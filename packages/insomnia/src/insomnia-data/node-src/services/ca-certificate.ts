@@ -2,7 +2,7 @@ import { database as db } from '../../src/database';
 import { models } from '../../src/models';
 import { type CaCertificate } from '../../src/models/types';
 
-export const { type } = models.caCertificate;
+const { type } = models.caCertificate;
 
 export function create(patch: Partial<CaCertificate> = {}) {
   if (!patch.parentId) {

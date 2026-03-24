@@ -37,7 +37,6 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
 import { type ApiSpec, type GitRepository, type MockServer, models, type Project, services, type Workspace, type WorkspaceMeta, type WorkspaceScope } from '~/insomnia-data';
-import { sortProjects } from '~/models/helpers/project';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -385,7 +384,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
 
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 

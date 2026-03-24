@@ -22,10 +22,15 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
-import { models, type RunnerResultPerRequest, type RunnerTestResult, services, type UserUploadEnvironment } from '~/insomnia-data';
+import {
+  models,
+  type RunnerResultPerRequest,
+  type RunnerTestResult,
+  services,
+  type UserUploadEnvironment,
+} from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
-import { getTimeline } from '~/models/helpers/response-operations';
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
@@ -61,6 +66,7 @@ const inputStyle =
   'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-xs border-2 border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden focus:ring-1 focus:ring-(--hl-md) transition-colors';
 const iterationInputStyle =
   'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-xs border-2 border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden focus:ring-1 focus:ring-(--hl-md) transition-colors';
+const { getResponseTimeline } = services.helpers;
 
 // TODO: improve the performance for a lot of logs
 async function aggregateAllTimelines(errorMsg: string | null, testResult: RunnerTestResult) {
@@ -71,7 +77,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
     const resp = await services.response.getById(respInfo.responseId);
 
     if (resp) {
-      const timeline = getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
+      const timeline = (await getResponseTimeline(resp, true)) as unknown as ResponseTimelineEntry[];
       timelines = [
         ...timelines,
         {

@@ -1,5 +1,4 @@
-import { database as db, models, type Response } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
+import { database as db, models, type Response, services } from '~/insomnia-data';
 
 import * as requestVersionOperations from './request-version';
 import * as settingsOperations from './settings';
@@ -44,7 +43,7 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
 
   const { parentId } = patch;
   // Create request version snapshot
-  const request = await requestOperations.getById(parentId);
+  const request = await services.helpers.getRequestById(parentId);
   const requestVersion = request ? await requestVersionOperations.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled

@@ -1,17 +1,16 @@
 import { href } from 'react-router';
 
 import { models, services } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
-import { removeResponse } from '~/models/helpers/response-operations';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 
+const { removeResponse } = services.helpers;
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { workspaceId, requestId } = params;
 
-  const req = await requestOperations.getById(requestId);
+  const req = await services.helpers.getRequestById(requestId);
   invariant(req, 'Request not found');
 
   const { responseId } = await request.json();

@@ -4,7 +4,6 @@ import path from 'node:path';
 import { database, initDatabase, services, type Settings } from '~/insomnia-data';
 import { type BaseModel, type Environment, type UserUploadEnvironment } from '~/insomnia-data';
 import { createNedbDatabase } from '~/insomnia-data/node';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import {
   defaultSendActionRuntime,
@@ -15,6 +14,8 @@ import {
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
+
+const { getResponseBodyBuffer } = services.helpers;
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
@@ -139,7 +140,7 @@ export async function getSendRequestCallbackMemDb(
       (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
       {},
     );
-    const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
+    const bodyBuffer = (await getResponseBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
     const testResults = [

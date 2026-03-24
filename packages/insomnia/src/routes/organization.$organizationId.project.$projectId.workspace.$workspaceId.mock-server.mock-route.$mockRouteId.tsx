@@ -17,8 +17,15 @@ import {
 } from '~/common/constants';
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
-import { type MockRoute, type MockServer, models, type Request, type RequestHeader, type Response,services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import {
+  type MockRoute,
+  type MockServer,
+  models,
+  type Request,
+  type RequestHeader,
+  type Response,
+  services,
+} from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
@@ -37,6 +44,7 @@ import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
+const { getResponseBodyBuffer } = services.helpers;
 export interface MockRouteLoaderData {
   mockServer: MockServer;
   mockRoute: MockRoute;
@@ -65,7 +73,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
     // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
-      const buffer = await getBodyBuffer(activeResponse);
+      const buffer = await getResponseBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
     }
   }

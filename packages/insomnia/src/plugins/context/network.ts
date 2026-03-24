@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import { type Request, type ResponseHeader, services } from '~/insomnia-data';
-import { readCurlResponse } from '~/models/helpers/response-operations';
 
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import {
@@ -12,6 +11,8 @@ import {
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
 import type { PluginTemplateTagContext } from '../../templating/types';
+
+const { readCurlResponse } = services.helpers;
 
 type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
   Partial<Pick<Request, 'body' | 'authentication'>>;

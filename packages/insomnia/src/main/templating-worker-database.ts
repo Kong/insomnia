@@ -16,7 +16,6 @@ import {
   services,
   type Workspace,
 } from '~/insomnia-data';
-import { getBodyBuffer, readCurlResponse } from '~/models/helpers/response-operations';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
@@ -26,6 +25,8 @@ import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugin
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
 import { secureReadFile } from './secure-read-file';
+
+const { getResponseBodyBuffer, readCurlResponse } = services.helpers;
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
@@ -116,7 +117,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
-    return await getBodyBuffer(body.response, body.readFailureValue);
+    return await getResponseBodyBuffer(body.response, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
     const doc = await services.pluginData.getByKey(body.pluginName, body.key);

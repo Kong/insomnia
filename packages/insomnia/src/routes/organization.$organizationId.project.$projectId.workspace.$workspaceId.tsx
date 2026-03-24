@@ -5,7 +5,6 @@ import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
 import { type CaCertificate, services } from '~/insomnia-data';
 import { type ApiSpec, type ClientCertificate, type CookieJar, type Environment, type GitRepository, type GrpcRequest, type GrpcRequestMeta, type MockServer, models, type Project, type Request, type RequestGroup, type RequestGroupMeta, type RequestMeta, type SocketIORequest, type WebSocketRequest, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
-import { sortProjects } from '~/models/helpers/project';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -120,7 +119,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
       parentId: organizationId,
     })) || [];
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
 
   const searchParams = new URL(request.url).searchParams;
   const sortOrder = searchParams.get('sortOrder') as SortOrder;

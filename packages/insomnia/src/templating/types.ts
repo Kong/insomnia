@@ -2,25 +2,23 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 
 import type { Cookie } from 'tough-cookie';
 
-import type { services } from '~/insomnia-data';
-import {
-  type CloudProviderCredential,
-  type CookieJar,
-  type Environment,
-  type GrpcRequest,
-  type McpRequest,
-  type OAuth2Token,
-  type Project,
-  type Request,
-  type RequestGroup,
-  type Response,
-  type Services,
-  type SocketIORequest,
-  type UserUploadEnvironment,
-  type WebSocketRequest,
-  type Workspace,
+import type {
+  CloudProviderCredential,
+  CookieJar,
+  Environment,
+  GrpcRequest,
+  McpRequest,
+  OAuth2Token,
+  Project,
+  Request,
+  RequestGroup,
+  Response,
+  Services,
+  SocketIORequest,
+  UserUploadEnvironment,
+  WebSocketRequest,
+  Workspace,
 } from '~/insomnia-data';
-import type { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PluginStore } from '../plugins/context/store';
@@ -296,10 +294,10 @@ export interface PluginTemplateTagContext {
       };
       response: {
         getLatestForRequestId: Services['response']['getLatestForRequestId'];
-        getBodyBuffer: typeof getBodyBuffer;
+        getBodyBuffer: Services['helpers']['getResponseBodyBuffer'];
       };
       settings: {
-        get: typeof services.settings.get;
+        get: Services['settings']['get'];
       };
     };
   };

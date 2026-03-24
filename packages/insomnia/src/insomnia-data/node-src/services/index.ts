@@ -8,6 +8,7 @@ import * as gitCredentialsService from './git-credentials';
 import * as gitRepositoryService from './git-repository';
 import * as grpcRequestService from './grpc-request';
 import * as grpcRequestMetaService from './grpc-request-meta';
+import * as helpers from './helpers';
 import * as mcpPayloadService from './mcp-payload';
 import * as mcpRequestService from './mcp-request';
 import * as mcpResponseService from './mcp-response';
@@ -82,4 +83,5 @@ export const servicesNodeImpl = {
   webSocketResponse: webSocketResponseService,
   workspace: workspaceService,
   workspaceMeta: workspaceMetaService,
-} as const;
+  helpers,
+} satisfies Record<string, Record<string, (...args: never[]) => Promise<unknown>>>;

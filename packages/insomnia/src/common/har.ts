@@ -2,8 +2,15 @@ import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import { type BaseModel, models, type Request, type RequestGroup, type Response, services, type Workspace } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import {
+  type BaseModel,
+  models,
+  type Request,
+  type RequestGroup,
+  type Response,
+  services,
+  type Workspace,
+} from '~/insomnia-data';
 
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
@@ -19,6 +26,8 @@ import { jarFromCookies } from './cookies';
 import { database } from './database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
 import { getRenderedRequestAndContext } from './render';
+
+const { getResponseBodyBuffer } = services.helpers;
 
 const getDocWithDescendants =
   (includePrivateDocs = false) =>
@@ -384,7 +393,7 @@ function mapCookie(cookie: ToughCookie) {
 }
 
 async function getResponseContent(response: Response) {
-  let body = await getBodyBuffer(response);
+  let body = await getResponseBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);

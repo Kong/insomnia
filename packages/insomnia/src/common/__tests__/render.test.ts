@@ -1,9 +1,9 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { type Environment, models, services, type Workspace } from '~/insomnia-data';
+import { type Environment, services, type Workspace } from '~/insomnia-data';
 
-import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
+import { environmentModelSchema, requestGroupModelSchema } from '../../sync/__schemas__/model-schemas';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);

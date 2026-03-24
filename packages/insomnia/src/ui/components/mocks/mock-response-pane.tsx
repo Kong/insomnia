@@ -3,8 +3,7 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import { type MockRoute, type MockServer, type Response,services } from '~/insomnia-data';
-import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
+import { type MockRoute, type MockServer, type Response, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
@@ -35,6 +34,7 @@ import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
 
 const { useInterval } = reactUse;
+const { getResponseBodyBuffer, getResponseTimeline } = services.helpers;
 
 export const MockResponsePane = () => {
   const { mockServer, mockRoute, activeResponse } = useMockRouteLoaderData()!;
@@ -47,7 +47,7 @@ export const MockResponsePane = () => {
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
-        const timeline = await getTimeline(activeResponse, true);
+        const timeline = await getResponseTimeline(activeResponse, true);
         setTimeline(timeline);
       }
     };
@@ -130,7 +130,7 @@ export const MockResponsePane = () => {
               filter={''}
               filterHistory={[]}
               bodyBuffer={activeResponse.bodyBuffer}
-              getBody={() => getBodyBuffer(activeResponse)}
+              getBody={() => getResponseBodyBuffer(activeResponse)}
               previewMode={previewMode}
               responseId={activeResponse._id}
               updateFilter={activeResponse.error ? undefined : () => {}}
@@ -299,7 +299,7 @@ const PreviewModeDropdown = ({
             icon="copy"
             label="Copy raw response"
             onClick={async () => {
-              const bodyBuffer = await getBodyBuffer(activeResponse);
+              const bodyBuffer = await getResponseBodyBuffer(activeResponse);
               bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
             }}
           />
@@ -331,7 +331,7 @@ const PreviewModeDropdown = ({
               icon="save"
               label="Export prettified response"
               onClick={async () => {
-                const bodyBuffer = await getBodyBuffer(activeResponse);
+                const bodyBuffer = await getResponseBodyBuffer(activeResponse);
                 const { canceled, filePath } = await window.dialog.showSaveDialog({
                   title: 'Save Full Response',
                   buttonLabel: 'Save',
@@ -363,7 +363,7 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath) {
                 return;
               }
-              const timeline = getTimeline(activeResponse);
+              const timeline = await getResponseTimeline(activeResponse);
               const headers = timeline
                 .filter(v => v.name === 'HeaderIn')
                 .map(v => v.value)

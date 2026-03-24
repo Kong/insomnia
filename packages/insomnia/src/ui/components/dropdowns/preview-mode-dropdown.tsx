@@ -1,8 +1,7 @@
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
-import { models } from '~/insomnia-data';
-import { getTimeline } from '~/models/helpers/response-operations';
+import { models, services } from '~/insomnia-data';
 
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
@@ -13,6 +12,7 @@ import {
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
+const { getResponseTimeline } = services.helpers;
 interface Props {
   download: (pretty: boolean) => any;
   copyToClipboard: () => any;
@@ -27,7 +27,12 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
   const handleDownloadNormal = useCallback(() => download(false), [download]);
 
   const exportAsHAR = useCallback(async () => {
-    if (!activeResponse || !activeRequest || !models.request.isRequest(activeRequest) || !models.response.isResponse(activeResponse)) {
+    if (
+      !activeResponse ||
+      !activeRequest ||
+      !models.request.isRequest(activeRequest) ||
+      !models.response.isResponse(activeResponse)
+    ) {
       console.warn('Nothing to download');
       return;
     }
@@ -57,7 +62,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const timeline = getTimeline(activeResponse);
+    const timeline = await getResponseTimeline(activeResponse);
     const headers = timeline
       .filter(v => v.name === 'HeaderIn')
       .map(v => v.value)

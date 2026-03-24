@@ -6,7 +6,6 @@ import iconv from 'iconv-lite';
 
 import { jarFromCookies } from '~/common/cookies';
 import { models, type Request, type RequestGroup, services, type Workspace } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { database as db } from '../common/database';
 import * as pluginApp from '../plugins/context/app';
@@ -16,6 +15,8 @@ import type { Plugin } from '../plugins/index';
 import * as templating from './index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import { decodeEncoding } from './utils';
+
+const { getResponseBodyBuffer } = services.helpers;
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
@@ -160,7 +161,7 @@ export default class BaseExtension {
           },
           response: {
             getLatestForRequestId: services.response.getLatestForRequestId,
-            getBodyBuffer,
+            getBodyBuffer: getResponseBodyBuffer,
           },
           settings: {
             get: services.settings.get,

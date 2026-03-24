@@ -13,7 +13,6 @@ import {
   type WebSocketRequest,
   type Workspace,
 } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
@@ -25,6 +24,8 @@ import * as pluginStore from '../plugins/context/store';
 import type { PluginTemplateTag, RenderPurpose } from '../templating/types';
 import type { PluginTheme } from './misc';
 import themes from './themes';
+
+const { getResponseBodyBuffer } = services.helpers;
 
 export interface Plugin {
   name: string;
@@ -414,7 +415,7 @@ export function getPluginCommonContext({
         },
         response: {
           getLatestForRequestId: services.response.getLatestForRequestId,
-          getBodyBuffer,
+          getBodyBuffer: getResponseBodyBuffer,
         },
         settings: {
           get: services.settings.get,

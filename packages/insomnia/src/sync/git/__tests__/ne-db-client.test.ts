@@ -13,7 +13,7 @@ import YAML from 'yaml';
 
 import { database as db, models, services } from '~/insomnia-data';
 
-import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+import { workspaceModelSchema } from '../../__schemas__/model-schemas';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
 import { NeDBClient } from '../ne-db-client';
 import { assertAsyncError } from './util';

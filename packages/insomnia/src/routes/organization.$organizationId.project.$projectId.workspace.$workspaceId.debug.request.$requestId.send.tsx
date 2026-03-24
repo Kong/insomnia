@@ -18,7 +18,6 @@ import {
 } from '~/insomnia-data';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
-import { getBodyStream } from '~/models/helpers/response-operations';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -38,6 +37,7 @@ import { createFetcherSubmitHook } from '~/utils/router';
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 
+const { getResponseBodyStream } = services.helpers;
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
@@ -78,7 +78,7 @@ const writeToDownloadPath = (
   invariant(downloadPathAndName, 'filename should be set by now');
 
   const to = createWriteStream(downloadPathAndName);
-  const readStream = getBodyStream(responsePatch);
+  const readStream = getResponseBodyStream(responsePatch);
   if (!readStream || typeof readStream === 'string') {
     return null;
   }

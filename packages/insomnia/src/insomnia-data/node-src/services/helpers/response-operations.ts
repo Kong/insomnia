@@ -72,7 +72,7 @@ export function removeResponse(response: Response | WebSocketResponse | SocketIO
   return db.remove(response);
 }
 
-export const getBodyStream = (
+export const getResponseBodyStream = (
   response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: string,
 ): Readable | string | null => {
@@ -93,7 +93,7 @@ export const getBodyStream = (
 
 export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
-  const bodyBufferOrErrMsg = await getBodyBuffer(options, readFailureMsg);
+  const bodyBufferOrErrMsg = await getResponseBodyBuffer(options, readFailureMsg);
   // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
 
   if (!bodyBufferOrErrMsg) {
@@ -108,7 +108,7 @@ export const readCurlResponse = async (options: { bodyPath?: string; bodyCompres
   return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
 };
 
-export function getTimeline(response: Response, showBody?: boolean) {
+export async function getResponseTimeline(response: Response, showBody?: boolean) {
   const { timelinePath, bodyPath } = response;
 
   if (!timelinePath) {
@@ -116,7 +116,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
   }
 
   try {
-    const rawBuffer = fs.readFileSync(timelinePath);
+    const rawBuffer = await fs.promises.readFile(timelinePath);
     const timelineString = rawBuffer.toString();
     const timeline = deserializeNDJSON(timelineString);
 
@@ -125,7 +125,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
           {
             name: 'DataOut',
             timestamp: Date.now(),
-            value: fs.readFileSync(bodyPath).toString(),
+            value: (await fs.promises.readFile(bodyPath)).toString(),
           },
         ]
       : [];
@@ -137,7 +137,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
   }
 }
 
-export const getBodyBuffer = async (
+export const getResponseBodyBuffer = async (
   response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: string,
 ): Promise<Buffer | string> => {

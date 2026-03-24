@@ -4,8 +4,18 @@ import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'reac
 
 import { database } from '~/common/database';
 import { type McpRequest, models, services } from '~/insomnia-data';
-import { type GrpcRequest, type MockRoute, type MockServer, type Project, type Request, type RequestGroup, type SocketIORequest, type UnitTestSuite, type WebSocketRequest, type Workspace } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
+import {
+  type GrpcRequest,
+  type MockRoute,
+  type MockServer,
+  type Project,
+  type Request,
+  type RequestGroup,
+  type SocketIORequest,
+  type UnitTestSuite,
+  type WebSocketRequest,
+  type Workspace,
+} from '~/insomnia-data';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
@@ -276,7 +286,12 @@ export const buildTabFromResource = async (params: AddTabParams, withTab?: boole
     });
   }
 
-  if (models.request.isRequest(resource) || models.grpcRequest.isGrpcRequest(resource) || models.webSocketRequest.isWebSocketRequest(resource) || models.socketIORequest.isSocketIORequest(resource)) {
+  if (
+    models.request.isRequest(resource) ||
+    models.grpcRequest.isGrpcRequest(resource) ||
+    models.webSocketRequest.isWebSocketRequest(resource) ||
+    models.socketIORequest.isSocketIORequest(resource)
+  ) {
     baseTab.tag = getRequestMethodShortHand(resource);
     baseTab.method = (resource as Request).method || '';
   }
@@ -439,7 +454,7 @@ const buildTabFromUrl = async (pathname: string, searchParams: URLSearchParams):
   const resource = await (async () => {
     switch (tabType) {
       case 'request': {
-        return await requestOperations.getById(id);
+        return await services.helpers.getRequestById(id);
       }
       case 'folder': {
         return await database.findOne('RequestGroup', { _id: id });

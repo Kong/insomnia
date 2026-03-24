@@ -2,7 +2,6 @@ import { href } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
 import { models, services, type Workspace } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -66,7 +65,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     });
     // When navigating, we are interested in knowing if there was only one workspace and only one request
     const singleImportedWorkspace = Array.isArray(result) && result.length === 1 && result[0];
-    const requests = singleImportedWorkspace && (await requestOperations.findByParentId(singleImportedWorkspace._id));
+    const requests =
+      singleImportedWorkspace && (await services.helpers.findRequestByParentId(singleImportedWorkspace._id));
     const singleImportedRequest = Array.isArray(requests) && requests.length === 1 && requests.at(0);
     return { done: true, singleImportedWorkspace, singleImportedRequest };
   } catch (error) {

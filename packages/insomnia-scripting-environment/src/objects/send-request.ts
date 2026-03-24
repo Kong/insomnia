@@ -1,9 +1,8 @@
 import type { CurlRequestOutput } from 'insomnia/src/main/network/libcurl-promise';
-import { readCurlResponse } from 'insomnia/src/models/helpers/response-operations';
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { Settings } from '~/insomnia-data';
+import { services, type Settings } from '~/insomnia-data';
 
 import { RequestAuth } from './auth';
 import { fromPreRequestAuth } from './auth';
@@ -11,6 +10,7 @@ import type { CookieOptions } from './cookies';
 import { Request, type RequestOptions } from './request';
 import { Response } from './response';
 
+const { readCurlResponse } = services.helpers;
 export async function sendRequest(
   request: string | Request | RequestOptions,
   cb: (error?: string, response?: Response) => void,

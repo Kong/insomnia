@@ -8,7 +8,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { models, services } from '..';
+import { services } from '..';
 import type {
   AuthTypeAPIKey,
   AuthTypeAsap,

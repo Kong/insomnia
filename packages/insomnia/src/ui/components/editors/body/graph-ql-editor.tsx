@@ -22,8 +22,7 @@ import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import * as reactUse from 'react-use';
 
-import { type Request,services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import { type Request, services } from '~/insomnia-data';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
@@ -49,6 +48,7 @@ import { TimeFromNow } from '../../time-from-now';
 import { prettifyGraphql } from './prettify-graphql.mjs';
 
 const { useLocalStorage } = reactUse;
+const { getResponseBodyBuffer } = services.helpers;
 
 // Type guard to ensure loc is non-nullable
 const hasLocation = (
@@ -184,7 +184,7 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       };
     }
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await getResponseBodyBuffer(response);
     if (bodyBuffer) {
       const { data, errors } = JSON.parse(bodyBuffer.toString());
       if (errors?.length) {

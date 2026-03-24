@@ -1,13 +1,13 @@
-import { type FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { services } from '~/insomnia-data';
-import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
+import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { cancelRequestById } from '../../../network/cancellation';
 import {
   type RequestLoaderData,
@@ -33,6 +33,7 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 import { RequestTestResultPane } from './request-test-result-pane';
 import { downloadResponseBody } from './response-pane-utils';
 
+const { getResponseBodyBuffer, getResponseTimeline } = services.helpers;
 interface Props {
   activeRequestId: string;
 }
@@ -83,6 +84,26 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   }, [activeResponse]);
   const testResultCountTagColor =
     totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-(--hl-sm)';
+  const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
+
+  useEffect(() => {
+    if (!activeResponse) {
+      setTimeline([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    void getResponseTimeline(activeResponse).then(responseTimeline => {
+      if (!cancelled) {
+        setTimeline(responseTimeline);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeResponse]);
 
   if (!activeRequest) {
     return <BlankPane type="response" />;
@@ -103,7 +124,6 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     );
   }
 
-  const timeline = getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
 
   return (
@@ -197,7 +217,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={async () => {
-                const bodyBuffer = activeResponse ? await getBodyBuffer(activeResponse) : null;
+                const bodyBuffer = activeResponse ? await getResponseBodyBuffer(activeResponse) : null;
                 if (bodyBuffer) {
                   window.clipboard.writeText(bodyBuffer.toString('utf8'));
                 }
@@ -216,7 +236,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             filter={filter}
             filterHistory={filterHistory}
             bodyBuffer={activeResponse.bodyBuffer}
-            getBody={() => getBodyBuffer(activeResponse)}
+            getBody={() => getResponseBodyBuffer(activeResponse)}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}

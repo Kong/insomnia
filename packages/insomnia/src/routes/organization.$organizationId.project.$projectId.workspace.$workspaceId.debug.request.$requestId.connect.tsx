@@ -2,9 +2,8 @@ import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import { href } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
-import { type McpTransportType, models } from '~/insomnia-data';
+import { type McpTransportType, models, services } from '~/insomnia-data';
 import { type CookieJar, type RequestAuthentication, type RequestHeader } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
 import { getAuthHeader } from '~/network/authentication';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';
@@ -27,7 +26,7 @@ export interface ConnectActionParams {
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { requestId, workspaceId } = params;
 
-  const req = await requestOperations.getById(requestId);
+  const req = await services.helpers.getRequestById(requestId);
   invariant(req, 'Request not found');
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = (await request.json()) as ConnectActionParams;

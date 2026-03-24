@@ -13,9 +13,10 @@ import { HttpVersions } from '../../common/settings';
 import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
-import { getBodyBuffer } from '../../models/helpers/response-operations';
 import * as networkUtils from '../network';
 import { getSetCookiesFromResponseHeaders } from '../network';
+
+const { getResponseBodyBuffer: getBodyBuffer } = services.helpers;
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;

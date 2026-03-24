@@ -10,7 +10,6 @@ import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { services } from '~/insomnia-data';
 import { type CookieJar, type RequestAuthentication, type RequestHeader, type Response } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
-import { readCurlResponse } from '~/models/helpers/response-operations';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import { filterClientCertificates } from '../../network/certificate';
@@ -19,6 +18,8 @@ import { invariant } from '../../utils/invariant';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { createConfiguredCurlInstance } from './libcurl-promise';
 import { parseHeaderStrings } from './parse-header-strings';
+
+const { readCurlResponse } = services.helpers;
 
 export interface CurlConnection extends Curl {
   _id: string;

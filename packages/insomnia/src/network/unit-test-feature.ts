@@ -1,5 +1,4 @@
 import { services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import {
@@ -10,6 +9,7 @@ import {
   tryToTransformRequestWithPlugins,
 } from './network';
 
+const { getResponseBodyBuffer } = services.helpers;
 export function getSendRequestCallback() {
   return async function sendRequest(requestId: string) {
     services.stats.incrementExecutedRequests();
@@ -44,7 +44,7 @@ export function getSendRequestCallback() {
       (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
       [],
     );
-    const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
+    const bodyBuffer = (await getResponseBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
     return { status, statusMessage, data, headers, responseTime };
   };

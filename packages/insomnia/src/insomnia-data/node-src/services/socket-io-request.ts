@@ -14,8 +14,6 @@ export const getById = (_id: string) => database.findOne<SocketIORequest>(type, 
 
 export const findByParentId = (parentId: string) => database.find<SocketIORequest>(type, { parentId });
 
-export const migrate = (doc: SocketIORequest) => doc;
-
 export const remove = (obj: SocketIORequest) => database.remove(obj);
 
 export const update = (obj: SocketIORequest, patch: Partial<SocketIORequest> = {}) => database.docUpdate(obj, patch);

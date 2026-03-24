@@ -1,7 +1,7 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+import { baseModelSchema, workspaceModelSchema } from '../../__schemas__/model-schemas';
 import { branchSchema, mergeConflictSchema, statusCandidateSchema } from '../../__schemas__/type-schemas';
 import type { StageEntry } from '../../types';
 import {

@@ -5,9 +5,9 @@ import zlib from 'node:zlib';
 
 import { describe, expect, it } from 'vitest';
 
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import { models, services } from '..';
 
-import { models } from '..';
+const { getResponseBodyBuffer: getBodyBuffer } = services.helpers;
 
 describe('migrate()', () => {
   it('does it', async () => {

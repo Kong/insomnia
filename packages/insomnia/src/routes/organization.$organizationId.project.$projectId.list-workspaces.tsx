@@ -6,7 +6,6 @@ import { scopeToLabelMap } from '~/common/get-workspace-label';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort } from '~/common/sorting';
 import { type ApiSpec, type GitRepository, type MockServer, models, type Project, services, type WorkspaceMeta } from '~/insomnia-data';
-import { sortProjects } from '~/models/helpers/project';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -120,7 +119,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       parentId: organizationId,
     })) || [];
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
   const files = await getAllLocalFiles({ projectId });
 
   return {

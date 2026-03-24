@@ -6,7 +6,6 @@ import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har'
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
 import { strings } from 'insomnia/src/common/strings';
-import * as requestOperations from 'insomnia/src/models/helpers/request-operations';
 import { SegmentEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
@@ -19,7 +18,7 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
-import { type BaseModel, type Environment, models, type Project, type Workspace } from '~/insomnia-data';
+import { type BaseModel, type Environment, models, type Project, services, type Workspace } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -302,7 +301,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
     onDone: async selectedFormat => {
       const requests: BaseModel[] = [];
       for (const requestId of requestIds) {
-        const request = await requestOperations.getById(requestId);
+        const request = await services.helpers.getRequestById(requestId);
         if (request) {
           requests.push(request);
         }
@@ -662,7 +661,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && organizationId && projectId && !models.organization.isScratchpadOrganizationId(organizationId)) {
+    if (
+      isIdleAndUninitialized &&
+      organizationId &&
+      projectId &&
+      !models.organization.isScratchpadOrganizationId(organizationId)
+    ) {
       workspacesFetcher.load({
         organizationId,
         projectId,
@@ -827,7 +831,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               {activeProject && (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  isDisabled={workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)}
+                  isDisabled={
+                    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)
+                  }
                   onPress={() => setIsImportModalOpen(true)}
                 >
                   <Icon icon="file-import" />
@@ -837,7 +843,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               {features.bulkImport.enabled ? (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  isDisabled={workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)}
+                  isDisabled={
+                    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)
+                  }
                   onPress={() => setIsImportProjectsModalOpen(true)}
                 >
                   <Icon icon="file-import" />

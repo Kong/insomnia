@@ -10,7 +10,6 @@ import { database } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
-import { sortProjects } from '../../../models/helpers/project';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -37,7 +36,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
       const organizationProjects = await database.find<Project>(models.project.type, {
         parentId: selectedOrgId,
       });
-      setProjectOptions(sortProjects(organizationProjects));
+      setProjectOptions(models.project.sortProjects(organizationProjects));
       setSelectedProjectId(organizationProjects[0]?._id || '');
     })();
   }, [selectedOrgId]);

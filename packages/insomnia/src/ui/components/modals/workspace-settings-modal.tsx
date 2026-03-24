@@ -16,8 +16,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { type MockServer, models, type Project, type Workspace } from '~/insomnia-data';
-import { removeResponsesForRequest } from '~/models/helpers/response-operations';
+import { type MockServer, models, type Project, services, type Workspace } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
@@ -31,6 +30,7 @@ import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 
+const { removeResponsesForRequest } = services.helpers;
 interface Props {
   onClose: () => void;
   workspace: Workspace;
@@ -55,7 +55,12 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
-    if (project && models.project.isGitProject(project) && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
+    if (
+      project &&
+      models.project.isGitProject(project) &&
+      gitRepoTreeFetcher.state === 'idle' &&
+      !gitRepoTreeFetcher.data
+    ) {
       gitRepoTreeFetcher.load({ projectId: project._id });
     }
   }, [project, gitRepoTreeFetcher]);
@@ -148,41 +153,44 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   />
                 </TextField>
-                {project && models.project.isGitProject(project) && gitRepoTreeFetcher.data && !models.workspace.isMcp(workspace) && (
-                  <TextField
-                    name="fileName"
-                    isRequired
-                    validate={fileName => {
-                      if (
-                        selectedFolderChildren
-                          .filter(name => name !== fileName)
-                          .includes(safeToUseInsomniaFileNameWithExt(fileName))
-                      ) {
-                        return 'A file with the same name already exists in the selected folder';
-                      }
+                {project &&
+                  models.project.isGitProject(project) &&
+                  gitRepoTreeFetcher.data &&
+                  !models.workspace.isMcp(workspace) && (
+                    <TextField
+                      name="fileName"
+                      isRequired
+                      validate={fileName => {
+                        if (
+                          selectedFolderChildren
+                            .filter(name => name !== fileName)
+                            .includes(safeToUseInsomniaFileNameWithExt(fileName))
+                        ) {
+                          return 'A file with the same name already exists in the selected folder';
+                        }
 
-                      return null;
-                    }}
-                    defaultValue={safeToUseInsomniaFileName(fileName || '')}
-                    className="group relative flex w-full max-w-full shrink-0 flex-col gap-2 overflow-hidden"
-                  >
-                    <Label className="group relative flex flex-col gap-2 overflow-hidden">
-                      <span className="text-sm text-(--hl)">File name</span>
+                        return null;
+                      }}
+                      defaultValue={safeToUseInsomniaFileName(fileName || '')}
+                      className="group relative flex w-full max-w-full shrink-0 flex-col gap-2 overflow-hidden"
+                    >
+                      <Label className="group relative flex flex-col gap-2 overflow-hidden">
+                        <span className="text-sm text-(--hl)">File name</span>
 
-                      <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
-                        <Input
-                          placeholder={workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name'}
-                          className="w-full min-w-[3ch] outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
-                        />
-                        <span className="-z-10 w-min truncate opacity-0 [grid-area:input]">
-                          {safeToUseInsomniaFileName(fileName || workspace.name || 'name')}
-                        </span>
-                        <span className="text-(--hl) [grid-area:extension]">.yaml</span>
-                      </div>
-                    </Label>
-                    <FieldError className="text-xs text-red-500" />
-                  </TextField>
-                )}
+                        <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
+                          <Input
+                            placeholder={workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name'}
+                            className="w-full min-w-[3ch] outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
+                          />
+                          <span className="-z-10 w-min truncate opacity-0 [grid-area:input]">
+                            {safeToUseInsomniaFileName(fileName || workspace.name || 'name')}
+                          </span>
+                          <span className="text-(--hl) [grid-area:extension]">.yaml</span>
+                        </div>
+                      </Label>
+                      <FieldError className="text-xs text-red-500" />
+                    </TextField>
+                  )}
                 {!models.workspace.isMockServer(workspace) && (
                   <>
                     <Label className="text-sm text-(--hl)" aria-label="Description">

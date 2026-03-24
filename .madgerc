@@ -1,0 +1,3 @@
+{
+  "tsConfig": "packages/insomnia/tsconfig.json"
+}

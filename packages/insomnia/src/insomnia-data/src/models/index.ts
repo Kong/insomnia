@@ -1,8 +1,7 @@
 // model types — flat re-exports for convenient consumer access, only export types that are needed outside of this package
 
-import { generateId } from '~/common/misc';
-import { typedKeys } from '~/utils';
-
+import { generateId } from '../utils/misc';
+import { typedKeys } from '../utils/type';
 // models - export models that define the structure of the data and any related functions such as init, type guards
 import * as apiSpec from './api-spec';
 import * as caCertificate from './ca-certificate';

@@ -11,7 +11,8 @@ import {
   type SocketIORequest,
   type WebSocketRequest,
 } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
+
+import * as requestHelpers from './helpers/request-operations';
 
 const { isRequest } = models.request;
 const { isWebSocketRequest } = models.webSocketRequest;
@@ -87,7 +88,7 @@ export async function restore(requestVersionId: string) {
     return null;
   }
 
-  const originalRequest = await requestOperations.getById(requestPatch._id);
+  const originalRequest = await requestHelpers.getRequestById(requestPatch._id);
 
   if (!originalRequest) {
     return null;
@@ -100,7 +101,7 @@ export async function restore(requestVersionId: string) {
     }
   }
 
-  return requestOperations.update(originalRequest, requestPatch);
+  return requestHelpers.updateRequest(originalRequest, requestPatch);
 }
 function _diffRequests(
   rOld: Request | WebSocketRequest | SocketIORequest | McpRequest | null,
