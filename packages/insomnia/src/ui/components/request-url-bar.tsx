@@ -3,7 +3,8 @@ import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { models, type Request, type RequestGroup,services } from '~/insomnia-data';
+import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
+import { models, type Request, type RequestGroup, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -69,7 +70,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         // only for request render error
         const errorMessage = searchParams.get('error') || '';
         // detects a string to replace with a link to settings
-        const linkText = 'Insomnia Preferences → Security';
+        const linkText = SECURITY_SETTINGS_PATH_LABEL;
         const hasLink = errorMessage.endsWith(linkText);
 
         const modifiedString = hasLink ? errorMessage.slice(0, errorMessage.length - linkText.length) : errorMessage;
@@ -116,7 +117,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const dropdownRef = useRef<DropdownHandle>(null);
     const inputRef = useRef<OneLineEditorHandle>(null);
     const isRealtimeRequest =
-      activeRequest && (models.request.isEventStreamRequest(activeRequest) || models.request.isGraphqlSubscriptionRequest(activeRequest));
+      activeRequest &&
+      (models.request.isEventStreamRequest(activeRequest) ||
+        models.request.isGraphqlSubscriptionRequest(activeRequest));
 
     const focusInput = useCallback(() => {
       if (inputRef.current) {
@@ -182,7 +185,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         // reset timeout
         setCurrentTimeout(undefined);
 
-        if (models.request.isEventStreamRequest(activeRequest) || models.request.isGraphqlSubscriptionRequest(activeRequest)) {
+        if (
+          models.request.isEventStreamRequest(activeRequest) ||
+          models.request.isGraphqlSubscriptionRequest(activeRequest)
+        ) {
           const startListening = async () => {
             const environmentId = activeEnvironment._id;
             const workspaceId = activeWorkspace._id;
@@ -516,7 +522,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 </Button>
                 <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
                   {undefinedEnvironmentVariableList
-                    ?.filter(variableName => variableName.startsWith(`${models.environment.vaultEnvironmentRuntimePath}.`))
+                    ?.filter(variableName =>
+                      variableName.startsWith(`${models.environment.vaultEnvironmentRuntimePath}.`),
+                    )
                     .map(item => {
                       return (
                         <div

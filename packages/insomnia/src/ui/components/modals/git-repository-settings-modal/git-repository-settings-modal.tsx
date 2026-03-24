@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
@@ -52,7 +52,13 @@ export const GitRepositorySettingsModal = ({
           </HelpTooltip>
         </ModalHeader>
         <ModalBody>
-          {selectedProvider && <GitConnectionInfo gitRepository={gitRepository} providerInfo={selectedProvider} />}
+          {selectedProvider && (
+            <GitConnectionInfo
+              gitRepository={gitRepository}
+              providerInfo={selectedProvider}
+              authorName={selectedCredential?.author.name || selectedCredential?.author.email}
+            />
+          )}
           {authorEmail && (
             <div className="mt-4 flex text-[12px]">
               <div className="w-[110px] font-semibold">Author Email</div>

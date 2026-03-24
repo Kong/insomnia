@@ -24,9 +24,9 @@ export type {
   Environment,
   EnvironmentKvPairData,
   UserUploadEnvironment,
-  EnvironmentType,
   EnvironmentKvPairDataType,
 } from './environment';
+export { EnvironmentType } from './environment';
 export type {
   GitCredentials,
   GitCredentialsV2,

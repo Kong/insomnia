@@ -41,6 +41,9 @@ import * as webSocketResponseService from './websocket-response';
 import * as workspaceService from './workspace';
 import * as workspaceMetaService from './workspace-meta';
 
+// Services are consumed from renderer via preload -> IPC (`ipcRenderer.invoke`), so this contract
+// must stay async across runtimes even if a main-process implementation could be synchronous.
+// `satisfies` keeps the original inferred type while still producing compile-time errors for sync actions.
 export const servicesNodeImpl = {
   apiSpec: apiSpecService,
   caCertificate: caCertificateService,

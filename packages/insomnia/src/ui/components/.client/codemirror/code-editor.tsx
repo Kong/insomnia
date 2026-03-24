@@ -17,8 +17,9 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-ari
 import { useLatest, useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
-import { DEBOUNCE_MILLIS, isMac } from '~/common/constants';
+import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
+import { isMac } from '~/common/platform';
 import type { KeyCombination } from '~/common/settings';
 import { getTemplateTags } from '~/plugins';
 import { useRootLoaderData } from '~/root';
@@ -210,14 +211,14 @@ export const CodeEditor = memo(
       const extraKeys = useMemo(
         () => ({
           'Ctrl-Q': (cm: CodeMirror.Editor) => cm.foldCode(cm.getCursor()),
-          [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
+          [isMac ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
           // Autocomplete
           'Ctrl-Space': 'autocomplete',
           // Change default find command from "find" to "findPersistent" so the
           // search box stays open after pressing Enter
-          [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
-          [isMac() ? 'Shift-Cmd--' : 'Shift-Ctrl--']: 'foldAll',
-          [isMac() ? 'Shift-Cmd-=' : 'Shift-Ctrl-=']: 'unfoldAll',
+          [isMac ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
+          [isMac ? 'Shift-Cmd--' : 'Shift-Ctrl--']: 'foldAll',
+          [isMac ? 'Shift-Cmd-=' : 'Shift-Ctrl-=']: 'unfoldAll',
           'Shift-Tab': 'indentLess',
           // Indent with tabs or spaces
           // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785

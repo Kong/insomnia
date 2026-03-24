@@ -239,6 +239,41 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
   });
 
+  test('delay input can be cleared to enter a new value', async ({ page }) => {
+    await page.getByTestId('run-collection-btn-quick').click();
+
+    const delayInput = page.locator('input[name="Delay"]');
+
+    // default value should be 0
+    await expect.soft(delayInput).toHaveValue('0');
+
+    // clear the input
+    await delayInput.clear();
+    await expect.soft(delayInput).toHaveValue('');
+
+    // type a new value
+    await delayInput.fill('500');
+    await expect.soft(delayInput).toHaveValue('500');
+  });
+
+  test('running with cleared delay input uses last valid value', async ({ page }) => {
+    await page.getByTestId('run-collection-btn-quick').click();
+
+    const delayInput = page.locator('input[name="Delay"]');
+
+    // set a valid delay
+    await delayInput.fill('100');
+    await expect.soft(delayInput).toHaveValue('100');
+
+    // clear the input without entering a new value
+    await delayInput.clear();
+    await expect.soft(delayInput).toHaveValue('');
+
+    // blur the input - it should restore to last valid value
+    await delayInput.blur();
+    await expect.soft(delayInput).toHaveValue('100');
+  });
+
   test('iterations input can be cleared to enter a new value', async ({ page }) => {
     await page.getByTestId('run-collection-btn-quick').click();
 

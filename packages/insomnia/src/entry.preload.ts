@@ -142,6 +142,7 @@ const git: GitServiceAPI = {
   listGitProviders: () => ipcRenderer.invoke('git.listGitProviders'),
   initSignInToGitProvider: options => ipcRenderer.invoke('git.initSignInToGitProvider', options),
   completeSignInToGitProvider: options => ipcRenderer.invoke('git.completeSignInToGitProvider', options),
+  updateSignInToGitProvider: options => ipcRenderer.invoke('git.updateSignInToGitProvider', options),
   getGitProviderRepositories: options => ipcRenderer.invoke('git.getGitProviderRepositories', options),
   getGitProviderEmails: options => ipcRenderer.invoke('git.getGitProviderEmails', options),
   getCurrentBranchByRepositoryId: options => ipcRenderer.invoke('git.getCurrentBranchByRepositoryId', options),
@@ -207,6 +208,7 @@ const main: Window['main'] = {
   secretStorage,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
+  setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
   showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),
   showContextMenu: options => ipcRenderer.send('showContextMenu', options),
   database: {
@@ -278,6 +280,11 @@ const dialog: Window['dialog'] = {
 const app: Window['app'] = {
   getPath: options => ipcRenderer.sendSync('getPath', options),
   getAppPath: () => ipcRenderer.sendSync('getAppPath'),
+  process: {
+    get platform() {
+      return process.platform as NodeJS.Platform;
+    },
+  },
 };
 const shell: Window['shell'] = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),

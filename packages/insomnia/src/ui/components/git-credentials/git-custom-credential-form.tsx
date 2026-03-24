@@ -96,7 +96,7 @@ export const GitCustomCredentialForm = ({
           defaultValue={gitCredentialToEdit?.credentials?.baseURI}
         />
       </div>
-      <div className="flex gap-2">
+      <div className="mt-2 flex justify-end gap-2">
         <Button primary type="submit">
           {isEditing ? 'Update Credential' : 'Save Credential'}
         </Button>

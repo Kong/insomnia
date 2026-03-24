@@ -2,11 +2,20 @@ import classNames from 'classnames';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
-import { models, type Request, type RequestAuthentication, type RequestGroup, type RequestParameter, type SocketIORequest, type WebSocketRequest } from '~/insomnia-data';
+import {
+  models,
+  type Request,
+  type RequestAuthentication,
+  type RequestGroup,
+  type RequestParameter,
+  type SocketIORequest,
+  type WebSocketRequest,
+} from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
+import { SECURITY_SETTINGS_PATH_LABEL } from '../../common/misc';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
 import { RenderError } from '../../templating/render-error';
@@ -139,7 +148,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
   // detects a string to replace with a link to settings
-  const linkText = 'Insomnia Preferences → Security';
+  const linkText = SECURITY_SETTINGS_PATH_LABEL;
   const hasLink = previewString.endsWith(linkText);
   const modifiedString = hasLink ? previewString.slice(0, previewString.length - linkText.length) : previewString;
 

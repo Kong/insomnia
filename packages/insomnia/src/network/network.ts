@@ -27,6 +27,7 @@ import {
   type WebSocketRequest,
   type Workspace,
 } from '~/insomnia-data';
+import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
   ExecutionOption,
@@ -451,7 +452,7 @@ export async function savePatchesMadeByScript(patches: {
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === models.environment.EnvironmentType.KVPAIR && {
-        kvPairData: models.environment.getKVPairFromData(data, dataPropertyOrder),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder),
       }),
     });
   };
@@ -480,10 +481,7 @@ export async function savePatchesMadeByScript(patches: {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === models.environment.EnvironmentType.KVPAIR && {
-          kvPairData: models.environment.getKVPairFromData(
-            mutatedFolder.environment,
-            originalFolder.environmentPropertyOrder,
-          ),
+          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder),
         }),
       });
     }

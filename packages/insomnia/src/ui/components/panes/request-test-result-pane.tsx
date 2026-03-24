@@ -31,7 +31,8 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
   }
 
   const testResultRows = requestTestResults
-    .filter(result => {
+    .map((result, index) => ({ result, index }))
+    .filter(({ result }) => {
       switch (targetTests) {
         case 'all': {
           return true;
@@ -50,14 +51,14 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
         }
       }
     })
-    .filter(result => {
+    .filter(({ result }) => {
       if (resultFilter.trim() === '') {
         return true;
       }
 
       return Boolean(fuzzyMatch(resultFilter, result.testCase, { splitSpace: false, loose: true })?.indexes);
     })
-    .map(result => {
+    .map(({ result, index }) => {
       const statusText = {
         passed: 'PASS',
         failed: 'FAIL',
@@ -95,7 +96,10 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
             : 'Unknown';
 
       return (
-        <div key={result.testCase} data-testid="test-result-row">
+        // Using `index` as the key for the row since it's the only unique property available in the current data model. A
+        // stable & unique key avoids rendering quirks.
+        // Ref: https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key
+        <div key={index} data-testid="test-result-row">
           <div className="my-3 flex w-full text-base">
             <div className="m-auto mx-1 leading-4">
               <span className="mr-2 ml-2">{statusTag}</span>

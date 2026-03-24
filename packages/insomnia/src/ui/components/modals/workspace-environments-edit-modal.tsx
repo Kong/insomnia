@@ -25,6 +25,8 @@ import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organi
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
 import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
+import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
+import { getDataFromKVPair } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
@@ -34,7 +36,6 @@ import { useOrganizationPermissions } from '../../hooks/use-organization-feature
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
-import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { Icon } from '../icon';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';
@@ -59,6 +60,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
   const deleteEnvironmentFetcher = useEnvironmentDeleteActionFetcher();
   const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
   const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
+  const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
@@ -183,7 +185,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
 
   const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
     if (selectedEnvironment) {
-      const environmentData = models.environment.getDataFromKVPair(kvPairData);
+      const environmentData = getDataFromKVPair(kvPairData);
       updateEnvironmentFetcher.submit({
         organizationId,
         projectId,
@@ -484,7 +486,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                             });
                           };
                           const isValidJSON = !!environmentEditorRef.current?.isValid();
-                          handleToggleEnvironmentType(
+                          toggleEnvironmentType(
                             isSelected,
                             selectedEnvironment,
                             isValidJSON,

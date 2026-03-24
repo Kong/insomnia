@@ -72,6 +72,7 @@ export type HandleChannels =
   | 'git.listGitProviders'
   | 'git.initSignInToGitProvider'
   | 'git.completeSignInToGitProvider'
+  | 'git.updateSignInToGitProvider'
   | 'git.getGitProviderRepositories'
   | 'git.getGitProviderEmails'
   | 'grpc.loadMethods'
@@ -141,6 +142,7 @@ export const ipcMainHandle = (
 ) => ipcMain.handle(channel, listener);
 export type MainOnChannels =
   | 'addExecutionStep'
+  | 'analytics.setOrganizationId'
   | 'cancelCurlRequest'
   | 'clear'
   | 'completeExecutionStep'

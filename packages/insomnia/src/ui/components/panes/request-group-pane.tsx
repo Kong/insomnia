@@ -2,6 +2,8 @@ import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 
 import { type EnvironmentKvPairData, type EnvironmentType, models, type Settings } from '~/insomnia-data';
+import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
+import { getDataFromKVPair } from '~/utils/environment-utils';
 
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -11,7 +13,6 @@ import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { EnvironmentEditor, type EnvironmentEditorHandle } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
-import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -30,6 +31,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
   const headersCount = folderHeaders.filter(h => !h.disabled)?.length || 0;
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const patchGroup = useRequestGroupPatcher();
+  const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const saveChanges = () => {
     if (environmentEditorRef.current?.isValid()) {
@@ -49,7 +51,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
 
   const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
     if (activeRequestGroup) {
-      const environmentData = models.environment.getDataFromKVPair(kvPairData);
+      const environmentData = getDataFromKVPair(kvPairData);
       patchGroup(activeRequestGroup._id, {
         environment: environmentData.data,
         environmentPropertyOrder: environmentData.dataPropertyOrder,
@@ -207,7 +209,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                     };
                     const { environment, environmentPropertyOrder, kvPairData } = activeRequestGroup;
                     const isValidJSON = !!environmentEditorRef.current?.isValid();
-                    handleToggleEnvironmentType(
+                    toggleEnvironmentType(
                       isSelected,
                       { data: environment, dataPropertyOrder: environmentPropertyOrder, kvPairData },
                       isValidJSON,

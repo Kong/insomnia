@@ -9,13 +9,18 @@ import { services } from '~/insomnia-data';
 
 import {
   getApiBaseURL,
-  getAppPlatform,
   getAppVersion,
   getClientString,
   getProductName,
   getSegmentWriteKey,
   PLAYWRIGHT,
 } from '../common/constants';
+import { platform } from '../common/platform';
+let _currentOrganizationId: string | undefined;
+
+export function setCurrentOrganizationId(id: string | undefined): void {
+  _currentOrganizationId = id;
+}
 
 const analytics = new Analytics({
   writeKey: getSegmentWriteKey(),
@@ -61,6 +66,7 @@ export enum SegmentEvent {
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
   gitAuthenticationCompleted = 'Git Authentication Completed',
+  gitAuthenticationUpdated = 'Git Authentication Updated',
   buttonClick = 'Button Clicked',
   aiFeatureEnabled = 'AI Feature Enabled',
   aiFeatureDisabled = 'AI Feature Disabled',
@@ -70,10 +76,6 @@ export enum SegmentEvent {
   mcpResourceRead = 'MCP Resource Read',
   mcpPromptCalled = 'MCP Prompt Called',
   installPlugin = 'Plugin Installed',
-
-  // TODO(INS-1912): Remove in 12.5
-  tempOrganizationOpened = 'temp_organization_opened',
-  tempProjectOpened = 'temp_project_opened',
 }
 
 function hashString(input: string) {
@@ -102,6 +104,7 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
         {
           event,
           properties: {
+            ...(_currentOrganizationId && { organization_id: _currentOrganizationId }),
             ...properties,
             platform: 'app',
           },
@@ -177,7 +180,6 @@ export async function trackPageView(name: string) {
 // Private Functions //
 // ~~~~~~~~~~~~~~~~~ //
 function _getOsName() {
-  const platform = getAppPlatform();
   switch (platform) {
     case 'darwin': {
       return 'mac';

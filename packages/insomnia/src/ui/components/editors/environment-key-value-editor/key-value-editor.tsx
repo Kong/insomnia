@@ -15,16 +15,17 @@ import {
 
 import { type EnvironmentKvPairData, type EnvironmentKvPairDataType, models } from '~/insomnia-data';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
 import { base64decode } from '../../../../utils/vault';
+import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import { showModal } from '../../modals';
 import { AskModal } from '../../modals/ask-modal';
 import { CodePromptModal, type CodePromptModalHandle } from '../../modals/code-prompt-modal';
 import { Tooltip } from '../../tooltip';
-import { checkNestedKeys, ensureKeyIsValid } from '../environment-utils';
 import { PasswordInput } from './password-input';
 
 interface EditorProps {
@@ -170,13 +171,13 @@ export const EnvironmentKVEditor = ({
             if (yes) {
               handleItemChange(id, 'type', newType);
               // decrypt and save the value
-              handleItemChange(id, 'value', models.environment.decryptSecretValue(originValue, symmetricKey));
+              handleItemChange(id, 'value', decryptSecretValue(originValue, symmetricKey));
             }
           },
         });
       } else if (newType === models.environment.EnvironmentKvPairDataType.SECRET) {
         // encrypt value if set to secret type
-        handleItemChange(id, 'value', models.environment.encryptSecretValue(originValue, symmetricKey));
+        handleItemChange(id, 'value', encryptSecretValue(originValue, symmetricKey));
         handleItemChange(id, 'type', newType);
       } else {
         handleItemChange(id, 'type', newType);
@@ -308,9 +309,9 @@ export const EnvironmentKVEditor = ({
               itemId={id}
               enabled={enabled && !disabled}
               placeholder="Input Secret"
-              value={models.environment.decryptSecretValue(value, symmetricKey)}
+              value={decryptSecretValue(value, symmetricKey)}
               onChange={newValue => {
-                const encryptedValue = models.environment.encryptSecretValue(newValue, symmetricKey);
+                const encryptedValue = encryptSecretValue(newValue, symmetricKey);
                 handleItemChange(id, 'value', encryptedValue);
               }}
             />

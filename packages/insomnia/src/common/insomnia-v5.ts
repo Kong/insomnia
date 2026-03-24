@@ -41,6 +41,7 @@ import {
   type Workspace,
   type WorkspaceScope,
 } from '~/insomnia-data';
+import { maskVaultEnvironmentData } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 
 import { database } from './database';
@@ -981,7 +982,7 @@ export async function getInsomniaV5DataExport({
         },
         data: baseEnvironment.data,
         color: baseEnvironment.color,
-        subEnvironments: subEnvironments.map(models.environment.maskVaultEnvironmentData).map(subEnvironment => ({
+        subEnvironments: subEnvironments.map(maskVaultEnvironmentData).map(subEnvironment => ({
           name: subEnvironment.name,
           meta: {
             id: subEnvironment._id,

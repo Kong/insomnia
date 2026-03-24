@@ -25,6 +25,7 @@ import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { Button } from '~/ui/components/themed-button';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
+import { getDataFromKVPair } from '~/utils/environment-utils';
 
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
@@ -103,7 +104,7 @@ export const McpUrlActionBar = ({
         url: request.url,
         headers: request.headers,
         authentication: request.authentication,
-        env: models.environment.getDataFromKVPair(request.env).data,
+        env: getDataFromKVPair(request.env).data,
       },
     });
 
