@@ -363,7 +363,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 
     advanced = [scope, credentialsInBody, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_IMPLICIT) {
-    basic = [authorizationUrl, clientId, defaultRedirectUri];
+    basic = [authorizationUrl, clientId, defaultRedirectUri, useDefaultBrowser];
 
     advanced = [responseType, scope, state, tokenPrefix, audience];
   } else if (grantType === GRANT_TYPE_MCP_AUTH_FLOW) {
