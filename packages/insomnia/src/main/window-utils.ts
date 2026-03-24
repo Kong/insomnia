@@ -16,16 +16,9 @@ import {
   shell,
 } from 'electron';
 
-import {
-  getAppBuildDate,
-  getAppVersion,
-  getProductName,
-  isDevelopment,
-  isLinux,
-  isMac,
-  MNEMONIC_SYM,
-} from '../common/constants';
+import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
+import { isLinux, isMac } from '../common/platform';
 import { invariant } from '../utils/invariant';
 import ElectronStorage from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
@@ -447,7 +440,7 @@ export function createWindow(): ElectronBrowserWindow {
         role: 'minimize',
       },
       // @ts-expect-error -- TSCONVERSION missing in official electron types
-      ...(isMac()
+      ...(isMac
         ? [
             {
               label: `${MNEMONIC_SYM}Close`,
@@ -465,7 +458,7 @@ export function createWindow(): ElectronBrowserWindow {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Help and Support`,
-        ...(isMac() ? {} : { accelerator: 'F1' }),
+        ...(isMac ? {} : { accelerator: 'F1' }),
         click: () => {
           const { protocol } = new URL(docsBase);
           if (protocol === 'http:' || protocol === 'https:') {
@@ -518,7 +511,7 @@ export function createWindow(): ElectronBrowserWindow {
   const aboutMenuClickHandler = async () => {
     const copy = 'Copy';
     const ok = 'OK';
-    const buttons = isLinux() ? [copy, ok] : [ok, copy];
+    const buttons = isLinux ? [copy, ok] : [ok, copy];
     const detail = [
       `Version: ${getProductName()} ${getAppVersion()}`,
       `Build date: ${getAppBuildDate()}`,
@@ -546,7 +539,7 @@ export function createWindow(): ElectronBrowserWindow {
     }
   };
 
-  if (isMac()) {
+  if (isMac) {
     // @ts-expect-error -- TSCONVERSION type splitting
     applicationMenu.submenu?.unshift(
       {
@@ -684,7 +677,7 @@ export function createWindow(): ElectronBrowserWindow {
     template.push(developerMenu);
   }
 
-  if (isMac()) {
+  if (isMac) {
     Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   } else {
     // setMenu only works for Windows and Linux

@@ -13,7 +13,7 @@ declare global {
     // This is a temporary measure to provide access to services on the global window object. It will be removed in the future once all usages are updated to import services directly from the insomnia-data package.
     _dataServices?: Services;
     dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
-    app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
+    app: Pick<Electron.App, 'getPath' | 'getAppPath'> & { process: { platform: NodeJS.Platform } };
     shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;
     clipboard: Pick<Electron.Clipboard, 'readText' | 'writeText' | 'clear'>;
     webUtils: Pick<Electron.WebUtils, 'getPathForFile'>;
