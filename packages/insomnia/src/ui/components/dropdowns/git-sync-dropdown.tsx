@@ -14,6 +14,7 @@ import {
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { GitRepository } from '~/insomnia-data';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
@@ -22,7 +23,6 @@ import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
 
-import type { GitRepository } from '../../../models/git-repository';
 import type { MergeConflict } from '../../../sync/types';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';

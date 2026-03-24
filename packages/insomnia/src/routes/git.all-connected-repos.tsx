@@ -2,6 +2,7 @@ import type { Organization } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { userSession } from '~/models';
 import type { Project } from '~/models/project';
@@ -30,7 +31,7 @@ export async function clientLoader() {
   await Promise.all(
     allConnectedGitProjects.map(async ({ gitRepositoryId, name, parentId }) => {
       if (gitRepositoryId) {
-        const gitRepository = await models.gitRepository.getById(gitRepositoryId);
+        const gitRepository = await services.gitRepository.getById(gitRepositoryId);
         if (gitRepository) {
           gitRepoURIInfoMap[gitRepository.uri] = {
             organizationName: organizationMap[parentId]?.name || '',

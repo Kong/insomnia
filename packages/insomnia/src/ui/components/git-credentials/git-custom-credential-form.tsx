@@ -1,7 +1,7 @@
 import { Form } from 'react-aria-components';
 
 import { Button } from '~/basic-components/button';
-import type { CustomGitCredentialV2 } from '~/models/git-credentials';
+import type { CustomGitCredentialV2 } from '~/insomnia-data';
 import { useGitCredentialsUpdateActionFetcher } from '~/routes/git-credentials.$id.update';
 import { useGitCredentialsCreateActionFetcher } from '~/routes/git-credentials.create';
 import { Input } from '~/ui/components/base/input';
@@ -96,7 +96,7 @@ export const GitCustomCredentialForm = ({
           defaultValue={gitCredentialToEdit?.credentials?.baseURI}
         />
       </div>
-      <div className="flex gap-2">
+      <div className="mt-2 flex justify-end gap-2">
         <Button primary type="submit">
           {isEditing ? 'Update Credential' : 'Save Credential'}
         </Button>

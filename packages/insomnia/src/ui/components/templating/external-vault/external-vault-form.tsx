@@ -1,12 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import { type CloudProviderCredential, type CloudProviderName, models } from '~/insomnia-data';
+
 import { debounce } from '../../../../common/misc';
-import {
-  type CloudProviderCredential,
-  type CloudProviderName,
-  type as cloudCredentialType,
-} from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
 import { CloudCredentialModal } from '../../modals/cloud-credential-modal/cloud-credential-modal';
 import type { ArgConfigFormProps } from '../tag-editor-arg-sub-form';
@@ -21,6 +18,8 @@ import type {
   GCPSecretConfig,
   HashiCorpSecretConfig,
 } from './types';
+
+const cloudCredentialType = models.cloudCredential.type;
 
 export const ExternalVaultForm = (props: ArgConfigFormProps) => {
   const { onChange, configValue, activeTagData, docs } = props;
