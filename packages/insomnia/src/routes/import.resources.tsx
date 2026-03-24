@@ -103,21 +103,20 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     // example: GET,https://rest.rodeo/api
     if (data.endpoint && Array.isArray(importedWorkspaces) && importedWorkspaces.length > 0) {
       const [method, path] = data.endpoint.split(',', 2);
-      if (!method || !path) {
-        return { done: false };
-      }
-      for (const ws of importedWorkspaces) {
-        invariant(ws, 'Workspace not found');
-        if (ws.scope !== 'design') continue;
-        const allDocs = await db.getWithDescendants(ws, [requestType]);
-        const match = allDocs.find(d => {
-          if (!isRequest(d) || d.method.toUpperCase() !== method.toUpperCase()) {
-            return false;
+      if (method && path) {
+        for (const ws of importedWorkspaces) {
+          invariant(ws, 'Workspace not found');
+          if (ws.scope !== 'design') continue;
+          const allDocs = await db.getWithDescendants(ws, [requestType]);
+          const match = allDocs.find(d => {
+            if (!isRequest(d) || d.method.toUpperCase() !== method.toUpperCase()) {
+              return false;
+            }
+            return d.url.toLowerCase().endsWith(path.toLowerCase());
+          });
+          if (match && isRequest(match)) {
+            return { done: true, singleImportedWorkspace: ws, singleImportedRequest: match };
           }
-          return d.url.toLowerCase().endsWith(path.toLowerCase());
-        });
-        if (match && isRequest(match)) {
-          return { done: true, singleImportedWorkspace: ws, singleImportedRequest: match };
         }
       }
     }
