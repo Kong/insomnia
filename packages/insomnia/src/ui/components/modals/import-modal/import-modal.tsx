@@ -423,24 +423,24 @@ export const ImportModal: FC<ImportModalProps> = ({
     </OverlayContainer>
   );
 };
-export const validateCurl = async (value: string) => {
+export const validateCurl = async (value: string): Promise<{ isValid: boolean; message: string }> => {
   if (!value) {
-    return '';
+    return { isValid: false, message: 'Invalid cURL request' };
   }
   try {
     const { data } = await window.main.parseImport({ contentStr: value }, { importerId: 'curl' });
     const importedRequest = data?.resources?.[0];
     return importedRequest.url
-      ? `Detected ${importedRequest.method} request to ${importedRequest.url}`
-      : 'Invalid cURL request';
+      ? { isValid: true, message: `Detected ${importedRequest.method} request to ${importedRequest.url}` }
+      : { isValid: false, message: 'Invalid cURL request' };
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : String(error);
     const cleanedMessage = rawMessage.replace("Error invoking remote method 'parseImport': Error: ", '');
     const finalMessage = rawMessage.includes('No importers found for file') ? 'Invalid cURL request' : cleanedMessage;
     console.log('[importer] error', finalMessage);
     return finalMessage.includes('No importers found for file')
-      ? 'Invalid cURL request'
-      : finalMessage.replace("Error invoking remote method 'parseImport': Error: ", '');
+      ? { isValid: false, message: 'Invalid cURL request' }
+      : { isValid: false, message: finalMessage.replace("Error invoking remote method 'parseImport': Error: ", '') };
   }
 };
 const ScanResourcesForm = ({
@@ -462,7 +462,7 @@ const ScanResourcesForm = ({
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      const msg = await validateCurl(from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
+      const { message: msg } = await validateCurl(from?.type === 'curl' && from.defaultValue ? from.defaultValue : '');
       isMounted && setMessage(msg);
     };
     fn();
@@ -551,7 +551,7 @@ const ScanResourcesForm = ({
                   placeholder="curl --request GET --url http://insomnia.rest/"
                   onChange={async event => {
                     const { value } = event.target;
-                    const msg = await validateCurl(value);
+                    const { message: msg } = await validateCurl(value);
                     setMessage(msg);
                   }}
                 />

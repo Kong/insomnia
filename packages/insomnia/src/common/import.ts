@@ -172,6 +172,8 @@ export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
   proto_directory: 'ProtoDirectory',
 };
 
+export { mcpUrlToInsomniaV5Yaml } from './insomnia-v5';
+
 export async function scanResources(importEntries: ImportEntry[]): Promise<ScanResult[]> {
   resourceCacheList = [];
   const results = await Promise.allSettled(
@@ -795,34 +797,6 @@ export function pathPatternMatches(pattern: string, concretePath: string): boole
     }
     return segment.toLowerCase() === pathSuffix[i].toLowerCase();
   });
-}
-
-export async function findExistingRequestByMethodAndUrl(
-  projectId: string,
-  method: string,
-  url: string,
-): Promise<{ workspace: Workspace; request: Request } | undefined> {
-  let concretePath: string;
-  try {
-    concretePath = new URL(url).pathname;
-  } catch {
-    return undefined;
-  }
-  const workspaces = await models.workspace.findByParentId(projectId);
-  const workspacesWithRequests = workspaces.filter(w => w.scope === 'collection' || w.scope === 'design');
-  for (const ws of workspacesWithRequests) {
-    const allDocs = await db.getWithDescendants(ws, [models.request.type]);
-    const requests = allDocs.filter(isRequest);
-    const match = requests.find(
-      r =>
-        r.method.toUpperCase() === method.toUpperCase() &&
-        pathPatternMatches(getPathFromRequestUrl(r.url), concretePath),
-    );
-    if (match && isRequest(match)) {
-      return { workspace: ws, request: match };
-    }
-  }
-  return undefined;
 }
 
 export async function findRequestInExistingWorkspace(

@@ -7,6 +7,7 @@ import {
   fetchImportContentFromURI,
   getFilesFromPostmanExportedDataDump,
   IMPORT_SOURCE_TYPES,
+  mcpUrlToInsomniaV5Yaml,
   scanResources,
 } from '~/common/import';
 import type { ImportEntry } from '~/main/importers/entities';
@@ -39,7 +40,6 @@ export const scanImportResources = async (data: {
   if (source === 'uri') {
     const { uri } = data;
     invariant(typeof uri === 'string' && uri.length, 'URI is required');
-
     contentList.push({
       contentStr: await fetchImportContentFromURI({ uri }),
       oriFileName: uri,
@@ -53,18 +53,10 @@ export const scanImportResources = async (data: {
   } else if (source === 'mcp') {
     const { mcp } = data;
     invariant(typeof mcp === 'string' && mcp.length, 'MCP server URL is required');
-    const url = mcp.trim();
-    const isHttp = /^https?:\/\//i.test(url);
-    invariant(isHttp, 'MCP server URL must use http or https');
-    const escapedUrl = url.replace(/"/g, '\\"');
-    const yamlStr = `type: mcpClient.insomnia/5.0
-name: Imported MCP Client
-mcpRequest:
-  url: "${escapedUrl}"
-  transportType: streamable-http
-`;
+    const importYaml = mcpUrlToInsomniaV5Yaml(mcp);
+    invariant(importYaml, 'Failed to convert MCP URL to Insomnia v5 YAML');
     contentList.push({
-      contentStr: yamlStr,
+      contentStr: importYaml,
       oriFileName: 'mcp',
     });
   } else if (source === 'file') {

@@ -2,82 +2,114 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
 
 import { environment, project, request, requestGroup, workspace } from '../../models';
 import { EnvironmentKvPairDataType } from '../../models/environment';
 import * as importUtil from '../import';
+import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
+import { tryImportV5Data } from '../insomnia-v5';
 import { generateId } from '../misc';
-
-function pathPatternMatches(pattern: string, concretePath: string): boolean {
-  if (!pattern || pattern.length > 200) {
-    return false;
-  }
-  if (pattern === concretePath) {
-    return true;
-  }
-  const patternSegments = pattern.split('/').filter(Boolean);
-  const pathSegments = concretePath.split('/').filter(Boolean);
-  if (patternSegments.length > pathSegments.length) {
-    return false;
-  }
-  const offset = pathSegments.length - patternSegments.length;
-  const pathSuffix = pathSegments.slice(offset);
-  return patternSegments.every((segment, i) => {
-    if (segment.startsWith(':')) {
-      return pathSuffix[i].length > 0;
-    }
-    return segment.toLowerCase() === pathSuffix[i].toLowerCase();
-  });
-}
 
 describe('pathPatternMatches', () => {
   it('should match exact paths', () => {
-    expect(pathPatternMatches('/users', '/users')).toBe(true);
-    expect(pathPatternMatches('/users/list', '/users/list')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users', '/users')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users/list', '/users/list')).toBe(true);
   });
 
   it('should not match different paths', () => {
-    expect(pathPatternMatches('/users', '/user')).toBe(false);
-    expect(pathPatternMatches('/users', '/users/123')).toBe(false);
-    expect(pathPatternMatches('/users/list', '/users')).toBe(false);
+    expect(importUtil.pathPatternMatches('/users', '/user')).toBe(false);
+    expect(importUtil.pathPatternMatches('/users', '/users/123')).toBe(false);
+    expect(importUtil.pathPatternMatches('/users/list', '/users')).toBe(false);
   });
 
   it('should match paths with path parameters', () => {
-    expect(pathPatternMatches('/users/:id', '/users/123')).toBe(true);
-    expect(pathPatternMatches('/users/:userId/orders/:orderId', '/users/abc/orders/xyz')).toBe(true);
-    expect(pathPatternMatches('/api/:version/resource', '/api/v1/resource')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users/:id', '/users/123')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users/:userId/orders/:orderId', '/users/abc/orders/xyz')).toBe(true);
+    expect(importUtil.pathPatternMatches('/api/:version/resource', '/api/v1/resource')).toBe(true);
   });
 
   it('should not match when path param is empty', () => {
-    expect(pathPatternMatches('/users/:id', '/users/')).toBe(false);
-    expect(pathPatternMatches('/users/:id', '/users')).toBe(false);
+    expect(importUtil.pathPatternMatches('/users/:id', '/users/')).toBe(false);
+    expect(importUtil.pathPatternMatches('/users/:id', '/users')).toBe(false);
   });
 
   it('should be case insensitive for static segments', () => {
-    expect(pathPatternMatches('/Users', '/users')).toBe(true);
-    expect(pathPatternMatches('/USERS/LIST', '/users/list')).toBe(true);
-    expect(pathPatternMatches('/api/v1', '/API/V1')).toBe(true);
+    expect(importUtil.pathPatternMatches('/Users', '/users')).toBe(true);
+    expect(importUtil.pathPatternMatches('/USERS/LIST', '/users/list')).toBe(true);
+    expect(importUtil.pathPatternMatches('/api/v1', '/API/V1')).toBe(true);
   });
 
   it('should handle empty pattern', () => {
-    expect(pathPatternMatches('', '/users')).toBe(false);
+    expect(importUtil.pathPatternMatches('', '/users')).toBe(false);
   });
 
   it('should reject patterns over 200 characters', () => {
     const longPattern = '/' + 'a'.repeat(200);
-    expect(pathPatternMatches(longPattern, '/aaaa')).toBe(false);
+    expect(importUtil.pathPatternMatches(longPattern, '/aaaa')).toBe(false);
   });
 
   it('should match paths with different segment counts (prefix matching)', () => {
-    expect(pathPatternMatches('/basic', '/v1/basic')).toBe(true);
-    expect(pathPatternMatches('/users', '/api/v1/users')).toBe(true);
-    expect(pathPatternMatches('/key/header', '/v1/key/header')).toBe(true);
+    expect(importUtil.pathPatternMatches('/basic', '/v1/basic')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users', '/api/v1/users')).toBe(true);
+    expect(importUtil.pathPatternMatches('/key/header', '/v1/key/header')).toBe(true);
   });
 
   it('should handle leading slashes consistently', () => {
-    expect(pathPatternMatches('users', 'users')).toBe(true);
-    expect(pathPatternMatches('users', '/users')).toBe(true);
-    expect(pathPatternMatches('/users', 'users')).toBe(true);
+    expect(importUtil.pathPatternMatches('users', 'users')).toBe(true);
+    expect(importUtil.pathPatternMatches('users', '/users')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users', 'users')).toBe(true);
+  });
+});
+
+describe('mcpUrlToInsomniaV5Yaml', () => {
+  it('should produce YAML matching the MCP client export shape (schema_version, mcpRequest)', () => {
+    const yaml = importUtil.mcpUrlToInsomniaV5Yaml('https://example.com/mcp?x=1#y');
+    const doc = parse(yaml) as Record<string, unknown>;
+    expect(doc).toMatchObject({
+      type: 'mcpClient.insomnia/5.0',
+      schema_version: INSOMNIA_SCHEMA_VERSION,
+      name: 'Imported MCP Client',
+      mcpRequest: {
+        name: 'Imported MCP Client',
+        url: 'https://example.com/mcp?x=1#y',
+        transportType: 'streamable-http',
+      },
+    });
+  });
+
+  it.each([
+    ['https://example.com'],
+    ['https://example.com/mcp'],
+    ['https://example.com/mcp?param=value'],
+    ['https://example.com/mcp#fragment'],
+    ['http://examples.com/mcp'],
+  ])('should embed the MCP URL %s in mcpRequest.url', url => {
+    const doc = parse(importUtil.mcpUrlToInsomniaV5Yaml(url)) as { mcpRequest: { url: string } };
+    expect(doc.mcpRequest.url).toBe(url);
+  });
+
+  it('should throw an error if the MCP URL is not a valid HTTP URL', () => {
+    expect(() => importUtil.mcpUrlToInsomniaV5Yaml('ftp://example.com')).toThrow(
+      'MCP server URL must use http or https',
+    );
+    expect(() => importUtil.mcpUrlToInsomniaV5Yaml('not-a-url')).toThrow('Invalid URL: not-a-url');
+  });
+
+  it('escape sequences in the MCP URL are unmodified', () => {
+    const cases = ['https://example.com/foo\\nbar', 'https://example.com/foo\\tbar'] as const;
+    for (const input of cases) {
+      const yaml = importUtil.mcpUrlToInsomniaV5Yaml(input);
+      const doc = parse(yaml) as { mcpRequest: { url: string } };
+      expect(doc.mcpRequest.url).toBe(input);
+    }
+  });
+
+  it('should be accepted by the v5 importer', () => {
+    const yaml = importUtil.mcpUrlToInsomniaV5Yaml('https://example.com/mcp');
+    const { data, error } = tryImportV5Data(yaml);
+    expect(error).toBeUndefined();
+    expect(data.length).toBeGreaterThan(0);
   });
 });
 
@@ -449,77 +481,6 @@ describe('importRaw()', () => {
     expect(newKvPairData.filter(pair => !pair.enabled).length).toBe(2);
     expect(newKvPairData.find(pair => pair.name === 'from' && pair.enabled)?.value).toBe('baseEnv');
     expect(newKvPairData.find(pair => pair.name === 'foo')?.value).toBe('bar');
-  });
-
-  it('should find existing request by method and url matching OpenAPI path params', async () => {
-    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
-    const content = fs.readFileSync(fixturePath, 'utf8').toString();
-
-    const projectToImportTo = await project.create();
-
-    const scanResult = await importUtil.scanResources([
-      {
-        contentStr: content,
-      },
-    ]);
-
-    expect(scanResult[0].type?.id).toBe('openapi3');
-    expect(scanResult[0].errors.length).toBe(0);
-
-    await importUtil.importResourcesToProject({
-      projectId: projectToImportTo._id,
-    });
-
-    const workspaces = await workspace.findByParentId(projectToImportTo._id);
-    expect(workspaces).toHaveLength(1);
-    const requests = await request.findByParentId(workspaces[0]._id);
-    expect(requests.length).toBeGreaterThan(0);
-
-    const result = await importUtil.findExistingRequestByMethodAndUrl(
-      projectToImportTo._id,
-      'GET',
-      'https://api.server.test/v1/key/header',
-    );
-    expect(result).toBeDefined();
-    expect(result?.request.url).toContain('/key/header');
-  });
-
-  it('should find existing request by method and url with path parameters', async () => {
-    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
-    const content = fs.readFileSync(fixturePath, 'utf8').toString();
-
-    const projectToImportTo = await project.create();
-
-    await importUtil.scanResources([{ contentStr: content }]);
-    await importUtil.importResourcesToProject({ projectId: projectToImportTo._id });
-
-    const workspaces = await workspace.findByParentId(projectToImportTo._id);
-    const requests = await request.findByParentId(workspaces[0]._id);
-
-    const result = await importUtil.findExistingRequestByMethodAndUrl(
-      projectToImportTo._id,
-      'GET',
-      'https://api.server.test/v1/basic',
-    );
-    expect(result).toBeDefined();
-    expect(result?.request.method).toBe('GET');
-  });
-
-  it('should return undefined when no matching request found', async () => {
-    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
-    const content = fs.readFileSync(fixturePath, 'utf8').toString();
-
-    const projectToImportTo = await project.create();
-
-    await importUtil.scanResources([{ contentStr: content }]);
-    await importUtil.importResourcesToProject({ projectId: projectToImportTo._id });
-
-    const result = await importUtil.findExistingRequestByMethodAndUrl(
-      projectToImportTo._id,
-      'POST',
-      'https://api.server.test/v1/none',
-    );
-    expect(result).toBeUndefined();
   });
 
   it('should resolve operationId to method and name', async () => {
