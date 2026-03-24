@@ -68,6 +68,7 @@ export enum SegmentEvent {
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
   gitAuthenticationCompleted = 'Git Authentication Completed',
+  gitAuthenticationUpdated = 'Git Authentication Updated',
   buttonClick = 'Button Clicked',
   aiFeatureEnabled = 'AI Feature Enabled',
   aiFeatureDisabled = 'AI Feature Disabled',
