@@ -101,8 +101,6 @@ function setEditorValueWithTruncation(
       lines[i] = lines[i].slice(0, LONG_LINE_VISIBLE_CHARS) + lines[i].slice(-LONG_LINE_VISIBLE_CHARS);
     }
   }
-  editor.setValue(lines.join('\n'));
-
   const makeToggleWidget = (lineNum: number, originalText: string): HTMLSpanElement => {
     const el = document.createElement('span');
     el.className = 'line-collapse-widget';
@@ -124,13 +122,17 @@ function setEditorValueWithTruncation(
     return el;
   };
 
-  Object.keys(longLinesMap).forEach(lineStr => {
-    const lineNum = Number.parseInt(lineStr, 10);
-    const originalText = longLinesMap[lineNum];
-    editor.setBookmark(
-      { line: lineNum, ch: LONG_LINE_VISIBLE_CHARS },
-      { widget: makeToggleWidget(lineNum, originalText), insertLeft: true },
-    );
+  // Perform the editor update in a single operation to minimize reflows y
+  editor.operation(() => {
+    editor.setValue(lines.join('\n'));
+    Object.keys(longLinesMap).forEach(lineStr => {
+      const lineNum = Number.parseInt(lineStr, 10);
+      const originalText = longLinesMap[lineNum];
+      editor.setBookmark(
+        { line: lineNum, ch: LONG_LINE_VISIBLE_CHARS },
+        { widget: makeToggleWidget(lineNum, originalText), insertLeft: true },
+      );
+    });
   });
 }
 
