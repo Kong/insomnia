@@ -61,14 +61,14 @@ const deleteSecret = async (key: string) => {
   }
 };
 
-const encryptString = (raw: string) => {
+export const encryptString = (raw: string) => {
   if (safeStorage.isEncryptionAvailable()) {
     return safeStorage.encryptString(raw).toString('hex');
   }
   return raw;
 };
 
-const decryptString = (cipherText: string) => {
+export const decryptString = (cipherText: string) => {
   const buffer = Buffer.from(cipherText, 'hex');
   if (safeStorage.isEncryptionAvailable()) {
     try {
