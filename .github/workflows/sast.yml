@@ -23,5 +23,5 @@ jobs:
     if: (github.actor != 'dependabot[bot]')
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: Kong/public-shared-actions/security-actions/semgrep@a18abf762d6e2444bcbfd20de70451ea1e3bc1b1 # 4.0.1

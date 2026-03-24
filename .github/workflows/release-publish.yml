@@ -36,14 +36,14 @@ jobs:
       packages: write
     steps:
       - name: Checkout branch # Check out the release branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'

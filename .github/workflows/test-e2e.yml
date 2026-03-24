@@ -21,10 +21,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -45,7 +45,7 @@ jobs:
         run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
 
       - name: Upload smoke test
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: ignore

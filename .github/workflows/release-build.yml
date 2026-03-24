@@ -58,10 +58,10 @@ jobs:
           #   csc_key_password_secret: ''
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -329,7 +329,7 @@ jobs:
           SYFT_SOURCE_NAME: ${{ env.INSO_DOCKER_TAR }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: ignore
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
@@ -347,7 +347,7 @@ jobs:
             packages/insomnia-inso/artifacts/*
 
       - name: Upload source assets for Sentry
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ runner.os }}-${{ runner.arch }}-sentry
           path: |

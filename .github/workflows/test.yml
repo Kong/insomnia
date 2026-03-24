@@ -25,10 +25,10 @@ jobs:
       packages: read
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Setup Node (PR merge tree)
-        uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -53,14 +53,14 @@ jobs:
 
       - name: Checkout base branch (cycle comparison)
         if: github.event_name == 'pull_request' && always()
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           path: insomnia-base
 
       - name: Setup Node (base branch tree)
         if: github.event_name == 'pull_request' && always()
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: insomnia-base/.nvmrc
           cache: npm

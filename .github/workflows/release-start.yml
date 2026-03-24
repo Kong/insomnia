@@ -22,14 +22,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: develop
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -75,7 +75,7 @@ jobs:
           branch: ${{ env.RELEASE_BRANCH }}
 
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           persist-credentials: false
