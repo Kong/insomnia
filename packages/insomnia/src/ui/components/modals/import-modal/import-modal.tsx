@@ -5,7 +5,6 @@ import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } 
 import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
-import { parseApiSpec } from '~/common/api-specs';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { scopeToActivity } from '~/models/workspace';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
@@ -215,6 +214,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       return;
     }
     modalRef.current?.show();
+    // the only import types that can be auto-scanned are uri (spec), curl, and mcp
     if (autoScan && !scanResourcesFetcherData && scanResourcesFetcher.state === 'idle') {
       const fd: FormData = new FormData();
       fd.append('source', from.type);
@@ -457,7 +457,6 @@ const ScanResourcesForm = ({
   const id = useId();
   const [selectedTab, setSelectedTab] = useState(from?.type || 'uri');
   const [message, setMessage] = useState('');
-  const [mcpUrl, setMcpUrl] = useState(from?.type === 'mcp' ? (from.defaultValue ?? '') : '');
 
   useEffect(() => {
     let isMounted = true;
@@ -470,13 +469,7 @@ const ScanResourcesForm = ({
       isMounted = false;
     };
   }, [from]);
-  useEffect(() => {
-    if (from?.type === 'mcp' && from.defaultValue !== undefined) {
-      setMcpUrl(from.defaultValue);
-    }
-  }, [from?.type, from?.defaultValue]);
   const isValidCurl = (selectedTab === 'curl' && message && message.startsWith('Detected')) || selectedTab !== 'curl';
-  const isValidMcp = selectedTab !== 'mcp' || (mcpUrl && mcpUrl.trim().length > 0);
   return (
     <Fragment>
       <div className="flex flex-col overflow-y-auto">
@@ -565,8 +558,7 @@ const ScanResourcesForm = ({
                 <input
                   type="text"
                   name="mcp"
-                  value={mcpUrl}
-                  onChange={e => setMcpUrl(e.target.value)}
+                  defaultValue={from?.type === 'mcp' && from.defaultValue ? from.defaultValue : ''}
                   placeholder="https://mcp.example.com/mcp"
                 />
               </label>
@@ -604,7 +596,7 @@ const ScanResourcesForm = ({
       <div className="flex items-end justify-between gap-(--padding-sm)">
         <SupportedFormats />
         <Button
-          isDisabled={!isValidCurl || !isValidMcp}
+          isDisabled={!isValidCurl}
           variant="contained"
           bg="surprise"
           type="submit"
@@ -618,6 +610,8 @@ const ScanResourcesForm = ({
     </Fragment>
   );
 };
+
+const DEFAULT_NEW_PROJECT_NAME = 'New Project';
 
 const ImportResourcesForm = ({
   onImport,
@@ -649,26 +643,14 @@ const ImportResourcesForm = ({
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId || '');
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
-  const defaultProjectName = useMemo(() => {
+  const [newProjectName, setNewProjectName] = useState(() => {
     for (const result of scanResults) {
-      if (result.apiSpecs?.length) {
-        const spec = result.apiSpecs[0];
-        try {
-          const parsed = parseApiSpec(spec.contents);
-          const info = parsed.contents?.info;
-          if (info && typeof info === 'object' && typeof info.title === 'string') {
-            return info.title;
-          }
-        } catch {}
-        return spec.fileName;
+      if (isApiSpecScanResult(result)) {
+        return result.workspaces?.[0]?.name || result.apiSpecs?.[0]?.name || DEFAULT_NEW_PROJECT_NAME;
       }
     }
-    return '';
-  }, [scanResults]);
-  const [newProjectName, setNewProjectName] = useState(defaultProjectName);
-  useEffect(() => {
-    setNewProjectName(defaultProjectName);
-  }, [defaultProjectName]);
+    return DEFAULT_NEW_PROJECT_NAME;
+  });
   useEffect(() => {
     const isIdle = workspacesFetcher.state === 'idle';
     const hasFetchedSelectedProject = selectedProjectId === workspacesFetcher?.data?.activeProject._id;
@@ -758,11 +740,9 @@ const ImportResourcesForm = ({
               </div>
             </div>
           )}
-          {origin && (
-            <div className="mt-4 w-full items-center gap-4 text-wrap outline-hidden">
-              ⚠️ Make sure that you trust the import source before continuing.
-            </div>
-          )}
+          <div className="mt-4 w-full items-center gap-4 text-wrap outline-hidden">
+            ⚠️ Make sure that you trust the import source before continuing.
+          </div>
           {isImportingBaseEnvironmentToWorkspace && (
             <Checkbox
               isSelected={overrideBaseEnvironmentData}

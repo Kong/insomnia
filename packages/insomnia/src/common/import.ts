@@ -242,14 +242,11 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           return { ...model, type: MODELS_BY_EXPORT_TYPE[_type] };
         });
 
-      const isDuplicateContent = resourceCacheList.some(c => c.content === contentStr);
-      if (!isDuplicateContent) {
-        resourceCacheList.push({
-          resources,
-          importer: type,
-          content: contentStr,
-        });
-      }
+      resourceCacheList.push({
+        resources,
+        importer: type,
+        content: contentStr,
+      });
 
       const requests = resources.filter(isRequest);
       const requestGroups = resources.filter(isRequestGroup);

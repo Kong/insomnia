@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
+import { type ProjectScopeKeys, scopeToLabelMap } from '~/common/get-workspace-label';
 import type { ScanResult } from '~/common/import';
 
 export const validImportExtensions = [
@@ -181,14 +182,6 @@ export const SupportedFormats = () => {
   );
 };
 
-const WORKSPACE_SCOPE_LABELS: Record<string, { singular: string; plural: string }> = {
-  'mcp': { singular: 'MCP Client', plural: 'MCP Clients' },
-  'design': { singular: 'Document', plural: 'Documents' },
-  'collection': { singular: 'Collection', plural: 'Collections' },
-  'environment': { singular: 'Environment', plural: 'Environments' },
-  'mock-server': { singular: 'Mock Server', plural: 'Mock Servers' },
-};
-
 export function isApiSpecScanResult(scanResult: ScanResult) {
   return (
     (scanResult.apiSpecs?.length ?? 0) > 0 || scanResult.type?.id === 'openapi3' || scanResult.type?.id === 'swagger2'
@@ -271,10 +264,8 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
                     getWorkspaceCountsByScope(scanResult.workspaces, scanResult).map(({ scope, count }) => (
                       <tr key={scope} className="table--no-outline-row">
                         <td>
-                          {count}{' '}
-                          {count === 1
-                            ? (WORKSPACE_SCOPE_LABELS[scope]?.singular ?? 'Workspace')
-                            : (WORKSPACE_SCOPE_LABELS[scope]?.plural ?? 'Workspaces')}
+                          {count} {scopeToLabelMap[scope as ProjectScopeKeys] ?? 'Workspace'}
+                          {count > 1 ? 's' : ''}
                         </td>
                       </tr>
                     ))}
