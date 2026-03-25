@@ -93,6 +93,7 @@ function setEditorValueWithTruncation(
   // split the original text by line with different line breaks across Different OS
   const lines = fullText.split(/\r\n?|\n/);
   const longLinesMap: Record<number, string> = {};
+  const markerMap = new Map<number, CodeMirror.TextMarker>();
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].length > threshold) {
       // save the original long line in a map for later restoration
@@ -112,6 +113,8 @@ function setEditorValueWithTruncation(
     el.title = 'Expanding long values can affect performance';
     el.setAttribute('aria-label', 'Show full value');
     el.onclick = () => {
+      // clear the marker and restore the original long line when the widget is clicked
+      markerMap.get(lineNum)?.clear();
       editor.replaceRange(
         originalText,
         { line: lineNum, ch: 0 },
@@ -128,10 +131,11 @@ function setEditorValueWithTruncation(
     Object.keys(longLinesMap).forEach(lineStr => {
       const lineNum = Number.parseInt(lineStr, 10);
       const originalText = longLinesMap[lineNum];
-      editor.setBookmark(
+      const editorMarker = editor.setBookmark(
         { line: lineNum, ch: LONG_LINE_VISIBLE_CHARS },
         { widget: makeToggleWidget(lineNum, originalText), insertLeft: true },
       );
+      markerMap.set(lineNum, editorMarker);
     });
   });
 }
