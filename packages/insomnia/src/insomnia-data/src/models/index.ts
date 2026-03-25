@@ -21,11 +21,17 @@ import * as protoDirectory from './proto-directory';
 import * as protoFile from './proto-file';
 import * as runnerTestResult from './runner-test-result';
 import * as settings from './settings';
+import * as socketIOPayload from './socket-io-payload';
+import * as socketIORequest from './socket-io-request';
+import * as socketIoResponse from './socket-io-response';
 import * as stats from './stats';
 import * as unitTest from './unit-test';
 import * as unitTestResult from './unit-test-result';
 import * as unitTestSuite from './unit-test-suite';
 import * as userSession from './user-session';
+import * as webSocketPayload from './websocket-payload';
+import * as webSocketRequest from './websocket-request';
+import * as webSocketResponse from './websocket-response';
 import * as workspace from './workspace';
 import * as workspaceMeta from './workspace-meta';
 
@@ -59,4 +65,10 @@ export const models = {
   unitTest,
   unitTestResult,
   unitTestSuite,
+  socketIOPayload,
+  socketIORequest,
+  socketIoResponse,
+  webSocketPayload,
+  webSocketRequest,
+  webSocketResponse,
 } as const;
