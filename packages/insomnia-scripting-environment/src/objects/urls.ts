@@ -281,12 +281,21 @@ export class Url extends PropertyBase {
     if (this.urlObject) {
       return this.urlObject.hostname;
     }
+    if (this.origin) {
+      // [^\/:] stops at ':' so the port is excluded (hostname only)
+      const match = this.origin.match(/^(?:https?:\/\/)?([^\/:]+)/i);
+      return match ? match[1] : '';
+    }
     return '';
   }
 
   getPath(_unresolved?: boolean) {
     if (this.urlObject) {
       return this.urlObject.pathname;
+    }
+    if (this.origin) {
+      const match = this.origin.match(/^(?:https?:\/\/[^\/]+)(\/[^?#]*)/i);
+      return match ? match[1] : '';
     }
     return '';
   }
@@ -308,6 +317,11 @@ export class Url extends PropertyBase {
   getRemote(_forcePort?: boolean) {
     if (this.urlObject) {
       return this.urlObject.host;
+    }
+    if (this.origin) {
+      // [^\/]+ (no colon exclusion) so the port is included, unlike getHost()
+      const match = this.origin.match(/^(?:https?:\/\/)?([^\/]+)/i);
+      return match ? match[1] : '';
     }
     return '';
   }
