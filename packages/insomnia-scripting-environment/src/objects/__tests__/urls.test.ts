@@ -106,6 +106,24 @@ describe('test Url object', () => {
     expect(urlNoPath.getHost()).toEqual('{{ host }}');
     expect(urlNoPath.getPath()).toEqual('');
     expect(urlNoPath.getRemote()).toEqual('{{ host }}');
+
+    // URL with query but no explicit path
+    const urlWithQueryNoPath = new Url('http://{{ host }}?q=1');
+    expect(urlWithQueryNoPath.getHost()).toEqual('{{ host }}');
+    expect(urlWithQueryNoPath.getPath()).toEqual('');
+    expect(urlWithQueryNoPath.getRemote()).toEqual('{{ host }}');
+
+    // URL with userinfo and template host
+    const urlWithUserInfoAndTagHost = new Url('http://user:pass@{{ host }}/p');
+    expect(urlWithUserInfoAndTagHost.getHost()).toEqual('{{ host }}');
+    expect(urlWithUserInfoAndTagHost.getPath()).toEqual('/p');
+    expect(urlWithUserInfoAndTagHost.getRemote()).toEqual('{{ host }}');
+
+    // Non-HTTP scheme with template host and port
+    const nonHttpUrlWithTagHostAndPort = new Url('grpc://{{ host }}:50051');
+    expect(nonHttpUrlWithTagHostAndPort.getHost()).toEqual('{{ host }}');
+    expect(nonHttpUrlWithTagHostAndPort.getPath()).toEqual('');
+    expect(nonHttpUrlWithTagHostAndPort.getRemote()).toEqual('{{ host }}:50051');
   });
 
   it('test Url static methods', () => {
