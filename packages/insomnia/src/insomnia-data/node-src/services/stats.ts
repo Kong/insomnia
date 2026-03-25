@@ -71,9 +71,9 @@ export async function incrementCreatedRequestsForDescendents(doc: Workspace | Re
     models.webSocketRequest.type,
     models.socketIORequest.type,
   ]);
-  const requests =
-    docs.filter(doc => isRequest(doc) || models.grpcRequest.isGrpcRequest(doc) || isWebSocketRequest(doc)) ||
-    isSocketIORequest(doc);
+  const requests = docs.filter(
+    doc => isRequest(doc) || models.grpcRequest.isGrpcRequest(doc) || isWebSocketRequest(doc) || isSocketIORequest(doc),
+  );
   await incrementRequestStats({
     createdRequests: requests.length,
   });
@@ -86,9 +86,9 @@ export async function incrementDeletedRequestsForDescendents(doc: Workspace | Re
     models.webSocketRequest.type,
     models.socketIORequest.type,
   ]);
-  const requests =
-    docs.filter(doc => isRequest(doc) || models.grpcRequest.isGrpcRequest(doc) || isWebSocketRequest(doc)) ||
-    isSocketIORequest(doc);
+  const requests = docs.filter(
+    doc => isRequest(doc) || models.grpcRequest.isGrpcRequest(doc) || isWebSocketRequest(doc) || isSocketIORequest(doc),
+  );
   await incrementRequestStats({
     deletedRequests: requests.length,
   });

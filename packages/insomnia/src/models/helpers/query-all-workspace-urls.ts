@@ -1,13 +1,16 @@
-import type { GrpcRequest, models } from '~/insomnia-data';
+import type { GrpcRequest } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import { invariant } from '../../utils/invariant';
 import type { Request, type as RequestType } from '../request';
 
+const grpcRequestType = models.grpcRequest.type;
+
 export const queryAllWorkspaceUrls = async (
   workspaceId: string,
-  reqType: typeof RequestType | typeof models.grpcRequest.type,
+  reqType: typeof RequestType | typeof grpcRequestType,
   reqId = 'n/a',
 ): Promise<string[]> => {
   const workspace = await services.workspace.getById(workspaceId);
