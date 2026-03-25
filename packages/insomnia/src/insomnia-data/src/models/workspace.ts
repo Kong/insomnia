@@ -1,9 +1,8 @@
 import type { Merge } from 'type-fest';
 
 import { strings } from '~/common/strings';
+import { services } from '~/insomnia-data';
 import type { BaseModel } from '~/models/types';
-
-// import { services } from '../services';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
