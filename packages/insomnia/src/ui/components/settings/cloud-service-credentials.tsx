@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
+import { type CloudProviderCredential, type CloudProviderName, models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
-import {
-  type CloudProviderCredential,
-  type CloudProviderName,
-  getProviderDisplayName,
-} from '../../../models/cloud-credential';
 import { executePluginMainAction } from '../../../plugins';
 import { getBundlePlugins } from '../../../plugins';
 import { usePlanData } from '../../hooks/use-plan';
@@ -21,6 +17,8 @@ import { SvgIcon } from '../svg-icon';
 import { Tooltip } from '../tooltip';
 import { UpgradeNotice } from '../upgrade-notice';
 import { NumberSetting } from './number-setting';
+
+const { getProviderDisplayName } = models.cloudCredential;
 
 interface createCredentialItemType {
   name: string;

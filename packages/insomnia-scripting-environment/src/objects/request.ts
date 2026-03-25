@@ -1,4 +1,3 @@
-import { type ClientCertificate, init as initClientCertificate } from 'insomnia/src/models/client-certificate';
 import type {
   Request as InsomniaRequest,
   RequestBody as InsomniaRequestBody,
@@ -7,6 +6,7 @@ import type {
 } from 'insomnia/src/models/request';
 
 import type { Settings } from '~/insomnia-data';
+import { type ClientCertificate, models } from '~/insomnia-data';
 
 import { type AuthOptions, type AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import type { CertificateOptions } from './certificates';
@@ -18,6 +18,8 @@ import { ProxyConfig, type ProxyConfigOptions } from './proxy-configs';
 import type { Url } from './urls';
 import { QueryParam, toUrlObject } from './urls';
 import type { Variable, VariableList } from './variables';
+
+const { init: initClientCertificate } = models.clientCertificate;
 
 export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'file' | 'graphql';
 

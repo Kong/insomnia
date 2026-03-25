@@ -16,7 +16,7 @@ import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import type { Settings } from '~/insomnia-data';
-import { userSession } from '~/models';
+import { services } from '~/insomnia-data';
 import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
 import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
@@ -55,7 +55,7 @@ export interface OrganizationLoaderData {
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id, accountId } = await userSession.getOrCreate();
+  const { id, accountId } = await services.userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfile;

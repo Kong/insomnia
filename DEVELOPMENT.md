@@ -13,7 +13,7 @@ There are a few more technologies and tools worth mentioning:
 - [`Electron Builder`](https://github.com/electron-userland/electron-builder) is used to help build, sign, and package Insomnia for distribution.
 - [`libcurl`](https://curl.se/libcurl/) is the library that Insomnia uses to make requests. We used libcurl as our HTTP client of choice because it allows the deepest amount of debuggability and control of HTTP requests.
 - [`NeDB`](https://github.com/louischatriot/nedb) a local in-memory database.
-- [`node-libcurl`](https://github.com/JCMais/node-libcurl) is a Node.js wrapper around the native libcurl library.
+- [`node-libcurl`](https://github.com/Kong/node-libcurl) is a Node.js wrapper around the native libcurl library.
 - [`CodeMirror`](https://codemirror.net/) is a web-based, extendable, code editor used for highlighting and linting of data formats like JSON, GraphQL, and XML.
 - [`Commander.js`](https://github.com/tj/commander.js) is used for building the Inso CLI.
 

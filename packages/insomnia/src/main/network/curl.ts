@@ -161,7 +161,7 @@ const openCurlConnection = async (
 
     const settings = await services.settings.get();
     const start = performance.now();
-    const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
+    const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'https:');
     const { curl, debugTimeline } = createConfiguredCurlInstance({
       req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },

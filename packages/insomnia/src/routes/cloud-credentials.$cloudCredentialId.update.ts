@@ -1,8 +1,7 @@
 import { href } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
-import * as models from '~/models';
-import type { CloudProviderCredential } from '~/models/cloud-credential';
+import { type CloudProviderCredential, services } from '~/insomnia-data';
 import { executePluginMainAction } from '~/plugins';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -29,7 +28,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     };
   }
   if (success) {
-    const originCredential = await models.cloudCredential.getById(cloudCredentialId);
+    const originCredential = await services.cloudCredential.getById(cloudCredentialId);
     invariant(originCredential, 'No Cloud Credential found');
     if (provider === 'hashicorp') {
       // update access token and expires_at
@@ -39,7 +38,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
         patch.credentials['expires_at'] = expires_at;
       }
     }
-    await models.cloudCredential.update(originCredential, patch);
+    await services.cloudCredential.update(originCredential, patch);
     return result as { access_token: string; expires_at: number };
   }
   return { error: 'Unexpected response from ' + provider };

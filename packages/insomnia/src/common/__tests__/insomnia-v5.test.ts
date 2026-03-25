@@ -287,7 +287,7 @@ collection: []
         data: {},
       });
 
-      await models.apiSpec.getOrCreateForParentId(workspace._id, {
+      await services.apiSpec.getOrCreateForParentId(workspace._id, {
         _id: 'spec_design',
         contents: '{"openapi": "3.0.0"}',
         contentType: 'json',

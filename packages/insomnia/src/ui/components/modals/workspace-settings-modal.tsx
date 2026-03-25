@@ -1,4 +1,3 @@
-import type { StorageRules } from 'insomnia-api';
 import { useEffect, useState } from 'react';
 import {
   Button,
@@ -10,15 +9,12 @@ import {
   Label,
   Modal,
   ModalOverlay,
-  Radio,
-  RadioGroup,
   TextField,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { removeResponsesForRequest } from '~/models/helpers/response-operations';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
 import { database as db } from '../../../common/database';
@@ -29,8 +25,6 @@ import { isGitProject, type Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isEnvironment, isMcp, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
-import { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '../../organization-utils';
-import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
@@ -49,12 +43,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
     projectId: string;
     workspaceId: string;
   };
-  const organizationData = useOrganizationLoaderData();
-  const [orgStorageRules, setOrgStorageRules] = useState<StorageRules>(DEFAULT_STORAGE_RULES);
   const [description, setDescription] = useState<string>(workspace.description);
-  useEffect(() => {
-    fetchAndCacheOrganizationStorageRule(organizationId as string).then(setOrgStorageRules);
-  }, [organizationId]);
 
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
@@ -63,11 +52,6 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
       gitRepoTreeFetcher.load({ projectId: project._id });
     }
   }, [project, gitRepoTreeFetcher]);
-
-  const isLocalProject = !project?.remoteId;
-  const isEnterprise = organizationData?.currentPlan?.type.includes('enterprise');
-  const isSelfHostedDisabled = !isEnterprise || !orgStorageRules.enableLocalVault;
-  const isCloudProjectDisabled = isLocalProject || !orgStorageRules.enableCloudSync;
 
   const isScratchpadWorkspace = isScratchpad(workspace);
 
@@ -223,69 +207,21 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                 )}
                 {Boolean(isMockServer(workspace) && mockServer) && (
                   <>
-                    <RadioGroup
-                      name="mockServerType"
-                      defaultValue={mockServer?.useInsomniaCloud ? 'cloud' : 'self-hosted'}
-                      validate={value => {
-                        if (!isEnterprise && value === 'self-hosted') {
-                          return 'Self-hosted Mocks are only supported for Enterprise users.';
-                        }
-
-                        return null;
-                      }}
-                      className="flex flex-col gap-2"
-                    >
-                      <Label className="text-sm text-(--hl)">Mock server type</Label>
-                      <div className="flex gap-2">
-                        <Radio
-                          value="cloud"
-                          isDisabled={isCloudProjectDisabled}
-                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon icon="globe" />
-                            <Heading className="text-lg font-bold">Cloud Mock</Heading>
-                          </div>
-                          <p className="pt-2">Runs on Insomnia cloud, ideal for collaboration.</p>
-                        </Radio>
-                        <Radio
-                          value="self-hosted"
-                          isDisabled={isSelfHostedDisabled}
-                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon icon="server" />
-                            <Heading className="text-lg font-bold">Self-hosted Mock</Heading>
-                          </div>
-                          <p className="pt-2">
-                            Runs locally or on your infrastructure, ideal for private usage and lower latency.
-                          </p>
-                        </Radio>
-                      </div>
-                      <FieldError className="text-xs text-red-500" />
-                    </RadioGroup>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Icon icon="info-circle" />
-                      <span>
-                        To learn more about self hosting{' '}
-                        <Link href="https://docs.insomnia.rest/insomnia/api-mocking" className="underline">
-                          click here
-                        </Link>
-                      </span>
-                    </div>
-                    {!isSelfHostedDisabled && (
+                    <Label className="text-sm text-(--hl)">Mock server type</Label>
+                    {mockServer?.useInsomniaCloud ? <p>Cloud Mock</p> : <p>Self-hosted Mock</p>}
+                    {!mockServer?.useInsomniaCloud && (
                       <TextField
-                        autoFocus
                         name="mockServerUrl"
+                        isRequired
                         defaultValue={mockServer?.url || ''}
-                        className={`group relative flex flex-1 flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
+                        className="group relative flex flex-1 flex-col gap-2"
                       >
                         <Label className="text-sm text-(--hl)">Self-hosted mock server URL</Label>
                         <Input
-                          disabled={mockServer?.useInsomniaCloud}
-                          placeholder={mockServer?.useInsomniaCloud ? '' : 'https://example.com'}
-                          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+                          placeholder="https://example.com"
+                          className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                         />
+                        <FieldError className="text-xs text-red-500" />
                       </TextField>
                     )}
                   </>

@@ -1,38 +1,6 @@
-import { database as db } from '../common/database';
-import { strings } from '../common/strings';
-import type { BaseModel } from './types';
+import { type ApiSpec, database as db, models } from '~/insomnia-data';
 
-export const name = 'ApiSpec';
-
-export const type = 'ApiSpec';
-
-export const prefix = 'spc';
-
-export const canDuplicate = true;
-
-export const canSync = true;
-
-export interface BaseApiSpec {
-  fileName: string;
-  contentType: 'json' | 'yaml';
-  contents: string;
-}
-
-export type ApiSpec = BaseModel & BaseApiSpec;
-
-export const isApiSpec = (model: Pick<BaseModel, 'type'>): model is ApiSpec => model.type === type;
-
-export function init(): BaseApiSpec {
-  return {
-    fileName: `New ${strings.document.singular}`,
-    contents: '',
-    contentType: 'yaml',
-  };
-}
-
-export function migrate(doc: ApiSpec) {
-  return doc;
-}
+const { type } = models.apiSpec;
 
 export function getByParentId(workspaceId: string) {
   return db.findOne<ApiSpec>(type, { parentId: workspaceId });

@@ -1,6 +1,7 @@
 import { href } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { isRemoteProject } from '~/models/project';
@@ -96,7 +97,7 @@ export const useImportResourcesFetcher = createFetcherSubmitHook(
 export async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
   const project = await models.project.getById(newWorkspace.parentId);
   invariant(project, 'Project not found');
-  const userSession = await models.userSession.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
 
   if (userSession.id && isRemoteProject(project)) {
     const storageRules = await fetchAndCacheOrganizationStorageRule(project.parentId);

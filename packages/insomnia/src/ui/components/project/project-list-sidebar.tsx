@@ -3,7 +3,7 @@ import { Button, GridList, GridListItem, Heading, Input, SearchField } from 'rea
 import { useNavigate } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { GitRepository } from '~/models/git-repository';
+import type { GitRepository } from '~/insomnia-data';
 import { isGitProject, isRemoteProject, type Project, SCRATCHPAD_PROJECT_ID } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
 
