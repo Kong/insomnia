@@ -1215,7 +1215,6 @@ const Component = () => {
             isOpen
             project={activeProject}
             storageRules={storageRules}
-            currentPlan={organizationData?.currentPlan}
             scope={newWorkspaceModalState.scope}
             onOpenChange={isOpen => {
               setNewWorkspaceModalState({

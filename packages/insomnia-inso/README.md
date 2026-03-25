@@ -39,7 +39,7 @@ node-libcurl builds for 3 operating systems and two versions of nodejs. insomnia
 
 ```shell
 # install node version
-node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+npm run install-libcurl-node
 # install electron version
 npm run install-libcurl-electron
 ```

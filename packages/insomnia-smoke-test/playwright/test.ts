@@ -102,7 +102,7 @@ export const test = baseTest.extend<{
     const electronApp = await playwright._electron.launch({
       cwd,
       executablePath,
-      args: bundleType() === 'package' ? [] : [mainPath],
+      args: bundleType() === 'package' ? ['--no-sandbox'] : ['--no-sandbox', mainPath],
       env: {
         ...process.env,
         ...options,
@@ -153,7 +153,7 @@ export const test = baseTest.extend<{
     await electronApp.close();
   },
   page: async ({ app }, use) => {
-    const page = await app.firstWindow();
+    const page = await app.firstWindow({ timeout: 60_000 });
 
     await page.waitForLoadState();
 

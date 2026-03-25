@@ -40,7 +40,7 @@
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",
     "start": "ESBUILD_WATCH=true esr esbuild.ts",
     "prepackage": "npm run build:production && rm -rf binaries/inso",
-    "package": "npx -y @yao-pkg/pkg@6.3.2 . --output binaries/inso --targets host",
+    "package": "npx -y @yao-pkg/pkg@6.14.1 . --output binaries/inso --targets host",
     "postpackage": "node src/scripts/verify-pkg.js",
     "artifacts": "esr src/scripts/artifacts.ts"
   },

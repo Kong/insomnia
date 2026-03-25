@@ -55,25 +55,19 @@ export const NewWorkspaceModal = ({
   project,
   scope,
   storageRules,
-  currentPlan,
   sourceApiSpec,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   project: Project;
   storageRules: StorageRules;
-  currentPlan?: { type: string };
   scope: WorkspaceScope;
   sourceApiSpec?: ApiSpec;
 }) => {
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
 
-  const isLocalProject = !project.remoteId;
-  const isEnterprise = currentPlan?.type.includes('enterprise');
-  const isSelfHostedDisabled = !storageRules.enableLocalVault;
-  const isCloudProjectDisabled = isLocalProject || !storageRules.enableCloudSync;
-
-  const canOnlyCreateSelfHosted = isLocalProject && isEnterprise;
+  const isSelfHostedMockDisabled = !storageRules.enableLocalVault && !storageRules.enableGitSync;
+  const isCloudMockDisabled = !project.remoteId || !storageRules.enableCloudSync;
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
@@ -96,7 +90,7 @@ export const NewWorkspaceModal = ({
     scope,
     folderPath: '',
     fileName: safeToUseInsomniaFileName(defaultNameByScope[scope]),
-    mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
+    mockServerType: isCloudMockDisabled ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
     mockServerCreationType: sourceApiSpec?.contents ? 'ai' : 'manual',
     mockServerSpecSource: 'file',
@@ -620,11 +614,7 @@ export const NewWorkspaceModal = ({
 
                     <RadioGroup
                       name="mockServerType"
-                      value={
-                        isCloudProjectDisabled || workspaceData.mockServerCreationType === 'ai'
-                          ? 'self-hosted'
-                          : workspaceData.mockServerType
-                      }
+                      value={workspaceData.mockServerType}
                       onChange={serverType => {
                         setWorkspaceData({ ...workspaceData, mockServerType: serverType as 'self-hosted' | 'cloud' });
                       }}
@@ -634,7 +624,7 @@ export const NewWorkspaceModal = ({
                       <div className="flex gap-2">
                         <Radio
                           value="cloud"
-                          isDisabled={isCloudProjectDisabled || workspaceData.mockServerCreationType === 'ai'}
+                          isDisabled={isCloudMockDisabled || workspaceData.mockServerCreationType === 'ai'}
                           className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
@@ -644,14 +634,14 @@ export const NewWorkspaceModal = ({
                           <p className="pt-2">
                             {workspaceData.mockServerCreationType === 'ai'
                               ? 'Not available when creating with Auto Generate.'
-                              : isCloudProjectDisabled
+                              : isCloudMockDisabled
                                 ? 'Only available for cloud projects'
                                 : 'Runs on Insomnia cloud, ideal for collaboration.'}
                           </p>
                         </Radio>
                         <Radio
                           value="self-hosted"
-                          isDisabled={isSelfHostedDisabled}
+                          isDisabled={isSelfHostedMockDisabled}
                           className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
@@ -673,17 +663,16 @@ export const NewWorkspaceModal = ({
                         </Link>
                       </span>
                     </div>
-                    {!isSelfHostedDisabled && (
+                    {workspaceData.mockServerType === 'self-hosted' && (
                       <TextField
                         name="mockServerUrl"
                         value={workspaceData.mockServerUrl}
                         onChange={url => setWorkspaceData({ ...workspaceData, mockServerUrl: url })}
-                        className={`group relative flex flex-1 flex-col gap-2 ${workspaceData.mockServerType === 'cloud' ? 'disabled' : ''}`}
+                        className="group relative flex flex-1 flex-col gap-2"
                       >
                         <Label className="text-sm text-(--hl)">What is your self-hosted mock server URL?</Label>
                         <Input
-                          disabled={workspaceData.mockServerType === 'cloud'}
-                          placeholder={workspaceData.mockServerType === 'cloud' ? '' : 'https://example.com'}
+                          placeholder="https://example.com"
                           className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                         />
                       </TextField>
