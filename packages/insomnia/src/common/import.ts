@@ -4,8 +4,9 @@ import { z, type ZodError } from 'zod/v4';
 import { type ApiSpec, type McpRequest, services } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
 
-import { type InsomniaImporter } from '../main/importers/convert';
+import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
+import { pathWithParamsAsPathParameters } from '../main/importers/importers/openapi-3';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import {
@@ -15,8 +16,8 @@ import {
   isEnvironment,
 } from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
+import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
 import { isGitProject } from '../models/project';
 import { isRequest, type Request } from '../models/request';
@@ -27,12 +28,16 @@ import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { invariant } from '../utils/invariant';
+import { parseApiSpec, type ParsedApiSpec } from './api-specs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
 
 const { isApiSpec } = models.apiSpec;
+
+export const IMPORT_SOURCE_TYPES = ['file', 'uri', 'curl', 'clipboard', 'mcp'] as const;
+export type ImportSourceType = (typeof IMPORT_SOURCE_TYPES)[number];
 
 export type AllExportTypes =
   | 'request'
@@ -141,6 +146,10 @@ interface ResourceCacheType {
 
 let resourceCacheList: ResourceCacheType[] = [];
 
+export function clearResourceCache() {
+  resourceCacheList = [];
+}
+
 // All models that can be exported should be listed here
 export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
   request: 'Request',
@@ -162,6 +171,8 @@ export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
   proto_file: 'ProtoFile',
   proto_directory: 'ProtoDirectory',
 };
+
+export { mcpUrlToInsomniaV5Yaml } from './insomnia-v5';
 
 export async function scanResources(importEntries: ImportEntry[]): Promise<ScanResult[]> {
   resourceCacheList = [];
@@ -399,6 +410,7 @@ export async function importResourcesToProject({
     importedWorkspaces.push(...newWorkspaces);
     await db.flushChanges(bufferId);
   }
+  clearResourceCache();
   return importedWorkspaces;
 }
 
@@ -553,6 +565,7 @@ export const importResourcesToWorkspace = async ({
 
     await db.flushChanges(bufferId);
   }
+  clearResourceCache();
   return [existingWorkspace];
 };
 
@@ -672,3 +685,145 @@ export const importResourcesToNewWorkspace = async ({
 
   return newWorkspace;
 };
+
+export function resolveOperationId(operationId: string): { method: string; name: string } | undefined {
+  for (const cache of resourceCacheList) {
+    let spec: ParsedApiSpec;
+    try {
+      spec = parseApiSpec(cache.content);
+    } catch {
+      continue;
+    }
+
+    const paths = spec.contents?.paths;
+    if (!paths) {
+      continue;
+    }
+
+    for (const [path, pathItem] of Object.entries(paths)) {
+      if (!pathItem || typeof pathItem !== 'object') {
+        continue;
+      }
+      for (const [method, operation] of Object.entries(pathItem as Record<string, unknown>)) {
+        if (!operation || typeof operation !== 'object') {
+          continue;
+        }
+        if (method.startsWith('x-') || method === 'parameters' || method === '$ref') {
+          continue;
+        }
+        const op = operation as Record<string, unknown>;
+        if (op.operationId === operationId) {
+          const name: string =
+            spec.format === 'swagger'
+              ? (op.summary as string | undefined) || `${method} ${path}`
+              : (op.summary as string | undefined) || path;
+          return { method, name };
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+function getPathFromRequestUrl(url: string): string {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    const m = url.match(/\}\}(\/.*)$/);
+    return m ? m[1] : url;
+  }
+}
+
+function getOasTitleAndVersion(content: string): { title: string; version: string } | undefined {
+  try {
+    const spec = parseApiSpec(content);
+    const info = spec.contents?.info;
+    if (!info || typeof info !== 'object') return undefined;
+    const title = info.title;
+    const version = info.version;
+    if (typeof title !== 'string' || typeof version !== 'string') return undefined;
+    return { title, version };
+  } catch {
+    return undefined;
+  }
+}
+
+export async function findExistingImportedSpec(projectId: string): Promise<
+  | {
+      workspace: Workspace;
+      apiSpec: ApiSpec;
+    }
+  | undefined
+> {
+  for (const cache of resourceCacheList) {
+    if (!isApiSpecImport(cache.importer)) continue;
+    const incoming = getOasTitleAndVersion(cache.content);
+    if (!incoming) continue;
+    const workspaces = await models.workspace.findByParentId(projectId);
+    const designWorkspaces = workspaces.filter(w => w.scope === 'design');
+    for (const ws of designWorkspaces) {
+      const expectedName = `${incoming.title} ${incoming.version}`;
+      if (ws.name !== expectedName) continue;
+      const apiSpec = await services.apiSpec.getByParentId(ws._id);
+      if (!apiSpec) continue;
+      const stored = getOasTitleAndVersion(apiSpec.contents);
+      if (!stored || stored.title !== incoming.title || stored.version !== incoming.version) continue;
+      return { workspace: ws, apiSpec };
+    }
+  }
+  return undefined;
+}
+
+export function pathPatternMatches(pattern: string, concretePath: string): boolean {
+  if (!pattern || pattern.length > 200) {
+    return false;
+  }
+  if (pattern === concretePath) {
+    return true;
+  }
+  const patternSegments = pattern.split('/').filter(Boolean);
+  const pathSegments = concretePath.split('/').filter(Boolean);
+  if (patternSegments.length > pathSegments.length) {
+    return false;
+  }
+  const offset = pathSegments.length - patternSegments.length;
+  const pathSuffix = pathSegments.slice(offset);
+  return patternSegments.every((segment, i) => {
+    if (segment.startsWith(':')) {
+      return pathSuffix[i].length > 0;
+    }
+    return segment.toLowerCase() === pathSuffix[i].toLowerCase();
+  });
+}
+
+export async function findRequestInExistingWorkspace(
+  workspace: Workspace,
+  endpoint?: string,
+  operationId?: string,
+): Promise<Request | undefined> {
+  const allDocs = await db.getWithDescendants(workspace, [models.request.type]);
+  const requests = allDocs.filter(isRequest);
+  if (endpoint) {
+    const [method, path] = endpoint.split(',', 2);
+    if (!method || !path) {
+      return undefined;
+    }
+    const normalizedPath = pathWithParamsAsPathParameters(path);
+    return requests.find(
+      r =>
+        r.method.toUpperCase() === method.toUpperCase() &&
+        pathWithParamsAsPathParameters(getPathFromRequestUrl(r.url))
+          .toLowerCase()
+          .endsWith(normalizedPath.toLowerCase()),
+    ) as Request | undefined;
+  }
+  if (operationId) {
+    const opInfo = resolveOperationId(operationId);
+    if (!opInfo) return undefined;
+    return requests.find(
+      r =>
+        r.method.toUpperCase() === opInfo.method.toUpperCase() && r.name?.toLowerCase() === opInfo.name.toLowerCase(),
+    ) as Request | undefined;
+  }
+  return undefined;
+}

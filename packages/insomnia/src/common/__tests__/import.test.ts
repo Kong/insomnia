@@ -2,11 +2,116 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
 
 import { environment, project, request, requestGroup, workspace } from '../../models';
 import { EnvironmentKvPairDataType } from '../../models/environment';
 import * as importUtil from '../import';
+import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
+import { tryImportV5Data } from '../insomnia-v5';
 import { generateId } from '../misc';
+
+describe('pathPatternMatches', () => {
+  it('should match exact paths', () => {
+    expect(importUtil.pathPatternMatches('/users', '/users')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users/list', '/users/list')).toBe(true);
+  });
+
+  it('should not match different paths', () => {
+    expect(importUtil.pathPatternMatches('/users', '/user')).toBe(false);
+    expect(importUtil.pathPatternMatches('/users', '/users/123')).toBe(false);
+    expect(importUtil.pathPatternMatches('/users/list', '/users')).toBe(false);
+  });
+
+  it('should match paths with path parameters', () => {
+    expect(importUtil.pathPatternMatches('/users/:id', '/users/123')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users/:userId/orders/:orderId', '/users/abc/orders/xyz')).toBe(true);
+    expect(importUtil.pathPatternMatches('/api/:version/resource', '/api/v1/resource')).toBe(true);
+  });
+
+  it('should not match when path param is empty', () => {
+    expect(importUtil.pathPatternMatches('/users/:id', '/users/')).toBe(false);
+    expect(importUtil.pathPatternMatches('/users/:id', '/users')).toBe(false);
+  });
+
+  it('should be case insensitive for static segments', () => {
+    expect(importUtil.pathPatternMatches('/Users', '/users')).toBe(true);
+    expect(importUtil.pathPatternMatches('/USERS/LIST', '/users/list')).toBe(true);
+    expect(importUtil.pathPatternMatches('/api/v1', '/API/V1')).toBe(true);
+  });
+
+  it('should handle empty pattern', () => {
+    expect(importUtil.pathPatternMatches('', '/users')).toBe(false);
+  });
+
+  it('should reject patterns over 200 characters', () => {
+    const longPattern = '/' + 'a'.repeat(200);
+    expect(importUtil.pathPatternMatches(longPattern, '/aaaa')).toBe(false);
+  });
+
+  it('should match paths with different segment counts (prefix matching)', () => {
+    expect(importUtil.pathPatternMatches('/basic', '/v1/basic')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users', '/api/v1/users')).toBe(true);
+    expect(importUtil.pathPatternMatches('/key/header', '/v1/key/header')).toBe(true);
+  });
+
+  it('should handle leading slashes consistently', () => {
+    expect(importUtil.pathPatternMatches('users', 'users')).toBe(true);
+    expect(importUtil.pathPatternMatches('users', '/users')).toBe(true);
+    expect(importUtil.pathPatternMatches('/users', 'users')).toBe(true);
+  });
+});
+
+describe('mcpUrlToInsomniaV5Yaml', () => {
+  it('should produce YAML matching the MCP client export shape (schema_version, mcpRequest)', () => {
+    const yaml = importUtil.mcpUrlToInsomniaV5Yaml('https://example.com/mcp?x=1#y');
+    const doc = parse(yaml) as Record<string, unknown>;
+    expect(doc).toMatchObject({
+      type: 'mcpClient.insomnia/5.0',
+      schema_version: INSOMNIA_SCHEMA_VERSION,
+      name: 'Imported MCP Client',
+      mcpRequest: {
+        name: 'Imported MCP Client',
+        url: 'https://example.com/mcp?x=1#y',
+        transportType: 'streamable-http',
+      },
+    });
+  });
+
+  it.each([
+    ['https://example.com'],
+    ['https://example.com/mcp'],
+    ['https://example.com/mcp?param=value'],
+    ['https://example.com/mcp#fragment'],
+    ['http://examples.com/mcp'],
+  ])('should embed the MCP URL %s in mcpRequest.url', url => {
+    const doc = parse(importUtil.mcpUrlToInsomniaV5Yaml(url)) as { mcpRequest: { url: string } };
+    expect(doc.mcpRequest.url).toBe(url);
+  });
+
+  it('should throw an error if the MCP URL is not a valid HTTP URL', () => {
+    expect(() => importUtil.mcpUrlToInsomniaV5Yaml('ftp://example.com')).toThrow(
+      'MCP server URL must use http or https',
+    );
+    expect(() => importUtil.mcpUrlToInsomniaV5Yaml('not-a-url')).toThrow('Invalid URL: not-a-url');
+  });
+
+  it('escape sequences in the MCP URL are unmodified', () => {
+    const cases = ['https://example.com/foo\\nbar', 'https://example.com/foo\\tbar'] as const;
+    for (const input of cases) {
+      const yaml = importUtil.mcpUrlToInsomniaV5Yaml(input);
+      const doc = parse(yaml) as { mcpRequest: { url: string } };
+      expect(doc.mcpRequest.url).toBe(input);
+    }
+  });
+
+  it('should be accepted by the v5 importer', () => {
+    const yaml = importUtil.mcpUrlToInsomniaV5Yaml('https://example.com/mcp');
+    const { data, error } = tryImportV5Data(yaml);
+    expect(error).toBeUndefined();
+    expect(data.length).toBeGreaterThan(0);
+  });
+});
 
 /*
 @vitest-environment jsdom
@@ -376,5 +481,39 @@ describe('importRaw()', () => {
     expect(newKvPairData.filter(pair => !pair.enabled).length).toBe(2);
     expect(newKvPairData.find(pair => pair.name === 'from' && pair.enabled)?.value).toBe('baseEnv');
     expect(newKvPairData.find(pair => pair.name === 'foo')?.value).toBe('bar');
+  });
+
+  it('should resolve operationId to method and name', async () => {
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'smoke-test-with-operationIds.yaml');
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
+
+    await importUtil.scanResources([{ contentStr: content }]);
+
+    const result = importUtil.resolveOperationId('echoId');
+    expect(result).toBeDefined();
+    expect(result?.method).toBe('get');
+    expect(result?.name).toBe('Echo id');
+  });
+
+  it('should resolve operationId with path parameters in path', async () => {
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'smoke-test-with-operationIds.yaml');
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
+
+    await importUtil.scanResources([{ contentStr: content }]);
+
+    const result = importUtil.resolveOperationId('delayByDuration');
+    expect(result).toBeDefined();
+    expect(result?.method).toBe('get');
+    expect(result?.name).toBe('Delay by seconds');
+  });
+
+  it('should return undefined for non-existent operationId', async () => {
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'smoke-test-with-operationIds.yaml');
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
+
+    await importUtil.scanResources([{ contentStr: content }]);
+
+    const result = importUtil.resolveOperationId('nonExistentOpId');
+    expect(result).toBeUndefined();
   });
 });

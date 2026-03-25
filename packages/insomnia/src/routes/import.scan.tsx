@@ -2,26 +2,31 @@ import path from 'node:path';
 
 import { type ActionFunctionArgs, href } from 'react-router';
 
-import type { ScanResult } from '~/common/import';
-import { fetchImportContentFromURI, getFilesFromPostmanExportedDataDump, scanResources } from '~/common/import';
+import type { ImportSourceType, ScanResult } from '~/common/import';
+import {
+  fetchImportContentFromURI,
+  getFilesFromPostmanExportedDataDump,
+  IMPORT_SOURCE_TYPES,
+  mcpUrlToInsomniaV5Yaml,
+  scanResources,
+} from '~/common/import';
 import type { ImportEntry } from '~/main/importers/entities';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
-export type SourceType = 'file' | 'uri' | 'curl' | 'clipboard';
-
 export const scanImportResources = async (data: {
-  source: SourceType;
+  source: ImportSourceType;
   uri?: string;
   curl?: string;
+  mcp?: string;
   filePaths?: string | string[];
   postmanArchiveFile?: string | null;
 }): Promise<ScanResult[]> => {
   const { source, postmanArchiveFile } = data;
 
   invariant(typeof source === 'string', 'Source is required.');
-  invariant(['file', 'uri', 'curl', 'clipboard'].includes(source), 'Unsupported import type');
+  invariant(IMPORT_SOURCE_TYPES.includes(source), 'Unsupported import type');
 
   window.main.trackSegmentEvent({
     event: SegmentEvent.importScanned,
@@ -35,7 +40,6 @@ export const scanImportResources = async (data: {
   if (source === 'uri') {
     const { uri } = data;
     invariant(typeof uri === 'string' && uri.length, 'URI is required');
-
     contentList.push({
       contentStr: await fetchImportContentFromURI({ uri }),
       oriFileName: uri,
@@ -45,6 +49,15 @@ export const scanImportResources = async (data: {
     invariant(typeof curl === 'string' && curl.length, 'cURL command is required');
     contentList.push({
       contentStr: curl,
+    });
+  } else if (source === 'mcp') {
+    const { mcp } = data;
+    invariant(typeof mcp === 'string' && mcp.length, 'MCP server URL is required');
+    const importYaml = mcpUrlToInsomniaV5Yaml(mcp);
+    invariant(importYaml, 'Failed to convert MCP URL to Insomnia v5 YAML');
+    contentList.push({
+      contentStr: importYaml,
+      oriFileName: 'mcp',
     });
   } else if (source === 'file') {
     let filePaths: string[];
@@ -140,8 +153,10 @@ export const scanImportResources = async (data: {
 };
 
 interface ImportScanInputData {
-  source: SourceType;
+  source: ImportSourceType;
   uri?: string;
+  curl?: string;
+  mcp?: string;
   filePaths?: string | string[];
   postmanArchiveFile?: string | null;
 }

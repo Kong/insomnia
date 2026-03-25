@@ -30,7 +30,6 @@ import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-br
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
-import type { SourceType } from '~/routes/import.scan';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -39,7 +38,7 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
+import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
@@ -310,11 +309,7 @@ const Root = () => {
     projectId: string;
   };
 
-  const [importObject, setImportObject] = useState({ type: 'clipboard', defaultValue: '' } as {
-    type: SourceType;
-    defaultValue: string;
-    origin?: string;
-  });
+  const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
@@ -365,13 +360,28 @@ const Root = () => {
             type: 'uri',
             defaultValue: params.uri,
             origin: sanitizeUrlAndExtractOrigin(params.origin),
+            endpoint: params.endpoint,
+            operationId: params.operationId,
+            autoScan: true,
+          });
+        }
+        if (params.mcp) {
+          return setImportObject({
+            type: 'mcp',
+            defaultValue: params.mcp,
+            origin: sanitizeUrlAndExtractOrigin(params.origin),
+            autoScan: true,
           });
         }
         if (params.curl) {
+          const { isValid } = await validateCurl(params.curl);
           return setImportObject({
             type: 'curl',
             defaultValue: params.curl,
             origin: sanitizeUrlAndExtractOrigin(params.origin),
+            endpoint: params.endpoint,
+            operationId: params.operationId,
+            autoScan: isValid,
           });
         }
       }
@@ -571,6 +581,8 @@ const Root = () => {
     gitProviderCompleteSignInSubmit,
     logoutSubmit,
     navigate,
+    organizationId,
+    projectId,
     redirectToDefaultBrowserSubmit,
   ]);
 
@@ -586,7 +598,6 @@ const Root = () => {
       {importObject.defaultValue && (
         <ImportModal
           onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
-          projectName="Insomnia"
           defaultProjectId={projectId}
           organizationId={organizationId}
           from={importObject}
