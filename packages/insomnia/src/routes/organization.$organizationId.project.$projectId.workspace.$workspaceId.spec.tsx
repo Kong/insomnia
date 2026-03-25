@@ -35,7 +35,6 @@ import * as models from '~/models/index';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import { isGitProject } from '~/models/project';
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
@@ -168,7 +167,6 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
 
-  const organizationData = useOrganizationLoaderData();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
 
   useEffect(() => {
@@ -919,7 +917,6 @@ const Component = ({ params }: Route.ComponentProps) => {
               isOpen={isNewMockServerModalOpen}
               project={activeProject}
               storageRules={storageRules}
-              currentPlan={organizationData?.currentPlan}
               scope="mock-server"
               sourceApiSpec={apiSpec}
               onOpenChange={setNewMockServerModalOpen}
