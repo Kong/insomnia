@@ -140,9 +140,10 @@ export interface UrlOptions {
 }
 
 // Regex patterns used as fallbacks when urlObject is undefined (e.g. URL contains template tags)
-const URL_HOST_PATTERN = /^(?:https?:\/\/)?([^\/:]+)/i; // hostname only, stops before ':'
-const URL_PATH_PATTERN = /^(?:https?:\/\/[^\/]+)(\/[^?#]*)/i; // path without query/hash
-const URL_REMOTE_PATTERN = /^(?:https?:\/\/)?([^\/]+)/i; // host + port (if present)
+// Scheme-agnostic, strip optional userinfo, and treat '/', '?', '#' as terminators (IPv6 supported).
+const URL_HOST_PATTERN = /^(?:[^:\/?#]+:\/\/)?(?:[^@\/?#]*@)?(\[[^\]]+]|[^\/?#:]+)/i; // hostname only
+const URL_PATH_PATTERN = /^(?:[^:\/?#]+:\/\/[^\/?#]*)(\/[^?#]*)/i; // path without query/hash
+const URL_REMOTE_PATTERN = /^(?:[^:\/?#]+:\/\/)?(?:[^@\/?#]*@)?([^\/?#]+)/i; // host + optional port
 
 export class Url extends PropertyBase {
   override _kind = 'Url';
