@@ -37,7 +37,6 @@ import {
 } from '../network';
 import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } from './constants';
 
-const { getResponseBodyBuffer } = services.helpers;
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 
 export function initNewOAuthSession() {
@@ -318,7 +317,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
 
   const statusCode = response.statusCode || 0;
-  const bodyBuffer = await getResponseBodyBuffer(response);
+  const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
 
   if (statusCode === 401) {
     // If the refresh token was rejected due an unauthorized request, we will
@@ -366,7 +365,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
 }
 
 export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {
-  const bodyBuffer = await getResponseBodyBuffer(response);
+  const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
   if (!bodyBuffer) {
     return {
       xResponseId: response._id,
@@ -435,7 +434,7 @@ const sendAccessTokenRequest = async (
   if (!settings.disableAppVersionUserAgent) {
     defaultHeaders.push(defaultUserAgentHeader);
   }
-  const newRequest: Request = await models.initModel(models.request.type, {
+  const newRequest: Request = await services.request.create({
     // Do not inherit authentication from parent request or group since this is a special request
     authentication: {
       type: 'none',

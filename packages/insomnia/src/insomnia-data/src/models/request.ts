@@ -12,13 +12,10 @@
  * - Provide GraphQL operation type detection
  *
  */
+import { getOperationAST, OperationTypeNode, parse } from 'graphql';
 
-import { OperationTypeNode } from 'graphql';
-
-import { CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET } from '~/common/constants';
+import { CONTENT_TYPE_GRAPHQL, METHOD_GET } from '~/common/constants';
 import type { OAuth1SignatureMethod } from '~/network/o-auth-1/constants';
-import { getOperationType } from '~/utils/graph-ql';
-import { deconstructQueryStringToParams } from '~/utils/url/querystring';
 
 import type { BaseModel } from './base-types';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';
@@ -300,6 +297,26 @@ export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => m
 
 export const isRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
+export function getOperationType(request: Request) {
+  if (request.body?.mimeType === CONTENT_TYPE_GRAPHQL) {
+    let documentAST;
+    let requestBody;
+    try {
+      requestBody = JSON.parse(request.body.text || '');
+      documentAST = parse(requestBody?.query || '');
+    } catch {
+      documentAST = null;
+    }
+    if (documentAST) {
+      const operationAST = getOperationAST(documentAST, requestBody?.operationName);
+      if (operationAST) {
+        return operationAST.operation;
+      }
+    }
+  }
+  return;
+}
+
 export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream';
 export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) =>
@@ -328,88 +345,6 @@ export function init(): BaseRequest {
     settingRebuildPath: true,
     settingFollowRedirects: 'global',
   };
-}
-
-export function migrate(doc: Request): Request {
-  try {
-    doc = migrateBody(doc);
-    doc = migrateWeirdUrls(doc);
-    doc = migrateAuthType(doc);
-    return doc;
-  } catch (e) {
-    console.log('[db] Error during request migration', e);
-    throw e;
-  }
-}
-
-// ~~~~~~~~~~ //
-// Migrations //
-// ~~~~~~~~~~ //
-
-/**
- * Migrate old body (string) to new body (object)
- * @param request
- */
-function migrateBody(request: Request) {
-  if (request.body && typeof request.body === 'object') {
-    return request;
-  }
-
-  // Second, convert all existing urlencoded bodies to new format
-  const contentType = getContentTypeFromHeaders(request.headers) || '';
-  const wasFormUrlEncoded = !!contentType.match(/^application\/x-www-form-urlencoded/i);
-
-  if (wasFormUrlEncoded) {
-    // Convert old-style form-encoded request bodies to new style
-    request.body = {
-      mimeType: CONTENT_TYPE_FORM_URLENCODED,
-      params: deconstructQueryStringToParams(typeof request.body === 'string' ? request.body : '', false),
-    };
-  } else if (!request.body && !contentType) {
-    request.body = {};
-  } else {
-    const rawBody: string = typeof request.body === 'string' ? request.body : '';
-    request.body =
-      typeof contentType !== 'string'
-        ? {
-            text: rawBody,
-          }
-        : {
-            mimeType: contentType.split(';')[0],
-            text: rawBody,
-          };
-  }
-
-  return request;
-}
-
-/**
- * Fix some weird URLs that were caused by an old bug
- * @param request
- */
-function migrateWeirdUrls(request: Request) {
-  // Some people seem to have requests with URLs that don't have the indexOf
-  // function. This should clear that up. This can be removed at a later date.
-  if (typeof request.url !== 'string') {
-    request.url = '';
-  }
-
-  return request;
-}
-
-/**
- * Ensure the request.authentication.type property is added
- * @param request
- */
-function migrateAuthType(request: Request) {
-  const isAuthSet = request?.authentication && 'username' in request.authentication && request.authentication.username;
-  // @ts-expect-error -- old model
-  if (isAuthSet && !request.authentication.type) {
-    // @ts-expect-error -- old model
-    request.authentication.type = 'basic';
-  }
-
-  return request;
 }
 
 export function rewriteReferences(request: Request, idMapping: Map<string, string>): Request {

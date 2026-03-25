@@ -25,8 +25,6 @@ import type { PluginTemplateTag, RenderPurpose } from '../templating/types';
 import type { PluginTheme } from './misc';
 import themes from './themes';
 
-const { getResponseBodyBuffer } = services.helpers;
-
 export interface Plugin {
   name: string;
   description: string;
@@ -415,7 +413,7 @@ export function getPluginCommonContext({
         },
         response: {
           getLatestForRequestId: services.response.getLatestForRequestId,
-          getBodyBuffer: getResponseBodyBuffer,
+          getBodyBuffer: services.helpers.getResponseBodyBuffer,
         },
         settings: {
           get: services.settings.get,

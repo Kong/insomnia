@@ -1,3 +1,5 @@
+import { getMockServiceURL } from '~/common/constants';
+
 import type { BaseModel } from './base-types';
 
 export const name = 'Mock Server';
@@ -29,3 +31,13 @@ export function init(): BaseMockServer {
 }
 
 export const isMockServer = (model: Pick<BaseModel, 'type'>): model is MockServer => model.type === type;
+
+export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
+  if (!mockServer.useInsomniaCloud) {
+    return `${mockServer.url}/bin/${mockServer._id}${path}`;
+  }
+  const baseUrl = getMockServiceURL();
+  const url = new URL(baseUrl);
+  url.host = mockServer._id.replace('_', '-') + '.' + url.host;
+  return url.origin + path;
+};

@@ -167,6 +167,33 @@ export default defineConfig([
           ],
         },
       ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "Program > VariableDeclaration > VariableDeclarator[id.type='ObjectPattern'][init.type='MemberExpression'][init.object.type='Identifier'][init.object.name='services']",
+          message:
+            'Do not destructure from services.* at module top-level. Move it into a function scope or use direct calls inline.',
+        },
+        {
+          selector:
+            "Program > VariableDeclaration > VariableDeclarator[id.type='ObjectPattern'][init.type='Identifier'][init.name='services']",
+          message:
+            'Do not destructure from services at module top-level. Move it into a function scope or use direct calls inline.',
+        },
+        {
+          selector:
+            "Program > VariableDeclaration > VariableDeclarator[init.type='MemberExpression'][init.object.type='Identifier'][init.object.name='services']",
+          message:
+            'Do not alias services members at module top-level. Move it into a function scope or use direct calls inline.',
+        },
+        {
+          selector:
+            "Program > VariableDeclaration > VariableDeclarator[init.type='MemberExpression'][init.object.type='MemberExpression'][init.object.object.type='Identifier'][init.object.object.name='services']",
+          message:
+            'Do not alias services members at module top-level. Move it into a function scope or use direct calls inline.',
+        },
+      ],
     },
   },
   {

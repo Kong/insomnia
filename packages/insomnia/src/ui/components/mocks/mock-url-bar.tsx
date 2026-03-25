@@ -2,11 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
-import { getMockServiceBinURL } from '../../../common/constants';
 import { useTimeoutWhen } from '../../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
@@ -60,8 +59,8 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
         onPress={() => {
           showModal(AlertModal, {
             title: 'Full URL',
-            message: getMockServiceBinURL(mockServer, pathInput),
-            onConfirm: () => window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput)),
+            message: models.mockServer.getMockServiceBinURL(mockServer, pathInput),
+            onConfirm: () => window.clipboard.writeText(models.mockServer.getMockServiceBinURL(mockServer, pathInput)),
             addCancel: true,
             okLabel: 'Copy',
           });
@@ -73,7 +72,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
       <Button
         className="shrink-0 rounded-xs bg-(--hl-sm) px-3 py-1 text-sm text-(--color-font) hover:bg-(--hl-xs) focus:bg-(--hl-xs)"
         onPress={() => {
-          window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
+          window.clipboard.writeText(models.mockServer.getMockServiceBinURL(mockServer, pathInput));
         }}
       >
         <Icon icon="copy" /> Copy
@@ -128,7 +127,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
                   const request = await services.request.getByParentId(mockRoute._id);
                   request &&
                     showModal(GenerateCodeModal, {
-                      request: { ...request, url: getMockServiceBinURL(mockServer, pathInput) },
+                      request: { ...request, url: models.mockServer.getMockServiceBinURL(mockServer, pathInput) },
                     });
                 }}
               />

@@ -17,6 +17,7 @@ import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { RequestTestResult } from '~/insomnia-data';
 import {
   type Environment,
   initServices,
@@ -28,7 +29,6 @@ import {
 } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 
-import type { RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
 import packageJson from '../package.json';
 import { flushAnalytics, InsoEvent, trackInsoEvent } from './analytics';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';

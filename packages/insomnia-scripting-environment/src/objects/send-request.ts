@@ -10,7 +10,6 @@ import type { CookieOptions } from './cookies';
 import { Request, type RequestOptions } from './request';
 import { Response } from './response';
 
-const { readCurlResponse } = services.helpers;
 export async function sendRequest(
   request: string | Request | RequestOptions,
   cb: (error?: string, response?: Response) => void,
@@ -264,7 +263,8 @@ async function curlOutputToResponse(
       originalRequest,
     });
   }
-  const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
+  const nodejsReadCurlResponse =
+    process.type === 'renderer' ? window.bridge.readCurlResponse : services.helpers.readCurlResponse;
   const bodyResult = await nodejsReadCurlResponse({
     bodyPath: result.responseBodyPath,
     bodyCompression: result.patch.bodyCompression,

@@ -19,8 +19,6 @@ import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { createConfiguredCurlInstance } from './libcurl-promise';
 import { parseHeaderStrings } from './parse-header-strings';
 
-const { readCurlResponse } = services.helpers;
-
 export interface CurlConnection extends Curl {
   _id: string;
   requestId: string;
@@ -436,7 +434,9 @@ export const registerCurlHandlers = () => {
   ipcMainOn('curl.closeAll', closeAllCurlConnections);
   ipcMainHandle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
   ipcMainHandle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
-  ipcMainHandle('readCurlResponse', (_, options: Parameters<typeof readCurlResponse>[0]) => readCurlResponse(options));
+  ipcMainHandle('readCurlResponse', (_, options: Parameters<typeof services.helpers.readCurlResponse>[0]) =>
+    services.helpers.readCurlResponse(options),
+  );
 };
 
 electron.app.on('window-all-closed', closeAllCurlConnections);

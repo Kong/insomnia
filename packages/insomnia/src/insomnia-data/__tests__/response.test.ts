@@ -6,17 +6,16 @@ import zlib from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 
 import { models, services } from '..';
-
-const { getResponseBodyBuffer: getBodyBuffer } = services.helpers;
+import { initModel } from '../node-src/utils';
 
 describe('migrate()', () => {
   it('does it', async () => {
     const bodyPath = path.join(tmpdir(), 'foo.zip');
     fs.writeFileSync(bodyPath, zlib.gzipSync('Hello World!'));
-    const response = await models.initModel(models.response.type, {
+    const response = await initModel(models.response.type, {
       bodyPath,
     });
-    const body = (await getBodyBuffer(response)).toString();
+    const body = (await services.helpers.getResponseBodyBuffer(response)).toString();
     expect(response.bodyCompression).toBe('zip');
     expect(body).toBe('Hello World!');
   });
@@ -24,7 +23,7 @@ describe('migrate()', () => {
   it('migrates leaves bodyCompression for null', async () => {
     expect(
       (
-        await models.initModel(models.response.type, {
+        await initModel(models.response.type, {
           bodyPath: '/foo/bar',
           bodyCompression: null,
         })
@@ -35,7 +34,7 @@ describe('migrate()', () => {
   it('migrates sets bodyCompression to zip if does not have one yet', async () => {
     expect(
       (
-        await models.initModel(models.response.type, {
+        await initModel(models.response.type, {
           bodyPath: '/foo/bar',
         })
       ).bodyCompression,
@@ -45,7 +44,7 @@ describe('migrate()', () => {
   it('migrates leaves bodyCompression if string', async () => {
     expect(
       (
-        await models.initModel(models.response.type, {
+        await initModel(models.response.type, {
           bodyPath: '/foo/bar',
           bodyCompression: 'zip',
         })

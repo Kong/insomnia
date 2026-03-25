@@ -1,4 +1,4 @@
-import { models, type RemoteProject, type Workspace } from '~/insomnia-data';
+import { models, type RemoteProject, services } from '~/insomnia-data';
 
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
@@ -27,7 +27,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
   // @TODO Revisit the UX for this. What should happen if there are other branches?
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
-    const workspace = await models.initModel<Workspace>(models.workspace.type, {
+    const workspace = await services.workspace.create({
       _id: backendProject.rootDocumentId,
       name: backendProject.name,
       parentId: remoteProject._id,

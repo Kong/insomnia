@@ -1,3 +1,8 @@
 {
-  "tsConfig": "packages/insomnia/tsconfig.json"
+  "tsConfig": "packages/insomnia/tsconfig.json",
+  "detectiveOptions": {
+    "ts": {
+      "skipTypeImports": true
+    }
+  }
 }

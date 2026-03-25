@@ -30,7 +30,6 @@ import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 
-const { removeResponsesForRequest } = services.helpers;
 interface Props {
   onClose: () => void;
   workspace: Workspace;
@@ -213,7 +212,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                             const docs = await db.getWithDescendants(workspace, [models.request.type]);
                             const requests = docs.filter(models.request.isRequest);
                             for (const req of requests) {
-                              await removeResponsesForRequest(req._id);
+                              await services.helpers.removeResponsesForRequest(req._id);
                             }
                             close();
                           }}

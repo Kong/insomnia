@@ -15,8 +15,6 @@ import {
   tryToInterpolateRequest,
 } from '../network/network';
 
-const { getResponseBodyBuffer } = services.helpers;
-
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
 interface SettingsOverride {
@@ -140,7 +138,7 @@ export async function getSendRequestCallbackMemDb(
       (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
       {},
     );
-    const bodyBuffer = (await getResponseBodyBuffer(res)) as Buffer;
+    const bodyBuffer = (await services.helpers.getResponseBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
     const testResults = [

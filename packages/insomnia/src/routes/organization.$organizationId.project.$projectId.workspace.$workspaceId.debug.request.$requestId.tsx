@@ -25,7 +25,6 @@ import {
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-const { getResponseBodyBuffer } = services.helpers;
 export default Outlet;
 export interface WebSocketRequestLoaderData {
   activeRequest: WebSocketRequest;
@@ -170,7 +169,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
     // Oversized repsonses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
-      const buffer = await getResponseBodyBuffer(activeResponse);
+      const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
     }
   }

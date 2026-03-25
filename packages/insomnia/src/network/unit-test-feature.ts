@@ -9,7 +9,6 @@ import {
   tryToTransformRequestWithPlugins,
 } from './network';
 
-const { getResponseBodyBuffer } = services.helpers;
 export function getSendRequestCallback() {
   return async function sendRequest(requestId: string) {
     services.stats.incrementExecutedRequests();
@@ -44,7 +43,7 @@ export function getSendRequestCallback() {
       (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
       [],
     );
-    const bodyBuffer = (await getResponseBodyBuffer(res)) as Buffer;
+    const bodyBuffer = (await services.helpers.getResponseBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
     return { status, statusMessage, data, headers, responseTime };
   };

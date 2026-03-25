@@ -11,7 +11,6 @@ import {
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
   contentTypesMap,
-  getMockServiceBinURL,
   getMockServiceURL,
   RESPONSE_CODE_REASONS,
 } from '~/common/constants';
@@ -44,7 +43,6 @@ import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
-const { getResponseBodyBuffer } = services.helpers;
 export interface MockRouteLoaderData {
   mockServer: MockServer;
   mockRoute: MockRoute;
@@ -73,7 +71,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
     // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
-      const buffer = await getResponseBodyBuffer(activeResponse);
+      const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
     }
   }
@@ -227,7 +225,7 @@ export const MockRouteRoute = () => {
   const onSend = async (pathInput: string) => {
     await upsertMockbinHar(pathInput);
     createAndSendPrivateRequest({
-      url: getMockServiceBinURL(mockServer, pathInput),
+      url: models.mockServer.getMockServiceBinURL(mockServer, pathInput),
       method: mockRoute.method,
       headers: mockRoute.headers,
       parentId: mockRoute._id,

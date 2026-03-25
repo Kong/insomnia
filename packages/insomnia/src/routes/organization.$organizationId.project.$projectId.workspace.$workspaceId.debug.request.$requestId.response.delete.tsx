@@ -5,8 +5,6 @@ import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
-
-const { removeResponse } = services.helpers;
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { workspaceId, requestId } = params;
 
@@ -36,7 +34,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const res = await responseService.getById(responseId);
   invariant(res, 'Response not found');
 
-  await removeResponse(res);
+  await services.helpers.removeResponse(res);
   const response = await responseService.getLatestForRequestId(requestId, workspaceMeta.activeEnvironmentId);
   if (response?.requestVersionId) {
     await services.requestVersion.restore(response.requestVersionId);

@@ -12,7 +12,6 @@ import {
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
-const { getResponseTimeline } = services.helpers;
 interface Props {
   download: (pretty: boolean) => any;
   copyToClipboard: () => any;
@@ -62,7 +61,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const timeline = await getResponseTimeline(activeResponse);
+    const timeline = await services.helpers.getResponseTimeline(activeResponse);
     const headers = timeline
       .filter(v => v.name === 'HeaderIn')
       .map(v => v.value)

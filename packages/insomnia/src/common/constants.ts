@@ -1,5 +1,3 @@
-import { type MockServer } from '~/insomnia-data';
-
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import { isLinux, isMac, isWindows, platform } from './platform';
@@ -99,16 +97,6 @@ export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomn
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
 export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.run';
-
-export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
-  if (!mockServer.useInsomniaCloud) {
-    return `${mockServer.url}/bin/${mockServer._id}${path}`;
-  }
-  const baseUrl = getMockServiceURL();
-  const url = new URL(baseUrl);
-  url.host = mockServer._id.replace('_', '-') + '.' + url.host;
-  return url.origin + path;
-};
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
 

@@ -26,8 +26,6 @@ import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths 
 import { curlRequest } from './network/libcurl-promise';
 import { secureReadFile } from './secure-read-file';
 
-const { getResponseBodyBuffer, readCurlResponse } = services.helpers;
-
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
@@ -117,7 +115,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
-    return await getResponseBodyBuffer(body.response, body.readFailureValue);
+    return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
     const doc = await services.pluginData.getByKey(body.pluginName, body.key);
@@ -224,7 +222,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     if (!lastRedirect) {
       throw new Error('Error in response: the lastRedirect is not defined');
     }
-    const bodyResult = await readCurlResponse({
+    const bodyResult = await services.helpers.readCurlResponse({
       bodyPath: responseBodyPath,
       bodyCompression: patch.bodyCompression,
     });

@@ -1,5 +1,5 @@
-import type { RequestTestResult } from '../../../../../insomnia-scripting-environment/src/objects';
 import type { BaseModel } from './base-types';
+import type { RequestTestResult } from './runner-test-result';
 
 export const name = 'Response';
 
@@ -78,21 +78,4 @@ export function init(): BaseResponse {
     requestTestResults: [],
     globalEnvironmentId: null,
   };
-}
-
-export function migrate(doc: Response) {
-  try {
-    return migrateBodyCompression(doc);
-  } catch (e) {
-    console.log('[db] Error during response migration', e);
-    throw e;
-  }
-}
-
-function migrateBodyCompression(doc: Response) {
-  if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
-    doc.bodyCompression = 'zip';
-  }
-
-  return doc;
 }

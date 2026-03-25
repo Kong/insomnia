@@ -83,6 +83,7 @@ export type {
   RunnerResultPerRequest,
   ResponseInfo,
   RunnerResultPerRequestPerIteration,
+  RequestTestResult,
 } from './runner-test-result';
 export type { Settings, ThemeSettings } from './settings';
 export type { SocketIOPayload } from './socket-io-payload';

@@ -48,7 +48,6 @@ import { TimeFromNow } from '../../time-from-now';
 import { prettifyGraphql } from './prettify-graphql.mjs';
 
 const { useLocalStorage } = reactUse;
-const { getResponseBodyBuffer } = services.helpers;
 
 // Type guard to ensure loc is non-nullable
 const hasLocation = (
@@ -184,7 +183,7 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       };
     }
-    const bodyBuffer = await getResponseBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     if (bodyBuffer) {
       const { data, errors } = JSON.parse(bodyBuffer.toString());
       if (errors?.length) {

@@ -59,6 +59,8 @@ initializeLogging();
 
 initializeSentry();
 
+// Initialize services for main process
+initServices(servicesNodeImpl);
 registerInsomniaProtocols();
 
 // Force onlyResolveOnSuccess to true, will be removed after all usages are updated
@@ -122,8 +124,6 @@ app.on('ready', async () => {
 
   // Init some important things first
   await initDatabase(mainDatabase);
-  // Initialize services for main process
-  initServices(servicesNodeImpl);
   await _createModelInstances();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();

@@ -28,6 +28,7 @@ import {
   type WorkspaceMeta,
 } from '~/insomnia-data';
 
+import { initModel } from '../utils';
 import { repairDatabase } from './repair-database';
 
 const { mustGetModel } = models;
@@ -75,7 +76,7 @@ export const createNedbDatabase = <O = initOptions>(
     },
 
     docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Partial<T>[]) => {
-      const doc = await models.initModel<T>(
+      const doc = await initModel<T>(
         type,
         ...patches,
         // Fields that the user can't touch
@@ -88,7 +89,7 @@ export const createNedbDatabase = <O = initOptions>(
 
     docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Partial<T>[]) => {
       // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
-      const doc = await models.initModel<T>(
+      const doc = await initModel<T>(
         originalDoc.type,
         originalDoc,
 
@@ -163,7 +164,7 @@ export const createNedbDatabase = <O = initOptions>(
       if (doc === null) {
         return undefined;
       }
-      return models.initModel<T>(type, doc);
+      return initModel<T>(type, doc);
     },
     /** find documents matching query */
     find: async function <T extends BaseModel>(
@@ -180,7 +181,7 @@ export const createNedbDatabase = <O = initOptions>(
       // TODO: create a db init phase for migrations rather than doing it on every find.
       const migrated = [];
       for (const rawDoc of docs) {
-        migrated.push(await models.initModel<T>(type, rawDoc));
+        migrated.push(await initModel<T>(type, rawDoc));
       }
       return migrated;
     },
@@ -384,7 +385,7 @@ export const createNedbDatabase = <O = initOptions>(
     },
 
     insert: async function <T extends BaseModel>(doc: T) {
-      const docWithDefaults = await models.initModel<T>(doc.type, doc);
+      const docWithDefaults = await initModel<T>(doc.type, doc);
       const newDoc = await nedbBucket[doc.type].insertAsync(docWithDefaults);
       notifyOfChange('insert', newDoc);
       return newDoc;
@@ -454,7 +455,7 @@ export const createNedbDatabase = <O = initOptions>(
     },
 
     update: async function <T extends BaseModel>(doc: T, patches: Partial<T>[] = []) {
-      const docWithDefaults = await models.initModel<T>(doc.type, doc);
+      const docWithDefaults = await initModel<T>(doc.type, doc);
       await nedbBucket[doc.type].updateAsync({ _id: docWithDefaults._id }, docWithDefaults, { upsert: true });
       notifyOfChange('update', docWithDefaults, patches);
       return docWithDefaults;

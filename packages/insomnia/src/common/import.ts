@@ -1,7 +1,6 @@
 import orderedJSON from 'json-order';
 import { z, type ZodError } from 'zod/v4';
 
-import { type McpRequest } from '~/insomnia-data';
 import {
   type AllTypes,
   type ApiSpec,
@@ -10,6 +9,7 @@ import {
   type Environment,
   type EnvironmentKvPairData,
   type GrpcRequest,
+  type McpRequest,
   type MockRoute,
   models,
   type Request,

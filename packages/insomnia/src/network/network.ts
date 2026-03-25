@@ -20,6 +20,7 @@ import {
   type RequestGroup,
   type RequestHeader,
   type RequestParameter,
+  type RequestTestResult,
   services,
   type Settings,
   type SocketIORequest,
@@ -29,11 +30,7 @@ import {
 } from '~/insomnia-data';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
-import type {
-  ExecutionOption,
-  RequestContext,
-  RequestTestResult,
-} from '../../../insomnia-scripting-environment/src/objects';
+import type { ExecutionOption, RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';

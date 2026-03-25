@@ -1,7 +1,6 @@
 import { href, redirect } from 'react-router';
 
-import { getMockServiceBinURL } from '~/common/constants';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -28,7 +27,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     scope: 'collection',
   });
 
-  const baseUrl = getMockServiceBinURL(mockServer, '').replace(/\/$/, '');
+  const baseUrl = models.mockServer.getMockServiceBinURL(mockServer, '').replace(/\/$/, '');
 
   await services.environment.create({
     name: 'Base Environment',

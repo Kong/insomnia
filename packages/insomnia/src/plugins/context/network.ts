@@ -12,8 +12,6 @@ import {
 } from '../../network/network';
 import type { PluginTemplateTagContext } from '../../templating/types';
 
-const { readCurlResponse } = services.helpers;
-
 type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
   Partial<Pick<Request, 'body' | 'authentication'>>;
 export interface NodeCurlRequestOptions {
@@ -113,7 +111,7 @@ export function init(): {
         if (!lastRedirect) {
           throw new Error('Error in response: the lastRedirect is not defined');
         }
-        const bodyResult = await readCurlResponse({
+        const bodyResult = await services.helpers.readCurlResponse({
           bodyPath: responseBodyPath,
           bodyCompression: patch.bodyCompression,
         });

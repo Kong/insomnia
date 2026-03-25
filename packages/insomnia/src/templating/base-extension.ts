@@ -16,8 +16,6 @@ import * as templating from './index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import { decodeEncoding } from './utils';
 
-const { getResponseBodyBuffer } = services.helpers;
-
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
 export default class BaseExtension {
@@ -161,7 +159,7 @@ export default class BaseExtension {
           },
           response: {
             getLatestForRequestId: services.response.getLatestForRequestId,
-            getBodyBuffer: getResponseBodyBuffer,
+            getBodyBuffer: services.helpers.getResponseBodyBuffer,
           },
           settings: {
             get: services.settings.get,

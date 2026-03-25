@@ -8,7 +8,6 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
-const { getResponseTimeline } = services.helpers;
 interface ResponseDebugModalOptions {
   responseId?: string;
   response?: Response | null;
@@ -46,7 +45,7 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
           console.error('No response found');
           return;
         }
-        const timeline = await getResponseTimeline(response, options.showBody);
+        const timeline = await services.helpers.getResponseTimeline(response, options.showBody);
         setState({
           responseId: response._id,
           timeline,

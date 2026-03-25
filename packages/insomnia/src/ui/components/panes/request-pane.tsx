@@ -33,7 +33,6 @@ import { RequestUrlBar, type RequestUrlBarHandle } from '../request-url-bar';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
 
-const { queryAllWorkspaceUrls } = services.helpers;
 interface Props {
   environmentId: string;
   settings: Settings;
@@ -107,7 +106,9 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
           <RequestUrlBar
             key={requestId}
             uniquenessKey={uniqueKey}
-            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
+            handleAutocompleteUrls={() =>
+              services.helpers.queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)
+            }
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             onPaste={onPaste}
             ref={requestUrlBarRef}

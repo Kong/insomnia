@@ -27,8 +27,6 @@ import { database } from './database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
 import { getRenderedRequestAndContext } from './render';
 
-const { getResponseBodyBuffer } = services.helpers;
-
 const getDocWithDescendants =
   (includePrivateDocs = false) =>
   async (parentDoc: BaseModel | null) => {
@@ -393,7 +391,7 @@ function mapCookie(cookie: ToughCookie) {
 }
 
 async function getResponseContent(response: Response) {
-  let body = await getResponseBodyBuffer(response);
+  let body = await services.helpers.getResponseBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);

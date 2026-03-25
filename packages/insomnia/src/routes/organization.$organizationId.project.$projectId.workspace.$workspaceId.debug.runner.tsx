@@ -66,7 +66,6 @@ const inputStyle =
   'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-xs border-2 border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden focus:ring-1 focus:ring-(--hl-md) transition-colors';
 const iterationInputStyle =
   'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-xs border-2 border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden focus:ring-1 focus:ring-(--hl-md) transition-colors';
-const { getResponseTimeline } = services.helpers;
 
 // TODO: improve the performance for a lot of logs
 async function aggregateAllTimelines(errorMsg: string | null, testResult: RunnerTestResult) {
@@ -77,7 +76,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
     const resp = await services.response.getById(respInfo.responseId);
 
     if (resp) {
-      const timeline = (await getResponseTimeline(resp, true)) as unknown as ResponseTimelineEntry[];
+      const timeline = (await services.helpers.getResponseTimeline(resp, true)) as unknown as ResponseTimelineEntry[];
       timelines = [
         ...timelines,
         {

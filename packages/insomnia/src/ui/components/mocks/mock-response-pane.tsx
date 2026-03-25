@@ -34,7 +34,6 @@ import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
 
 const { useInterval } = reactUse;
-const { getResponseBodyBuffer, getResponseTimeline } = services.helpers;
 
 export const MockResponsePane = () => {
   const { mockServer, mockRoute, activeResponse } = useMockRouteLoaderData()!;
@@ -47,7 +46,7 @@ export const MockResponsePane = () => {
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
-        const timeline = await getResponseTimeline(activeResponse, true);
+        const timeline = await services.helpers.getResponseTimeline(activeResponse, true);
         setTimeline(timeline);
       }
     };
@@ -130,7 +129,7 @@ export const MockResponsePane = () => {
               filter={''}
               filterHistory={[]}
               bodyBuffer={activeResponse.bodyBuffer}
-              getBody={() => getResponseBodyBuffer(activeResponse)}
+              getBody={() => services.helpers.getResponseBodyBuffer(activeResponse)}
               previewMode={previewMode}
               responseId={activeResponse._id}
               updateFilter={activeResponse.error ? undefined : () => {}}
@@ -299,7 +298,7 @@ const PreviewModeDropdown = ({
             icon="copy"
             label="Copy raw response"
             onClick={async () => {
-              const bodyBuffer = await getResponseBodyBuffer(activeResponse);
+              const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
               bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
             }}
           />
@@ -331,7 +330,7 @@ const PreviewModeDropdown = ({
               icon="save"
               label="Export prettified response"
               onClick={async () => {
-                const bodyBuffer = await getResponseBodyBuffer(activeResponse);
+                const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
                 const { canceled, filePath } = await window.dialog.showSaveDialog({
                   title: 'Save Full Response',
                   buttonLabel: 'Save',
@@ -363,7 +362,7 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath) {
                 return;
               }
-              const timeline = await getResponseTimeline(activeResponse);
+              const timeline = await services.helpers.getResponseTimeline(activeResponse);
               const headers = timeline
                 .filter(v => v.name === 'HeaderIn')
                 .map(v => v.value)

@@ -1,7 +1,3 @@
-// model types — flat re-exports for convenient consumer access, only export types that are needed outside of this package
-
-import { generateId } from '../utils/misc';
-import { typedKeys } from '../utils/type';
 // models - export models that define the structure of the data and any related functions such as init, type guards
 import * as apiSpec from './api-spec';
 import * as caCertificate from './ca-certificate';
@@ -139,51 +135,6 @@ function rewriteReferences<T extends BaseModel>(doc: T, idMapping: Map<string, s
     : doc;
 }
 
-async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
-  const model = getModel(type);
-
-  if (!model) {
-    const choices = all()
-      .map(m => m.type)
-      .join(', ');
-    throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
-  }
-
-  // Define global default fields
-  const objectDefaults = Object.assign(
-    {},
-    {
-      _id: null,
-      type: type,
-      parentId: null,
-      modified: Date.now(),
-      created: Date.now(),
-    },
-    model.init(),
-  );
-  const fullObject = Object.assign({}, objectDefaults, ...sources);
-
-  // Generate an _id if there isn't one yet
-  if (!fullObject._id) {
-    fullObject._id = generateId(model.prefix);
-  }
-
-  // Migrate the model
-  // NOTE: Do migration before pruning because we might need to look at those fields
-  const migratedDoc = ('migrate' in model ? model.migrate : (doc: T) => doc)(fullObject);
-  // optional keys do not generated in init method but should allow update.
-  // If we put those keys in init method, all related models will show as modified in git sync.
-  const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
-  // Prune extra keys from doc
-  for (const key of typedKeys(migratedDoc)) {
-    if (!(key in objectDefaults) && !modelOptionalKeys.includes(key)) {
-      delete migratedDoc[key];
-    }
-  }
-
-  return migratedDoc as T;
-}
-
 // Use function instead of object to avoid issues with circular dependencies
 const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => {
   return {
@@ -286,7 +237,6 @@ export const models = {
   getModel,
   mustGetModel,
   canDuplicate,
-  initModel,
   generateDescendantMap,
   getAllDescendantMap,
   rewriteReferences,

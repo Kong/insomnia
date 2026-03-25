@@ -2,8 +2,6 @@ import fs from 'node:fs';
 
 import { type ResponseHeader, services } from '~/insomnia-data';
 
-const { getResponseBodyBuffer, getResponseBodyStream } = services.helpers;
-
 interface MaybeResponse {
   parentId?: string;
   statusCode?: number;
@@ -49,11 +47,11 @@ export function init(response?: MaybeResponse) {
       },
 
       getBody() {
-        return getResponseBodyBuffer(response);
+        return services.helpers.getResponseBodyBuffer(response);
       },
 
       getBodyStream() {
-        return getResponseBodyStream(response);
+        return services.helpers.getResponseBodyStream(response);
       },
 
       setBody(body: Buffer) {

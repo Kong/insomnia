@@ -5,8 +5,6 @@ import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
-
-const { removeResponsesForRequest } = services.helpers;
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { workspaceId, requestId } = params;
 
@@ -16,7 +14,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Active workspace meta not found');
 
-  await removeResponsesForRequest(requestId, workspaceMeta.activeEnvironmentId);
+  await services.helpers.removeResponsesForRequest(requestId, workspaceMeta.activeEnvironmentId);
 
   return null;
 }

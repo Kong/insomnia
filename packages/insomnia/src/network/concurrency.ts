@@ -6,11 +6,12 @@ import {
   type CookieJar,
   type Environment,
   type Request,
+  type RequestTestResult,
   type Settings,
   type UserUploadEnvironment,
 } from '~/insomnia-data';
 
-import type { RequestContext, RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
+import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import { cancellableExecution } from './cancellation';
 
 export interface ExecuteScriptContext {
