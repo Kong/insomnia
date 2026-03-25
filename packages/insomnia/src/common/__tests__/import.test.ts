@@ -4,7 +4,9 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
-import { environment, project, request, requestGroup, workspace } from '../../models';
+import { services } from '~/insomnia-data';
+
+import { environment, project, request, requestGroup } from '../../models';
 import { EnvironmentKvPairDataType } from '../../models/environment';
 import * as importUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
@@ -159,8 +161,8 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const workspacesCount = await workspace.count();
-    const projectWorkspaces = await workspace.findByParentId(projectToImportTo._id);
+    const workspacesCount = await services.workspace.count();
+    const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
     const curlRequests = await request.findByParentId(projectWorkspaces[0]._id);
 
     expect(workspacesCount).toBe(1);
@@ -176,7 +178,7 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
 
     const scanResult = await importUtil.scanResources([
       {
@@ -217,7 +219,7 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const projectWorkspaces = await workspace.findByParentId(projectToImportTo._id);
+    const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
 
     const requestGroups = await requestGroup.findByParentId(projectWorkspaces[0]._id);
     const requests = await request.findByParentId(requestGroups[0]._id);
@@ -231,7 +233,7 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
 
     const scanResult = await importUtil.scanResources([
       {
@@ -295,7 +297,7 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const projectWorkspaces = await workspace.findByParentId(projectId);
+    const projectWorkspaces = await services.workspace.findByParentId(projectId);
     const importedWorkspaceId = projectWorkspaces[0]._id;
     const requestBaseEnvironment = await environment.getByParentId(importedWorkspaceId);
 
@@ -317,7 +319,7 @@ describe('importRaw()', () => {
     );
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
     const workspaceId = existingWorkspace._id;
     const baseEnvironment = await environment.getOrCreateForParentId(workspaceId);
     await environment.update(baseEnvironment, {
@@ -358,7 +360,7 @@ describe('importRaw()', () => {
     );
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
     const workspaceId = existingWorkspace._id;
     const baseEnvironmentPair = [
       {
@@ -421,7 +423,7 @@ describe('importRaw()', () => {
     );
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
     const workspaceId = existingWorkspace._id;
     const baseEnvironmentPair = [
       {

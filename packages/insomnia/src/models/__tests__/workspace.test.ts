@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { services } from '~/insomnia-data';
 
 import * as models from '../index';
-import { WorkspaceScopeKeys } from '../workspace';
 describe('migrate()', () => {
   it('migrates client certificates properly', async () => {
     const workspace = await services.workspace.create({
@@ -82,20 +81,20 @@ describe('migrate()', () => {
       scope: 'something',
     });
     const designW = await services.workspace.create({
-      scope: WorkspaceScopeKeys.design,
+      scope: models.workspace.WorkspaceScopeKeys.design,
     });
     const collectionW = await services.workspace.create({
-      scope: WorkspaceScopeKeys.collection,
+      scope: models.workspace.WorkspaceScopeKeys.collection,
     });
     await models.workspace.migrate(specW);
     await models.workspace.migrate(debugW);
     await models.workspace.migrate(nullW);
     await models.workspace.migrate(somethingElseW);
-    expect(specW.scope).toBe(WorkspaceScopeKeys.design);
-    expect(debugW.scope).toBe(WorkspaceScopeKeys.collection);
-    expect(nullW.scope).toBe(WorkspaceScopeKeys.collection);
-    expect(somethingElseW.scope).toBe(WorkspaceScopeKeys.collection);
-    expect(designW.scope).toBe(WorkspaceScopeKeys.design);
-    expect(collectionW.scope).toBe(WorkspaceScopeKeys.collection);
+    expect(specW.scope).toBe(models.workspace.WorkspaceScopeKeys.design);
+    expect(debugW.scope).toBe(models.workspace.WorkspaceScopeKeys.collection);
+    expect(nullW.scope).toBe(models.workspace.WorkspaceScopeKeys.collection);
+    expect(somethingElseW.scope).toBe(models.workspace.WorkspaceScopeKeys.collection);
+    expect(designW.scope).toBe(models.workspace.WorkspaceScopeKeys.design);
+    expect(collectionW.scope).toBe(models.workspace.WorkspaceScopeKeys.collection);
   });
 });

@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import * as models from '../index';
 
 describe('init()', () => {
