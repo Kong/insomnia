@@ -15,7 +15,8 @@ import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoa
 import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import { services, type Settings } from '~/insomnia-data';
+import type { Settings } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
 import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';

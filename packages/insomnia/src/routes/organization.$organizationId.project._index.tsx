@@ -5,7 +5,8 @@ import { href, redirect, useLoaderData, useNavigate, useParams } from 'react-rou
 
 import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { type GitRepository, services } from '~/insomnia-data';
+import type { GitRepository } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import type { Project } from '~/models/project';
