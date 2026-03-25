@@ -767,7 +767,13 @@ export function importInsomniaV5Data(rawData: string) {
 }
 
 export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
-  const url = new URL(mcpUrl.trim());
+  const trimmed = mcpUrl.trim();
+  let url: URL;
+  try {
+    url = new URL(trimmed);
+  } catch (err) {
+    throw new TypeError(`Invalid URL: ${trimmed}`, { cause: err });
+  }
   const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
   invariant(isHttp, 'MCP server URL must use http or https');
   const mcpClient = {
@@ -776,7 +782,7 @@ export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
     name: 'Imported MCP Client',
     mcpRequest: {
       name: 'Imported MCP Client',
-      url: mcpUrl.trim(),
+      url: trimmed,
       transportType: 'streamable-http' as const,
     },
   };

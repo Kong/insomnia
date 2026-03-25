@@ -1,11 +1,14 @@
+import { fromJson, type JsonValue, toBinary } from '@bufbuild/protobuf';
+import { FileDescriptorSetSchema } from '@bufbuild/protobuf/wkt';
+import { Code, ConnectError } from '@connectrpc/connect';
 import {
-  FileDescriptorSet as ProtobufEsFileDescriptorSet,
-  MethodIdempotency,
-  MethodKind,
-  proto3,
-} from '@bufbuild/protobuf';
-import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
-import { createConnectTransport } from '@connectrpc/connect-node';
+  codeFromHttpStatus,
+  contentTypeUnaryJson,
+  errorFromJson,
+  headerContentType,
+  headerProtocolVersion,
+  protocolVersion,
+} from '@connectrpc/connect/protocol-connect';
 import {
   type Call,
   ChannelCredentials,
@@ -109,75 +112,45 @@ interface MethodDefs {
 
 const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflectionApi']): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
-  const GetFileDescriptorSetRequest = proto3.makeMessageType('buf.reflect.v1beta1.GetFileDescriptorSetRequest', () => [
-    { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    {
-      no: 3,
-      name: 'symbols',
-      kind: 'scalar',
-      T: 9 /* ScalarType.STRING */,
-      repeated: true,
-    },
-  ]);
-  const GetFileDescriptorSetResponse = proto3.makeMessageType(
-    'buf.reflect.v1beta1.GetFileDescriptorSetResponse',
-    () => [
-      {
-        no: 1,
-        name: 'file_descriptor_set',
-        kind: 'message',
-        T: ProtobufEsFileDescriptorSet,
-      },
-      { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    ],
-  );
-  const FileDescriptorSetService = {
-    typeName: 'buf.reflect.v1beta1.FileDescriptorSetService',
-    methods: {
-      getFileDescriptorSet: {
-        name: 'GetFileDescriptorSet',
-        I: GetFileDescriptorSetRequest,
-        O: GetFileDescriptorSetResponse,
-        kind: MethodKind.Unary,
-        idempotency: MethodIdempotency.NoSideEffects,
-      },
-    },
-  } as const;
-  const transport = createConnectTransport({
-    baseUrl: url,
-    httpVersion: '1.1',
-  });
-  const client = createPromiseClient(FileDescriptorSetService, transport);
-  const headers: HeadersInit = {
+  const endpoint = `${url.replace(/\/?$/, '')}/buf.reflect.v1beta1.FileDescriptorSetService/GetFileDescriptorSet`;
+  const headers = {
+    [headerContentType]: contentTypeUnaryJson,
+    [headerProtocolVersion]: protocolVersion,
     'User-Agent': `insomnia/${version}`,
     ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
   };
   try {
-    const res = await client.getFileDescriptorSet(
-      {
-        module,
-      },
-      {
-        headers,
-      },
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ module }),
+    });
+    const fallback = new ConnectError(
+      `HTTP ${response.status}`,
+      codeFromHttpStatus(response.status),
+      response.headers,
     );
-    const methodDefs: MethodDefs[] = [];
-    if (res.fileDescriptorSet === undefined) {
+
+    if (!response.ok) {
+      const json = (await response.json().catch(() => {
+        throw fallback;
+      })) as JsonValue;
+      throw errorFromJson(json, response.headers, fallback);
+    }
+
+    const { fileDescriptorSet } = (await response.json()) as { fileDescriptorSet?: JsonValue };
+    if (fileDescriptorSet === undefined) {
       return [];
     }
     const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
-      Buffer.from(res.fileDescriptorSet.toBinary()),
+      Buffer.from(
+        toBinary(
+          FileDescriptorSetSchema,
+          fromJson(FileDescriptorSetSchema, fileDescriptorSet, { ignoreUnknownFields: true }),
+        ),
+      ),
     );
-    for (const definition of Object.values(packageDefinition)) {
-      const serviceDefinition = asServiceDefinition(definition);
-      if (serviceDefinition === null) {
-        continue;
-      }
-      const serviceMethods = Object.values(serviceDefinition);
-      methodDefs.push(...serviceMethods);
-    }
-    return methodDefs;
+    return getMethodsFromPackageDefinition(packageDefinition);
   } catch (error) {
     const connectError = ConnectError.from(error);
     switch (connectError.code) {
