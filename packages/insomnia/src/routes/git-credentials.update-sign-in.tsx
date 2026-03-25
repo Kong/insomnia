@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import type { GitRemoteProviderType } from '~/models/git-credentials';
+import type { GitRemoteProviderType } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git-credentials.update-sign-in';

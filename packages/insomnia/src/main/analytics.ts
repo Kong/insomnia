@@ -9,13 +9,13 @@ import { services } from '~/insomnia-data';
 
 import {
   getApiBaseURL,
-  getAppPlatform,
   getAppVersion,
   getClientString,
   getProductName,
   getSegmentWriteKey,
   PLAYWRIGHT,
 } from '../common/constants';
+import { platform } from '../common/platform';
 import * as models from '../models/index';
 
 let _currentOrganizationId: string | undefined;
@@ -182,7 +182,6 @@ export async function trackPageView(name: string) {
 // Private Functions //
 // ~~~~~~~~~~~~~~~~~ //
 function _getOsName() {
-  const platform = getAppPlatform();
   switch (platform) {
     case 'darwin': {
       return 'mac';

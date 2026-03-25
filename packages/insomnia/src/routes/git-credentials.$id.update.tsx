@@ -1,16 +1,17 @@
 import { href } from 'react-router';
 
-import { gitCredentials } from '~/models';
-import { type GitCredentialsV2, isGitCredentialsV2 } from '~/models/git-credentials';
+import { type GitCredentialsV2, models, services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git-credentials.$id.update';
+
+const { isGitCredentialsV2 } = models.gitCredentials;
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const data = (await request.json()) as Partial<GitCredentialsV2>;
   const { id } = params;
 
-  const credential = await gitCredentials.getById(id);
+  const credential = await services.gitCredentials.getById(id);
   if (!credential) {
     throw new Error('Credential not found');
   }
@@ -18,7 +19,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     throw new Error('Invalid credential data structure');
   }
 
-  await gitCredentials.update(credential, data);
+  await services.gitCredentials.update(credential, data);
 
   return {
     success: true,

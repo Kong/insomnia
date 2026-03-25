@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
+import { type CloudProviderCredential, models } from '~/insomnia-data';
 import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.update';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
-import { type CloudProviderCredential, getProviderDisplayName } from '../../../../models/cloud-credential';
 import { executePluginMainAction } from '../../../../plugins';
 import { Icon } from '../../icon';
 import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
 import { HashiCorpCredentialForm } from './hashicorp-credential-form';
+
+const { getProviderDisplayName } = models.cloudCredential;
 
 type BaseCloudCredential = Pick<CloudProviderCredential, 'credentials' | 'provider' | 'name'>;
 export interface CloudCredentialModalProps {

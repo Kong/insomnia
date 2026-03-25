@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { type CloudProviderCredential, HashiCorpCredentialType } from '~/models/cloud-credential';
+import { type CloudProviderCredential, models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import type { NunjucksParsedTag } from '~/templating/types';
 
@@ -20,6 +20,7 @@ export interface HashiCorpVaultFormProps {
 type HashiCorpCredential = Extract<CloudProviderCredential, { provider: 'hashicorp' }>;
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 
+const { HashiCorpCredentialType } = models.cloudCredential;
 const defaultKVVersion = 'v2';
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {

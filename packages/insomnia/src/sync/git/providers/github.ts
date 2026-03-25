@@ -4,9 +4,8 @@ import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
 import { getApiBaseURL, getAppWebsiteBaseURL, PLAYWRIGHT } from '~/common/constants';
-import * as models from '~/models';
-import type { GitCredentials, GitCredentialsV2 } from '~/models/git-credentials';
-import { isGitCredentialsV2 } from '~/models/git-credentials';
+import type { GitCredentials, GitCredentialsV2 } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { expiresAtFromOAuthExpiresIn } from '~/sync/git/utils';
 
 import type {
@@ -19,6 +18,8 @@ import type {
   ProviderUser,
   ValidationResult,
 } from './types';
+
+const { isGitCredentialsV2 } = models.gitCredentials;
 
 /**
  * OAuth state cache for security validation
@@ -318,7 +319,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
 
       // Upsert: update the existing GitHub credential when we can reliably identify it.
       // Otherwise, create a new credential to avoid overwriting a different account.
-      const existingGitHubCredentials = (await models.gitCredentials.all()).filter(
+      const existingGitHubCredentials = (await services.gitCredentials.all()).filter(
         (c): c is GitHubCredentialV2 => isGitCredentialsV2(c) && c.provider === 'github',
       );
 
@@ -335,11 +336,10 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
         : [];
 
       const existing =
-        matchingByEmail[0] ||
-        (existingGitHubCredentials.length === 1 ? existingGitHubCredentials[0] : undefined);
+        matchingByEmail[0] || (existingGitHubCredentials.length === 1 ? existingGitHubCredentials[0] : undefined);
 
       await (existing
-        ? models.gitCredentials.update(existing, {
+        ? services.gitCredentials.update(existing, {
             name: 'GitHub Credential',
             author,
             credentials: {
@@ -347,12 +347,10 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
               token: data.access_token,
               emails,
               selectedEmail: email || existing.credentials.selectedEmail,
-              ...(accessTokenExpiresAt !== undefined
-                ? { expiresAt: accessTokenExpiresAt }
-                : {}),
+              ...(accessTokenExpiresAt !== undefined ? { expiresAt: accessTokenExpiresAt } : {}),
             },
           })
-        : models.gitCredentials.create({
+        : services.gitCredentials.create({
             name: 'GitHub Credential',
             credentials,
             provider: 'github',

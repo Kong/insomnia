@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 
-import {
-  type CloudProviderCredential,
-  type CloudProviderName,
-  HashiCorpCredentialType,
-  HashiCorpVaultAuthMethod,
-  type HCPCredential,
-  type HCPVaultDedicatedAppRoleCredential,
-  type HCPVaultDedicatedTokenCredential,
-  type VaultAppRoleCredential,
-  type VaultTokenCredential,
-} from '../../../../models/cloud-credential';
+import type {
+  CloudProviderCredential,
+  CloudProviderName,
+  HCPCredential,
+  HCPVaultDedicatedAppRoleCredential,
+  HCPVaultDedicatedTokenCredential,
+  VaultAppRoleCredential,
+  VaultTokenCredential,
+} from '~/insomnia-data';
+import { HashiCorpCredentialType, HashiCorpVaultAuthMethod } from '~/insomnia-data';
+
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 

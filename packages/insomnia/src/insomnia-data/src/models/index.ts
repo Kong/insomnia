@@ -1,14 +1,26 @@
-// export models that define the structure of the data and any related functions such as init, type guards
+// models - export models that define the structure of the data and any related functions such as init, type guards
+import * as apiSpec from './api-spec';
 import * as caCertificate from './ca-certificate';
+import * as clientCertificate from './client-certificate';
+import * as cloudCredential from './cloud-credential';
+import * as gitCredentials from './git-credentials';
+import * as gitRepository from './git-repository';
 import * as mcpPayload from './mcp-payload';
 import * as mcpRequest from './mcp-request';
 import * as mcpResponse from './mcp-response';
+import * as runnerTestResult from './runner-test-result';
 import * as settings from './settings';
 
 export const models = {
+  apiSpec,
   caCertificate,
-  mcpRequest,
+  clientCertificate,
+  cloudCredential,
+  gitCredentials,
+  gitRepository,
   mcpPayload,
+  mcpRequest,
   mcpResponse,
+  runnerTestResult,
   settings,
 } as const;

@@ -21,12 +21,12 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { ApiSpec } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
-import { type ApiSpec } from '../../../models/api-spec';
 import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';

@@ -1,8 +1,7 @@
 import { href } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
-import * as models from '~/models';
-import type { CloudProviderCredential } from '~/models/cloud-credential';
+import { type CloudProviderCredential, services } from '~/insomnia-data';
 import { executePluginMainAction } from '~/plugins';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -22,10 +21,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   invariant(credentials, 'Credentials are required');
   if (isAuthenticated) {
     // find credential with same name for oauth authenticated cloud service
-    const existingCredential = await models.cloudCredential.getByName(name, provider);
+    const existingCredential = await services.cloudCredential.getByName(name, provider);
     await (existingCredential.length === 0
-      ? models.cloudCredential.create(patch)
-      : models.cloudCredential.update(existingCredential[0], patch));
+      ? services.cloudCredential.create(patch)
+      : services.cloudCredential.update(existingCredential[0], patch));
     return credentials;
   }
   const authenticateResponse = await executePluginMainAction({
@@ -46,7 +45,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       patch.credentials['access_token'] = access_token;
       patch.credentials['expires_at'] = expires_at;
     }
-    await models.cloudCredential.create(patch);
+    await services.cloudCredential.create(patch);
     return result as { access_token: string; expires_at: number };
   }
   return { error: 'Unexpected response from ' + provider };

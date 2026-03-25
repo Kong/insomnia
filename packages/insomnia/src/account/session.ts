@@ -1,19 +1,10 @@
 import { logout as logoutAPI, whoami } from 'insomnia-api';
 
-import { services } from '~/insomnia-data';
+import { type GitRepository, services } from '~/insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
-import {
-  cloudCredential,
-  gitCredentials,
-  gitRepository,
-  pluginData,
-  project,
-  userSession,
-  workspaceMeta,
-} from '../models';
-import { type GitRepository } from '../models/git-repository';
+import { pluginData, project, userSession, workspaceMeta } from '../models';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
 import type { WorkspaceMeta } from '../models/workspace-meta';
 import * as crypt from './crypt';
@@ -178,12 +169,12 @@ async function _unsetSessionData() {
  * If any LLM provider is authenticated, the API key is removed, and deactivated if active.
  */
 async function _removeAllCredentials() {
-  const removals: Promise<unknown>[] = [gitCredentials.removeAll()];
+  const removals: Promise<unknown>[] = [services.gitCredentials.removeAll()];
 
-  const cloudCredentials = await cloudCredential.all();
+  const cloudCredentials = await services.cloudCredential.all();
   for (const cred of cloudCredentials) {
     if ('credentials' in cred) {
-      removals.push(cloudCredential.update(cred, { credentials: undefined }));
+      removals.push(services.cloudCredential.update(cred, { credentials: undefined }));
     }
   }
 
@@ -197,7 +188,7 @@ async function _removeAllCredentials() {
     }
   }
 
-  const customGitRepos = await gitRepository.all();
+  const customGitRepos = await services.gitRepository.all();
   for (const repo of customGitRepos) {
     if (!repo.credentialsId) continue; // unauthenticated git repositories need not be removed
     removals.push(_removeGitRepository(repo));
@@ -237,7 +228,7 @@ async function _removeGitRepository(repo: GitRepository) {
   for (const wsMeta of workspaceMetas) {
     await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
   }
-  await gitRepository.remove(repo);
+  await services.gitRepository.remove(repo);
 }
 
 // TODO: v12 remove this function and getLocalStorageDataFromFileOrigin from main

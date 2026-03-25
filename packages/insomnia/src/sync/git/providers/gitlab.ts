@@ -6,9 +6,8 @@ import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
 import { getApiBaseURL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '~/common/constants';
-import * as models from '~/models';
-import type { BaseGitCredentialsV2, GitCredentials, GitCredentialsV2 } from '~/models/git-credentials';
-import { isGitCredentialsV2 } from '~/models/git-credentials';
+import type { BaseGitCredentialsV2, GitCredentials, GitCredentialsV2 } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { expiresAtFromOAuthExpiresIn } from '~/sync/git/utils';
 
 import type {
@@ -21,6 +20,8 @@ import type {
   ProviderUser,
   ValidationResult,
 } from './types';
+
+const { isGitCredentialsV2 } = models.gitCredentials;
 
 /**
  * OAuth state cache for security validation with PKCE verifiers
@@ -411,7 +412,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
 
       // Upsert: update the existing GitLab credential when we can reliably identify it.
       // Otherwise, create a new credential to avoid overwriting a different account.
-      const existingGitLabCredentials = (await models.gitCredentials.all()).filter(
+      const existingGitLabCredentials = (await services.gitCredentials.all()).filter(
         (c): c is GitLabCredentialV2 => isGitCredentialsV2(c) && c.provider === 'gitlab',
       );
 
@@ -429,7 +430,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         matchingByEmail[0] || (existingGitLabCredentials.length === 1 ? existingGitLabCredentials[0] : undefined);
 
       const credential = await (existing
-        ? models.gitCredentials.update(existing, {
+        ? services.gitCredentials.update(existing, {
             name: 'GitLab Credential',
             author,
             credentials: {
@@ -441,7 +442,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
               ...(accessTokenExpiresAt !== undefined ? { expiresAt: accessTokenExpiresAt } : {}),
             },
           })
-        : models.gitCredentials.create({
+        : services.gitCredentials.create({
             name: 'GitLab Credential',
             credentials,
             provider: 'gitlab',
@@ -529,7 +530,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
       const accessTokenExpiresAt = expiresAtFromOAuthExpiresIn(tokenResponse.expires_in);
 
       // Update the credential in the database with new tokens
-      const updatedCredential = await models.gitCredentials.update(credential, {
+      const updatedCredential = await services.gitCredentials.update(credential, {
         credentials: {
           ...credential.credentials,
           token: access_token,

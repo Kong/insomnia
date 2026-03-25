@@ -7,6 +7,7 @@ import React, { type FC, Fragment, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Label, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
+import type { ApiSpec } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
@@ -14,7 +15,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { ApiSpec } from '../../../models/api-spec';
 import type { MockServer } from '../../../models/mock-server';
 import { isRemoteProject, type Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';

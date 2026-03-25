@@ -136,7 +136,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     if (scope === 'design') {
-      await models.apiSpec.getOrCreateForParentId(workspace._id);
+      await services.apiSpec.getOrCreateForParentId(workspace._id);
     }
 
     if (workspaceData.scope === 'mcp') {

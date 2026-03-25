@@ -5,8 +5,7 @@ import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-compone
 
 import { Banner } from '~/basic-components/banner';
 import { Icon } from '~/basic-components/icon';
-import type { GitCredentials } from '~/models/git-credentials';
-import type { GitRepository } from '~/models/git-repository';
+import type { GitCredentials, GitRepository } from '~/insomnia-data';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
 import { useGitProviderUpdateSignInFetcher } from '~/routes/git-credentials.update-sign-in';
 

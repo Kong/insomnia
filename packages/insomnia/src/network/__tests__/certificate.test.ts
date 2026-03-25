@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ClientCertificate } from '../../models/client-certificate';
+import type { ClientCertificate } from '~/insomnia-data';
+
 import { filterClientCertificates } from '../certificate';
 
 describe('filterClientCertificates', () => {

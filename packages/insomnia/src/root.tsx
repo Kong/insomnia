@@ -158,7 +158,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
   const workspaceCount = await models.workspace.count();
   const userSession = await models.userSession.getOrCreate();
-  const cloudCredentials = await models.cloudCredential.all();
+  const cloudCredentials = await services.cloudCredential.all();
 
   return {
     settings,

@@ -1,5 +1,7 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
 import type { ChangeBufferEvent } from '../..';
@@ -520,40 +522,40 @@ describe('_repairDatabase()', async () => {
       _id: 'w3',
       name: 'Workspace 3',
     });
-    await models.apiSpec.updateOrCreateForParentId(w1._id, {
+    await services.apiSpec.updateOrCreateForParentId(w1._id, {
       fileName: '',
     });
-    await models.apiSpec.updateOrCreateForParentId(w2._id, {
+    await services.apiSpec.updateOrCreateForParentId(w2._id, {
       fileName: models.apiSpec.init().fileName,
     });
-    await models.apiSpec.updateOrCreateForParentId(w3._id, {
+    await services.apiSpec.updateOrCreateForParentId(w3._id, {
       fileName: 'Unique name',
     });
     // Make sure we have everything
-    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('');
-    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
-    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
+    expect((await services.apiSpec.getByParentId(w1._id))?.fileName).toBe('');
+    expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
+    expect((await services.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
     // Run the fix algorithm
     await repairDatabase();
     // Make sure things get adjusted
-    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
-    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
-    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
+    expect((await services.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
+    expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
+    expect((await services.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
   });
 
   it('fixes old git uris', async () => {
-    const oldRepoWithSuffix = await models.gitRepository.create({
+    const oldRepoWithSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
       uriNeedsMigration: true,
     });
-    const oldRepoWithoutSuffix = await models.gitRepository.create({
+    const oldRepoWithoutSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar',
       uriNeedsMigration: true,
     });
-    const newRepoWithSuffix = await models.gitRepository.create({
+    const newRepoWithSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
     });
-    const newRepoWithoutSuffix = await models.gitRepository.create({
+    const newRepoWithoutSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar',
     });
     await repairDatabase();

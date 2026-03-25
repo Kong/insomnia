@@ -4,7 +4,7 @@ import nodePath from 'node:path';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
-import { type CaCertificate, services, type Settings } from '~/insomnia-data';
+import { type CaCertificate, type ClientCertificate, services, type Settings } from '~/insomnia-data';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
@@ -20,7 +20,6 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import type { ClientCertificate } from '../models/client-certificate';
 import type { Cookie, CookieJar } from '../models/cookie-jar';
 import {
   type Environment,
@@ -151,7 +150,7 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
 
   const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
   const responsesDir = nodePath.join(
@@ -216,7 +215,7 @@ export const fetchRequestData = async (
 
   const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');

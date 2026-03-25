@@ -13,7 +13,7 @@ concurrency:
 jobs:
   # shared kong github action for security checking
   generate-sbom-and-upload-assets:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       packages: write
       contents: write # publish sbom to GH releases/tag assets
@@ -50,18 +50,18 @@ jobs:
           - os: windows-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             csc_link_secret: ''
             csc_key_password_secret: ''
-          # - os: ubuntu-22.04-arm
+          # - os: ubuntu-24.04-arm
           #   csc_link_secret: ''
           #   csc_key_password_secret: ''
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -73,6 +73,7 @@ jobs:
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Setup Inso CLI version env var
         shell: bash
@@ -328,7 +329,7 @@ jobs:
           SYFT_SOURCE_NAME: ${{ env.INSO_DOCKER_TAR }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: ignore
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
@@ -346,7 +347,7 @@ jobs:
             packages/insomnia-inso/artifacts/*
 
       - name: Upload source assets for Sentry
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ runner.os }}-${{ runner.arch }}-sentry
           path: |
@@ -357,7 +358,7 @@ jobs:
   update-pull-request:
     timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Get release version
         id: release_version

@@ -21,14 +21,8 @@ import {
 
 import { Button as BasicButton } from '~/basic-components/button';
 import { Icon } from '~/basic-components/icon';
-import {
-  type GitCredentials,
-  type GitCredentialsV2,
-  type GitRemoteProviderType,
-  isGitCredentialsV2,
-  isOAuthCredential,
-  type ProviderEmail,
-} from '~/models/git-credentials';
+import type { GitCredentials, GitCredentialsV2, GitRemoteProviderType, ProviderEmail } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
 import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-credentials.$id.related-projects';
@@ -41,6 +35,9 @@ import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-cus
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { CloudServiceCredentialList } from '~/ui/components/settings/cloud-service-credentials';
+
+const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
+
 const getErrorResult = (data: any) => {
   if (data && 'errors' in data && Array.isArray(data.errors) && data.errors.length > 0) {
     return data.errors.join(', ');

@@ -4,6 +4,7 @@ import { href, redirect } from 'react-router';
 import { database } from '~/common/database';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
@@ -135,7 +136,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
   let git_provider = 'none';
 
   if (newProjectData.credentialsId) {
-    const credentials = await models.gitCredentials.getById(newProjectData.credentialsId);
+    const credentials = await services.gitCredentials.getById(newProjectData.credentialsId);
     if (credentials) {
       git_provider = credentials.provider;
     }

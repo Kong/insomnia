@@ -280,6 +280,11 @@ const dialog: Window['dialog'] = {
 const app: Window['app'] = {
   getPath: options => ipcRenderer.sendSync('getPath', options),
   getAppPath: () => ipcRenderer.sendSync('getAppPath'),
+  process: {
+    get platform() {
+      return process.platform as NodeJS.Platform;
+    },
+  },
 };
 const shell: Window['shell'] = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),

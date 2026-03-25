@@ -85,7 +85,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         },
       });
 
-      const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+      const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
       const clientCertificate = workspaceClientCertificates.find(
         c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
       );
@@ -147,7 +147,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           purpose: 'send',
           skipBody: canClientStream(methodType),
         });
-        const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+        const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
         const clientCertificate = workspaceClientCertificates.find(
           c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false),
         );
@@ -286,7 +286,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                         reflectionApi: activeRequest.reflectionApi,
                       },
                     });
-                    const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+                    const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
                     const clientCertificate = workspaceClientCertificates.find(
                       c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
                     );

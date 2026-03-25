@@ -2,12 +2,12 @@ import { useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
+import type { GitRepository } from '~/insomnia-data';
 import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 
 import { docsGitSync } from '../../../../common/documentation';
-import type { GitRepository } from '../../../../models/git-repository';
 import { Link } from '../../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';

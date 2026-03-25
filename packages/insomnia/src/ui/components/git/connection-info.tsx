@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, Separator } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import type { GitRepository } from '~/models/git-repository';
+import type { GitRepository } from '~/insomnia-data';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 export const GitConnectionInfo = ({

@@ -1,7 +1,8 @@
-import type { GitCredentials } from '~/models/git-credentials';
-import { isGitCredentialsV2, isOAuthCredential } from '~/models/git-credentials';
-import type { GitRepository } from '~/models/git-repository';
+import type { GitCredentials, GitRepository } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
+
+const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
 /** GitHub App user tokens start with `ghu_` (see {@link isGitHubAppUserToken} in github-app-config-link). */
 function isGitHubAppUserToken(token?: string): boolean {

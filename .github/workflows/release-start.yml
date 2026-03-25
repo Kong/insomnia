@@ -19,17 +19,17 @@ on:
 jobs:
   setup-release-branch:
     timeout-minutes: 5
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: develop
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -37,6 +37,8 @@ jobs:
 
       - name: Install packages
         run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       # ############################################################
       # SETUP RELEASE_VERSION and RELEASE_BRANCH
@@ -73,7 +75,7 @@ jobs:
           branch: ${{ env.RELEASE_BRANCH }}
 
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           persist-credentials: false

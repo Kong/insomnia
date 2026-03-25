@@ -36,10 +36,9 @@ import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
+import { type ApiSpec, type GitRepository, services } from '~/insomnia-data';
 import * as models from '~/models';
 import { userSession } from '~/models';
-import type { ApiSpec } from '~/models/api-spec';
-import type { GitRepository } from '~/models/git-repository';
 import { sortProjects } from '~/models/helpers/project';
 import type { MockServer } from '~/models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
@@ -403,7 +402,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
-    project && isGitProject(project) ? await models.gitRepository.getById(project.gitRepositoryId || '') : null;
+    project && isGitProject(project) ? await services.gitRepository.getById(project.gitRepositoryId || '') : null;
 
   return {
     localFiles,
