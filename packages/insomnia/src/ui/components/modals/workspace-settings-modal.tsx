@@ -209,17 +209,19 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                   <>
                     <Label className="text-sm text-(--hl)">Mock server type</Label>
                     {mockServer?.useInsomniaCloud ? <p>Cloud Mock</p> : <p>Self-hosted Mock</p>}
-                    {!mockServer?.useInsomniaCloud && mockServer?.url && (
+                    {!mockServer?.useInsomniaCloud && (
                       <TextField
                         name="mockServerUrl"
+                        isRequired
                         defaultValue={mockServer?.url || ''}
-                        className={`group relative flex flex-1 flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
+                        className="group relative flex flex-1 flex-col gap-2"
                       >
                         <Label className="text-sm text-(--hl)">Self-hosted mock server URL</Label>
                         <Input
                           placeholder="https://example.com"
                           className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                         />
+                        <FieldError className="text-xs text-red-500" />
                       </TextField>
                     )}
                   </>
