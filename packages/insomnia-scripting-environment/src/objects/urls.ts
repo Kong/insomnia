@@ -139,6 +139,11 @@ export interface UrlOptions {
   variables: { key: string; value: string }[];
 }
 
+// Regex patterns used as fallbacks when urlObject is undefined (e.g. URL contains template tags)
+const URL_HOST_PATTERN = /^(?:https?:\/\/)?([^\/:]+)/i; // hostname only, stops before ':'
+const URL_PATH_PATTERN = /^(?:https?:\/\/[^\/]+)(\/[^?#]*)/i; // path without query/hash
+const URL_REMOTE_PATTERN = /^(?:https?:\/\/)?([^\/]+)/i; // host + port (if present)
+
 export class Url extends PropertyBase {
   override _kind = 'Url';
 
@@ -283,7 +288,7 @@ export class Url extends PropertyBase {
     }
     if (this.origin) {
       // [^\/:] stops at ':' so the port is excluded (hostname only)
-      const match = this.origin.match(/^(?:https?:\/\/)?([^\/:]+)/i);
+      const match = this.origin.match(URL_HOST_PATTERN);
       return match ? match[1] : '';
     }
     return '';
@@ -294,7 +299,7 @@ export class Url extends PropertyBase {
       return this.urlObject.pathname;
     }
     if (this.origin) {
-      const match = this.origin.match(/^(?:https?:\/\/[^\/]+)(\/[^?#]*)/i);
+      const match = this.origin.match(URL_PATH_PATTERN);
       return match ? match[1] : '';
     }
     return '';
@@ -320,7 +325,7 @@ export class Url extends PropertyBase {
     }
     if (this.origin) {
       // [^\/]+ (no colon exclusion) so the port is included, unlike getHost()
-      const match = this.origin.match(/^(?:https?:\/\/)?([^\/]+)/i);
+      const match = this.origin.match(URL_REMOTE_PATTERN);
       return match ? match[1] : '';
     }
     return '';
