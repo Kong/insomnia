@@ -108,7 +108,7 @@ export const NewWorkspaceModal = ({
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
-    if (createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer) {
+    if (createNewWorkspaceFetcher.state !== 'idle' && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
       setProgressMessage(0);
       const interval = setInterval(() => {
         setProgressMessage(prev => (prev + 1) % progressMessages.length);
@@ -122,7 +122,7 @@ export const NewWorkspaceModal = ({
 
   useEffect(() => {
     if (
-      scope === WorkspaceScopeKeys.mockServer &&
+      scope === models.workspace.WorkspaceScopeKeys.mockServer &&
       createNewWorkspaceFetcher.state === 'idle' &&
       createNewWorkspaceFetcher.data &&
       !createNewWorkspaceFetcher.data.error
@@ -138,7 +138,7 @@ export const NewWorkspaceModal = ({
   }, [gitRepoTreeFetcher, isOpen, project]);
 
   useEffect(() => {
-    if (isOpen && scope === WorkspaceScopeKeys.mockServer) {
+    if (isOpen && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
       window.main.trackSegmentEvent({
         event: SegmentEvent.mockCreateModalOpened,
       });
@@ -696,7 +696,8 @@ export const NewWorkspaceModal = ({
                 >
                   {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
                   <span>
-                    {createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer
+                    {createNewWorkspaceFetcher.state !== 'idle' &&
+                    scope === models.workspace.WorkspaceScopeKeys.mockServer
                       ? progressMessages[progressMessage]
                       : 'Create'}
                   </span>
