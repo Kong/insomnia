@@ -9,8 +9,8 @@ import {
 import { fetchTeamProjects } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
-import { services } from '~/insomnia-data';
 import type { Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 import { database } from '../common/database';
 import { project } from '../models';

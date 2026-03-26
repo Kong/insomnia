@@ -2,9 +2,8 @@ import type { Organization } from 'insomnia-api';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
-import { services } from '~/insomnia-data';
-
 import type { Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 import { database } from '../common/database';
 import * as models from '../models';

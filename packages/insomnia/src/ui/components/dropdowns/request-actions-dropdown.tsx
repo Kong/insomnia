@@ -3,8 +3,8 @@ import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import type { Environment } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';

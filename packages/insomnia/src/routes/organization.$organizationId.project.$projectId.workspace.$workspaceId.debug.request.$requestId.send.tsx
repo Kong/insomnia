@@ -9,9 +9,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { getContentDispositionHeader } from '~/common/misc';
 import type {
   Environment,
-  UserUploadEnvironment,
   ResponseInfo,
   RunnerResultPerRequestPerIteration,
+  UserUploadEnvironment,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';

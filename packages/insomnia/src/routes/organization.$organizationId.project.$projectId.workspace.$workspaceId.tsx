@@ -3,16 +3,16 @@ import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
-import { services } from '~/insomnia-data';
 import type {
   ApiSpec,
   CaCertificate,
   ClientCertificate,
-  GitRepository,
   CookieJar,
   Environment,
+  GitRepository,
   Project,
 } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { GrpcRequest } from '~/models/grpc-request';
 import type { GrpcRequestMeta } from '~/models/grpc-request-meta';

@@ -2,8 +2,8 @@ import type { Organization } from 'insomnia-api';
 
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
-import { services } from '~/insomnia-data';
 import type { Environment, Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { environment, grpcRequest, project, request, requestGroup, webSocketRequest, workspace } from '~/models';
 import type { GrpcRequest } from '~/models/grpc-request';
 import { isScratchpadOrganizationId } from '~/models/organization';

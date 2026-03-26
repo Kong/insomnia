@@ -2,8 +2,8 @@ import type { Organization } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import { services } from '~/insomnia-data';
 import type { Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { createFetcherLoadHook } from '~/utils/router';
 

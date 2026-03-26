@@ -2,8 +2,8 @@ import type { Organization } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import { services, models } from '~/insomnia-data';
 import type { Project } from '~/insomnia-data';
+import { models,services } from '~/insomnia-data';
 import { findPersonalOrganization } from '~/models/organization';
 import { migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';

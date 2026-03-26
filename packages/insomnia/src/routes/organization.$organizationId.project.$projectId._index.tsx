@@ -36,7 +36,7 @@ import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
-import type { Project, ApiSpec, GitRepository } from '~/insomnia-data';
+import type { ApiSpec, GitRepository,Project } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { sortProjects } from '~/models/helpers/project';

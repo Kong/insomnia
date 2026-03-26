@@ -1,7 +1,7 @@
 import { href, redirect } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import type { Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { type Workspace } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';

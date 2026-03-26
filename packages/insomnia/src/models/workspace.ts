@@ -1,6 +1,6 @@
 import type { Merge } from 'type-fest';
 
-import { services, models } from '~/insomnia-data';
+import { models,services } from '~/insomnia-data';
 
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';

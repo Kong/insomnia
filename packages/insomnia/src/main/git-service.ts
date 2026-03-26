@@ -20,8 +20,8 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import { services } from '~/insomnia-data';
 import type { GitRemoteProviderType, GitRepository } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
