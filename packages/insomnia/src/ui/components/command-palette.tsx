@@ -25,7 +25,6 @@ import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/co
 import { models } from '~/insomnia-data';
 import { isRequest } from '~/models/request';
 import { isRequestGroup } from '~/models/request-group';
-import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRootLoaderData } from '~/root';
 import { useCommandsLoaderFetcher } from '~/routes/commands';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -335,7 +334,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           >
             {getMethodShortHand(request.item)}
           </span>
-        ) : isWebSocketRequest(request.item) ? (
+        ) : models.webSocketRequest.isWebSocketRequest(request.item) ? (
           <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             WS
           </span>
@@ -349,7 +348,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         name: request.name,
         presence: [],
         description: request.item.url,
-        textValue: `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`,
+        textValue: `${isRequest(request.item) ? request.item.method : models.webSocketRequest.isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`,
         openInNewTab: request.openInNewTab,
         action: request.action,
       })),
@@ -437,7 +436,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           >
             {getMethodShortHand(request.item)}
           </span>
-        ) : isWebSocketRequest(request.item) ? (
+        ) : models.webSocketRequest.isWebSocketRequest(request.item) ? (
           <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             WS
           </span>
@@ -460,7 +459,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           </span>
         ),
         textValue: !isRequestGroup(request.item)
-          ? `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`
+          ? `${isRequest(request.item) ? request.item.method : models.webSocketRequest.isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`
           : '',
         openInNewTab: 'openInNewTab' in request ? request.openInNewTab : undefined,
         action: request.action,

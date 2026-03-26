@@ -52,8 +52,6 @@ export const init = (): BaseWebSocketRequest => ({
   description: '',
 });
 
-export const migrate = (doc: WebSocketRequest) => doc;
-
 export function rewriteReferences(request: WebSocketRequest, idMapping: Map<string, string>): WebSocketRequest {
   return {
     ...request,

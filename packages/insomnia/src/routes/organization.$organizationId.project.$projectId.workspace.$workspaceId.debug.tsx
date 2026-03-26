@@ -44,7 +44,7 @@ import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sort
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
-import type { Environment, GrpcRequest, Project, Workspace } from '~/insomnia-data';
+import type { Environment, GrpcRequest, Project, SocketIORequest, WebSocketRequest, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import * as models from '~/models';
@@ -58,8 +58,6 @@ import {
 } from '~/models/request';
 import { isRequestGroup, isRequestGroupId, type RequestGroup } from '~/models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '~/models/request-meta';
-import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '~/models/websocket-request';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -502,10 +500,10 @@ const Debug = () => {
 
   const isRealtimeRequest =
     activeRequest &&
-    (isWebSocketRequest(activeRequest) ||
+    (models.webSocketRequest.isWebSocketRequest(activeRequest) ||
       isEventStreamRequest(activeRequest) ||
       isGraphqlSubscriptionRequest(activeRequest) ||
-      isSocketIORequest(activeRequest));
+      models.socketIORequest.isSocketIORequest(activeRequest));
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -1111,12 +1109,12 @@ const Debug = () => {
                           {getMethodShortHand(item.doc)}
                         </span>
                       )}
-                      {isWebSocketRequest(item.doc) && (
+                      {models.webSocketRequest.isWebSocketRequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           WS
                         </span>
                       )}
-                      {isSocketIORequest(item.doc) && (
+                      {models.socketIORequest.isSocketIORequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           IO
                         </span>
@@ -1167,7 +1165,7 @@ const Debug = () => {
                   let label = item.doc.name;
                   if (isRequest(item.doc)) {
                     label = `${getMethodShortHand(item.doc)} ${label}`;
-                  } else if (isWebSocketRequest(item.doc)) {
+                  } else if (models.webSocketRequest.isWebSocketRequest(item.doc)) {
                     label = `WS ${label}`;
                   } else if (models.grpcRequest.isGrpcRequest(item.doc)) {
                     label = `gRPC ${label}`;
@@ -1253,8 +1251,12 @@ const Debug = () => {
                             reloadRequests={reloadRequests}
                           />
                         )}
-                        {isWebSocketRequestId(requestId) && <WebSocketRequestPane environment={activeEnvironment} />}
-                        {isSocketIORequestId(requestId) && <SocketIORequestPane environment={activeEnvironment} />}
+                        {models.webSocketRequest.isWebSocketRequestId(requestId) && (
+                          <WebSocketRequestPane environment={activeEnvironment} />
+                        )}
+                        {models.socketIORequest.isSocketIORequestId(requestId) && (
+                          <SocketIORequestPane environment={activeEnvironment} />
+                        )}
                         {isRequestId(requestId) && (
                           <RequestPane
                             environmentId={activeEnvironment ? activeEnvironment._id : ''}
@@ -1552,7 +1554,7 @@ const CollectionGridListItem = ({
             {getMethodShortHand(item.doc)}
           </span>
         )}
-        {isWebSocketRequest(item.doc) && (
+        {models.webSocketRequest.isWebSocketRequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1561,7 +1563,7 @@ const CollectionGridListItem = ({
             WS
           </span>
         )}
-        {isSocketIORequest(item.doc) && (
+        {models.socketIORequest.isSocketIORequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1599,8 +1601,8 @@ const CollectionGridListItem = ({
             }
           }}
         />
-        {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-        {isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
+        {models.webSocketRequest.isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+        {models.socketIORequest.isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
         {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}

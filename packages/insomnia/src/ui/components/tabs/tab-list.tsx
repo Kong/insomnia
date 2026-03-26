@@ -14,8 +14,6 @@ import { useParams } from 'react-router';
 
 import type { MockRoute } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { isSocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
@@ -191,9 +189,9 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         if (workspace) {
           if (
             isRequest(doc) ||
-            isWebSocketRequest(doc) ||
             models.grpcRequest.isGrpcRequest(doc) ||
-            isSocketIORequest(doc)
+            models.webSocketRequest.isWebSocketRequest(doc) ||
+            models.socketIORequest.isSocketIORequest(doc)
           ) {
             updateTabById?.(doc._id, {
               workspaceId: workspace._id,

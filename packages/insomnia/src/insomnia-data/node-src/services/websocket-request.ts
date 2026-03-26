@@ -1,8 +1,7 @@
-import { replaceIdsInFields } from '~/models/helpers/replace-ids-in-fields';
+import { type WebSocketRequest } from '~/insomnia-data';
+import * as models from '~/models';
 
 import { database } from '../../src/database';
-import { models } from '../../src/models';
-import { type WebSocketRequest } from '../../src/models/types';
 
 const { type, name } = models.webSocketRequest;
 
@@ -54,10 +53,3 @@ export const getById = (_id: string) => database.findOne<WebSocketRequest>(type,
 export const findByParentId = (parentId: string) => database.find<WebSocketRequest>(type, { parentId });
 
 export const all = () => database.find<WebSocketRequest>(type);
-
-export function rewriteReferences(request: WebSocketRequest, idMapping: Map<string, string>): WebSocketRequest {
-  return {
-    ...request,
-    ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping),
-  };
-}

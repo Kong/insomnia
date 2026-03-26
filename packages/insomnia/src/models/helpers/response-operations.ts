@@ -3,18 +3,11 @@ import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
 import { database as db } from '~/common/database';
-import { type McpResponse, services } from '~/insomnia-data';
+import type { McpResponse, SocketIOResponse, WebSocketResponse } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import * as models from '~/models/index';
 import { type Compression, isResponse, type Response, type as responseType } from '~/models/response';
-import { isSocketIORequestId } from '~/models/socket-io-request';
-import { isSocketIOResponse, type SocketIOResponse, type as socketIOResponseType } from '~/models/socket-io-response';
-import { isWebSocketRequestId } from '~/models/websocket-request';
-import {
-  isWebSocketResponse,
-  type as webSocketResponseType,
-  type WebSocketResponse,
-} from '~/models/websocket-response';
 import { deserializeNDJSON } from '~/utils/ndjson';
 
 export async function removeResponsesForRequest(requestId: string, environmentId?: string | null) {
@@ -30,15 +23,19 @@ export async function removeResponsesForRequest(requestId: string, environmentId
     query.environmentId = environmentId;
   }
 
-  const type = isWebSocketRequestId(requestId)
-    ? webSocketResponseType
-    : isSocketIORequestId(requestId)
-      ? socketIOResponseType
+  const type = models.webSocketRequest.isWebSocketRequestId(requestId)
+    ? models.webSocketResponse.type
+    : models.socketIORequest.isSocketIORequestId(requestId)
+      ? models.socketIOResponse.type
       : models.mcpRequest.isMcpRequestId(requestId)
         ? models.mcpResponse.type
         : responseType;
 
-  if (type === webSocketResponseType || type === socketIOResponseType || type === models.mcpResponse.type) {
+  if (
+    type === models.webSocketResponse.type ||
+    type === models.socketIOResponse.type ||
+    type === models.mcpResponse.type
+  ) {
     const toDelete = await db.find<WebSocketResponse | SocketIOResponse | McpResponse>(type, query);
     for (const doc of toDelete) {
       fs.promises.unlink(doc.eventLogPath);
@@ -58,7 +55,11 @@ export async function removeResponsesForRequest(requestId: string, environmentId
 }
 
 export function removeResponse(response: Response | WebSocketResponse | SocketIOResponse | McpResponse) {
-  if (isWebSocketResponse(response) || isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response)) {
+  if (
+    models.webSocketResponse.isWebSocketResponse(response) ||
+    models.socketIOResponse.isSocketIOResponse(response) ||
+    models.mcpResponse.isMcpResponse(response)
+  ) {
     fs.promises.unlink(response.eventLogPath);
     fs.promises.unlink(response.timelinePath);
   } else if (isResponse(response)) {

@@ -1,9 +1,9 @@
 import { href } from 'react-router';
 
+import type { WebSocketRequest } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { getPathParametersFromUrl, isRequest } from '~/models/request';
-import type { WebSocketRequest } from '~/models/websocket-request';
-import { isWebSocketRequest } from '~/models/websocket-request';
 import { SegmentEvent } from '~/ui/analytics';
 import { updateMimeType } from '~/ui/components/dropdowns/content-type-dropdown';
 import { invariant } from '~/utils/invariant';
@@ -18,7 +18,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(req, 'Request not found');
   const patch = await request.json();
 
-  const isRequestURLChanged = (isRequest(req) || isWebSocketRequest(req)) && patch.url && patch.url !== req.url;
+  const isRequestURLChanged =
+    (isRequest(req) || models.webSocketRequest.isWebSocketRequest(req)) && patch.url && patch.url !== req.url;
 
   if (isRequestURLChanged) {
     const { url } = patch as Request | WebSocketRequest;

@@ -2,8 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useNavigate, useParams } from 'react-router';
 
-import type { McpRequest } from '~/insomnia-data';
-import type { GrpcRequest } from '~/insomnia-data';
+import type { GrpcRequest, McpRequest, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
@@ -12,8 +11,6 @@ import { isNotNullOrUndefined } from '../../../common/misc';
 import * as models from '../../../models';
 import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isRequest, type Request } from '../../../models/request';
-import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import { revalidateWorkspaceActiveRequest } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -136,7 +133,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 />
               </label>
             </div>
-            {request && isWebSocketRequest(request) && (
+            {request && models.webSocketRequest.isWebSocketRequest(request) && (
               <>
                 <>
                   <div className="pad-top pad-bottom">
@@ -240,7 +237,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 </div>
               </>
             )}
-            {request && isSocketIORequest(request) && (
+            {request && models.socketIORequest.isSocketIORequest(request) && (
               <SocketIOPathSettings request={request} patchRequest={patchRequest} />
             )}
             {request && models.grpcRequest.isGrpcRequest(request) && (

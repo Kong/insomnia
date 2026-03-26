@@ -1,5 +1,3 @@
-import { replaceIdsInFields } from '~/models/helpers/replace-ids-in-fields';
-
 import { database } from '../../src/database';
 import { models } from '../../src/models';
 import { type SocketIOPayload } from '../../src/models/types';
@@ -57,7 +55,3 @@ export async function getOrCreateByParentId(parentId: string) {
 }
 
 export const all = () => database.find<SocketIOPayload>(type);
-
-export function rewriteReferences(payload: SocketIOPayload, idMapping: Map<string, string>): SocketIOPayload {
-  return { ...payload, ...replaceIdsInFields(payload, ['args'], idMapping) };
-}

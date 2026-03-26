@@ -40,8 +40,6 @@ export const init = (): BaseSocketIOPayload => {
   };
 };
 
-export const migrate = (doc: SocketIOPayload) => doc;
-
 export function rewriteReferences(payload: SocketIOPayload, idMapping: Map<string, string>): SocketIOPayload {
   return { ...payload, ...replaceIdsInFields(payload, ['args'], idMapping) };
 }

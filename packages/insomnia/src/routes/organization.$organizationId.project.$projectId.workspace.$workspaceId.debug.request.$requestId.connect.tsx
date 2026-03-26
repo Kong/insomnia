@@ -8,8 +8,6 @@ import * as requestOperations from '~/models/helpers/request-operations';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '~/models/request';
 import { isRequestMeta } from '~/models/request-meta';
-import { isSocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequestId } from '~/models/websocket-request';
 import { getAuthHeader } from '~/network/authentication';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';
@@ -37,7 +35,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = (await request.json()) as ConnectActionParams;
 
-  if (isWebSocketRequestId(requestId)) {
+  if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
     window.main.webSocket.open({
       requestId,
       workspaceId,
@@ -84,7 +82,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       suppressUserAgent: rendered.suppressUserAgent,
     });
   }
-  if (isSocketIORequest(req)) {
+  if (models.socketIORequest.isSocketIORequest(req)) {
     window.main.socketIO.open({
       requestId,
       workspaceId,

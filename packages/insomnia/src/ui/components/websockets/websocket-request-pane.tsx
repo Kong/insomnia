@@ -4,7 +4,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { Environment } from '~/insomnia-data';
+import type { Environment, WebSocketRequest } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -12,9 +12,7 @@ import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codem
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
-import * as models from '../../../models';
 import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
-import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import {
   useRequestLoaderData,
@@ -77,7 +75,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
 
   useEffect(() => {
     const init = async () => {
-      const payload = await models.webSocketPayload.getByParentId(request._id);
+      const payload = await services.webSocketPayload.getByParentId(request._id);
       const msg = payload?.value || '';
       editorRef.current?.setValue(msg);
     };
@@ -138,10 +136,10 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
   };
 
   const upsertPayloadWithValue = async (value: string) => {
-    const payload = await models.webSocketPayload.getByParentId(request._id);
+    const payload = await services.webSocketPayload.getByParentId(request._id);
     await (payload
-      ? models.webSocketPayload.update(payload, { value })
-      : models.webSocketPayload.create({
+      ? services.webSocketPayload.update(payload, { value })
+      : services.webSocketPayload.create({
           parentId: request._id,
           value,
           mode: previewMode,
@@ -201,7 +199,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      const payload = await models.webSocketPayload.getByParentId(requestId);
+      const payload = await services.webSocketPayload.getByParentId(requestId);
       if (isMounted && payload) {
         setPreviewMode(payload.mode);
       }
@@ -229,10 +227,10 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const patchSettings = useSettingsPatcher();
   const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
-    const payload = await models.webSocketPayload.getByParentId(requestId);
+    const payload = await services.webSocketPayload.getByParentId(requestId);
     await (payload
-      ? models.webSocketPayload.update(payload, { mode })
-      : models.webSocketPayload.create({
+      ? services.webSocketPayload.update(payload, { mode })
+      : services.webSocketPayload.create({
           parentId: requestId,
           value: '',
           mode,

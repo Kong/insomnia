@@ -1,15 +1,13 @@
 import deepEqual from 'deep-equal';
 
-import type { GrpcRequest, McpRequest } from '~/insomnia-data';
+import type { GrpcRequest, McpRequest, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 
 import { database, database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
 import { isRequest, type Request } from './request';
-import { isSocketIORequest, type SocketIORequest } from './socket-io-request';
 import type { BaseModel } from './types';
-import { isWebSocketRequest, type WebSocketRequest } from './websocket-request';
 
 /* When viewing a specific request, the user can click the Send button to test-send it.
 Each time the user sends the request, the parameters may differ—they might edit the body, headers, and so on—and Insomnia records every sent request as history.
@@ -66,8 +64,8 @@ export function findByParentId(parentId: string) {
 export async function create(request: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest) {
   if (
     !isRequest(request) &&
-    !isWebSocketRequest(request) &&
-    !isSocketIORequest(request) &&
+    !models.webSocketRequest.isWebSocketRequest(request) &&
+    !models.socketIORequest.isSocketIORequest(request) &&
     !models.mcpRequest.isMcpRequest(request)
   ) {
     throw new Error(`New ${type} was not given a valid ${request.type} instance`);

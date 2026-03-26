@@ -29,8 +29,6 @@ export const init = (): BaseWebSocketPayload => ({
   mode: 'application/json',
 });
 
-export const migrate = (doc: WebSocketPayload) => doc;
-
 export function rewriteReferences(payload: WebSocketPayload, idMapping: Map<string, string>): WebSocketPayload {
   return { ...payload, ...replaceIdsInFields(payload, ['value'], idMapping) };
 }

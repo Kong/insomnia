@@ -1,5 +1,3 @@
-import { replaceIdsInFields } from '~/models/helpers/replace-ids-in-fields';
-
 import { database } from '../../src/database';
 import { models } from '../../src/models';
 import { type SocketIORequest } from '../../src/models/types';
@@ -17,8 +15,6 @@ export const create = (patch: Partial<SocketIORequest> = {}) => {
 export const getById = (_id: string) => database.findOne<SocketIORequest>(type, { _id });
 
 export const findByParentId = (parentId: string) => database.find<SocketIORequest>(type, { parentId });
-
-export const migrate = (doc: SocketIORequest) => doc;
 
 export const remove = (obj: SocketIORequest) => database.remove(obj);
 
@@ -53,11 +49,4 @@ export async function duplicate(request: SocketIORequest, patch: Partial<SocketI
     metaSortKey,
     ...patch,
   });
-}
-
-export function rewriteReferences(request: SocketIORequest, idMapping: Map<string, string>): SocketIORequest {
-  return {
-    ...request,
-    ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping),
-  };
 }

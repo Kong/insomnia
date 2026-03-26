@@ -3,24 +3,22 @@ import { Button } from 'react-aria-components';
 
 import { models } from '~/insomnia-data';
 
-import { isSocketIORequestId } from '../../../models/socket-io-request';
-import { isWebSocketRequestId } from '../../../models/websocket-request';
 import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base/dropdown';
 
 export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
   const handleCloseThisRequest = () => {
-    if (isWebSocketRequestId(requestId)) {
+    if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
       window.main.webSocket.close({ requestId });
-    } else if (isSocketIORequestId(requestId)) {
+    } else if (models.socketIORequest.isSocketIORequestId(requestId)) {
       window.main.socketIO.close({ requestId });
     } else if (models.mcpRequest.isMcpRequestId(requestId)) {
       window.main.mcp.close({ requestId });
     }
   };
   const handleCloseAllRequests = () => {
-    if (isWebSocketRequestId(requestId)) {
+    if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
       window.main.webSocket.closeAll();
-    } else if (isSocketIORequestId(requestId)) {
+    } else if (models.socketIORequest.isSocketIORequestId(requestId)) {
       window.main.socketIO.closeAll();
     } else if (models.mcpRequest.isMcpRequestId(requestId)) {
       window.main.mcp.closeAll();

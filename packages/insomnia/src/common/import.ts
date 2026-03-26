@@ -9,8 +9,10 @@ import type {
   GrpcRequest,
   McpRequest,
   MockRoute,
+  SocketIORequest,
   UnitTest,
   UnitTestSuite,
+  WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
@@ -24,8 +26,6 @@ import * as models from '../models/index';
 import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import { isRequest, type Request } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
-import { isSocketIORequest, type SocketIORequest } from '../models/socket-io-request';
-import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { invariant } from '../utils/invariant';
 import { parseApiSpec, type ParsedApiSpec } from './api-specs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
@@ -250,12 +250,12 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
 
       const requests = resources.filter(isRequest);
       const requestGroups = resources.filter(isRequestGroup);
-      const websocketRequests = resources.filter(isWebSocketRequest);
       const grpcRequests = resources.filter(models.grpcRequest.isGrpcRequest);
-      const socketIoRequests = resources.filter(isSocketIORequest);
       const environments = resources.filter(models.environment.isEnvironment);
       const unitTests = resources.filter(models.unitTest.isUnitTest);
       const unitTestSuites = resources.filter(models.unitTestSuite.isUnitTestSuite);
+      const websocketRequests = resources.filter(models.webSocketRequest.isWebSocketRequest);
+      const socketIoRequests = resources.filter(models.socketIORequest.isSocketIORequest);
       const apiSpecs = resources.filter(isApiSpec);
       const workspaces = resources.filter(models.workspace.isWorkspace);
       const cookieJars = resources.filter(models.cookieJar.isCookieJar);

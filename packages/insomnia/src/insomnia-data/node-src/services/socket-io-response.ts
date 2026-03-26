@@ -1,12 +1,11 @@
-import { services } from '~/insomnia-data';
-import { requestVersion as rv } from '~/models';
+import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 
 import { database as db } from '../../src/database';
-import { models } from '../../src/models';
 import { type SocketIOResponse } from '../../src/models/types';
+import * as SettingsService from './settings';
 
-const { type } = models.socketIoResponse;
+const { type } = models.socketIOResponse;
 
 export function update(doc: SocketIOResponse, patch: Partial<SocketIOResponse>) {
   return db.docUpdate(doc, patch);
@@ -32,14 +31,14 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
   const { parentId } = patch;
   // Create request version snapshot
   const request = await requestOperations.getById(parentId);
-  const requestVersion = request ? await rv.create(request) : null;
+  const requestVersion = request ? await models.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
   const query: Record<string, any> = {
     parentId,
   };
 
-  if ((await services.settings.get()).filterResponsesByEnv && 'environmentId' in patch) {
+  if ((await SettingsService.get()).filterResponsesByEnv && 'environmentId' in patch) {
     query.environmentId = patch.environmentId;
   }
 
@@ -60,7 +59,7 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
 export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
 
-  const shouldFilter = (await services.settings.get()).filterResponsesByEnv;
+  const shouldFilter = (await SettingsService.get()).filterResponsesByEnv;
 
   const response = await db.findOne<SocketIOResponse>(
     type,

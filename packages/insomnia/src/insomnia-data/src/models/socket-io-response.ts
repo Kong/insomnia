@@ -37,7 +37,3 @@ export function init(): BaseSocketIOResponse {
     url: '',
   };
 }
-
-export function migrate(doc: SocketIOResponse) {
-  return doc;
-}

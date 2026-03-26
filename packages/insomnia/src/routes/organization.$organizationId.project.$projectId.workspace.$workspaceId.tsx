@@ -14,6 +14,8 @@ import type {
   GrpcRequestMeta,
   MockServer,
   Project,
+  SocketIORequest,
+  WebSocketRequest,
   Workspace,
   WorkspaceMeta,
 } from '~/insomnia-data';
@@ -24,8 +26,6 @@ import type { Request } from '~/models/request';
 import { isRequestGroup, type RequestGroup } from '~/models/request-group';
 import type { RequestGroupMeta } from '~/models/request-group-meta';
 import type { RequestMeta } from '~/models/request-meta';
-import type { SocketIORequest } from '~/models/socket-io-request';
-import type { WebSocketRequest } from '~/models/websocket-request';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';

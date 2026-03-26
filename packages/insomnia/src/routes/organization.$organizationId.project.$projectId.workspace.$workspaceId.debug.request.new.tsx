@@ -85,7 +85,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (requestType === 'WebSocket') {
     activeRequestId = (
-      await models.webSocketRequest.create({
+      await services.webSocketRequest.create({
         parentId: parentId || workspaceId,
         name: 'New WebSocket Request',
         headers: defaultHeaders,
@@ -94,7 +94,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (requestType === 'SocketIO') {
     activeRequestId = (
-      await models.socketIORequest.create({
+      await services.socketIORequest.create({
         parentId: parentId || workspaceId,
         name: 'New Socket.IO Request',
         headers: defaultHeaders,

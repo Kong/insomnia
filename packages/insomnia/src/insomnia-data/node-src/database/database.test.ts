@@ -775,11 +775,11 @@ describe('getWithDescendants()', () => {
       _id: 'grpc1',
       parentId: workspace._id,
     });
-    const websocketRequest1 = await models.webSocketRequest.create({
+    const websocketRequest1 = await services.webSocketRequest.create({
       _id: 'ws1',
       parentId: workspace._id,
     });
-    const socketIORequest1 = await models.socketIORequest.create({
+    const socketIORequest1 = await services.socketIORequest.create({
       _id: 'socket1',
       parentId: workspace._id,
     });

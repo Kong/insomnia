@@ -52,7 +52,3 @@ export function init(): BaseWebSocketResponse {
     environmentId: null,
   };
 }
-
-export function migrate(doc: WebSocketResponse) {
-  return doc;
-}

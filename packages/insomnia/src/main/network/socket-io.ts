@@ -9,16 +9,13 @@ import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOpti
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import type { CookieJar } from '~/insomnia-data';
+import type { BaseSocketIORequest, CookieJar, SocketIOResponse } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
-import { socketIORequest } from '../../models';
 import { type RequestAuthentication, type RequestHeader } from '../../models/request';
-import type { BaseSocketIORequest } from '../../models/socket-io-request';
-import type { SocketIOResponse } from '../../models/socket-io-response.ts';
 import { filterClientCertificates } from '../../network/certificate';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -226,7 +223,7 @@ const createErrorResponse = async (
     statusMessage: 'Error',
     error: message,
   };
-  const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+  const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
   models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
@@ -242,7 +239,7 @@ const openSocketIOConnection = async (
     return;
   }
 
-  const request = await socketIORequest.getById(options.requestId);
+  const request = await services.socketIORequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
@@ -361,7 +358,7 @@ const openSocketIOConnection = async (
         url: url,
       };
 
-      const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+      const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
     });
 
@@ -575,7 +572,7 @@ const removeSocketIOListener = (options: { eventName: string; requestId: string 
 };
 
 const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[]> => {
-  const response = await models.socketIOResponse.getById(options.responseId);
+  const response = await services.socketIOResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }

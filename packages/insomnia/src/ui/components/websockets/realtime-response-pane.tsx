@@ -4,7 +4,8 @@ import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { docsMcpAuthentication } from '~/common/documentation';
-import { type McpResponse, models } from '~/insomnia-data';
+import type { McpResponse, SocketIOResponse, WebSocketResponse } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
 
@@ -16,8 +17,6 @@ import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
-import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
-import { type WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { SegmentEvent } from '../../../ui/analytics';
 import { deserializeNDJSON } from '../../../utils/ndjson';
@@ -76,7 +75,7 @@ interface RealtimeActiveResponsePaneProps {
 const RealTimeActiveResponsePaneWrapper: FC<RealtimeActiveResponsePaneProps> = props => {
   const { response } = props;
   const protocol = useMemo(() => {
-    if (isSocketIOResponse(response)) {
+    if (models.socketIoResponse.isSocketIOResponse(response)) {
       return 'socketIO';
     }
     if (models.mcpResponse.isMcpResponse(response)) {
@@ -122,7 +121,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
   const isConnected = readyState === 'connected';
 
   const protocol = useMemo(() => {
-    if (isSocketIOResponse(response)) {
+    if (models.socketIoResponse.isSocketIOResponse(response)) {
       return 'socketIO';
     }
     if (models.mcpResponse.isMcpResponse(response)) {
@@ -137,7 +136,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
     setSelectedEvent((selected: EventType | null) => (selected?._id === event._id ? null : event));
   };
   const getEventView = (selectedEvent: EventType) => {
-    if (isSocketIOResponse(response)) {
+    if (models.socketIoResponse.isSocketIOResponse(response)) {
       return <SocketIOEventView event={selectedEvent as SocketIOEvent} key={selectedEvent._id} />;
     } else if (models.mcpResponse.isMcpResponse(response)) {
       return <McpEventView event={selectedEvent as McpEvent} key={selectedEvent._id} />;
@@ -219,10 +218,12 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
     };
   }, [response.timelinePath, events.length]);
 
-  const isLongRunning = isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
-  const hideCookies = isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
+  const isLongRunning =
+    models.socketIoResponse.isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
+  const hideCookies =
+    models.socketIoResponse.isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
   const hideHeaders =
-    isSocketIOResponse(response) ||
+    models.socketIoResponse.isSocketIOResponse(response) ||
     (models.mcpResponse.isMcpResponse(response) && response.transportType === models.mcpRequest.TRANSPORT_TYPES.STDIO);
 
   const cookieHeaders = hideCookies ? [] : getSetCookieHeaders(response.headers);
@@ -409,7 +410,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             <McpNotificationTab allEvents={allNotifications} />
           </TabPanel>
         )}
-        {!isSocketIOResponse(response) && (
+        {!models.socketIoResponse.isSocketIOResponse(response) && (
           <>
             <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
               <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">

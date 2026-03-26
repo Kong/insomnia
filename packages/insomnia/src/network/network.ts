@@ -14,7 +14,9 @@ import type {
   MockServer,
   Project,
   Settings,
+  SocketIORequest,
   UserUploadEnvironment,
+  WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
 import { EnvironmentType, services } from '~/insomnia-data';
@@ -42,8 +44,6 @@ import {
   type RequestParameter,
 } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginData from '../plugins/context/data';
 import * as pluginNetwork from '../plugins/context/network';
