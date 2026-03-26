@@ -1,6 +1,5 @@
 import type { GrpcRequest } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import { invariant } from '../../utils/invariant';

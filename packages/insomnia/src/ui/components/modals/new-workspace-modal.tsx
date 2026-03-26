@@ -21,8 +21,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { ApiSpec } from '~/insomnia-data';
-import type { WorkspaceScope } from '~/insomnia-data';
+import type { ApiSpec, WorkspaceScope } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';

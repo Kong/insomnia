@@ -17,8 +17,7 @@ import {
 } from '~/common/constants';
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
-import type { MockRoute } from '~/insomnia-data';
-import type { MockServer } from '~/insomnia-data';
+import type { MockRoute, MockServer } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { getBodyBuffer } from '~/models/helpers/response-operations';

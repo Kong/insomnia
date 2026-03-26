@@ -39,7 +39,3 @@ export function init(): BaseWorkspaceMeta {
     hasUnpushedChanges: false,
   };
 }
-
-export function migrate(doc: WorkspaceMeta) {
-  return doc;
-}

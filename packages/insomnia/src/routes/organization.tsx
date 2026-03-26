@@ -16,8 +16,7 @@ import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import type { Settings } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';

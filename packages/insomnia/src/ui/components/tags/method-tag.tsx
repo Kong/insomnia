@@ -1,7 +1,7 @@
 import React, { type FC, memo } from 'react';
 
-import type { GrpcRequest } from '~/insomnia-data';
-import { type McpRequest, models } from '~/insomnia-data';
+import type { GrpcRequest, McpRequest } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
 import { isEventStreamRequest, isRequest, type Request } from '../../../models/request';

@@ -288,7 +288,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       }
       if (workspace) {
         navigate(
-          `/organization/${organizationId}/project/${defaultProjectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
+          `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
         );
         return modalRef.current?.hide();
       }
