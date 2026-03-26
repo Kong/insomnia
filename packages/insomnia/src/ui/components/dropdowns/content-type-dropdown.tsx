@@ -14,6 +14,7 @@ import {
 import { useParams } from 'react-router';
 
 import { type Request, type RequestBody, type RequestHeader, type RequestParameter } from '~/insomnia-data';
+import { deconstructQueryStringToParams } from '~/insomnia-data/common';
 
 import {
   CONTENT_TYPE_EDN,
@@ -33,7 +34,6 @@ import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent } from '../../analytics';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';

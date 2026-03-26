@@ -19,6 +19,7 @@ import {
   services,
   type Stats,
 } from '~/insomnia-data';
+import { isMac } from '~/insomnia-data/common';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
@@ -28,7 +29,6 @@ import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
-import { isMac } from './common/platform';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';

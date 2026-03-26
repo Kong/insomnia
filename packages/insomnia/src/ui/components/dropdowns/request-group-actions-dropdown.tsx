@@ -4,6 +4,7 @@ import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, P
 import { useParams } from 'react-router';
 
 import { type Request, type RequestGroup, services } from '~/insomnia-data';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
@@ -12,7 +13,6 @@ import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organiza
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { toKebabCase } from '../../../common/misc';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';

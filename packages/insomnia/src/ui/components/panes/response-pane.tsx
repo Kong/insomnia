@@ -1,13 +1,12 @@
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
-import { services } from '~/insomnia-data';
+import { type ResponseTimelineEntry, services } from '~/insomnia-data';
+import { PREVIEW_MODE_SOURCE } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 
-import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
-import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { cancelRequestById } from '../../../network/cancellation';
 import {
   type RequestLoaderData,

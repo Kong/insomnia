@@ -1,5 +1,5 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -17,7 +17,6 @@ import {
 import { useRequestResponseDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 import { useRequestResponseDeleteAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete-all';
 
-import { decompressObject } from '../../../common/misc';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -48,6 +47,28 @@ export const ResponseHistoryDropdown = ({
   const dropdownRef = useRef<DropdownHandle>(null);
   const patchRequestMeta = useRequestMetaPatcher();
   const { activeEnvironment } = useWorkspaceLoaderData()!;
+
+  const [requestsByVersionId, setRequestsByVersionId] = useState<Record<string, Request | WebSocketRequest | null>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const entries = await Promise.all(
+        requestVersions.map(async rv => {
+          const req = await services.requestVersion.getRequest<Request | WebSocketRequest>(rv);
+          return [rv._id, req] as const;
+        }),
+      );
+      if (!cancelled) {
+        setRequestsByVersionId(Object.fromEntries(entries));
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [requestVersions]);
+
   const now = new Date();
   const categories: Record<string, ResponseType[]> = {
     minutes: [],
@@ -131,9 +152,7 @@ export const ResponseHistoryDropdown = ({
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const requestVersion = requestVersions.find(({ _id }) => _id === response.requestVersionId);
-    const request = requestVersion
-      ? decompressObject<Request | WebSocketRequest>(requestVersion.compressedRequest)
-      : null;
+    const request = requestVersion ? (requestsByVersionId[requestVersion._id] ?? null) : null;
 
     return (
       <DropdownItem key={response._id} aria-label={response._id}>

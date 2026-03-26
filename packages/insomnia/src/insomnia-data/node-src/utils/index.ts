@@ -1,8 +1,7 @@
 import type { AllTypes, BaseModel } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
+import { generateId, typedKeys } from '~/insomnia-data/common';
 
-import { generateId } from '../../src/utils/misc';
-import { typedKeys } from '../../src/utils/type';
 import { migrate as migrateRequest } from './migrate/request';
 import { migrate as migrateResponse } from './migrate/response';
 import { migrate as migrateSettings } from './migrate/settings';
@@ -43,31 +42,32 @@ export async function initModel<T extends BaseModel>(type: AllTypes, ...sources:
   let migratedDoc = fullObject;
   switch (type) {
     case 'Workspace': {
-      migratedDoc = migrateWorkspace(migratedDoc);
+      migratedDoc = migrateWorkspace(fullObject);
       break;
     }
     case 'Request': {
-      migratedDoc = migrateRequest(migratedDoc);
+      migratedDoc = migrateRequest(fullObject);
       break;
     }
     case 'Response': {
-      migratedDoc = migrateResponse(migratedDoc);
+      migratedDoc = migrateResponse(fullObject);
       break;
     }
     case 'Settings': {
-      migratedDoc = migrateSettings(migratedDoc);
+      migratedDoc = migrateSettings(fullObject);
       break;
     }
     default: {
       break;
     }
   }
+
   // optional keys do not generated in init method but should allow update.
   // If we put those keys in init method, all related models will show as modified in git sync.
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
   // Prune extra keys from doc
   for (const key of typedKeys(migratedDoc)) {
-    if (!(key in objectDefaults) && !modelOptionalKeys.includes(key)) {
+    if (!(key in objectDefaults) && !modelOptionalKeys.includes(key as string)) {
       delete migratedDoc[key];
     }
   }

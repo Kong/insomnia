@@ -1,8 +1,7 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 import { models, type Workspace, type WorkspaceScope } from '~/insomnia-data';
-
-import { strings } from './strings';
+import { strings } from '~/insomnia-data/common';
 
 export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
 

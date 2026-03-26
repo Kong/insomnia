@@ -21,6 +21,7 @@ import {
   type RequestHeader,
   type RequestParameter,
   type RequestTestResult,
+  type ResponseTimelineEntry,
   services,
   type Settings,
   type SocketIORequest,
@@ -28,6 +29,7 @@ import {
   type WebSocketRequest,
   type Workspace,
 } from '~/insomnia-data';
+import { serializeNDJSON } from '~/insomnia-data/common';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type { ExecutionOption, RequestContext } from '../../../insomnia-scripting-environment/src/objects';
@@ -37,7 +39,7 @@ import { database as db } from '../common/database';
 import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeaders } from '../common/misc';
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
-import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promise';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginData from '../plugins/context/data';
 import * as pluginNetwork from '../plugins/context/network';
@@ -49,7 +51,6 @@ import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { invariant } from '../utils/invariant';
-import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
 import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
 import { cancellableCurlRequest, cancellableRunScript } from './cancellation';

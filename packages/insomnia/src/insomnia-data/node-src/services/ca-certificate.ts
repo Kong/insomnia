@@ -1,6 +1,7 @@
+import type { CaCertificate } from '~/insomnia-data';
+
 import { database as db } from '../../src/database';
 import { models } from '../../src/models';
-import { type CaCertificate } from '../../src/models/types';
 
 const { type } = models.caCertificate;
 

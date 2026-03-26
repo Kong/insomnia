@@ -5,6 +5,7 @@ import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { type Environment, models, type RequestPathParameter, services, type WebSocketRequest } from '~/insomnia-data';
+import { deconstructQueryStringToParams } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
@@ -20,7 +21,6 @@ import { RenderError } from '../../../templating/render-error';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import {
   buildQueryStringFromParams,
-  deconstructQueryStringToParams,
   extractQueryStringFromUrl,
   joinUrlAndQueryString,
 } from '../../../utils/url/querystring';
@@ -214,7 +214,10 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   };
 
   // Path parameters are path segments that start with a colon (:)
-  const pathParameters = models.request.getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters || []);
+  const pathParameters = models.request.getCombinedPathParametersFromUrl(
+    activeRequest.url,
+    activeRequest.pathParameters || [],
+  );
 
   const onPathParameterChange = (pathParameters: RequestPathParameter[]) => {
     patchRequest(requestId, { pathParameters });

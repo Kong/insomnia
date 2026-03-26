@@ -1,4 +1,4 @@
-import { invariant } from '~/utils/invariant';
+import { invariant } from '~/insomnia-data/common';
 
 import { database as db } from '../../src/database';
 import { models } from '../../src/models';

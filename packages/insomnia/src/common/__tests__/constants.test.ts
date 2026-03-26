@@ -1,14 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { MockServer } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 
-import {
-  FLEXIBLE_URL_REGEX,
-  getContentTypeName,
-  getMockServiceBinURL,
-  isValidActivity,
-  isWorkspaceActivity,
-} from '../constants';
+import { FLEXIBLE_URL_REGEX, getContentTypeName } from '../constants';
+
+const { getMockServiceBinURL } = models.mockServer;
 
 describe('URL Regex', () => {
   it('matches valid URLs', () => {
@@ -33,35 +30,6 @@ describe('URL Regex', () => {
     expect('"https://google.com"').not.toMatch(FLEXIBLE_URL_REGEX);
     expect('(https://google.com)').not.toMatch(FLEXIBLE_URL_REGEX);
     expect('[https://google.com]').not.toMatch(FLEXIBLE_URL_REGEX);
-  });
-});
-
-describe('isWorkspaceActivity', () => {
-  it('should return true', () => {
-    expect(isWorkspaceActivity('spec')).toBe(true);
-    expect(isWorkspaceActivity('debug')).toBe(true);
-    expect(isWorkspaceActivity('unittest')).toBe(true);
-  });
-
-  it('should return false', () => {
-    expect(isWorkspaceActivity('home')).toBe(false);
-  });
-});
-
-describe('isValidActivity', () => {
-  it('should return true', () => {
-    expect(isValidActivity('spec')).toBe(true);
-    expect(isValidActivity('debug')).toBe(true);
-    expect(isValidActivity('unittest')).toBe(true);
-    expect(isValidActivity('home')).toBe(true);
-  });
-
-  it('should return false', () => {
-    expect(isValidActivity('something else')).toBe(false);
-    // @ts-expect-error intentionally invalid
-    expect(isValidActivity(null)).toBe(false);
-    // @ts-expect-error intentionally invalid
-    expect(isValidActivity()).toBe(false);
   });
 });
 

@@ -1,5 +1,9 @@
-import type { Services } from '../../node-src/types';
+// Use this file to export services that are shared across the app. This is a workaround for circular dependencies between services and models. Services should not depend on models, but models can depend on services.
+// type Services = InsomniaData.Services;
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="../../node-src/types.d.ts" />
 
+type Services = ServicesNodeImpl;
 export type { Services };
 
 let initialized = false;

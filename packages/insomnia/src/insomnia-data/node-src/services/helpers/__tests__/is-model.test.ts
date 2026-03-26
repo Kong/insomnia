@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { generateId } from '~/common/misc';
 import { models } from '~/insomnia-data';
+import { generateId } from '~/insomnia-data/common';
 
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);

@@ -6,6 +6,7 @@ import { net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
 import { services } from '~/insomnia-data';
+import { platform } from '~/insomnia-data/common';
 
 import {
   getApiBaseURL,
@@ -15,7 +16,6 @@ import {
   getSegmentWriteKey,
   PLAYWRIGHT,
 } from '../common/constants';
-import { platform } from '../common/platform';
 let _currentOrganizationId: string | undefined;
 
 export function setCurrentOrganizationId(id: string | undefined): void {

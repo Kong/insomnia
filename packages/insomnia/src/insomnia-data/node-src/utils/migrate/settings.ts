@@ -1,6 +1,7 @@
-import * as hotkeys from '~/common/hotkeys';
-import type { KeyboardShortcut } from '~/common/settings';
 import type { Settings } from '~/insomnia-data';
+
+import * as hotkeys from '../../../common-src/hotkeys';
+import type { KeyboardShortcut } from '../../../common-src/settings';
 
 export function migrate(doc: Settings) {
   try {

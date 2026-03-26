@@ -76,7 +76,7 @@ export type {
   AuthTypeBasic,
   AuthTypeNTLM,
 } from './request';
-export type { Response, ResponseHeader, Compression } from './response';
+export type { Response, ResponseHeader, Compression, ResponseTimelineEntry } from './response';
 export type {
   RunnerTestResult,
   BaseRunnerTestResult,

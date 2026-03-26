@@ -3,7 +3,17 @@ import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { type Environment, type GrpcRequest, models, type Request, type RequestGroup, services, type SocketIORequest, type WebSocketRequest } from '~/insomnia-data';
+import {
+  type Environment,
+  type GrpcRequest,
+  models,
+  type Request,
+  type RequestGroup,
+  services,
+  type SocketIORequest,
+  type WebSocketRequest,
+} from '~/insomnia-data';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -13,7 +23,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';

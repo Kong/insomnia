@@ -1,5 +1,4 @@
 import path from 'node:path';
-import zlib from 'node:zlib';
 
 import fuzzysort from 'fuzzysort';
 import { v4 as uuidv4 } from 'uuid';
@@ -147,20 +146,6 @@ export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]
   return v(...args);
 }
 
-export function compressObject(obj: any) {
-  const compressed = zlib.gzipSync(JSON.stringify(obj));
-  return compressed.toString('base64');
-}
-
-export function decompressObject<ObjectType>(input: string | null): ObjectType | null {
-  if (typeof input !== 'string') {
-    return null;
-  }
-
-  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
-  return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
-}
-
 /**
  * Escape a dynamic string for use inside of a regular expression
  * @param str - string to escape
@@ -275,9 +260,7 @@ export const normalizeFolderPath = (p: string) => {
   return normalized.replace(/[/\\]+$/, '');
 };
 
-export type FolderValidationResult =
-  | { ok: true; normalizedValue: string }
-  | { ok: false; error: string };
+export type FolderValidationResult = { ok: true; normalizedValue: string } | { ok: false; error: string };
 
 export function validateFolderInput(input: string, existing: string[]): FolderValidationResult {
   const trimmed = input.trim();
@@ -294,7 +277,7 @@ export function validateFolderInput(input: string, existing: string[]): FolderVa
   return { ok: true, normalizedValue: normalized };
 }
 
-export const SECURITY_SETTINGS_PATH_LABEL = "Insomnia Preferences → General → Security";
+export const SECURITY_SETTINGS_PATH_LABEL = 'Insomnia Preferences → General → Security';
 
 export function cannotAccessPathError(accessingPath: string): string {
   return process.type === 'renderer' || process.type === 'browser'

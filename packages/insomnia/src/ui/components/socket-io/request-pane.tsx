@@ -5,6 +5,7 @@ import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { type Environment, models, type RequestPathParameter } from '~/insomnia-data';
+import { deconstructQueryStringToParams } from '~/insomnia-data/common';
 import { getAuthObjectOrNull } from '~/network/authentication';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -15,7 +16,7 @@ import {
   type SocketIORequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
+import { extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -66,7 +67,10 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
   const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
 
   // Path parameters are path segments that start with a colon (:)
-  const pathParameters = models.request.getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters || []);
+  const pathParameters = models.request.getCombinedPathParametersFromUrl(
+    activeRequest.url,
+    activeRequest.pathParameters || [],
+  );
 
   const onPathParameterChange = (pathParameters: RequestPathParameter[]) => {
     patchRequest(requestId, { pathParameters });

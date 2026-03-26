@@ -8,12 +8,12 @@ import {
   type McpResponse,
   models,
   type Response,
+  type ResponseTimelineEntry,
   services,
   type SocketIOResponse,
   type WebSocketResponse,
 } from '~/insomnia-data';
-import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
-import { deserializeNDJSON } from '~/utils/ndjson';
+import { deserializeNDJSON } from '~/insomnia-data/common';
 
 const { type: responseType, isResponse } = models.response;
 const { isSocketIORequestId } = models.socketIORequest;
@@ -72,15 +72,15 @@ export function removeResponse(response: Response | WebSocketResponse | SocketIO
   return db.remove(response);
 }
 
-export const getResponseBodyStream = (
+export const getResponseBodyStream = async (
   response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: string,
-): Readable | string | null => {
+): Promise<Readable | string | null> => {
   if (!response?.bodyPath) {
     return null;
   }
   try {
-    fs.statSync(response?.bodyPath);
+    await fs.promises.stat(response?.bodyPath);
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return readFailureValue === undefined ? null : readFailureValue;

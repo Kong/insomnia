@@ -43,8 +43,19 @@ import { useLocalStorage } from 'react-use';
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
-import type { PlatformKeyCombinations } from '~/common/settings';
-import { type Environment, type GrpcRequest, models, type Project, type Request, type RequestGroup, services, type SocketIORequest, type WebSocketRequest, type Workspace } from '~/insomnia-data';
+import {
+  type Environment,
+  type GrpcRequest,
+  models,
+  type Project,
+  type Request,
+  type RequestGroup,
+  services,
+  type SocketIORequest,
+  type WebSocketRequest,
+  type Workspace,
+} from '~/insomnia-data';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import { useRootLoaderData } from '~/root';
 import {
@@ -207,7 +218,9 @@ const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
 const getRequestNameOrFallback = (
   doc: Request | RequestGroup | GrpcRequest | WebSocketRequest | SocketIORequest,
 ): string => {
-  return !models.requestGroup.isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
+  return !models.requestGroup.isRequestGroup(doc)
+    ? doc.name || doc.url || 'Untitled request'
+    : doc.name || 'Untitled folder';
 };
 
 const RequestTiming = ({ requestId }: { requestId: string }) => {
@@ -541,7 +554,8 @@ const Debug = () => {
 
       let metaSortKey = 0;
       // If the target is a folder and we insert after it we want to add that item to the folder
-      const isMovingItemInsideFolder = models.requestGroup.isRequestGroup(targetItem.doc) && event.target.dropPosition === 'after';
+      const isMovingItemInsideFolder =
+        models.requestGroup.isRequestGroup(targetItem.doc) && event.target.dropPosition === 'after';
       if (isMovingItemInsideFolder) {
         // there is no item before we move the item to the beginning
         // If there are children find the first child key and use a lower one
@@ -1230,7 +1244,9 @@ const Debug = () => {
                   <Panel id="pane-one" order={1} minSize={10} className="pane-one theme--pane">
                     {workspaceId ? (
                       <ErrorBoundary showAlert>
-                        {models.requestGroup.isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
+                        {models.requestGroup.isRequestGroupId(requestGroupId) && (
+                          <RequestGroupPane settings={settings} />
+                        )}
                         {models.grpcRequest.isGrpcRequestId(requestId) && grpcState && (
                           <GrpcRequestPane
                             key={grpcState.requestId}
@@ -1239,8 +1255,12 @@ const Debug = () => {
                             reloadRequests={reloadRequests}
                           />
                         )}
-                        {models.webSocketRequest.isWebSocketRequestId(requestId) && <WebSocketRequestPane environment={activeEnvironment} />}
-                        {models.socketIORequest.isSocketIORequestId(requestId) && <SocketIORequestPane environment={activeEnvironment} />}
+                        {models.webSocketRequest.isWebSocketRequestId(requestId) && (
+                          <WebSocketRequestPane environment={activeEnvironment} />
+                        )}
+                        {models.socketIORequest.isSocketIORequestId(requestId) && (
+                          <SocketIORequestPane environment={activeEnvironment} />
+                        )}
                         {models.request.isRequestId(requestId) && (
                           <RequestPane
                             environmentId={activeEnvironment ? activeEnvironment._id : ''}

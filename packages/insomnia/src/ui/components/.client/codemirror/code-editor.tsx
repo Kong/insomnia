@@ -19,8 +19,7 @@ import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import { isMac } from '~/common/platform';
-import type { KeyCombination } from '~/common/settings';
+import { isMac, type KeyCombination } from '~/insomnia-data/common';
 import { getTemplateTags } from '~/plugins';
 import { useRootLoaderData } from '~/root';
 import { getTagDefinitions } from '~/templating/index';

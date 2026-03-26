@@ -159,10 +159,10 @@ export default defineConfig([
               group: ['./**/insomnia-data', './**/insomnia-data/**', '../**/insomnia-data', '../**/insomnia-data/**'],
               message: "Please use '~/insomnia-data' instead of relative paths",
             },
-            // Only allow ~/insomnia-data and ~/insomnia-data/node
+            // Only allow ~/insomnia-data, ~/insomnia-data/node and ~/insomnia-data/common
             {
-              regex: '^~/insomnia-data/(?!node($|/)).+',
-              message: "Only '~/insomnia-data' and '~/insomnia-data/node' are allowed",
+              regex: '^~/insomnia-data/(?!node($|/)|common($|/)).+',
+              message: "Only '~/insomnia-data', '~/insomnia-data/node' and '~/insomnia-data/common' are allowed",
             },
           ],
         },

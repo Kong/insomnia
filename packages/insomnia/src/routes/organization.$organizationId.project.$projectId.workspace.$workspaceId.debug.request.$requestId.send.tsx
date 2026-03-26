@@ -67,7 +67,7 @@ export interface RunnerContextForRequest {
   responseId: string;
 }
 
-const writeToDownloadPath = (
+const writeToDownloadPath = async (
   downloadPathAndName: string,
   responsePatch: ResponsePatch,
   requestMeta: RequestMeta,
@@ -76,7 +76,7 @@ const writeToDownloadPath = (
   invariant(downloadPathAndName, 'filename should be set by now');
 
   const to = createWriteStream(downloadPathAndName);
-  const readStream = services.helpers.getResponseBodyStream(responsePatch);
+  const readStream = await services.helpers.getResponseBodyStream(responsePatch);
   if (!readStream || typeof readStream === 'string') {
     return null;
   }
@@ -315,7 +315,7 @@ export const sendActionImplementation = async (options: {
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
       : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
-    writeToDownloadPath(
+    await writeToDownloadPath(
       path.join(requestMeta.downloadPath, name),
       responsePatch,
       requestMeta,
@@ -334,7 +334,7 @@ export const sendActionImplementation = async (options: {
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
   window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-  writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  await writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
   return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
 };
 

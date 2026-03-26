@@ -22,13 +22,13 @@ import {
 import { href, useNavigate, useParams } from 'react-router';
 
 import { models, type Workspace } from '~/insomnia-data';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -451,7 +451,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     <p>
                       This will permanently delete the{' '}
                       {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
-                      {getWorkspaceLabel(activeWorkspace).singular} {models.project.isRemoteProject(activeProject) ? 'remotely' : ''}.
+                      {getWorkspaceLabel(activeWorkspace).singular}{' '}
+                      {models.project.isRemoteProject(activeProject) ? 'remotely' : ''}.
                     </p>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>

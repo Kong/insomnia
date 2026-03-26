@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { models, services } from '..';
+import { migrate } from '../node-src/utils/migrate/workspace';
 const { WorkspaceScopeKeys } = models.workspace;
 describe('migrate()', () => {
   it('migrates client certificates properly', async () => {
@@ -17,7 +18,7 @@ describe('migrate()', () => {
         },
       ],
     });
-    const migratedWorkspace = await models.workspace.migrate(workspace);
+    const migratedWorkspace = await migrate(workspace);
     const certs = await services.clientCertificate.findByParentId(workspace._id);
 
     // Delete modified and created so we can assert them
@@ -57,7 +58,7 @@ describe('migrate()', () => {
     ]);
     expect(migratedWorkspace.certificates).toBeUndefined();
     // Make sure we don't create new certs if we migrate again
-    await models.workspace.migrate(migratedWorkspace);
+    await migrate(migratedWorkspace);
     const certsAgain = await services.clientCertificate.findByParentId(workspace._id);
     expect(certsAgain.length).toBe(2);
   });
@@ -81,10 +82,10 @@ describe('migrate()', () => {
     const collectionW = await services.workspace.create({
       scope: WorkspaceScopeKeys.collection,
     });
-    await models.workspace.migrate(specW);
-    await models.workspace.migrate(debugW);
-    await models.workspace.migrate(nullW);
-    await models.workspace.migrate(somethingElseW);
+    await migrate(specW);
+    await migrate(debugW);
+    await migrate(nullW);
+    await migrate(somethingElseW);
     expect(specW.scope).toBe(WorkspaceScopeKeys.design);
     expect(debugW.scope).toBe(WorkspaceScopeKeys.collection);
     expect(nullW.scope).toBe(WorkspaceScopeKeys.collection);

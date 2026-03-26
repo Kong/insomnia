@@ -1,6 +1,6 @@
 import type { GrpcRequest, models, Request } from '~/insomnia-data';
 import { database as db, services } from '~/insomnia-data';
-import { invariant } from '~/utils/invariant';
+import { invariant } from '~/insomnia-data/common';
 
 export const queryAllWorkspaceUrls = async (
   workspaceId: string,

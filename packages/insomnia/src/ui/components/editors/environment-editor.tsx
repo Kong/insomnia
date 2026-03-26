@@ -1,11 +1,11 @@
 import orderedJSON from 'json-order';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
+import { isWindows } from '~/insomnia-data/common';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { checkNestedKeys } from '~/utils/environment-utils';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
-import { isWindows } from '../../../common/platform';
 
 export interface EnvironmentInfo {
   object: Record<string, any>;

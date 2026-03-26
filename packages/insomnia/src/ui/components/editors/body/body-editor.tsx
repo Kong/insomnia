@@ -5,13 +5,13 @@ import { Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { models, type Request, type RequestBodyParameter } from '~/insomnia-data';
+import { getContentTypeFromHeaders } from '~/insomnia-data/common';
 
 import {
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
-  getContentTypeFromHeaders,
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
