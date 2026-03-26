@@ -171,7 +171,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     // read the body if its smaller than the limit add it to the activeResponse
     const length = Math.max(activeResponse.bytesContent, activeResponse.bytesRead);
     const isOversizedResponse = length > LARGE_RESPONSE_MB * 1024 * 1024;
-    // Oversized repsonses are handled in the response-viewer.tsx for now
+    // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
       const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? undefined : buffer;

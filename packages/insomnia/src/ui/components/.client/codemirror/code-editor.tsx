@@ -125,10 +125,12 @@ function setEditorValueWithTruncation(
     return el;
   };
 
-  // Perform the editor update in a single operation to minimize reflows y
+  // Perform the editor update in a single operation to minimize reflows
   editor.operation(() => {
-    editor.setValue(lines.join('\n'));
-    Object.keys(longLinesMap).forEach(lineStr => {
+    const longLineMapKeys = Object.keys(longLinesMap);
+    const hasLongLines = longLineMapKeys.length > 0;
+    editor.setValue(hasLongLines ? lines.join('\n') : fullText);
+    longLineMapKeys.forEach(lineStr => {
       const lineNum = Number.parseInt(lineStr, 10);
       const originalText = longLinesMap[lineNum];
       const editorMarker = editor.setBookmark(
@@ -784,7 +786,7 @@ export const CodeEditor = memo(
           indexFromPos: (pos?: CodeMirror.Position) => (pos ? codeMirror.current?.indexFromPos(pos) || 0 : 0),
           getDoc: () => codeMirror.current?.getDoc(),
         }),
-        [],
+        [shouldTruncateLongLines],
       );
 
       useEffect(() => {
