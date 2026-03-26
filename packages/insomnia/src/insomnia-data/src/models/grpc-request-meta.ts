@@ -27,13 +27,3 @@ export function init() {
     lastActive: 0,
   };
 }
-
-export function migrate(doc: GrpcRequestMeta) {
-  return doc;
-}
-
-export function expectParentToBeGrpcRequest(parentId: string | null) {
-  if (!isGrpcRequestId(parentId)) {
-    throw new Error('Expected the parent of GrpcRequestMeta to be a GrpcRequest');
-  }
-}
