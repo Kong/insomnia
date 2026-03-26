@@ -15,7 +15,7 @@ import {
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { GitProject,GitRepository } from '~/insomnia-data';
+import type { GitProject, GitRepository } from '~/insomnia-data';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
