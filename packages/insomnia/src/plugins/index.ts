@@ -5,6 +5,7 @@ import electron from 'electron';
 
 import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
+import { fetchFromTemplateWorkerDatabase } from '~/templating/base-extension-worker';
 
 import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
@@ -383,7 +384,11 @@ export function getPluginCommonContext({
     ...pluginStore.init(plugin),
     ...pluginNetwork.init(),
     util: {
-      openInBrowser: (url: string) => window.main.openInBrowser(url),
+      openInBrowser: async (url: string) => {
+        process.type === 'renderer' || process.type === 'worker'
+          ? window.main.openInBrowser(url)
+          : (await import('electron')).shell.openExternal(url);
+      },
       models: {
         request: {
           getById: models.request.getById,
@@ -422,7 +427,7 @@ export function getPluginCommonContext({
   };
 }
 
-// This is for insomnia UI to reach out to bundled plugin functions and executed under main process(node integration) context
+// This is for insomnia UI to reach out to bundled plugin functions and executed under render process(by default) or main process
 // It should only be available to bundled plugins, not for public plugins
 export async function executePluginMainAction({
   pluginName,
@@ -435,17 +440,27 @@ export async function executePluginMainAction({
   context?: Record<string, any>;
   params?: Record<string, any>;
 }): Promise<any> {
-  const bundlePlugins = await getBundlePlugins();
-  const plugin = bundlePlugins.find(p => p.name === pluginName);
-  if (!plugin) {
-    throw new Error(`Plugin ${pluginName} not found`);
+  const settings = await services.settings.get();
+  if (settings.pluginsAllowElevatedAccess) {
+    const bundlePlugins = await getBundlePlugins();
+    const plugin = bundlePlugins.find(p => p.name === pluginName);
+    if (!plugin) {
+      throw new Error(`Plugin ${pluginName} not found`);
+    }
+    const action = plugin.module.unsafePluginMainActions?.find(p => p.name === actionName);
+    if (!action) {
+      throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
+    }
+    const commonContext = getPluginCommonContext({ plugin });
+    return action.action({ ...commonContext, ...context }, params);
   }
-  const action = plugin.module.unsafePluginMainActions?.find(p => p.name === actionName);
-  if (!action) {
-    throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
-  }
-  const commonContext = getPluginCommonContext({ plugin });
-  return action.action({ ...commonContext, ...context }, params);
+  const result = await fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginMainAction', {
+    pluginName,
+    actionName,
+    context,
+    params,
+  });
+  return result;
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {

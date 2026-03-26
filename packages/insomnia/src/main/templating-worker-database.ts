@@ -290,4 +290,24 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
   },
+  // execute the plugin exported main action with the given parameters
+  'plugin.executeBundlePluginMainAction': async (body: {
+    pluginName: string;
+    actionName: string;
+    context?: Record<string, any>;
+    params?: Record<string, any>;
+  }) => {
+    const { pluginName, actionName, context, params } = body;
+    const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
+    if (appBundlePluginNames.includes(pluginName)) {
+      const module = getBundlePluginModule(pluginName);
+      const pluginActions = module?.unsafePluginMainActions || [];
+      const targetAction = pluginActions.find(action => action.name === actionName);
+      if (targetAction) {
+        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
+        return targetAction.action({ ...commonContext, ...context }, params);
+      }
+    }
+    throw new Error(`Unsupported tag ${actionName} for plugin ${pluginName}`);
+  },
 };

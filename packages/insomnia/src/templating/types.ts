@@ -46,7 +46,8 @@ export type PluginToMainAPIPaths =
   | 'network.sendRequest'
   | 'network.sendRequestWithoutSideEffects'
   | 'plugin.getBundlePluginTemplateTags'
-  | 'plugin.executeBundlePluginTag';
+  | 'plugin.executeBundlePluginTag'
+  | 'plugin.executeBundlePluginMainAction';
 
 export type RenderedRequest = Request & {
   cookies: {
