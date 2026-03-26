@@ -252,7 +252,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     return collection;
   }
 
-  const userSession = await models.userSession.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
   const isLoggedInIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
   let vcsVersion = null;
   if (isLoggedInIsCloudProjectAndIsNotGitRepo) {

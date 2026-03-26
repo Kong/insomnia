@@ -2,12 +2,15 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import type { ProtoDirectory, ProtoFile } from '~/insomnia-data';
+
 import { database as db } from '../../common/database';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { isProtoDirectory, type ProtoDirectory } from '../../models/proto-directory';
-import { isProtoFile, type ProtoFile } from '../../models/proto-file';
 import { isWorkspace, type Workspace } from '../../models/workspace';
+
+const { isProtoDirectory } = models.protoDirectory;
+const { isProtoFile } = models.protoFile;
 
 interface WriteResult {
   filePath: string;

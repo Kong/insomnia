@@ -16,7 +16,6 @@ import {
   PLAYWRIGHT,
 } from '../common/constants';
 import { platform } from '../common/platform';
-import * as models from '../models/index';
 
 let _currentOrganizationId: string | undefined;
 
@@ -89,7 +88,7 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
     return;
   }
   const settings = await services.settings.getOrCreate();
-  const userSession = await models.userSession.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }
@@ -143,7 +142,7 @@ export async function trackPageView(name: string) {
     return;
   }
   const settings = await services.settings.getOrCreate();
-  const userSession = await models.userSession.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }

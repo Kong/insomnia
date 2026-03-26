@@ -2,6 +2,8 @@ import type { Organization } from 'insomnia-api';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
+import { services } from '~/insomnia-data';
+
 import { database } from '../common/database';
 import * as models from '../models';
 import { findPersonalOrganization, SCRATCHPAD_ORGANIZATION_ID } from '../models/organization';
@@ -100,7 +102,7 @@ export const getInitialEntry = async () => {
 
     const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
 
-    const user = await models.userSession.getOrCreate();
+    const user = await services.userSession.getOrCreate();
     if (user.id) {
       const organizations = JSON.parse(
         localStorage.getItem(`${user.accountId}:organizations`) || '[]',

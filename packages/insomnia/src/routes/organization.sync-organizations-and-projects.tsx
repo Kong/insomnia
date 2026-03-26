@@ -2,7 +2,8 @@ import type { Organization } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import { project, userSession } from '~/models';
+import { services } from '~/insomnia-data';
+import { project } from '~/models';
 import { findPersonalOrganization } from '~/models/organization';
 import type { Project } from '~/models/project';
 import { migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
@@ -25,7 +26,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       projectId,
       asyncTaskList = [],
     } = (await request.json()) as SyncOrgsAndProjectsActionRequest;
-    const { id: sessionId, accountId } = await userSession.getOrCreate();
+    const { id: sessionId, accountId } = await services.userSession.getOrCreate();
 
     const taskPromiseList = [];
     if (asyncTaskList.includes(AsyncTask.SyncOrganization)) {

@@ -18,7 +18,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const user = await models.userSession.getOrCreate();
+  const user = await services.userSession.getOrCreate();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to delete a project');
 
@@ -38,7 +38,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       gitRepository && (await services.gitRepository.remove(gitRepository));
     }
 
-    await models.stats.incrementDeletedRequestsForDescendents(project);
+    await services.stats.incrementDeletedRequestsForDescendents(project);
     await models.project.remove(project);
 
     await database.flushChanges(bufferId);

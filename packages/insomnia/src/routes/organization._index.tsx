@@ -2,7 +2,7 @@ import type { Organization } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import * as session from '~/account/session';
-import { userSession } from '~/models';
+import { services } from '~/insomnia-data';
 import { findPersonalOrganization } from '~/models/organization';
 import { migrateProjectsUnderOrganization, syncOrganizations } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
@@ -10,7 +10,7 @@ import { invariant } from '~/utils/invariant';
 import type { Route } from './+types/organization._index';
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id: sessionId, accountId } = await userSession.getOrCreate();
+  const { id: sessionId, accountId } = await services.userSession.getOrCreate();
   if (sessionId) {
     await syncOrganizations(sessionId, accountId);
 

@@ -1,6 +1,6 @@
+import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
-import { stats } from '../models';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import {
   fetchRequestData,
@@ -12,7 +12,7 @@ import {
 
 export function getSendRequestCallback() {
   return async function sendRequest(requestId: string) {
-    stats.incrementExecutedRequests();
+    services.stats.incrementExecutedRequests();
     // NOTE: unit tests will use the UI selected environment
     const {
       request,

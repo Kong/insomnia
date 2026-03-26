@@ -766,6 +766,24 @@ export function importInsomniaV5Data(rawData: string) {
   }
 }
 
+export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
+  const url = new URL(mcpUrl.trim());
+  const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
+  invariant(isHttp, 'MCP server URL must use http or https');
+  const mcpClient = {
+    type: 'mcpClient.insomnia/5.0' as const,
+    schema_version: INSOMNIA_SCHEMA_VERSION,
+    name: 'Imported MCP Client',
+    mcpRequest: {
+      name: 'Imported MCP Client',
+      url: mcpUrl.trim(),
+      transportType: 'streamable-http' as const,
+    },
+  };
+  const parsed = InsomniaFileSchema.parse(mcpClient);
+  return stringify(removeEmptyFields(parsed));
+}
+
 /**
  * Exports workspace data to Insomnia v5 format
  * This is the main export function that converts internal models to v5 YAML format

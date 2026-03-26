@@ -29,6 +29,10 @@ export type {
   GitAuthor,
   GitRemoteConfig,
 } from './git-repository';
+export type { OAuth2Token } from './o-auth-2-token';
+export type { PluginData } from './plugin-data';
+export type { ProtoDirectory } from './proto-directory';
+export type { ProtoFile } from './proto-file';
 export type { McpRequest, McpTransportType, McpServerPrimitiveTypes } from './mcp-request';
 export type { McpPayload } from './mcp-payload';
 export type { McpResponse } from './mcp-response';
@@ -40,3 +44,5 @@ export type {
   RunnerResultPerRequestPerIteration,
 } from './runner-test-result';
 export type { Settings, ThemeSettings } from './settings';
+export type { Stats } from './stats';
+export type { UserSession } from './user-session';

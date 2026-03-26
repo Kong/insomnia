@@ -2,13 +2,13 @@ import type { Organization } from 'insomnia-api';
 
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
+import { services } from '~/insomnia-data';
 import {
   environment,
   grpcRequest,
   project,
   request,
   requestGroup,
-  userSession,
   webSocketRequest,
   workspace,
 } from '~/models';
@@ -45,7 +45,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     );
   };
 
-  const { accountId } = await userSession.getOrCreate();
+  const { accountId } = await services.userSession.getOrCreate();
 
   const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 

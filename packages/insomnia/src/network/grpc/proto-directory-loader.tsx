@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import type { ProtoDirectory } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
+
 import { insecureReadFile } from '../../main/secure-read-file';
-import * as models from '../../models';
-import type { ProtoDirectory } from '../../models/proto-directory';
 
 interface IngestResult {
   createdDir?: ProtoDirectory | null;
@@ -37,7 +38,7 @@ export class ProtoDirectoryLoader {
     // allow to read the file as it is chosen by user
     const protoText = await insecureReadFile(entryPath);
     const name = path.basename(entryPath);
-    const { _id } = await models.protoFile.create({
+    const { _id } = await services.protoFile.create({
       name,
       parentId,
       protoText,
@@ -70,7 +71,7 @@ export class ProtoDirectoryLoader {
 
     // Only create the directory if a .proto file is found in the tree
     if (filesFound) {
-      const createdProtoDir = await models.protoDirectory.create({
+      const createdProtoDir = await services.protoDirectory.create({
         _id: newDirId,
         name: path.basename(dirPath),
         parentId,

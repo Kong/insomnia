@@ -1,5 +1,6 @@
 import { href } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { RequestGroup } from '~/models/request-group';
 import { invariant } from '~/utils/invariant';
@@ -25,14 +26,14 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       metaSortKey: -1e9,
     });
 
-    models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
+    services.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
 
     return null;
   }
 
   const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name: patch.name });
 
-  models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
+  services.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
 
   return null;
 }

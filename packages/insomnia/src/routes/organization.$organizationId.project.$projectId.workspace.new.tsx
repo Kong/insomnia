@@ -8,7 +8,6 @@ import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants
 import { database } from '~/common/database';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { userSession } from '~/models';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGitProject, isLocalProject } from '~/models/project';
@@ -166,7 +165,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     await database.flushChanges(flushId);
 
-    const { id } = await models.userSession.getOrCreate();
+    const { id } = await services.userSession.getOrCreate();
     if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
@@ -334,7 +333,7 @@ async function createMockServer(
         return result.error;
       }
 
-      const { id: sessionId } = await userSession.getOrCreate();
+      const { id: sessionId } = await services.userSession.getOrCreate();
       await createMockRoutes(result.routes, mockServer, sessionId, organizationId);
     }
 
@@ -342,7 +341,7 @@ async function createMockServer(
 
     const generationDurationMs = Date.now() - generationStartTime;
 
-    const { id } = await models.userSession.getOrCreate();
+    const { id } = await services.userSession.getOrCreate();
     if (id && !workspaceMeta.gitRepositoryId) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({

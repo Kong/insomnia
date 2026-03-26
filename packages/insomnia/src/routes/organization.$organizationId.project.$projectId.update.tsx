@@ -43,7 +43,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const gitRepository = project.gitRepositoryId ? await services.gitRepository.getById(project.gitRepositoryId) : null;
 
-  const user = await models.userSession.getOrCreate();
+  const user = await services.userSession.getOrCreate();
   const sessionId = user.id;
 
   try {
