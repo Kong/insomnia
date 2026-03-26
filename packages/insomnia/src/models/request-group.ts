@@ -1,5 +1,6 @@
+import type { EnvironmentKvPairData, EnvironmentType } from '~/insomnia-data';
+
 import { database as db } from '../common/database';
-import type { EnvironmentKvPairData, EnvironmentType } from './environment';
 import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
 import type { RequestAuthentication, RequestHeader } from './request';
 import type { BaseModel } from './types';

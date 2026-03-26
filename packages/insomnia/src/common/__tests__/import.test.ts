@@ -4,8 +4,9 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
-import { environment, project, request, requestGroup, workspace } from '../../models';
-import { EnvironmentKvPairDataType } from '../../models/environment';
+import { EnvironmentKvPairDataType, EnvironmentType, services } from '~/insomnia-data';
+
+import { request, requestGroup, workspace } from '../../models';
 import * as importUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
 import { tryImportV5Data } from '../insomnia-v5';
@@ -144,7 +145,7 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const projectToImportTo = await project.create();
+    const projectToImportTo = await services.project.create();
 
     const scanResult = await importUtil.scanResources([
       {
@@ -203,7 +204,7 @@ describe('importRaw()', () => {
   it('should import a postman collection to a new workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
-    const projectToImportTo = await project.create();
+    const projectToImportTo = await services.project.create();
     const scanResult = await importUtil.scanResources([
       {
         contentStr: content,
@@ -279,7 +280,7 @@ describe('importRaw()', () => {
     );
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const projectToImportTo = await project.create();
+    const projectToImportTo = await services.project.create();
     const projectId = projectToImportTo._id;
 
     const scanResult = await importUtil.scanResources([
@@ -297,7 +298,7 @@ describe('importRaw()', () => {
 
     const projectWorkspaces = await workspace.findByParentId(projectId);
     const importedWorkspaceId = projectWorkspaces[0]._id;
-    const requestBaseEnvironment = await environment.getByParentId(importedWorkspaceId);
+    const requestBaseEnvironment = await services.environment.getByParentId(importedWorkspaceId);
 
     expect(requestBaseEnvironment).toBeDefined();
 
@@ -319,8 +320,8 @@ describe('importRaw()', () => {
 
     const existingWorkspace = await workspace.create();
     const workspaceId = existingWorkspace._id;
-    const baseEnvironment = await environment.getOrCreateForParentId(workspaceId);
-    await environment.update(baseEnvironment, {
+    const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
+    await services.environment.update(baseEnvironment, {
       data: {
         existingVar: 'exists',
       },
@@ -339,7 +340,7 @@ describe('importRaw()', () => {
       workspaceId: existingWorkspace._id,
     });
 
-    const updatedBaseEnvironment = await environment.getByParentId(workspaceId);
+    const updatedBaseEnvironment = await services.environment.getByParentId(workspaceId);
 
     expect(updatedBaseEnvironment?.data).toMatchObject({
       existingVar: 'exists',
@@ -376,12 +377,12 @@ describe('importRaw()', () => {
         enabled: false,
       },
     ];
-    const baseEnvironment = await environment.getOrCreateForParentId(workspaceId);
-    await environment.update(baseEnvironment, {
+    const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
+    await services.environment.update(baseEnvironment, {
       data: {
         from: 'baseEnv',
       },
-      environmentType: environment.EnvironmentType.KVPAIR,
+      environmentType: EnvironmentType.KVPAIR,
       kvPairData: baseEnvironmentPair,
     });
 
@@ -398,7 +399,7 @@ describe('importRaw()', () => {
       workspaceId: existingWorkspace._id,
     });
 
-    const updatedBaseEnvironment = await environment.getByParentId(workspaceId);
+    const updatedBaseEnvironment = await services.environment.getByParentId(workspaceId);
 
     expect(updatedBaseEnvironment?.data).toMatchObject({
       from: 'variable',
@@ -446,12 +447,12 @@ describe('importRaw()', () => {
         enabled: false,
       },
     ];
-    const baseEnvironment = await environment.getOrCreateForParentId(workspaceId);
-    await environment.update(baseEnvironment, {
+    const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
+    await services.environment.update(baseEnvironment, {
       data: {
         from: 'baseEnv',
       },
-      environmentType: environment.EnvironmentType.KVPAIR,
+      environmentType: EnvironmentType.KVPAIR,
       kvPairData: baseEnvironmentPair,
     });
 
@@ -469,7 +470,7 @@ describe('importRaw()', () => {
       overrideBaseEnvironmentData: false,
     });
 
-    const updatedBaseEnvironment = await environment.getByParentId(workspaceId);
+    const updatedBaseEnvironment = await services.environment.getByParentId(workspaceId);
 
     expect(updatedBaseEnvironment?.data).toMatchObject({
       from: 'baseEnv',

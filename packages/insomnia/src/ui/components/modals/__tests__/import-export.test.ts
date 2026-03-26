@@ -9,7 +9,7 @@ import * as models from '../../../../models';
 // @vitest-environment jsdom
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
-    await models.project.all();
+    await services.project.all();
     await services.settings.getOrCreate();
   });
 
@@ -36,13 +36,13 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
       parentId: wrk1._id,
       metaSortKey: 1,
     });
-    let env1Base = await models.environment.getOrCreateForParentId(wrk1._id);
-    env1Base = await models.environment.update(env1Base, {
+    let env1Base = await services.environment.getOrCreateForParentId(wrk1._id);
+    env1Base = await services.environment.update(env1Base, {
       data: {
         envvalue: 'base1',
       },
     });
-    const env1Private = await models.environment.create({
+    const env1Private = await services.environment.create({
       name: 'Private',
       parentId: env1Base._id,
       data: {
@@ -143,26 +143,26 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
         },
       ],
     });
-    let env1Base = await models.environment.getOrCreateForParentId(wrk1._id);
-    env1Base = await models.environment.update(env1Base, {
+    let env1Base = await services.environment.getOrCreateForParentId(wrk1._id);
+    env1Base = await services.environment.update(env1Base, {
       data: {
         envvalue: 'base1',
       },
     });
-    const env1Public = await models.environment.create({
+    const env1Public = await services.environment.create({
       name: 'Public',
       parentId: env1Base._id,
       data: {
         envvalue: 'public1',
       },
     });
-    const env2Base = await models.environment.getOrCreateForParentId(wrk2._id);
-    await models.environment.update(env2Base, {
+    const env2Base = await services.environment.getOrCreateForParentId(wrk2._id);
+    await services.environment.update(env2Base, {
       data: {
         envvalue: 'base2',
       },
     });
-    const env2Private = await models.environment.create({
+    const env2Private = await services.environment.create({
       name: 'Private',
       isPrivate: true,
       parentId: env1Base._id,

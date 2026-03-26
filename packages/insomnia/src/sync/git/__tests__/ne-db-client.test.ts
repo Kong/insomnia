@@ -11,6 +11,8 @@ import { createBuilder } from '@develohpanda/fluent-builder';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
+import { services } from '~/insomnia-data';
+
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
@@ -32,7 +34,7 @@ describe('NeDBClient', () => {
     await db.init({ inMemoryOnly: true }, true);
 
     // Create test project
-    await models.project.create({
+    await services.project.create({
       _id: 'proj_test',
       name: 'Test Project',
     });
@@ -76,7 +78,7 @@ describe('NeDBClient', () => {
     });
 
     // Create environment
-    await models.environment.create({
+    await services.environment.create({
       _id: 'env_test',
       name: 'Test Environment',
       parentId: 'wrk_test',

@@ -14,11 +14,11 @@ import {
 } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
+import { models } from '~/insomnia-data';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 import { useEnvironmentSetActiveGlobalActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global';
 
 import { fuzzyMatch } from '../../common/misc';
-import { isRemoteProject } from '../../models/project';
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import uiEventBus from '../event-bus';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
@@ -53,7 +53,7 @@ export const EnvironmentPicker = ({
   };
 
   const { features } = useOrganizationPermissions();
-  const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingInsomniaCloudSync = Boolean(models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();

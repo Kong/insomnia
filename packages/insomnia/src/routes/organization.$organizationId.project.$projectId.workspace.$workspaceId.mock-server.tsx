@@ -24,6 +24,7 @@ import {
 } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { MockRoute } from '~/models/mock-route';
 import { useRootLoaderData } from '~/root';
@@ -59,7 +60,7 @@ export interface MockServerLoaderData {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, projectId, organizationId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));

@@ -154,10 +154,10 @@ export default class BaseExtension {
           },
           cookieJar: {
             getOrCreateForParentId: (parentId: string) => {
-              return models.cookieJar.getOrCreateForParentId(parentId);
+              return services.cookieJar.getOrCreateForParentId(parentId);
             },
             getCookiesForUrl: async (parentId: string, url: string) => {
-              const cookies = await models.cookieJar.getOrCreateForParentId(parentId);
+              const cookies = await services.cookieJar.getOrCreateForParentId(parentId);
               const jar = jarFromCookies(cookies.cookies);
               return jar.getCookiesSync(url);
             },

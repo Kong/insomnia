@@ -3,12 +3,12 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 import type { Cookie } from 'tough-cookie';
 
 import type { CloudProviderCredential, McpRequest, OAuth2Token, Services } from '~/insomnia-data';
+import type { CookieJar } from '~/insomnia-data';
+import type { Environment, UserUploadEnvironment } from '~/insomnia-data';
+import type { Project } from '~/insomnia-data';
 import type { getBodyBuffer } from '~/models/helpers/response-operations';
 
-import type { CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
-import type { Project } from '../models/project';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { getLatestForRequestId, Response } from '../models/response';

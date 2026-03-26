@@ -6,12 +6,10 @@ import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har'
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
 import { strings } from 'insomnia/src/common/strings';
-import { type Environment } from 'insomnia/src/models/environment';
 import * as requestOperations from 'insomnia/src/models/helpers/request-operations';
 import * as models from 'insomnia/src/models/index';
 import { type BaseModel, environment } from 'insomnia/src/models/index';
 import { isScratchpadOrganizationId } from 'insomnia/src/models/organization';
-import type { Project } from 'insomnia/src/models/project';
 import { isScratchpad, type Workspace } from 'insomnia/src/models/workspace';
 import { SegmentEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
@@ -25,6 +23,7 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
+import type { Environment, Project } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';

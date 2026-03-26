@@ -36,18 +36,12 @@ import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
-import { type ApiSpec, type GitRepository, services } from '~/insomnia-data';
+import type { Project, ApiSpec, GitRepository } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { sortProjects } from '~/models/helpers/project';
 import type { MockServer } from '~/models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
-import {
-  getProjectStorageTypeLabel,
-  isGitProject,
-  isLocalProject,
-  isRemoteProject,
-  type Project,
-} from '~/models/project';
 import { isDesign, type Workspace, type WorkspaceScope } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { useRootLoaderData } from '~/root';
@@ -248,7 +242,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
 
 async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
   try {
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
 
     const remoteId = project?.remoteId;
     if (!remoteId) {
@@ -386,7 +380,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
   invariant(projectId, 'projectId parameter is required');
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   console.log('[project loader] Loading project:', project?.name, projectId);
   const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),
@@ -401,7 +395,9 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
-    project && isGitProject(project) ? await services.gitRepository.getById(project.gitRepositoryId || '') : null;
+    project && models.project.isGitProject(project)
+      ? await services.gitRepository.getById(project.gitRepositoryId || '')
+      : null;
 
   return {
     localFiles,
@@ -752,10 +748,15 @@ const Component = () => {
     },
   ];
 
-  const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && !storageRules.enableCloudSync;
+  const isRemoteProjectInconsistent =
+    activeProject && models.project.isRemoteProject(activeProject) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent =
-    activeProject && !isRemoteProject(activeProject) && !isGitProject(activeProject) && !storageRules.enableLocalVault;
-  const isGitSyncProjectInconsistent = activeProject && isGitProject(activeProject) && !storageRules.enableGitSync;
+    activeProject &&
+    !models.project.isRemoteProject(activeProject) &&
+    !models.project.isGitProject(activeProject) &&
+    !storageRules.enableLocalVault;
+  const isGitSyncProjectInconsistent =
+    activeProject && models.project.isGitProject(activeProject) && !storageRules.enableGitSync;
   const isProjectInconsistent =
     isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
 
@@ -831,15 +832,17 @@ const Component = () => {
                       );
                     }}
                   </GridList>
-                  {isGitProject(activeProject) && (
+                  {models.project.isGitProject(activeProject) && (
                     <GitProjectSyncDropdown
                       key={activeProjectGitRepository?._id}
                       gitRepository={activeProjectGitRepository}
                       activeProject={activeProject}
                     />
                   )}
-                  {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}
-                  {isRemoteProject(activeProject) && <CloudSyncProjectBar />}
+                  {models.project.isLocalProject(activeProject) && !models.project.isGitProject(activeProject) && (
+                    <LocalProjectBar />
+                  )}
+                  {models.project.isRemoteProject(activeProject) && <CloudSyncProjectBar />}
                 </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
@@ -917,7 +920,7 @@ const Component = () => {
                       <p className="text-base">
                         <Icon icon="exclamation-triangle" className="mr-2" />
                         The organization owner mandates that projects must be created and stored using{' '}
-                        {getProjectStorageTypeLabel(storageRules)}.
+                        {models.project.getProjectStorageTypeLabel(storageRules)}.
                       </p>
                       <Button
                         onPress={() => setIsUpdateProjectModalOpen(true)}

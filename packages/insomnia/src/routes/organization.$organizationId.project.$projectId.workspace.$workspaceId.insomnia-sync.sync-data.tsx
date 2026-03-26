@@ -1,5 +1,6 @@
 import { href } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteBackendProjectsCache, remoteBranchesCache, remoteCompareCache } from '~/ui/sync-utils';
@@ -11,7 +12,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { projectId, workspaceId } = params;
   try {
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
     const vcs = VCSInstance();
@@ -70,7 +71,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { projectId, workspaceId } = params;
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.remoteId, 'Project is not remote');
 

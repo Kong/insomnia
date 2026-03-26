@@ -1,6 +1,5 @@
+import type { CookieJar, Environment } from '~/insomnia-data';
 import { database, type GitRepository } from '~/insomnia-data';
-import type { CookieJar } from '~/models/cookie-jar';
-import { type Environment } from '~/models/environment';
 import * as models from '~/models/index';
 import type { Workspace } from '~/models/workspace';
 

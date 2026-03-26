@@ -133,8 +133,8 @@ export const createConnectionContext = async (
   // Get environment
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspaceId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(workspaceId));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const environmentId = environment ? environment._id : null;
 

@@ -1,61 +1,17 @@
 import * as crypto from 'node:crypto';
 
-import { database as db } from '../common/database';
-import type { Project } from './project';
-import * as project from './project';
-import { type BaseModel } from './types';
-import type { Workspace } from './workspace';
-import * as workspace from './workspace';
+import type { Workspace } from '../../../models/workspace';
+import * as workspace from '../../../models/workspace';
+import { database as db } from '../../src/database';
+import { models } from '../../src/models';
+import type { Environment, Project } from '../../src/models/types';
 
-export const name = 'Environment';
-export const type = 'Environment';
-export const prefix = 'env';
-export const prefixEnvPair = 'envPair';
-// vault environment path when saved in environment data
-export const vaultEnvironmentPath = '__insomnia_vault';
-// vault environment path when used in runtime rendering
-export const vaultEnvironmentRuntimePath = 'vault';
-export const vaultEnvironmentMaskValue = '••••••';
-export const canDuplicate = true;
-export const canSync = true;
-// for those keys do not need to add in model init method
-export const optionalKeys = ['kvPairData', 'environmentType'];
-
-export interface BaseEnvironment {
-  name: string;
-  data: Record<string, any>;
-  dataPropertyOrder: Record<string, any> | null;
-  kvPairData?: EnvironmentKvPairData[];
-  color: string | null;
-  metaSortKey: number;
-  // For sync control
-  isPrivate: boolean;
-  environmentType?: EnvironmentType;
-}
-
-export enum EnvironmentType {
-  JSON = 'json',
-  KVPAIR = 'kv',
-}
-export enum EnvironmentKvPairDataType {
-  JSON = 'json',
-  STRING = 'str',
-  SECRET = 'secret',
-}
-export interface EnvironmentKvPairData {
-  id: string;
-  name: string;
-  value: string;
-  type: EnvironmentKvPairDataType;
-  enabled?: boolean;
-}
-export type Environment = BaseModel & BaseEnvironment;
-// This is a representation of the data taken from a csv or json file AKA iterationData
-export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrder' | 'name'>;
+const { type, prefix, vaultEnvironmentPath } = models.environment;
+const { EnvironmentKvPairDataType, EnvironmentType } = models.environment;
 
 // remove all secret items when user reset vault key
 export const removeAllSecrets = async (organizationIds: string[]) => {
-  const allProjects = await db.find<Project>(project.type, {
+  const allProjects = await db.find<Project>(models.project.type, {
     parentId: { $in: organizationIds },
   });
   const allProjectIds = allProjects.map(project => project._id);
@@ -84,23 +40,6 @@ export const removeAllSecrets = async (organizationIds: string[]) => {
     }
   });
 };
-
-export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => model.type === type;
-
-export function init() {
-  return {
-    name: 'New Environment',
-    data: {},
-    dataPropertyOrder: null,
-    color: null,
-    isPrivate: false,
-    metaSortKey: Date.now(),
-  };
-}
-
-export function migrate(doc: Environment) {
-  return doc;
-}
 
 export function create(patch: Partial<Environment> = {}) {
   if (!patch.parentId) {

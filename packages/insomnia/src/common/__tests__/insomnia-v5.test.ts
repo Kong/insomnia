@@ -8,11 +8,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
-import { services } from '~/insomnia-data';
+import { EnvironmentKvPairDataType, services } from '~/insomnia-data';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
 import * as models from '../../models';
-import { EnvironmentKvPairDataType } from '../../models/environment';
 import type { Request } from '../../models/request';
 import { database as db } from '../database';
 import {
@@ -29,7 +28,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
     await db.init({ inMemoryOnly: true });
 
     // Create a basic project and workspace
-    await models.project.create({
+    await services.project.create({
       _id: 'proj_test',
       name: 'Test Project',
     });
@@ -181,7 +180,7 @@ collection: []
       });
 
       // Add base environment (required)
-      await models.environment.create({
+      await services.environment.create({
         _id: 'env_export_test',
         name: 'Base Environment',
         parentId: workspace._id,
@@ -213,7 +212,7 @@ collection: []
       });
 
       // must add a base environment
-      await models.environment.create({
+      await services.environment.create({
         _id: 'env_empty',
         name: 'Base Env',
         parentId: workspace._id,
@@ -238,7 +237,7 @@ collection: []
         scope: 'collection',
       });
 
-      await models.environment.create({
+      await services.environment.create({
         _id: 'env_filter',
         name: 'Base Env',
         parentId: workspace._id,
@@ -280,7 +279,7 @@ collection: []
         scope: 'design',
       });
 
-      await models.environment.create({
+      await services.environment.create({
         _id: 'env_design',
         name: 'Base Env',
         parentId: workspace._id,
@@ -336,7 +335,7 @@ collection: []
         scope: 'mcp',
       });
 
-      await models.environment.create({
+      await services.environment.create({
         _id: 'env_mcp',
         name: 'Base Env',
         parentId: workspace._id,

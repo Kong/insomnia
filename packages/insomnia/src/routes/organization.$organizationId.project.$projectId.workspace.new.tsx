@@ -10,8 +10,7 @@ import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
-import { isGitProject, isLocalProject } from '~/models/project';
-import { isCollection, isEnvironment, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
+import { isCollection, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
 import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
@@ -46,7 +45,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { organizationId, projectId } = params;
   try {
     const workspaceData = (await request.json()) as NewWorkspaceData;
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
 
     invariant(project, 'Project not found');
 
@@ -105,7 +104,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       parentId: projectId,
     });
 
-    if (isGitProject(project)) {
+    if (models.project.isGitProject(project)) {
       const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
       const fileName = workspaceData.fileName || workspace.name;
@@ -159,14 +158,19 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     // Create default env, cookie jar, and meta
-    await models.environment.getOrCreateForParentId(workspace._id);
-    await models.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.environment.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.getOrCreateForParentId(workspace._id);
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     await database.flushChanges(flushId);
 
     const { id } = await services.userSession.getOrCreate();
-    if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
+    if (
+      id &&
+      !workspaceMeta.gitRepositoryId &&
+      !models.project.isGitProject(project) &&
+      !models.project.isLocalProject(project)
+    ) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -179,9 +183,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     if (isCollection(workspace)) {
       event = SegmentEvent.collectionCreate;
-    } else if (isEnvironment(workspace)) {
+    } else if (models.environment.isEnvironment(workspace)) {
       event = SegmentEvent.environmentCreate;
-      const environment = await models.environment.getById(workspace._id);
+      const environment = await services.environment.getById(workspace._id);
       environmentType = environment?.isPrivate ? 'private' : 'global';
     } else if (scope === 'mcp') {
       event = SegmentEvent.mcpClientWorkspaceCreate;
@@ -286,7 +290,7 @@ async function createMockServer(
       mockServerPatch.url = workspaceData.mockServerUrl!;
     }
 
-    await models.environment.getOrCreateForParentId(workspace._id);
+    await services.environment.getOrCreateForParentId(workspace._id);
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
     const mockServer = await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
 

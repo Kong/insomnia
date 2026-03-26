@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { href, redirect, useNavigate } from 'react-router';
 
+import { project } from '~/models';
 import { SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
-import { SCRATCHPAD_PROJECT_ID } from '~/models/project';
 import { SCRATCHPAD_WORKSPACE_ID } from '~/models/workspace';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
@@ -160,7 +160,7 @@ const Component = () => {
             navigate(
               href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
                 organizationId: SCRATCHPAD_ORGANIZATION_ID,
-                projectId: SCRATCHPAD_PROJECT_ID,
+                projectId: project.SCRATCHPAD_PROJECT_ID,
                 workspaceId: SCRATCHPAD_WORKSPACE_ID,
               }),
             );

@@ -4,7 +4,7 @@ import nodePath from 'node:path';
 import type { Consola } from 'consola';
 import { pick } from 'es-toolkit';
 
-import type { Environment, UserUploadEnvironment } from '~/models/environment';
+import type { Environment, EnvironmentKvPairData, UserUploadEnvironment } from '~/insomnia-data';
 import type { Request, RequestAuthentication, RequestHeader } from '~/models/request';
 import type { Workspace } from '~/models/workspace';
 import { typedKeys } from '~/utils';
@@ -228,7 +228,7 @@ export class RunCollectionResultReport {
         data: redactObject(env.data),
         ...(env.kvPairData
           ? {
-              kvPairData: env.kvPairData.map(pair => ({
+              kvPairData: env.kvPairData.map((pair: EnvironmentKvPairData) => ({
                 ...pair,
                 value: REDACTED_VALUE,
               })),

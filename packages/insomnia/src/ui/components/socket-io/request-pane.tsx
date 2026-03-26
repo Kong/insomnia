@@ -4,13 +4,13 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { Environment } from '~/insomnia-data';
 import { getAuthObjectOrNull } from '~/network/authentication';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
 
-import type { Environment } from '../../../models/environment';
 import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import {
   type SocketIORequestLoaderData,

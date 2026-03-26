@@ -7,13 +7,13 @@ import electron, { BrowserWindow } from 'electron';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import type { CookieJar } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
 import { readCurlResponse } from '~/models/helpers/response-operations';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import * as models from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
 import type { RequestAuthentication, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
 import { filterClientCertificates } from '../../network/certificate';
@@ -146,7 +146,7 @@ const openCurlConnection = async (
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
-  const environment = await models.environment.getById(environmentId || 'n/a');
+  const environment = await services.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await services.caCertificate.getByParentId(options.workspaceId);
@@ -283,7 +283,7 @@ const openCurlConnection = async (
             );
             const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
             if (hasCookiesToPersist) {
-              await models.cookieJar.update(options.cookieJar, { cookies });
+              await services.cookieJar.update(options.cookieJar, { cookies });
               timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
             }
           }

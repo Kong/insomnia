@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
 
-import { removeAllSecrets } from '~/models/environment';
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useResetVaultKeyFetcher } from '~/routes/auth.reset-vault-key';
 import { useValidateVaultKeyActionFetcher } from '~/routes/auth.validate-vault-key';
@@ -115,7 +115,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                       <PromptButton
                         className="h-full px-4 py-1 text-sm text-(--color-info) underline transition-all"
                         onClick={async () => {
-                          await removeAllSecrets(organizations.map(org => org.id));
+                          await services.environment.removeAllSecrets(organizations.map(org => org.id));
                           resetVaultKeyFetcher.submit();
                         }}
                       >

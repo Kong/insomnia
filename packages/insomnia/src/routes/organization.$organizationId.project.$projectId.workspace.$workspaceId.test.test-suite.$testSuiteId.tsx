@@ -17,11 +17,11 @@ import { useParams, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import { documentationLinks } from '~/common/documentation';
+import type { UnitTest } from '~/insomnia-data';
+import type { UnitTestSuite } from '~/insomnia-data';
 import * as models from '~/models';
 import { isGrpcRequest } from '~/models/grpc-request';
 import { isRequest, type Request } from '~/models/request';
-import type { UnitTest } from '~/models/unit-test';
-import type { UnitTestSuite } from '~/models/unit-test-suite';
 import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
 import { useTestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.delete';

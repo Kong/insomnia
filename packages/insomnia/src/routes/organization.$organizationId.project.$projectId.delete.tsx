@@ -15,7 +15,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   const user = await services.userSession.getOrCreate();
@@ -39,7 +39,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     }
 
     await services.stats.incrementDeletedRequestsForDescendents(project);
-    await models.project.remove(project);
+    await services.project.remove(project);
 
     await database.flushChanges(bufferId);
 

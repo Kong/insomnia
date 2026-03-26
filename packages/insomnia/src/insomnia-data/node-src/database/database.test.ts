@@ -211,13 +211,13 @@ describe('_repairDatabase()', async () => {
 
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
-    const project = await models.project.create();
+    const project = await services.project.create();
     const workspace = await models.workspace.create({
       _id: 'w1',
       parentId: project._id,
     });
     // Create one set of sub environments
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b1',
       parentId: 'w1',
       data: {
@@ -225,14 +225,14 @@ describe('_repairDatabase()', async () => {
         b1: true,
       },
     });
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b1_sub1',
       parentId: 'b1',
       data: {
         foo: '1',
       },
     });
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b1_sub2',
       parentId: 'b1',
       data: {
@@ -240,7 +240,7 @@ describe('_repairDatabase()', async () => {
       },
     });
     // Create second set of sub environments
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b2',
       parentId: 'w1',
       data: {
@@ -248,14 +248,14 @@ describe('_repairDatabase()', async () => {
         b2: true,
       },
     });
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b2_sub1',
       parentId: 'b2',
       data: {
         foo: '3',
       },
     });
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b2_sub2',
       parentId: 'b2',
       data: {
@@ -381,14 +381,14 @@ describe('_repairDatabase()', async () => {
 
   it('fixes duplicate cookie jars', async () => {
     // Create Workspace with no children
-    const project = await models.project.create();
+    const project = await services.project.create();
     const workspace = await models.workspace.create({
       _id: 'w1',
       parentId: project._id,
     });
     expect((await db.getWithDescendants(workspace)).length).toBe(1);
     // Create one set of sub environments
-    await models.cookieJar.create({
+    await services.cookieJar.create({
       _id: 'j1',
       parentId: 'w1',
       cookies: [
@@ -406,7 +406,7 @@ describe('_repairDatabase()', async () => {
         },
       ],
     });
-    await models.cookieJar.create({
+    await services.cookieJar.create({
       _id: 'j2',
       parentId: 'w1',
       cookies: [
@@ -674,7 +674,7 @@ describe('docCreate()', () => {
 
 describe('withAncestors()', () => {
   it('should return itself and all parents but exclude siblings', async () => {
-    const spc = await models.project.create();
+    const spc = await services.project.create();
     const wrk = await models.workspace.create({
       parentId: spc._id,
     });
@@ -714,12 +714,12 @@ describe('withAncestors()', () => {
 
 describe('getWithDescendants()', () => {
   it('should return specified model and all children', async () => {
-    const project = await models.project.create();
+    const project = await services.project.create();
     const workspace = await models.workspace.create({
       _id: 'w1',
       parentId: project._id,
     });
-    const cookieJar1 = await models.cookieJar.create({
+    const cookieJar1 = await services.cookieJar.create({
       _id: 'j1',
       parentId: workspace._id,
       cookies: [
@@ -737,7 +737,7 @@ describe('getWithDescendants()', () => {
         },
       ],
     });
-    const cookieJar2 = await models.cookieJar.create({
+    const cookieJar2 = await services.cookieJar.create({
       _id: 'j2',
       parentId: workspace._id,
       cookies: [
@@ -784,12 +784,12 @@ describe('getWithDescendants()', () => {
       parentId: workspace._id,
     });
 
-    const environment1 = await models.environment.create({
+    const environment1 = await services.environment.create({
       _id: 'env1',
       parentId: workspace._id,
     });
 
-    const environment2 = await models.environment.create({
+    const environment2 = await services.environment.create({
       _id: 'env2',
       parentId: environment1._id,
     });

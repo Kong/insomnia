@@ -2,11 +2,11 @@ import path from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { Cookie } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import type { Cookie } from '../../models/cookie-jar';
 import type { Request } from '../../models/request';
 import type { Response } from '../../models/response';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
@@ -15,7 +15,7 @@ import { getRenderedRequestAndContext } from '../render';
 describe('export', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
-    await models.project.all();
+    await services.project.all();
     await services.settings.getOrCreate();
   });
 
@@ -188,13 +188,13 @@ describe('export', () => {
         value: '3',
       });
       await models.request.create(req3);
-      const envBase = await models.environment.getOrCreateForParentId(workspace._id);
-      await models.environment.update(envBase, {
+      const envBase = await services.environment.getOrCreateForParentId(workspace._id);
+      await services.environment.update(envBase, {
         data: {
           envvalue: '',
         },
       });
-      const envPublic = await models.environment.create({
+      const envPublic = await services.environment.create({
         _id: 'env_1',
         name: 'Public',
         parentId: envBase._id,
@@ -202,7 +202,7 @@ describe('export', () => {
           envvalue: 'public',
         },
       });
-      const envPrivate = await models.environment.create({
+      const envPrivate = await services.environment.create({
         _id: 'env_2',
         name: 'Private',
         isPrivate: true,
@@ -410,8 +410,8 @@ describe('export', () => {
           lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
         },
       ];
-      const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
-      await models.cookieJar.update(cookieJar, {
+      const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+      await services.cookieJar.update(cookieJar, {
         parentId: workspace._id,
         cookies,
       });

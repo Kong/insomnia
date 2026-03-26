@@ -20,8 +20,8 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import { type GitRemoteProviderType, type GitRepository, services } from '~/insomnia-data';
-import { EMPTY_GIT_PROJECT_ID, isEmptyGitProject } from '~/models/project';
+import { services } from '~/insomnia-data';
+import type { GitRemoteProviderType, GitRepository } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
@@ -165,10 +165,13 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   }
 
   invariant(projectId, 'Project ID is required');
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
-  invariant(project.gitRepositoryId && !isEmptyGitProject(project), 'Project is not linked to a git repository');
+  invariant(
+    project.gitRepositoryId && !models.project.isEmptyGitProject(project),
+    'Project is not linked to a git repository',
+  );
   const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
@@ -857,10 +860,10 @@ export const cloneGitRepoAction = async ({
 
       async function getProject() {
         if (cloneIntoProjectId) {
-          const project = await models.project.getById(cloneIntoProjectId);
+          const project = await services.project.getById(cloneIntoProjectId);
           invariant(project, 'Project not found');
 
-          await models.project.update(project, {
+          await services.project.update(project, {
             remoteId: null,
             gitRepositoryId: gitRepository._id,
           });
@@ -868,7 +871,7 @@ export const cloneGitRepoAction = async ({
           return project;
         }
 
-        const project = await models.project.create({
+        const project = await services.project.create({
           name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
           parentId: organizationId,
           gitRepositoryId: gitRepository._id,
@@ -935,7 +938,7 @@ export const cloneGitRepoAction = async ({
       };
     }
 
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
     trackSegmentEvent(SegmentEvent.vcsSyncStart, {
@@ -1050,7 +1053,7 @@ export const cloneGitRepoAction = async ({
       const existingWorkspace = await models.workspace.getById(workspace._id);
 
       if (existingWorkspace) {
-        const project = await models.project.getById(existingWorkspace.parentId);
+        const project = await services.project.getById(existingWorkspace.parentId);
         if (!project) {
           return {
             errors: [
@@ -1160,14 +1163,14 @@ export const updateGitRepoAction = async ({
       const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
       gitRepositoryId = workspaceMeta?.gitRepositoryId;
     } else if (projectId) {
-      const project = await models.project.getById(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       gitRepositoryId = project.gitRepositoryId;
     }
 
     let gitRepository: GitRepository | undefined;
 
-    if (gitRepositoryId && gitRepositoryId !== EMPTY_GIT_PROJECT_ID) {
+    if (gitRepositoryId && gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID) {
       gitRepository = await services.gitRepository.getById(gitRepositoryId);
       invariant(gitRepository, 'GitRepository not found');
     } else {
@@ -1187,9 +1190,9 @@ export const updateGitRepoAction = async ({
         gitRepositoryId: gitRepository._id,
       });
     } else if (projectId) {
-      const project = await models.project.getById(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
-      await models.project.update(project, {
+      await services.project.update(project, {
         gitRepositoryId: gitRepository._id,
       });
     }
@@ -1247,10 +1250,10 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
       gitRepositoryId: null,
     });
   } else if (projectId) {
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
-    await models.project.update(project, {
-      gitRepositoryId: EMPTY_GIT_PROJECT_ID,
+    await services.project.update(project, {
+      gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID,
     });
   }
 
@@ -2269,9 +2272,9 @@ const getRepositoryDirectoryTree = async ({
   repositoryTree: FileTree;
   folderList: Record<string, string[]>;
 }> => {
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
 
-  if (project && isEmptyGitProject(project)) {
+  if (project && models.project.isEmptyGitProject(project)) {
     return {
       repositoryTree: {
         id: '',

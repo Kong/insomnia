@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { EnvironmentKvPairDataType, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
+import { EnvironmentKvPairDataType, models } from '~/insomnia-data';
+
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating';
 import {
   checkNestedKeys,
@@ -175,7 +176,7 @@ describe('getKVPairFromData()', () => {
   });
 
   it('converts vault path entries to SECRET type with individual keys', () => {
-    const data = { [vaultEnvironmentPath]: { secret1: 'val1', secret2: 'val2' } };
+    const data = { [models.environment.vaultEnvironmentPath]: { secret1: 'val1', secret2: 'val2' } };
     const result = getKVPairFromData(data, null);
     expect(result).toHaveLength(2);
     expect(result[0]).toMatchObject({
@@ -193,7 +194,7 @@ describe('getKVPairFromData()', () => {
   });
 
   it('handles mixed data with strings, objects, and secrets', () => {
-    const data = { str: 'hello', obj: { x: 1 }, [vaultEnvironmentPath]: { pw: 'secret' } };
+    const data = { str: 'hello', obj: { x: 1 }, [models.environment.vaultEnvironmentPath]: { pw: 'secret' } };
     const result = getKVPairFromData(data, null);
     expect(result).toHaveLength(3);
     const types = result.map(r => r.type);
@@ -222,7 +223,7 @@ describe('getDataFromKVPair()', () => {
       { id: '2', name: 'token', value: 'tok', type: EnvironmentKvPairDataType.SECRET, enabled: true },
     ];
     const { data } = getDataFromKVPair(kvPair);
-    expect(data[vaultEnvironmentPath]).toEqual({ pw: 'secret', token: 'tok' });
+    expect(data[models.environment.vaultEnvironmentPath]).toEqual({ pw: 'secret', token: 'tok' });
   });
 
   it('skips disabled pairs', () => {
@@ -261,34 +262,36 @@ describe('maskVaultEnvironmentData()', () => {
   it('does not mask data for non-private environments', () => {
     const env = makeEnv({
       isPrivate: false,
-      data: { [vaultEnvironmentPath]: { pw: 'secret' } },
+      data: { [models.environment.vaultEnvironmentPath]: { pw: 'secret' } },
       kvPairData: [{ id: '1', name: 'pw', value: 'secret', type: EnvironmentKvPairDataType.SECRET, enabled: true }],
     });
     const result = maskVaultEnvironmentData(env);
-    expect(result.data[vaultEnvironmentPath].pw).toBe('secret');
+    expect(result.data[models.environment.vaultEnvironmentPath].pw).toBe('secret');
     expect(result.kvPairData![0].value).toBe('secret');
   });
 
   it('masks vault data and kvPairData for private environments with secrets', () => {
     const env = makeEnv({
       isPrivate: true,
-      data: { [vaultEnvironmentPath]: { pw: 'secret', token: 'tok' } },
+      data: { [models.environment.vaultEnvironmentPath]: { pw: 'secret', token: 'tok' } },
       kvPairData: [
         { id: '1', name: 'pw', value: 'secret', type: EnvironmentKvPairDataType.SECRET, enabled: true },
         { id: '2', name: 'token', value: 'tok', type: EnvironmentKvPairDataType.SECRET, enabled: true },
       ],
     });
     const result = maskVaultEnvironmentData(env);
-    expect(result.data[vaultEnvironmentPath].pw).toBe(vaultEnvironmentMaskValue);
-    expect(result.data[vaultEnvironmentPath].token).toBe(vaultEnvironmentMaskValue);
-    expect(result.kvPairData![0].value).toBe(vaultEnvironmentMaskValue);
-    expect(result.kvPairData![1].value).toBe(vaultEnvironmentMaskValue);
+    expect(result.data[models.environment.vaultEnvironmentPath].pw).toBe(models.environment.vaultEnvironmentMaskValue);
+    expect(result.data[models.environment.vaultEnvironmentPath].token).toBe(
+      models.environment.vaultEnvironmentMaskValue,
+    );
+    expect(result.kvPairData![0].value).toBe(models.environment.vaultEnvironmentMaskValue);
+    expect(result.kvPairData![1].value).toBe(models.environment.vaultEnvironmentMaskValue);
   });
 
   it('does not mask non-secret kvPairData entries in private environments', () => {
     const env = makeEnv({
       isPrivate: true,
-      data: { [vaultEnvironmentPath]: { pw: 'secret' }, str: 'visible' },
+      data: { [models.environment.vaultEnvironmentPath]: { pw: 'secret' }, str: 'visible' },
       kvPairData: [
         { id: '1', name: 'pw', value: 'secret', type: EnvironmentKvPairDataType.SECRET, enabled: true },
         { id: '2', name: 'str', value: 'visible', type: EnvironmentKvPairDataType.STRING, enabled: true },

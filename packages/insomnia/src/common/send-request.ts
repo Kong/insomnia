@@ -1,12 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { database, initDatabase, services, type Settings } from '~/insomnia-data';
+import type { Environment, Settings, UserUploadEnvironment } from '~/insomnia-data';
+import { database, initDatabase, services } from '~/insomnia-data';
 import { createNedbDatabase } from '~/insomnia-data/node';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
 import {
   defaultSendActionRuntime,
   fetchRequestData,

@@ -1,6 +1,7 @@
-import type { Cookie as InsomniaCookie, CookieJar as InsomniaCookieJar } from 'insomnia/src/models/cookie-jar';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
+
+import type { Cookie as InsomniaCookie, CookieJar as InsomniaCookieJar } from '~/insomnia-data';
 
 import { getExistingConsole } from './console';
 import { Property, PropertyList } from './properties';

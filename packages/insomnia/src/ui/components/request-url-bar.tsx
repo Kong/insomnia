@@ -19,7 +19,6 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import { vaultEnvironmentRuntimePath } from '../../models/environment';
 import type { Request } from '../../models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
@@ -193,7 +192,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             const environmentId = activeEnvironment._id;
             const workspaceId = activeWorkspace._id;
             // Render any nunjucks tags in the url/headers/authentication settings/cookies
-            const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+            const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
             const ancestors = await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type]);
             // check for authentication overrides in parent folders
@@ -505,7 +504,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           </div>
           {!vaultKey &&
             undefinedEnvironmentVariableList.some(variableName =>
-              variableName.startsWith(`${vaultEnvironmentRuntimePath}.`),
+              variableName.startsWith(`${models.environment.vaultEnvironmentRuntimePath}.`),
             ) && (
               <div className="mt-4">
                 <p>
@@ -522,7 +521,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 </Button>
                 <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
                   {undefinedEnvironmentVariableList
-                    ?.filter(variableName => variableName.startsWith(`${vaultEnvironmentRuntimePath}.`))
+                    ?.filter(variableName =>
+                      variableName.startsWith(`${models.environment.vaultEnvironmentRuntimePath}.`),
+                    )
                     .map(item => {
                       return (
                         <div

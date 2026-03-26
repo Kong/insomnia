@@ -1,6 +1,7 @@
 import { href, redirect } from 'react-router';
 
 import { getMockServiceBinURL } from '~/common/constants';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
@@ -11,7 +12,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   const workspace = await models.workspace.getById(workspaceId);
@@ -30,7 +31,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   const baseUrl = getMockServiceBinURL(mockServer, '').replace(/\/$/, '');
 
-  await models.environment.create({
+  await services.environment.create({
     name: 'Base Environment',
     parentId: collectionWorkspace._id,
     data: {

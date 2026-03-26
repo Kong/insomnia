@@ -5,11 +5,11 @@ import { database } from '~/common/database';
 import { scopeToLabelMap } from '~/common/get-workspace-label';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort } from '~/common/sorting';
-import type { ApiSpec, GitRepository } from '~/insomnia-data';
+import type { ApiSpec, GitRepository, Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { sortProjects } from '~/models/helpers/project';
 import type { MockServer } from '~/models/mock-server';
-import { type Project } from '~/models/project';
 import { isDesign } from '~/models/workspace';
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { invariant } from '~/utils/invariant';
@@ -118,7 +118,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, `Project was not found ${projectId}`);
   const organizationProjects =
     (await database.find<Project>(models.project.type, {

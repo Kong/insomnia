@@ -3,21 +3,21 @@ import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
-import {
-  type ApiSpec,
-  type CaCertificate,
-  type ClientCertificate,
-  type GitRepository,
-  services,
+import { services } from '~/insomnia-data';
+import type {
+  ApiSpec,
+  CaCertificate,
+  ClientCertificate,
+  GitRepository,
+  CookieJar,
+  Environment,
+  Project,
 } from '~/insomnia-data';
 import * as models from '~/models';
-import type { CookieJar } from '~/models/cookie-jar';
-import type { Environment } from '~/models/environment';
 import type { GrpcRequest } from '~/models/grpc-request';
 import type { GrpcRequestMeta } from '~/models/grpc-request-meta';
 import { sortProjects } from '~/models/helpers/project';
 import type { MockServer } from '~/models/mock-server';
-import { isGitProject, type Project } from '~/models/project';
 import type { Request } from '~/models/request';
 import { isRequestGroup, type RequestGroup } from '~/models/request-group';
 import type { RequestGroupMeta } from '~/models/request-group-meta';
@@ -70,7 +70,7 @@ export interface Child {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const activeProject = await models.project.getById(projectId);
+  const activeProject = await services.project.getById(projectId);
   if (!activeProject) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -84,14 +84,14 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
   const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
 
-  const gitRepositoryId = isGitProject(activeProject)
+  const gitRepositoryId = models.project.isGitProject(activeProject)
     ? activeProject.gitRepositoryId
     : activeWorkspaceMeta.gitRepositoryId;
   const gitRepository = await services.gitRepository.getById(gitRepositoryId || '');
 
-  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
 
-  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id)).sort(
+  const subEnvironments = (await services.environment.findByParentId(baseEnvironment._id)).sort(
     (e1, e2) => e1.metaSortKey - e2.metaSortKey,
   );
 
@@ -129,7 +129,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     _id: activeWorkspaceMeta.activeGlobalEnvironmentId,
   });
 
-  const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+  const activeCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
   const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
   const activeMockServer = await models.mockServer.getByParentId(workspaceId);

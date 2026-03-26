@@ -9,7 +9,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { configureFetch } from 'insomnia-api';
 
 import { getCurrentSessionId } from '~/account/session';
-import type { Stats } from '~/insomnia-data';
+import type { Project, RemoteProject, Stats } from '~/insomnia-data';
 import { database, initDatabase, initServices, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
@@ -40,7 +40,6 @@ import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
-import type { Project, RemoteProject } from './models/project';
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
@@ -295,11 +294,11 @@ async function _createModelInstances() {
   await services.stats.get();
   await services.settings.getOrCreate();
   try {
-    const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
-      await models.project.create({
+      await services.project.create({
         _id: models.project.SCRATCHPAD_PROJECT_ID,
         name: getProductName(),
         remoteId: null,

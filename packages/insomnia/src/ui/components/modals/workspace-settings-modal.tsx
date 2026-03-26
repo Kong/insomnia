@@ -13,6 +13,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { Project } from '~/insomnia-data';
 import { removeResponsesForRequest } from '~/models/helpers/response-operations';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
@@ -21,7 +22,6 @@ import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as models from '../../../models/index';
 import type { MockServer } from '../../../models/mock-server';
-import { isGitProject, type Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isEnvironment, isMcp, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
@@ -48,7 +48,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
-    if (project && isGitProject(project) && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
+    if (project && models.project.isGitProject(project) && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
       gitRepoTreeFetcher.load({ projectId: project._id });
     }
   }, [project, gitRepoTreeFetcher]);
@@ -136,7 +136,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   />
                 </TextField>
-                {project && isGitProject(project) && gitRepoTreeFetcher.data && !isMcp(workspace) && (
+                {project && models.project.isGitProject(project) && gitRepoTreeFetcher.data && !isMcp(workspace) && (
                   <TextField
                     name="fileName"
                     isRequired

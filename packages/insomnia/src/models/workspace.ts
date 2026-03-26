@@ -1,10 +1,9 @@
 import type { Merge } from 'type-fest';
 
-import { services } from '~/insomnia-data';
+import { services, models } from '~/insomnia-data';
 
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
-import { isProjectId } from './project';
 import type { BaseModel } from './types';
 
 export const name = 'Workspace';
@@ -158,7 +157,7 @@ function _migrateScope(workspace: MigrationWorkspace) {
 }
 
 function expectParentToBeProject(parentId?: string | null) {
-  if (parentId && !isProjectId(parentId)) {
+  if (parentId && !models.project.isProjectId(parentId)) {
     throw new Error('Expected the parent of a Workspace to be a Project');
   }
 }

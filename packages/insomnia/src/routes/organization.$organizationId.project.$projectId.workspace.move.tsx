@@ -2,8 +2,9 @@ import { href, redirect } from 'react-router';
 
 import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
+import type { Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { Project } from '~/models/project';
 import { scopeToActivity } from '~/models/workspace';
 import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
 import { invariant } from '~/utils/invariant';
@@ -27,7 +28,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(oldWorkspace, 'Workspace not found');
 
     // duplicate the workspace to the new project
-    const newProject = (await models.project.getById(newProjectId)) as Project;
+    const newProject = (await services.project.getById(newProjectId)) as Project;
     const workspaceExport = await getInsomniaV5DataExport({
       workspaceId: oldWorkspace._id,
       includePrivateEnvironments: true,

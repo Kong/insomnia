@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -15,7 +15,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
 
-  await models.unitTest.create({
+  await services.unitTest.create({
     parentId: testSuiteId,
     code: `const response1 = await insomnia.send();
 expect(response1.status).to.equal(200);`,

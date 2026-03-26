@@ -6,7 +6,8 @@ import { app, autoUpdater, BrowserWindow, dialog } from 'electron';
 import log from 'electron-log';
 import { autoUpdater as electronUpdater } from 'electron-updater';
 
-import { services, type Settings } from '~/insomnia-data';
+import type { Settings } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 import appConfig from '../../config/config.json';
 import packageJSON from '../../package.json';

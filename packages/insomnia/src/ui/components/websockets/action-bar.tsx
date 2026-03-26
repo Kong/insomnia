@@ -1,13 +1,13 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
-import * as models from '../../../models';
 import type { SocketIORequest } from '../../../models/socket-io-request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
@@ -62,7 +62,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     const generateConnectParams = useCallback(async () => {
       // Render any nunjucks tags in the url/headers/authentication settings/cookies
 
-      const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+      const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
       // Render any nunjucks tags in the url/headers/authentication settings/cookies
       const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
         request,

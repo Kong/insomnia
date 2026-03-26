@@ -1,6 +1,7 @@
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { Workspace } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
@@ -15,7 +16,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(typeof projectId === 'string', 'Project Id is required');
 
   try {
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;

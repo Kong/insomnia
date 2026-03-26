@@ -1,5 +1,4 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './types';
+import type { BaseModel } from '~/models/types';
 
 export const name = 'Unit Test';
 
@@ -10,6 +9,7 @@ export const prefix = 'ut';
 export const canDuplicate = true;
 
 export const canSync = true;
+
 interface BaseUnitTest {
   name: string;
   code: string;
@@ -28,34 +28,6 @@ export function init() {
     code: '',
     metaSortKey: -1 * Date.now(),
   };
-}
-
-export function migrate(doc: UnitTest) {
-  return doc;
-}
-
-export function create(patch: Partial<UnitTest> = {}) {
-  if (!patch.parentId) {
-    throw new Error('New UnitTest missing `parentId` ' + JSON.stringify(patch));
-  }
-
-  return db.docCreate<UnitTest>(type, patch);
-}
-
-export function remove(unitTest: UnitTest) {
-  return db.remove(unitTest);
-}
-
-export function update(unitTest: UnitTest, patch: Partial<UnitTest> = {}) {
-  return db.docUpdate<UnitTest>(unitTest, patch);
-}
-
-export function getByParentId(parentId: string) {
-  return db.findOne<UnitTest>(type, { parentId });
-}
-
-export function all() {
-  return db.find<UnitTest>(type);
 }
 
 export function rewriteReferences(doc: UnitTest, idMapping: Map<string, string>): UnitTest {

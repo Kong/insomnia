@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
@@ -25,7 +25,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   try {
     await vcs.takeSnapshot(data.message);
     if (data.push) {
-      const project = await models.project.getById(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       invariant(project.remoteId, 'Project is not remote');
 

@@ -7,7 +7,7 @@ import { useLatest } from 'react-use';
 
 import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
-import type { McpPayload } from '~/insomnia-data';
+import type { Environment, EnvironmentKvPairData, McpPayload } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
@@ -15,7 +15,6 @@ import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-val
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
 
 import { type AuthTypes } from '../../../common/constants';
-import type { Environment, EnvironmentKvPairData } from '../../../models/environment';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import {
   type McpRequestLoaderData,

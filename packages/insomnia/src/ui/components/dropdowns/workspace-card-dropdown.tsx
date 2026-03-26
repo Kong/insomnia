@@ -7,7 +7,8 @@ import React, { type FC, Fragment, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Label, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
-import type { ApiSpec } from '~/insomnia-data';
+import type { ApiSpec, Project } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
@@ -16,7 +17,6 @@ import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { MockServer } from '../../../models/mock-server';
-import { isRemoteProject, type Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { isMcp, WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
@@ -303,7 +303,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                       This will permanently delete the{' '}
                       {<strong style={{ whiteSpace: 'pre-wrap' }}>{workspace?.name}</strong>}{' '}
                       {getWorkspaceLabel(workspace).singular}
-                      {isRemoteProject(project) && (
+                      {models.project.isRemoteProject(project) && (
                         <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
                           <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
                           <div className="flex gap-2">

@@ -6,6 +6,7 @@ import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
+import { models } from '~/insomnia-data';
 import { scopeToActivity } from '~/models/workspace';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
@@ -20,7 +21,6 @@ import {
   type ImportSourceType,
   type ScanResult,
 } from '../../../../common/import';
-import { isScratchpadProject } from '../../../../models/project';
 import { invariant } from '../../../../utils/invariant';
 import { SegmentEvent } from '../../../analytics';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
@@ -326,7 +326,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       : 'Import';
   const isScratchPad =
     defaultProjectId &&
-    isScratchpadProject({
+    models.project.isScratchpadProject({
       _id: defaultProjectId,
     });
 

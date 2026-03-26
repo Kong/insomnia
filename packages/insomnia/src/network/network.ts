@@ -4,7 +4,17 @@ import nodePath from 'node:path';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
-import { type CaCertificate, type ClientCertificate, services, type Settings } from '~/insomnia-data';
+import type {
+  CaCertificate,
+  ClientCertificate,
+  Cookie,
+  CookieJar,
+  Environment,
+  Project,
+  Settings,
+  UserUploadEnvironment,
+} from '~/insomnia-data';
+import { EnvironmentType, services } from '~/insomnia-data';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
@@ -20,16 +30,8 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import type { Cookie, CookieJar } from '../models/cookie-jar';
-import {
-  type Environment,
-  EnvironmentType,
-  type UserUploadEnvironment,
-  vaultEnvironmentPath,
-} from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
-import { isProject, type Project } from '../models/project';
 import {
   type BaseRequest,
   isRequest,
@@ -144,8 +146,8 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   // NOTE: parent folders wont be checked in here since we only use it for oauth2 requests right now, so they are discarded in that code path
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspace._id));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(workspace._id));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
   const settings = await services.settings.get();
@@ -190,26 +192,27 @@ export const fetchRequestData = async (
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   const activeEnvironmentId = overrideEnvironmentId ?? workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
 
-  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
   // no active environment in workspaceMeta, fallback to workspace root environment as active environment
   const environment = activeEnvironment || baseEnvironment;
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+  const cookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
   let activeGlobalEnvironment: Environment | undefined;
   let activeGlobalBaseEnvironment: Environment | undefined;
   if (workspaceMeta?.activeGlobalEnvironmentId) {
-    activeGlobalEnvironment = (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
+    activeGlobalEnvironment =
+      (await services.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
     const activeGlobalEnvironmentParentId = activeGlobalEnvironment?.parentId || '';
     if (activeGlobalEnvironmentParentId.startsWith('wrk_')) {
       // activeGlobalEnvironment is a base global environment
       activeGlobalBaseEnvironment = activeGlobalEnvironment;
     } else if (activeGlobalEnvironmentParentId.startsWith('env_')) {
       // activeGlobalEnvironment is a sub global environment
-      activeGlobalBaseEnvironment = (await models.environment.getById(activeGlobalEnvironmentParentId)) || undefined;
+      activeGlobalBaseEnvironment = (await services.environment.getById(activeGlobalEnvironmentParentId)) || undefined;
     }
   }
 
@@ -253,8 +256,8 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   const workspaceId = workspace._id;
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
   // no active environment in workspaceMeta, fallback to workspace root environment as active environment
   const environment = activeEnvironment || baseEnvironment;
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
@@ -433,7 +436,7 @@ export async function savePatchesMadeByScript(patches: {
   // persist updated cookieJar if needed
   if (mutatedContext.cookieJar) {
     // merge cookies from response to the cookiejar, or cookies from response will not be persisted
-    await models.cookieJar.update(mutatedContext.cookieJar, {
+    await services.cookieJar.update(mutatedContext.cookieJar, {
       cookies: [...(responseCookies || []), ...mutatedContext.cookieJar.cookies],
     });
   }
@@ -445,7 +448,7 @@ export async function savePatchesMadeByScript(patches: {
   const updateEnvironment = async (originEnvironment: Environment, mutatedContextEnvironment: Environment) => {
     const { environmentType } = originEnvironment;
     const { data, dataPropertyOrder } = mutatedContextEnvironment;
-    await models.environment.update(originEnvironment, {
+    await services.environment.update(originEnvironment, {
       data,
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
@@ -513,17 +516,17 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
 
   // location is the complete path of a request, including project, collection and folder(if have).
   const requestLocation = ancestors
-    .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
+    .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || models.project.isProject(doc))
     .reverse()
     .map(doc => doc.name);
   let vault;
-  if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
+  if (globals && models.environment.vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
     // decrypt and set vault in insomnia sdk if necessary
-    globals.data[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
-      globals.data[vaultEnvironmentPath],
+    globals.data[models.environment.vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
+      globals.data[models.environment.vaultEnvironmentPath],
       'script',
     );
-    vault = globals.data[vaultEnvironmentPath];
+    vault = globals.data[models.environment.vaultEnvironmentPath];
   }
 
   try {
@@ -922,7 +925,7 @@ export async function sendCurlAndWriteTimeline(
     timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
   );
   if (totalSetCookies) {
-    await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
+    await services.cookieJar.update(renderedRequest.cookieJar, { cookies });
     timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
   }
   const lastRedirect = headerResults[headerResults.length - 1];

@@ -1,30 +1,29 @@
 import orderedJSON from 'json-order';
 import { z, type ZodError } from 'zod/v4';
 
-import { type ApiSpec, type McpRequest, services } from '~/insomnia-data';
+import type {
+  ApiSpec,
+  CookieJar,
+  Environment,
+  EnvironmentKvPairData,
+  McpRequest,
+  UnitTest,
+  UnitTestSuite,
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
 
 import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
 import { pathWithParamsAsPathParameters } from '../main/importers/importers/openapi-3';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
-import { type CookieJar, isCookieJar } from '../models/cookie-jar';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  isEnvironment,
-} from '../models/environment';
 import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import * as models from '../models/index';
 import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
-import { isGitProject } from '../models/project';
 import { isRequest, type Request } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
 import { isSocketIORequest, type SocketIORequest } from '../models/socket-io-request';
-import { isUnitTest, type UnitTest } from '../models/unit-test';
-import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { invariant } from '../utils/invariant';
@@ -253,12 +252,12 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
       const websocketRequests = resources.filter(isWebSocketRequest);
       const grpcRequests = resources.filter(isGrpcRequest);
       const socketIoRequests = resources.filter(isSocketIORequest);
-      const environments = resources.filter(isEnvironment);
-      const unitTests = resources.filter(isUnitTest);
-      const unitTestSuites = resources.filter(isUnitTestSuite);
+      const environments = resources.filter(models.environment.isEnvironment);
+      const unitTests = resources.filter(models.unitTest.isUnitTest);
+      const unitTestSuites = resources.filter(models.unitTestSuite.isUnitTestSuite);
       const apiSpecs = resources.filter(isApiSpec);
       const workspaces = resources.filter(isWorkspace);
-      const cookieJars = resources.filter(isCookieJar);
+      const cookieJars = resources.filter(models.cookieJar.isCookieJar);
       const mockRoutes = resources.filter(isMockRoute);
       const mcpRequests = resources.filter(models.mcpRequest.isMcpRequest);
 
@@ -349,9 +348,9 @@ export async function importResourcesToProject({
     }
 
     // if the resource is postman environment,
-    if (importer.id === postmanEnvImporterId && resources.find(isEnvironment)) {
+    if (importer.id === postmanEnvImporterId && resources.find(models.environment.isEnvironment)) {
       const newWorkspaces = await Promise.all(
-        resources.filter(isEnvironment).map(resource =>
+        resources.filter(models.environment.isEnvironment).map(resource =>
           importResourcesToNewWorkspace({
             projectId,
             resourceCacheItem,
@@ -463,14 +462,18 @@ export const importResourcesToWorkspace = async ({
     toImport && ResourceIdMap.set(toImport._id, existingWorkspace._id);
 
     const optionalResources = resources.filter(
-      resource => !isWorkspace(resource) && !isApiSpec(resource) && !isCookieJar(resource) && !isEnvironment(resource),
+      resource =>
+        !isWorkspace(resource) &&
+        !isApiSpec(resource) &&
+        !models.cookieJar.isCookieJar(resource) &&
+        !models.environment.isEnvironment(resource),
     );
 
-    const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+    const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
     invariant(baseEnvironment, 'Could not create base environment');
 
     const baseEnvironmentFromResources = resources
-      .filter(isEnvironment)
+      .filter(models.environment.isEnvironment)
       .find(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__'));
     if (baseEnvironmentFromResources) {
       const environmentType = baseEnvironment.environmentType;
@@ -506,29 +509,29 @@ export const importResourcesToWorkspace = async ({
               id: generateId(models.environment.prefixEnvPair),
               name: key,
               value: newData[key],
-              type: EnvironmentKvPairDataType.STRING,
+              type: models.environment.EnvironmentKvPairDataType.STRING,
               enabled: true,
             });
           }
         });
-        await models.environment.update(baseEnvironment, {
+        await services.environment.update(baseEnvironment, {
           kvPairData: newKvPairs,
           data: object,
           dataPropertyOrder: map || null,
         });
       } else {
-        await models.environment.update(baseEnvironment, {
+        await services.environment.update(baseEnvironment, {
           data: object,
           dataPropertyOrder: map || null,
         });
       }
     }
-    const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
+    const subEnvironments = resources.filter(models.environment.isEnvironment).filter(isSubEnvironmentResource) || [];
 
     for (const environment of subEnvironments) {
       const model = getModel(environment.type);
       model && ResourceIdMap.set(environment._id, generateId(model.prefix));
-      await models.environment.create({
+      await services.environment.create({
         ...environment,
         _id: ResourceIdMap.get(environment._id),
         parentId: baseEnvironment._id,
@@ -553,8 +556,8 @@ export const importResourcesToWorkspace = async ({
         };
         if (isGrpcRequest(resource)) {
           await models.grpcRequest.create(objectToWrite);
-        } else if (isUnitTest(resource)) {
-          await models.unitTest.create(objectToWrite);
+        } else if (models.unitTest.isUnitTest(resource)) {
+          await services.unitTest.create(objectToWrite);
         } else if (isRequest(resource)) {
           await models.request.create(objectToWrite);
         } else {
@@ -584,7 +587,7 @@ export const importResourcesToNewWorkspace = async ({
 }): Promise<Workspace> => {
   invariant(resourceCacheItem, 'No resources to import');
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   const resources = resourceCacheItem.resources;
@@ -642,8 +645,8 @@ export const importResourcesToNewWorkspace = async ({
       };
       if (isGrpcRequest(resource)) {
         await models.grpcRequest.create(objectToWrite);
-      } else if (isUnitTest(resource)) {
-        await models.unitTest.create(objectToWrite);
+      } else if (models.unitTest.isUnitTest(resource)) {
+        await services.unitTest.create(objectToWrite);
       } else if (isRequest(resource)) {
         await models.request.create(objectToWrite);
       } else {
@@ -653,7 +656,7 @@ export const importResourcesToNewWorkspace = async ({
   }
 
   // Use the first sub environment as the active one
-  const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
+  const subEnvironments = resources.filter(models.environment.isEnvironment).filter(isSubEnvironmentResource) || [];
 
   if (subEnvironments.length > 0) {
     const firstSubEnvironment = subEnvironments[0];
@@ -668,10 +671,10 @@ export const importResourcesToNewWorkspace = async ({
   }
 
   // Make sure the new workspace has required resources like base environment, cookie jar and workspaceMeta
-  await models.environment.getOrCreateForParentId(newWorkspace._id);
+  await services.environment.getOrCreateForParentId(newWorkspace._id);
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
-  if (isGitProject(project)) {
+  if (models.project.isGitProject(project)) {
     await models.workspaceMeta.update(workspaceMeta, {
       gitFilePath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
     });

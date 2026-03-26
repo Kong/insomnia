@@ -22,14 +22,8 @@ import { NavLink } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
-import { services } from '~/insomnia-data';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  EnvironmentType,
-} from '~/models/environment';
-import { isRemoteProject } from '~/models/project';
+import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models, services } from '~/insomnia-data';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
@@ -84,7 +78,9 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
 
   const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
-  const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingInsomniaCloudSync = Boolean(
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+  );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const allEnvironment = useMemo(() => {

@@ -2,8 +2,8 @@ import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import { href } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
-import { type McpTransportType, models } from '~/insomnia-data';
-import type { CookieJar } from '~/models/cookie-jar';
+import type { CookieJar, McpTransportType } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '~/models/request';

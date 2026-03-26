@@ -1,17 +1,15 @@
 import { database } from '~/common/database';
 import type { ApiSpec } from '~/insomnia-data';
-import { type McpRequest, services } from '~/insomnia-data';
+import type { Environment, McpRequest, UnitTest, UnitTestSuite } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { canSync } from '~/models';
 import * as models from '~/models';
-import type { Environment } from '~/models/environment';
 import type { GrpcRequest } from '~/models/grpc-request';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import type { Request } from '~/models/request';
 import type { RequestGroup } from '~/models/request-group';
 import type { SocketIORequest } from '~/models/socket-io-request';
-import type { UnitTest } from '~/models/unit-test';
-import type { UnitTestSuite } from '~/models/unit-test-suite';
 import type { WebSocketRequest } from '~/models/websocket-request';
 import type { Workspace } from '~/models/workspace';
 import type { BackendProject, Compare, StatusCandidate } from '~/sync/types';
@@ -96,7 +94,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     | WebSocketRequest
     | SocketIORequest
   )[];
-  const testSuites = await models.unitTestSuite.findByParentId(workspaceId);
+  const testSuites = await services.unitTestSuite.findByParentId(workspaceId);
   const tests = await database.find<UnitTest>(models.unitTest.type, {
     parentId: { $in: testSuites.map(t => t._id) },
   });
@@ -115,10 +113,10 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     syncItemsList.push(mcpRequest);
   }
 
-  const baseEnvironment = await models.environment.getByParentId(workspaceId);
+  const baseEnvironment = await services.environment.getByParentId(workspaceId);
   invariant(baseEnvironment, 'Base environment not found');
 
-  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id)).sort(
+  const subEnvironments = (await services.environment.findByParentId(baseEnvironment._id)).sort(
     (e1, e2) => e1.metaSortKey - e2.metaSortKey,
   );
   allRequests.map(r => syncItemsList.push(r));

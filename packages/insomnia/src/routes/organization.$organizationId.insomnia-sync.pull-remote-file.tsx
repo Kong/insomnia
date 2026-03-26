@@ -1,5 +1,6 @@
 import { href, redirect } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { scopeToActivity } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
@@ -31,7 +32,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     invariant(backendProject, 'Backend project not found');
 
-    const project = await models.project.getByRemoteId(remoteId);
+    const project = await services.project.getByRemoteId(remoteId);
 
     invariant(project?.remoteId, 'Project is not a remote project');
 

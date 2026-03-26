@@ -6,8 +6,8 @@ import { Button } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
+import { models } from '~/insomnia-data';
 import { isOwnerOfOrganization } from '~/models/organization';
-import { getProjectStorageTypeLabel } from '~/models/project';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import type { ProjectType } from '~/ui/components/project/utils';
@@ -77,7 +77,7 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
           message={
             <span>
               The organization owner mandates that projects must be created and stored using{' '}
-              {getProjectStorageTypeLabel(storageRules)}.
+              {models.project.getProjectStorageTypeLabel(storageRules)}.
             </span>
           }
         />

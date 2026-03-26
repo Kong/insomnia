@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -14,10 +14,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   invariant(typeof organizationId === 'string', 'Organization ID is required');
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  await models.project.update(project, {
+  await services.project.update(project, {
     parentId: organizationId,
     // We move a project to another organization as local no matter what it was before
     remoteId: null,

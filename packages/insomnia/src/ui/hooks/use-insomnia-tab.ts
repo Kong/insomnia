@@ -3,18 +3,17 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { database } from '~/common/database';
-import { type McpRequest, models, services } from '~/insomnia-data';
+import type { McpRequest, Project, UnitTestSuite } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { type GrpcRequest, isGrpcRequest } from '~/models/grpc-request';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { isMockRoute, type MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
-import type { Project } from '~/models/project';
 import { isRequest, type Request } from '~/models/request';
 import { isRequestGroup, type RequestGroup } from '~/models/request-group';
 import { isSocketIORequest, type SocketIORequest } from '~/models/socket-io-request';
-import { isUnitTestSuite, type UnitTestSuite } from '~/models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '~/models/websocket-request';
-import { isDesign, isEnvironment, isMockServer, isWorkspace, type Workspace } from '~/models/workspace';
+import { isDesign, isMockServer, isWorkspace, type Workspace } from '~/models/workspace';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
@@ -65,7 +64,7 @@ function inferTabType(resource: TabResource): TabType | null {
   if (isMockRoute(resource)) {
     return 'mockRoute';
   }
-  if (isUnitTestSuite(resource)) {
+  if (models.unitTestSuite.isUnitTestSuite(resource)) {
     return 'testSuite';
   }
   if (isWorkspace(resource)) {
@@ -75,7 +74,7 @@ function inferTabType(resource: TabResource): TabType | null {
     if (isMockServer(resource)) {
       return 'mockServer';
     }
-    if (isEnvironment(resource)) {
+    if (models.environment.isEnvironment(resource)) {
       return 'environment';
     }
     return 'collection';

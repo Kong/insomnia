@@ -1,7 +1,8 @@
+import type { Project } from '~/insomnia-data';
+
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { type BaseModel, canSync } from '../../models';
-import type { Project } from '../../models/project';
 import type { Workspace } from '../../models/workspace';
 import type { StatusCandidate } from '../types';
 import type { VCS } from './vcs';

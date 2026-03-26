@@ -9,8 +9,6 @@ import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
-import type { Environment, UserUploadEnvironment } from 'insomnia/src/models/environment';
-import { init } from 'insomnia/src/models/environment';
 import type { Request } from 'insomnia/src/models/request';
 import type { RequestGroup } from 'insomnia/src/models/request-group';
 import { insomniaFetch } from 'insomnia/src/ui/insomnia-fetch';
@@ -21,7 +19,8 @@ import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
-import { initServices } from '~/insomnia-data';
+import type { Environment, UserUploadEnvironment } from '~/insomnia-data';
+import { initServices, models } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import type { Workspace } from '~/models/workspace';
 
@@ -421,7 +420,7 @@ export const go = (args?: string[]) => {
         }
 
         const transientVariables: Environment = {
-          ...init(),
+          ...models.environment.init(),
           _id: uuidv4(),
           type: 'Environment',
           parentId: '',
@@ -755,7 +754,7 @@ export const go = (args?: string[]) => {
 
           const iterationData = await pathToIterationData(options.iterationData, options.envVar);
           const transientVariables: Environment = {
-            ...init(),
+            ...models.environment.init(),
             _id: uuidv4(),
             type: 'Environment',
             parentId: '',

@@ -1,6 +1,7 @@
 import deepEqual from 'deep-equal';
 
-import { type McpRequest, models } from '~/insomnia-data';
+import type { McpRequest } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 
 import { database, database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';

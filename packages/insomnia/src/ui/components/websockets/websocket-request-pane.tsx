@@ -4,6 +4,8 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { Environment } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
@@ -11,7 +13,6 @@ import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-edito
 
 import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
-import type { Environment } from '../../../models/environment';
 import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
@@ -90,7 +91,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
       const renderedMessage = await tryToInterpolateRequestOrShowRenderErrorModal({ request, environmentId, payload });
       const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
       if (!readyState) {
-        const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+        const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
         const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
           request,
           environmentId,

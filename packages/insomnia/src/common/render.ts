@@ -1,17 +1,11 @@
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
-import { type McpRequest, services } from '~/insomnia-data';
+import type { Environment, McpRequest, UserUploadEnvironment } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 import * as models from '../models';
-import {
-  type Environment,
-  type UserUploadEnvironment,
-  vaultEnvironmentPath,
-  vaultEnvironmentRuntimePath,
-} from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
@@ -168,31 +162,31 @@ export async function buildRenderContext({
   }
 
   const vaultEnvironmentData = await maskOrDecryptVaultDataIfNecessary(
-    finalRenderContext[vaultEnvironmentPath],
+    finalRenderContext[models.environment.vaultEnvironmentPath],
     renderContext?.getPurpose(),
   );
   if (vaultEnvironmentData) {
     // avoid add undefined data to render context
-    finalRenderContext[vaultEnvironmentPath] = vaultEnvironmentData;
+    finalRenderContext[models.environment.vaultEnvironmentPath] = vaultEnvironmentData;
   }
   // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
-  if (finalRenderContext[vaultEnvironmentPath]) {
+  if (finalRenderContext[models.environment.vaultEnvironmentPath]) {
     if (
-      finalRenderContext[vaultEnvironmentRuntimePath] &&
-      typeof finalRenderContext[vaultEnvironmentRuntimePath] !== 'object'
+      finalRenderContext[models.environment.vaultEnvironmentRuntimePath] &&
+      typeof finalRenderContext[models.environment.vaultEnvironmentRuntimePath] !== 'object'
     ) {
-      const errorMsg = `${vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename your environment with vault as key.`;
+      const errorMsg = `${models.environment.vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename your environment with vault as key.`;
       const newError = new RenderError(errorMsg);
       newError.type = 'render';
       newError.message = errorMsg;
       throw newError;
     }
-    finalRenderContext[vaultEnvironmentRuntimePath] = {
-      ...finalRenderContext[vaultEnvironmentPath],
-      ...finalRenderContext[vaultEnvironmentRuntimePath],
+    finalRenderContext[models.environment.vaultEnvironmentRuntimePath] = {
+      ...finalRenderContext[models.environment.vaultEnvironmentPath],
+      ...finalRenderContext[models.environment.vaultEnvironmentRuntimePath],
     };
-    delete finalRenderContext[vaultEnvironmentPath];
+    delete finalRenderContext[models.environment.vaultEnvironmentPath];
   }
 
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
@@ -376,7 +370,7 @@ export async function getRenderContext({
 }: RenderContextOptions): Promise<BaseRenderContext> {
   const ancestors = _ancestors || (await getRenderContextAncestors(request));
 
-  const project = ancestors.find(isProject);
+  const project = ancestors.find(models.project.isProject);
   const workspace = ancestors.find(isWorkspace);
   if (!workspace) {
     throw new Error('Failed to render. Could not find workspace');
@@ -388,7 +382,7 @@ export async function getRenderContext({
   let subGlobalEnvironment: Environment | null = null;
 
   if (workspaceMeta?.activeGlobalEnvironmentId) {
-    const activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId);
+    const activeGlobalEnvironment = await services.environment.getById(workspaceMeta.activeGlobalEnvironmentId);
 
     if (activeGlobalEnvironment) {
       if (activeGlobalEnvironment?.parentId.startsWith('wrk_')) {
@@ -396,7 +390,7 @@ export async function getRenderContext({
       } else {
         subGlobalEnvironment = activeGlobalEnvironment;
 
-        const baseGlobalEnvironment = await models.environment.getById(activeGlobalEnvironment.parentId);
+        const baseGlobalEnvironment = await services.environment.getById(activeGlobalEnvironment.parentId);
 
         if (baseGlobalEnvironment) {
           rootGlobalEnvironment = baseGlobalEnvironment;
@@ -406,13 +400,13 @@ export async function getRenderContext({
   }
 
   const rootEnvironment =
-    baseEnvironment || (await models.environment.getOrCreateForParentId(workspace ? workspace._id : 'n/a'));
+    baseEnvironment || (await services.environment.getOrCreateForParentId(workspace ? workspace._id : 'n/a'));
   const subEnvironmentId = environment ? (typeof environment === 'string' ? environment : environment._id) : 'n/a';
   const subEnvironment = environment
     ? typeof environment === 'string'
-      ? await models.environment.getById(environment)
+      ? await services.environment.getById(environment)
       : environment
-    : await models.environment.getById('n/a');
+    : await services.environment.getById('n/a');
 
   const keySource: Record<string, string> = {};
   // Function that gets Keys and stores their Source location
@@ -555,7 +549,7 @@ export async function getRenderedRequestAndContext({
   const requestGroups = ancestors.filter(isRequestGroup);
 
   const parentId = workspace ? workspace._id : 'n/a';
-  const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
+  const cookieJar = await services.cookieJar.getOrCreateForParentId(parentId);
   const renderContext = await getRenderContext({
     request,
     environment,

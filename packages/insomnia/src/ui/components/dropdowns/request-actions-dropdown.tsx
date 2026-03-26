@@ -4,6 +4,7 @@ import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, P
 import { useParams } from 'react-router';
 
 import { services } from '~/insomnia-data';
+import type { Environment } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -14,7 +15,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { Environment } from '../../../models/environment';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
@@ -59,7 +59,6 @@ export const RequestActionsDropdown = ({
   const { settings } = useRootLoaderData()!;
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const patchRequestMeta = useRequestMetaPatcher();
-  const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
@@ -220,7 +219,7 @@ export const RequestActionsDropdown = ({
               name: 'Generate Code',
               action: generateCode,
               icon: 'code',
-              hint: hotKeyRegistry.request_showGenerateCodeEditor,
+              hint: settings.hotKeyRegistry.request_showGenerateCodeEditor,
             },
             {
               id: 'CopyAsCurl',
@@ -255,21 +254,21 @@ export const RequestActionsDropdown = ({
           name: 'Open in New Tab',
           action: openInNewTab,
           icon: 'external-link-alt',
-          hint: hotKeyRegistry.request_openInNewTab,
+          hint: settings.hotKeyRegistry.request_openInNewTab,
         },
         {
           id: 'Pin',
           name: isPinned ? 'Unpin' : 'Pin',
           action: togglePin,
           icon: 'thumbtack',
-          hint: hotKeyRegistry.request_togglePin,
+          hint: settings.hotKeyRegistry.request_togglePin,
         },
         {
           id: 'Duplicate',
           name: 'Duplicate',
           action: handleDuplicateRequest,
           icon: 'copy',
-          hint: hotKeyRegistry.request_showDuplicate,
+          hint: settings.hotKeyRegistry.request_showDuplicate,
         },
         {
           id: 'Rename',
@@ -285,13 +284,13 @@ export const RequestActionsDropdown = ({
           name: 'Delete',
           action: deleteRequest,
           icon: 'trash',
-          hint: hotKeyRegistry.request_showDelete,
+          hint: settings.hotKeyRegistry.request_showDelete,
         },
         {
           id: 'Settings',
           name: 'Settings',
           icon: 'gear',
-          hint: hotKeyRegistry.request_showSettings,
+          hint: settings.hotKeyRegistry.request_showSettings,
           action: () => {
             window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuSettingsClicked });
             setIsSettingsModalOpen(true);

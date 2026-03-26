@@ -33,7 +33,6 @@ import { debounce, isNotNullOrUndefined } from '~/common/misc';
 import { services } from '~/insomnia-data';
 import * as models from '~/models/index';
 import { isScratchpadOrganizationId } from '~/models/organization';
-import { isGitProject } from '~/models/project';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
@@ -67,7 +66,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -87,7 +86,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
 
-  const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const gitRepositoryId = models.project.isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
   const rulesetPath = gitRepositoryId

@@ -1,5 +1,6 @@
 import { href, Outlet, redirect } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test._index';
@@ -11,7 +12,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   if (workspaceMeta?.activeUnitTestSuiteId) {
-    const unitTestSuite = await models.unitTestSuite.getById(workspaceMeta.activeUnitTestSuiteId);
+    const unitTestSuite = await services.unitTestSuite.getById(workspaceMeta.activeUnitTestSuiteId);
 
     if (unitTestSuite) {
       return redirect(
@@ -25,7 +26,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     }
   }
 
-  const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
+  const unitTestSuites = await services.unitTestSuite.findByParentId(workspaceId);
   if (unitTestSuites.length > 0) {
     return redirect(
       href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId', {

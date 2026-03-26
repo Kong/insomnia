@@ -29,7 +29,6 @@ import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import * as models from '../../../models';
-import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { isMcp, isScratchpad, type Workspace } from '../../../models/workspace';
@@ -455,7 +454,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     <p>
                       This will permanently delete the{' '}
                       {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
-                      {getWorkspaceLabel(activeWorkspace).singular} {isRemoteProject(activeProject) ? 'remotely' : ''}.
+                      {getWorkspaceLabel(activeWorkspace).singular}{' '}
+                      {models.project.isRemoteProject(activeProject) ? 'remotely' : ''}.
                     </p>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>

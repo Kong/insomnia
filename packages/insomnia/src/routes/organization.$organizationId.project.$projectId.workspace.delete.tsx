@@ -1,8 +1,8 @@
 import { href, redirect } from 'react-router';
 
 import { services } from '~/insomnia-data';
+import type { Project } from '~/insomnia-data';
 import * as models from '~/models';
-import { isRemoteProject, type Project } from '~/models/project';
 import { type Workspace } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
@@ -15,7 +15,7 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 
-  if (isRemoteProject(project) && !isGitSync) {
+  if (models.project.isRemoteProject(project) && !isGitSync) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
@@ -62,7 +62,7 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   const formData = await request.formData();
 

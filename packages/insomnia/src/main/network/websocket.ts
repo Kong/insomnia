@@ -12,13 +12,13 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
+import type { CookieJar } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
 import * as models from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
 import type { Request } from '../../models/request';
 import { type RequestAuthentication, type RequestHeader } from '../../models/request';
 import { type BaseWebSocketRequest, isWebSocketRequest } from '../../models/websocket-request';
@@ -167,8 +167,8 @@ const openWebSocketConnection = async (
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(options.workspaceId));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
@@ -339,7 +339,7 @@ const openWebSocketConnection = async (
           );
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
-            await models.cookieJar.update(options.cookieJar, { cookies });
+            await services.cookieJar.update(options.cookieJar, { cookies });
             timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
           }
         }

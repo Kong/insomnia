@@ -1,7 +1,8 @@
+import type { RemoteProject } from '~/insomnia-data';
+
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import type { RemoteProject } from '../../models/project';
 import { isWorkspace, type Workspace } from '../../models/workspace';
 import type { BackendProjectWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';

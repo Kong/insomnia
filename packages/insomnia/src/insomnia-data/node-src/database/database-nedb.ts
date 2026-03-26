@@ -14,15 +14,15 @@ import type {
   ChangeType,
   ClientCertificate,
   CloudProviderCredential,
+  CookieJar,
   DataStoreOptions,
   GitRepository,
+  Environment,
   IDatabase,
   Operation,
   Query,
 } from '~/insomnia-data';
 import { mustGetModel } from '~/models';
-import type { CookieJar } from '~/models/cookie-jar';
-import { type Environment } from '~/models/environment';
 import type { AllTypes, BaseModel } from '~/models/index';
 import * as models from '~/models/index';
 import type { Workspace } from '~/models/workspace';

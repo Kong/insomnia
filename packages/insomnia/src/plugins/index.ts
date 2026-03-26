@@ -407,7 +407,7 @@ export function getPluginCommonContext({
         },
         cookieJar: {
           getOrCreateForParentId: (parentId: string) => {
-            return models.cookieJar.getOrCreateForParentId(parentId);
+            return services.cookieJar.getOrCreateForParentId(parentId);
           },
         },
         response: {

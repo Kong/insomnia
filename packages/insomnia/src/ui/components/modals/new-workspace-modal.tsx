@@ -21,13 +21,13 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { ApiSpec } from '~/insomnia-data';
+import type { ApiSpec, Project } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
-import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { SegmentEvent } from '../../analytics';
@@ -131,7 +131,12 @@ export const NewWorkspaceModal = ({
   }, [createNewWorkspaceFetcher.state, createNewWorkspaceFetcher.data, scope, onOpenChange]);
 
   useEffect(() => {
-    if (isGitProject(project) && isOpen && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
+    if (
+      models.project.isGitProject(project) &&
+      isOpen &&
+      gitRepoTreeFetcher.state === 'idle' &&
+      !gitRepoTreeFetcher.data
+    ) {
       gitRepoTreeFetcher.load({ projectId: project._id });
     }
   }, [gitRepoTreeFetcher, isOpen, project]);
@@ -167,7 +172,7 @@ export const NewWorkspaceModal = ({
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
-        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
+        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${models.project.isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
       >
         <Dialog
           aria-label="Create or update dialog"
@@ -225,7 +230,7 @@ export const NewWorkspaceModal = ({
                   />
                   <FieldError className="text-xs text-red-500" />
                 </TextField>
-                {isGitProject(project) && (
+                {models.project.isGitProject(project) && (
                   <>
                     <TextField
                       name="fileName"

@@ -23,7 +23,7 @@ const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndC
 
 describe('sendCurlAndWriteTimeline()', () => {
   beforeEach(async () => {
-    await models.project.all();
+    await services.project.all();
   });
 
   it('sends a generic request', async () => {
@@ -51,8 +51,8 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
     ];
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
-    await models.cookieJar.update(cookieJar, {
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies,
     });
@@ -237,7 +237,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
     ];
-    await models.cookieJar.create({
+    await services.cookieJar.create({
       parentId: workspace._id,
       cookies,
     });
@@ -320,7 +320,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     const workspace = await models.workspace.create();
     let settings = await services.settings.getOrCreate();
     settings = await services.settings.update(settings, { dataFolders: [nodePath.resolve(__dirname)] });
-    await models.cookieJar.create({
+    await services.cookieJar.create({
       parentId: workspace._id,
     });
     const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
@@ -387,7 +387,7 @@ describe('sendCurlAndWriteTimeline()', () => {
   it('sends multipart form data', async () => {
     const workspace = await models.workspace.create();
     const settings = await services.settings.getOrCreate();
-    await models.cookieJar.create({
+    await services.cookieJar.create({
       parentId: workspace._id,
     });
     const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
@@ -684,8 +684,8 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
     ];
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
-    await models.cookieJar.update(cookieJar, {
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies,
     });

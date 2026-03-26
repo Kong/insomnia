@@ -1,4 +1,5 @@
-import { type McpRequest, services } from '~/insomnia-data';
+import type { McpRequest } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
 import * as models from '../index';

@@ -32,12 +32,12 @@ import type {
 // @vitest-environment jsdom
 describe('Request Model - Comprehensive Tests', () => {
   beforeEach(async () => {
-    await models.project.all();
+    await services.project.all();
     await services.settings.getOrCreate();
 
     // Create test project for all tests
     try {
-      await models.project.create({
+      await services.project.create({
         _id: `proj_test_${uuidv4()}`,
         name: 'Test Project',
       });

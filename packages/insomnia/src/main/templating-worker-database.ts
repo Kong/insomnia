@@ -103,10 +103,10 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await services.oAuth2Token.getByParentId(body.parentId);
   },
   'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
-    return await models.cookieJar.getOrCreateForParentId(body.parentId);
+    return await services.cookieJar.getOrCreateForParentId(body.parentId);
   },
   'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
-    const cookies = await models.cookieJar.getOrCreateForParentId(body.parentId);
+    const cookies = await services.cookieJar.getOrCreateForParentId(body.parentId);
     const jar = jarFromCookies(cookies.cookies);
     return jar.getCookiesSync(body.url);
   },

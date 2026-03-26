@@ -2,6 +2,7 @@ import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
+import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';
@@ -68,7 +69,7 @@ export async function exportRequestsHAR(requests: BaseModel[], includePrivateDoc
   for (const workspace of workspaces) {
     const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
     let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
-    const environment = await models.environment.getById(environmentId || 'n/a');
+    const environment = await services.environment.getById(environmentId || 'n/a');
 
     if (!environment || (environment.isPrivate && !includePrivateDocs)) {
       environmentId = 'n/a';
@@ -118,7 +119,7 @@ export async function exportHarCurrentRequest(request: Request, response: Respon
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
   let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
-  const environment = await models.environment.getById(environmentId || 'n/a');
+  const environment = await services.environment.getById(environmentId || 'n/a');
   if (!environment || environment.isPrivate) {
     environmentId = 'n/a';
   }
