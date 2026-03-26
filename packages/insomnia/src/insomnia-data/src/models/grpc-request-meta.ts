@@ -1,7 +1,5 @@
 import type { BaseModel } from '~/models/types';
 
-import { isGrpcRequestId } from './grpc-request';
-
 export const name = 'gRPC Request Meta';
 
 export const type = 'GrpcRequestMeta';

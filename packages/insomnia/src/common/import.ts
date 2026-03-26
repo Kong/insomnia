@@ -282,8 +282,8 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
     retObj.status === 'fulfilled'
       ? retObj.value
       : {
-        errors: [retObj.reason.toString()],
-      },
+          errors: [retObj.reason.toString()],
+        },
   );
 }
 
@@ -481,13 +481,13 @@ export const importResourcesToWorkspace = async ({
       const baseEnvironmentDataFromResources = baseEnvironmentFromResources.data;
       const newData = overrideBaseEnvironmentData
         ? {
-          ...originalEnvironmentData,
-          ...baseEnvironmentDataFromResources,
-        }
+            ...originalEnvironmentData,
+            ...baseEnvironmentDataFromResources,
+          }
         : {
-          ...baseEnvironmentDataFromResources,
-          ...originalEnvironmentData,
-        };
+            ...baseEnvironmentDataFromResources,
+            ...originalEnvironmentData,
+          };
       const { object, map } = orderedJSON.parse(JSON.stringify(newData), JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR);
       if (environmentType === 'kv') {
         const originKVPairData = baseEnvironment.kvPairData || [];
@@ -756,9 +756,9 @@ export async function findExistingImportedSpec(
   organizationId?: string,
 ): Promise<
   | {
-    workspace: Workspace;
-    apiSpec: ApiSpec;
-  }
+      workspace: Workspace;
+      apiSpec: ApiSpec;
+    }
   | undefined
 > {
   const allProjects = await models.project.all();
@@ -780,7 +780,7 @@ export async function findExistingImportedSpec(
     if (!incoming) continue;
 
     for (const pid of projectIds) {
-      const workspaces = await models.workspace.findByParentId(pid);
+      const workspaces = await services.workspace.findByParentId(pid);
       const designWorkspaces = workspaces.filter(w => w.scope === 'design');
 
       for (const ws of designWorkspaces) {

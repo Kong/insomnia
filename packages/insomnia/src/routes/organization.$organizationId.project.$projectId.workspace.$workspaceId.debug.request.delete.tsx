@@ -1,7 +1,6 @@
 import { href, redirect } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';

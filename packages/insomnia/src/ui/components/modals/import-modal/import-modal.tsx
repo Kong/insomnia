@@ -250,7 +250,7 @@ export const ImportModal: FC<ImportModalProps> = ({
         const targetProjectId = existing.workspace.parentId || defaultProjectId;
         const path = req
           ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
-          : `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/${scopeToActivity(existing.workspace.scope)}`;
+          : `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/${models.workspace.scopeToActivity(existing.workspace.scope)}`;
         clearResourceCache();
         navigate(path);
         modalRef.current?.hide();
