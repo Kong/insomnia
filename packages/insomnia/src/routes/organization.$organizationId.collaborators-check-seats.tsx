@@ -2,13 +2,13 @@ import { checkSeats } from 'insomnia-api';
 import { href } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
-import { userSession } from '~/models';
+import { services } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators-check-seats';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const { id: sessionId } = await userSession.get();
+  const { id: sessionId } = await services.userSession.get();
 
   const { organizationId } = params;
 

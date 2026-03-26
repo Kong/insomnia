@@ -72,6 +72,7 @@ export type HandleChannels =
   | 'git.listGitProviders'
   | 'git.initSignInToGitProvider'
   | 'git.completeSignInToGitProvider'
+  | 'git.updateSignInToGitProvider'
   | 'git.getGitProviderRepositories'
   | 'git.getGitProviderEmails'
   | 'grpc.loadMethods'

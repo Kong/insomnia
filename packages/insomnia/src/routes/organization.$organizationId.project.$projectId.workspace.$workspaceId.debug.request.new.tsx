@@ -123,9 +123,9 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     }
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
-  models.stats.incrementCreatedRequests();
+  services.stats.incrementCreatedRequests();
 
-  const certificates = await models.clientCertificate.findByParentId(workspaceId);
+  const certificates = await services.clientCertificate.findByParentId(workspaceId);
 
   window.main.trackSegmentEvent({
     event: SegmentEvent.requestCreated,

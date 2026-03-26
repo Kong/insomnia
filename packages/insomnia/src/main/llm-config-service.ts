@@ -3,10 +3,9 @@ import path from 'node:path';
 import { app } from 'electron';
 
 import { LLM_BACKENDS } from '~/common/constants';
+import { services } from '~/insomnia-data';
 import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
-
-import * as models from '../models';
 
 const LLM_PLUGIN_NAME = 'insomnia-llm';
 
@@ -28,21 +27,21 @@ export interface LLMConfig {
 export type AIFeatureNames = 'aiMockServers' | 'aiCommitMessages' | 'aiMcpClient';
 
 export const getActiveBackend = async (): Promise<LLMBackend | null> => {
-  const active = await models.pluginData.getByKey(LLM_PLUGIN_NAME, 'model.active');
+  const active = await services.pluginData.getByKey(LLM_PLUGIN_NAME, 'model.active');
   if (!active) return null;
   return active.value as LLMBackend;
 };
 
 export const setActiveBackend = async (backend: LLMBackend): Promise<void> => {
-  await models.pluginData.upsertByKey(LLM_PLUGIN_NAME, 'model.active', backend);
+  await services.pluginData.upsertByKey(LLM_PLUGIN_NAME, 'model.active', backend);
 };
 
 export const clearActiveBackend = async (): Promise<void> => {
-  await models.pluginData.removeByKey(LLM_PLUGIN_NAME, 'model.active');
+  await services.pluginData.removeByKey(LLM_PLUGIN_NAME, 'model.active');
 };
 
 export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLMConfig>> => {
-  const allData = await models.pluginData.all(LLM_PLUGIN_NAME);
+  const allData = await services.pluginData.all(LLM_PLUGIN_NAME);
   const backendData = allData.filter(item => item.key.startsWith(`${backend}.`));
 
   const config: Partial<LLMConfig> = { backend };
@@ -89,7 +88,7 @@ export const updateBackendConfig = async (backend: LLMBackend, config: Partial<L
 
   for (const [field, value] of updates) {
     if (value !== undefined && value !== null) {
-      await models.pluginData.upsertByKey(LLM_PLUGIN_NAME, `${backend}.${field}`, String(value));
+      await services.pluginData.upsertByKey(LLM_PLUGIN_NAME, `${backend}.${field}`, String(value));
     }
   }
 };
@@ -117,12 +116,12 @@ export const getCurrentConfig = async (): Promise<LLMConfig | null> => {
 };
 
 export const getAIFeatureEnabled = async (feature: AIFeatureNames): Promise<boolean> => {
-  const data = await models.pluginData.getByKey(LLM_PLUGIN_NAME, `feature.${feature}`);
+  const data = await services.pluginData.getByKey(LLM_PLUGIN_NAME, `feature.${feature}`);
   return data?.value === 'true';
 };
 
 export const setAIFeatureEnabled = async (feature: AIFeatureNames, enabled: boolean): Promise<void> => {
-  await models.pluginData.upsertByKey(LLM_PLUGIN_NAME, `feature.${feature}`, String(enabled));
+  await services.pluginData.upsertByKey(LLM_PLUGIN_NAME, `feature.${feature}`, String(enabled));
 
   trackSegmentEvent(enabled ? SegmentEvent.aiFeatureEnabled : SegmentEvent.aiFeatureDisabled, {
     feature: feature,

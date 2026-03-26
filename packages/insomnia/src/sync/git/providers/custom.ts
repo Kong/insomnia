@@ -1,9 +1,10 @@
 import type { GitAuth } from 'isomorphic-git';
 
-import type { GitCredentials } from '~/models/git-credentials';
-import { isGitCredentialsV2 } from '~/models/git-credentials';
+import { type GitCredentials, models } from '~/insomnia-data';
 
 import type { CustomProviderConfig, GitRemoteProvider, ValidationResult } from './types';
+
+const { isGitCredentialsV2 } = models.gitCredentials;
 
 /**
  * Custom Provider

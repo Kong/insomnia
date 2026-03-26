@@ -22,12 +22,13 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
+import type { RunnerResultPerRequest, RunnerTestResult } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
 import type { UserUploadEnvironment } from '~/models/environment';
 import { getTimeline } from '~/models/helpers/response-operations';
-import type { RunnerResultPerRequest, RunnerTestResult } from '~/models/runner-test-result';
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
@@ -334,7 +335,7 @@ export const Runner: FC = () => {
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
   useEffect(() => {
     const readResults = async () => {
-      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
+      const results = (await services.runnerTestResult.findByParentId(runnerId)) || [];
       setTestHistory(results.reverse());
     };
     readResults();
@@ -350,7 +351,7 @@ export const Runner: FC = () => {
   const [timelines, setTimelines] = useState<ResponseTimelineEntry[]>([]);
   const gotoExecutionResult = useCallback(
     async (executionId: string) => {
-      const result = await models.runnerTestResult.getById(executionId);
+      const result = await services.runnerTestResult.getById(executionId);
       if (result) {
         setExecutionResult(result);
       }
@@ -402,7 +403,7 @@ export const Runner: FC = () => {
         unit: durationUnit,
       });
     } else {
-      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
+      const results = (await services.runnerTestResult.findByParentId(runnerId)) || [];
       // show execution result
       if (results.length > 0) {
         setTestHistory(results.reverse());
@@ -469,7 +470,7 @@ export const Runner: FC = () => {
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
-    models.runnerTestResult.remove(item);
+    services.runnerTestResult.remove(item);
     setDeletedItems([...deletedItems, item._id]);
   };
 
@@ -1129,7 +1130,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   } finally {
     cancelExecution(runnerId);
 
-    await models.runnerTestResult.create({
+    await services.runnerTestResult.create({
       parentId: runnerId,
       source: testCtx.source,
       iterations: testCtx.iterationCount,

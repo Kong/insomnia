@@ -1,5 +1,6 @@
+import type { CloudProviderCredential } from '~/insomnia-data';
+
 import packageJson from '../../package.json';
-import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';

@@ -9,14 +9,13 @@ import { services } from '~/insomnia-data';
 
 import {
   getApiBaseURL,
-  getAppPlatform,
   getAppVersion,
   getClientString,
   getProductName,
   getSegmentWriteKey,
   PLAYWRIGHT,
 } from '../common/constants';
-import * as models from '../models/index';
+import { platform } from '../common/platform';
 
 let _currentOrganizationId: string | undefined;
 
@@ -68,6 +67,7 @@ export enum SegmentEvent {
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
   gitAuthenticationCompleted = 'Git Authentication Completed',
+  gitAuthenticationUpdated = 'Git Authentication Updated',
   buttonClick = 'Button Clicked',
   aiFeatureEnabled = 'AI Feature Enabled',
   aiFeatureDisabled = 'AI Feature Disabled',
@@ -88,7 +88,7 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
     return;
   }
   const settings = await services.settings.getOrCreate();
-  const userSession = await models.userSession.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }
@@ -142,7 +142,7 @@ export async function trackPageView(name: string) {
     return;
   }
   const settings = await services.settings.getOrCreate();
-  const userSession = await models.userSession.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }
@@ -181,7 +181,6 @@ export async function trackPageView(name: string) {
 // Private Functions //
 // ~~~~~~~~~~~~~~~~~ //
 function _getOsName() {
-  const platform = getAppPlatform();
   switch (platform) {
     case 'darwin': {
       return 'mac';

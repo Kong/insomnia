@@ -4,7 +4,8 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { checkNestedKeys } from '~/utils/environment-utils';
 
-import { isWindows, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
+import { isWindows } from '../../../common/platform';
 
 export interface EnvironmentInfo {
   object: Record<string, any>;
@@ -38,7 +39,7 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
       // The file tag inserted by Nunjucks in JSON uses double backslashes in its path parameter, but in the logic below, orderedJSON.parse unescapes those double backslashes into a single backslash. This causes the file tag to fail when the corresponding environment variable is referenced in a request.
       // Therefore, we replace the double backslashes in the file tag’s path parameter with four backslashes, ensuring that after orderedJSON.parse runs, the path parameter in the file tag still contains two backslashes.
       // See https://github.com/Kong/insomnia/issues/5754
-      if (isWindows()) {
+      if (isWindows) {
         value = escapeFileTag(value);
       }
 
@@ -70,7 +71,7 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
     );
 
     // The reverse operation of the logic in getValue.
-    if (isWindows()) {
+    if (isWindows) {
       defaultValue = unescapeFileTag(defaultValue);
     }
 

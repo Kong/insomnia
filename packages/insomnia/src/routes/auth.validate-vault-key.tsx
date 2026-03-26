@@ -1,12 +1,12 @@
 import { type ActionFunctionArgs, href } from 'react-router';
 
-import { userSession as sessionModel } from '~/models';
+import { services } from '~/insomnia-data';
 import { saveVaultKey, validateVaultKey } from '~/ui/vault-key.client';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction({ request }: ActionFunctionArgs) {
   const { vaultKey, saveVaultKey: saveVaultKeyLocally = false } = await request.json();
-  const userSession = await sessionModel.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
   const { vaultSalt, accountId } = userSession;
 
   if (!vaultSalt) {

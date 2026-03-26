@@ -1,14 +1,13 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import type { ClientCertificate } from '~/models/client-certificate';
+import { type ClientCertificate, services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.new';
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const patch = await request.json();
-  const certificate = await models.clientCertificate.create(patch);
+  const certificate = await services.clientCertificate.create(patch);
 
   return {
     certificate,

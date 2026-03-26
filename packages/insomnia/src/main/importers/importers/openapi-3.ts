@@ -253,7 +253,7 @@ const importFolderItem =
  *
  * I.e. "/foo/{bar}" => "/foo/:bar"
  */
-const pathWithParamsAsPathParameters = (path?: string) => path?.replace(VARIABLE_SEARCH_VALUE, ':$1') ?? '';
+export const pathWithParamsAsPathParameters = (path?: string) => path?.replace(VARIABLE_SEARCH_VALUE, ':$1') ?? '';
 
 /**
  * Return Insomnia request
