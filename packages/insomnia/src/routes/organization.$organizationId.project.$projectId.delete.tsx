@@ -4,7 +4,6 @@ import { href, redirect } from 'react-router';
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
