@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockTrack = vi.fn();
 
 vi.mock('@segment/analytics-node', () => ({
-  Analytics: vi.fn(() => ({
-    track: mockTrack,
-    closeAndFlush: vi.fn(),
-  })),
+  Analytics: vi.fn(function () {
+    return {
+      track: mockTrack,
+      closeAndFlush: vi.fn(),
+    };
+  }),
 }));
 
 vi.mock('./db/adapters/ne-db-adapter', () => ({

@@ -186,16 +186,12 @@ export const sendActionImplementation = async (options: {
 
   window.main.completeExecutionStep({ requestId });
 
-  // disable after-response script here to avoiding rendering it
-  // @TODO This should be handled in a better way. Maybe remove the key from the request object we pass in tryToInterpolateRequest
-  const afterResponseScript = mutatedContext.request.afterResponseScript
-    ? `${mutatedContext.request.afterResponseScript}`
-    : undefined;
-  mutatedContext.request.afterResponseScript = '';
-
   window.main.addExecutionStep({ requestId, stepName: 'Rendering request' });
   const renderedResult = await tryToInterpolateRequest({
-    request: mutatedContext.request,
+    request: {
+      ...mutatedContext.request,
+      afterResponseScript: '',
+    },
     environment: mutatedContext.environment,
     purpose: 'send',
     extraInfo: undefined,
@@ -252,7 +248,6 @@ export const sendActionImplementation = async (options: {
     baseResponsePatch.bodyPath;
   const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
 
-  mutatedContext.request.afterResponseScript = afterResponseScript;
   window.main.addExecutionStep({ requestId, stepName: 'Executing after-response script' });
   const postMutatedContext = await tryToExecuteAfterResponseScript({
     ...requestData,

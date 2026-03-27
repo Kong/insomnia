@@ -62,7 +62,6 @@
     "consola": "^2.15.3",
     "cosmiconfig": "^9.0.0",
     "enquirer": "^2.4.1",
-    "jshint": "0.5.9",
     "picocolors": "^1.1.1",
     "string-argv": "^0.3.2",
     "yaml": "^2.7.1"
