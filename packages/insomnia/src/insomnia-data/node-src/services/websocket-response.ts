@@ -1,5 +1,6 @@
 import type { WebSocketResponse } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
+import { requestVersion as requestVersionModel } from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 
 import { database as db } from '../../src/database';
@@ -27,7 +28,8 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
   const { parentId } = patch;
   // Create request version snapshot
   const request = await requestOperations.getById(parentId);
-  const requestVersion = request ? await models.requestVersion.create(request) : null;
+  // FIX ME, this should be changed to insomnia data model after request version is migrated
+  const requestVersion = request ? await requestVersionModel.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
   const query: Record<string, any> = {
