@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 
-import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2 } from 'openapi-types';
+import { validate } from 'swagger-parser';
 import YAML from 'yaml';
 
 import type { Converter, Header, ImportRequest } from '../entities';
@@ -502,7 +502,7 @@ export const convert: Converter = async rawData => {
   } // Await here so we catch any exceptions
 
   try {
-    api = await SwaggerParser.validate(api);
+    api = await validate(api);
   } catch (err) {
     // We already know it's a Swagger doc so we will try to import it anyway instead
     // of bailing out here.

@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import { parse as urlParse } from 'node:url';
 
-import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
+import { validate } from 'swagger-parser';
 import YAML from 'yaml';
 
 import type { Converter, ImportRequest } from '../entities';
@@ -592,7 +592,20 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
   }
 
   if (schema instanceof Object) {
-    const { type, format, example, readOnly, default: defaultValue, allOf, oneOf, anyOf } = schema as OpenAPIV3.SchemaObject & { allOf?: OpenAPIV3.SchemaObject[]; oneOf?: OpenAPIV3.SchemaObject[]; anyOf?: OpenAPIV3.SchemaObject[] };
+    const {
+      type,
+      format,
+      example,
+      readOnly,
+      default: defaultValue,
+      allOf,
+      oneOf,
+      anyOf,
+    } = schema as OpenAPIV3.SchemaObject & {
+      allOf?: OpenAPIV3.SchemaObject[];
+      oneOf?: OpenAPIV3.SchemaObject[];
+      anyOf?: OpenAPIV3.SchemaObject[];
+    };
 
     if (readOnly) {
       return;
@@ -794,7 +807,7 @@ export const convert: Converter = async rawData => {
   }
 
   try {
-    apiDocument = (await SwaggerParser.validate(apiDocument, {
+    apiDocument = (await validate(apiDocument, {
       dereference: {
         circular: 'ignore',
       },

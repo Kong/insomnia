@@ -94,6 +94,7 @@ The structure for smoke tests is explained in the smoke testing package: [`packa
 This is just a brief summary of Insomnia's current technical debt.
 
 - We use npm engines feature to improve the dx of node upgrades. However one of our deps `node_modules/apiconnect-wsdl` has an overly restrictive engine max, so each time we refresh the package lock we are running `npm install --force` then manually editing the lock file to extend this engine config from `<21` to `<23`
+- We use jshint for linting, but it is unmaintained and some dependencies have vulnerabilities. See the overrides in the root `package.json`.
 - Loading large responses (~20 MB) can crash the app on weaker hardware.
 - Bundling `libcurl` (native module) has caused many weeks of headaches trying to get builds working across Windows, Mac, and Linux. More expertise here is definitely needed.
 - All input fields that support features like templating or code completion are actually [CodeMirror](https://codemirror.net/6/) instances. This isn't really debt, but may affect things going forward.

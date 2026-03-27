@@ -17,11 +17,11 @@
         in
         pkgs.mkShell {
           buildInputs = [
-            pkgs.nodejs_22
+            pkgs.nodejs_24
             pkgs.yarn
           ];
 
-          ELECTRON_OVERRIDE_DIST_PATH = "${pkgs.electron_37}/bin/";
+          ELECTRON_OVERRIDE_DIST_PATH = "${pkgs.electron_41}/bin/";
           ELECTRON_SKIP_BINARY_DOWNLOAD = 1;
           LD_LIBRARY_PATH = nixpkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc ];
         }

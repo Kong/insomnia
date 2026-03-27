@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
 //These will be excluded from the bundle and remain as runtime dependencies
-export const externalDependencies = ['@apidevtools/swagger-parser', 'mocha', 'tough-cookie'];
+export const externalDependencies = ['mocha', 'tough-cookie'];
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
 

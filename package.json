@@ -48,7 +48,7 @@
     "@eslint/js": "^9.23.0",
     "@types/chai": "^4.3.14",
     "@types/har-format": "^1.2.15",
-    "@types/mocha": "^10.0.6",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^24.2.1",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
@@ -78,7 +78,11 @@
     },
     "@stoplight/spectral-core": {
       "minimatch": "3.1.5"
-    }
+    },
+    "@stoplight/spectral-ruleset-bundler": {
+      "rollup": "2.80.0"
+    },
+    "serialize-javascript": "7.0.5"
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "3.2.1"
