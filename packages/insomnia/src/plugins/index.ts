@@ -441,6 +441,7 @@ export async function executePluginMainAction({
   params?: Record<string, any>;
 }): Promise<any> {
   const settings = await services.settings.get();
+  // Execute the plugin action directly in the renderer process, to keep to same execution context as plugin tags
   if (settings.pluginsAllowElevatedAccess) {
     const bundlePlugins = await getBundlePlugins();
     const plugin = bundlePlugins.find(p => p.name === pluginName);
@@ -454,6 +455,7 @@ export async function executePluginMainAction({
     const commonContext = getPluginCommonContext({ plugin });
     return action.action({ ...commonContext, ...context }, params);
   }
+  // Use the template worker database to execute the plugin action in main process
   const result = await fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginMainAction', {
     pluginName,
     actionName,
