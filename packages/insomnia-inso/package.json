@@ -45,7 +45,7 @@
     "artifacts": "esr src/scripts/artifacts.ts"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "esbuild": "^0.25.10",
     "esbuild-runner": "^2.2.2",
     "shellwords": "^1.0.1"

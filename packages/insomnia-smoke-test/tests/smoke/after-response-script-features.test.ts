@@ -5,6 +5,7 @@ import { test } from '../../playwright/test';
 
 test.describe('after-response script features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
   test('all', async ({ page, app }) => {
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');
@@ -107,6 +108,13 @@ test.describe('after-response script features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     // check when activate global sub environment, globals refers to the selected while baseGlobals refers to the base env
     await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
+
+    // scroll the console to the bottom
+    await page
+      .getByTestId('CodeEditor')
+      .locator('.CodeMirror-scroll')
+      .evaluate(el => el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }));
+
     await page.getByText('log: globals sub').click();
     await page.getByText('log: baseGlobals base').click();
     // view sub environment has been updated
