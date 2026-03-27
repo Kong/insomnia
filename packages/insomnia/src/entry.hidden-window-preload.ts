@@ -12,7 +12,7 @@ import {
 } from '../../insomnia-scripting-environment/src/objects';
 import type { Compression } from './models/response';
 // this will also import lots of node_modules into the preload script, consider moving this file insomnia-scripting-environment
-import { requireInterceptor } from './require-interceptor';
+import { requireInterceptor } from './scripting/require-interceptor';
 
 export interface HiddenBrowserWindowToMainBridgeAPI {
   requireInterceptor: (module: string) => any;

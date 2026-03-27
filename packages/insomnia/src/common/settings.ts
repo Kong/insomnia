@@ -162,4 +162,12 @@ export interface Settings {
   saveVaultKeyToOSSecretManager: boolean;
   vaultSecretCacheDuration: number;
   dataFolders: string[];
+  // AST and shadowing check.
+  scriptSandboxEnabled: boolean;
+  // Names of security rules that have been individually disabled.
+  disabledSecurityRules: string[];
+  // AST blocked-property names that have been individually disabled.
+  disabledBlockedProperties: string[];
+  // AST blocked-root names that have been individually disabled.
+  disabledBlockedRoots: string[];
 }

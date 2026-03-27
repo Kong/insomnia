@@ -40,7 +40,6 @@
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
     "@apidevtools/swagger-parser": "10.1.1",
-    "ajv": "^8.17.1",
     "@bufbuild/protobuf": "^1.10.0",
     "@connectrpc/connect": "^1.6.1",
     "@connectrpc/connect-node": "^1.6.1",
@@ -71,6 +70,9 @@
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-virtual": "3.13.12",
     "@xmldom/xmldom": "^0.9.8",
+    "acorn": "^8.16.0",
+    "acorn-walk": "^8.3.5",
+    "ajv": "^8.17.1",
     "apiconnect-wsdl": "2.0.36",
     "aws4": "^1.13.2",
     "blakejs": "^1.2.1",
