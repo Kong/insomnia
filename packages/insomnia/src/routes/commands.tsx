@@ -152,7 +152,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     });
   }
 
-  const webSocketRequests = await database.find<WebSocketRequest>(webSocketRequest.type, {
+  const webSocketRequests = await database.find<WebSocketRequest>(models.webSocketRequest.type, {
     parentId: {
       $in: [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)],
     },

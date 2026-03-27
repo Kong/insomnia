@@ -1,4 +1,4 @@
-import { type WebSocketRequest } from '~/insomnia-data';
+import type { WebSocketRequest } from '~/insomnia-data';
 import * as models from '~/models';
 
 import { database } from '../../src/database';
