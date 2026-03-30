@@ -60,7 +60,6 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByText('Authenticate With Azure').first().click();
   // @ts-expect-error -- add url to globalThis to verify the url in test
   const azureAuthUrl = await app.evaluate(() => globalThis.__lastOpenedExternalUrl);
-  console.log('azureAuthUrl', azureAuthUrl);
   expect.soft(azureAuthUrl).toContain('https://login.microsoftonline.com/');
   await page.locator('#close-add-cloud-credential-modal').click();
 

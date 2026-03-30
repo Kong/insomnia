@@ -308,6 +308,6 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
         return targetAction.action({ ...commonContext, ...context }, params);
       }
     }
-    throw new Error(`Unsupported tag ${actionName} for plugin ${pluginName}`);
+    throw new Error(`Unsupported action named ${actionName} for plugin ${pluginName}`);
   },
 };

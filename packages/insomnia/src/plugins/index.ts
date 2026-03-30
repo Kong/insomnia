@@ -384,11 +384,10 @@ export function getPluginCommonContext({
     ...pluginStore.init(plugin),
     ...pluginNetwork.init(),
     util: {
-      openInBrowser: async (url: string) => {
+      openInBrowser: async (url: string) =>
         process.type === 'renderer' || process.type === 'worker'
           ? window.main.openInBrowser(url)
-          : (await import('electron')).shell.openExternal(url);
-      },
+          : electron.shell.openExternal(url),
       models: {
         request: {
           getById: models.request.getById,
@@ -427,8 +426,8 @@ export function getPluginCommonContext({
   };
 }
 
-// This is for insomnia UI to reach out to bundled plugin functions and executed under render process or main process(by default)
-// It should only be available to bundled plugins, not for public plugins
+// Allows Insomnia UI to invoke bundled plugin actions from either the renderer process or the main process (default).
+// This entry point is only exposed to bundled plugins, not to public/third‑party plugins.
 export async function executePluginMainAction({
   pluginName,
   actionName,
