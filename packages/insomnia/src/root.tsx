@@ -19,9 +19,9 @@ import {
 } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
-import { services, type Settings } from '~/insomnia-data';
+import type { Settings, UserSession } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { UserSession } from '~/models/user-session';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -30,7 +30,6 @@ import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-br
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
-import type { SourceType } from '~/routes/import.scan';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -39,7 +38,7 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
+import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
@@ -157,8 +156,8 @@ export const useRootLoaderData = () => {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
   const workspaceCount = await models.workspace.count();
-  const userSession = await models.userSession.getOrCreate();
-  const cloudCredentials = await models.cloudCredential.all();
+  const userSession = await services.userSession.getOrCreate();
+  const cloudCredentials = await services.cloudCredential.all();
 
   return {
     settings,
@@ -310,11 +309,7 @@ const Root = () => {
     projectId: string;
   };
 
-  const [importObject, setImportObject] = useState({ type: 'clipboard', defaultValue: '' } as {
-    type: SourceType;
-    defaultValue: string;
-    origin?: string;
-  });
+  const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
@@ -365,13 +360,28 @@ const Root = () => {
             type: 'uri',
             defaultValue: params.uri,
             origin: sanitizeUrlAndExtractOrigin(params.origin),
+            endpoint: params.endpoint,
+            operationId: params.operationId,
+            autoScan: true,
+          });
+        }
+        if (params.mcp) {
+          return setImportObject({
+            type: 'mcp',
+            defaultValue: params.mcp,
+            origin: sanitizeUrlAndExtractOrigin(params.origin),
+            autoScan: true,
           });
         }
         if (params.curl) {
+          const { isValid } = await validateCurl(params.curl);
           return setImportObject({
             type: 'curl',
             defaultValue: params.curl,
             origin: sanitizeUrlAndExtractOrigin(params.origin),
+            endpoint: params.endpoint,
+            operationId: params.operationId,
+            autoScan: isValid,
           });
         }
       }
@@ -462,7 +472,7 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://app/open/organization') {
         // if user is logged out, navigate to authorize instead
         // gracefully handle open org in app from browser
-        const userSession = await models.userSession.getOrCreate();
+        const userSession = await services.userSession.getOrCreate();
         if (!userSession.id || userSession.id === '') {
           const url = new URL(getLoginUrl());
           window.main.openInBrowser(url.toString());
@@ -571,6 +581,8 @@ const Root = () => {
     gitProviderCompleteSignInSubmit,
     logoutSubmit,
     navigate,
+    organizationId,
+    projectId,
     redirectToDefaultBrowserSubmit,
   ]);
 
@@ -586,7 +598,6 @@ const Root = () => {
       {importObject.defaultValue && (
         <ImportModal
           onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
-          projectName="Insomnia"
           defaultProjectId={projectId}
           organizationId={organizationId}
           from={importObject}

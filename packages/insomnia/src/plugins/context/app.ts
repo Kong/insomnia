@@ -1,4 +1,5 @@
-import { getAppPlatform, getAppVersion } from 'insomnia/src/common/constants';
+import { getAppVersion } from 'insomnia/src/common/constants';
+import { platform } from 'insomnia/src/common/platform';
 import type { AppContext, RenderPurpose } from 'insomnia/src/templating/types';
 import { invariant } from 'insomnia/src/utils/invariant';
 
@@ -45,7 +46,7 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
       return window.app.getPath('desktop');
     },
 
-    getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
+    getInfo: () => ({ version: getAppVersion(), platform: platform }),
 
     showSaveDialog: async (options = {}) => {
       const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';

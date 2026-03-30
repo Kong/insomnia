@@ -6,7 +6,7 @@ on:
     inputs:
       version:
         required: true
-        description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
+        description: Release version (e.g. 12.5.0)
 
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
@@ -21,7 +21,7 @@ env:
 jobs:
   publish:
     timeout-minutes: 30
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       NOTARY_REPOSITORY: ${{ env.NOTARY_REPOSITORY }}
       INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE: ${{ steps.cli_binary_hashes.outputs.handle }}
@@ -36,14 +36,14 @@ jobs:
       packages: write
     steps:
       - name: Checkout branch # Check out the release branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -55,6 +55,7 @@ jobs:
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Download all artifacts from release-build.yml
         uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2

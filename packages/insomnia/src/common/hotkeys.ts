@@ -1,5 +1,5 @@
-import { displayModifierKey, isMac } from './constants';
 import { keyboardKeys } from './keyboard-keys';
+import { isMac, isWindows } from './platform';
 import type { HotKeyRegistry, KeyboardShortcut, KeyCombination, PlatformKeyCombinations } from './settings';
 import { strings } from './strings';
 
@@ -201,7 +201,7 @@ export function newDefaultRegistry(): HotKeyRegistry {
  * Get the key combinations based on the current platform.
  */
 export function getPlatformKeyCombinations(bindings: PlatformKeyCombinations): KeyCombination[] {
-  if (isMac()) {
+  if (isMac) {
     return bindings.macKeys;
   }
 
@@ -238,7 +238,7 @@ export function getChar(keyCode: number) {
 }
 
 function joinHotKeys(mustUsePlus: boolean, keys: string[]) {
-  if (!mustUsePlus && isMac()) {
+  if (!mustUsePlus && isMac) {
     return keys.join(' ');
   }
 
@@ -259,6 +259,43 @@ export function isModifierKeyCode(keyCode: number): boolean {
     keyCode === keyboardKeys.selectkey.keyCode
   );
 }
+
+export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) => {
+  const mac = isMac;
+  switch (key) {
+    case 'ctrl': {
+      return mac ? '⌃' : 'Ctrl';
+    }
+
+    case 'alt': {
+      return mac ? '⌥' : 'Alt';
+    }
+
+    case 'shift': {
+      return mac ? '⇧' : 'Shift';
+    }
+
+    case 'meta': {
+      if (mac) {
+        return '⌘';
+      }
+
+      if (isWindows) {
+        // Note: Although this unicode character for the Windows doesn't exist, the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
+        // see: https://en.wikipedia.org/wiki/Windows_key
+        return 'Win';
+      }
+
+      // Note: To avoid using a Microsoft trademark, much Linux documentation refers to the key as "Super". This can confuse some users who still consider it a "Windows key". In KDE Plasma documentation it is called the Meta key even though the X11 "Super" shift bit is used.
+      // see: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
+      return 'Super';
+    }
+
+    default: {
+      throw new Error(key + 'unrecognized key');
+    }
+  }
+};
 
 /**
  * Construct the display string of a key combination based on platform.
@@ -281,7 +318,7 @@ export function constructKeyCombinationDisplay(keyComb: KeyCombination, mustUseP
     });
   };
 
-  if (isMac()) {
+  if (isMac) {
     // Note: on Mac the canonical order is Control, Option (i.e. Alt), Shift, Command (i.e. Meta)
     // see: https://developer.apple.com/design/human-interface-guidelines/macos/user-interaction/keyboard
     addModifierKeys(['ctrl', 'alt', 'shift', 'meta']);

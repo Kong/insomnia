@@ -22,7 +22,7 @@ import { NavLink } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
-import { userSession } from '~/models';
+import { services } from '~/insomnia-data';
 import {
   type Environment,
   type EnvironmentKvPairData,
@@ -59,7 +59,7 @@ import { decryptVaultKeyFromSession } from '~/utils/vault';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment';
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const user = await userSession.get();
+  const user = await services.userSession.get();
 
   const vaultKey = user.vaultKey ? await decryptVaultKeyFromSession(user.vaultKey, false) : '';
 

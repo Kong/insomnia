@@ -3,10 +3,10 @@ import React, { useEffect } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useNavigation } from 'react-router';
 
+import type { GitRepository } from '~/insomnia-data';
 import { useActiveView } from '~/ui/components/project/utils';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 
-import type { GitRepository } from '../../../models/git-repository';
 import type { Project } from '../../../models/project';
 import { Icon } from '../icon';
 import { ProjectCreateForm } from '../project/project-create-form';

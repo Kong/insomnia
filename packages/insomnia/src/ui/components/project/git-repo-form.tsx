@@ -12,9 +12,10 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
+import { type GitCredentials, models, type ProviderEmail } from '~/insomnia-data';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import type { GitProviderOption, ProviderEmail } from '~/sync/git/providers/types';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
 import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
@@ -22,7 +23,6 @@ import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remot
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
-import { type GitCredentials, isGitCredentialsV2, isOAuthCredential } from '../../../models/git-credentials';
 import { ErrorBoundary } from '../error-boundary';
 import type { ActiveView, ProjectData } from './utils';
 
@@ -33,6 +33,8 @@ const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined
   }
   return fullUri;
 };
+
+const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
 const getCredentialEmails = (credential: GitCredentials | undefined) => {
   if (credential && isGitCredentialsV2(credential) && isOAuthCredential(credential)) {

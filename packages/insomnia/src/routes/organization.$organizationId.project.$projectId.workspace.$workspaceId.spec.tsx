@@ -30,11 +30,11 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
+import { services } from '~/insomnia-data';
 import * as models from '~/models/index';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import { isGitProject } from '~/models/project';
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
@@ -79,7 +79,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const apiSpec = await services.apiSpec.getByParentId(workspaceId);
   if (!apiSpec) {
     showResourceNotFoundToast(`API Specification not found for workspace: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
@@ -167,7 +167,6 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
 
-  const organizationData = useOrganizationLoaderData();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
 
   useEffect(() => {
@@ -918,7 +917,6 @@ const Component = ({ params }: Route.ComponentProps) => {
               isOpen={isNewMockServerModalOpen}
               project={activeProject}
               storageRules={storageRules}
-              currentPlan={organizationData?.currentPlan}
               scope="mock-server"
               sourceApiSpec={apiSpec}
               onOpenChange={setNewMockServerModalOpen}

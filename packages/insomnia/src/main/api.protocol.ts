@@ -8,7 +8,6 @@ import { app, net, protocol, session } from 'electron';
 import { services } from '~/insomnia-data';
 
 import { getApiBaseURL } from '../common/constants';
-import * as _userSession from '../models/user-session';
 import { setDefaultProtocol } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
 
@@ -62,7 +61,7 @@ export async function registerInsomniaProtocols() {
       // see https://github.com/electron/electron/issues/47097
       return await new Promise(async (resolve, reject) => {
         try {
-          const { id: sessionId } = await _userSession.get();
+          const { id: sessionId } = await services.userSession.get();
           const curl = new Curl();
           curl.setOpt(Curl.option.URL, urlStr);
           curl.setOpt(Curl.option.ACCEPT_ENCODING, '');

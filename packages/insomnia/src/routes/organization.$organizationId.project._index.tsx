@@ -5,8 +5,8 @@ import { href, redirect, useLoaderData, useNavigate, useParams } from 'react-rou
 
 import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { userSession } from '~/models';
-import type { GitRepository } from '~/models/git-repository';
+import type { GitRepository } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import type { Project } from '~/models/project';
@@ -35,7 +35,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
 
   if (!sessionId) {
     await logout();

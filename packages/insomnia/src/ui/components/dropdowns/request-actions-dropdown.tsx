@@ -3,6 +3,7 @@ import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -18,7 +19,6 @@ import type { GrpcRequest } from '../../../models/grpc-request';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { SocketIORequest } from '../../../models/socket-io-request';
-import { incrementDeletedRequests } from '../../../models/stats';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
@@ -181,7 +181,7 @@ export const RequestActionsDropdown = ({
       color: 'danger',
       onDone: async (isYes: boolean) => {
         if (isYes) {
-          incrementDeletedRequests();
+          services.stats.incrementDeletedRequests();
           deleteRequestFetcher.submit({
             organizationId,
             projectId,

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import * as models from '../index';
 import { WorkspaceScopeKeys } from '../workspace';
 describe('migrate()', () => {
@@ -18,15 +20,13 @@ describe('migrate()', () => {
       ],
     });
     const migratedWorkspace = await models.workspace.migrate(workspace);
-    const certs = await models.clientCertificate.findByParentId(workspace._id);
+    const certs = await services.clientCertificate.findByParentId(workspace._id);
 
     // Delete modified and created so we can assert them
     for (const cert of certs) {
       expect(typeof cert.modified).toBe('number');
       expect(typeof cert.created).toBe('number');
-      // @ts-expect-error delete in order to test
       delete cert.modified;
-      // @ts-expect-error delete in order to test
       delete cert.created;
     }
 
@@ -60,7 +60,7 @@ describe('migrate()', () => {
     expect(migratedWorkspace.certificates).toBeUndefined();
     // Make sure we don't create new certs if we migrate again
     await models.workspace.migrate(migratedWorkspace);
-    const certsAgain = await models.clientCertificate.findByParentId(workspace._id);
+    const certsAgain = await services.clientCertificate.findByParentId(workspace._id);
     expect(certsAgain.length).toBe(2);
   });
 

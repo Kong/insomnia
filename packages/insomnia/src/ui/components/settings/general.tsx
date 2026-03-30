@@ -4,7 +4,6 @@ import { useRootLoaderData } from '~/root';
 
 import {
   EditorKeyMap,
-  isMac,
   MAX_EDITOR_FONT_SIZE,
   MAX_INTERFACE_FONT_SIZE,
   MIN_EDITOR_FONT_SIZE,
@@ -12,6 +11,7 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
+import { isMac } from '../../../common/platform';
 import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import { strings } from '../../../common/strings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
@@ -48,7 +48,7 @@ export const General: FC = () => {
         </div>
         <div>
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
-          {!isMac() && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
+          {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
         </div>
       </div>
@@ -115,7 +115,7 @@ export const General: FC = () => {
           label="Text Editor Key Map"
           setting="editorKeyMap"
           help={
-            isMac() &&
+            isMac &&
             settings.editorKeyMap === EditorKeyMap.vim && (
               <Fragment>
                 To enable key-repeating with Vim on macOS, see{' '}

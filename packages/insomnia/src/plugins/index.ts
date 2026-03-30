@@ -396,14 +396,14 @@ export function getPluginCommonContext({
           },
         },
         cloudCredential: {
-          getById: models.cloudCredential.getById,
-          update: models.cloudCredential.update,
+          getById: services.cloudCredential.getById,
+          update: services.cloudCredential.update,
         },
         workspace: {
           getById: models.workspace.getById,
         },
         oAuth2Token: {
-          getByRequestId: models.oAuth2Token.getByParentId,
+          getByRequestId: services.oAuth2Token.getByParentId,
         },
         cookieJar: {
           getOrCreateForParentId: (parentId: string) => {

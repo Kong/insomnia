@@ -3,6 +3,8 @@ import querystring from 'node:querystring';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import type { OAuth2Token } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
@@ -11,7 +13,6 @@ import { getOauthRedirectUrl } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
-import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
 import type { Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../models/request-group';
@@ -105,14 +106,14 @@ export const getOAuth2Token = async (
       const responseUrl = new URL(redirectedTo);
       if (responseUrl.searchParams.has('error')) {
         const params = Object.fromEntries(responseUrl.searchParams);
-        const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-        return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
+        const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+        return services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
       }
       const hash = responseUrl.hash.slice(1);
       invariant(hash, 'No hash found in response URL from OAuth2 provider');
       const data = Object.fromEntries(new URLSearchParams(hash));
-      const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-      return models.oAuth2Token.update(
+      const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+      return services.oAuth2Token.update(
         old,
         transformNewAccessTokenToOauthModel({
           ...data,
@@ -233,7 +234,7 @@ export const getOAuth2Token = async (
     }
 
     const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
-    const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
+    const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
 
     if (authentication.useDefaultBrowser) {
       uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
@@ -241,7 +242,7 @@ export const getOAuth2Token = async (
       });
     }
 
-    return models.oAuth2Token.update(
+    return services.oAuth2Token.update(
       old,
       transformNewAccessTokenToOauthModel(await oauthResponseToAccessToken(authentication.accessTokenUrl, response)),
     );
@@ -278,7 +279,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
   }
 
-  const token = await models.oAuth2Token.getByParentId(closestAuthId);
+  const token = await services.oAuth2Token.getByParentId(closestAuthId);
   if (!token) {
     return { oAuth2Token: undefined, closestAuthId };
   }
@@ -318,8 +319,8 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     // If the refresh token was rejected due an unauthorized request, we will
     // return a null access_token to trigger an authentication request to fetch
     // brand new refresh and access tokens.
-    const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-    models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+    const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+    services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
     return { oAuth2Token: undefined, closestAuthId };
   }
   const isSuccessful = statusCode >= 200 && statusCode < 300;
@@ -332,8 +333,11 @@ async function getExistingAccessTokenAndRefreshIfExpired(
       // brand new refresh and access tokens.
       if (body?.error === 'invalid_grant') {
         console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
-        const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-        const token = await models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+        const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+        const token = await services.oAuth2Token.update(
+          old,
+          transformNewAccessTokenToOauthModel({ access_token: null }),
+        );
         return { oAuth2Token: token, closestAuthId };
       }
     }
@@ -345,8 +349,8 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   if (!data) {
     return { oAuth2Token: undefined, closestAuthId };
   }
-  const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
-  const oAuth2Token = await models.oAuth2Token.update(
+  const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
+  const oAuth2Token = await services.oAuth2Token.update(
     old,
     transformNewAccessTokenToOauthModel({
       ...data,

@@ -1,7 +1,8 @@
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-import type { BaseRunnerTestResult, RunnerResultPerRequest } from '../../../models/runner-test-result';
+import type { BaseRunnerTestResult, RunnerResultPerRequest } from '~/insomnia-data';
+
 import { RequestTestResultRows } from './request-test-result-pane';
 
 type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';

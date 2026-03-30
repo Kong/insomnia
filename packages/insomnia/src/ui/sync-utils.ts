@@ -1,8 +1,8 @@
 import { database } from '~/common/database';
+import type { ApiSpec } from '~/insomnia-data';
 import { type McpRequest, services } from '~/insomnia-data';
 import { canSync } from '~/models';
 import * as models from '~/models';
-import type { ApiSpec } from '~/models/api-spec';
 import type { Environment } from '~/models/environment';
 import type { GrpcRequest } from '~/models/grpc-request';
 import type { MockRoute } from '~/models/mock-route';
@@ -73,7 +73,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     return parentIds;
   };
   const listOfParentIds = await flattenFoldersIntoList(activeWorkspace._id);
-  const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
   const reqs = await database.find(models.request.type, {
     parentId: { $in: listOfParentIds },
   });

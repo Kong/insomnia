@@ -1,5 +1,6 @@
 import { href, redirect } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { SegmentEvent } from '~/ui/analytics';
@@ -15,7 +16,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const id = formData.get('id') as string;
   const req = await requestOperations.getById(id);
   invariant(req, 'Request not found');
-  models.stats.incrementDeletedRequests();
+  services.stats.incrementDeletedRequests();
   await requestOperations.remove(req);
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Workspace meta not found');

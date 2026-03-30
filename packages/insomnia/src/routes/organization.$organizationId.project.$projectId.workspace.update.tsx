@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { href } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { isGitProject } from '~/models/project';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
@@ -27,10 +28,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   invariant(workspace, 'Workspace not found');
 
   if (workspace.scope === 'design') {
-    const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+    const apiSpec = await services.apiSpec.getByParentId(workspaceId);
     invariant(apiSpec, 'No Api Spec found for this workspace');
 
-    await models.apiSpec.update(apiSpec, {
+    await services.apiSpec.update(apiSpec, {
       fileName: patch.name || workspace.name,
     });
   }

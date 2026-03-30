@@ -1,5 +1,6 @@
 import { href, redirect } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { isRemoteProject, type Project } from '~/models/project';
 import { type Workspace } from '~/models/workspace';
@@ -34,7 +35,7 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
 }
 
 async function deleteWorkspaceFromLocal(workspace: Workspace) {
-  await models.stats.incrementDeletedRequestsForDescendents(workspace);
+  await services.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
 }
 
