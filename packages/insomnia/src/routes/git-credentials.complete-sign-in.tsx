@@ -1,3 +1,4 @@
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { href } from 'react-router';
 
 import type { GitRemoteProviderType } from '~/insomnia-data';
@@ -23,13 +24,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   if ('errors' in result && result.errors?.length) {
     showToast({
-      icon: providerIcon,
+      icon: providerIcon as IconProp,
       title: 'Connect failed',
       status: 'error',
     });
   } else {
     showToast({
-      icon: providerIcon,
+      icon: providerIcon as IconProp,
       title: 'Successfully connected',
       status: 'success',
     });

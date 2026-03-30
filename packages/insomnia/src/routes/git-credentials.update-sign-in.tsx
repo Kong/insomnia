@@ -1,3 +1,4 @@
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { href } from 'react-router';
 
 import type { GitRemoteProviderType } from '~/insomnia-data';
@@ -20,7 +21,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     state,
   });
 
-  const icon = provider === 'github' ? ['fab', 'github'] : provider === 'gitlab' ? ['fab', 'gitlab'] : 'key';
+  const icon: IconProp = provider === 'github' ? ['fab', 'github'] : provider === 'gitlab' ? ['fab', 'gitlab'] : 'key';
 
   if ('errors' in result && result.errors?.length) {
     showToast({
