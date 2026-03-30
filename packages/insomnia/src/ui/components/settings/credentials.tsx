@@ -472,6 +472,7 @@ const GitCredentialsList = () => {
     iconName?: IconProp;
   } | null>(null);
   const previousCredentialsLengthRef = useRef<number>(0);
+  const editedCredentialModifiedRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (credentialsFetcher.state === 'idle' && !credentialsFetcher.data) {
@@ -487,6 +488,35 @@ const GitCredentialsList = () => {
     }
     previousCredentialsLengthRef.current = currentLength;
   }, [credentialsFetcher.data?.credentials.length]);
+
+  // Track the currently edited credential version when modal opens.
+  useEffect(() => {
+    if (isCredentialModalOpen && gitCredentialToEdit) {
+      editedCredentialModifiedRef.current = gitCredentialToEdit.modified;
+    } else if (!isCredentialModalOpen) {
+      editedCredentialModifiedRef.current = null;
+    }
+  }, [isCredentialModalOpen, gitCredentialToEdit]);
+
+  // Auto-close edit modal when the edited credential has been updated (e.g. OAuth callback completed in root flow).
+  useEffect(() => {
+    if (!isCredentialModalOpen || !gitCredentialToEdit || !credentialsFetcher.data?.credentials) {
+      return;
+    }
+
+    const latest = credentialsFetcher.data.credentials.find(c => c._id === gitCredentialToEdit._id);
+    if (!latest) {
+      return;
+    }
+
+    if (
+      editedCredentialModifiedRef.current !== null &&
+      typeof latest.modified === 'number' &&
+      latest.modified > editedCredentialModifiedRef.current
+    ) {
+      setIsCredentialModalOpen(false);
+    }
+  }, [credentialsFetcher.data?.credentials, isCredentialModalOpen, gitCredentialToEdit]);
 
   // Handle delete confirmation when related projects data is loaded
   useEffect(() => {
