@@ -20,15 +20,17 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     state,
   });
 
+  const icon = provider === 'github' ? ['fab', 'github'] : provider === 'gitlab' ? ['fab', 'gitlab'] : 'key';
+
   if ('errors' in result && result.errors?.length) {
     showToast({
-      icon: provider === 'github' ? ['fab', 'github'] : provider === 'gitlab' ? ['fab', 'gitlab'] : 'key',
+      icon,
       title: 'Connect failed',
       status: 'error',
     });
   } else {
     showToast({
-      icon: provider === 'github' ? ['fab', 'github'] : provider === 'gitlab' ? ['fab', 'gitlab'] : 'key',
+      icon,
       title: 'Successfully connected',
       status: 'success',
     });
