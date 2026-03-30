@@ -427,7 +427,7 @@ export function getPluginCommonContext({
   };
 }
 
-// This is for insomnia UI to reach out to bundled plugin functions and executed under render process(by default) or main process
+// This is for insomnia UI to reach out to bundled plugin functions and executed under render process or main process(by default)
 // It should only be available to bundled plugins, not for public plugins
 export async function executePluginMainAction({
   pluginName,
@@ -441,7 +441,7 @@ export async function executePluginMainAction({
   params?: Record<string, any>;
 }): Promise<any> {
   const settings = await services.settings.get();
-  // Execute the plugin action directly in the renderer process, to keep to same execution context as plugin tags
+  // Execute the plugin action directly in renderer process when allow elevated access.
   if (settings.pluginsAllowElevatedAccess) {
     const bundlePlugins = await getBundlePlugins();
     const plugin = bundlePlugins.find(p => p.name === pluginName);
