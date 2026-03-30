@@ -1,6 +1,7 @@
 import { href } from 'react-router';
 
 import type { GitRemoteProviderType } from '~/insomnia-data';
+import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git-credentials.complete-sign-in';
@@ -13,11 +14,27 @@ interface CompleteSignInData {
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const { provider, code, state } = (await request.json()) as CompleteSignInData;
-  return await window.main.git.completeSignInToGitProvider({
+  const result = await window.main.git.completeSignInToGitProvider({
     provider,
     code,
     state,
   });
+
+  if ('errors' in result && result.errors?.length) {
+    showToast({
+      icon: provider === 'github' ? ['fab', 'github'] : provider === 'gitlab' ? ['fab', 'gitlab'] : 'key',
+      title: 'Connect failed',
+      status: 'error',
+    });
+  } else {
+    showToast({
+      icon: provider === 'github' ? ['fab', 'github'] : provider === 'gitlab' ? ['fab', 'gitlab'] : 'key',
+      title: 'Successfully connected',
+      status: 'success',
+    });
+  }
+
+  return result;
 }
 
 export const useGitProviderCompleteSignInFetcher = createFetcherSubmitHook(
