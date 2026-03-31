@@ -456,6 +456,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                   >
                     <input type="hidden" name="workspaceId" value={activeWorkspace._id} />
                     <div>
+                      This will permanently delete the{' '}
                       {
                         <strong style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
                           {activeWorkspace?.name}
