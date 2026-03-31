@@ -238,6 +238,59 @@ async function getGitFSClient({
   return routableFS;
 }
 
+/**
+ * Validate that the stored Git credential is currently accepted by the remote.
+ *
+ * For GitHub credentials the GitHub REST API (`GET /user`) is used because the
+ * git wire protocol (`listServerRefs`) can succeed anonymously on public repos
+ * even after a token has been revoked or a GitHub App has been uninstalled.
+ * The REST endpoint reliably returns HTTP 401 in those cases.
+ *
+ * For all other providers we fall back to `fetchRemoteBranches` which uses the
+ * git wire protocol and is sufficient for PAT / GitLab credentials.
+ *
+ * Throws an error starting with `HTTP Error: 4xx` on auth failures so the
+ * existing `shouldShowHttp40OAuthReauthHint` banner logic is triggered.
+ */
+async function validateGitCredentials({
+  credentialsId,
+  uri,
+}: {
+  credentialsId?: string | null;
+  uri: string;
+}): Promise<void> {
+  if (!credentialsId) return;
+
+  const credentials = await services.gitCredentials.getById(credentialsId);
+  if (!credentials) return;
+
+  const provider = gitRemoteProviderRegistry.get(credentials.provider as GitRemoteProviderType);
+
+  await (provider?.validateCredentials
+    ? provider.validateCredentials(credentials)
+    : fetchRemoteBranches({ uri: parseGitToHttpsURL(uri), credentialsId }));
+}
+
+export async function validateGitRepositoryCredentials({
+  projectId,
+  workspaceId,
+}: {
+  projectId: string;
+  workspaceId?: string;
+}): Promise<{ errors?: string[] }> {
+  try {
+    const gitRepository = await getGitRepository({ projectId, workspaceId });
+    await validateGitCredentials({
+      credentialsId: gitRepository.credentialsId,
+      uri: gitRepository.uri,
+    });
+    return {};
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error validating git credentials.';
+    return { errors: [errorMessage] };
+  }
+}
+
 export async function loadGitRepository({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
@@ -284,6 +337,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         credentialsId,
         legacyDiff: Boolean(workspaceId),
       });
+
+      // GitVCS.init() opens the local repo without a network call, so explicitly
+      // verify credentials here to surface revoked tokens as HTTP 4xx errors.
+      await validateGitCredentials({ credentialsId, uri });
     }
 
     // Configure basic info
@@ -2508,6 +2565,7 @@ export interface GitServiceAPI {
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
   fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
+  validateGitRepositoryCredentials: typeof validateGitRepositoryCredentials;
 
   initSignInToGitProvider: typeof initSignInToGitProvider;
   completeSignInToGitProvider: typeof completeSignInToGitProvider;
@@ -2525,6 +2583,11 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.getGitBranches', (_, options: Parameters<typeof getGitBranches>[0]) => getGitBranches(options));
   ipcMainHandle('git.fetchGitRemoteBranches', (_, options: Parameters<typeof fetchGitRemoteBranches>[0]) =>
     fetchGitRemoteBranches(options),
+  );
+  ipcMainHandle(
+    'git.validateGitRepositoryCredentials',
+    (_, options: Parameters<typeof validateGitRepositoryCredentials>[0]) =>
+      validateGitRepositoryCredentials(options),
   );
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));

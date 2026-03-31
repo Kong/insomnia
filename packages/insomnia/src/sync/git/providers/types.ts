@@ -132,6 +132,14 @@ export interface GitRemoteProvider<TConfig extends BaseProviderConfig = BaseProv
   validateUrl(url: string): Promise<ValidationResult>;
 
   /**
+   * Validate that a credential is currently accepted by the remote provider.
+   * Should throw an error starting with `HTTP Error: 4xx` on auth failures so
+   * the re-auth banner can detect it.  Falls back to `fetchRemoteBranches` for
+   * providers that don't implement this method.
+   */
+  validateCredentials?(credential: GitCredentials): Promise<void>;
+
+  /**
    * Fetch repositories accessible by the credential
    * Only for providers that support it (GitHub, GitLab)
    */

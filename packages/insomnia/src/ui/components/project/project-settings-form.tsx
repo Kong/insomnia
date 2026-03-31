@@ -20,7 +20,7 @@ import { LearnMoreLink } from '~/basic-components/link';
 import type { GitCredentials, GitRepository, Project, ProviderEmail } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import { useGitProjectRepoFetcher } from '~/routes/git.repo';
+import { useGitValidateCredentialsFetcher } from '~/routes/git.validate-credentials';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
@@ -110,7 +110,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
-  const gitRepoDataFetcher = useGitProjectRepoFetcher();
+  const validateCredentialsFetcher = useGitValidateCredentialsFetcher();
   const updateProjectFetcher = useProjectUpdateActionFetcher();
 
   const insomniaFiles =
@@ -197,15 +197,17 @@ export const ProjectSettingsForm: FC<Props> = ({
       gitRepository?.uri &&
       gitRepository?._id &&
       project?._id &&
-      gitRepoDataFetcher.state === 'idle' &&
-      !gitRepoDataFetcher.data
+      validateCredentialsFetcher.state === 'idle' &&
+      !validateCredentialsFetcher.data
     ) {
-      gitRepoDataFetcher.load({ projectId: project._id });
+      validateCredentialsFetcher.load({ projectId: project._id });
     }
-  }, [showGitConnectionInfo, gitRepository?.uri, gitRepository?._id, project?._id, gitRepoDataFetcher]);
+  }, [showGitConnectionInfo, gitRepository?.uri, gitRepository?._id, project?._id, validateCredentialsFetcher]);
 
   const gitRepoLoadErrors =
-    gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? gitRepoDataFetcher.data.errors : undefined;
+    validateCredentialsFetcher.data && 'errors' in validateCredentialsFetcher.data
+      ? validateCredentialsFetcher.data.errors
+      : undefined;
 
   return (
     <>
@@ -316,7 +318,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 repoLoadErrors={gitRepoLoadErrors}
                 provider={selectedProvider}
               />
-              {showEmailSelector ? (
+              {showEmailSelector && !gitRepoLoadErrors ? (
                 <div className="flex flex-col gap-2">
                   {isLoadingEmails ? (
                     <div className="flex items-center gap-2 text-sm">
@@ -394,7 +396,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                     </div>
                   )}
                 </div>
-              ) : selectedCredential?.author.email ? (
+              ) : selectedCredential?.author.email && !gitRepoLoadErrors ? (
                 <div className="text-[12px]">
                   <div className="flex">
                     <div className="w-[110px] font-semibold">Author Email</div>
