@@ -283,8 +283,8 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
     retObj.status === 'fulfilled'
       ? retObj.value
       : {
-          errors: [retObj.reason.toString()],
-        },
+        errors: [retObj.reason.toString()],
+      },
   );
 }
 
@@ -478,13 +478,13 @@ export const importResourcesToWorkspace = async ({
       const baseEnvironmentDataFromResources = baseEnvironmentFromResources.data;
       const newData = overrideBaseEnvironmentData
         ? {
-            ...originalEnvironmentData,
-            ...baseEnvironmentDataFromResources,
-          }
+          ...originalEnvironmentData,
+          ...baseEnvironmentDataFromResources,
+        }
         : {
-            ...baseEnvironmentDataFromResources,
-            ...originalEnvironmentData,
-          };
+          ...baseEnvironmentDataFromResources,
+          ...originalEnvironmentData,
+        };
       const { object, map } = orderedJSON.parse(JSON.stringify(newData), JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR);
       if (environmentType === 'kv') {
         const originKVPairData = baseEnvironment.kvPairData || [];
@@ -748,27 +748,50 @@ function getOasTitleAndVersion(content: string): { title: string; version: strin
   }
 }
 
-export async function findExistingImportedSpec(projectId: string): Promise<
+export async function findExistingImportedSpec(
+  projectId?: string,
+  organizationId?: string,
+): Promise<
   | {
-      workspace: Workspace;
-      apiSpec: ApiSpec;
-    }
+    workspace: Workspace;
+    apiSpec: ApiSpec;
+  }
   | undefined
 > {
+  const allProjects = await models.project.all();
+  const filteredProjects = organizationId ? allProjects.filter(p => p.parentId === organizationId) : allProjects;
+
+  // match active project first, then look in rest
+  const projectIds = new Set<string>();
+  if (projectId) {
+    projectIds.add(projectId);
+  }
+  for (const p of filteredProjects) {
+    projectIds.add(p._id);
+  }
+
   for (const cache of resourceCacheList) {
     if (!isApiSpecImport(cache.importer)) continue;
+
     const incoming = getOasTitleAndVersion(cache.content);
     if (!incoming) continue;
-    const workspaces = await models.workspace.findByParentId(projectId);
-    const designWorkspaces = workspaces.filter(w => w.scope === 'design');
-    for (const ws of designWorkspaces) {
-      const expectedName = `${incoming.title} ${incoming.version}`;
-      if (ws.name !== expectedName) continue;
-      const apiSpec = await services.apiSpec.getByParentId(ws._id);
-      if (!apiSpec) continue;
-      const stored = getOasTitleAndVersion(apiSpec.contents);
-      if (!stored || stored.title !== incoming.title || stored.version !== incoming.version) continue;
-      return { workspace: ws, apiSpec };
+
+    for (const pid of projectIds) {
+      const workspaces = await models.workspace.findByParentId(pid);
+      const designWorkspaces = workspaces.filter(w => w.scope === 'design');
+
+      for (const ws of designWorkspaces) {
+        const expectedName = `${incoming.title} ${incoming.version}`;
+        if (ws.name !== expectedName) continue;
+
+        const apiSpec = await services.apiSpec.getByParentId(ws._id);
+        if (!apiSpec) continue;
+
+        const stored = getOasTitleAndVersion(apiSpec.contents);
+        if (!stored || stored.title !== incoming.title || stored.version !== incoming.version) continue;
+
+        return { workspace: ws, apiSpec };
+      }
     }
   }
   return undefined;
