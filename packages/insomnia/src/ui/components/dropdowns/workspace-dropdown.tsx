@@ -456,13 +456,11 @@ export const WorkspaceDropdown: FC<{}> = () => {
                   >
                     <input type="hidden" name="workspaceId" value={activeWorkspace._id} />
                     <div>
-                      This will permanently delete the{' '}
-                      {
-                        <strong style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                          {activeWorkspace?.name}
-                        </strong>
-                      }{' '}
-                      {getWorkspaceLabel(activeWorkspace).singular}
+                      <p className="line-clamp-5">
+                        This will permanently delete the{' '}
+                        <strong className="break-all whitespace-pre-wrap">{activeWorkspace?.name}</strong>{' '}
+                        {getWorkspaceLabel(activeWorkspace).singular}
+                      </p>
                       {isRemoteProject(activeProject) && (
                         <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
                           <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
