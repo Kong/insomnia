@@ -56,7 +56,7 @@ export const SyncDeleteModal = ({ vcs, onHide }: Props) => {
         <ModalBody className="wide pad-left pad-right text-center" noScroll>
           {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
           <p className="selectable">
-            This will permanently delete the{' '}
+            This will permanently delete the sync delete modal{' '}
             {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
             {strings.collection.singular.toLowerCase()} remotely.
           </p>

@@ -11,6 +11,7 @@ import {
   Dialog,
   Header,
   Heading,
+  Label,
   Menu,
   MenuItem,
   MenuSection,
@@ -18,6 +19,8 @@ import {
   Modal,
   ModalOverlay,
   Popover,
+  Radio,
+  RadioGroup,
 } from 'react-aria-components';
 import { href, useNavigate, useParams } from 'react-router';
 
@@ -453,9 +456,41 @@ export const WorkspaceDropdown: FC<{}> = () => {
                   >
                     <input type="hidden" name="workspaceId" value={activeWorkspace._id} />
                     <p>
-                      This will permanently delete the{' '}
-                      {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
-                      {getWorkspaceLabel(activeWorkspace).singular} {isRemoteProject(activeProject) ? 'remotely' : ''}.
+                      {
+                        <strong style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                          {activeWorkspace?.name}
+                        </strong>
+                      }{' '}
+                      {getWorkspaceLabel(activeWorkspace).singular}
+                      {isRemoteProject(activeProject) && (
+                        <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
+                          <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
+                          <div className="flex gap-2">
+                            <Radio
+                              value="true"
+                              aria-label="Remove Local Copy"
+                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
+                            >
+                              <div>
+                                <Heading className="text-lg font-bold">Remove Local Copy</Heading>
+                                <p className="pt-2">The project will still exist on the Cloud.</p>
+                              </div>
+                            </Radio>
+                            <Radio
+                              value="false"
+                              aria-label="Delete Permanently"
+                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
+                            >
+                              <div>
+                                <Heading className="text-lg font-bold">Delete Permanently</Heading>
+                                <p className="pt-2">
+                                  The project will be deleted everywhere. You cannot undo this action.
+                                </p>
+                              </div>
+                            </Radio>
+                          </div>
+                        </RadioGroup>
+                      )}
                     </p>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>
