@@ -455,7 +455,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     className="flex flex-col gap-4"
                   >
                     <input type="hidden" name="workspaceId" value={activeWorkspace._id} />
-                    <p>
+                    <div>
                       {
                         <strong style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
                           {activeWorkspace?.name}
@@ -491,7 +491,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                           </div>
                         </RadioGroup>
                       )}
-                    </p>
+                    </div>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>
                     )}
