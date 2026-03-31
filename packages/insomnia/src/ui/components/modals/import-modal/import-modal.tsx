@@ -180,6 +180,7 @@ export interface ImportSource {
   endpoint?: string;
   operationId?: string;
   autoScan?: boolean;
+  startedAt?: number;
 }
 
 interface ImportModalProps extends ModalProps {
