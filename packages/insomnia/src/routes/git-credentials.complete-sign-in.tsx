@@ -11,14 +11,16 @@ interface CompleteSignInData {
   provider: GitRemoteProviderType;
   code: string;
   state: string;
+  isEditing?: boolean;
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
-  const { provider, code, state } = (await request.json()) as CompleteSignInData;
+  const { provider, code, state, isEditing } = (await request.json()) as CompleteSignInData;
   const result = await window.main.git.completeSignInToGitProvider({
     provider,
     code,
     state,
+    isEditing,
   });
   const providerIcon = provider === 'github' ? ['fab', 'github'] : provider === 'gitlab' ? ['fab', 'gitlab'] : 'key';
 

@@ -29,7 +29,6 @@ import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-
 import { useGitCredentialsUpdateActionFetcher } from '~/routes/git-credentials.$id.update';
 import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
-import { useGitProviderUpdateSignInFetcher } from '~/routes/git-credentials.update-sign-in';
 import { Input } from '~/ui/components/base/input';
 import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-custom-credential-form';
 import { showModal } from '~/ui/components/modals';
@@ -70,20 +69,21 @@ const GitEditProviderOAuthForm = ({
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const initSignInFetcher = useInitSignInToGitProviderFetcher();
-  const updateSignInFetcher = useGitProviderUpdateSignInFetcher();
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher();
   const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
 
   const [selectedAuthorEmail, setSelectedAuthorEmail] = useState(gitCredentialToEdit?.author.email);
   const initSignInError = getErrorResult(initSignInFetcher.data);
-  const updateSignInError = getErrorResult(updateSignInFetcher.data);
+  const completeSignInError = getErrorResult(completeSignInFetcher.data);
 
   const availableEmails = getCredentialEmails(gitCredentialToEdit);
 
+  console.log({ data: completeSignInFetcher.data, completeSignInError });
   useEffect(() => {
-    if (updateSignInFetcher.data && !updateSignInError) {
+    if (completeSignInFetcher.data && !completeSignInError) {
       onComplete?.();
     }
-  }, [updateSignInFetcher.data, updateSignInError, onComplete]);
+  }, [completeSignInFetcher.data, completeSignInError, onComplete]);
 
   const updateCredentialFetcher = useGitCredentialsUpdateActionFetcher();
   const isEditing = !!gitCredentialToEdit;
@@ -238,7 +238,7 @@ const GitEditProviderOAuthForm = ({
                 return;
               }
 
-              updateSignInFetcher.submit({ provider: provider.type, code, state });
+              completeSignInFetcher.submit({ provider: provider.type, code, state, isEditing });
             }
           }}
         >
@@ -263,10 +263,10 @@ const GitEditProviderOAuthForm = ({
               {error}
             </p>
           )}
-          {(initSignInError || updateSignInError) && (
+          {(initSignInError || completeSignInError) && (
             <p className="margin-bottom-sm flex items-start gap-2 rounded-xs border border-solid border-(--color-danger) bg-(--color-danger-bg) p-2 text-(--color-danger)">
               <Icon icon="exclamation-triangle" className="mt-1 size-4" />
-              <span>{initSignInError || updateSignInError}</span>
+              <span>{initSignInError || completeSignInError}</span>
             </p>
           )}
         </form>
@@ -293,7 +293,7 @@ const GitProviderOAuthForm = ({
 
   const initSignInError = getErrorResult(initSignInFetcher.data);
   const completeSignInError = getErrorResult(completeSignInFetcher.data);
-
+  console.log({ data: completeSignInFetcher.data, completeSignInError });
   useEffect(() => {
     if (completeSignInFetcher.data && !completeSignInError) {
       onComplete?.();
@@ -472,7 +472,6 @@ const GitCredentialsList = () => {
     iconName?: IconProp;
   } | null>(null);
   const previousCredentialsLengthRef = useRef<number>(0);
-  const editedCredentialModifiedRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (credentialsFetcher.state === 'idle' && !credentialsFetcher.data) {
@@ -488,35 +487,6 @@ const GitCredentialsList = () => {
     }
     previousCredentialsLengthRef.current = currentLength;
   }, [credentialsFetcher.data?.credentials.length]);
-
-  // Track the currently edited credential version when modal opens.
-  useEffect(() => {
-    if (isCredentialModalOpen && gitCredentialToEdit) {
-      editedCredentialModifiedRef.current = gitCredentialToEdit.modified;
-    } else if (!isCredentialModalOpen) {
-      editedCredentialModifiedRef.current = null;
-    }
-  }, [isCredentialModalOpen, gitCredentialToEdit]);
-
-  // Auto-close edit modal when the edited credential has been updated (e.g. OAuth callback completed in root flow).
-  useEffect(() => {
-    if (!isCredentialModalOpen || !gitCredentialToEdit || !credentialsFetcher.data?.credentials) {
-      return;
-    }
-
-    const latest = credentialsFetcher.data.credentials.find(c => c._id === gitCredentialToEdit._id);
-    if (!latest) {
-      return;
-    }
-
-    if (
-      editedCredentialModifiedRef.current !== null &&
-      typeof latest.modified === 'number' &&
-      latest.modified > editedCredentialModifiedRef.current
-    ) {
-      setIsCredentialModalOpen(false);
-    }
-  }, [credentialsFetcher.data?.credentials, isCredentialModalOpen, gitCredentialToEdit]);
 
   // Handle delete confirmation when related projects data is loaded
   useEffect(() => {
