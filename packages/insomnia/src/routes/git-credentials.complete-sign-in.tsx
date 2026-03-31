@@ -41,6 +41,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return result;
 }
 
+export const GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY = 'git-provider-complete-sign-in';
+
 export const useGitProviderCompleteSignInFetcher = createFetcherSubmitHook(
   submit => (data: CompleteSignInData) => {
     return submit(JSON.stringify(data), {
