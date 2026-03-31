@@ -1,6 +1,16 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import { getLearningFeature } from 'insomnia-api';
-import { type ApiSpec, type GitRepository, type MockServer, models, type Project, services, type Workspace, type WorkspaceMeta, type WorkspaceScope } from 'insomnia-data';
+import {
+  type ApiSpec,
+  type GitRepository,
+  type MockServer,
+  models,
+  type Project,
+  services,
+  type Workspace,
+  type WorkspaceMeta,
+  type WorkspaceScope,
+} from 'insomnia-data';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -388,7 +398,9 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
-    project && models.project.isGitProject(project) ? await services.gitRepository.getById(project.gitRepositoryId || '') : null;
+    project && models.project.isGitProject(project)
+      ? await services.gitRepository.getById(project.gitRepositoryId || '')
+      : null;
 
   return {
     localFiles,
@@ -493,7 +505,9 @@ const Component = () => {
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
   const isUserOwner =
-    organization && userSession.accountId && models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+    organization &&
+    userSession.accountId &&
+    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && models.organization.isPersonalOrganization(organization);
 
   const tabNavigate = useTabNavigate();
@@ -739,10 +753,15 @@ const Component = () => {
     },
   ];
 
-  const isRemoteProjectInconsistent = activeProject && models.project.isRemoteProject(activeProject) && !storageRules.enableCloudSync;
+  const isRemoteProjectInconsistent =
+    activeProject && models.project.isRemoteProject(activeProject) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent =
-    activeProject && !models.project.isRemoteProject(activeProject) && !models.project.isGitProject(activeProject) && !storageRules.enableLocalVault;
-  const isGitSyncProjectInconsistent = activeProject && models.project.isGitProject(activeProject) && !storageRules.enableGitSync;
+    activeProject &&
+    !models.project.isRemoteProject(activeProject) &&
+    !models.project.isGitProject(activeProject) &&
+    !storageRules.enableLocalVault;
+  const isGitSyncProjectInconsistent =
+    activeProject && models.project.isGitProject(activeProject) && !storageRules.enableGitSync;
   const isProjectInconsistent =
     isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
 
@@ -825,7 +844,9 @@ const Component = () => {
                       activeProject={activeProject}
                     />
                   )}
-                  {models.project.isLocalProject(activeProject) && !models.project.isGitProject(activeProject) && <LocalProjectBar />}
+                  {models.project.isLocalProject(activeProject) && !models.project.isGitProject(activeProject) && (
+                    <LocalProjectBar />
+                  )}
                   {models.project.isRemoteProject(activeProject) && <CloudSyncProjectBar />}
                 </>
               )}
