@@ -48,7 +48,7 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('~/insomnia-data', () => ({
+vi.mock('insomnia-data', () => ({
   services: {
     settings: {
       get: vi.fn(() => Promise.resolve({})),

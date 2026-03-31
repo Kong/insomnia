@@ -1,10 +1,6 @@
 import classnames from 'classnames';
 import clone from 'clone';
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
-import { Button, Link } from 'react-aria-components';
-import * as reactUse from 'react-use';
-
 import {
   type BaseModel,
   type CloudProviderCredential,
@@ -13,7 +9,11 @@ import {
   type RequestGroup,
   services,
   type Workspace,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import React, { type FC, useCallback, useEffect, useState } from 'react';
+import { Button, Link } from 'react-aria-components';
+import * as reactUse from 'react-use';
+
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';

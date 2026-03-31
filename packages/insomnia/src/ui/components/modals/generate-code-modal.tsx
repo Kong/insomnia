@@ -1,8 +1,8 @@
 import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
+import { type Request } from 'insomnia-data';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
-import { type Request } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 

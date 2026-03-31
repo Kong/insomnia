@@ -2,10 +2,9 @@ import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { ClientRequest, JSONRPCResponse, Notification } from '@modelcontextprotocol/sdk/types.js';
+import type { models } from 'insomnia-data';
+import { type RequestAuthentication, type RequestHeader } from 'insomnia-data';
 import type z from 'zod';
-
-import type { models } from '~/insomnia-data';
-import { type RequestAuthentication, type RequestHeader } from '~/insomnia-data';
 
 // Refer the SDK: https://github.com/modelcontextprotocol/typescript-sdk/blob/main/src/shared/protocol.ts#L504
 // The Client type has missing transport property

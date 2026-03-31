@@ -1,7 +1,6 @@
+import { models } from 'insomnia-data';
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
-
-import { models } from '~/insomnia-data';
 
 import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base/dropdown';
 

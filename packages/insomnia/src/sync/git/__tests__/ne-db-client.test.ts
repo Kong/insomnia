@@ -8,10 +8,9 @@
 import path from 'node:path';
 
 import { createBuilder } from '@develohpanda/fluent-builder';
+import { database as db, models, services } from 'insomnia-data';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
-
-import { database as db, models, services } from '~/insomnia-data';
 
 import { workspaceModelSchema } from '../../__schemas__/model-schemas';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';

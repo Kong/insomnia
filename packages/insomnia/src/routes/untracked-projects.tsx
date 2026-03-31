@@ -1,7 +1,7 @@
 import type { Organization } from 'insomnia-api';
+import { models, type Project, services, type Workspace } from 'insomnia-data';
 
 import { database } from '~/common/database';
-import { models, type Project, services, type Workspace } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/untracked-projects';

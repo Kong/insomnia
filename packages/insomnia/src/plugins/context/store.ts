@@ -1,4 +1,4 @@
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
 
 import type { Plugin } from '../index';
 

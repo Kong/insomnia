@@ -1,8 +1,8 @@
 import type { Organization } from 'insomnia-api';
+import { type Environment, type GrpcRequest, models, type Project, type Request, type RequestGroup, services, type WebSocketRequest, type Workspace } from 'insomnia-data';
 
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
-import { type Environment, type GrpcRequest, models, type Project, type Request, type RequestGroup, services, type WebSocketRequest, type Workspace } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 

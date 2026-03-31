@@ -7,12 +7,7 @@ import electron, { BrowserWindow } from 'electron';
 import { MessageType, parseMessage } from 'graphql-ws';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { v4 as uuidV4 } from 'uuid';
-import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
-
-import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import { database } from '~/common/database';
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
 import {
   type BaseWebSocketRequest,
   type CookieJar,
@@ -21,7 +16,12 @@ import {
   type RequestAuthentication,
   type RequestHeader,
   type WebSocketResponse,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import { v4 as uuidV4 } from 'uuid';
+import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
+
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { database } from '~/common/database';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';

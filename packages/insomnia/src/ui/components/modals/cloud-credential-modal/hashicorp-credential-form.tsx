@@ -1,6 +1,3 @@
-import React, { useState } from 'react';
-import { Button, Input, Label, TextField } from 'react-aria-components';
-
 import {
   type CloudProviderCredential,
   type CloudProviderName,
@@ -12,7 +9,9 @@ import {
   models,
   type VaultAppRoleCredential,
   type VaultTokenCredential,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import React, { useState } from 'react';
+import { Button, Input, Label, TextField } from 'react-aria-components';
 
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';

@@ -1,8 +1,7 @@
 import path from 'node:path';
 
+import { type Cookie, models, type Request, type Response, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
-
-import { type Cookie, models, type Request, type Response, services } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';

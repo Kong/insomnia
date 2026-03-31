@@ -1,9 +1,5 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Button } from 'react-aria-components';
-import { useParams } from 'react-router';
-
-import { type McpResponse } from '~/insomnia-data';
+import { type McpResponse } from 'insomnia-data';
 import {
   models,
   type Request,
@@ -13,7 +9,11 @@ import {
   type SocketIOResponse,
   type WebSocketRequest,
   type WebSocketResponse,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Button } from 'react-aria-components';
+import { useParams } from 'react-router';
+
 import { useRequestResponseDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 import { useRequestResponseDeleteAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete-all';
 

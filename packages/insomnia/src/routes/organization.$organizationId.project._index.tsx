@@ -1,3 +1,4 @@
+import { type GitRepository, models, type Project,services } from 'insomnia-data';
 import { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import type { LoaderFunctionArgs } from 'react-router';
@@ -5,7 +6,6 @@ import { href, redirect, useLoaderData, useNavigate, useParams } from 'react-rou
 
 import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { type GitRepository, models, type Project,services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { getProjectsWithGitRepositories } from '~/routes/organization.$organizationId.project.$projectId._index';

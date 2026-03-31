@@ -1,4 +1,5 @@
 import type { StorageRules } from 'insomnia-api';
+import { models } from 'insomnia-data';
 import { useParams } from 'react-router';
 
 import { Banner } from '~/basic-components/banner';
@@ -6,7 +7,6 @@ import { Button } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import type { ProjectType } from '~/ui/components/project/utils';

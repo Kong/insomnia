@@ -1,10 +1,10 @@
 import path from 'node:path';
 
 import type { IRuleResult } from '@stoplight/spectral-core';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
-import { models, services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';

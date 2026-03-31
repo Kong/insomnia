@@ -1,6 +1,6 @@
+import { type CaCertificate, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { type CaCertificate, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 

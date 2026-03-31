@@ -5,10 +5,9 @@
  * ensuring they work correctly and handle edge cases properly.
  */
 
+import { models, type Request, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
-
-import { models, type Request, services } from '~/insomnia-data';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
 import { database as db } from '../database';

@@ -4,9 +4,8 @@
  */
 import crypto from 'node:crypto';
 
+import { type RequestAuthentication, type RequestBody } from 'insomnia-data';
 import OAuth1 from 'oauth-1.0a';
-
-import { type RequestAuthentication, type RequestBody } from '~/insomnia-data';
 
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import type { OAuth1SignatureMethod } from './constants';

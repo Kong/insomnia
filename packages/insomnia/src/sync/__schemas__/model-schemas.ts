@@ -1,6 +1,5 @@
 import type { Schema } from '@develohpanda/fluent-builder';
 import clone from 'clone';
-
 import {
   type AllTypes,
   type BaseModel,
@@ -10,7 +9,7 @@ import {
   type Request,
   type RequestGroup,
   type Workspace,
-} from '~/insomnia-data';
+} from 'insomnia-data';
 
 const { environment, grpcRequest, request, requestGroup, workspace } = models;
 const { EnvironmentKvPairDataType, EnvironmentType } = environment;

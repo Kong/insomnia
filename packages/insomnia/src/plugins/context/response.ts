@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
-import { type Compression, type ResponseHeader, services } from '~/insomnia-data';
+import { type Compression, type ResponseHeader, services } from 'insomnia-data';
 
 interface MaybeResponse {
   parentId?: string;

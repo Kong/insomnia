@@ -24,8 +24,9 @@
  * @see providers/ for provider implementations
  */
 
+import { type GitCredentials, type GitRepository, models, services } from 'insomnia-data';
+
 import { database } from '~/common/database';
-import { type GitCredentials, type GitRepository, models, services } from '~/insomnia-data';
 import type ElectronStorage from '~/main/electron-storage';
 import { initElectronStorage } from '~/main/window-utils';
 

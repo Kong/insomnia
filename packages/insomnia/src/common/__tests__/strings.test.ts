@@ -1,7 +1,6 @@
+import { models } from 'insomnia-data';
+import { strings } from 'insomnia-data/common';
 import { describe, expect, it } from 'vitest';
-
-import { models } from '~/insomnia-data';
-import { strings } from '~/insomnia-data/common';
 
 import { getWorkspaceLabel } from '../get-workspace-label';
 

@@ -1,9 +1,9 @@
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { InitializeRequestSchema, type JSONRPCRequest } from '@modelcontextprotocol/sdk/types.js';
+import { type McpResponse, models, services } from 'insomnia-data';
 import { shellPath } from 'shell-path';
 import { parse } from 'shell-quote';
 
-import { type McpResponse, models, services } from '~/insomnia-data';
 import { type ConnectionContext, writeTimeline } from '~/main/mcp/common';
 import type { OpenMcpStdioClientConnectionOptions } from '~/main/mcp/types';
 

@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import electron from 'electron';
-
 import {
   type GrpcRequest,
   models,
@@ -12,8 +11,8 @@ import {
   type SocketIORequest,
   type WebSocketRequest,
   type Workspace,
-} from '~/insomnia-data';
-import type { PluginConfigMap } from '~/insomnia-data/common';
+} from 'insomnia-data';
+import type { PluginConfigMap } from 'insomnia-data/common';
 
 import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';

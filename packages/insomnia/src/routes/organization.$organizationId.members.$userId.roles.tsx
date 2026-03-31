@@ -1,7 +1,7 @@
 import { updateUserRoles } from 'insomnia-api';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 

@@ -1,8 +1,7 @@
 import type { CurlRequestOutput } from 'insomnia/src/main/network/libcurl-promise';
+import { services, type Settings } from 'insomnia-data';
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
-
-import { services, type Settings } from '~/insomnia-data';
 
 import { RequestAuth } from './auth';
 import { fromPreRequestAuth } from './auth';

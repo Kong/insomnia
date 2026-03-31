@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { database, initDatabase, services, type Settings } from '~/insomnia-data';
-import { type BaseModel, type Environment, type UserUploadEnvironment } from '~/insomnia-data';
-import { createNedbDatabase } from '~/insomnia-data/node';
+import { database, initDatabase, services, type Settings } from 'insomnia-data';
+import { type BaseModel, type Environment, type UserUploadEnvironment } from 'insomnia-data';
+import { createNedbDatabase } from 'insomnia-data/node';
 
 import {
   defaultSendActionRuntime,

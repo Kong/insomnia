@@ -1,8 +1,8 @@
+import { models, services, type UnitTest } from 'insomnia-data';
 import { generate, runTests, type Test, type TestResults } from 'insomnia-testing';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import { models, services, type UnitTest } from '~/insomnia-data';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';

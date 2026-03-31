@@ -1,8 +1,8 @@
 import path from 'node:path';
 
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { models, services } from '~/insomnia-data';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';

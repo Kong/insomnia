@@ -1,5 +1,7 @@
 import { type RJSFSchema } from '@rjsf/utils';
 import type { EditorChange } from 'codemirror';
+import type { McpPayload } from 'insomnia-data';
+import { type Environment, type EnvironmentKvPairData } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -7,8 +9,6 @@ import { useLatest } from 'react-use';
 
 import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
-import type { McpPayload } from '~/insomnia-data';
-import { type Environment, type EnvironmentKvPairData } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';

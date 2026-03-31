@@ -1,9 +1,8 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import classNames from 'classnames';
+import { models } from 'insomnia-data';
 import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
-
-import { models } from '~/insomnia-data';
 
 import { scrollElementIntoView } from '../../../utils';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';

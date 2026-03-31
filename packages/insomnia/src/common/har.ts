@@ -1,7 +1,5 @@
 import clone from 'clone';
 import type * as Har from 'har-format';
-import { Cookie as ToughCookie } from 'tough-cookie';
-
 import {
   type BaseModel,
   models,
@@ -10,7 +8,8 @@ import {
   type Response,
   services,
   type Workspace,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import { Cookie as ToughCookie } from 'tough-cookie';
 
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';

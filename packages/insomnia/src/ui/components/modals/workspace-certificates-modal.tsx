@@ -1,3 +1,5 @@
+import type { CaCertificate } from 'insomnia-data';
+import { type ClientCertificate } from 'insomnia-data';
 import React, { Fragment, type ReactNode, useEffect, useId, useState } from 'react';
 import {
   Button,
@@ -18,8 +20,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { CaCertificate } from '~/insomnia-data';
-import { type ClientCertificate } from '~/insomnia-data';
 import { useCaCertDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.delete';
 import { useCACertNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.new';
 import { useCACertUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.update';

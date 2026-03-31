@@ -1,7 +1,7 @@
+import { models, services, type Workspace } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
-import { models, services, type Workspace } from '~/insomnia-data';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,

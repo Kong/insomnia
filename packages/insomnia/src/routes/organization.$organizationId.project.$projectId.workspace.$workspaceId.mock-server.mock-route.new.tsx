@@ -1,6 +1,6 @@
+import { type MockRoute,services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import { type MockRoute,services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';

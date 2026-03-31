@@ -1,6 +1,5 @@
+import { deconstructQueryStringToParams } from 'insomnia-data/common';
 import { describe, expect, it } from 'vitest';
-
-import { deconstructQueryStringToParams } from '~/insomnia-data/common';
 
 import {
   buildQueryParameter,

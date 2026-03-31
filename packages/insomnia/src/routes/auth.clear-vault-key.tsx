@@ -1,8 +1,8 @@
 import electron from 'electron';
 import { getVault } from 'insomnia-api';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.clear-vault-key';

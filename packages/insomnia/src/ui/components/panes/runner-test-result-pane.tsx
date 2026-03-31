@@ -1,7 +1,6 @@
+import { type BaseRunnerTestResult, type RunnerResultPerRequest } from 'insomnia-data';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
-
-import { type BaseRunnerTestResult, type RunnerResultPerRequest } from '~/insomnia-data';
 
 import { RequestTestResultRows } from './request-test-result-pane';
 

@@ -19,14 +19,13 @@ import {
 } from '@getinsomnia/node-libcurl';
 import { isValid } from 'date-fns';
 import electron from 'electron';
-import { v4 as uuidv4 } from 'uuid';
-
 import {
   type ClientCertificate,
   type RequestHeader,
   type ResponseHeader,
   type ResponseTimelineEntry,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';

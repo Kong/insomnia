@@ -2,11 +2,11 @@ import './ui/renderer-listeners';
 import './ui/log';
 
 import { configureFetch } from 'insomnia-api';
+import { initDatabase, initServices, services } from 'insomnia-data';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
-import { initDatabase, initServices, services } from '~/insomnia-data';
 import { database as clientDatabase } from '~/ui/database.client';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 

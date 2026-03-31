@@ -1,8 +1,4 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useCallback, useState } from 'react';
-import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
-import { useParams } from 'react-router';
-
 import {
   type Environment,
   type GrpcRequest,
@@ -12,8 +8,12 @@ import {
   services,
   type SocketIORequest,
   type WebSocketRequest,
-} from '~/insomnia-data';
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
+} from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
+import React, { Fragment, useCallback, useState } from 'react';
+import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
+import { useParams } from 'react-router';
+
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';

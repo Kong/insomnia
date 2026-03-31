@@ -2,11 +2,6 @@ import { createWriteStream } from 'node:fs';
 import path from 'node:path';
 
 import contentDisposition from 'content-disposition';
-import { extension as mimeExtension } from 'mime-types';
-import { href, redirect } from 'react-router';
-import { v4 as uuidv4 } from 'uuid';
-
-import { getContentDispositionHeader } from '~/common/misc';
 import {
   type Environment,
   models,
@@ -16,7 +11,12 @@ import {
   type RunnerResultPerRequestPerIteration,
   services,
   type UserUploadEnvironment,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import { extension as mimeExtension } from 'mime-types';
+import { href, redirect } from 'react-router';
+import { v4 as uuidv4 } from 'uuid';
+
+import { getContentDispositionHeader } from '~/common/misc';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import {

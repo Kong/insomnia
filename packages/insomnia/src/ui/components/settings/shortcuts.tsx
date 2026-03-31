@@ -1,14 +1,14 @@
-import React, { type FC } from 'react';
-import { Button } from 'react-aria-components';
-
-import type { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '~/insomnia-data/common';
+import type { HotKeyRegistry, KeyboardShortcut, KeyCombination } from 'insomnia-data/common';
 import {
   areSameKeyCombinations,
   constructKeyCombinationDisplay,
   getPlatformKeyCombinations,
   keyboardShortcutDescriptions,
   newDefaultRegistry,
-} from '~/insomnia-data/common';
+} from 'insomnia-data/common';
+import React, { type FC } from 'react';
+import { Button } from 'react-aria-components';
+
 import { useRootLoaderData } from '~/root';
 
 import { generateId } from '../../../common/misc';

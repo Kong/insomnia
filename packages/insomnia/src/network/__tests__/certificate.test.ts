@@ -1,6 +1,5 @@
+import type { ClientCertificate } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import type { ClientCertificate } from '~/insomnia-data';
 
 import { filterClientCertificates } from '../certificate';
 

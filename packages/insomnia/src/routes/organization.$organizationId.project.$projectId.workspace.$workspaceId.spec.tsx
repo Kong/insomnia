@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
+import { models, services } from 'insomnia-data';
 import type { OpenAPIV3 } from 'openapi-types';
 import { Fragment, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -30,7 +31,6 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
-import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';

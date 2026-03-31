@@ -3,7 +3,6 @@ import nodePath from 'node:path';
 
 import type { Consola } from 'consola';
 import { pick } from 'es-toolkit';
-
 import type {
   Environment,
   Request,
@@ -12,7 +11,8 @@ import type {
   RequestTestResult,
   UserUploadEnvironment,
   Workspace,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+
 import { typedKeys } from '~/utils';
 
 interface RunReportExecution {

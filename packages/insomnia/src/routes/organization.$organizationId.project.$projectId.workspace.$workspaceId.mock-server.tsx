@@ -1,4 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import { type MockRoute,services } from 'insomnia-data';
 import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
@@ -24,7 +25,6 @@ import {
 } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { type MockRoute,services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockRouteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';

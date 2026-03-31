@@ -1,4 +1,4 @@
-import { type BaseModel, models, type Workspace } from '~/insomnia-data';
+import { type BaseModel, models, type Workspace } from 'insomnia-data';
 
 // Key for VCS to delete before computing changes
 const DELETE_KEY: keyof BaseModel = 'modified';

@@ -1,6 +1,6 @@
 import { format as urlFormat, parse as urlParse } from 'node:url';
 
-import { deconstructQueryStringToParams, type StrictNullSearchParamsValueType } from '~/insomnia-data/common';
+import { deconstructQueryStringToParams, type StrictNullSearchParamsValueType } from 'insomnia-data/common';
 
 import { setDefaultProtocol } from './protocol';
 

@@ -1,10 +1,10 @@
 import { createTeamProject, isApiError, updateGitProjectCount } from 'insomnia-api';
+import { models, type Project,services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
-import { models, type Project,services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { invariant } from '~/utils/invariant';

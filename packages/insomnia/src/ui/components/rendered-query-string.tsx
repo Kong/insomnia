@@ -1,7 +1,4 @@
 import classNames from 'classnames';
-import { type FC, useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-aria-components';
-
 import {
   models,
   type Request,
@@ -10,7 +7,10 @@ import {
   type RequestParameter,
   type SocketIORequest,
   type WebSocketRequest,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import { type FC, useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-aria-components';
+
 import { SegmentEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 

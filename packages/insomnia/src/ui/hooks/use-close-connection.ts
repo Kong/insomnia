@@ -1,6 +1,5 @@
+import { models, services } from 'insomnia-data';
 import { useCallback, useEffect } from 'react';
-
-import { models, services } from '~/insomnia-data';
 
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import uiEventBus from '../event-bus';

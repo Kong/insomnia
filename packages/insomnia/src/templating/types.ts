@@ -1,7 +1,5 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 
-import type { Cookie } from 'tough-cookie';
-
 import type {
   CloudProviderCredential,
   CookieJar,
@@ -18,7 +16,8 @@ import type {
   UserUploadEnvironment,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import type { Cookie } from 'tough-cookie';
 
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PluginStore } from '../plugins/context/store';

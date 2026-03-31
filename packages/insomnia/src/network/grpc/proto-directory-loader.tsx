@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { models, type ProtoDirectory,services } from '~/insomnia-data';
+import { models, type ProtoDirectory,services } from 'insomnia-data';
 
 import { insecureReadFile } from '../../main/secure-read-file';
 

@@ -1,7 +1,7 @@
+import { type EnvironmentKvPairData, type EnvironmentType, models, type Settings } from 'insomnia-data';
 import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 
-import { type EnvironmentKvPairData, type EnvironmentType, models, type Settings } from '~/insomnia-data';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
 import { getDataFromKVPair } from '~/utils/environment-utils';
 

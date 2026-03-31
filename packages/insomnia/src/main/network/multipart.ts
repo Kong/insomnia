@@ -6,9 +6,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { type RequestBodyParameter } from 'insomnia-data';
 import { lookup } from 'mime-types';
-
-import { type RequestBodyParameter } from '~/insomnia-data';
 
 export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
 

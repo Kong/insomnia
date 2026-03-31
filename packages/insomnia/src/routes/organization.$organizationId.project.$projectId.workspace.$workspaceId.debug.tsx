@@ -1,6 +1,19 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import {
+  type Environment,
+  type GrpcRequest,
+  models,
+  type Project,
+  type Request,
+  type RequestGroup,
+  services,
+  type SocketIORequest,
+  type WebSocketRequest,
+  type Workspace,
+} from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Breadcrumb,
@@ -43,19 +56,6 @@ import { useLocalStorage } from 'react-use';
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
-import {
-  type Environment,
-  type GrpcRequest,
-  models,
-  type Project,
-  type Request,
-  type RequestGroup,
-  services,
-  type SocketIORequest,
-  type WebSocketRequest,
-  type Workspace,
-} from '~/insomnia-data';
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import { useRootLoaderData } from '~/root';
 import {

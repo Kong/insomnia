@@ -1,8 +1,8 @@
 import type { Organization } from 'insomnia-api';
+import { models, type Project, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import { models, type Project, services } from '~/insomnia-data';
 import { migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 import { AsyncTask, createFetcherSubmitHook } from '~/utils/router';

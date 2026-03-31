@@ -1,6 +1,6 @@
+import { database, models, type Organization, type Project, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { database, models, type Organization, type Project, services } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 export async function clientLoader() {

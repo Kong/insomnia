@@ -1,10 +1,10 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { McpRequest, McpServerPrimitiveTypes } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 
 import type { McpServerData } from '~/common/mcp-utils';
-import type { McpRequest, McpServerPrimitiveTypes } from '~/insomnia-data';
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 
 import { Icon } from '../icon';
 import type { PrimitiveTypeItem } from '../mcp/types';

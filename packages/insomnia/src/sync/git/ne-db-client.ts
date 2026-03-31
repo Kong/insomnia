@@ -15,10 +15,9 @@
 
 import path from 'node:path';
 
+import { type BaseModel,models } from 'insomnia-data';
 import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
-
-import { type BaseModel,models } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import { resetKeys } from '../ignore-keys';

@@ -7,8 +7,6 @@ import electron, { app, BrowserWindow, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
-
-import { getCurrentSessionId } from '~/account/session';
 import {
   database,
   initDatabase,
@@ -18,9 +16,11 @@ import {
   type RemoteProject,
   services,
   type Stats,
-} from '~/insomnia-data';
-import { isMac } from '~/insomnia-data/common';
-import { servicesNodeImpl } from '~/insomnia-data/node';
+} from 'insomnia-data';
+import { isMac } from 'insomnia-data/common';
+import { servicesNodeImpl } from 'insomnia-data/node';
+
+import { getCurrentSessionId } from '~/account/session';
 import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';

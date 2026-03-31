@@ -2,8 +2,6 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import clone from 'clone';
-import orderedJSON from 'json-order';
-
 import {
   type BaseRequest,
   type CaCertificate,
@@ -28,8 +26,10 @@ import {
   type UserUploadEnvironment,
   type WebSocketRequest,
   type Workspace,
-} from '~/insomnia-data';
-import { serializeNDJSON } from '~/insomnia-data/common';
+} from 'insomnia-data';
+import { serializeNDJSON } from 'insomnia-data/common';
+import orderedJSON from 'json-order';
+
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type { ExecutionOption, RequestContext } from '../../../insomnia-scripting-environment/src/objects';

@@ -1,7 +1,7 @@
+import { isWindows } from 'insomnia-data/common';
 import orderedJSON from 'json-order';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
-import { isWindows } from '~/insomnia-data/common';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { checkNestedKeys } from '~/utils/environment-utils';
 

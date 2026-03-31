@@ -15,9 +15,9 @@ import {
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
+import { type Services, services } from 'insomnia-data';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
-import { type Services, services } from '~/insomnia-data';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';

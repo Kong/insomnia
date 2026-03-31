@@ -1,9 +1,9 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
+import { type GitRepository, models, type Project } from 'insomnia-data';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
 
-import { type GitRepository, models, type Project } from '~/insomnia-data';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 
 import { Icon } from '../icon';

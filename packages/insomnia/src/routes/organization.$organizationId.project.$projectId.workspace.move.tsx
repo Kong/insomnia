@@ -1,8 +1,8 @@
+import { models, type Project,services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
-import { models, type Project,services } from '~/insomnia-data';
 import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';

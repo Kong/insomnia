@@ -1,9 +1,9 @@
 import type { StorageRules } from 'insomnia-api';
+import { type GitRepository, models, type Project } from 'insomnia-data';
 import { Button, GridList, GridListItem, Heading, Input, SearchField } from 'react-aria-components';
 import { useNavigate } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { type GitRepository, models, type Project } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 
 import { AvatarGroup } from '../avatar';

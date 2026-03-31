@@ -1,9 +1,9 @@
 import { createTeamProject, deleteTeamProject, isApiError, updateTeamProject } from 'insomnia-api';
+import { models, services, type WorkspaceMeta } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
-import { models, services, type WorkspaceMeta } from '~/insomnia-data';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';

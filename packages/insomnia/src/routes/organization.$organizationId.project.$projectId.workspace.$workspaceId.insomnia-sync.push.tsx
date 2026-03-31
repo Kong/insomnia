@@ -1,6 +1,6 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { remoteCompareCache, vcsSegmentEventProperties } from '~/ui/sync-utils';

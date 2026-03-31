@@ -1,4 +1,5 @@
 import type { StorageRules } from 'insomnia-api';
+import { type GitCredentials, type GitRepository, models, type Project, type ProviderEmail } from 'insomnia-data';
 import type { FC } from 'react';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
@@ -17,7 +18,6 @@ import { useParams } from 'react-router';
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
-import { type GitCredentials, type GitRepository, models, type Project, type ProviderEmail } from '~/insomnia-data';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';

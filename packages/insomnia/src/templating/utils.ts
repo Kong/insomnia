@@ -1,6 +1,6 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
+import { models, services } from 'insomnia-data';
 
-import { models, services } from '~/insomnia-data';
 import { decryptSecretValue, decryptVaultKeyFromSession } from '~/utils/vault';
 
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';

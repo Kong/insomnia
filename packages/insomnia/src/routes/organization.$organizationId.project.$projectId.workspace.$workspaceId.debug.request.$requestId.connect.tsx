@@ -1,9 +1,9 @@
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
+import { type McpTransportType, models, services } from 'insomnia-data';
+import { type CookieJar, type RequestAuthentication, type RequestHeader } from 'insomnia-data';
 import { href } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
-import { type McpTransportType, models, services } from '~/insomnia-data';
-import { type CookieJar, type RequestAuthentication, type RequestHeader } from '~/insomnia-data';
 import { getAuthHeader } from '~/network/authentication';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';

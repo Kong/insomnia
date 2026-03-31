@@ -1,6 +1,5 @@
 import { session } from 'electron/main';
-
-import { models, services } from '~/insomnia-data';
+import { models, services } from 'insomnia-data';
 
 import { type ChangeBufferEvent, database as db } from '../common/database';
 import { setDefaultProtocol } from '../utils/url/protocol';

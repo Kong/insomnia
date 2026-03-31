@@ -11,7 +11,7 @@
     "sourceMap": true,
     "baseUrl": ".",
     "rootDirs": ["."],
-    "lib": ["ES2023", "DOM"],
+    "lib": ["ES2023", "WebWorker"],
     "types": [],
     "strict": true,
     "noImplicitReturns": true,

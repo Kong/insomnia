@@ -1,9 +1,8 @@
 import path from 'node:path';
 
+import { models, services, type Workspace, type WorkspaceMeta } from 'insomnia-data';
 import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
-
-import { models, services, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
 
 import { database, database as db } from '../../common/database';
 import { extractErrorMessages } from '../../common/import';

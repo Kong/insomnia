@@ -1,8 +1,7 @@
 import type { Organization } from 'insomnia-api';
+import { models, type Project, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
-
-import { models, type Project, services } from '~/insomnia-data';
 
 import { database } from '../common/database';
 export const enum AsyncTask {

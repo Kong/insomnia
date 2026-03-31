@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
+import type { Services } from 'insomnia-data';
 
-import type { Services } from '~/insomnia-data';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 

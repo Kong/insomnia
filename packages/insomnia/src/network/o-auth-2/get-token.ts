@@ -1,8 +1,6 @@
 import crypto from 'node:crypto';
 import querystring from 'node:querystring';
 
-import { v4 as uuidv4 } from 'uuid';
-
 import {
   type AuthTypeOAuth2,
   models,
@@ -14,7 +12,9 @@ import {
   type RequestParameter,
   type Response,
   services,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import { v4 as uuidv4 } from 'uuid';
+
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
 import { version } from '../../../package.json';

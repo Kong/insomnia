@@ -27,9 +27,8 @@ import type {
 import * as protoLoader from '@grpc/proto-loader';
 import electron, { type IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
-
-import { services } from '~/insomnia-data';
-import { type GrpcRequest, type GrpcRequestBody, type GrpcRequestHeader } from '~/insomnia-data';
+import { services } from 'insomnia-data';
+import { type GrpcRequest, type GrpcRequestBody, type GrpcRequestHeader } from 'insomnia-data';
 
 import { version } from '../../../package.json';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';

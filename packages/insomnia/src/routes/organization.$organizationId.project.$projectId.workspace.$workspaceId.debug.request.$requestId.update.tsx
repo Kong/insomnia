@@ -1,6 +1,6 @@
+import { models, services, type WebSocketRequest } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { models, services, type WebSocketRequest } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { updateMimeType } from '~/ui/components/dropdowns/content-type-dropdown';
 import { invariant } from '~/utils/invariant';

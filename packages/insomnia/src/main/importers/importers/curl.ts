@@ -1,8 +1,7 @@
 import { URL } from 'node:url';
 
+import { type RequestAuthentication } from 'insomnia-data';
 import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
-
-import { type RequestAuthentication } from '~/insomnia-data';
 
 import { type Converter, type ImportRequest, type Parameter } from '../entities';
 

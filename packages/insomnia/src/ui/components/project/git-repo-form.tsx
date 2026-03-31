@@ -1,3 +1,4 @@
+import { type GitCredentials,models } from 'insomnia-data';
 import { type FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
@@ -12,7 +13,6 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import { type GitCredentials,models } from '~/insomnia-data';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import type { GitProviderOption, ProviderEmail } from '~/sync/git/providers/types';

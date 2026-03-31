@@ -1,6 +1,6 @@
+import { models, type Project, services, type Workspace } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import { models, type Project, services, type Workspace } from '~/insomnia-data';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';

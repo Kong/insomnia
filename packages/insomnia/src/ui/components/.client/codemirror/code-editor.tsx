@@ -11,6 +11,7 @@ import CodeMirror, {
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
+import { isMac, type KeyCombination } from 'insomnia-data/common';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-aria-components';
@@ -19,7 +20,6 @@ import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import { isMac, type KeyCombination } from '~/insomnia-data/common';
 import { getTemplateTags } from '~/plugins';
 import { useRootLoaderData } from '~/root';
 import { getTagDefinitions } from '~/templating/index';

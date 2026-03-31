@@ -1,4 +1,4 @@
-import { models, type Project, type RemoteProject,services } from '~/insomnia-data';
+import { models, type Project, type RemoteProject,services } from 'insomnia-data';
 
 import { database } from '../../common/database';
 

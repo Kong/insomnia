@@ -1,4 +1,5 @@
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
+
 import { syncOrganizations } from '~/ui/organization-utils';
 import { createFetcherSubmitHook } from '~/utils/router';
 

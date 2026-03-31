@@ -1,6 +1,4 @@
-import { useParams } from 'react-router';
-
-import type { McpPayload, McpRequest, Settings } from '~/insomnia-data';
+import type { McpPayload, McpRequest, Settings } from 'insomnia-data';
 import {
   type GrpcRequest,
   type GrpcRequestMeta,
@@ -12,7 +10,9 @@ import {
   type SocketIORequest,
   type WebSocketRequest,
   type WorkspaceMeta,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import { useParams } from 'react-router';
+
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 import { useRequestUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-meta';
 import { useRequestUpdatePayloadActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';

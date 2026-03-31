@@ -1,6 +1,6 @@
+import { type Environment, type EnvironmentKvPairData, EnvironmentType } from 'insomnia-data';
 import { useCallback } from 'react';
 
-import { type Environment, type EnvironmentKvPairData, EnvironmentType } from '~/insomnia-data';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';

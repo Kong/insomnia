@@ -1,10 +1,10 @@
+import { models, type Request, type RequestGroup, services } from 'insomnia-data';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
-import { models, type Request, type RequestGroup, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,

@@ -1,12 +1,11 @@
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
-
 import type {
   ClientCertificate,
   CookieJar as InsomniaCookieJar,
   Request,
   RequestTestResult,
   Settings,
-} from '~/insomnia-data';
+} from 'insomnia-data';
 
 import type { ExecutionOption } from './execution';
 import type { RequestInfoOption } from './request-info';

@@ -11,12 +11,7 @@ import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import { insomniaFetch } from 'insomnia/src/ui/insomnia-fetch';
 import { configureFetch } from 'insomnia-api';
-import { generate, runTestsCli } from 'insomnia-testing';
-import orderedJSON from 'json-order';
-import { parseArgsStringToArgv } from 'string-argv';
-import { v4 as uuidv4 } from 'uuid';
-
-import type { RequestTestResult } from '~/insomnia-data';
+import type { RequestTestResult } from 'insomnia-data';
 import {
   type Environment,
   initServices,
@@ -25,9 +20,13 @@ import {
   type RequestGroup,
   type UserUploadEnvironment,
   type Workspace,
-} from '~/insomnia-data';
-import { deserializeNDJSON } from '~/insomnia-data/common';
-import { servicesNodeImpl } from '~/insomnia-data/node';
+} from 'insomnia-data';
+import { deserializeNDJSON } from 'insomnia-data/common';
+import { servicesNodeImpl } from 'insomnia-data/node';
+import { generate, runTestsCli } from 'insomnia-testing';
+import orderedJSON from 'json-order';
+import { parseArgsStringToArgv } from 'string-argv';
+import { v4 as uuidv4 } from 'uuid';
 
 import packageJson from '../package.json';
 import { flushAnalytics, InsoEvent, trackInsoEvent } from './analytics';

@@ -1,9 +1,5 @@
 import type { Organization } from 'insomnia-api';
-import { useCallback, useEffect, useMemo } from 'react';
-import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'react-router';
-
-import { database } from '~/common/database';
-import { type McpRequest, models, services } from '~/insomnia-data';
+import { type McpRequest, models, services } from 'insomnia-data';
 import {
   type GrpcRequest,
   type MockRoute,
@@ -15,7 +11,11 @@ import {
   type UnitTestSuite,
   type WebSocketRequest,
   type Workspace,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import { useCallback, useEffect, useMemo } from 'react';
+import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'react-router';
+
+import { database } from '~/common/database';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 

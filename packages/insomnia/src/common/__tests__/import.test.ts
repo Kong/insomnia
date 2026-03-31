@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { models, services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import { models, services } from '~/insomnia-data';
 
 import * as importUtil from '../import';
 import { generateId } from '../misc';

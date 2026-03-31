@@ -1,6 +1,6 @@
-import { services } from '~/insomnia-data';
+import { type AESMessage, services } from 'insomnia-data';
 
-import { type AESMessage, decryptAES, encryptAES } from '../account/crypt';
+import { decryptAES, encryptAES } from '../account/crypt';
 import { getInsomniaVaultKey, PLAYWRIGHT } from '../common/constants';
 
 export const base64encode = (input: string | JsonWebKey) => {

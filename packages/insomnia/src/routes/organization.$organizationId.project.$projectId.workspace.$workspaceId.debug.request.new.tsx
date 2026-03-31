@@ -1,3 +1,5 @@
+import { services } from 'insomnia-data';
+import { type Request, type RequestBody, type RequestParameter } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import {
@@ -8,8 +10,6 @@ import {
   METHOD_GET,
   METHOD_POST,
 } from '~/common/constants';
-import { services } from '~/insomnia-data';
-import { type Request, type RequestBody, type RequestParameter } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { invariant } from '~/utils/invariant';

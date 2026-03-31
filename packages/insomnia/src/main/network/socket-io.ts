@@ -5,18 +5,18 @@ import tls from 'node:tls';
 import electron, { BrowserWindow } from 'electron';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
-import { v4 as uuidV4 } from 'uuid';
-
-import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
 import {
   type BaseSocketIORequest,
   type CookieJar,
   type RequestAuthentication,
   type RequestHeader,
   type SocketIOResponse,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
+import { v4 as uuidV4 } from 'uuid';
+
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';

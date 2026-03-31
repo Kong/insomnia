@@ -1,6 +1,5 @@
 import { logout as logoutAPI, whoami } from 'insomnia-api';
-
-import { type GitRepository, models, type Project, services, type WorkspaceMeta } from '~/insomnia-data';
+import { type AESMessage, type GitRepository, models, type Project, services, type WorkspaceMeta } from 'insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
@@ -14,7 +13,7 @@ export interface SessionData {
   lastName: string;
   symmetricKey: JsonWebKey;
   publicKey: JsonWebKey;
-  encPrivateKey: crypt.AESMessage;
+  encPrivateKey: AESMessage;
 }
 
 /** Creates a session from a sessionId and derived symmetric key. */
@@ -100,7 +99,7 @@ export async function setSessionData(
   email: string,
   symmetricKey: JsonWebKey,
   publicKey: JsonWebKey,
-  encPrivateKey: crypt.AESMessage,
+  encPrivateKey: AESMessage,
 ) {
   const sessionData: SessionData = {
     id,
@@ -145,7 +144,7 @@ async function _unsetSessionData() {
     lastName: '',
     symmetricKey: {} as JsonWebKey,
     publicKey: {} as JsonWebKey,
-    encPrivateKey: {} as crypt.AESMessage,
+    encPrivateKey: {} as AESMessage,
     vaultSalt: '',
     vaultKey: '',
   });

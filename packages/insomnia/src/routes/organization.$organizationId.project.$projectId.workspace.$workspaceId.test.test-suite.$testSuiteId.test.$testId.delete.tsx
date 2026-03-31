@@ -1,7 +1,7 @@
+import { models, services, type UnitTest } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import { models, services, type UnitTest } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';

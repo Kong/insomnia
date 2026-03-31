@@ -1,8 +1,7 @@
 import * as protoLoader from '@grpc/proto-loader';
+import { models, type ProtoDirectory, type ProtoFile,services } from 'insomnia-data';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
-
-import { models, type ProtoDirectory, type ProtoFile,services } from '~/insomnia-data';
 
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';

@@ -1,4 +1,4 @@
-import { type BaseModel, models, type Project, services, type Workspace } from '~/insomnia-data';
+import { type BaseModel, models, type Project, services, type Workspace } from 'insomnia-data';
 
 import { database } from '../../common/database';
 import type { StatusCandidate } from '../types';

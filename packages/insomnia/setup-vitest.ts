@@ -1,7 +1,6 @@
+import { initDatabase, initServices } from 'insomnia-data';
+import { servicesNodeImpl } from 'insomnia-data/node';
 import { vi } from 'vitest';
-
-import { initDatabase, initServices } from '~/insomnia-data';
-import { servicesNodeImpl } from '~/insomnia-data/node';
 
 import { nodeLibcurlMock } from './src/__mocks__/@getinsomnia/node-libcurl';
 import { electronMock } from './src/__mocks__/electron';

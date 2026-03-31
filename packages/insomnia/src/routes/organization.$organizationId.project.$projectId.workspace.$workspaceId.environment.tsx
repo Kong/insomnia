@@ -1,4 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import { type Environment, type EnvironmentKvPairData, type EnvironmentType, models, services } from 'insomnia-data';
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Breadcrumb,
@@ -22,7 +23,6 @@ import { NavLink } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
-import { type Environment, type EnvironmentKvPairData, type EnvironmentType, models, services } from '~/insomnia-data';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';

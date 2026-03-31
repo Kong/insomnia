@@ -1,4 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import { type Environment, type EnvironmentKvPairData, type EnvironmentType, models } from 'insomnia-data';
 import React, { Fragment, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -20,7 +21,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { type Environment, type EnvironmentKvPairData, type EnvironmentType, models } from '~/insomnia-data';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';

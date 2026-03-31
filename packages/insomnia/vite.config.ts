@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
@@ -73,23 +73,127 @@ export default defineConfig(({ mode }) => {
 let totalWarnings = 0;
 function DetectNodeBuiltinImports() {
   const builtins = new Set(builtinModules);
+  const importersByModule = new Map<string, Set<string>>();
+  const scriptExtensions = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.mts', '.cts']);
 
-  return {
-    name: 'detect-node-builtin-imports',
+  const normalizeId = (id: string) => id.replace(/^\/@@fs\//, '/').replace(/\?.*$/, '');
+  const shouldTrack = (id: string) =>
+    !id.includes('node_modules') && !id.startsWith('\0') && !id.startsWith('virtual:');
+  const isScriptModule = (id: string) => scriptExtensions.has(path.extname(id));
+  const isBuiltinImport = (source: string) =>
+    builtins.has(source) ||
+    builtins.has(source.replace(/^node:/, '')) ||
+    builtins.has(source.replace('virtual:external:node:', ''));
+  const displayPath = (id: string) => {
+    const normalizedId = normalizeId(id);
+    return path.isAbsolute(normalizedId) ? path.relative(process.cwd(), normalizedId) : normalizedId;
+  };
+  const recordImporter = (moduleId: string, importerId: string) => {
+    const trackedImporters = importersByModule.get(moduleId) ?? new Set<string>();
+    trackedImporters.add(importerId);
+    importersByModule.set(moduleId, trackedImporters);
+  };
+  const buildImportChain = (moduleId: string) => {
+    const chain = [moduleId];
+    const seen = new Set(chain);
+    let current = moduleId;
 
-    resolveId(source: string, importer: string | undefined) {
-      // Ignore node_modules and virtual imports
-      if (!importer) return null;
-      if (importer.includes('node_modules')) return null;
+    while (true) {
+      const importers = importersByModule.get(current);
+      const nextImporter = importers ? [...importers].find(importer => !seen.has(importer)) : undefined;
 
-      // If the import target is a Node builtin module
-      if (builtins.has(source) || builtins.has(source.replace('virtual:external:node:', ''))) {
-        const file = path.relative(process.cwd(), importer);
-        totalWarnings += 1;
-        console.warn(`⚠️  ${totalWarnings} File "${file}" imports Node builtin module "${source}"`);
+      if (!nextImporter) {
+        break;
       }
 
-      return null; // Let Vite handle the actual resolution
+      chain.unshift(nextImporter);
+      seen.add(nextImporter);
+      current = nextImporter;
+    }
+
+    return chain.map(displayPath).join(' -> ');
+  };
+
+  const plugin: Plugin = {
+    name: 'detect-node-builtin-imports',
+
+    async transform(code: string, id: string) {
+      const normalizedId = normalizeId(id);
+
+      if (!shouldTrack(normalizedId) || !isScriptModule(normalizedId)) {
+        return null;
+      }
+
+      let parsed: { body?: unknown[] };
+
+      try {
+        parsed = this.parse(code) as unknown as { body?: unknown[] };
+      } catch {
+        return null;
+      }
+
+      const importSources = new Set<string>();
+      const visitNode = (node: unknown): void => {
+        if (!node || typeof node !== 'object') {
+          return;
+        }
+
+        const candidate = node as {
+          type?: string;
+          source?: { value?: unknown };
+          body?: unknown[];
+        };
+
+        if (
+          (candidate.type === 'ImportDeclaration' ||
+            candidate.type === 'ExportAllDeclaration' ||
+            candidate.type === 'ExportNamedDeclaration') &&
+          typeof candidate.source?.value === 'string'
+        ) {
+          importSources.add(candidate.source.value);
+        }
+
+        if (candidate.type === 'ImportExpression' && typeof candidate.source?.value === 'string') {
+          importSources.add(candidate.source.value);
+        }
+
+        for (const value of Object.values(candidate)) {
+          if (Array.isArray(value)) {
+            for (const child of value) {
+              visitNode(child);
+            }
+          } else {
+            visitNode(value);
+          }
+        }
+      };
+
+      for (const node of parsed.body ?? []) {
+        visitNode(node);
+      }
+
+      for (const source of importSources) {
+        if (isBuiltinImport(source)) {
+          const file = displayPath(normalizedId);
+          const importChain = buildImportChain(normalizedId);
+          totalWarnings += 1;
+          console.warn(
+            `⚠️  ${totalWarnings} File "${file}" imports Node builtin module "${source}" via "${importChain}"`,
+          );
+          continue;
+        }
+
+        const resolution = await this.resolve(source, id, { skipSelf: true });
+        const resolvedId = resolution?.id ? normalizeId(resolution.id) : null;
+
+        if (resolvedId && shouldTrack(resolvedId)) {
+          recordImporter(resolvedId, normalizedId);
+        }
+      }
+
+      return null;
     },
   };
+
+  return plugin;
 }

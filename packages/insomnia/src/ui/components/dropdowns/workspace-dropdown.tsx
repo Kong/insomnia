@@ -4,6 +4,8 @@ import {
   exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
+import { models, type Workspace } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -21,8 +23,6 @@ import {
 } from 'react-aria-components';
 import { href, useNavigate, useParams } from 'react-router';
 
-import { models, type Workspace } from '~/insomnia-data';
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 

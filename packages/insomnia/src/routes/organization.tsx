@@ -1,4 +1,5 @@
 import { type Billing, type CurrentPlan, type FeatureList, type Organization, type UserProfile } from 'insomnia-api';
+import { models, services, type Settings } from 'insomnia-data';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -15,7 +16,6 @@ import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoa
 import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import { models, services, type Settings } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';

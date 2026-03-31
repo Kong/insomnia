@@ -1,4 +1,11 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import {
+  type GitCredentials,
+  type GitCredentialsV2,
+  type GitRemoteProviderType,
+  models,
+  type ProviderEmail,
+} from 'insomnia-data';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -21,13 +28,6 @@ import {
 
 import { Button as BasicButton } from '~/basic-components/button';
 import { Icon } from '~/basic-components/icon';
-import {
-  type GitCredentials,
-  type GitCredentialsV2,
-  type GitRemoteProviderType,
-  models,
-  type ProviderEmail,
-} from '~/insomnia-data';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
 import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-credentials.$id.related-projects';

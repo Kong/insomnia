@@ -1,8 +1,7 @@
+import type { McpRequest } from 'insomnia-data';
+import { type GrpcRequest, type Request, type SocketIORequest, type WebSocketRequest } from 'insomnia-data';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-
-import type { McpRequest } from '~/insomnia-data';
-import { type GrpcRequest, type Request, type SocketIORequest, type WebSocketRequest } from '~/insomnia-data';
 
 import { docsTemplateTags } from '../../../common/documentation';
 import type { RenderError } from '../../../templating/render-error';

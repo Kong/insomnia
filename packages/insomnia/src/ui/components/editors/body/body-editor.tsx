@@ -1,11 +1,10 @@
 import clone from 'clone';
+import { models, type Request, type RequestBodyParameter } from 'insomnia-data';
+import { getContentTypeFromHeaders } from 'insomnia-data/common';
 import { lookup } from 'mime-types';
 import React, { type FC, useCallback } from 'react';
 import { Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router';
-
-import { models, type Request, type RequestBodyParameter } from '~/insomnia-data';
-import { getContentTypeFromHeaders } from '~/insomnia-data/common';
 
 import {
   CONTENT_TYPE_FILE,

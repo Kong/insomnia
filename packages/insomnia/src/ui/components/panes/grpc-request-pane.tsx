@@ -1,10 +1,10 @@
+import { models,services } from 'insomnia-data';
+import { type GrpcRequest, type GrpcRequestHeader,  type RequestGroup } from 'insomnia-data';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { models,services } from '~/insomnia-data';
-import { type GrpcRequest, type GrpcRequestHeader,  type RequestGroup } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';

@@ -1,7 +1,6 @@
+import { type ProtoDirectory, type ProtoFile } from 'insomnia-data';
 import React, { type FunctionComponent } from 'react';
 import { Checkbox } from 'react-aria-components';
-
-import { type ProtoDirectory, type ProtoFile } from '~/insomnia-data';
 
 import { Button } from '../themed-button';
 

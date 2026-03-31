@@ -1,4 +1,4 @@
-import type { RequestTestResult } from '~/insomnia-data';
+import type { RequestTestResult } from 'insomnia-data';
 
 /** @ignore */
 export async function test(msg: string, fn: () => Promise<void>, log: (testResult: RequestTestResult) => void) {

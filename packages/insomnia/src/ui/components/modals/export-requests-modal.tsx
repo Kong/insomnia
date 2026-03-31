@@ -1,9 +1,8 @@
 import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
+import { type GrpcRequest, models, type Request, type RequestGroup, type SocketIORequest, type WebSocketRequest } from 'insomnia-data';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useParams } from 'react-router';
-
-import { type GrpcRequest, models, type Request, type RequestGroup, type SocketIORequest, type WebSocketRequest } from '~/insomnia-data';
 
 import {
   type Child,

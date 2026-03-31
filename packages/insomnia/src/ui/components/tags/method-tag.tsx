@@ -1,7 +1,6 @@
+import { type McpRequest, models } from 'insomnia-data';
+import { type GrpcRequest, type Request, type SocketIORequest, type WebSocketRequest } from 'insomnia-data';
 import React, { type FC, memo } from 'react';
-
-import { type McpRequest, models } from '~/insomnia-data';
-import { type GrpcRequest, type Request, type SocketIORequest, type WebSocketRequest } from '~/insomnia-data';
 
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
 

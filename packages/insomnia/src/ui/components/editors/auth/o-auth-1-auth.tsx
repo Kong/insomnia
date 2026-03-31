@@ -1,6 +1,5 @@
+import { type AuthTypeOAuth1 } from 'insomnia-data';
 import React, { type FC } from 'react';
-
-import { type AuthTypeOAuth1 } from '~/insomnia-data';
 
 import {
   type OAuth1SignatureMethod,

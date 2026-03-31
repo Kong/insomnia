@@ -17,10 +17,10 @@ import path from 'node:path';
 
 import { app } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
+import { type BaseModel, type GitRemoteProviderType, type GitRepository, models, services, type WorkspaceScope } from 'insomnia-data';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import { type BaseModel, type GitRemoteProviderType, type GitRepository, models, services, type WorkspaceScope } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,

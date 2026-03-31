@@ -1,4 +1,4 @@
-import { type GrpcRequest, models, type Request, type RequestGroup } from '~/insomnia-data';
+import { type GrpcRequest, models, type Request, type RequestGroup } from 'insomnia-data';
 
 import { type DashboardSortOrder, HTTP_METHODS, type SortOrder } from './constants';
 

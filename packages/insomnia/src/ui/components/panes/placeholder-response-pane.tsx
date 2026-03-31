@@ -1,6 +1,6 @@
+import { type KeyboardShortcut, keyboardShortcutDescriptions } from 'insomnia-data/common';
 import React, { type FC, type PropsWithChildren } from 'react';
 
-import { type KeyboardShortcut, keyboardShortcutDescriptions } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 
 import { Hotkey } from '../hotkey';

@@ -1,3 +1,5 @@
+import { models } from 'insomnia-data';
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from 'insomnia-data/common';
 import React, { memo, useEffect, useRef } from 'react';
 import { useState } from 'react';
 import {
@@ -21,8 +23,6 @@ import {
 import { useNavigate, useParams } from 'react-router';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { models } from '~/insomnia-data';
-import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { useCommandsLoaderFetcher } from '~/routes/commands';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';

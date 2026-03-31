@@ -1,6 +1,5 @@
+import { type Response, type ResponseTimelineEntry, services } from 'insomnia-data';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-
-import { type Response, type ResponseTimelineEntry, services } from '~/insomnia-data';
 
 import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
