@@ -1,14 +1,15 @@
 import {
-  createTeamProject, 
+  createTeamProject,
   fetchTeamProjects,
   getCurrentPlan,
   getOrganizations,
   getOrganizationStorageRule,
-  getUserProfile,isApiError,
+  getUserProfile,
+  isApiError,
   type Organization,
   type StorageRules,
 } from 'insomnia-api';
-import {  database,models, type Project,services, type Workspace } from 'insomnia-data';
+import { database, models, type Project, services, type Workspace } from 'insomnia-data';
 
 import { projectLock } from '~/common/project';
 import {
@@ -89,7 +90,6 @@ async function updateLocalProjectToRemote({
     error: null,
   };
 }
-
 
 // Create an in-memory storage to store the storage rules
 const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();

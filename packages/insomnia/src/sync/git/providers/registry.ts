@@ -2,7 +2,6 @@ import type { GitProviderOption, GitRemoteProvider, GitRemoteProviderType, Valid
 
 // Re-export types from git-credentials model for convenience
 export type { GitCredentials as GitCredentialData, GitRemoteProviderType, ProviderEmail } from 'insomnia-data';
-
 export class GitRemoteProviderRegistry {
   private providers = new Map<GitRemoteProviderType, GitRemoteProvider>();
 

@@ -1,4 +1,4 @@
-import { type ClientCertificate,services } from 'insomnia-data';
+import { type ClientCertificate, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/utils/invariant';

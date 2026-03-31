@@ -40,14 +40,15 @@ import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-cus
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { CloudServiceCredentialList } from '~/ui/components/settings/cloud-service-credentials';
+
+const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
+
 const getErrorResult = (data: any) => {
   if (data && 'errors' in data && Array.isArray(data.errors) && data.errors.length > 0) {
     return data.errors.join(', ');
   }
   return null;
 };
-
-const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
 const getCredentialEmails = (credential: GitCredentials | undefined | null) => {
   if (credential && isGitCredentialsV2(credential) && isOAuthCredential(credential)) {

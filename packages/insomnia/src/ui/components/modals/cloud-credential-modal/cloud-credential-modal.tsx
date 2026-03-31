@@ -1,4 +1,4 @@
-import { type CloudProviderCredential,models } from 'insomnia-data';
+import { type CloudProviderCredential, models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 

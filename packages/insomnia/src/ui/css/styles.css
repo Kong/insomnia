@@ -268,6 +268,11 @@ table.json-diff-viewer {
 }
 
 /* System change line background */
+.monaco-editor .system-change-line-bg ~ .cdr {
+  /* Remove the background-color of the following line decoration */
+  background-color: transparent !important;
+}
+
 .monaco-editor.vs-dark .system-change-line-bg {
   background-color: #383838 !important;
 }

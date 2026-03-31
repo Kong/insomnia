@@ -28,7 +28,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   const isLintError = (result: IRuleResult) => result.severity === 0;
 
-  const gitRepositoryId = models.project.isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const gitRepositoryId = models.project.isGitProject(project)
+    ? project.gitRepositoryId
+    : workspaceMeta?.gitRepositoryId;
 
   const rulesetPath = gitRepositoryId
     ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)

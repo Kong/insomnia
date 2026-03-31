@@ -3,7 +3,6 @@ import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, M
 
 import { gitRemoteProviderRegistry, isGitCredentialsV1 } from '~/sync/git/providers';
 import { invariant } from '~/utils/invariant';
-
 export const addDotGit = (url: string): string => (url.endsWith('.git') ? url : `${url}.git`);
 
 /**

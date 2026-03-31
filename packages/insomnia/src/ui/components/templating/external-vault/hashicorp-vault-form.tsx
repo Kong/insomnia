@@ -1,4 +1,4 @@
-import { type CloudProviderCredential,models } from 'insomnia-data';
+import { type CloudProviderCredential, models } from 'insomnia-data';
 import React from 'react';
 
 import { useRootLoaderData } from '~/root';
@@ -19,7 +19,6 @@ export interface HashiCorpVaultFormProps {
 }
 type HashiCorpCredential = Extract<CloudProviderCredential, { provider: 'hashicorp' }>;
 type KeysOfUnion<T> = T extends T ? keyof T : never;
-
 const defaultKVVersion = 'v2';
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {

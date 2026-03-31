@@ -35,7 +35,6 @@ import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
-
 const FORMID = 'git-repo-form';
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
@@ -157,7 +156,8 @@ export const ProjectSettingsForm: FC<Props> = ({
   const showGitRepoForm =
     storageType === 'git' &&
     ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
-      (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID));
+      (!isSwitchingStorageType(project!, storageType) &&
+        project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID));
 
   const emailsFetcher = useGitProviderEmailsLoaderFetcher();
   const isLoadingEmails = emailsFetcher.state !== 'idle';
@@ -167,7 +167,11 @@ export const ProjectSettingsForm: FC<Props> = ({
     if (fetchedEmails.length > 0) {
       return fetchedEmails;
     }
-    if (selectedCredential && models.gitCredentials.isGitCredentialsV2(selectedCredential) && models.gitCredentials.isOAuthCredential(selectedCredential)) {
+    if (
+      selectedCredential &&
+      models.gitCredentials.isGitCredentialsV2(selectedCredential) &&
+      models.gitCredentials.isOAuthCredential(selectedCredential)
+    ) {
       return selectedCredential.credentials?.emails || [];
     }
     return [];
@@ -248,7 +252,11 @@ export const ProjectSettingsForm: FC<Props> = ({
             <Banner
               type="info"
               className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
-              title={models.project.isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Cloud Sync project'}
+              title={
+                models.project.isGitProject(project!)
+                  ? 'Removing Git Sync connection'
+                  : 'Converting to Cloud Sync project'
+              }
               message={
                 models.project.isGitProject(project!)
                   ? 'Changing this project to a Cloud Sync project will remove the connection to your repo. This does not delete the project files on the remote repo.'
@@ -271,7 +279,11 @@ export const ProjectSettingsForm: FC<Props> = ({
             <Banner
               type="info"
               className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
-              title={models.project.isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Local Vault project'}
+              title={
+                models.project.isGitProject(project!)
+                  ? 'Removing Git Sync connection'
+                  : 'Converting to Local Vault project'
+              }
               message={
                 models.project.isGitProject(project!)
                   ? 'Changing this project to a Local Vault project will remove the connection to your repo. This does not delete the project files on the remote repo.'

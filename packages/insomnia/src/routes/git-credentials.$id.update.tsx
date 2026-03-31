@@ -1,4 +1,4 @@
-import { type GitCredentialsV2,models, services } from 'insomnia-data';
+import { type GitCredentialsV2, models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { createFetcherSubmitHook } from '~/utils/router';

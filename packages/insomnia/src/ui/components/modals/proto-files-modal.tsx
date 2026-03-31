@@ -1,5 +1,5 @@
 import * as protoLoader from '@grpc/proto-loader';
-import { models, type ProtoDirectory, type ProtoFile,services } from 'insomnia-data';
+import { models, type ProtoDirectory, type ProtoFile, services } from 'insomnia-data';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
@@ -15,6 +15,7 @@ import { type ExpandedProtoDirectory, ProtoFileList } from '../proto-file/proto-
 import { AsyncButton } from '../themed-button';
 import { showError, showModal } from '.';
 import { AlertModal } from './alert-modal';
+
 const tryToSelectFilePath = async () => {
   try {
     const { filePath, canceled } = await selectFileOrFolder({ itemTypes: ['file'], extensions: ['proto'] });

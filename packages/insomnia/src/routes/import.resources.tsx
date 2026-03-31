@@ -1,7 +1,13 @@
 import { models, services, type Workspace } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
+import {
+  clearResourceCache,
+  findExistingImportedSpec,
+  findRequestInExistingWorkspace,
+  importResourcesToProject,
+  importResourcesToWorkspace,
+} from '~/common/import';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -17,6 +23,9 @@ interface ImportScannedResourcesParams {
   organizationId: string;
   projectId: string;
   workspaceId?: string;
+  endpoint?: string;
+  operationId?: string;
+  skipImportIfDuplicate?: boolean;
   options?: {
     overrideBaseEnvironmentData?: boolean;
   };
@@ -57,14 +66,43 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof organizationId === 'string', 'OrganizationId is required.');
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
-    const result = await importScannedResources({
+    if (!workspaceId && data.skipImportIfDuplicate) {
+      const existing = await findExistingImportedSpec(projectId);
+      if (existing) {
+        const matchedRequest = await findRequestInExistingWorkspace(
+          existing.workspace,
+          data.endpoint,
+          data.operationId,
+        );
+        clearResourceCache(); // skipping import to navigate to existing, avoid stale resource cache
+        return {
+          done: true,
+          singleImportedWorkspace: existing.workspace,
+          singleImportedRequest: matchedRequest,
+        };
+      }
+    }
+
+    const importedWorkspaces = await importScannedResources({
       organizationId,
       projectId,
       workspaceId,
       options,
     });
+
+    if (data.endpoint || data.operationId) {
+      for (const ws of importedWorkspaces) {
+        if (!ws) continue;
+        const foundDeepLinkedRequest = await findRequestInExistingWorkspace(ws, data.endpoint, data.operationId);
+        if (foundDeepLinkedRequest) {
+          return { done: true, singleImportedWorkspace: ws, singleImportedRequest: foundDeepLinkedRequest };
+        }
+      }
+    }
+
     // When navigating, we are interested in knowing if there was only one workspace and only one request
-    const singleImportedWorkspace = Array.isArray(result) && result.length === 1 && result[0];
+    const singleImportedWorkspace =
+      Array.isArray(importedWorkspaces) && importedWorkspaces.length === 1 && importedWorkspaces[0];
     const requests =
       singleImportedWorkspace && (await services.helpers.findRequestByParentId(singleImportedWorkspace._id));
     const singleImportedRequest = Array.isArray(requests) && requests.length === 1 && requests.at(0);

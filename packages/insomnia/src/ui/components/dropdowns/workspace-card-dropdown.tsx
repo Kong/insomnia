@@ -297,7 +297,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                     <input type="hidden" name="workspaceId" value={workspace._id} />
                     <div>
                       This will permanently delete the{' '}
-                      {<strong style={{ whiteSpace: 'pre-wrap' }}>{workspace?.name}</strong>}{' '}
+                      {<strong style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{workspace?.name}</strong>}{' '}
                       {getWorkspaceLabel(workspace).singular}
                       {models.project.isRemoteProject(project) && (
                         <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">

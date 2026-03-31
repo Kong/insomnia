@@ -4,9 +4,10 @@ import {
   type Environment,
   type GitRepository,
   models,
-  services,
   type Workspace,
 } from 'insomnia-data';
+
+import * as apiSpecServices from '../services/api-spec';
 
 /**
  * Run various database repair scripts
@@ -31,11 +32,11 @@ export async function repairDatabase() {
  * It will apply the workspace name to it
  */
 async function _applyApiSpecName(workspace: Workspace) {
-  const apiSpec = await services.apiSpec.getByParentId(workspace._id);
+  const apiSpec = await apiSpecServices.getByParentId(workspace._id);
   const existsAndFilenameIsDefaultOrMissing =
     apiSpec && (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName);
   if (existsAndFilenameIsDefaultOrMissing) {
-    await services.apiSpec.update(apiSpec, { fileName: workspace.name });
+    await apiSpecServices.update(apiSpec, { fileName: workspace.name });
   }
 }
 

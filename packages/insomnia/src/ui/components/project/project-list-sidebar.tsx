@@ -114,7 +114,13 @@ export const ProjectListSidebar = ({
               <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                 <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                 <Icon
-                  icon={models.project.isRemoteProject(item) ? 'globe-americas' : models.project.isGitProject(item) ? ['fab', 'git-alt'] : 'laptop'}
+                  icon={
+                    models.project.isRemoteProject(item)
+                      ? 'globe-americas'
+                      : models.project.isGitProject(item)
+                        ? ['fab', 'git-alt']
+                        : 'laptop'
+                  }
                 />
                 <span className={'truncate'}>{item.name}</span>
                 <span className="flex-1" />

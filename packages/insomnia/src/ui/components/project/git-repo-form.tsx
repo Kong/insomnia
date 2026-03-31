@@ -1,4 +1,4 @@
-import { type GitCredentials,models } from 'insomnia-data';
+import { type GitCredentials, models, type ProviderEmail } from 'insomnia-data';
 import { type FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
@@ -15,7 +15,7 @@ import {
 import { Icon } from '~/basic-components/icon';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import type { GitProviderOption, ProviderEmail } from '~/sync/git/providers/types';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
 import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
@@ -35,7 +35,11 @@ const getDisplayValue = (fullUri: string | undefined, prefix: string | undefined
 };
 
 const getCredentialEmails = (credential: GitCredentials | undefined) => {
-  if (credential && models.gitCredentials.isGitCredentialsV2(credential) && models.gitCredentials.isOAuthCredential(credential)) {
+  if (
+    credential &&
+    models.gitCredentials.isGitCredentialsV2(credential) &&
+    models.gitCredentials.isOAuthCredential(credential)
+  ) {
     return credential.credentials?.emails || [];
   }
   return [];

@@ -1,7 +1,6 @@
 import path from 'node:path';
 
-import { diffLines } from 'diff';
-import { parse } from 'yaml';
+import { isMap, isScalar, isSeq, LineCounter, parse, type ParsedNode, parseDocument } from 'yaml';
 
 import { normalizeScripts } from '~/common/insomnia-schema-migrations/v5.1';
 
@@ -183,84 +182,165 @@ export function hasSignificantChanges(
   }
 }
 
+interface Interval {
+  start: number;
+  end: number;
+}
+
 /**
- * Find lines that represent "system changes" - lines that were modified (not added/deleted)
- * and contain the "modified" property.
- *
- * A "modification" is detected by finding adjacent removed and added chunks in the diff.
- * For each such pair, we check if any line contains "modified" and mark those lines.
+ * Find lines that represent "system changes" within line change intervals.
+ * The meta property and its children are considered system changes.
  */
 export function findSystemChangeLines(
-  original: string,
-  modified: string,
-): {
-  originalLines: number[];
-  modifiedLines: number[];
-} {
-  const originalLines: number[] = [];
-  const modifiedLines: number[] = [];
+  modifiedYaml: string,
+  lineChangeIntervals: { modifiedStartLineNumber: number; modifiedEndLineNumber: number }[],
+) {
+  const intersectIntervals: Interval[] = [];
 
   try {
-    const changes = diffLines(original, modified);
+    const changeIntervals = lineChangeIntervals.map(({ modifiedStartLineNumber, modifiedEndLineNumber }) => ({
+      start: modifiedStartLineNumber,
+      end: modifiedEndLineNumber,
+    }));
+    const systemLineIntervals = findMetaLineIntervals(modifiedYaml);
 
-    let originalLineNumber = 1;
-    let modifiedLineNumber = 1;
+    const EVENT_TYPE = {
+      CHANGE_START: 0,
+      SYSTEM_START: 1,
+      SYSTEM_END: 2,
+      CHANGE_END: 3,
+    } as const;
 
-    for (let i = 0; i < changes.length; i++) {
-      const change = changes[i];
-      const lines = change.value.split('\n');
-      // diffLines includes trailing newline, so remove empty last element
-      if (lines[lines.length - 1] === '') {
-        lines.pop();
+    type EventType = (typeof EVENT_TYPE)[keyof typeof EVENT_TYPE];
+
+    interface Event {
+      eventType: EventType;
+      lineNumber: number;
+    }
+
+    const events: Event[] = [];
+
+    changeIntervals.forEach(interval => {
+      events.push(
+        { eventType: EVENT_TYPE.CHANGE_START, lineNumber: interval.start },
+        { eventType: EVENT_TYPE.CHANGE_END, lineNumber: interval.end },
+      );
+    });
+
+    systemLineIntervals.forEach(interval => {
+      events.push(
+        { eventType: EVENT_TYPE.SYSTEM_START, lineNumber: interval.start },
+        { eventType: EVENT_TYPE.SYSTEM_END, lineNumber: interval.end },
+      );
+    });
+
+    // Line sweep algorithm to find intersecting intervals between change intervals and system line intervals
+    // Sort events by line number, and for same line number, the order of event types is: CHANGE_START -> SYSTEM_START -> SYSTEM_END -> CHANGE_END
+    events.sort((a, b) => {
+      if (a.lineNumber !== b.lineNumber) {
+        return a.lineNumber - b.lineNumber;
       }
-      const lineCount = lines.length;
+      return a.eventType - b.eventType;
+    });
 
-      if (!change.added && !change.removed) {
-        // Unchanged lines - advance both line counters
-        originalLineNumber += lineCount;
-        modifiedLineNumber += lineCount;
-      } else if (change.removed && !change.added) {
-        // Check if next change is an addition (which would make this a modification)
-        const nextChange = changes[i + 1];
-        if (nextChange && nextChange.added && !nextChange.removed) {
-          // This is a modification: removed lines followed by added lines
-          const addedLines = nextChange.value.split('\n');
-          if (addedLines[addedLines.length - 1] === '') {
-            addedLines.pop();
-          }
+    // Sweep through events to find intervals where both a change and a system change are active simultaneously
+    let changeCount = 0;
+    let systemCount = 0;
+    let overlapStart: number | null = null;
 
-          // Check each line pair for "modified" property
-          // For modifications, we consider lines that contain "modified:" in either version
-          lines.forEach((originalLine, j) => {
-            if (originalLine && /\bmodified\b/.test(originalLine)) {
-              originalLines.push(originalLineNumber + j);
-            }
-          });
+    for (const event of events) {
+      const wasOverlapping = changeCount > 0 && systemCount > 0;
 
-          addedLines.forEach((modifiedLine, j) => {
-            if (modifiedLine && /\bmodified\b/.test(modifiedLine)) {
-              modifiedLines.push(modifiedLineNumber + j);
-            }
-          });
-
-          // Advance original line counter for removed lines
-          originalLineNumber += lineCount;
-          // Advance modified line counter for added lines
-          modifiedLineNumber += addedLines.length;
-          // Skip the next change since we've processed it
-          i++;
-        } else {
-          // Pure deletion - just advance original line counter
-          originalLineNumber += lineCount;
+      switch (event.eventType) {
+        case EVENT_TYPE.CHANGE_START: {
+          changeCount++;
+          break;
         }
-      } else if (change.added && !change.removed) {
-        // Pure addition - just advance modified line counter
-        modifiedLineNumber += lineCount;
+        case EVENT_TYPE.SYSTEM_START: {
+          systemCount++;
+          break;
+        }
+        case EVENT_TYPE.SYSTEM_END: {
+          systemCount--;
+          break;
+        }
+        case EVENT_TYPE.CHANGE_END: {
+          changeCount--;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+
+      const isOverlapping = changeCount > 0 && systemCount > 0;
+
+      if (!wasOverlapping && isOverlapping) {
+        overlapStart = event.lineNumber;
+      } else if (wasOverlapping && !isOverlapping) {
+        intersectIntervals.push({ start: overlapStart!, end: event.lineNumber });
+        overlapStart = null;
+      }
+    }
+
+    // Merge consecutive/overlapping intervals
+    for (let i = 1; i < intersectIntervals.length; ) {
+      const prev = intersectIntervals[i - 1];
+      const curr = intersectIntervals[i];
+      if (curr.start <= prev.end + 1) {
+        prev.end = Math.max(prev.end, curr.end);
+        intersectIntervals.splice(i, 1);
+      } else {
+        i++;
       }
     }
   } catch (error) {
     console.error('Error finding system change lines:', error);
   }
 
-  return { originalLines, modifiedLines };
+  return intersectIntervals;
+}
+
+// Get all line numbers (1-based, inclusive) spanned by a YAML AST node
+function getNodeLineInterval(node: ParsedNode | null | undefined, lineCounter: LineCounter) {
+  if (!node?.range) return;
+  const [start, , end] = node.range as [number, number, number];
+  const startLine = lineCounter.linePos(start).line;
+  const endLine = end > start ? lineCounter.linePos(end - 1).line : startLine;
+  if (endLine < startLine) return;
+  return { start: startLine, end: endLine };
+}
+
+// Recursively find all line numbers belonging to 'meta' keys in a YAML string
+function findMetaLineIntervals(yamlString: string) {
+  const lineCounter = new LineCounter();
+  const doc = parseDocument(yamlString, { lineCounter });
+  const retIntervals: Interval[] = [];
+
+  function walk(node: ParsedNode | null | undefined) {
+    if (isMap(node)) {
+      for (const pair of node.items) {
+        if (isScalar(pair.key) && pair.key.value === 'meta') {
+          // Collect the 'meta' key line + all value lines
+          const intervalOfKey = getNodeLineInterval(pair.key, lineCounter);
+          if (intervalOfKey) {
+            retIntervals.push(intervalOfKey);
+          }
+          const intervalOfValue = getNodeLineInterval(pair.value, lineCounter);
+          if (intervalOfValue) {
+            retIntervals.push(intervalOfValue);
+          }
+        } else {
+          walk(pair.value);
+        }
+      }
+    } else if (isSeq(node)) {
+      for (const item of node.items) {
+        walk(item);
+      }
+    }
+  }
+
+  walk(doc.contents);
+  return retIntervals;
 }

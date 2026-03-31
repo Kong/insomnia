@@ -41,6 +41,8 @@ const mockPluginData = (key: string, value: string) => ({ key, value }) as any;
 describe('llm-config-service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(services.pluginData.all).mockResolvedValue([]);
+    vi.mocked(services.pluginData.getByKey).mockResolvedValue(null as any);
   });
 
   describe('getBackendConfig()', () => {
@@ -204,7 +206,7 @@ describe('llm-config-service', () => {
     });
 
     it('should return null when no active backend', async () => {
-      vi.mocked(services.pluginData.getByKey).mockResolvedValue(undefined as any);
+      vi.mocked(services.pluginData.getByKey).mockResolvedValue(null as any);
 
       const active = await getActiveBackend();
 

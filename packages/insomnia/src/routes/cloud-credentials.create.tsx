@@ -1,4 +1,4 @@
-import { type CloudProviderCredential,services } from 'insomnia-data';
+import { type CloudProviderCredential, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';

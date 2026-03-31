@@ -1,4 +1,4 @@
-import { type BaseGitCredentialsV2,services } from 'insomnia-data';
+import { type BaseGitCredentialsV2, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { createFetcherSubmitHook } from '~/utils/router';

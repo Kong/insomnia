@@ -60,7 +60,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           if (error.name === 'FORBIDDEN') {
             errorMessage = 'You do not have permission to create a cloud project in this organization.';
           }
-
           if (error.name === 'NEEDS_TO_UPGRADE') {
             errorMessage = 'Upgrade your account in order to create new Cloud Projects.';
           }

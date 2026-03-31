@@ -1,4 +1,10 @@
-import { type AuthTypeOAuth2, type OAuth2ResponseType, type OAuth2Token, type RequestAuthentication,services } from 'insomnia-data';
+import {
+  type AuthTypeOAuth2,
+  type OAuth2ResponseType,
+  type OAuth2Token,
+  type RequestAuthentication,
+  services,
+} from 'insomnia-data';
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { getOauthRedirectUrl } from '../../../../common/constants';

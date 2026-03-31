@@ -6,7 +6,6 @@ export interface AESMessage {
   d: string;
   ad: string;
 }
-
 export interface BaseUserSession {
   accountId: string;
   id: string;

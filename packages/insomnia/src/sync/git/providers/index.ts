@@ -34,7 +34,6 @@ export type { GitCredentials as GitCredentialData, OauthProviderName } from 'ins
 // Export type guards from model
 import { models } from 'insomnia-data';
 export const { isGitCredentialsV2, isGitCredentialsV1, isOAuthCredential, supportsRenewal } = models.gitCredentials;
-
 // Export registry class
 export { GitRemoteProviderRegistry } from './registry';
 

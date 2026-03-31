@@ -15,6 +15,7 @@ import {
   getSegmentWriteKey,
   PLAYWRIGHT,
 } from '../common/constants';
+
 let _currentOrganizationId: string | undefined;
 
 export function setCurrentOrganizationId(id: string | undefined): void {

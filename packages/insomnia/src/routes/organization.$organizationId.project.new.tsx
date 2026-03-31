@@ -1,5 +1,5 @@
 import { createTeamProject, isApiError, updateGitProjectCount } from 'insomnia-api';
-import { models, type Project,services } from 'insomnia-data';
+import { models, type Project, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';

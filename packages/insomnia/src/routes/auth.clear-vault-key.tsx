@@ -21,7 +21,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     // remove all secret environment variables
     await services.environment.removeAllSecrets(organizations);
     // Update vault salt and delete vault key from session
-    services.userSession.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
+    await services.userSession.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification
     electron.ipcRenderer.emit('show-toast', null, {
       content: {
