@@ -1,5 +1,24 @@
 import { type CaCertificate, services } from 'insomnia-data';
-import { type ApiSpec, type ClientCertificate, type CookieJar, type Environment, type GitRepository, type GrpcRequest, type GrpcRequestMeta, type MockServer, models, type Project, type Request, type RequestGroup, type RequestGroupMeta, type RequestMeta, type SocketIORequest, type WebSocketRequest, type Workspace, type WorkspaceMeta } from 'insomnia-data';
+import {
+  type ApiSpec,
+  type ClientCertificate,
+  type CookieJar,
+  type Environment,
+  type GitRepository,
+  type GrpcRequest,
+  type GrpcRequestMeta,
+  type MockServer,
+  models,
+  type Project,
+  type Request,
+  type RequestGroup,
+  type RequestGroupMeta,
+  type RequestMeta,
+  type SocketIORequest,
+  type WebSocketRequest,
+  type Workspace,
+  type WorkspaceMeta,
+} from 'insomnia-data';
 import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import type { SortOrder } from '~/common/constants';
@@ -179,7 +198,9 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
       levelReqs.sort(sortFunction).map(async (doc): Promise<Child> => {
         const hidden = parentIsCollapsed;
 
-        const pinned = (!models.requestGroup.isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
+        const pinned =
+          (!models.requestGroup.isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned) ||
+          false;
         const collapsed =
           parentIsCollapsed ||
           (models.requestGroup.isRequestGroup(doc) && requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||

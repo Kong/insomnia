@@ -17,7 +17,14 @@ import path from 'node:path';
 
 import { app } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { type BaseModel, type GitRemoteProviderType, type GitRepository, models, services, type WorkspaceScope } from 'insomnia-data';
+import {
+  type BaseModel,
+  type GitRemoteProviderType,
+  type GitRepository,
+  models,
+  services,
+  type WorkspaceScope,
+} from 'insomnia-data';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
@@ -165,7 +172,10 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
-  invariant(project.gitRepositoryId && !models.project.isEmptyGitProject(project), 'Project is not linked to a git repository');
+  invariant(
+    project.gitRepositoryId && !models.project.isEmptyGitProject(project),
+    'Project is not linked to a git repository',
+  );
   const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
@@ -1042,7 +1052,9 @@ export const cloneGitRepoAction = async ({
       const workspace = YAML.parse(workspaceJson.toString());
       workspaceId = workspace._id;
       scope =
-        workspace.scope === models.workspace.WorkspaceScopeKeys.collection ? models.workspace.WorkspaceScopeKeys.collection : models.workspace.WorkspaceScopeKeys.design;
+        workspace.scope === models.workspace.WorkspaceScopeKeys.collection
+          ? models.workspace.WorkspaceScopeKeys.collection
+          : models.workspace.WorkspaceScopeKeys.design;
       // Check if the workspace already exists
       const existingWorkspace = await services.workspace.getById(workspace._id);
 
