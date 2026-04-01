@@ -2,17 +2,45 @@ import { type Services } from '../../node-src/types';
 
 export type { Services };
 
-let initialized = false;
+let servicesImplementation: Services | null = null;
+
 export function initServices(impl: Services) {
-  if (initialized) {
+  if (servicesImplementation) {
     throw new Error('Services have already been initialized.');
   }
-  services = impl;
-  initialized = true;
+  servicesImplementation = impl;
 }
 
-export let services: Services = new Proxy({} as Services, {
-  get(_target) {
-    throw new Error('Service not initialized. Call initServices() first.');
+// Keep service and method destructuring working before initServices() runs.
+export const services: Services = new Proxy({} as Services, {
+  get(_target, serviceName) {
+    if (typeof serviceName === 'symbol') {
+      return;
+    }
+
+    return new Proxy({} as Services[keyof Services], {
+      get(_target, methodName) {
+        if (typeof methodName === 'symbol') {
+          return;
+        }
+
+        // Resolve the real implementation at call time so pre-init destructuring stays safe.
+        return (...args: unknown[]) => {
+          if (!servicesImplementation) {
+            throw new Error('Service not initialized. Call initServices() first.');
+          }
+
+          const service = servicesImplementation[serviceName as keyof Services] as Record<PropertyKey, unknown>;
+          const method = service[methodName];
+
+          if (typeof method !== 'function') {
+            throw new TypeError(`Service member "${String(serviceName)}.${String(methodName)}" is not callable.`);
+          }
+
+          // Call with the real service object as `this` in case an implementation relies on it.
+          return Reflect.apply(method, service, args);
+        };
+      },
+    });
   },
 });
