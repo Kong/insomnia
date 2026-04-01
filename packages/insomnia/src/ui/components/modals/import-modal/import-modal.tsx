@@ -180,6 +180,7 @@ export interface ImportSource {
   endpoint?: string;
   operationId?: string;
   autoScan?: boolean;
+  startedAt?: number;
 }
 
 interface ImportModalProps extends ModalProps {
@@ -243,12 +244,13 @@ export const ImportModal: FC<ImportModalProps> = ({
     const valid = scanResourcesFetcherData?.some(({ errors }) => !errors.length);
     if (!valid) return;
     dupCheckRef.current = true;
-    findExistingImportedSpec(defaultProjectId).then(existing => {
+    findExistingImportedSpec(defaultProjectId, organizationId).then(existing => {
       if (!existing) return setShowForm(true);
       findRequestInExistingWorkspace(existing.workspace, from.endpoint, from.operationId).then(req => {
+        const targetProjectId = existing.workspace.parentId || defaultProjectId;
         const path = req
-          ? `/organization/${organizationId}/project/${defaultProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
-          : `/organization/${organizationId}/project/${defaultProjectId}/workspace/${existing.workspace._id}/${scopeToActivity(existing.workspace.scope)}`;
+          ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
+          : `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/${scopeToActivity(existing.workspace.scope)}`;
         clearResourceCache();
         navigate(path);
         modalRef.current?.hide();
@@ -277,7 +279,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       });
       const workspace = importFetcher?.data?.singleImportedWorkspace;
       const request = importFetcher?.data?.singleImportedRequest;
-      const targetProjectId = createdProjectId || defaultProjectId;
+      const targetProjectId = importFetcher?.data?.singleImportedProjectId || createdProjectId || defaultProjectId;
       if (workspace && request) {
         navigate(
           `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/debug/request/${request._id}`,
