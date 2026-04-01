@@ -570,10 +570,10 @@ const Root = () => {
                 <div className="flex flex-col gap-1 text-left">
                   {errorDetailKeys.length > 0
                     ? errorDetailKeys.map(k => (
-                        <span key={k} className="whitespace-normal">
-                          {k}: {restParams[k]}
-                        </span>
-                      ))
+                      <span key={k} className="whitespace-normal">
+                        {k}: {restParams[k]}
+                      </span>
+                    ))
                     : 'Unknown error'}
                 </div>
               ),

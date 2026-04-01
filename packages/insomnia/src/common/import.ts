@@ -175,7 +175,8 @@ export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
 export { mcpUrlToInsomniaV5Yaml } from './insomnia-v5';
 
 export async function scanResources(importEntries: ImportEntry[]): Promise<ScanResult[]> {
-  resourceCacheList = [];
+  const sessionCache: ResourceCacheType[] = [];
+  resourceCacheList = sessionCache;
   const results = await Promise.allSettled(
     importEntries.map(async importEntry => {
       const contentStr = importEntry.contentStr;
@@ -242,7 +243,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           return { ...model, type: MODELS_BY_EXPORT_TYPE[_type] };
         });
 
-      resourceCacheList.push({
+      sessionCache.push({
         resources,
         importer: type,
         content: contentStr,
