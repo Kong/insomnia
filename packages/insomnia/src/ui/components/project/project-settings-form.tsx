@@ -93,6 +93,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   }, [project, storageType]);
 
   const [error, setError] = useState<string | null>(null);
+  const [isGitCredentialInvalid, setIsGitCredentialInvalid] = useState(false);
 
   const [projectData, setProjectData] = useState<{
     name: string;
@@ -416,6 +417,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               credentials={credentials}
               providers={providers}
               formId={FORMID}
+              onCredentialValidationChange={setIsGitCredentialInvalid}
             />
           )}
         </div>
@@ -448,7 +450,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID ||
               !gitRepository?.credentialsId) ? (
               <Button
-                isDisabled={!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)}
+                isDisabled={(!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) || isGitCredentialInvalid}
                 form={FORMID}
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"

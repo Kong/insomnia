@@ -291,6 +291,32 @@ export async function validateGitRepositoryCredentials({
   }
 }
 
+/**
+ * Validates a credential by its ID without requiring a repo URI.
+ * Works for OAuth providers (GitHub, GitLab) which have a dedicated validate endpoint.
+ * PAT/custom credentials are skipped since they require a repo URI to validate.
+ */
+export async function validateGitCredentialById({
+  credentialsId,
+}: {
+  credentialsId: string;
+}): Promise<{ errors?: string[] }> {
+  try {
+    const credentials = await services.gitCredentials.getById(credentialsId);
+    if (!credentials) {
+      return { errors: ['Credential not found.'] };
+    }
+    const provider = gitRemoteProviderRegistry.get(credentials.provider as GitRemoteProviderType);
+    if (provider?.validateCredentials) {
+      await provider.validateCredentials(credentials);
+    }
+    return {};
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error validating git credentials.';
+    return { errors: [errorMessage] };
+  }
+}
+
 export async function loadGitRepository({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
@@ -2566,6 +2592,7 @@ export interface GitServiceAPI {
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
   fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
   validateGitRepositoryCredentials: typeof validateGitRepositoryCredentials;
+  validateGitCredentialById: typeof validateGitCredentialById;
 
   initSignInToGitProvider: typeof initSignInToGitProvider;
   completeSignInToGitProvider: typeof completeSignInToGitProvider;
@@ -2588,6 +2615,10 @@ export const registerGitServiceAPI = () => {
     'git.validateGitRepositoryCredentials',
     (_, options: Parameters<typeof validateGitRepositoryCredentials>[0]) =>
       validateGitRepositoryCredentials(options),
+  );
+  ipcMainHandle(
+    'git.validateGitCredentialById',
+    (_, options: Parameters<typeof validateGitCredentialById>[0]) => validateGitCredentialById(options),
   );
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));
