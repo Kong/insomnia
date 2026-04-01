@@ -28,7 +28,10 @@ import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
-import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
+import {
+  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  useGitProviderCompleteSignInFetcher,
+} from '~/routes/git-credentials.complete-sign-in';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -313,7 +316,9 @@ const Root = () => {
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
-  const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher();
+  const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
+    key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -362,6 +367,7 @@ const Root = () => {
             endpoint: params.endpoint,
             operationId: params.operationId,
             autoScan: true,
+            startedAt: Date.now(),
           });
         }
         if (params.mcp) {
@@ -370,6 +376,7 @@ const Root = () => {
             defaultValue: params.mcp,
             origin: sanitizeUrlAndExtractOrigin(params.origin),
             autoScan: true,
+            startedAt: Date.now(),
           });
         }
         if (params.curl) {
@@ -381,6 +388,7 @@ const Root = () => {
             endpoint: params.endpoint,
             operationId: params.operationId,
             autoScan: isValid,
+            startedAt: Date.now(),
           });
         }
       }
@@ -596,6 +604,7 @@ const Root = () => {
       {/* triggered by insomnia://app/import */}
       {importObject.defaultValue && (
         <ImportModal
+          key={importObject.startedAt}
           onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
           defaultProjectId={projectId}
           organizationId={organizationId}

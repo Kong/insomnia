@@ -67,7 +67,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
     if (!workspaceId && data.skipImportIfDuplicate) {
-      const existing = await findExistingImportedSpec(projectId);
+      const existing = await findExistingImportedSpec(projectId, organizationId);
       if (existing) {
         const matchedRequest = await findRequestInExistingWorkspace(
           existing.workspace,
@@ -79,6 +79,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
           done: true,
           singleImportedWorkspace: existing.workspace,
           singleImportedRequest: matchedRequest,
+          singleImportedProjectId: existing.workspace.parentId,
         };
       }
     }
