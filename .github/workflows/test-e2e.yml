@@ -19,6 +19,8 @@ jobs:
   Test:
     timeout-minutes: 40
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
     steps:
       - name: Checkout branch
         uses: actions/checkout@v6
@@ -41,8 +43,19 @@ jobs:
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
+      - name: Configure AWS credentials for smoke test
+        continue-on-error: true # in case aws auth fails, we still want to run the rest of the tests
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ secrets.E2E_AWS_ROLE_ARN }}
+          role-session-name: github-actions-insomnia-smoke-${{ github.run_id }}
+          aws-region: ap-southeast-2 # change to your region
+          role-duration-seconds: 3600 # 1 hours
+
       - name: Smoke test electron app
         run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+        env:
+          GOOGLE_CREDENTIALS_PATH: ${{ steps.google-auth.outputs.credentials_file_path }}
 
       - name: Upload smoke test
         uses: actions/upload-artifact@v7

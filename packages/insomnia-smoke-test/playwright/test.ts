@@ -53,6 +53,7 @@ interface AESMessage {
 export const test = baseTest.extend<{
   app: ElectronApplication;
   dataPath: string;
+  setPlaywrightEnv: boolean;
   fixturesPath: string;
   userConfig: {
     skipOnboarding: boolean;
@@ -76,7 +77,7 @@ export const test = baseTest.extend<{
   };
   insomnia: InsomniaApp;
 }>({
-  app: async ({ playwright, trace, dataPath, userConfig }, use, testInfo) => {
+  app: async ({ playwright, trace, dataPath, userConfig, setPlaywrightEnv }, use, testInfo) => {
     invariant(testInfo.config.webServer?.url, 'Requires web server config');
     const webServerUrl = testInfo.config.webServer.url;
 
@@ -106,7 +107,7 @@ export const test = baseTest.extend<{
       env: {
         ...process.env,
         ...options,
-        PLAYWRIGHT: 'true',
+        ...(setPlaywrightEnv ? { PLAYWRIGHT: 'true' } : {}),
       },
     });
 
@@ -163,6 +164,9 @@ export const test = baseTest.extend<{
     const insomniaDataPath = randomDataPath();
 
     await use(insomniaDataPath);
+  },
+  setPlaywrightEnv: async ({}, use) => {
+    await use(true);
   },
   userConfig: async ({}, use) => {
     await use({

@@ -10,7 +10,6 @@ test('Setup external vault and used in request', async ({ app, page }) => {
     getFixturePath('files/template-file.txt'),
   );
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
   await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
@@ -107,7 +106,6 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await page.getByRole('tab', { name: 'Console' }).click();
   const responsePane = page.getByTestId('response-pane');
-  await expect.soft(responsePane).toContainText(externalVaultTestCases.aws.expectedResult);
   await expect.soft(responsePane).toContainText(externalVaultTestCases.gcp.expectedResult);
   await expect.soft(responsePane).toContainText(externalVaultTestCases.hashicorp.expectedResult);
   // enable elevated access and execute again in renderer process
@@ -119,5 +117,80 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   // send request and execute the tags in renderer process
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await page.getByRole('tab', { name: 'Console' }).click();
-  await expect.soft(responsePane).toContainText(externalVaultTestCases.aws.expectedResult);
+  await expect.soft(responsePane).toContainText(externalVaultTestCases.gcp.expectedResult);
+  await expect.soft(responsePane).toContainText(externalVaultTestCases.hashicorp.expectedResult);
+});
+
+test.describe('Real case external vault integration', () => {
+  test.use({
+    setPlaywrightEnv: async ({}, use) => {
+      await use(false);
+    },
+  });
+
+  test('Real case external vault integration', async ({ app, page }) => {
+    // eslint-disable-next-line playwright/no-skipped-test
+    test.skip(
+      !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_SESSION_TOKEN,
+      'AWS temp credentials are not set',
+    );
+
+    // import collection with per-defined tags
+    const text = await loadFixture('template-tag-collection.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+    const validateAWSCredentialIntegration = async (awsCredentialName: string) => {
+      // Nav to cloud credentials page
+      await page.getByTestId('settings-button').click();
+      await page.getByRole('tab', { name: 'Credentials' }).click();
+      // create aws credential
+      await page.getByRole('button', { name: 'Create Cloud Credential' }).click();
+      await page.getByRole('menuitemradio', { name: 'AWS' }).click();
+      await page.getByRole('textbox', { name: 'Credential Name:' }).fill(awsCredentialName);
+      await page.getByRole('textbox', { name: 'Access Key Id:' }).fill(process.env.AWS_ACCESS_KEY_ID || '');
+      await page.getByRole('textbox', { name: 'Secret Access Key:' }).fill(process.env.AWS_SECRET_ACCESS_KEY || '');
+      await page.getByRole('textbox', { name: 'Session Token:' }).fill(process.env.AWS_SESSION_TOKEN || '');
+      await page.getByRole('textbox', { name: 'Region:' }).fill(process.env.AWS_REGION || 'ap-southeast-2');
+      await page.getByRole('dialog').getByRole('button', { name: 'Create', exact: true }).click();
+      await expect.soft(page.getByRole('cell', { name: awsCredentialName })).toBeVisible();
+      // close the settings
+      await page.locator('.app').press('Escape');
+      // used in request
+      await page.getByLabel('Request Collection').getByTestId('External Vault Tag').press('Enter');
+      await page.getByText('Body', { exact: true }).click();
+      const tagPrefix = "{% vault 'aws'";
+      const secretName = 'insomnia-e2e-external-vault-secrets';
+      const expectedResult = '{"foo":"bar","secret":"e2e-smoke"}';
+      // test aws vault tag
+      await page.locator(`[data-template^="${tagPrefix}"]`).click();
+      await page.getByLabel('Credential For Vault Service').selectOption(awsCredentialName);
+      await page.getByRole('textbox', { name: 'Secret Name Or ARN' }).fill(secretName);
+      await expect.soft(page.getByRole('dialog').getByLabel('Live Preview')).toHaveText(expectedResult);
+      await page.getByRole('button', { name: 'Done' }).click();
+      // reset credential cache
+      await page.getByTestId('settings-button').click();
+      await page.getByRole('tab', { name: 'Credentials' }).click();
+      await page.getByRole('button', { name: 'Reset Cache' }).click();
+      // close the settings
+      await page.locator('.app').press('Escape');
+      // test aws vault tag
+      await page.locator(`[data-template^="${tagPrefix}"]`).click();
+      // expect the live preview do not show at first since the cache is reset
+      await expect.soft(page.getByRole('dialog').getByLabel('Live Preview')).toBeHidden({ timeout: 2000 });
+      await expect.soft(page.getByRole('dialog').getByLabel('Live Preview')).toHaveText(expectedResult);
+      await page.getByRole('button', { name: 'Done' }).click();
+    };
+    // validate the external vault under none-elevated access first.
+    await validateAWSCredentialIntegration('smoke-external-vault-integration-aws-none-elevated');
+    // elevate access for plugins
+    await page.getByTestId('settings-button').click();
+    await page.getByRole('tab', { name: 'Plugins' }).click();
+    await page.locator('text=Allow elevated access for plugins').click();
+    await page.locator('.app').press('Escape');
+    await validateAWSCredentialIntegration('smoke-external-vault-integration-aws-elevated');
+  });
 });
