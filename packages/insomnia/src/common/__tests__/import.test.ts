@@ -483,6 +483,21 @@ describe('importRaw()', () => {
     expect(newKvPairData.find(pair => pair.name === 'foo')?.value).toBe('bar');
   });
 
+  it('concurrent scanResources calls should not duplicate the resource cache', async () => {
+    const proj = await project.create();
+    await Promise.all(
+      Array.from({ length: 5 }, (_, i) =>
+        importUtil.scanResources([{ contentStr: `curl -X POST https://${i}.test -d "n=${i}"` }]),
+      ),
+    );
+
+    const workspaces = await importUtil.importResourcesToProject({ projectId: proj._id });
+    expect(workspaces).toHaveLength(1);
+
+    const reqs = await request.findByParentId(workspaces[0]._id);
+    expect(reqs).toHaveLength(1);
+  });
+
   it('should resolve operationId to method and name', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'smoke-test-with-operationIds.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
