@@ -30,6 +30,13 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
       isDisabled: !storageRules.enableLocalVault,
     },
     {
+      type: 'directory',
+      icon: 'folder-open',
+      name: 'Local Directory',
+      description: 'Keep project data as Insomnia files inside your own folder.',
+      isDisabled: !storageRules.enableLocalVault,
+    },
+    {
       type: 'remote',
       icon: 'globe',
       name: 'Cloud Sync',

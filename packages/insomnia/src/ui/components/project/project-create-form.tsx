@@ -8,6 +8,7 @@ import type { GitCredentials } from '~/insomnia-data';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import type { GitProviderOption } from '~/sync/git/providers/types';
+import { ProjectDirectoryForm } from '~/ui/components/project/project-directory-form';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
@@ -51,6 +52,7 @@ export const ProjectCreateForm: FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   const [projectData, setProjectData] = useState<ProjectData>({
+    directoryPath: '',
     name: defaultProjectName,
     uri: '',
     credentialsId: undefined,
@@ -85,6 +87,7 @@ export const ProjectCreateForm: FC<Props> = ({
   };
 
   const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
+  const isDirectoryProjectInvalid = storageType === 'directory' && !projectData.directoryPath?.trim();
 
   return (
     <>
@@ -124,6 +127,12 @@ export const ProjectCreateForm: FC<Props> = ({
             storageType={storageType}
             storageRules={storageRules}
           />
+          {storageType === 'directory' && (
+            <ProjectDirectoryForm
+              directoryPath={projectData.directoryPath}
+              onChange={directoryPath => setProjectData({ ...projectData, directoryPath })}
+            />
+          )}
           {storageType === 'git' && isGitSyncEnabled && (
             <GitRepoForm
               formId={FORMID}
@@ -163,7 +172,7 @@ export const ProjectCreateForm: FC<Props> = ({
             {storageType !== 'git' || projectData.connectRepositoryLater ? (
               <Button
                 onPress={onUpsertProject}
-                isDisabled={!storageType || newProjectFetcher.state !== 'idle'}
+                isDisabled={!storageType || isDirectoryProjectInvalid || newProjectFetcher.state !== 'idle'}
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}

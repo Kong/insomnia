@@ -21,7 +21,8 @@ export interface CreateProjectActionResult {
 
 export interface CreateProjectData {
   name: string;
-  storageType: 'local' | 'remote' | 'git';
+  storageType: 'local' | 'directory' | 'remote' | 'git';
+  directoryPath?: string;
   uri?: string;
   credentialsId?: string | null;
   connectRepositoryLater?: boolean;
@@ -58,8 +59,13 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
 
-  if (newProjectData.storageType === 'local') {
+  if (newProjectData.storageType === 'local' || newProjectData.storageType === 'directory') {
+    if (newProjectData.storageType === 'directory') {
+      invariant(newProjectData.directoryPath, 'Directory path is required for Local Directory project creation');
+    }
+
     const project = await models.project.create({
+      directoryPath: newProjectData.storageType === 'directory' ? newProjectData.directoryPath : null,
       name: newProjectData.name,
       parentId: organizationId,
     });

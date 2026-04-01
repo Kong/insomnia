@@ -109,6 +109,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
       workspace,
       hasUncommittedChanges: workspaceMeta?.hasUncommittedChanges,
       hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
+      fileProjectConflictType: workspaceMeta?.fileProjectConflictType,
       gitFilePath: workspaceMeta?.gitFilePath,
     };
   });

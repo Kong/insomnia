@@ -13,6 +13,8 @@ export interface BaseWorkspaceMeta {
   activeGlobalEnvironmentId: string | null;
   activeRequestId: string | null;
   activeUnitTestSuiteId: string | null;
+  fileProjectConflictType: 'id-conflict' | null;
+  fileProjectOriginalWorkspaceId: string | null;
   gitRepositoryId: string | null;
   parentId: string | null;
   pushSnapshotOnInitialize: boolean;
@@ -32,6 +34,8 @@ export function init(): BaseWorkspaceMeta {
     activeGlobalEnvironmentId: null,
     activeRequestId: null,
     activeUnitTestSuiteId: null,
+    fileProjectConflictType: null,
+    fileProjectOriginalWorkspaceId: null,
     gitRepositoryId: null,
     gitFilePath: null,
     parentId: null,

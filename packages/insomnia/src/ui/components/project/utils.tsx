@@ -9,6 +9,7 @@ export function useActiveView() {
 }
 
 export interface ProjectData {
+  directoryPath?: string;
   name: string;
   uri?: string;
   ref?: string;
@@ -17,4 +18,4 @@ export interface ProjectData {
   selectedAuthorEmail?: string | null;
 }
 
-export type ProjectType = 'local' | 'remote' | 'git';
+export type ProjectType = 'local' | 'directory' | 'remote' | 'git';

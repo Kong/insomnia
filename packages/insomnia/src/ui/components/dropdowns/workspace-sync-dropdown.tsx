@@ -2,9 +2,10 @@ import React, { type FC } from 'react';
 
 import { useRootLoaderData } from '~/root';
 
-import { isGitProject, isRemoteProject } from '../../../models/project';
+import { isDirectoryProject, isGitProject, isRemoteProject } from '../../../models/project';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
+import { DirectoryProjectBar } from './directory-project-bar';
 import { GitProjectSyncDropdown } from './git-project-sync-dropdown';
 import { GitSyncDropdown } from './git-sync-dropdown';
 import { LocalProjectBar } from './local-project-bar';
@@ -23,6 +24,10 @@ export const WorkspaceSyncDropdown: FC = () => {
 
   const isLocalProject =
     !isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId && !isGitProject(activeProject);
+
+  if (isDirectoryProject(activeProject)) {
+    return <DirectoryProjectBar directoryPath={activeProject.directoryPath} />;
+  }
 
   if (isLocalProject) {
     return <LocalProjectBar />;

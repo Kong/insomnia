@@ -24,17 +24,20 @@ import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails'
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
+import { ProjectDirectoryForm } from '~/ui/components/project/project-directory-form';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
-import { useActiveView } from '~/ui/components/project/utils';
+import { type ProjectType, useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
 import {
   EMPTY_GIT_PROJECT_ID,
   getDefaultProjectStorageType,
+  getProjectStorageType,
+  isDirectoryProject,
   isGitProject,
   isRemoteProject,
   type Project,
@@ -42,24 +45,11 @@ import {
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
-
 const FORMID = 'git-repo-form';
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
-function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
-    return true;
-  }
-
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
-    return true;
-  }
-
-  if (storageType === 'remote' && !isRemoteProject(project)) {
-    return true;
-  }
-
-  return false;
+function isSwitchingStorageType(project: Project, storageType: ProjectType) {
+  return getProjectStorageType(project) !== storageType;
 }
 
 interface Props {
@@ -89,9 +79,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const isLightTheme = useIsLightTheme();
 
-  const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(
-    getDefaultProjectStorageType(storageRules, project),
-  );
+  const [storageType, setStorageType] = useState<ProjectType>(getDefaultProjectStorageType(storageRules, project));
 
   const { activeView, setActiveView } = useActiveView();
 
@@ -102,6 +90,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   const [projectData, setProjectData] = useState<{
+    directoryPath?: string;
     name: string;
     uri?: string;
     ref?: string;
@@ -109,6 +98,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     connectRepositoryLater?: boolean;
     selectedAuthorEmail?: string | null;
   }>({
+    directoryPath: project?.directoryPath || '',
     name: project?.name || defaultProjectName,
     uri: gitRepository?.uri || '',
     credentialsId: gitRepository?.credentialsId ?? undefined,
@@ -154,6 +144,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
 
   const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
+  const isDirectoryProjectInvalid = storageType === 'directory' && !projectData.directoryPath?.trim();
 
   const showGitConnectionInfo =
     storageType === 'git' &&
@@ -244,13 +235,38 @@ export const ProjectSettingsForm: FC<Props> = ({
           <ProjectTypeSelect
             storageRules={storageRules}
             value={storageType}
-            onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+            onChange={v => setStorageType(v as ProjectType)}
           />
           <ProjectTypeWarning
             isGitSyncEnabled={isGitSyncEnabled}
             storageType={storageType}
             storageRules={storageRules}
           />
+
+          {showSwitchBanner && storageType === 'directory' && (
+            <Banner
+              type="info"
+              className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
+              title={isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Local Directory project'}
+              message="This project will be stored as Insomnia files in the selected local folder. Existing files in that folder are kept if you switch away later."
+            />
+          )}
+
+          {showSwitchBanner && isDirectoryProject(project!) && storageType !== 'directory' && (
+            <Banner
+              type="info"
+              className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
+              title="Disconnecting local directory storage"
+              message="Changing the project type stops using the selected folder, but it does not delete any files already written there."
+            />
+          )}
+
+          {storageType === 'directory' && (
+            <ProjectDirectoryForm
+              directoryPath={projectData.directoryPath}
+              onChange={directoryPath => setProjectData(prev => ({ ...prev, directoryPath }))}
+            />
+          )}
 
           {showSwitchBanner && storageType === 'remote' && (
             <Banner
@@ -455,9 +471,11 @@ export const ProjectSettingsForm: FC<Props> = ({
               <Button
                 onPress={onUpsertProject}
                 isDisabled={
+                  isDirectoryProjectInvalid ||
                   updateProjectFetcher.state !== 'idle' ||
                   (!isSwitchingStorageType(project!, storageType) &&
                     project?.name.trim() === projectData.name.trim() &&
+                    (project?.directoryPath || '') === (projectData.directoryPath || '') &&
                     (gitRepository?.selectedAuthorEmail ?? null) === (projectData.selectedAuthorEmail ?? null))
                 }
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"

@@ -43,6 +43,7 @@ import type { MockServer } from '~/models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
 import {
   getProjectStorageTypeLabel,
+  isDirectoryProject,
   isGitProject,
   isLocalProject,
   isRemoteProject,
@@ -59,6 +60,7 @@ import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
+import { DirectoryProjectBar } from '~/ui/components/dropdowns/directory-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
 import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
@@ -100,6 +102,7 @@ export interface InsomniaFile {
   apiSpec?: ApiSpec;
   hasUncommittedChanges?: boolean;
   hasUnpushedChanges?: boolean;
+  fileProjectConflictType?: 'id-conflict' | null;
   gitFilePath?: string | null;
 }
 
@@ -838,7 +841,12 @@ const Component = () => {
                       activeProject={activeProject}
                     />
                   )}
-                  {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}
+                  {isDirectoryProject(activeProject) && (
+                    <DirectoryProjectBar directoryPath={activeProject.directoryPath} />
+                  )}
+                  {isLocalProject(activeProject) &&
+                    !isGitProject(activeProject) &&
+                    !isDirectoryProject(activeProject) && <LocalProjectBar />}
                   {isRemoteProject(activeProject) && <CloudSyncProjectBar />}
                 </>
               )}
@@ -1105,10 +1113,10 @@ const Component = () => {
                           }}
                           className={`flex aspect-square w-full flex-1 flex-col overflow-hidden rounded-md p-(--padding-md) ring-1 ring-(--hl-md) outline-hidden transition-all select-none hover:bg-(--hl-xs) hover:shadow-md hover:ring-(--hl-sm) focus:bg-(--hl-sm) focus:ring-(--hl-lg) ${item.loading ? 'animate-pulse' : ''}`}
                         >
-                          <div className="flex h-[20px] gap-2">
+                          <div className="flex h-5 gap-2">
                             <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
                               <div
-                                className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                                className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-5 w-5 items-center justify-center rounded-s-sm px-2`}
                               >
                                 <Icon
                                   icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]}
@@ -1142,6 +1150,12 @@ const Component = () => {
                             </Tooltip>
                           </TooltipTrigger>
                           <div className="flex flex-1 flex-col justify-end gap-2 text-sm text-(--hl)">
+                            {item.fileProjectConflictType === 'id-conflict' && (
+                              <div className="flex items-center gap-2 text-sm text-(--color-warning)">
+                                <Icon icon="triangle-exclamation" />
+                                <span>Workspace ID conflict detected for this file</span>
+                              </div>
+                            )}
                             {item.gitFilePath && (
                               <div className="flex items-center gap-2 text-sm">
                                 <Icon icon="file-alt" />

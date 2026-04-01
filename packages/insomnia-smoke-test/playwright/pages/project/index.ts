@@ -5,10 +5,11 @@ import { mockSaveDialogForFile } from '../../utils';
 import { BasePage } from '../base-page';
 import { WorkspaceListComponent } from './workspace-list';
 
-export type ProjectStorageType = 'local' | 'remote' | 'git';
+export type ProjectStorageType = 'local' | 'directory' | 'remote' | 'git';
 
 const storageTypeNames: Record<ProjectStorageType, string> = {
   local: 'Local Vault',
+  directory: 'Local Directory',
   remote: 'Cloud Sync',
   git: 'Git Sync',
 };
