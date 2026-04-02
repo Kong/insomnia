@@ -33,18 +33,18 @@ import { LearnMoreLink } from '~/basic-components/link';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import type { GitCredentials, GitRepository } from '~/insomnia-data';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
-import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
 import { useGitProjectCommitsActionFetcher } from '~/routes/git.commits';
-import {
-  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
-  useGitProviderCompleteSignInFetcher,
-} from '~/routes/git-credentials.complete-sign-in';
 import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
+import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
+import {
+  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  useGitProviderCompleteSignInFetcher,
+} from '~/routes/git-credentials.complete-sign-in';
 import type { GitFileType } from '~/sync/git/git-vcs';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { GitProviderOption } from '~/sync/git/providers/types';
