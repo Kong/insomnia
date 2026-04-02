@@ -483,6 +483,7 @@ export interface GitChangesLoaderData {
     }[];
   };
   branch: string;
+  gitRepository?: GitRepository | null;
   errors?: string[];
 }
 
@@ -506,6 +507,7 @@ export const gitChangesLoader = async ({
     return {
       branch,
       changes,
+      gitRepository,
     };
   } catch {
     return {
@@ -1475,6 +1477,16 @@ export const commitAndPushToGitRepoAction = async ({
   message: string;
 }): Promise<CommitToGitRepoResult> => {
   const repo = await getGitRepository({ workspaceId, projectId });
+
+  // Validate credentials before committing to prevent orphaned local commits
+  // when the subsequent push would fail due to authentication issues.
+  try {
+    await validateGitCredentials({ credentialsId: repo.credentialsId, uri: repo.uri });
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Authentication failed';
+    return { errors: [errorMessage] };
+  }
+
   try {
     await GitVCS.setAuthor();
     await GitVCS.commit(message);

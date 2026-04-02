@@ -1,12 +1,15 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 import { Banner } from '~/basic-components/banner';
 import { Icon } from '~/basic-components/icon';
 import type { GitCredentials, GitRepository } from '~/insomnia-data';
-import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
+import {
+  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  useGitProviderCompleteSignInFetcher,
+} from '~/routes/git-credentials.complete-sign-in';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
 
 import { isOAuthAccessTokenExpired, shouldShowHttp40OAuthReauthHint } from './git-oauth-auth-utils';
@@ -35,17 +38,26 @@ export const GitOauthAuthBanner: FC<{
   const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
   const [error, setError] = useState('');
   const initSignInFetcher = useInitSignInToGitProviderFetcher();
-  const completeSignInFetcher = useGitProviderCompleteSignInFetcher();
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
 
   const initSignInError = getErrorResult(initSignInFetcher.data);
   const completeSignInError = getErrorResult(completeSignInFetcher.data);
 
+  const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
-    if (completeSignInFetcher.data && !completeSignInError) {
+    const prevState = prevCompleteSignInStateRef.current;
+    prevCompleteSignInStateRef.current = completeSignInFetcher.state;
+
+    if (
+      (prevState === 'submitting' || prevState === 'loading') &&
+      completeSignInFetcher.state === 'idle' &&
+      completeSignInFetcher.data &&
+      !completeSignInError
+    ) {
       setIsReauthModalOpen(false);
       setError('');
     }
-  }, [completeSignInFetcher.data, completeSignInError]);
+  }, [completeSignInFetcher.state, completeSignInFetcher.data, completeSignInError]);
 
   const expiredByExpiresAt = isOAuthAccessTokenExpired(selectedCredential);
   const http40Fallback =
