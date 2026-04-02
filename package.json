@@ -75,10 +75,23 @@
   "overrides": {
     "ajv-draft-04": {
       "ajv": "$ajv"
+    },
+    "serialize-javascript": "7.0.5",
+    "lodash": "4.18.1",
+    "@stoplight/spectral-core": {
+      "minimatch": "3.1.5"
+    },
+    "diff": "8.0.4",
+    "jshint": {
+      "minimatch": "3.1.5"
+    },
+    "@stoplight/spectral-ruleset-bundler": {
+      "rollup": "2.80.0"
     }
-  },
+ },
   "dependencies": {
     "@getinsomnia/node-libcurl": "3.2.1",
+    "chai-json-schema": "1.5.1",
     "ajv": "^8.17.1"
   }
 }

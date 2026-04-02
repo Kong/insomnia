@@ -75,7 +75,6 @@
     "blakejs": "^1.2.1",
     "buffer": "^6.0.3",
     "chai": "^4.5.0",
-    "chai-json-schema": "1.5.1",
     "chardet": "^2.1.0",
     "classnames": "^2.5.1",
     "clone": "^2.1.2",
@@ -202,7 +201,7 @@
   },
   "optionalDependencies": {
     "@kong/insomnia-plugin-ai": "^1.0.9",
-    "@kong/insomnia-plugin-external-vault": "0.1.4-dev.20251224090833"
+    "@kong/insomnia-plugin-external-vault": "0.1.5-dev.20260402212720"
   },
   "dev": {
     "dev-server-port": 3334

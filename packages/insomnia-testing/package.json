@@ -19,9 +19,6 @@
     "test": "vitest run",
     "type-check": "tsc --project tsconfig.json"
   },
-  "dependencies": {
-    "chai-json-schema": "1.5.1"
-  },
   "homepage": "https://github.com/Kong/insomnia#readme",
   "description": ""
 }
