@@ -442,6 +442,14 @@ export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: st
     };
   } catch (e) {
     console.error(e);
+    if (
+      e instanceof Errors.UserCanceledError ||
+      (e instanceof Errors.HttpError && (e.data.statusCode === 401 || e.data.statusCode === 403))
+    ) {
+      return {
+        errors: [GitVCSOperationErrors.AuthenticationRequiredError],
+      };
+    }
     return {
       errors: ['Failed to fetch from remote'],
     };
@@ -1864,15 +1872,17 @@ export const pushToGitRemoteAction = async ({
   try {
     canPush = await GitVCS.canPush(gitRepository.credentialsId);
   } catch (err) {
-    if (err instanceof Errors.HttpError) {
-      if (err.data.statusCode === 401 || err.data.statusCode === 403) {
-        // If we get a 401 or 403, it means that the user does not have permissions to push to this repository
-        return {
-          errors: [`${err.data.statusMessage}, it seems that you do not have permissions to push to this repository.`],
-          gitRepository,
-        };
-      }
+    if (
+      err instanceof Errors.UserCanceledError ||
+      (err instanceof Errors.HttpError && (err.data.statusCode === 401 || err.data.statusCode === 403))
+    ) {
+      return {
+        errors: [GitVCSOperationErrors.AuthenticationRequiredError],
+        gitRepository,
+      };
+    }
 
+    if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
         gitRepository,
@@ -1924,6 +1934,16 @@ export const pushToGitRemoteAction = async ({
         errors: [
           'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
         ],
+      };
+    }
+
+    if (
+      err instanceof Errors.UserCanceledError ||
+      (err instanceof Errors.HttpError && (err.data.statusCode === 401 || err.data.statusCode === 403))
+    ) {
+      return {
+        errors: [GitVCSOperationErrors.AuthenticationRequiredError],
+        gitRepository,
       };
     }
 
@@ -2018,6 +2038,16 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
   } catch (err: unknown) {
     if (err instanceof MergeConflictError) {
       return err.data;
+    }
+
+    if (
+      err instanceof Errors.UserCanceledError ||
+      (err instanceof Errors.HttpError && (err.data.statusCode === 401 || err.data.statusCode === 403))
+    ) {
+      return {
+        success: false,
+        errors: [GitVCSOperationErrors.AuthenticationRequiredError],
+      };
     }
 
     let errorMessage = getErrorMessage(err);

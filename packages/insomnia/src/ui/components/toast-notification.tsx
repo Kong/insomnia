@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { format } from 'date-fns';
 import React from 'react';
 import {
+  Button,
   Text,
   UNSTABLE_Toast as Toast,
   UNSTABLE_ToastContent as ToastContent,
@@ -36,15 +37,17 @@ export const queue = new ToastQueue<RAToastContent>({
   },
 });
 
-export const showToast = (content: RAToastContent, options?: { timeout?: number }) => {
+export const showToast = (content: RAToastContent, options?: { timeout?: number | null }) => {
   // Add a new toast to the queue.
   if (!content.time) {
     content.time = format(new Date(), 'HH:mm:ss aa');
   }
 
-  const key = queue.add(content, {
-    timeout: options?.timeout ?? 3000,
-  });
+  // Pass timeout: null to keep the toast persistent (no auto-dismiss).
+  const toastOptions: { timeout?: number } =
+    options?.timeout === null ? {} : { timeout: options?.timeout ?? 3000 };
+
+  const key = queue.add(content, toastOptions);
   // Return the key for further reference if needed.
   return key;
 };
@@ -121,6 +124,15 @@ export const Toaster = () => (
             </div>
           </div>
         </ToastContent>
+        {!toast.timer && (
+          <Button
+            onPress={() => queue.close(toast.key)}
+            aria-label="Dismiss"
+            className="ml-1 flex shrink-0 items-center justify-center rounded text-(--hl) transition-opacity hover:opacity-70 focus:outline-none"
+          >
+            <FontAwesomeIcon icon="xmark" className="size-3" />
+          </Button>
+        )}
       </Toast>
     )}
   </ToastRegion>
