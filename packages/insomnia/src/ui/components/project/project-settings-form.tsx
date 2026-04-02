@@ -205,7 +205,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [showGitConnectionInfo, gitRepository?.uri, gitRepository?._id, project?._id, validateCredentialsFetcher]);
 
-  const gitRepoLoadErrors =
+  const credentialsValidationErrors =
     validateCredentialsFetcher.data && 'errors' in validateCredentialsFetcher.data
       ? validateCredentialsFetcher.data.errors
       : undefined;
@@ -316,10 +316,10 @@ export const ProjectSettingsForm: FC<Props> = ({
               <GitOauthAuthBanner
                 selectedCredential={selectedCredential}
                 gitRepository={gitRepository}
-                repoLoadErrors={gitRepoLoadErrors}
+                repoLoadErrors={credentialsValidationErrors}
                 provider={selectedProvider}
               />
-              {showEmailSelector && !gitRepoLoadErrors ? (
+              {showEmailSelector && !credentialsValidationErrors ? (
                 <div className="flex flex-col gap-2">
                   {isLoadingEmails ? (
                     <div className="flex items-center gap-2 text-sm">
@@ -397,7 +397,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                     </div>
                   )}
                 </div>
-              ) : selectedCredential?.author.email && !gitRepoLoadErrors ? (
+              ) : selectedCredential?.author.email && !credentialsValidationErrors ? (
                 <div className="text-[12px]">
                   <div className="flex">
                     <div className="w-[110px] font-semibold">Author Email</div>
@@ -450,7 +450,9 @@ export const ProjectSettingsForm: FC<Props> = ({
               project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID ||
               !gitRepository?.credentialsId) ? (
               <Button
-                isDisabled={(!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) || isGitCredentialInvalid}
+                isDisabled={
+                  (!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) || isGitCredentialInvalid
+                }
                 form={FORMID}
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
