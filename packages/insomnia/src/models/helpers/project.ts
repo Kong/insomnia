@@ -1,6 +1,6 @@
 import { createTeamProject, isApiError } from 'insomnia-api';
 
-import type { Workspace, Project } from '~/insomnia-data';
+import type { Project, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 
 import { database } from '../../common/database';

@@ -44,7 +44,7 @@ import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sort
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
-import type { GrpcRequest, Workspace, Environment, Project } from '~/insomnia-data';
+import type { Environment, GrpcRequest, Project, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import * as models from '~/models';

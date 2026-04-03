@@ -13,7 +13,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { MockServer, Workspace, Project } from '~/insomnia-data';
+import type { MockServer, Project, Workspace } from '~/insomnia-data';
 import { removeResponsesForRequest } from '~/models/helpers/response-operations';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';

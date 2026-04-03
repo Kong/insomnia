@@ -40,10 +40,10 @@ import type {
   ApiSpec,
   GitRepository,
   MockServer,
+  Project,
   Workspace,
   WorkspaceMeta,
   WorkspaceScope,
-  Project,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';

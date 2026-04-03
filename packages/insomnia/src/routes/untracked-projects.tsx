@@ -1,7 +1,7 @@
 import type { Organization } from 'insomnia-api';
 
 import { database } from '~/common/database';
-import type { Workspace, Project } from '~/insomnia-data';
+import type { Project, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
 import { createFetcherLoadHook } from '~/utils/router';

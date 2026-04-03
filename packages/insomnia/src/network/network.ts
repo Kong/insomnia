@@ -7,17 +7,17 @@ import orderedJSON from 'json-order';
 import type {
   CaCertificate,
   ClientCertificate,
-  MockRoute,
-  MockServer,
-  Workspace,
   Cookie,
   CookieJar,
   Environment,
+  MockRoute,
+  MockServer,
   Project,
   Settings,
   UserUploadEnvironment,
+  Workspace,
 } from '~/insomnia-data';
-import { services, EnvironmentType } from '~/insomnia-data';
+import { EnvironmentType, services } from '~/insomnia-data';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {

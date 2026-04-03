@@ -1,6 +1,6 @@
 import * as crypto from 'node:crypto';
 
-import type { Workspace, Environment, Project } from '~/insomnia-data';
+import type { Environment, Project, Workspace } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 
 import { database as db } from '../../src/database';

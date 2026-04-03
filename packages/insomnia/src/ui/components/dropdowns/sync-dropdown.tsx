@@ -15,7 +15,7 @@ import {
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { Workspace, Project } from '~/insomnia-data';
+import type { Project, Workspace } from '~/insomnia-data';
 import { useInsomniaSyncBranchCheckoutActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.checkout';
 import { useInsomniaSyncPullActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.pull';
 import { useInsomniaSyncPushActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.push';

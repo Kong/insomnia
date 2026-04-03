@@ -2,8 +2,8 @@ import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } f
 import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import type { Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
 import { database } from '../../../common/database';

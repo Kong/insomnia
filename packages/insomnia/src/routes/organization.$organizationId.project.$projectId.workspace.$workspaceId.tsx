@@ -4,16 +4,16 @@ import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
 import type {
-  CookieJar,
-  Environment,
-  Project,
   ApiSpec,
   CaCertificate,
   ClientCertificate,
+  CookieJar,
+  Environment,
   GitRepository,
   GrpcRequest,
   GrpcRequestMeta,
   MockServer,
+  Project,
   Workspace,
   WorkspaceMeta,
 } from '~/insomnia-data';

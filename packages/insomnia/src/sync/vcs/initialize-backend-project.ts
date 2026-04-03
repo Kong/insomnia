@@ -1,4 +1,4 @@
-import type { Workspace, Project } from '~/insomnia-data';
+import type { Project, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { database } from '../../common/database';

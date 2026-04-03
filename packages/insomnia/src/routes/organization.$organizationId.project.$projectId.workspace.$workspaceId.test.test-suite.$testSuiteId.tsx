@@ -17,8 +17,8 @@ import { useParams, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import { documentationLinks } from '~/common/documentation';
+import type { UnitTest, UnitTestSuite } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import type { UnitTestSuite, UnitTest } from '~/insomnia-data';
 import * as models from '~/models';
 import { isRequest, type Request } from '~/models/request';
 import { isWebSocketRequest } from '~/models/websocket-request';

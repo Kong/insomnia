@@ -2,7 +2,7 @@ import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } f
 import { OverlayContainer } from 'react-aria';
 import { href, useParams } from 'react-router';
 
-import type { Workspace, Project } from '~/insomnia-data';
+import type { Project, Workspace } from '~/insomnia-data';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
 
