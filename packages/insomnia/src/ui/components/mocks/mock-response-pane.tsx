@@ -1,4 +1,4 @@
-import type * as Har from 'har-format';
+import { fetchMockbinLogs, type MockbinLogOutput } from 'insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import * as reactUse from 'react-use';
@@ -25,7 +25,6 @@ import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
-import { insomniaFetch } from '../../insomnia-fetch';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Pane, PaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
@@ -39,23 +38,6 @@ import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
 
 const { useInterval } = reactUse;
-
-interface MockbinLogOutput {
-  log: {
-    version: string;
-    creator: {
-      name: string;
-      version: string;
-    };
-    entries: [
-      {
-        startedDateTime: string;
-        clientIPAddress: string;
-        request: Har.Request;
-      },
-    ];
-  };
-}
 
 export const MockResponsePane = () => {
   const { mockServer, mockRoute, activeResponse } = useMockRouteLoaderData()!;
@@ -188,13 +170,10 @@ const HistoryViewWrapperComponentFactory = ({
     const compoundId = mockRoute.parentId + mockRoute.name;
     const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
     try {
-      const res = await insomniaFetch<MockbinLogOutput>({
-        origin: mockbinUrl,
-        path: `/bin/log/${compoundId}`,
-        method: 'GET',
-        headers: {
-          'insomnia-mock-method': mockRoute.method,
-        },
+      const res = await fetchMockbinLogs({
+        mockbinUrl,
+        compoundId,
+        method: mockRoute.method,
         sessionId: userSession.id,
       });
       if (res?.log) {

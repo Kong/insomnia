@@ -7,8 +7,8 @@ import { useLatest } from 'react-use';
 
 import { docsMcpClient } from '~/common/documentation';
 import { buildResourceJsonSchema, fillUriTemplate } from '~/common/mcp-utils';
+import type { McpPayload } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
-import type { BaseMcpPayload } from '~/models/mcp-request-payload';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Link } from '~/ui/components/base/link';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
@@ -59,7 +59,7 @@ interface Props {
   onTabChange: (newTab: RequestPaneTabs) => void;
 }
 
-const getParamsFromPayload = (payloadParams: BaseMcpPayload['params']) => {
+const getParamsFromPayload = (payloadParams: McpPayload['params']) => {
   // INS-2041 params has been changed from object to json string to avoid param name with dot issue
   // For existing payload, we need to handle both string and object type
   if (typeof payloadParams === 'string') {

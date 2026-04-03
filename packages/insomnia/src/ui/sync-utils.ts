@@ -1,10 +1,10 @@
 import { database } from '~/common/database';
+import type { ApiSpec } from '~/insomnia-data';
+import { type McpRequest, services } from '~/insomnia-data';
 import { canSync } from '~/models';
 import * as models from '~/models';
-import type { ApiSpec } from '~/models/api-spec';
 import type { Environment } from '~/models/environment';
 import type { GrpcRequest } from '~/models/grpc-request';
-import type { McpRequest } from '~/models/mcp-request';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import type { Request } from '~/models/request';
@@ -73,7 +73,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     return parentIds;
   };
   const listOfParentIds = await flattenFoldersIntoList(activeWorkspace._id);
-  const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
   const reqs = await database.find(models.request.type, {
     parentId: { $in: listOfParentIds },
   });
@@ -110,7 +110,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     mockRoutes.map(m => syncItemsList.push(m));
   }
 
-  const mcpRequest = await models.mcpRequest.getByParentId(workspaceId);
+  const mcpRequest = await services.mcpRequest.getByParentId(workspaceId);
   if (mcpRequest) {
     syncItemsList.push(mcpRequest);
   }

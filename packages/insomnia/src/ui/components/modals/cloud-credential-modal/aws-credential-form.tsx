@@ -7,7 +7,8 @@ import {
   type AWSTemporaryCredential,
   type CloudProviderCredential,
   type CloudProviderName,
-} from '../../../../models/cloud-credential';
+} from '~/insomnia-data';
+
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { FilePicker } from './file-picker';

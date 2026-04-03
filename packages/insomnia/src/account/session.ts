@@ -1,18 +1,11 @@
 import { logout as logoutAPI, whoami } from 'insomnia-api';
 
+import type { GitRepository } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
-import {
-  cloudCredential,
-  gitCredentials,
-  gitRepository,
-  pluginData,
-  project,
-  settings,
-  userSession,
-  workspaceMeta,
-} from '../models';
-import { type GitRepository } from '../models/git-repository';
+import { project, workspaceMeta } from '../models';
 import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
 import type { WorkspaceMeta } from '../models/workspace-meta';
 import * as crypt from './crypt';
@@ -69,7 +62,7 @@ export async function getPrivateKey() {
 }
 
 export async function getCurrentSessionId() {
-  const { id } = await userSession.getOrCreate();
+  const { id } = await services.userSession.getOrCreate();
   return id;
 }
 
@@ -124,16 +117,16 @@ export async function setSessionData(
     lastName,
   };
 
-  const userData = await userSession.getOrCreate();
-  await userSession.update(userData, sessionData);
+  const userData = await services.userSession.getOrCreate();
+  await services.userSession.update(userData, sessionData);
 
   return sessionData;
 }
 
 /** Update the session data with vault salt and vault key */
 export async function setVaultSessionData(vaultSalt: string, vaultKey: string) {
-  const userData = await userSession.getOrCreate();
-  await userSession.update(userData, { vaultSalt, vaultKey });
+  const userData = await services.userSession.getOrCreate();
+  await services.userSession.update(userData, { vaultSalt, vaultKey });
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -141,14 +134,14 @@ export async function setVaultSessionData(vaultSalt: string, vaultKey: string) {
 // ~~~~~~~~~~~~~~~~ //
 
 export async function getUserSession(): Promise<SessionData> {
-  const userData = await userSession.getOrCreate();
+  const userData = await services.userSession.getOrCreate();
 
   return userData;
 }
 
 async function _unsetSessionData() {
-  await userSession.getOrCreate();
-  await userSession.update(await userSession.getOrCreate(), {
+  await services.userSession.getOrCreate();
+  await services.userSession.update(await services.userSession.getOrCreate(), {
     id: '',
     accountId: '',
     email: '',
@@ -177,37 +170,37 @@ async function _unsetSessionData() {
  * If any LLM provider is authenticated, the API key is removed, and deactivated if active.
  */
 async function _removeAllCredentials() {
-  const removals: Promise<unknown>[] = [gitCredentials.removeAll()];
+  const removals: Promise<unknown>[] = [services.gitCredentials.removeAll()];
 
-  const cloudCredentials = await cloudCredential.all();
+  const cloudCredentials = await services.cloudCredential.all();
   for (const cred of cloudCredentials) {
     if ('credentials' in cred) {
-      removals.push(cloudCredential.update(cred, { credentials: undefined }));
+      removals.push(services.cloudCredential.update(cred, { credentials: undefined }));
     }
   }
 
   for (const backend of LLM_BACKENDS) {
-    const apiKey = await pluginData.getByKey(AI_PLUGIN_NAME, `${backend}.apiKey`);
+    const apiKey = await services.pluginData.getByKey(AI_PLUGIN_NAME, `${backend}.apiKey`);
     if (apiKey) {
-      removals.push(pluginData.removeByKey(AI_PLUGIN_NAME, `${backend}.apiKey`));
+      removals.push(services.pluginData.removeByKey(AI_PLUGIN_NAME, `${backend}.apiKey`));
       if (backend === (await window.main.llm.getActiveBackend())) {
         removals.push(window.main.llm.clearActiveBackend());
       }
     }
   }
 
-  const customGitRepos = await gitRepository.all();
+  const customGitRepos = await services.gitRepository.all();
   for (const repo of customGitRepos) {
     if (!repo.credentialsId) continue; // unauthenticated git repositories need not be removed
     removals.push(_removeGitRepository(repo));
   }
 
-  const proxySettings = await settings.get();
+  const proxySettings = await services.settings.get();
   if (proxySettings.httpProxy?.includes('@')) {
-    removals.push(settings.update(proxySettings, { httpProxy: '' }));
+    removals.push(services.settings.update(proxySettings, { httpProxy: '' }));
   }
   if (proxySettings.httpsProxy?.includes('@')) {
-    removals.push(settings.update(proxySettings, { httpsProxy: '' }));
+    removals.push(services.settings.update(proxySettings, { httpsProxy: '' }));
   }
 
   await Promise.all(removals);
@@ -236,7 +229,7 @@ async function _removeGitRepository(repo: GitRepository) {
   for (const wsMeta of workspaceMetas) {
     await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
   }
-  await gitRepository.remove(repo);
+  await services.gitRepository.remove(repo);
 }
 
 // TODO: v12 remove this function and getLocalStorageDataFromFileOrigin from main
@@ -273,12 +266,12 @@ export async function migrateFromLocalStorage() {
   try {
     const sessionData = JSON.parse(session) as SessionData;
 
-    const currentUserSession = await userSession.getOrCreate();
+    const currentUserSession = await services.userSession.getOrCreate();
 
     if (currentUserSession.id) {
       console.warn('Session already exists, skipping migration');
     } else {
-      await userSession.update(currentUserSession, sessionData);
+      await services.userSession.update(currentUserSession, sessionData);
     }
   } catch (e) {
     console.error('Failed to parse session data', e);

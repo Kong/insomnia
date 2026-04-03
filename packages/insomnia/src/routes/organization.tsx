@@ -15,9 +15,9 @@ import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoa
 import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import { userSession } from '~/models';
+import type { Settings } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
-import type { Settings } from '~/models/settings';
 import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -44,7 +44,6 @@ import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { sortOrganizations } from '~/ui/organization-utils';
-import { trackTempOrganizationOpened } from '~/ui/temp-segment-tracking';
 import { AsyncTask, getInitialRouteForOrganization } from '~/utils/router';
 
 import type { Route } from './+types/organization';
@@ -56,7 +55,7 @@ export interface OrganizationLoaderData {
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id, accountId } = await userSession.getOrCreate();
+  const { id, accountId } = await services.userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfile;
@@ -213,11 +212,9 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     }
   }, [organizationId, untrackedProjectsFetcher]);
 
-  // TODO(INS-1912): Remove in 12.5
   useEffect(() => {
-    if (organizationId) {
-      trackTempOrganizationOpened(organizationId);
-    }
+    window.main.setCurrentOrganizationId(organizationId);
+    return () => window.main.setCurrentOrganizationId(undefined);
   }, [organizationId]);
 
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
@@ -414,7 +411,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 <Outlet />
               </RunnerProvider>
             </div>
-            <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]">
+            <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]" data-testid="statusbar">
               <div className="flex h-full w-[50px] shrink-0 items-center justify-center gap-2 border-r border-solid border-r-(--hl-md)">
                 <TooltipTrigger>
                   <ToggleButton

@@ -1,4 +1,5 @@
 import { database } from '../common/database';
+import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
 import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
 import type { BaseModel } from './types';
 
@@ -31,6 +32,7 @@ export interface BaseSocketIORequest {
   settingEncodeUrl: boolean;
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
+  settingPath?: string;
   eventListeners: SocketIOEventListener[];
 }
 
@@ -51,6 +53,7 @@ export const init = (): BaseSocketIORequest => ({
   settingEncodeUrl: true,
   settingStoreCookies: true,
   settingSendCookies: true,
+  settingPath: undefined,
   description: '',
   eventListeners: [],
 });
@@ -102,4 +105,8 @@ export async function duplicate(request: SocketIORequest, patch: Partial<SocketI
     metaSortKey,
     ...patch,
   });
+}
+
+export function rewriteReferences(request: SocketIORequest, idMapping: Map<string, string>): SocketIORequest {
+  return { ...request, ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping) };
 }

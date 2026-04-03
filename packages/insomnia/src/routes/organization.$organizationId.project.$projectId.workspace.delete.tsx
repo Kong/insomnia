@@ -1,5 +1,6 @@
 import { href, redirect } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { isRemoteProject, type Project } from '~/models/project';
 import { type Workspace } from '~/models/workspace';
@@ -10,7 +11,7 @@ import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.delete';
 
-async function deleteWorkspaceFromCloud(workspace: Workspace, project: Project) {
+async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, localOnly: boolean) {
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 
@@ -18,7 +19,8 @@ async function deleteWorkspaceFromCloud(workspace: Workspace, project: Project) 
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
-      await vcs.archiveProject();
+      // For cloud sync workspaces, delete only local file or also delete remote copy
+      await (localOnly ? vcs.removeBackendProjectsForRoot(workspace._id) : vcs.archiveProject());
     } catch (err) {
       return {
         error:
@@ -33,15 +35,15 @@ async function deleteWorkspaceFromCloud(workspace: Workspace, project: Project) 
 }
 
 async function deleteWorkspaceFromLocal(workspace: Workspace) {
-  await models.stats.incrementDeletedRequestsForDescendents(workspace);
+  await services.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
 }
 
-async function deleteWorkspace(workspace: Workspace | null, project: Project | null) {
+async function deleteWorkspace(workspace: Workspace | null, project: Project | null, localOnly: boolean) {
   invariant(workspace, 'Workspace not found');
   invariant(project, 'Project not found');
 
-  const ret = await deleteWorkspaceFromCloud(workspace, project);
+  const ret = await deleteCloudSyncWorkspace(workspace, project, localOnly);
   if (ret?.error) {
     return ret;
   }
@@ -65,12 +67,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const formData = await request.formData();
 
   const workspaceId = formData.get('workspaceId');
+  const localOnly = formData.get('localOnly') === 'true';
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  const msgObj = await deleteWorkspace(workspace, project);
+  const msgObj = await deleteWorkspace(workspace, project, localOnly);
 
   if (msgObj?.error) {
     return msgObj;
@@ -90,10 +93,13 @@ export const useWorkspaceDeleteActionFetcher = createFetcherSubmitHook(
       organizationId,
       projectId,
       workspaceId,
+      // for cloud sync workspaces, delete only local file or also delete remote copy
+      localOnly = 'true',
     }: {
       organizationId: string;
       projectId: string;
       workspaceId: string;
+      localOnly?: 'true' | 'false';
     }) => {
       const url = href('/organization/:organizationId/project/:projectId/workspace/delete', {
         organizationId,
@@ -102,6 +108,7 @@ export const useWorkspaceDeleteActionFetcher = createFetcherSubmitHook(
 
       const formData = new FormData();
       formData.append('workspaceId', workspaceId);
+      formData.append('localOnly', localOnly);
 
       return submit(formData, {
         action: url,

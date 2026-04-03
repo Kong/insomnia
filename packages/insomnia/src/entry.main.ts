@@ -9,7 +9,9 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { configureFetch } from 'insomnia-api';
 
 import { getCurrentSessionId } from '~/account/session';
-import { database, initDatabase } from '~/insomnia-data';
+import type { Stats } from '~/insomnia-data';
+import { database, initDatabase, initServices, services } from '~/insomnia-data';
+import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
@@ -17,7 +19,8 @@ import { runGitCredentialsMigration } from '~/sync/git/migrations';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
-import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
+import { getAppVersion, getProductName, isDevelopment } from './common/constants';
+import { isMac } from './common/platform';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
@@ -38,7 +41,6 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Project, RemoteProject } from './models/project';
-import type { Stats } from './models/stats';
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
@@ -114,6 +116,8 @@ app.on('ready', async () => {
 
   // Init some important things first
   await initDatabase(mainDatabase);
+  // Initialize services for main process
+  initServices(servicesNodeImpl);
   await _createModelInstances();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();
@@ -182,7 +186,7 @@ app.on('quit', () => {
 });
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
-  if (!isMac()) {
+  if (!isMac) {
     app.quit();
   }
 });
@@ -288,8 +292,8 @@ const _launchApp = async () => {
   To avoid that, create them explicitly prior to any initialization steps
  */
 async function _createModelInstances() {
-  await models.stats.get();
-  await models.settings.getOrCreate();
+  await services.stats.get();
+  await services.settings.getOrCreate();
   try {
     const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
@@ -345,8 +349,8 @@ function getOperatingSystem(): string {
 
 async function _trackStats() {
   // Handle the stats
-  const oldStats = await models.stats.get();
-  const stats: Stats = await models.stats.update({
+  const oldStats = await services.stats.get();
+  const stats: Stats = await services.stats.update({
     currentLaunch: Date.now(),
     lastLaunch: oldStats.currentLaunch,
     currentVersion: getAppVersion(),
@@ -365,7 +369,7 @@ async function _trackStats() {
     parentId: { $ne: null },
   });
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
 
   trackSegmentEvent(SegmentEvent.appStarted, {
     localProjects,

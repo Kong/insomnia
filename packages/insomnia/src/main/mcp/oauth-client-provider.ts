@@ -8,9 +8,9 @@ import {
 import { BrowserWindow, ipcMain } from 'electron';
 
 import { getOauthRedirectUrl } from '~/common/constants';
+import { services } from '~/insomnia-data';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import type { ConnectionContext } from '~/main/mcp/common';
-import * as models from '~/models';
 import type { RequestAuthentication } from '~/models/request';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 import { invariant } from '~/utils/invariant';
@@ -64,9 +64,9 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     );
   }
   private async updateAuthentication(auth: Partial<RequestAuthentication>) {
-    const mcpRequest = await models.mcpRequest.getById(this.context.requestId);
+    const mcpRequest = await services.mcpRequest.getById(this.context.requestId);
     invariant(mcpRequest, 'MCP Request not found');
-    await models.mcpRequest.update(mcpRequest, {
+    await services.mcpRequest.update(mcpRequest, {
       authentication: {
         ...mcpRequest.authentication,
         ...auth,
@@ -128,7 +128,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   async tokens(): Promise<OAuthTokens | undefined> {
     // Don't return tokens if not using MCP Auth Flow or if disabled
     if (this.isUsingMcpAuthFlow()) {
-      const token = await models.oAuth2Token.getOrCreateByParentId(this.context.requestId);
+      const token = await services.oAuth2Token.getOrCreateByParentId(this.context.requestId);
       if (token.accessToken) {
         return {
           access_token: token.accessToken,
@@ -142,8 +142,8 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     return undefined;
   }
   async saveTokens(tokens: OAuthTokens) {
-    const token = await models.oAuth2Token.getOrCreateByParentId(this.context.requestId);
-    await models.oAuth2Token.update(token, {
+    const token = await services.oAuth2Token.getOrCreateByParentId(this.context.requestId);
+    await services.oAuth2Token.update(token, {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token || '',
       identityToken: tokens.id_token || '',
@@ -179,8 +179,10 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     });
     const redirectedTo = decryptOAuthResult(redirectedResult);
     const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
-    const authorizationCode = redirectParams.code;
-    if (!authorizationCode) {
+    const { code: authorizationCode, error, error_description, error_uri } = redirectParams;
+    if (error) {
+      throw new Error(JSON.stringify({ error, error_description, error_uri }));
+    } else if (!authorizationCode) {
       throw new Error('Authorization code not found');
     }
     await this._redirectEndListener?.(authorizationCode);

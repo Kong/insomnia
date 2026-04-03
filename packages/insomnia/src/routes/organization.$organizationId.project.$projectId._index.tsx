@@ -1,4 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import { getLearningFeature } from 'insomnia-api';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -35,10 +36,8 @@ import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
+import { type ApiSpec, type GitRepository, services } from '~/insomnia-data';
 import * as models from '~/models';
-import { userSession } from '~/models';
-import type { ApiSpec } from '~/models/api-spec';
-import type { GitRepository } from '~/models/git-repository';
 import { sortProjects } from '~/models/helpers/project';
 import type { MockServer } from '~/models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
@@ -80,9 +79,7 @@ import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-s
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
-import { trackTempProjectOpened } from '~/ui/temp-segment-tracking';
 import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';
 
@@ -317,7 +314,7 @@ interface LearningFeature {
   url: string;
 }
 
-const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
+const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
   const lastFetched = lastFetchedString ? Number.parseInt(lastFetchedString, 10) : 0;
@@ -327,12 +324,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
   if (wasNotDismissedAndOneDayHasPassed) {
     try {
-      learningFeature = await insomniaFetch<LearningFeature>({
-        method: 'GET',
-        path: '/insomnia-production-public-assets/inapp-learning.json',
-        origin: 'https://storage.googleapis.com',
-        sessionId: '',
-      });
+      learningFeature = await getLearningFeature();
       window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
     } catch {
       console.log('[project] Could not fetch learning feature data.');
@@ -364,7 +356,7 @@ const CheckAllProjectSyncStatus = async (projects: Project[]) => {
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
   const fallbackLearningFeature = {
     active: false,
     title: '',
@@ -402,14 +394,14 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   ]);
 
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
-  const learningFeaturePromise = getLearningFeature(fallbackLearningFeature);
+  const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
   const projects = sortProjects(organizationProjects);
 
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
-    project && isGitProject(project) ? await models.gitRepository.getById(project.gitRepositoryId || '') : null;
+    project && isGitProject(project) ? await services.gitRepository.getById(project.gitRepositoryId || '') : null;
 
   return {
     localFiles,
@@ -492,13 +484,6 @@ const Component = () => {
       load({ organizationId });
     }
   }, [organizationId, storageRuleFetcher.load]);
-
-  // TODO(INS-1912): Remove in 12.5
-  useEffect(() => {
-    if (projectId) {
-      trackTempProjectOpened(projectId);
-    }
-  }, [projectId]);
 
   const { storagePromise } = storageRuleFetcher.data || {};
 
@@ -1068,6 +1053,7 @@ const Component = () => {
                 <div className="flex-1 overflow-y-auto">
                   <GridList
                     aria-label="Files"
+                    data-testid="workspace-grid"
                     className="grid grid-cols-[repeat(auto-fit,200px)] grid-rows-[repeat(auto-fit,200px)] gap-4 p-(--padding-md) data-empty:flex data-empty:justify-center"
                     items={filesWithPresence}
                     renderEmptyState={() => {
@@ -1108,6 +1094,12 @@ const Component = () => {
                           textValue={item.name}
                           // onAction is required for onPress with selectionMode='none' but we handle clicks in onPress
                           onAction={() => {}}
+                          onAuxClick={e => {
+                            if (e.button === 1) {
+                              e.preventDefault();
+                              item.action(true);
+                            }
+                          }}
                           onPress={e => {
                             item.action(isPrimaryClickModifier(e));
                           }}
@@ -1223,7 +1215,6 @@ const Component = () => {
             isOpen
             project={activeProject}
             storageRules={storageRules}
-            currentPlan={organizationData?.currentPlan}
             scope={newWorkspaceModalState.scope}
             onOpenChange={isOpen => {
               setNewWorkspaceModalState({

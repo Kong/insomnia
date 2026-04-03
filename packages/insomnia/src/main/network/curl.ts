@@ -7,6 +7,7 @@ import electron, { BrowserWindow } from 'electron';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { services } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
 import { readCurlResponse } from '~/models/helpers/response-operations';
 
@@ -148,7 +149,7 @@ const openCurlConnection = async (
   const environment = await models.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
-  const caCert = await models.caCertificate.findByParentId(options.workspaceId);
+  const caCert = await services.caCertificate.getByParentId(options.workspaceId);
   const caCertficatePath = caCert?.path || null;
   const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
@@ -158,9 +159,9 @@ const openCurlConnection = async (
     }
     const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const start = performance.now();
-    const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
+    const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'https:');
     const { curl, debugTimeline } = createConfiguredCurlInstance({
       req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },
@@ -263,7 +264,7 @@ const openCurlConnection = async (
           settingStoreCookies: request.settingStoreCookies,
           bodyCompression: null,
         };
-        const settings = await models.settings.get();
+        const settings = await services.settings.get();
         const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
         models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
@@ -342,7 +343,7 @@ const createErrorResponse = async (
   timelinePath: string,
   message: string,
 ) => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,

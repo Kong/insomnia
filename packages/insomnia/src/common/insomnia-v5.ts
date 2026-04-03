@@ -17,14 +17,14 @@ import { parse, stringify } from 'yaml';
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
-import type { McpRequest } from '~/models/mcp-request';
+import type { ApiSpec, McpRequest } from '~/insomnia-data';
+import { maskVaultEnvironmentData } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 
 import * as models from '../models';
-import type { ApiSpec } from '../models/api-spec';
 import type { CookieJar } from '../models/cookie-jar';
 import type { EnvironmentKvPairData } from '../models/environment';
-import { type Environment, maskVaultEnvironmentData } from '../models/environment';
+import { type Environment } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
@@ -628,6 +628,7 @@ function getCollection(
                 settingEncodeUrl: data.settings.encodeUrl,
                 settingSendCookies: data.settings.cookies.send,
                 settingStoreCookies: data.settings.cookies.store,
+                settingPath: data.settings.path,
                 pathParameters: data.pathParameters || [],
                 eventListeners: data.eventListeners || [],
               };
@@ -763,6 +764,24 @@ export function importInsomniaV5Data(rawData: string) {
     console.error('Failed to import Insomnia v5 data', err);
     return [];
   }
+}
+
+export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
+  const url = new URL(mcpUrl.trim());
+  const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
+  invariant(isHttp, 'MCP server URL must use http or https');
+  const mcpClient = {
+    type: 'mcpClient.insomnia/5.0' as const,
+    schema_version: INSOMNIA_SCHEMA_VERSION,
+    name: 'Imported MCP Client',
+    mcpRequest: {
+      name: 'Imported MCP Client',
+      url: mcpUrl.trim(),
+      transportType: 'streamable-http' as const,
+    },
+  };
+  const parsed = InsomniaFileSchema.parse(mcpClient);
+  return stringify(removeEmptyFields(parsed));
 }
 
 /**
@@ -901,6 +920,7 @@ export async function getInsomniaV5DataExport({
                   send: resource.settingSendCookies,
                   store: resource.settingStoreCookies,
                 },
+                path: resource.settingPath,
               },
               authentication: resource.authentication,
               headers: mapHeaders(resource.headers),

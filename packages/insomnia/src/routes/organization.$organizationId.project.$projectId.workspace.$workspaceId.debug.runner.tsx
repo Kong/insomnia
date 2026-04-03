@@ -22,12 +22,13 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
+import type { RunnerResultPerRequest, RunnerTestResult } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
 import type { UserUploadEnvironment } from '~/models/environment';
 import { getTimeline } from '~/models/helpers/response-operations';
-import type { RunnerResultPerRequest, RunnerTestResult } from '~/models/runner-test-result';
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
@@ -164,6 +165,8 @@ export const Runner: FC = () => {
 
   const { updateTabById } = useInsomniaTabContext();
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
+  const [zeroableIterationCount, setZeroableIterationCount] = useState<string>('1');
+  const [clearableDelay, setClearableDelay] = useState<string>('0');
   const {
     iterationCount = 1,
     delay = 0,
@@ -174,6 +177,14 @@ export const Runner: FC = () => {
     filePath,
   } = runnerStateMap?.[organizationId]?.[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
+
+  useEffect(() => {
+    setZeroableIterationCount(String(iterationCount));
+  }, [iterationCount]);
+
+  useEffect(() => {
+    setClearableDelay(String(delay));
+  }, [delay]);
 
   const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
 
@@ -324,7 +335,7 @@ export const Runner: FC = () => {
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
   useEffect(() => {
     const readResults = async () => {
-      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
+      const results = (await services.runnerTestResult.findByParentId(runnerId)) || [];
       setTestHistory(results.reverse());
     };
     readResults();
@@ -340,7 +351,7 @@ export const Runner: FC = () => {
   const [timelines, setTimelines] = useState<ResponseTimelineEntry[]>([]);
   const gotoExecutionResult = useCallback(
     async (executionId: string) => {
-      const result = await models.runnerTestResult.getById(executionId);
+      const result = await services.runnerTestResult.getById(executionId);
       if (result) {
         setExecutionResult(result);
       }
@@ -392,7 +403,7 @@ export const Runner: FC = () => {
         unit: durationUnit,
       });
     } else {
-      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
+      const results = (await services.runnerTestResult.findByParentId(runnerId)) || [];
       // show execution result
       if (results.length > 0) {
         setTestHistory(results.reverse());
@@ -459,7 +470,7 @@ export const Runner: FC = () => {
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
-    models.runnerTestResult.remove(item);
+    services.runnerTestResult.remove(item);
     setDeletedItems([...deletedItems, item._id]);
   };
 
@@ -482,17 +493,30 @@ export const Runner: FC = () => {
                   <div className="h-full min-w-[500px]">
                     <span className="mr-6 text-sm">
                       <input
-                        value={iterationCount}
+                        value={zeroableIterationCount}
                         name="Iterations"
                         disabled={isRunning}
                         onChange={e => {
+                          // Internal state "iterationCount" and the GUI state "zeroableIterationCount" have different
+                          // valid values: zeroableIterationCount = {iterationCount, ''}
                           try {
-                            if (Number.parseInt(e.target.value, 10) > 0) {
+                            const intValue = Number.parseInt(e.target.value, 10);
+
+                            // An empty string is a valid value to render in the GUI—a user can clear the field in order
+                            // to enter a new value—but not valid for the internal state.
+                            if (e.target.value === '' || intValue === iterationCount) {
+                              setZeroableIterationCount(e.target.value);
+                            }
+
+                            if (intValue > 0) {
                               updateRunnerState(organizationId, runnerId, {
-                                iterationCount: Number.parseInt(e.target.value, 10),
+                                iterationCount: intValue,
                               });
                             }
                           } catch {}
+                        }}
+                        onBlur={() => {
+                          setZeroableIterationCount(String(iterationCount));
                         }}
                         type="number"
                         className={iterationInputStyle}
@@ -501,16 +525,28 @@ export const Runner: FC = () => {
                     </span>
                     <span className="mr-6 text-sm">
                       <input
-                        value={delay}
+                        value={clearableDelay}
                         disabled={isRunning}
                         name="Delay"
                         onChange={e => {
+                          // Internal state "delay" and the local state "clearableDelay" have different
+                          // valid values: clearableDelay = {delay, ''}
                           try {
-                            const delay = Number.parseInt(e.target.value, 10);
-                            if (delay >= 0) {
-                              updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
+                            const intValue = Number.parseInt(e.target.value, 10);
+
+                            // An empty string is a valid value to render in the GUI—a user can clear the field in order
+                            // to enter a new value—but not valid for the internal state.
+                            if (e.target.value === '' || intValue === delay) {
+                              setClearableDelay(e.target.value);
+                            }
+
+                            if (intValue >= 0) {
+                              updateRunnerState(organizationId, runnerId, { delay: intValue });
                             }
                           } catch {}
+                        }}
+                        onBlur={() => {
+                          setClearableDelay(String(delay));
                         }}
                         type="number"
                         className={inputStyle}
@@ -1094,7 +1130,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   } finally {
     cancelExecution(runnerId);
 
-    await models.runnerTestResult.create({
+    await services.runnerTestResult.create({
       parentId: runnerId,
       source: testCtx.source,
       iterations: testCtx.iterationCount,

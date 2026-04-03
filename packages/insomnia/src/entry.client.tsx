@@ -6,13 +6,12 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
-import { initDatabase } from '~/insomnia-data';
+import { initDatabase, initServices, services } from '~/insomnia-data';
 import { database as clientDatabase } from '~/ui/database.client';
 import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { settings } from './models';
 import { initNewOAuthSession } from './network/o-auth-2/get-token';
 import { init as initPlugins } from './plugins';
 import { applyColorScheme } from './plugins/misc';
@@ -28,6 +27,15 @@ initializeSentry();
 
 // Initialize database for renderer process
 await initDatabase(clientDatabase);
+// Initialize services for renderer process
+if (!window._dataServices) {
+  throw new Error(
+    'window._dataServices is not available. This entrypoint must run in an environment with the preload bridge.',
+  );
+}
+initServices(window._dataServices);
+// Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
+delete window._dataServices;
 
 // Force onlyResolveOnSuccess to true, will be removed after all usages are updated
 configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
@@ -119,7 +127,7 @@ if (insomniaSession) {
   }
 }
 
-const appSettings = await settings.getOrCreate();
+const appSettings = await services.settings.getOrCreate();
 
 if (appSettings.clearOAuth2SessionOnRestart) {
   initNewOAuthSession();

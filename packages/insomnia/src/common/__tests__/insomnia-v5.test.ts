@@ -8,6 +8,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
+import { services } from '~/insomnia-data';
+
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
 import * as models from '../../models';
 import { EnvironmentKvPairDataType } from '../../models/environment';
@@ -39,7 +41,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
       scope: 'collection',
     });
 
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
   });
 
   describe('insomniaSchemaTypeToScope', () => {
@@ -285,7 +287,7 @@ collection: []
         data: {},
       });
 
-      await models.apiSpec.getOrCreateForParentId(workspace._id, {
+      await services.apiSpec.getOrCreateForParentId(workspace._id, {
         _id: 'spec_design',
         contents: '{"openapi": "3.0.0"}',
         contentType: 'json',
@@ -341,7 +343,7 @@ collection: []
         data: {},
       });
 
-      const mcpRequest = await models.mcpRequest.create({
+      const mcpRequest = await services.mcpRequest.create({
         _id: 'mcp-request_test',
         name: 'Test MCP client',
         parentId: workspace._id,
@@ -359,7 +361,7 @@ collection: []
       expect(parsed.mcpRequest.url).toBe('http://mcp.test.com/mcp');
       expect(parsed.mcpRequest.transportType).toBe('streamable-http');
 
-      await models.mcpRequest.update(mcpRequest, {
+      await services.mcpRequest.update(mcpRequest, {
         transportType: 'stdio',
         url: 'npx mcp-client stdio',
         env: [

@@ -1,1 +1,3 @@
-export { nedbDatabase, flushChangesImpl } from './database/database-nedb';
+export { createNedbDatabase, flushChangesImpl } from './database/database-nedb';
+
+export { servicesNodeImpl } from './services';

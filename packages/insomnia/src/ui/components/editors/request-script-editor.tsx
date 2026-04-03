@@ -12,6 +12,7 @@ import {
   Toolbar,
 } from 'react-aria-components';
 
+import type { Settings } from '~/insomnia-data';
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
@@ -28,7 +29,6 @@ import {
   Vault,
 } from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
-import type { Settings } from '../../../models/settings';
 import { Icon } from '../icon';
 
 interface Props {

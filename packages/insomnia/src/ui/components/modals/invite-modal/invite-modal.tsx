@@ -3,10 +3,12 @@ import {
   type Collaborator,
   deleteOrganizationMember,
   type FeatureList,
+  getOrganizationDetail,
   getOrganizationFeatures,
   getOrganizationMemberRoles,
   getOrganizationRoles,
   getOrgUserPermissions,
+  type Organization,
   type Permission,
   revokeInvitation,
   type Role,
@@ -40,7 +42,6 @@ import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { showModal } from '~/ui/components/modals/index';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 
 import { InviteForm } from './invite-form';
@@ -154,12 +155,12 @@ const InviteModal: FC<{
       isDismissable={false}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-(--color-bg)"
+      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-(--color-bg) pt-[70px]"
     >
-      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
-        <Dialog className="relative outline-hidden">
+      <Modal className="theme--dialog flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-[900px] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
+        <Dialog className="relative flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
-            <>
+            <div className="flex h-full flex-col overflow-hidden">
               <Heading slot="title" className="mb-[24px] text-[22px] leading-[34px]">
                 Invite collaborators
               </Heading>
@@ -206,66 +207,68 @@ const InviteModal: FC<{
                   )}
                 </Group>
               </div>
-              {collaboratorListError && (
-                <div className="flex h-[200px] items-center justify-center">
-                  <p className="text-[12px] text-(--color-danger) first-letter:capitalize">{collaboratorListError}</p>
-                </div>
-              )}
-              {collaborators?.length === 0 && page === 0 ? (
-                !collaboratorListError && (
+              <div className="flex-1 overflow-y-auto">
+                {collaboratorListError && (
                   <div className="flex h-[200px] items-center justify-center">
-                    <p className="text-[14px] text-(--color-font)">
-                      {queryInputString
-                        ? `No member or team found for the search: "${queryInputString}"`
-                        : 'No members or teams'}
-                    </p>
+                    <p className="text-[12px] text-(--color-danger) first-letter:capitalize">{collaboratorListError}</p>
                   </div>
-                )
-              ) : (
-                <>
-                  <ListBox aria-label="Invitation list" className="flex flex-col gap-1">
-                    {collaborators?.map((member: Collaborator) => (
-                      <MemberListItem
-                        key={member.id}
-                        organizationId={organizationId}
-                        member={member}
-                        currentUserAccountId={currentUserAccountId}
-                        currentUserRoleInOrg={currentUserRoleInOrg}
-                        allRoles={allRoles}
-                        isCurrentUserOrganizationOwner={isCurrentUserOrganizationOwner}
-                        orgFeatures={orgFeatures}
-                        permissionRef={permissionRef}
-                        revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
-                        onResetCurrentPage={resetCurrentPage}
-                        onError={setError}
-                        onRemoveMember={() => {
-                          collaboratorsCheckSeatsLoaderLoad({ organizationId });
-                        }}
-                      />
-                    ))}
-                  </ListBox>
-                  <PaginationBar
-                    isPrevDisabled={page === 0}
-                    isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
-                    isHidden={total <= ItemsPerPage && page === 0}
-                    onPrevPress={() => {
-                      collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
-                      setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
-                    }}
-                    onNextPress={() => {
-                      collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
-
-                      setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
-                    }}
-                  />
-                  {error && (
-                    <div className="mt-[16px] flex justify-center">
-                      <p className="text-[12px] text-(--color-danger)">{error}</p>
+                )}
+                {collaborators?.length === 0 && page === 0 ? (
+                  !collaboratorListError && (
+                    <div className="flex h-[200px] items-center justify-center">
+                      <p className="text-[14px] text-(--color-font)">
+                        {queryInputString
+                          ? `No member or team found for the search: "${queryInputString}"`
+                          : 'No members or teams'}
+                      </p>
                     </div>
-                  )}
-                </>
-              )}
-            </>
+                  )
+                ) : (
+                  <>
+                    <ListBox aria-label="Invitation list" className="flex flex-col gap-1">
+                      {collaborators?.map((member: Collaborator) => (
+                        <MemberListItem
+                          key={member.id}
+                          organizationId={organizationId}
+                          member={member}
+                          currentUserAccountId={currentUserAccountId}
+                          currentUserRoleInOrg={currentUserRoleInOrg}
+                          allRoles={allRoles}
+                          isCurrentUserOrganizationOwner={isCurrentUserOrganizationOwner}
+                          orgFeatures={orgFeatures}
+                          permissionRef={permissionRef}
+                          revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
+                          onResetCurrentPage={resetCurrentPage}
+                          onError={setError}
+                          onRemoveMember={() => {
+                            collaboratorsCheckSeatsLoaderLoad({ organizationId });
+                          }}
+                        />
+                      ))}
+                    </ListBox>
+                    {error && (
+                      <div className="mt-[16px] flex justify-center">
+                        <p className="text-[12px] text-(--color-danger)">{error}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              <PaginationBar
+                isPrevDisabled={page === 0}
+                isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
+                isHidden={total <= ItemsPerPage && page === 0}
+                onPrevPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
+                  setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
+                }}
+                onNextPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
+
+                  setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
+                }}
+              />
+            </div>
           )}
         </Dialog>
       </Modal>
@@ -600,25 +603,29 @@ export const InviteModalContainer: FC<{
   const [orgFeatures, setOrgFeatures] = useState<FeatureList | null>(null);
   const permissionRef = useRef<Record<Permission, boolean>>();
   const [currentUserAccountId, setCurrentUserAccountId] = useState('');
-  const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationAuth0 | null>(null);
+  const [currentOrgInfo, setCurrentOrgInfo] = useState<Organization | null>(null);
 
   const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
 
   async function getBaseInfo(organizationId: string) {
+    const sessionId = await getCurrentSessionId();
     return Promise.all([
       getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
       getOrganizationFeatures({
         organizationId,
-        sessionId: await getCurrentSessionId(),
+        sessionId,
       }).then(res => setOrgFeatures(res?.features)),
       getOrgUserPermissions({
         organizationId,
-        sessionId: await getCurrentSessionId(),
+        sessionId,
       }).then(permissions => {
         permissionRef.current = permissions;
       }),
       getAccountId().then(setCurrentUserAccountId),
-      getOrganization(organizationId).then(setCurrentOrgInfo),
+      getOrganizationDetail({
+        organizationId,
+        sessionId,
+      }).then(setCurrentOrgInfo),
     ]);
   }
 
@@ -706,33 +713,6 @@ export async function getCurrentUserRoleInOrg(organizationId: string): Promise<R
 export interface OrganizationBranding {
   logo_url: string;
   colors: string[];
-}
-
-export type OrganizationType = 'personal' | 'team' | 'enterprise';
-
-export interface Metadata {
-  organizationType: OrganizationType;
-  ownerAccountId?: string;
-  description?: string;
-}
-
-export interface OrganizationAuth0 {
-  id: string;
-  name: string;
-  display_name: string;
-  branding: OrganizationBranding;
-  metadata: Metadata;
-}
-
-async function getOrganization(organizationId: string): Promise<OrganizationAuth0> {
-  return insomniaFetch<OrganizationAuth0>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch organization');
-  });
 }
 
 async function unlinkTeam(organizationId: string, collaboratorId: string) {

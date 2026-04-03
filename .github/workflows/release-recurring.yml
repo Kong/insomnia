@@ -32,16 +32,16 @@ jobs:
             build-targets: zip
           - os: windows-latest
             build-targets: portable
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             build-targets: tar.gz
-          - os: ubuntu-22.04-arm
+          - os: ubuntu-24.04-arm
             build-targets: tar.gz
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -53,6 +53,7 @@ jobs:
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Install x64 version of native Mac dependencies
         run: npm run install-x64-native-dependencies -w insomnia
@@ -82,7 +83,7 @@ jobs:
           INSOMNIA_UPDATES_URL: http://localhost:4010
 
       - name: Upload smoke test traces
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           if-no-files-found: ignore
@@ -90,7 +91,7 @@ jobs:
           path: packages/insomnia-smoke-test/traces
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts-${{ github.run_number }}

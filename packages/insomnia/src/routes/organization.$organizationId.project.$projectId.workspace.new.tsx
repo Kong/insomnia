@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { upsertMockbin } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { userSession } from '~/models';
 import type { MockRoute } from '~/models/mock-route';
 import type { MockServer } from '~/models/mock-server';
 import { isGitProject, isLocalProject } from '~/models/project';
@@ -17,7 +18,6 @@ import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initiali
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -135,16 +135,16 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     if (scope === 'design') {
-      await models.apiSpec.getOrCreateForParentId(workspace._id);
+      await services.apiSpec.getOrCreateForParentId(workspace._id);
     }
 
     if (workspaceData.scope === 'mcp') {
-      const settings = await models.settings.getOrCreate();
+      const settings = await services.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
         : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
       // Create mcp request when MCP workspace is created
-      await models.mcpRequest.create({
+      await services.mcpRequest.create({
         parentId: workspace._id,
         transportType: 'streamable-http',
         url: '',
@@ -165,7 +165,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     await database.flushChanges(flushId);
 
-    const { id } = await models.userSession.getOrCreate();
+    const { id } = await services.userSession.getOrCreate();
     if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project) && !isLocalProject(project)) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
@@ -197,7 +197,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     });
 
     if (workspaceData.withRequest) {
-      const settings = await models.settings.getOrCreate();
+      const settings = await services.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
         : [
@@ -333,7 +333,7 @@ async function createMockServer(
         return result.error;
       }
 
-      const { id: sessionId } = await userSession.getOrCreate();
+      const { id: sessionId } = await services.userSession.getOrCreate();
       await createMockRoutes(result.routes, mockServer, sessionId, organizationId);
     }
 
@@ -341,7 +341,7 @@ async function createMockServer(
 
     const generationDurationMs = Date.now() - generationStartTime;
 
-    const { id } = await models.userSession.getOrCreate();
+    const { id } = await services.userSession.getOrCreate();
     if (id && !workspaceMeta.gitRepositoryId) {
       const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
@@ -444,15 +444,12 @@ async function createMockRoutes(
       const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
       if (mockbinUrl && sessionId) {
-        await insomniaFetch({
-          origin: mockbinUrl,
-          path: `/bin/upsert/${compoundId}`,
-          method: 'PUT',
+        await upsertMockbin({
+          mockbinUrl,
+          compoundId,
           organizationId,
           sessionId,
-          headers: {
-            'insomnia-mock-method': route.method,
-          },
+          method: route.method,
           data: mockRouteToHar({
             statusCode: mockRoute.statusCode,
             statusText: mockRoute.statusText || '',

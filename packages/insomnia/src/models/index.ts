@@ -1,43 +1,27 @@
+import { models } from '~/insomnia-data';
 import type { AllTypes, BaseModel } from '~/models/types';
 
 import { generateId } from '../common/misc';
 import { typedKeys } from '../utils';
-import * as _apiSpec from './api-spec';
-import * as _caCertificate from './ca-certificate';
-import * as _clientCertificate from './client-certificate';
-import * as _cloudCredential from './cloud-credential';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
-import * as _gitCredentials from './git-credentials';
-import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
-import * as _mcpRequest from './mcp-request';
-import * as _mcpPayload from './mcp-request-payload';
-import * as _mcpResponse from './mcp-response';
 import * as _mockRoute from './mock-route';
 import * as _mockServer from './mock-server';
-import * as _oAuth2Token from './o-auth-2-token';
-import * as _pluginData from './plugin-data';
 import * as _project from './project';
-import * as _protoDirectory from './proto-directory';
-import * as _protoFile from './proto-file';
 import * as _request from './request';
 import * as _requestGroup from './request-group';
 import * as _requestGroupMeta from './request-group-meta';
 import * as _requestMeta from './request-meta';
 import * as _requestVersion from './request-version';
 import * as _response from './response';
-import * as _runnerTestResult from './runner-test-result';
-import * as _settings from './settings';
 import * as _socketIOPayload from './socket-io-payload';
 import * as _socketIORequest from './socket-io-request';
 import * as _socketIoResponse from './socket-io-response';
-import * as _stats from './stats';
 import * as _unitTest from './unit-test';
 import * as _unitTestResult from './unit-test-result';
 import * as _unitTestSuite from './unit-test-suite';
-import * as _userSession from './user-session';
 import * as _webSocketPayload from './websocket-payload';
 import * as _webSocketRequest from './websocket-request';
 import * as _webSocketResponse from './websocket-response';
@@ -46,32 +30,32 @@ import * as _workspaceMeta from './workspace-meta';
 
 export type { AllTypes, BaseModel };
 // Reference to each model
-export const apiSpec = _apiSpec;
-export const clientCertificate = _clientCertificate;
-export const caCertificate = _caCertificate;
+export const apiSpec = models.apiSpec;
+export const clientCertificate = models.clientCertificate;
+export const caCertificate = models.caCertificate;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
-export const gitCredentials = _gitCredentials;
-export const gitRepository = _gitRepository;
+export const gitCredentials = models.gitCredentials;
+export const gitRepository = models.gitRepository;
 export const mockServer = _mockServer;
 export const mockRoute = _mockRoute;
-export const oAuth2Token = _oAuth2Token;
-export const pluginData = _pluginData;
+export const oAuth2Token = models.oAuth2Token;
+export const pluginData = models.pluginData;
 export const request = _request;
 export const requestGroup = _requestGroup;
 export const requestGroupMeta = _requestGroupMeta;
 export const requestMeta = _requestMeta;
 export const requestVersion = _requestVersion;
-export const runnerTestResult = _runnerTestResult;
+export const runnerTestResult = models.runnerTestResult;
 export const response = _response;
-export const settings = _settings;
+export const settings = models.settings;
 export const project = _project;
-export const stats = _stats;
+export const stats = models.stats;
 export const unitTest = _unitTest;
 export const unitTestSuite = _unitTestSuite;
 export const unitTestResult = _unitTestResult;
-export const protoFile = _protoFile;
-export const protoDirectory = _protoDirectory;
+export const protoFile = models.protoFile;
+export const protoDirectory = models.protoDirectory;
 export const grpcRequest = _grpcRequest;
 export const grpcRequestMeta = _grpcRequestMeta;
 export const webSocketPayload = _webSocketPayload;
@@ -83,11 +67,11 @@ export const webSocketResponse = _webSocketResponse;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 export * as organization from './organization';
-export const userSession = _userSession;
-export const cloudCredential = _cloudCredential;
-export const mcpRequest = _mcpRequest;
-export const mcpResponse = _mcpResponse;
-export const mcpPayload = _mcpPayload;
+export const userSession = models.userSession;
+export const cloudCredential = models.cloudCredential;
+export const mcpRequest = models.mcpRequest;
+export const mcpPayload = models.mcpPayload;
+export const mcpResponse = models.mcpResponse;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
@@ -176,6 +160,14 @@ export function canDuplicate(type: string) {
   return model ? model.canDuplicate : false;
 }
 
+export function rewriteReferences<T extends BaseModel>(doc: T, idMapping: Map<string, string>): T {
+  const model = getModel(doc.type);
+  if (!model) return doc;
+  return 'rewriteReferences' in model
+    ? (model.rewriteReferences as unknown as (doc: T, idMapping: Map<string, string>) => T)(doc, idMapping)
+    : doc;
+}
+
 export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
   const model = getModel(type);
 
@@ -207,7 +199,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
-  const migratedDoc = model.migrate(fullObject);
+  const migratedDoc = ('migrate' in model ? model.migrate : (doc: T) => doc)(fullObject);
   // optional keys do not generated in init method but should allow update.
   // If we put those keys in init method, all related models will show as modified in git sync.
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];

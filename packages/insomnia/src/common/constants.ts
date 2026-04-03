@@ -1,7 +1,7 @@
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import type { MockServer } from '../models/mock-server';
-import type { KeyCombination } from './settings';
+import { isLinux, isMac, isWindows, platform } from './platform';
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.
 const ENV = 'env';
@@ -28,11 +28,7 @@ export const getAppDefaultLightTheme = () => appConfig.lightTheme;
 export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
-export const getAppPlatform = () => process.platform;
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const isMac = () => getAppPlatform() === 'darwin';
-export const isLinux = () => getAppPlatform() === 'linux';
-export const isWindows = () => getAppPlatform() === 'win32';
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
@@ -53,19 +49,19 @@ export const getBrowserUserAgent = () =>
 
 export function updatesSupported() {
   // Updates are not supported on Linux
-  if (isLinux()) {
+  if (isLinux) {
     return false;
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows() && process.env['PORTABLE_EXECUTABLE_DIR']) {
+  if (isWindows && process.env['PORTABLE_EXECUTABLE_DIR']) {
     return false;
   }
 
   return true;
 }
 
-export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
+export const getClientString = () => `${getAppEnvironment()}::${platform}::${getAppVersion()}`;
 
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
@@ -93,44 +89,7 @@ export enum EditorKeyMap {
 
 // Hotkey
 // For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
-export const MNEMONIC_SYM = isMac() ? '' : '&';
-
-export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) => {
-  const mac = isMac();
-  switch (key) {
-    case 'ctrl': {
-      return mac ? '⌃' : 'Ctrl';
-    }
-
-    case 'alt': {
-      return mac ? '⌥' : 'Alt';
-    }
-
-    case 'shift': {
-      return mac ? '⇧' : 'Shift';
-    }
-
-    case 'meta': {
-      if (mac) {
-        return '⌘';
-      }
-
-      if (isWindows()) {
-        // Note: Although this unicode character for the Windows doesn't exist, the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
-        // see: https://en.wikipedia.org/wiki/Windows_key
-        return 'Win';
-      }
-
-      // Note: To avoid using a Microsoft trademark, much Linux documentation refers to the key as "Super". This can confuse some users who still consider it a "Windows key". In KDE Plasma documentation it is called the Meta key even though the X11 "Super" shift bit is used.
-      // see: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
-      return 'Super';
-    }
-
-    default: {
-      throw new Error(key + 'unrecognized key');
-    }
-  }
-};
+export const MNEMONIC_SYM = isMac ? '' : '&';
 
 // Oauth redirect URL
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';

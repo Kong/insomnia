@@ -9,6 +9,7 @@ import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOpti
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
@@ -118,9 +119,10 @@ const writeEventLogAndNotify = ({
   });
 };
 
-const buildTimeline = (url: string) => {
+const buildTimeline = (url: string, path?: string) => {
   const timeline = [
-    { value: `Connected to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Connecting to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Handshake path: ${path || '/socket.io'}`, name: 'Text', timestamp: Date.now() },
     { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
   ];
   return timeline;
@@ -134,6 +136,7 @@ interface OpenSocketIORequestOptions {
   headers: RequestHeader[];
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
+  path?: string;
   initialPayload?: string;
 }
 
@@ -147,14 +150,14 @@ const getCertificates = async ({
   requestId: string;
 }) => {
   // attach certificates to the request
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
   const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   // allow to read the file as it is chosen by user
   const caCertificate =
     (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
   const pemCertificates: string[] = [];
   const pemCertificateKeys: string[] = [];
@@ -214,7 +217,7 @@ const createErrorResponse = async (
   timelinePath: string,
   message: string,
 ) => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
@@ -289,7 +292,7 @@ const openSocketIOConnection = async (
       url: options.url,
       requestId: options.requestId,
     });
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
 
     const socketIOoptions: Partial<ManagerOptions & SocketOptions> = {
       extraHeaders: lowerCasedEnabledHeaders,
@@ -312,6 +315,13 @@ const openSocketIOConnection = async (
         token: options.authentication.token || '',
       };
     }
+
+    if (options.path) {
+      socketIOoptions.path = options.path;
+    }
+
+    const timeline = buildTimeline(url, options.path);
+    timeline.forEach(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
 
     const socket = SocketIOClient(url, socketIOoptions);
     SocketIOConnections.set(options.requestId, socket);
@@ -341,8 +351,6 @@ const openSocketIOConnection = async (
         writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(infoEvent) + '\n' });
       }
 
-      const timeline = buildTimeline(url);
-      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<SocketIOResponse> = {
         _id: responseId,
         parentId: request._id,

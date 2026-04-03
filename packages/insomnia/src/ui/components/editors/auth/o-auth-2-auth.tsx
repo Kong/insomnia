@@ -1,11 +1,12 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
+import type { OAuth2Token } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+
 import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
-import * as models from '../../../../models';
-import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -236,6 +237,82 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
   };
 };
 
+/**
+ * Returns a copy of an OAuth object with fields only suitable for selected type.
+ * See: https://github.com/Kong/insomnia/issues/5151
+ */
+const getActiveOAuth2AuthFields = (authentication: AuthTypeOAuth2): AuthTypeOAuth2 => {
+  const { grantType } = authentication;
+  const base: Partial<AuthTypeOAuth2> = {
+    type: authentication.type,
+    disabled: authentication.disabled,
+    grantType: authentication.grantType,
+    tokenPrefix: authentication.tokenPrefix,
+  };
+
+  switch (grantType) {
+    case GRANT_TYPE_AUTHORIZATION_CODE: {
+      return {
+        ...base,
+        authorizationUrl: authentication.authorizationUrl,
+        accessTokenUrl: authentication.accessTokenUrl,
+        clientId: authentication.clientId,
+        clientSecret: authentication.clientSecret,
+        usePkce: authentication.usePkce,
+        pkceMethod: authentication.pkceMethod,
+        redirectUrl: authentication.redirectUrl,
+        useDefaultBrowser: authentication.useDefaultBrowser,
+        scope: authentication.scope,
+        state: authentication.state,
+        credentialsInBody: authentication.credentialsInBody,
+        audience: authentication.audience,
+        resource: authentication.resource,
+        origin: authentication.origin,
+      } as AuthTypeOAuth2;
+    }
+    case GRANT_TYPE_CLIENT_CREDENTIALS: {
+      return {
+        ...base,
+        accessTokenUrl: authentication.accessTokenUrl,
+        clientId: authentication.clientId,
+        clientSecret: authentication.clientSecret,
+        scope: authentication.scope,
+        credentialsInBody: authentication.credentialsInBody,
+        audience: authentication.audience,
+        resource: authentication.resource,
+      } as AuthTypeOAuth2;
+    }
+    case GRANT_TYPE_PASSWORD: {
+      return {
+        ...base,
+        accessTokenUrl: authentication.accessTokenUrl,
+        clientId: authentication.clientId,
+        clientSecret: authentication.clientSecret,
+        username: authentication.username,
+        password: authentication.password,
+        scope: authentication.scope,
+        credentialsInBody: authentication.credentialsInBody,
+        audience: authentication.audience,
+      } as AuthTypeOAuth2;
+    }
+    case GRANT_TYPE_IMPLICIT: {
+      return {
+        ...base,
+        authorizationUrl: authentication.authorizationUrl,
+        clientId: authentication.clientId,
+        redirectUrl: authentication.redirectUrl,
+        responseType: authentication.responseType,
+        scope: authentication.scope,
+        state: authentication.state,
+        audience: authentication.audience,
+      } as AuthTypeOAuth2;
+    }
+    default: {
+      return authentication;
+    }
+  }
+};
+
 const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
   const {
     clientId,
@@ -427,8 +504,8 @@ const OAuth2TokenInput: FC<{
   const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
     await (token
-      ? models.oAuth2Token.update(token, { [property]: value })
-      : models.oAuth2Token.create({ [property]: value, parentId: _id }));
+      ? services.oAuth2Token.update(token, { [property]: value })
+      : services.oAuth2Token.create({ [property]: value, parentId: _id }));
   };
 
   const expiryLabel = useMemo(() => {
@@ -504,7 +581,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
   const [token, setToken] = useState<OAuth2Token | undefined>();
   useEffect(() => {
     const fn = async () => {
-      const token = await models.oAuth2Token.getByParentId(_id);
+      const token = await services.oAuth2Token.getByParentId(_id);
       setToken(token);
     };
     fn();
@@ -533,7 +610,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
             onClick={() => {
               if (token) {
                 setToken(undefined);
-                models.oAuth2Token.remove(token);
+                services.oAuth2Token.remove(token);
               }
             }}
           >
@@ -548,7 +625,8 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
               setLoading(true);
 
               try {
-                const renderedAuthentication = (await handleRender(authentication)) as AuthTypeOAuth2;
+                const activeAuth = getActiveOAuth2AuthFields(authentication as AuthTypeOAuth2);
+                const renderedAuthentication = (await handleRender(activeAuth)) as AuthTypeOAuth2;
                 const t = await getOAuth2Token(_id, renderedAuthentication, true);
                 setToken(t);
                 setLoading(false);
@@ -556,7 +634,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
                 // Clear existing tokens if there's an error
                 if (token) {
                   setToken(undefined);
-                  models.oAuth2Token.remove(token);
+                  services.oAuth2Token.remove(token);
                 }
                 setError(err.message);
                 setLoading(false);

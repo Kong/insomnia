@@ -8,6 +8,7 @@ import {
   METHOD_GET,
   METHOD_POST,
 } from '~/common/constants';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { Request, RequestBody, RequestParameter } from '~/models/request';
 import { SegmentEvent } from '~/ui/analytics';
@@ -26,7 +27,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     req?: Request;
   };
 
-  const settings = await models.settings.getOrCreate();
+  const settings = await services.settings.getOrCreate();
   const defaultHeaders = settings.disableAppVersionUserAgent
     ? []
     : [
@@ -122,9 +123,9 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     }
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
-  models.stats.incrementCreatedRequests();
+  services.stats.incrementCreatedRequests();
 
-  const certificates = await models.clientCertificate.findByParentId(workspaceId);
+  const certificates = await services.clientCertificate.findByParentId(workspaceId);
 
   window.main.trackSegmentEvent({
     event: SegmentEvent.requestCreated,

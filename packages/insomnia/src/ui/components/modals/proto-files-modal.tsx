@@ -2,11 +2,12 @@ import * as protoLoader from '@grpc/proto-loader';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
+import type { ProtoDirectory, ProtoFile } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+import * as models from '~/models';
+
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
-import * as models from '../../../models';
-import { isProtoDirectory, type ProtoDirectory } from '../../../models/proto-directory';
-import { isProtoFile, type ProtoFile } from '../../../models/proto-file';
 import { ProtoDirectoryLoader } from '../../../network/grpc/proto-directory-loader';
 import { writeProtoFile } from '../../../network/grpc/write-proto-file';
 import { Modal, type ModalHandle } from '../base/modal';
@@ -17,6 +18,10 @@ import { type ExpandedProtoDirectory, ProtoFileList } from '../proto-file/proto-
 import { AsyncButton } from '../themed-button';
 import { showError, showModal } from '.';
 import { AlertModal } from './alert-modal';
+
+const { isProtoDirectory } = models.protoDirectory;
+const { isProtoFile } = models.protoFile;
+
 const tryToSelectFilePath = async () => {
   try {
     const { filePath, canceled } = await selectFileOrFolder({ itemTypes: ['file'], extensions: ['proto'] });
@@ -72,15 +77,15 @@ const traverseDirectory = (
 });
 
 const getProtoDirectories = async (workspaceId: string) => {
-  const allFiles = await models.protoFile.all();
-  const allDirs = await models.protoDirectory.all();
+  const allFiles = await services.protoFile.all();
+  const allDirs = await services.protoDirectory.all();
 
   // Get directories where the parent is the workspace
-  const rootDirs = await models.protoDirectory.findByParentId(workspaceId);
+  const rootDirs = await services.protoDirectory.findByParentId(workspaceId);
   // Expand each directory
   const expandedDirs = rootDirs.map(dir => traverseDirectory(dir, allFiles, allDirs));
   // Get files where the parent is the workspace
-  const individualFiles = await models.protoFile.findByParentId(workspaceId);
+  const individualFiles = await services.protoFile.findByParentId(workspaceId);
   if (individualFiles.length) {
     return [
       {
@@ -229,7 +234,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     // allow to read the file as it is chosen by user
     const protoText = await window.main.insecureReadFile({ path: filePath });
 
-    const updatedFile = await models.protoFile.update(protoFile, {
+    const updatedFile = await services.protoFile.update(protoFile, {
       name: window.path.basename(filePath),
       protoText,
     });
@@ -251,7 +256,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       ),
       addCancel: true,
       onConfirm: async () => {
-        models.protoDirectory.remove(protoDirectory);
+        services.protoDirectory.remove(protoDirectory);
         setSelectedId('');
       },
     });
@@ -266,7 +271,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       ),
       addCancel: true,
       onConfirm: () => {
-        models.protoFile.remove(protoFile);
+        services.protoFile.remove(protoFile);
         if (selectedId === protoFile._id) {
           setSelectedId('');
         }
@@ -284,7 +289,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     // allow to read the file as it is chosen by user
     const protoText = await window.main.insecureReadFile({ path: filePath });
 
-    const newFile = await models.protoFile.create({
+    const newFile = await services.protoFile.create({
       name: window.path.basename(filePath),
       parentId: workspaceId,
       protoText,

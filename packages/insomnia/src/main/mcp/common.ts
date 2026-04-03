@@ -27,6 +27,7 @@ import {
   unsupportedMethodPrefix,
 } from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
+import { services } from '~/insomnia-data';
 import type {
   CommonMcpOptions,
   McpClient,
@@ -40,7 +41,6 @@ import type {
 } from '~/main/mcp/types';
 import { insecureReadFile } from '~/main/secure-read-file';
 import * as models from '~/models';
-import { prefix as mcpResponsePrefix } from '~/models/mcp-response';
 import { invariant } from '~/utils/invariant';
 
 interface ConnectingState {
@@ -116,7 +116,7 @@ export const createConnectionContext = async (
   const connectionId = uuidV4();
 
   // Create response model and file streams
-  const responseId = generateId(mcpResponsePrefix);
+  const responseId = generateId(models.mcpResponse.prefix);
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
   const eventLogPath = path.join(responsesDir, uuidV4() + '.response');
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
@@ -139,7 +139,7 @@ export const createConnectionContext = async (
   const environmentId = environment ? environment._id : null;
 
   // Create MCP payload model if not exists
-  await models.mcpPayload.getOrCreateByParentIdAndUrl(requestId, options.url);
+  await services.mcpPayload.getOrCreateByParentIdAndUrl(requestId, options.url);
 
   const context: ConnectionContext = {
     connectionId,
@@ -344,7 +344,7 @@ export const parseAndLogMcpRequest = (context: ConnectionContext, message: any) 
 };
 
 const getAllEvents = async (options: { responseId: string }): Promise<McpEvent[]> => {
-  const response = await models.mcpResponse.getById(options.responseId);
+  const response = await services.mcpResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }
@@ -437,10 +437,10 @@ export const cancelRequest = async (options: { messageId: string } & CommonMcpOp
 
 // To support MCP requests with custom CA certificates
 export const getFetchDispatcher = async (requestId: string) => {
-  const mcpRequest = await models.mcpRequest.getById(requestId);
+  const mcpRequest = await services.mcpRequest.getById(requestId);
   invariant(mcpRequest, 'McpRequest not found');
   const workspaceId = mcpRequest.parentId;
-  const workspaceCaCert = await models.caCertificate.findByParentId(workspaceId);
+  const workspaceCaCert = await services.caCertificate.getByParentId(workspaceId);
 
   return new Agent({
     connect: {

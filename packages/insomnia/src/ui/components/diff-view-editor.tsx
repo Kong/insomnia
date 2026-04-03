@@ -101,18 +101,27 @@ export const DiffEditor = ({ original, modified, highlightSystemChange = false }
       modified: modifiedModel,
     });
 
-    const originalEditor = diffEditor.getOriginalEditor();
-    const modifiedEditor = diffEditor.getModifiedEditor();
-
     // Add system change decorations if enabled
     if (highlightSystemChange) {
-      const systemChangeLines = findSystemChangeLines(original, modified);
-      systemChangeLines.originalLines.forEach(lineNumber => {
-        addLineDecoration(originalEditor, lineNumber);
-      });
-      systemChangeLines.modifiedLines.forEach(lineNumber => {
-        addLineDecoration(modifiedEditor, lineNumber);
-      });
+      setTimeout(() => {
+        let lineChanges = diffEditor.getLineChanges();
+        if (Array.isArray(lineChanges)) {
+          // It means the block is removed when modifiedEndLineNumber is smaller than modifiedStartLineNumber in a line change
+          // We only care about the changes in the modified block and added block
+          lineChanges = lineChanges.filter(
+            ({ modifiedStartLineNumber, modifiedEndLineNumber }) => modifiedEndLineNumber >= modifiedStartLineNumber,
+          );
+
+          if (lineChanges.length > 0) {
+            const modifiedEditor = diffEditor.getModifiedEditor();
+
+            const systemChangeLineIntervals = findSystemChangeLines(modified, lineChanges);
+            systemChangeLineIntervals.forEach(({ start, end }) => {
+              addLineDecoration(modifiedEditor, start, end);
+            });
+          }
+        }
+      }, 0);
     }
 
     diffEditor.layout(undefined, true);
@@ -127,10 +136,15 @@ const hoverMessage = [
   },
 ];
 
-function addLineDecoration(editor: monaco.editor.IStandaloneCodeEditor, lineNumber: number) {
+function addLineDecoration(
+  editor: monaco.editor.IStandaloneCodeEditor,
+  startLineNumber: number,
+  endLineNumber: number,
+) {
+  // The start line will always have a glyph margin icon
   editor.createDecorationsCollection([
     {
-      range: new monaco.Range(lineNumber, 1, lineNumber, 1),
+      range: new monaco.Range(startLineNumber, 1, startLineNumber, 1),
       options: {
         className: 'system-change-line-bg',
         glyphMarginClassName: 'info-decoration',
@@ -141,4 +155,19 @@ function addLineDecoration(editor: monaco.editor.IStandaloneCodeEditor, lineNumb
       },
     },
   ]);
+  // The rest lines will only have background decoration, no glyph margin icon
+  if (endLineNumber > startLineNumber) {
+    editor.createDecorationsCollection([
+      {
+        range: new monaco.Range(startLineNumber + 1, 1, endLineNumber, 1),
+        options: {
+          className: 'system-change-line-bg',
+          hoverMessage: hoverMessage,
+          glyphMarginHoverMessage: hoverMessage,
+          isWholeLine: true,
+          showIfCollapsed: false,
+        },
+      },
+    ]);
+  }
 }

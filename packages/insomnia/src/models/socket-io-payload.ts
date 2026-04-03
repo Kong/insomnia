@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_JSON } from '../common/constants';
 import { database } from '../common/database';
+import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
 import type { BaseModel } from './types';
 
 export const name = 'SocketIO Payload';
@@ -93,3 +94,7 @@ export async function getOrCreateByParentId(parentId: string) {
 }
 
 export const all = () => database.find<SocketIOPayload>(type);
+
+export function rewriteReferences(payload: SocketIOPayload, idMapping: Map<string, string>): SocketIOPayload {
+  return { ...payload, ...replaceIdsInFields(payload, ['args'], idMapping) };
+}

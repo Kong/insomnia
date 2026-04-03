@@ -1,4 +1,5 @@
 import { database } from '../common/database';
+import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
 import type { BaseModel } from './types';
 
 export const name = 'WebSocket Payload';
@@ -62,3 +63,7 @@ export const getById = (_id: string) => database.findOne<WebSocketPayload>(type,
 export const getByParentId = (parentId: string) => database.findOne<WebSocketPayload>(type, { parentId });
 
 export const all = () => database.find<WebSocketPayload>(type);
+
+export function rewriteReferences(payload: WebSocketPayload, idMapping: Map<string, string>): WebSocketPayload {
+  return { ...payload, ...replaceIdsInFields(payload, ['value'], idMapping) };
+}

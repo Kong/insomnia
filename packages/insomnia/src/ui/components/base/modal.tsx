@@ -19,6 +19,7 @@ export interface ModalProps {
   onHide?: () => void;
   children?: ReactNode;
   className?: string;
+  dataTestId?: string;
   maskClosable?: boolean;
   keyboardClosable?: boolean;
 }
@@ -35,6 +36,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
       centered,
       children,
       className,
+      dataTestId,
       onHide: onHideProp,
       onShow,
       skinny,
@@ -119,7 +121,9 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
               {...(maskClosable ? { 'data-close-modal': true } : {})}
             />
             <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
-              <div className="modal__content">{children}</div>
+              <div className="modal__content" data-testid={dataTestId}>
+                {children}
+              </div>
             </div>
           </Dialog>
         </RACModal>

@@ -5,6 +5,7 @@ import path from 'node:path';
 import type { ElectronApplication, TraceMode } from '@playwright/test';
 import { test as baseTest } from '@playwright/test';
 
+import { InsomniaApp } from './pages';
 import { bundleType, cwd, executablePath, mainPath, randomDataPath } from './paths';
 
 // Throw an error if the condition fails
@@ -73,6 +74,7 @@ export const test = baseTest.extend<{
       encPrivateKey: AESMessage;
     };
   };
+  insomnia: InsomniaApp;
 }>({
   app: async ({ playwright, trace, dataPath, userConfig }, use, testInfo) => {
     invariant(testInfo.config.webServer?.url, 'Requires web server config');
@@ -100,7 +102,7 @@ export const test = baseTest.extend<{
     const electronApp = await playwright._electron.launch({
       cwd,
       executablePath,
-      args: bundleType() === 'package' ? [] : [mainPath],
+      args: bundleType() === 'package' ? ['--no-sandbox'] : ['--no-sandbox', mainPath],
       env: {
         ...process.env,
         ...options,
@@ -151,7 +153,7 @@ export const test = baseTest.extend<{
     await electronApp.close();
   },
   page: async ({ app }, use) => {
-    const page = await app.firstWindow();
+    const page = await app.firstWindow({ timeout: 60_000 });
 
     await page.waitForLoadState();
 
@@ -199,5 +201,9 @@ export const test = baseTest.extend<{
         lastName: 'Morty',
       },
     });
+  },
+  insomnia: async ({ app, page }, use) => {
+    const insomnia = new InsomniaApp(page, app);
+    await use(insomnia);
   },
 });

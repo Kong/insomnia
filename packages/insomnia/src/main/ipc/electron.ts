@@ -32,6 +32,7 @@ export type HandleChannels =
   | 'curl.readyState'
   | 'curlRequest'
   | 'database.caCertificate.create'
+  | 'services.invoke'
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'generateCommitsFromDiff'
   | 'generateMockRouteDataFromSpec'
@@ -140,6 +141,7 @@ export const ipcMainHandle = (
 ) => ipcMain.handle(channel, listener);
 export type MainOnChannels =
   | 'addExecutionStep'
+  | 'analytics.setOrganizationId'
   | 'cancelCurlRequest'
   | 'clear'
   | 'completeExecutionStep'

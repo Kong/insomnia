@@ -1,5 +1,6 @@
 import { href, redirect } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { invariant } from '~/utils/invariant';
@@ -22,7 +23,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     const newRequest = await requestOperations.duplicate(req, { name, parentId, metaSortKey: -1e9 });
     invariant(newRequest, 'Failed to duplicate request');
 
-    models.stats.incrementCreatedRequests();
+    services.stats.incrementCreatedRequests();
 
     return null;
   }
@@ -30,7 +31,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const newRequest = await requestOperations.duplicate(req, { name });
   invariant(newRequest, 'Failed to duplicate request');
 
-  models.stats.incrementCreatedRequests();
+  services.stats.incrementCreatedRequests();
 
   return redirect(
     href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId', {

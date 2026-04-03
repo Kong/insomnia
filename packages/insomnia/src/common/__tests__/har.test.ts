@@ -2,6 +2,8 @@ import path from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import type { Cookie } from '../../models/cookie-jar';
@@ -14,7 +16,7 @@ describe('export', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
     await models.project.all();
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
   });
 
   describe('exportHar()', () => {

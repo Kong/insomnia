@@ -4,6 +4,9 @@ import nodePath from 'node:path';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
+import { type CaCertificate, type ClientCertificate, services, type Settings } from '~/insomnia-data';
+import { getKVPairFromData } from '~/utils/environment-utils';
+
 import type {
   ExecutionOption,
   RequestContext,
@@ -17,13 +20,10 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import type { CaCertificate } from '../models/ca-certificate';
-import type { ClientCertificate } from '../models/client-certificate';
 import type { Cookie, CookieJar } from '../models/cookie-jar';
 import {
   type Environment,
   EnvironmentType,
-  getKVPairFromData,
   type UserUploadEnvironment,
   vaultEnvironmentPath,
 } from '../models/environment';
@@ -39,7 +39,6 @@ import {
   type RequestParameter,
 } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
-import type { Settings } from '../models/settings';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
@@ -149,10 +148,10 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspace._id));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
   const responsesDir = nodePath.join(
     (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
@@ -214,10 +213,10 @@ export const fetchRequestData = async (
     }
   }
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
   const responsesDir = nodePath.join(
@@ -246,7 +245,7 @@ export const fetchRequestData = async (
 };
 
 export const fetchMcpRequestData = async (mcpRequestId: string) => {
-  const mcpRequest = await models.mcpRequest.getById(mcpRequestId);
+  const mcpRequest = await services.mcpRequest.getById(mcpRequestId);
   invariant(mcpRequest, 'failed to find MCP request ' + mcpRequestId);
 
   const workspace = await models.workspace.getById(mcpRequest.parentId);
@@ -260,7 +259,7 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   const environment = activeEnvironment || baseEnvironment;
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');

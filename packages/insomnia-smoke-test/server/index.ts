@@ -144,6 +144,13 @@ app.get('/updates/win', (request, response) => {
     name: '11.6.1',
   });
 });
+// mock endpoint for azure oauth config, used in external vault integration test
+app.get('/v1/oauth/azure/config', (_req, res) => {
+  res.status(200).send({
+    clientID: 'test_client_id',
+    clientRedirectURI: 'https://login.microsoftonline.com',
+  });
+});
 
 startWebSocketServer(
   app.listen(port, () => {

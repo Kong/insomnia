@@ -1,10 +1,12 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
 import type { ChangeBufferEvent } from '../..';
 import { database as db } from '../..';
-import { _repairDatabase } from './database-nedb';
+import { repairDatabase } from './repair-database';
 
 describe('init()', () => {
   it('handles being initialized twice', async () => {
@@ -320,7 +322,7 @@ describe('_repairDatabase()', async () => {
     ]);
 
     // Run the fix algorithm
-    await _repairDatabase();
+    await repairDatabase();
 
     // Make sure things get adjusted
     const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
@@ -469,7 +471,7 @@ describe('_repairDatabase()', async () => {
       },
     ]);
     // Run the fix algorithm
-    await _repairDatabase();
+    await repairDatabase();
     // Make sure things get adjusted
     const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
@@ -520,43 +522,43 @@ describe('_repairDatabase()', async () => {
       _id: 'w3',
       name: 'Workspace 3',
     });
-    await models.apiSpec.updateOrCreateForParentId(w1._id, {
+    await services.apiSpec.updateOrCreateForParentId(w1._id, {
       fileName: '',
     });
-    await models.apiSpec.updateOrCreateForParentId(w2._id, {
+    await services.apiSpec.updateOrCreateForParentId(w2._id, {
       fileName: models.apiSpec.init().fileName,
     });
-    await models.apiSpec.updateOrCreateForParentId(w3._id, {
+    await services.apiSpec.updateOrCreateForParentId(w3._id, {
       fileName: 'Unique name',
     });
     // Make sure we have everything
-    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('');
-    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
-    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
+    expect((await services.apiSpec.getByParentId(w1._id))?.fileName).toBe('');
+    expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
+    expect((await services.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
     // Run the fix algorithm
-    await _repairDatabase();
+    await repairDatabase();
     // Make sure things get adjusted
-    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
-    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
-    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
+    expect((await services.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
+    expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
+    expect((await services.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
   });
 
   it('fixes old git uris', async () => {
-    const oldRepoWithSuffix = await models.gitRepository.create({
+    const oldRepoWithSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
       uriNeedsMigration: true,
     });
-    const oldRepoWithoutSuffix = await models.gitRepository.create({
+    const oldRepoWithoutSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar',
       uriNeedsMigration: true,
     });
-    const newRepoWithSuffix = await models.gitRepository.create({
+    const newRepoWithSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
     });
-    const newRepoWithoutSuffix = await models.gitRepository.create({
+    const newRepoWithoutSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar',
     });
-    await _repairDatabase();
+    await repairDatabase();
     expect(await db.findOne(models.gitRepository.type, { _id: oldRepoWithSuffix._id })).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
@@ -617,6 +619,43 @@ describe('duplicate()', () => {
     const spy = vi.spyOn(models.workspace, 'migrate');
     await db.duplicate(workspace);
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('should rewrite chained request references when duplicating a folder', async () => {
+    const workspace = await models.workspace.create({ name: 'Workspace' });
+    const folder = await models.requestGroup.create({ parentId: workspace._id, name: 'Folder' });
+    const req1 = await models.request.create({
+      parentId: folder._id,
+      name: 'Request 1',
+      url: 'https://example.com/first',
+    });
+    const req2 = await models.request.create({
+      parentId: folder._id,
+      name: 'Request 2',
+      url: `https://example.com/{% response 'body', '${req1._id}', 'b64::JC5pZA==::46b', 'never', 60 %}`,
+    });
+
+    const duplicatedFolder = await db.duplicate(folder);
+
+    // Find duplicated requests
+    const duplicatedRequests = await db.find<typeof req1>(models.request.type, {
+      parentId: duplicatedFolder._id,
+    });
+    expect(duplicatedRequests).toHaveLength(2);
+
+    const dupReq1 = duplicatedRequests.find(r => r.name === 'Request 1');
+    const dupReq2 = duplicatedRequests.find(r => r.name === 'Request 2');
+    expect(dupReq1).toBeDefined();
+    expect(dupReq2).toBeDefined();
+
+    // The duplicated req2 should reference the duplicated req1, not the original
+    expect(dupReq2!.url).not.toContain(req1._id);
+    expect(dupReq2!.url).toContain(dupReq1!._id);
+    expect(dupReq2!.url).toContain("{% response 'body',");
+
+    // Original should be unchanged
+    const originalReq2 = await db.findOne(models.request.type, { _id: req2._id });
+    expect(originalReq2!.url).toContain(req1._id);
   });
 });
 

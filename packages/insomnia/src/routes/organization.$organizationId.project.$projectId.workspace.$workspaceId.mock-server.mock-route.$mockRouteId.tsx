@@ -1,4 +1,5 @@
 import type * as Har from 'har-format';
+import { isApiError, upsertMockbin } from 'insomnia-api';
 import { useCallback } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router';
@@ -36,7 +37,6 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
@@ -164,23 +164,14 @@ export const MockRouteRoute = () => {
     workspaceId: string;
   };
 
-  const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
+  const upsertBinOnRemoteFromResponse = async (compoundId: string): Promise<string> => {
     try {
-      const res = await insomniaFetch<
-        | string
-        | {
-            error: string;
-            message: string;
-          }
-      >({
-        origin: mockbinUrl,
-        path: `/bin/upsert/${compoundId}`,
-        method: 'PUT',
+      const res = await upsertMockbin({
+        mockbinUrl,
+        compoundId,
         organizationId,
         sessionId: userSession.id,
-        headers: {
-          'insomnia-mock-method': mockRoute.method,
-        },
+        method: mockRoute.method,
         data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
@@ -189,10 +180,6 @@ export const MockRouteRoute = () => {
           body: mockRoute.body,
         }),
       });
-      if (typeof res === 'object' && 'message' in res && 'error' in res) {
-        console.error('error response', res);
-        return `Mock API ${res.error}:\n${res.message}`;
-      }
 
       if (typeof res === 'string') {
         return '';
@@ -200,6 +187,10 @@ export const MockRouteRoute = () => {
       console.log('[mock] Error: invalid response from remote', { res, mockbinUrl });
       return 'Unexpected response, see console for details';
     } catch (e) {
+      if (isApiError(e)) {
+        console.error('error response', e);
+        return `Mock API ${e.name}:\n${e.message}`;
+      }
       const errorMessage = e instanceof Error ? e.message : String(e);
       return `Unhandled contacting Mock API at ${mockbinUrl}\n${errorMessage}`;
     }

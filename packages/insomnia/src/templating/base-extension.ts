@@ -5,6 +5,7 @@ import os from 'node:os';
 import iconv from 'iconv-lite';
 
 import { jarFromCookies } from '~/common/cookies';
+import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { database as db } from '../common/database';
@@ -142,14 +143,14 @@ export default class BaseExtension {
             },
           },
           cloudCredential: {
-            getById: models.cloudCredential.getById,
-            update: models.cloudCredential.update,
+            getById: services.cloudCredential.getById,
+            update: services.cloudCredential.update,
           },
           workspace: {
             getById: models.workspace.getById,
           },
           oAuth2Token: {
-            getByRequestId: models.oAuth2Token.getByParentId,
+            getByRequestId: services.oAuth2Token.getByParentId,
           },
           cookieJar: {
             getOrCreateForParentId: (parentId: string) => {
@@ -166,7 +167,7 @@ export default class BaseExtension {
             getBodyBuffer,
           },
           settings: {
-            get: models.settings.get,
+            get: services.settings.get,
           },
         },
       },

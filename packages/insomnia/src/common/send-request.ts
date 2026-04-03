@@ -1,14 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { database, initDatabase } from '~/insomnia-data';
-import { nedbDatabase } from '~/insomnia-data/node';
+import { database, initDatabase, services, type Settings } from '~/insomnia-data';
+import { createNedbDatabase } from '~/insomnia-data/node';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';
-import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { Settings } from '../models/settings';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -49,7 +47,7 @@ export async function getSendRequestCallbackMemDb(
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await initDatabase(
-    nedbDatabase,
+    createNedbDatabase(),
     {
       inMemoryOnly: true,
     },
@@ -69,7 +67,7 @@ export async function getSendRequestCallbackMemDb(
   });
 
   // Now get settings (may come from fixtures) and merge with overrides
-  const settings = await models.settings.getOrCreate();
+  const settings = await services.settings.getOrCreate();
   const mergedSettings = { ...settings, ...settingsOverrides };
   await database.batchModifyDocs({
     upsert: [mergedSettings],

@@ -1,7 +1,7 @@
 import { updateUserRoles } from 'insomnia-api';
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -16,7 +16,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(typeof roleId === 'string', 'Role ID is required');
 
   try {
-    const user = await models.userSession.getOrCreate();
+    const user = await services.userSession.getOrCreate();
     const sessionId = user.id;
     const response = await updateUserRoles({
       organizationId,

@@ -1,10 +1,12 @@
 import { expect } from '@playwright/test';
 
+import { InsomniaApp } from '../../playwright/pages';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test('can use bundled plugins, node-libcurl, httpsnippet, hidden browser window', async ({ app, page }) => {
-  await page.getByTestId('settings-button').click();
+  const insomnia = new InsomniaApp(page, app);
+  await insomnia.statusbar.openPreferences();
   await page.getByRole('tab', { name: 'Credentials' }).click();
   // Check that bundled plugins are available in the Cloud Credentials tab
   await expect.soft(page.getByRole('button', { name: 'Create Cloud Credential' })).toBeVisible();
