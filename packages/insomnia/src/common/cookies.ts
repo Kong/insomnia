@@ -22,7 +22,7 @@ export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => {
 /**
  * Get a request.jar() from a list of cookie objects
  */
-export const jarFromCookies = (cookies: Cookie[]) => {
+export const jarFromCookies = (cookies: Cookie[] | ToughCookie[]) => {
   let jar: CookieJar;
 
   try {
