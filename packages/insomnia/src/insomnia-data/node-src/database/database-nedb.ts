@@ -21,12 +21,12 @@ import type {
   IDatabase,
   Operation,
   Query,
+  Workspace,
+  WorkspaceMeta,
 } from '~/insomnia-data';
 import { mustGetModel } from '~/models';
 import type { AllTypes, BaseModel } from '~/models/index';
 import * as models from '~/models/index';
-import type { Workspace } from '~/models/workspace';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
 
 import { repairDatabase } from './repair-database';
 

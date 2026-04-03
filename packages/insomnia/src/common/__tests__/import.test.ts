@@ -3,10 +3,9 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-
 import { EnvironmentKvPairDataType, EnvironmentType, services } from '~/insomnia-data';
 
-import { request, requestGroup, workspace } from '../../models';
+import { request, requestGroup } from '../../models';
 import * as importUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
 import { tryImportV5Data } from '../insomnia-v5';
@@ -160,8 +159,8 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const workspacesCount = await workspace.count();
-    const projectWorkspaces = await workspace.findByParentId(projectToImportTo._id);
+    const workspacesCount = await services.workspace.count();
+    const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
     const curlRequests = await request.findByParentId(projectWorkspaces[0]._id);
 
     expect(workspacesCount).toBe(1);
@@ -177,7 +176,7 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
 
     const scanResult = await importUtil.scanResources([
       {
@@ -218,7 +217,7 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const projectWorkspaces = await workspace.findByParentId(projectToImportTo._id);
+    const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
 
     const requestGroups = await requestGroup.findByParentId(projectWorkspaces[0]._id);
     const requests = await request.findByParentId(requestGroups[0]._id);
@@ -232,7 +231,7 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
 
     const scanResult = await importUtil.scanResources([
       {
@@ -296,7 +295,7 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const projectWorkspaces = await workspace.findByParentId(projectId);
+    const projectWorkspaces = await services.workspace.findByParentId(projectId);
     const importedWorkspaceId = projectWorkspaces[0]._id;
     const requestBaseEnvironment = await services.environment.getByParentId(importedWorkspaceId);
 
@@ -318,7 +317,7 @@ describe('importRaw()', () => {
     );
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
     const workspaceId = existingWorkspace._id;
     const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
     await services.environment.update(baseEnvironment, {
@@ -359,7 +358,7 @@ describe('importRaw()', () => {
     );
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
     const workspaceId = existingWorkspace._id;
     const baseEnvironmentPair = [
       {
@@ -422,7 +421,7 @@ describe('importRaw()', () => {
     );
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create();
+    const existingWorkspace = await services.workspace.create();
     const workspaceId = existingWorkspace._id;
     const baseEnvironmentPair = [
       {
@@ -482,6 +481,21 @@ describe('importRaw()', () => {
     expect(newKvPairData.filter(pair => !pair.enabled).length).toBe(2);
     expect(newKvPairData.find(pair => pair.name === 'from' && pair.enabled)?.value).toBe('baseEnv');
     expect(newKvPairData.find(pair => pair.name === 'foo')?.value).toBe('bar');
+  });
+
+  it('concurrent scanResources calls should not duplicate the resource cache', async () => {
+    const proj = await services.project.create();
+    await Promise.all(
+      Array.from({ length: 5 }, (_, i) =>
+        importUtil.scanResources([{ contentStr: `curl -X POST https://${i}.test -d "n=${i}"` }]),
+      ),
+    );
+
+    const workspaces = await importUtil.importResourcesToProject({ projectId: proj._id });
+    expect(workspaces).toHaveLength(1);
+
+    const reqs = await request.findByParentId(workspaces[0]._id);
+    expect(reqs).toHaveLength(1);
   });
 
   it('should resolve operationId to method and name', async () => {

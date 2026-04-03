@@ -7,6 +7,9 @@ import orderedJSON from 'json-order';
 import type {
   CaCertificate,
   ClientCertificate,
+  MockRoute,
+  MockServer,
+  Workspace,
   Cookie,
   CookieJar,
   Environment,
@@ -14,7 +17,7 @@ import type {
   Settings,
   UserUploadEnvironment,
 } from '~/insomnia-data';
-import { EnvironmentType, services } from '~/insomnia-data';
+import { services, EnvironmentType } from '~/insomnia-data';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
@@ -30,8 +33,6 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import type { MockRoute } from '../models/mock-route';
-import type { MockServer } from '../models/mock-server';
 import {
   type BaseRequest,
   isRequest,
@@ -43,7 +44,6 @@ import {
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
-import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginData from '../plugins/context/data';
 import * as pluginNetwork from '../plugins/context/network';
@@ -136,13 +136,13 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
     models.mockRoute.type,
     models.mockServer.type,
   ]);
-  const workspaceDoc = ancestors.find(isWorkspace);
+  const workspaceDoc = ancestors.find(models.workspace.isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
   const workspaceId = workspaceDoc._id;
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
   // NOTE: parent folders wont be checked in here since we only use it for oauth2 requests right now, so they are discarded in that code path
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
@@ -183,13 +183,13 @@ export const fetchRequestData = async (
     ],
   );
 
-  const workspaceDoc = ancestors.find(isWorkspace);
+  const workspaceDoc = ancestors.find(models.workspace.isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
   const workspaceId = workspaceDoc._id;
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   const activeEnvironmentId = overrideEnvironmentId ?? workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
@@ -251,10 +251,10 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   const mcpRequest = await services.mcpRequest.getById(mcpRequestId);
   invariant(mcpRequest, 'failed to find MCP request ' + mcpRequestId);
 
-  const workspace = await models.workspace.getById(mcpRequest.parentId);
+  const workspace = await services.workspace.getById(mcpRequest.parentId);
   invariant(workspace, 'failed to find workspace');
   const workspaceId = workspace._id;
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
   const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
@@ -516,7 +516,10 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
 
   // location is the complete path of a request, including project, collection and folder(if have).
   const requestLocation = ancestors
-    .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || models.project.isProject(doc))
+    .filter(
+      doc =>
+        isRequest(doc) || isRequestGroup(doc) || models.workspace.isWorkspace(doc) || models.project.isProject(doc),
+    )
     .reverse()
     .map(doc => doc.name);
   let vault;

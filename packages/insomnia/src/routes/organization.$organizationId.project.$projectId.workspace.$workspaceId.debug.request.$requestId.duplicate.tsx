@@ -1,7 +1,6 @@
 import { href, redirect } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -16,7 +15,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(req, 'Request not found');
 
   if (parentId) {
-    const workspace = await models.workspace.getById(parentId);
+    const workspace = await services.workspace.getById(parentId);
     invariant(workspace, 'Workspace is required');
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     // Move to top of sort order

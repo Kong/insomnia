@@ -44,13 +44,10 @@ import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sort
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
-import type { Environment } from '~/insomnia-data';
-import type { Project } from '~/insomnia-data';
+import type { GrpcRequest, Workspace, Environment, Project } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import * as models from '~/models';
-import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
-import { getByParentId as getGrpcRequestMetaByParentId } from '~/models/grpc-request-meta';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import {
   isEventStreamRequest,
@@ -63,7 +60,6 @@ import { isRequestGroup, isRequestGroupId, type RequestGroup } from '~/models/re
 import { getByParentId as getRequestMetaByParentId } from '~/models/request-meta';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '~/models/socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '~/models/websocket-request';
-import { isDesign, type Workspace } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -169,13 +165,13 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
       throw redirect(href('/organization/:organizationId/project', { organizationId }));
     }
 
-    const activeWorkspace = await models.workspace.getById(workspaceId);
+    const activeWorkspace = await services.workspace.getById(workspaceId);
     if (!activeWorkspace) {
       showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
       throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
     }
 
-    const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+    const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
     const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
     // TODO(george): we should remove this after enabling the sidebar for the runner
@@ -303,7 +299,7 @@ const Debug = () => {
     const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
-        if (isGrpcRequest(doc) && event === 'insert') {
+        if (models.grpcRequest.isGrpcRequest(doc) && event === 'insert') {
           setGrpcStates(grpcStates => [...grpcStates, { requestId: doc._id, ...INITIAL_GRPC_REQUEST_STATE }]);
         }
       }
@@ -400,8 +396,8 @@ const Debug = () => {
     sidebar_toggle: toggleSidebar,
     request_togglePin: async () => {
       if (requestId) {
-        const meta = isGrpcRequestId(requestId)
-          ? await getGrpcRequestMetaByParentId(requestId)
+        const meta = models.grpcRequest.isGrpcRequestId(requestId)
+          ? await services.grpcRequestMeta.getByParentId(requestId)
           : await getRequestMetaByParentId(requestId);
         patchRequestMeta(requestId, { pinned: !meta?.pinned });
       }
@@ -843,7 +839,7 @@ const Debug = () => {
                 </Breadcrumb>
               </Breadcrumbs>
             </div>
-            {isDesign(activeWorkspace) && (
+            {models.workspace.isDesign(activeWorkspace) && (
               <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
             )}
             <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
@@ -1125,7 +1121,7 @@ const Debug = () => {
                           IO
                         </span>
                       )}
-                      {isGrpcRequest(item.doc) && (
+                      {models.grpcRequest.isGrpcRequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
                           gRPC
                         </span>
@@ -1173,7 +1169,7 @@ const Debug = () => {
                     label = `${getMethodShortHand(item.doc)} ${label}`;
                   } else if (isWebSocketRequest(item.doc)) {
                     label = `WS ${label}`;
-                  } else if (isGrpcRequest(item.doc)) {
+                  } else if (models.grpcRequest.isGrpcRequest(item.doc)) {
                     label = `gRPC ${label}`;
                   }
 
@@ -1249,7 +1245,7 @@ const Debug = () => {
                     {workspaceId ? (
                       <ErrorBoundary showAlert>
                         {isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
-                        {isGrpcRequestId(requestId) && grpcState && (
+                        {models.grpcRequest.isGrpcRequestId(requestId) && grpcState && (
                           <GrpcRequestPane
                             key={grpcState.requestId}
                             grpcState={grpcState}
@@ -1286,7 +1282,7 @@ const Debug = () => {
                       />
                       <Panel id="pane-two" order={2} minSize={10} className="pane-two theme--pane">
                         <ErrorBoundary showAlert>
-                          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+                          {activeRequest && models.grpcRequest.isGrpcRequest(activeRequest) && grpcState && (
                             <GrpcResponsePane grpcState={grpcState} />
                           )}
                           {isRealtimeRequest && <RealtimeResponsePane requestId={activeRequest._id} />}
@@ -1574,7 +1570,7 @@ const CollectionGridListItem = ({
             IO
           </span>
         )}
-        {isGrpcRequest(item.doc) && (
+        {models.grpcRequest.isGrpcRequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"

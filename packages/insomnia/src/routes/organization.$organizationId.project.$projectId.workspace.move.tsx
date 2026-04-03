@@ -2,10 +2,8 @@ import { href, redirect } from 'react-router';
 
 import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
+import { services, models } from '~/insomnia-data';
 import type { Project } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { scopeToActivity } from '~/models/workspace';
 import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -24,7 +22,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(newProjectId, 'Project ID is required');
     const newWorkspaceName = formData.get('name') as string;
 
-    const oldWorkspace = await models.workspace.getById(oldWorkspaceId);
+    const oldWorkspace = await services.workspace.getById(oldWorkspaceId);
     invariant(oldWorkspace, 'Workspace not found');
 
     // duplicate the workspace to the new project
@@ -59,7 +57,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
         organizationId: newOrgId,
         projectId: newProjectId,
         workspaceId: newWorkspace._id,
-      })}/${scopeToActivity(newWorkspace.scope)}`,
+      })}/${models.workspace.scopeToActivity(newWorkspace.scope)}`,
     );
   } catch (error) {
     return {

@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { removeResponsesForRequest } from '~/models/helpers/response-operations';
 import { invariant } from '~/utils/invariant';
@@ -14,7 +14,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Active workspace meta not found');
 
   await removeResponsesForRequest(requestId, workspaceMeta.activeEnvironmentId);

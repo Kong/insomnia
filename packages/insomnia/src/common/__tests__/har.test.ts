@@ -21,7 +21,7 @@ describe('export', () => {
 
   describe('exportHar()', () => {
     it('exports single requests', async () => {
-      const wrk = await models.workspace.create({
+      const wrk = await services.workspace.create({
         _id: 'wrk_1',
         name: 'Workspace',
       });
@@ -145,7 +145,7 @@ describe('export', () => {
     });
 
     it('exports multiple requests', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_1',
         name: 'Workspace',
       });
@@ -394,7 +394,7 @@ describe('export', () => {
 
   describe('exportHarWithRequest()', () => {
     it('renders does it correctly', async () => {
-      const workspace = await models.workspace.create();
+      const workspace = await services.workspace.create();
       const cookies: Cookie[] = [
         {
           id: '',
@@ -487,7 +487,7 @@ describe('export', () => {
     });
 
     it('export multipart request with file', async () => {
-      const workspace = await models.workspace.create();
+      const workspace = await services.workspace.create();
       const request: Request = {
         ...models.request.init(),
         _id: 'req_123',

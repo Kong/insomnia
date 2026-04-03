@@ -14,7 +14,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   });
 
   it('exports a single workspace and some requests only as an HTTP Archive', async () => {
-    const wrk1 = await models.workspace.create({
+    const wrk1 = await services.workspace.create({
       _id: 'wrk_1',
       name: 'Workspace 1',
     });
@@ -49,11 +49,11 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
         envvalue: 'private1',
       },
     });
-    await models.workspaceMeta.create({
+    await services.workspaceMeta.create({
       parentId: wrk1._id,
       activeEnvironmentId: env1Private._id,
     });
-    const wrk2 = await models.workspace.create({
+    const wrk2 = await services.workspace.create({
       _id: 'wrk_2',
       name: 'Workspace 2',
     });
@@ -113,11 +113,11 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   it('exports all workspaces as an HTTP Archive', async () => {
     await db.init({ inMemoryOnly: true }, true);
 
-    const wrk1 = await models.workspace.create({
+    const wrk1 = await services.workspace.create({
       _id: 'wrk_1',
       name: 'Workspace 1',
     });
-    const wrk2 = await models.workspace.create({
+    const wrk2 = await services.workspace.create({
       _id: 'wrk_2',
       name: 'Workspace 2',
     });
@@ -170,11 +170,11 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
         envvalue: 'private2',
       },
     });
-    await models.workspaceMeta.create({
+    await services.workspaceMeta.create({
       parentId: wrk1._id,
       activeEnvironmentId: env1Public._id,
     });
-    await models.workspaceMeta.create({
+    await services.workspaceMeta.create({
       parentId: wrk2._id,
       activeEnvironmentId: env2Private._id,
     });

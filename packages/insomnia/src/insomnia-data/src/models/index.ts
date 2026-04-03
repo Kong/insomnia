@@ -7,9 +7,13 @@ import * as cookieJar from './cookie-jar';
 import * as environment from './environment';
 import * as gitCredentials from './git-credentials';
 import * as gitRepository from './git-repository';
+import * as grpcRequest from './grpc-request';
+import * as grpcRequestMeta from './grpc-request-meta';
 import * as mcpPayload from './mcp-payload';
 import * as mcpRequest from './mcp-request';
 import * as mcpResponse from './mcp-response';
+import * as mockRoute from './mock-route';
+import * as mockServer from './mock-server';
 import * as oAuth2Token from './o-auth-2-token';
 import * as pluginData from './plugin-data';
 import * as project from './project';
@@ -22,6 +26,8 @@ import * as unitTest from './unit-test';
 import * as unitTestResult from './unit-test-result';
 import * as unitTestSuite from './unit-test-suite';
 import * as userSession from './user-session';
+import * as workspace from './workspace';
+import * as workspaceMeta from './workspace-meta';
 
 export const models = {
   apiSpec,
@@ -44,6 +50,12 @@ export const models = {
   settings,
   stats,
   userSession,
+  grpcRequest,
+  grpcRequestMeta,
+  workspace,
+  workspaceMeta,
+  mockRoute,
+  mockServer,
   unitTest,
   unitTestResult,
   unitTestSuite,

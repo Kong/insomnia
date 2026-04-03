@@ -3,17 +3,21 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { database } from '~/common/database';
-import type { McpRequest, Project, UnitTestSuite } from '~/insomnia-data';
+import type {
+  GrpcRequest,
+  MockRoute,
+  MockServer,
+  Workspace,
+  McpRequest,
+  Project,
+  UnitTestSuite,
+} from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { type GrpcRequest, isGrpcRequest } from '~/models/grpc-request';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isMockRoute, type MockRoute } from '~/models/mock-route';
-import type { MockServer } from '~/models/mock-server';
 import { isRequest, type Request } from '~/models/request';
 import { isRequestGroup, type RequestGroup } from '~/models/request-group';
 import { isSocketIORequest, type SocketIORequest } from '~/models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '~/models/websocket-request';
-import { isDesign, isMockServer, isWorkspace, type Workspace } from '~/models/workspace';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
@@ -51,7 +55,7 @@ interface AddTabParams {
 function inferTabType(resource: TabResource): TabType | null {
   if (
     isRequest(resource) ||
-    isGrpcRequest(resource) ||
+    models.grpcRequest.isGrpcRequest(resource) ||
     isWebSocketRequest(resource) ||
     isSocketIORequest(resource) ||
     models.mcpRequest.isMcpRequest(resource)
@@ -61,20 +65,20 @@ function inferTabType(resource: TabResource): TabType | null {
   if (isRequestGroup(resource)) {
     return 'folder';
   }
-  if (isMockRoute(resource)) {
+  if (models.mockRoute.isMockRoute(resource)) {
     return 'mockRoute';
   }
   if (models.unitTestSuite.isUnitTestSuite(resource)) {
     return 'testSuite';
   }
-  if (isWorkspace(resource)) {
-    if (isDesign(resource)) {
+  if (models.workspace.isWorkspace(resource)) {
+    if (models.workspace.isDesign(resource)) {
       return 'document';
     }
-    if (isMockServer(resource)) {
+    if (models.workspace.isMockServer(resource)) {
       return 'mockServer';
     }
-    if (models.environment.isEnvironment(resource)) {
+    if (models.workspace.isEnvironment(resource)) {
       return 'environment';
     }
     return 'collection';
@@ -265,7 +269,7 @@ export const buildTabFromResource = async (params: AddTabParams, withTab?: boole
     workspaceName,
   };
 
-  if (isWorkspace(resource) && resource.scope === 'mcp') {
+  if (models.workspace.isWorkspace(resource) && resource.scope === 'mcp') {
     const mcpRequestData = await services.mcpRequest.getByParentId(resource._id);
 
     if (!mcpRequestData) {
@@ -284,12 +288,17 @@ export const buildTabFromResource = async (params: AddTabParams, withTab?: boole
     });
   }
 
-  if (isRequest(resource) || isGrpcRequest(resource) || isWebSocketRequest(resource) || isSocketIORequest(resource)) {
+  if (
+    isRequest(resource) ||
+    models.grpcRequest.isGrpcRequest(resource) ||
+    isWebSocketRequest(resource) ||
+    isSocketIORequest(resource)
+  ) {
     baseTab.tag = getRequestMethodShortHand(resource);
     baseTab.method = (resource as Request).method || '';
   }
 
-  if (isMockRoute(resource)) {
+  if (models.mockRoute.isMockRoute(resource)) {
     baseTab.tag = formatMethodName(resource.method);
     baseTab.method = resource.method;
   }

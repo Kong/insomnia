@@ -46,7 +46,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
         hasUncommittedChanges = true;
       }
       // update workspace meta with sync data, use for show unpushed changes on collection card
-      await models.workspaceMeta.updateByParentId(workspaceId, {
+      await services.workspaceMeta.updateByParentId(workspaceId, {
         hasUncommittedChanges,
         hasUnpushedChanges: compare?.ahead > 0,
       });

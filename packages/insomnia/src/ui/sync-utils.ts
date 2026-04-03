@@ -1,17 +1,22 @@
 import { database } from '~/common/database';
-import type { ApiSpec } from '~/insomnia-data';
-import type { Environment, McpRequest, UnitTest, UnitTestSuite } from '~/insomnia-data';
+import type {
+  Environment,
+  McpRequest,
+  UnitTest,
+  UnitTestSuite,
+  ApiSpec,
+  GrpcRequest,
+  MockRoute,
+  MockServer,
+  Workspace,
+} from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { canSync } from '~/models';
 import * as models from '~/models';
-import type { GrpcRequest } from '~/models/grpc-request';
-import type { MockRoute } from '~/models/mock-route';
-import type { MockServer } from '~/models/mock-server';
 import type { Request } from '~/models/request';
 import type { RequestGroup } from '~/models/request-group';
 import type { SocketIORequest } from '~/models/socket-io-request';
 import type { WebSocketRequest } from '~/models/websocket-request';
-import type { Workspace } from '~/models/workspace';
 import type { BackendProject, Compare, StatusCandidate } from '~/sync/types';
 import { invariant } from '~/utils/invariant';
 
@@ -58,7 +63,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     | MockServer
     | MockRoute
   )[] = [];
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const activeWorkspace = await services.workspace.getById(workspaceId);
   invariant(activeWorkspace, 'Workspace could not be found');
 
   // first recursion to get all the folders ids in order to use nedb search by an array
@@ -99,7 +104,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     parentId: { $in: testSuites.map(t => t._id) },
   });
 
-  const mockServer = await models.mockServer.getByParentId(workspaceId);
+  const mockServer = await services.mockServer.getByParentId(workspaceId);
   if (mockServer) {
     syncItemsList.push(mockServer);
     const mockRoutes = await database.find<MockRoute>(models.mockRoute.type, {

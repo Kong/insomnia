@@ -20,7 +20,7 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import type { GitRemoteProviderType, GitRepository } from '~/insomnia-data';
+import type { GitRemoteProviderType, GitRepository, WorkspaceScope } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
@@ -36,7 +36,6 @@ import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
-import { isWorkspace, type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
 import GitVCS, {
   fetchRemoteBranches,
@@ -150,9 +149,9 @@ export function parseGitToHttpsURL(url: string) {
 
 async function getGitRepository({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   if (workspaceId) {
-    const workspace = await models.workspace.getById(workspaceId);
+    const workspace = await services.workspace.getById(workspaceId);
     invariant(workspace, 'Workspace not found');
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
     invariant(workspaceMeta, 'Workspace meta not found');
     if (!workspaceMeta.gitRepositoryId) {
       throw new Error('Workspace is not linked to a git repository');
@@ -585,7 +584,7 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
       }
 
       // Special handling for workspaces: ensure they're associated with the correct project
-      if (isWorkspace(doc)) {
+      if (models.workspace.isWorkspace(doc)) {
         console.log('[git] setting workspace parent to be that of the active project', {
           original: doc.parentId,
           new: projectId,
@@ -596,10 +595,10 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
         doc.parentId = projectId;
 
         // Create workspace metadata and set the new Git file path
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
+        const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(doc._id);
 
         const gitFilePath = `insomnia.${doc._id}.yaml`;
-        await models.workspaceMeta.update(workspaceMeta, { gitFilePath });
+        await services.workspaceMeta.update(workspaceMeta, { gitFilePath });
 
         // Track the change for Git staging
         changes.push({
@@ -987,12 +986,12 @@ export const cloneGitRepoAction = async ({
     // Stop the DB from pushing updates to the UI temporarily
     const bufferId = await database.bufferChanges();
     let workspaceId = '';
-    let scope: 'design' | 'collection' = WorkspaceScopeKeys.design;
+    let scope: 'design' | 'collection' = models.workspace.WorkspaceScopeKeys.design;
     // If no workspace exists we create a new one
     if (!(await containsInsomniaWorkspaceDir(inMemoryFsClient))) {
       // Create a new workspace
 
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         name: repoSettingsPatch.uri?.split('/').pop(),
         scope: scope,
         parentId: project._id,
@@ -1009,8 +1008,8 @@ export const cloneGitRepoAction = async ({
       workspaceId = workspace._id;
 
       const newRepo = await services.gitRepository.create(repoSettingsPatch);
-      const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-      await models.workspaceMeta.update(meta, {
+      const meta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
+      await services.workspaceMeta.update(meta, {
         gitRepositoryId: newRepo._id,
       });
     } else {
@@ -1048,9 +1047,11 @@ export const cloneGitRepoAction = async ({
       const workspace = YAML.parse(workspaceJson.toString());
       workspaceId = workspace._id;
       scope =
-        workspace.scope === WorkspaceScopeKeys.collection ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
+        workspace.scope === models.workspace.WorkspaceScopeKeys.collection
+          ? models.workspace.WorkspaceScopeKeys.collection
+          : models.workspace.WorkspaceScopeKeys.design;
       // Check if the workspace already exists
-      const existingWorkspace = await models.workspace.getById(workspace._id);
+      const existingWorkspace = await services.workspace.getById(workspace._id);
 
       if (existingWorkspace) {
         const project = await services.project.getById(existingWorkspace.parentId);
@@ -1075,8 +1076,8 @@ export const cloneGitRepoAction = async ({
 
       // Store GitRepository settings and set it as active
       const gitRepository = await services.gitRepository.create(repoSettingsPatch);
-      const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-      await models.workspaceMeta.update(meta, {
+      const meta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
+      await services.workspaceMeta.update(meta, {
         gitRepositoryId: gitRepository._id,
       });
 
@@ -1157,10 +1158,10 @@ export const updateGitRepoAction = async ({
     const gitURI = parseGitToHttpsURL(uri);
 
     if (workspaceId) {
-      const workspace = await models.workspace.getById(workspaceId);
+      const workspace = await services.workspace.getById(workspaceId);
       invariant(workspace, 'Workspace not found');
 
-      const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+      const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
       gitRepositoryId = workspaceMeta?.gitRepositoryId;
     } else if (projectId) {
       const project = await services.project.getById(projectId);
@@ -1186,7 +1187,7 @@ export const updateGitRepoAction = async ({
     }
 
     if (workspaceId) {
-      await models.workspaceMeta.updateByParentId(workspaceId, {
+      await services.workspaceMeta.updateByParentId(workspaceId, {
         gitRepositoryId: gitRepository._id,
       });
     } else if (projectId) {
@@ -1244,9 +1245,9 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
   const flushId = await database.bufferChanges();
 
   if (workspaceId) {
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
     invariant(workspaceMeta, 'Workspace meta not found');
-    await models.workspaceMeta.update(workspaceMeta, {
+    await services.workspaceMeta.update(workspaceMeta, {
       gitRepositoryId: null,
     });
   } else if (projectId) {
@@ -2361,10 +2362,12 @@ async function completeSignInToGitProvider({
   provider,
   code,
   state,
+  isEditing,
 }: {
   provider: GitRemoteProviderType;
   code: string;
   state: string;
+  isEditing?: boolean;
 }) {
   const gitProvider = gitRemoteProviderRegistry.get(provider);
 
@@ -2378,37 +2381,11 @@ async function completeSignInToGitProvider({
       return { errors: [result.error || `Failed to complete the ${provider} OAuth flow`] };
     }
 
-    trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider });
-
-    return {};
-  } catch (error) {
-    console.error('Failed to complete OAuth flow:', provider, error);
-    return { errors: [`Failed to complete the ${provider} OAuth flow. ${getErrorMessage(error)}`] };
-  }
-}
-
-async function updateSignInToGitProvider({
-  provider,
-  code,
-  state,
-}: {
-  provider: GitRemoteProviderType;
-  code: string;
-  state: string;
-}) {
-  const gitProvider = gitRemoteProviderRegistry.get(provider);
-
-  invariant(gitProvider, `Git provider ${provider} not found`);
-  invariant(gitProvider.completeOAuth, `Git provider ${provider} does not support OAuth`);
-
-  try {
-    const result = await gitProvider.completeOAuth(code, state);
-
-    if (!result.success) {
-      return { errors: [result.error || `Failed to complete the ${provider} OAuth flow`] };
+    if (isEditing) {
+      trackSegmentEvent(SegmentEvent.gitAuthenticationUpdated, { provider });
+    } else {
+      trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider });
     }
-
-    trackSegmentEvent(SegmentEvent.gitAuthenticationUpdated, { provider });
 
     return {};
   } catch (error) {
@@ -2534,7 +2511,6 @@ export interface GitServiceAPI {
 
   initSignInToGitProvider: typeof initSignInToGitProvider;
   completeSignInToGitProvider: typeof completeSignInToGitProvider;
-  updateSignInToGitProvider: typeof updateSignInToGitProvider;
   getCurrentBranchByRepositoryId: typeof getCurrentBranchByRepositoryId;
 
   getGitProviderRepositories: typeof getGitProviderRepositories;
@@ -2620,9 +2596,6 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle('git.completeSignInToGitProvider', (_, options: Parameters<typeof completeSignInToGitProvider>[0]) =>
     completeSignInToGitProvider(options),
-  );
-  ipcMainHandle('git.updateSignInToGitProvider', (_, options: Parameters<typeof updateSignInToGitProvider>[0]) =>
-    updateSignInToGitProvider(options),
   );
 
   ipcMainHandle('git.listGitProviders', () => listGitProviders());

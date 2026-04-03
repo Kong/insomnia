@@ -12,7 +12,8 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { isGrpcRequest } from '~/models/grpc-request';
+import type { MockRoute } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { isSocketIORequest } from '~/models/socket-io-request';
 import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
@@ -21,7 +22,6 @@ import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
 import * as models from '../../../models/index';
-import type { MockRoute } from '../../../models/mock-route';
 import { isRequest, type Request } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
@@ -187,9 +187,14 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
       // move request or requestGroup to another collection
       if (patchObj.parentId && !patchObj.metaSortKey && (patchObj.parentId as string).startsWith('wrk_')) {
-        const workspace = await models.workspace.getById(patchObj.parentId);
+        const workspace = await services.workspace.getById(patchObj.parentId);
         if (workspace) {
-          if (isRequest(doc) || isWebSocketRequest(doc) || isGrpcRequest(doc) || isSocketIORequest(doc)) {
+          if (
+            isRequest(doc) ||
+            isWebSocketRequest(doc) ||
+            models.grpcRequest.isGrpcRequest(doc) ||
+            isSocketIORequest(doc)
+          ) {
             updateTabById?.(doc._id, {
               workspaceId: workspace._id,
               workspaceName: workspace.name,

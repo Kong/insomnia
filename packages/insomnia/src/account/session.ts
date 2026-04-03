@@ -1,12 +1,10 @@
 import { logout as logoutAPI, whoami } from 'insomnia-api';
 
-import type { GitRepository, Project } from '~/insomnia-data';
+import type { GitRepository, WorkspaceMeta, Project } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
-import { workspaceMeta } from '../models';
-import type { WorkspaceMeta } from '../models/workspace-meta';
 import * as crypt from './crypt';
 
 export interface SessionData {
@@ -224,9 +222,9 @@ async function _removeGitRepository(repo: GitRepository) {
     await services.project.update(p, { gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
   }
 
-  const workspaceMetas = await database.find<WorkspaceMeta>(workspaceMeta.type, { gitRepositoryId: repo._id });
+  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, { gitRepositoryId: repo._id });
   for (const wsMeta of workspaceMetas) {
-    await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
+    await services.workspaceMeta.update(wsMeta, { gitRepositoryId: null });
   }
   await services.gitRepository.remove(repo);
 }

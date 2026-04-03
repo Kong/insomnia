@@ -50,6 +50,12 @@ export type { Project, LocalProject, RemoteProject, GitProject } from './project
 export type { Settings, ThemeSettings } from './settings';
 export type { Stats } from './stats';
 export type { UserSession } from './user-session';
+export type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from './grpc-request';
+export type { GrpcRequestMeta } from './grpc-request-meta';
+export type { Workspace, WorkspaceScope } from './workspace';
+export type { WorkspaceMeta } from './workspace-meta';
+export type { MockRoute } from './mock-route';
+export type { MockServer } from './mock-server';
 export type { UnitTest } from './unit-test';
 export type { UnitTestResult } from './unit-test-result';
 export type { UnitTestSuite } from './unit-test-suite';

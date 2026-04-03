@@ -16,10 +16,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   invariant(project, 'Project not found');
 
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  await models.workspace.update(workspace, {
+  await services.workspace.update(workspace, {
     parentId: projectId,
   });
 

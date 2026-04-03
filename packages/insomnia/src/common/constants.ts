@@ -1,6 +1,7 @@
+import type { MockServer } from '~/insomnia-data';
+
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import type { MockServer } from '../models/mock-server';
 import { isLinux, isMac, isWindows, platform } from './platform';
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.

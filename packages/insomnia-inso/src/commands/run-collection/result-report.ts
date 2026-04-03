@@ -3,10 +3,8 @@ import nodePath from 'node:path';
 
 import type { Consola } from 'consola';
 import { pick } from 'es-toolkit';
-
-import type { Environment, EnvironmentKvPairData, UserUploadEnvironment } from '~/insomnia-data';
+import type { Environment, EnvironmentKvPairData, UserUploadEnvironment, Workspace } from '~/insomnia-data';
 import type { Request, RequestAuthentication, RequestHeader } from '~/models/request';
-import type { Workspace } from '~/models/workspace';
 import { typedKeys } from '~/utils';
 
 import type { RequestTestResult } from '../../../../insomnia-scripting-environment/src/objects';

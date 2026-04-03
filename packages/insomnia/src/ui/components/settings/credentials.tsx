@@ -27,9 +27,11 @@ import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
 import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-credentials.$id.related-projects';
 import { useGitCredentialsUpdateActionFetcher } from '~/routes/git-credentials.$id.update';
-import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
+import {
+  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  useGitProviderCompleteSignInFetcher,
+} from '~/routes/git-credentials.complete-sign-in';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
-import { useGitProviderUpdateSignInFetcher } from '~/routes/git-credentials.update-sign-in';
 import { Input } from '~/ui/components/base/input';
 import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-custom-credential-form';
 import { showModal } from '~/ui/components/modals';
@@ -70,20 +72,29 @@ const GitEditProviderOAuthForm = ({
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const initSignInFetcher = useInitSignInToGitProviderFetcher();
-  const updateSignInFetcher = useGitProviderUpdateSignInFetcher();
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
   const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
 
   const [selectedAuthorEmail, setSelectedAuthorEmail] = useState(gitCredentialToEdit?.author.email);
   const initSignInError = getErrorResult(initSignInFetcher.data);
-  const updateSignInError = getErrorResult(updateSignInFetcher.data);
+  const completeSignInError = getErrorResult(completeSignInFetcher.data);
 
   const availableEmails = getCredentialEmails(gitCredentialToEdit);
 
+  const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
-    if (updateSignInFetcher.data && !updateSignInError) {
+    const prevState = prevCompleteSignInStateRef.current;
+    prevCompleteSignInStateRef.current = completeSignInFetcher.state;
+
+    if (
+      (prevState === 'submitting' || prevState === 'loading') &&
+      completeSignInFetcher.state === 'idle' &&
+      completeSignInFetcher.data &&
+      !completeSignInError
+    ) {
       onComplete?.();
     }
-  }, [updateSignInFetcher.data, updateSignInError, onComplete]);
+  }, [completeSignInFetcher.state, completeSignInFetcher.data, completeSignInError, onComplete]);
 
   const updateCredentialFetcher = useGitCredentialsUpdateActionFetcher();
   const isEditing = !!gitCredentialToEdit;
@@ -238,7 +249,7 @@ const GitEditProviderOAuthForm = ({
                 return;
               }
 
-              updateSignInFetcher.submit({ provider: provider.type, code, state });
+              completeSignInFetcher.submit({ provider: provider.type, code, state, isEditing });
             }
           }}
         >
@@ -263,10 +274,10 @@ const GitEditProviderOAuthForm = ({
               {error}
             </p>
           )}
-          {(initSignInError || updateSignInError) && (
+          {(initSignInError || completeSignInError) && (
             <p className="margin-bottom-sm flex items-start gap-2 rounded-xs border border-solid border-(--color-danger) bg-(--color-danger-bg) p-2 text-(--color-danger)">
               <Icon icon="exclamation-triangle" className="mt-1 size-4" />
-              <span>{initSignInError || updateSignInError}</span>
+              <span>{initSignInError || completeSignInError}</span>
             </p>
           )}
         </form>
@@ -289,16 +300,25 @@ const GitProviderOAuthForm = ({
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const initSignInFetcher = useInitSignInToGitProviderFetcher();
-  const completeSignInFetcher = useGitProviderCompleteSignInFetcher();
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
 
   const initSignInError = getErrorResult(initSignInFetcher.data);
   const completeSignInError = getErrorResult(completeSignInFetcher.data);
 
+  const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
-    if (completeSignInFetcher.data && !completeSignInError) {
+    const prevState = prevCompleteSignInStateRef.current;
+    prevCompleteSignInStateRef.current = completeSignInFetcher.state;
+
+    if (
+      (prevState === 'submitting' || prevState === 'loading') &&
+      completeSignInFetcher.state === 'idle' &&
+      completeSignInFetcher.data &&
+      !completeSignInError
+    ) {
       onComplete?.();
     }
-  }, [completeSignInFetcher.data, completeSignInError, onComplete]);
+  }, [completeSignInFetcher.state, completeSignInFetcher.data, completeSignInError, onComplete]);
 
   return (
     <div className="flex flex-col items-center justify-center border border-solid border-(--hl-sm) p-4">
@@ -471,7 +491,8 @@ const GitCredentialsList = () => {
     displayName: string;
     iconName?: IconProp;
   } | null>(null);
-  const previousCredentialsLengthRef = useRef<number>(0);
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
+  const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
 
   useEffect(() => {
     if (credentialsFetcher.state === 'idle' && !credentialsFetcher.data) {
@@ -479,14 +500,23 @@ const GitCredentialsList = () => {
     }
   }, [credentialsFetcher]);
 
-  // Auto-close modal when credentials length increases, new credentials can be added by deeplink callback
+  // Auto-close modal and reload credentials when OAuth sign-in completes (CREATE or EDIT via deep link)
   useEffect(() => {
-    const currentLength = credentialsFetcher.data?.credentials.length || 0;
-    if (currentLength > previousCredentialsLengthRef.current) {
+    const prevState = prevCompleteSignInStateRef.current;
+    prevCompleteSignInStateRef.current = completeSignInFetcher.state;
+
+    const completeSignInError = getErrorResult(completeSignInFetcher.data);
+    if (
+      (prevState === 'submitting' || prevState === 'loading') &&
+      completeSignInFetcher.state === 'idle' &&
+      completeSignInFetcher.data &&
+      !completeSignInError &&
+      isCredentialModalOpen
+    ) {
       setIsCredentialModalOpen(false);
+      credentialsFetcher.load();
     }
-    previousCredentialsLengthRef.current = currentLength;
-  }, [credentialsFetcher.data?.credentials.length]);
+  }, [completeSignInFetcher.state, completeSignInFetcher.data, isCredentialModalOpen, credentialsFetcher]);
 
   // Handle delete confirmation when related projects data is loaded
   useEffect(() => {

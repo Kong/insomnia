@@ -10,7 +10,7 @@ export default Outlet;
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   if (workspaceMeta?.activeUnitTestSuiteId) {
     const unitTestSuite = await services.unitTestSuite.getById(workspaceMeta.activeUnitTestSuiteId);
 

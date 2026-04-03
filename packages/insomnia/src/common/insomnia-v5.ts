@@ -25,19 +25,20 @@ import type {
   McpRequest,
   UnitTest,
   UnitTestSuite,
+  GrpcRequest,
+  MockRoute,
+  Workspace,
+  WorkspaceScope,
 } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { maskVaultEnvironmentData } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 
 import * as models from '../models';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { MockRoute } from '../models/mock-route';
-import type { MockServer } from '../models/mock-server';
 import type { Request, RequestBody, RequestHeader, RequestParameter } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace, WorkspaceScope } from '../models/workspace';
 import { database } from './database';
 import {
   type Insomnia_GRPCRequest,
@@ -806,7 +807,7 @@ export async function getInsomniaV5DataExport({
   requestIds?: string[];
 }) {
   try {
-    const workspace = await models.workspace.getById(workspaceId);
+    const workspace = await services.workspace.getById(workspaceId);
 
     if (!workspace) {
       throw new Error('Workspace not found');

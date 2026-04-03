@@ -5,6 +5,7 @@ import os from 'node:os';
 import iconv from 'iconv-lite';
 
 import { jarFromCookies } from '~/common/cookies';
+import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
@@ -12,7 +13,6 @@ import { database as db } from '../common/database';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
-import type { Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
@@ -147,7 +147,7 @@ export default class BaseExtension {
             update: services.cloudCredential.update,
           },
           workspace: {
-            getById: models.workspace.getById,
+            getById: services.workspace.getById,
           },
           oAuth2Token: {
             getByRequestId: services.oAuth2Token.getByParentId,

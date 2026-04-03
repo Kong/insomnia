@@ -8,7 +8,6 @@ import { services } from '~/insomnia-data';
 import { database } from '../common/database';
 import * as models from '../models';
 import { findPersonalOrganization, SCRATCHPAD_ORGANIZATION_ID } from '../models/organization';
-import { scopeToActivity, SCRATCHPAD_WORKSPACE_ID } from '../models/workspace';
 
 export const enum AsyncTask {
   SyncOrganization,
@@ -56,13 +55,13 @@ export const getInitialRouteForOrganization = async ({
         console.log('Redirecting to last visited project', existingProject._id);
 
         if (match.params.workspaceId && navigateToWorkspace) {
-          const existingWorkspace = await models.workspace.getById(match.params.workspaceId);
+          const existingWorkspace = await services.workspace.getById(match.params.workspaceId);
           if (existingWorkspace) {
             return `${href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
               organizationId: match.params.organizationId,
               projectId: existingProject._id,
               workspaceId: existingWorkspace._id,
-            })}/${scopeToActivity(existingWorkspace.scope)}`;
+            })}/${models.workspace.scopeToActivity(existingWorkspace.scope)}`;
           }
         }
 
@@ -140,13 +139,13 @@ export const getInitialEntry = async () => {
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
       organizationId: SCRATCHPAD_ORGANIZATION_ID,
       projectId: models.project.SCRATCHPAD_PROJECT_ID,
-      workspaceId: SCRATCHPAD_WORKSPACE_ID,
+      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
     });
   } catch {
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
       organizationId: SCRATCHPAD_ORGANIZATION_ID,
       projectId: models.project.SCRATCHPAD_PROJECT_ID,
-      workspaceId: SCRATCHPAD_WORKSPACE_ID,
+      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
     });
   }
 };

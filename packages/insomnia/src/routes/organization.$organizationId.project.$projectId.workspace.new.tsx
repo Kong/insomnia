@@ -6,11 +6,9 @@ import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
+import type { MockRoute, MockServer, WorkspaceScope } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { MockRoute } from '~/models/mock-route';
-import type { MockServer } from '~/models/mock-server';
-import { isCollection, scopeToActivity, type WorkspaceScope } from '~/models/workspace';
 import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
@@ -98,20 +96,20 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     const workspaceName = name || (scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
 
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       name: workspaceName,
       scope,
       parentId: projectId,
     });
 
     if (models.project.isGitProject(project)) {
-      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+      const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
       const fileName = workspaceData.fileName || workspace.name;
 
       const safeToUseFileNameWithExtension = safeToUseInsomniaFileNameWithExt(fileName);
 
-      await models.workspaceMeta.update(workspaceMeta, {
+      await services.workspaceMeta.update(workspaceMeta, {
         gitFilePath: path.join(workspaceData.folderPath || '', safeToUseFileNameWithExtension),
       });
     }
@@ -160,7 +158,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // Create default env, cookie jar, and meta
     await services.environment.getOrCreateForParentId(workspace._id);
     await services.cookieJar.getOrCreateForParentId(workspace._id);
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     await database.flushChanges(flushId);
 
@@ -181,9 +179,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     let event = SegmentEvent.documentCreate;
     let environmentType: string | undefined;
 
-    if (isCollection(workspace)) {
+    if (models.workspace.isCollection(workspace)) {
       event = SegmentEvent.collectionCreate;
-    } else if (models.environment.isEnvironment(workspace)) {
+    } else if (models.workspace.isEnvironment(workspace)) {
       event = SegmentEvent.environmentCreate;
       const environment = await services.environment.getById(workspace._id);
       environmentType = environment?.isPrivate ? 'private' : 'global';
@@ -239,7 +237,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         organizationId,
         projectId,
         workspaceId: workspace._id,
-      })}/${scopeToActivity(workspace.scope)}`,
+      })}/${models.workspace.scopeToActivity(workspace.scope)}`,
     );
   } catch (err) {
     console.error('Error creating workspace:', err);
@@ -291,8 +289,8 @@ async function createMockServer(
     }
 
     await services.environment.getOrCreateForParentId(workspace._id);
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-    const mockServer = await models.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
+    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+    const mockServer = await services.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
 
     const mockServerUrl = `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
       organizationId,
@@ -330,7 +328,7 @@ async function createMockServer(
 
       if (result.error && result.error !== '') {
         try {
-          await models.workspace.remove(workspace);
+          await services.workspace.remove(workspace);
         } catch (removeError) {
           console.error('Failed to rollback workspace creation:', removeError);
         }
@@ -387,7 +385,7 @@ async function createMockServer(
     return undefined;
   } catch (error) {
     try {
-      await models.workspace.remove(workspace);
+      await services.workspace.remove(workspace);
     } catch (removeError) {
       console.error('Failed to rollback workspace creation:', removeError);
     }
@@ -441,7 +439,7 @@ async function createMockRoutes(
       mockRouteCreateData.mimeType = route.mimeType;
     }
 
-    const mockRoute = await models.mockRoute.create(mockRouteCreateData);
+    const mockRoute = await services.mockRoute.create(mockRouteCreateData);
 
     try {
       const compoundId = mockRoute.parentId + mockRoute.name;
