@@ -119,36 +119,36 @@ describe('response tag', () => {
       expect(result).toBe('0');
     });
   });
-});
 
-describe('response tag - XPath scalar functions', () => {
-  const XML = `<store><book id="1"><title>Gatsby</title><price>9.99</price></book><book id="2"><title>1984</title><price>8.99</price></book></store>`;
-  const responseTag = localTemplateTags.find(p => p.templateTag.name === 'response')?.templateTag;
-  invariant(responseTag, 'missing tag in localTemplateTags');
+  describe('XPath filters', () => {
+    const XML = `<store><book id="1"><title>Gatsby</title><price>9.99</price></book><book id="2"><title>1984</title><price>8.99</price></book></store>`;
+    const responseTag = localTemplateTags.find(p => p.templateTag.name === 'response')?.templateTag;
+    invariant(responseTag, 'missing tag in localTemplateTags');
 
-  it('handles count() returning a number', async () => {
-    const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'count(//book)', 'never', 60);
-    expect(result).toBe('2');
-  });
+    it('handles count() returning a number', async () => {
+      const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'count(//book)', 'never', 60);
+      expect(result).toBe('2');
+    });
 
-  it('handles sum() returning a number', async () => {
-    const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'sum(//price)', 'never', 60);
-    expect(result).toBe('18.98');
-  });
+    it('handles sum() returning a number', async () => {
+      const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'sum(//price)', 'never', 60);
+      expect(result).toBe('18.98');
+    });
 
-  it('handles boolean() returning true', async () => {
-    const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'boolean(//book)', 'never', 60);
-    expect(result).toBe('true');
-  });
+    it('handles boolean() returning true', async () => {
+      const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'boolean(//book)', 'never', 60);
+      expect(result).toBe('true');
+    });
 
-  it('handles boolean() returning false', async () => {
-    const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'boolean(//missing)', 'never', 60);
-    expect(result).toBe('false');
-  });
+    it('handles boolean() returning false', async () => {
+      const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'boolean(//missing)', 'never', 60);
+      expect(result).toBe('false');
+    });
 
-  it('handles string() returning a string', async () => {
-    const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'string(//title[1])', 'never', 60);
-    expect(result).toBe('Gatsby');
+    it('handles string() returning a string', async () => {
+      const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'string(//title[1])', 'never', 60);
+      expect(result).toBe('Gatsby');
+    });
   });
 });
 
