@@ -29,7 +29,3 @@ export function init(): BaseMockServer {
 }
 
 export const isMockServer = (model: Pick<BaseModel, 'type'>): model is MockServer => model.type === type;
-
-export function migrate(doc: MockServer) {
-  return doc;
-}

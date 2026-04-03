@@ -42,10 +42,6 @@ export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequ
 
 export const isGrpcRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
-export function migrate(doc: GrpcRequest) {
-  return doc;
-}
-
 export function rewriteReferences(request: GrpcRequest, idMapping: Map<string, string>): GrpcRequest {
   return {
     ...request,
