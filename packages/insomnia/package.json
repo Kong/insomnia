@@ -30,7 +30,7 @@
     "start": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "start:autoRestart": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron:autoRestart\"",
     "start:dev-server": "vite dev",
-    "start:electron": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts && electron --inspect=5858 .",
+    "start:electron": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts && npx -y wait-on tcp:3334 && electron --inspect=5858 .",
     "start:electron:autoRestart": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts --autoRestart",
     "test": "vitest run",
     "type-check": "react-router typegen && tsc --project tsconfig.json",
