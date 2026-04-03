@@ -1,3 +1,7 @@
+/**
+ * Necessary because implementation assumes browser environment, e.g. Node.ELEMENT_NODE
+ * @vitest-environment jsdom
+ */
 import { describe, expect, it, vi } from 'vitest';
 
 import { invariant } from '../../utils/invariant';
@@ -148,6 +152,40 @@ describe('response tag', () => {
     it('handles string() returning a string', async () => {
       const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', 'string(//title[1])', 'never', 60);
       expect(result).toBe('Gatsby');
+    });
+
+    it('returns inner text for an element node query', async () => {
+      // /store/book[1]/title is unambiguous — only one <title> under the first <book>
+      const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', '/store/book[1]/title', 'never', 60);
+      expect(result).toBe('Gatsby');
+    });
+
+    it('returns nodeValue for an attribute node query', async () => {
+      const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', '/store/book[1]/@id', 'never', 60);
+      expect(result).toBe('1');
+    });
+
+    it('returns text content for a text() node query', async () => {
+      const result = await responseTag.run(makeResponseContext(XML), 'body', 'req_1', '/store/book[1]/title/text()', 'never', 60);
+      expect(result).toBe('Gatsby');
+    });
+
+    it('throws when query matches no nodes', async () => {
+      await expect(
+        responseTag.run(makeResponseContext(XML), 'body', 'req_1', '//missing', 'never', 60),
+      ).rejects.toThrow('Invalid XPath query: //missing');
+    });
+
+    it('throws when query matches more than one node', async () => {
+      await expect(
+        responseTag.run(makeResponseContext(XML), 'body', 'req_1', '//book', 'never', 60),
+      ).rejects.toThrow('Invalid XPath query: //book');
+    });
+
+    it('throws on a syntactically invalid XPath expression', async () => {
+      await expect(
+        responseTag.run(makeResponseContext(XML), 'body', 'req_1', '//[]', 'never', 60),
+      ).rejects.toThrow('Invalid XPath query: //[]');
     });
   });
 });
