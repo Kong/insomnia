@@ -38,6 +38,21 @@ describe('queryXPath()', () => {
     ]);
   });
 
+  it('handles count() query', () => {
+    expect(queryXPath('<store><book/><book/><book/></store>', 'count(//book)')).toEqual([{ inner: '3', outer: '3' }]);
+    expect(queryXPath('<store><book/></store>', 'count(//book)')).toEqual([{ inner: '1', outer: '1' }]);
+    expect(queryXPath('<store/>', 'count(//book)')).toEqual([{ inner: '0', outer: '0' }]);
+  });
+
+  it('handles sum() query', () => {
+    expect(queryXPath('<r><n>1</n><n>2</n><n>3</n></r>', 'sum(//n)')).toEqual([{ inner: '6', outer: '6' }]);
+  });
+
+  it('handles boolean() query', () => {
+    expect(queryXPath('<x><y/></x>', 'boolean(//y)')).toEqual([{ inner: 'true', outer: 'true' }]);
+    expect(queryXPath('<x/>', 'boolean(//y)')).toEqual([{ inner: 'false', outer: 'false' }]);
+  });
+
   it('handles invalid query', () => {
     expect(() => {
       queryXPath('<hi>there</hi>', '//[]');
