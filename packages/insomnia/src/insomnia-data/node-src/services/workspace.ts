@@ -1,5 +1,3 @@
-import { isProjectId } from '~/models/project';
-
 import { database as db } from '../../src/database';
 import { models } from '../../src/models';
 import { type Workspace } from '../../src/models/types';
@@ -37,7 +35,7 @@ export function remove(workspace: Workspace) {
 }
 
 function expectParentToBeProject(parentId?: string | null) {
-  if (parentId && !isProjectId(parentId)) {
+  if (parentId && !models.project.isProjectId(parentId)) {
     throw new Error('Expected the parent of a Workspace to be a Project');
   }
 }

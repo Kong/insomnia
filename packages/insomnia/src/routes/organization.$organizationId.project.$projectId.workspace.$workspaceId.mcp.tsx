@@ -4,7 +4,6 @@ import { href, NavLink, redirect, useParams } from 'react-router';
 
 import { Icon } from '~/basic-components/icon';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
