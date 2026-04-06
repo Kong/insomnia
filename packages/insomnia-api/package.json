@@ -24,5 +24,7 @@
     "lint": "eslint . --ext .ts,.tsx --cache",
     "type-check": "tsc --noEmit --project tsconfig.json"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@kong/insomnia-api-sdk": "^1.0.0"
+  }
 }
