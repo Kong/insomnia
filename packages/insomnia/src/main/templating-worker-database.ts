@@ -7,6 +7,7 @@ import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
+import type { CloudProviderCredential, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { getBodyBuffer, readCurlResponse } from '~/models/helpers/response-operations';
 
@@ -14,11 +15,9 @@ import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants'
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import * as models from '../models';
-import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
-import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
@@ -97,10 +96,10 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
   },
   'workspace.getById': async (body: { id: string }) => {
-    return await models.workspace.getById(body.id);
+    return await services.workspace.getById(body.id);
   },
   'oAuth2Token.getByRequestId': async (body: { parentId: string }) => {
-    return await models.oAuth2Token.getByParentId(body.parentId);
+    return await services.oAuth2Token.getByParentId(body.parentId);
   },
   'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
     return await models.cookieJar.getOrCreateForParentId(body.parentId);
@@ -117,37 +116,37 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await getBodyBuffer(body.response, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
-    const doc = await models.pluginData.getByKey(body.pluginName, body.key);
+    const doc = await services.pluginData.getByKey(body.pluginName, body.key);
     return doc !== null;
   },
   'pluginData.setItem': async (body: { pluginName: string; key: string; value: string }) => {
-    return models.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
+    return services.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
   },
   'pluginData.getItem': async (body: { pluginName: string; key: string }) => {
-    const doc = await models.pluginData.getByKey(body.pluginName, body.key);
+    const doc = await services.pluginData.getByKey(body.pluginName, body.key);
     return doc ? doc.value : null;
   },
   'pluginData.removeItem': async (body: { pluginName: string; key: string }) => {
-    return models.pluginData.removeByKey(body.pluginName, body.key);
+    return services.pluginData.removeByKey(body.pluginName, body.key);
   },
   'pluginData.clear': async (body: { pluginName: string }) => {
-    return models.pluginData.removeAll(body.pluginName);
+    return services.pluginData.removeAll(body.pluginName);
   },
   'pluginData.all': async (body: { pluginName: string }) => {
-    const docs = (await models.pluginData.all(body.pluginName)) || [];
+    const docs = (await services.pluginData.all(body.pluginName)) || [];
     return docs.map(d => ({
       value: d.value,
       key: d.key,
     }));
   },
   'cloudCredential.getById': async (body: { id: string }) => {
-    return await models.cloudCredential.getById(body.id);
+    return await services.cloudCredential.getById(body.id);
   },
   'cloudCredential.update': async (body: {
     originCredential: CloudProviderCredential;
     patch: Partial<CloudProviderCredential>;
   }) => {
-    return await models.cloudCredential.update(body.originCredential, body.patch);
+    return await services.cloudCredential.update(body.originCredential, body.patch);
   },
   'settings.get': async () => {
     return await services.settings.get();
@@ -289,5 +288,25 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       }
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
+  },
+  // execute the plugin exported main action with the given parameters
+  'plugin.executeBundlePluginMainAction': async (body: {
+    pluginName: string;
+    actionName: string;
+    context?: Record<string, any>;
+    params?: Record<string, any>;
+  }) => {
+    const { pluginName, actionName, context, params } = body;
+    const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
+    if (appBundlePluginNames.includes(pluginName)) {
+      const module = getBundlePluginModule(pluginName);
+      const pluginActions = module?.unsafePluginMainActions || [];
+      const targetAction = pluginActions.find(action => action.name === actionName);
+      if (targetAction) {
+        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
+        return targetAction.action({ ...commonContext, ...context }, params);
+      }
+    }
+    throw new Error(`Unsupported action named ${actionName} for plugin ${pluginName}`);
   },
 };

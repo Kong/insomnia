@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
@@ -19,7 +21,7 @@ describe('init()', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true, () => {});
 
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_1',
       name: 'My Workspace',
     });
@@ -100,7 +102,7 @@ describe('request.*', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true, () => {});
 
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_1',
       name: 'My Workspace',
     });

@@ -1,8 +1,8 @@
 import classnames from 'classnames';
 import React, { type FC, memo } from 'react';
 
-import { isMac } from '../../common/constants';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
+import { isMac } from '../../common/platform';
 import type { KeyCombination, PlatformKeyCombinations } from '../../common/settings';
 
 interface Props {
@@ -46,7 +46,7 @@ export const Hotkey: FC<Props> = memo(({ keyCombination, keyBindings, className,
   }
 
   const classes = {
-    'font-normal': isMac(),
+    'font-normal': isMac,
     'italic': isFallback,
   };
 

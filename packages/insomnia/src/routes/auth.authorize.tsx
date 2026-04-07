@@ -3,7 +3,7 @@ import { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
-import { userSession as sessionModel } from '~/models';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
@@ -36,14 +36,14 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     event: SegmentEvent.loginSuccess,
   });
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
-  const userSession = await sessionModel.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
   const { accountId, id: sessionId } = userSession;
   try {
     // check vault salt exists in server
     const { salt: vaultSalt } = await getVault({ sessionId });
     if (vaultSalt) {
       // save vault salt to session
-      await sessionModel.update(userSession, { vaultSalt });
+      await services.userSession.update(userSession, { vaultSalt });
       // get vault key saved in local
       const localVaultKey = await getVaultKeyFromStorage(accountId);
       if (localVaultKey) {
@@ -52,7 +52,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
         if (validateResult) {
           // Encrypt vault key and save encrypted vault key & raw vault salt to session
           const encryptedVaultKey = await window.main.secretStorage.encryptString(localVaultKey);
-          await sessionModel.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
+          await services.userSession.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
         }
       }
     }

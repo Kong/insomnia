@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { href } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { isGitProject } from '~/models/project';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
@@ -23,20 +24,20 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const patch = (await request.json()) as WorkspacePatch;
   const workspaceId = patch.workspaceId;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
   if (workspace.scope === 'design') {
-    const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+    const apiSpec = await services.apiSpec.getByParentId(workspaceId);
     invariant(apiSpec, 'No Api Spec found for this workspace');
 
-    await models.apiSpec.update(apiSpec, {
+    await services.apiSpec.update(apiSpec, {
       fileName: patch.name || workspace.name,
     });
   }
 
   if (workspace.scope === 'mock-server') {
-    const mockServer = await models.mockServer.getByParentId(workspaceId);
+    const mockServer = await services.mockServer.getByParentId(workspaceId);
     invariant(mockServer, 'No MockServer found for this workspace');
 
     let useInsomniaCloud = mockServer.useInsomniaCloud;
@@ -50,7 +51,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       mockServerUrl = patch.mockServerUrl;
     }
 
-    await models.mockServer.update(mockServer, {
+    await services.mockServer.update(mockServer, {
       name: patch.name || workspace.name,
       useInsomniaCloud,
       url: mockServerUrl,
@@ -63,12 +64,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
 
-  await models.workspace.update(workspace, patch);
+  await services.workspace.update(workspace, patch);
 
   const project = await models.project.getById(workspace.parentId);
   invariant(project, 'Project not found');
   if (isGitProject(project)) {
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     const existingPathDir = path.dirname(workspaceMeta.gitFilePath || '');
     let fileName = path.basename(workspaceMeta.gitFilePath || '');
@@ -77,7 +78,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       fileName = patch.fileName;
     }
 
-    await models.workspaceMeta.update(workspaceMeta, {
+    await services.workspaceMeta.update(workspaceMeta, {
       gitFilePath: path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(fileName)),
     });
   }

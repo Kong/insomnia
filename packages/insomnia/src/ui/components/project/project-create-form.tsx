@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { GitCredentials } from '~/models/git-credentials';
+import type { GitCredentials } from '~/insomnia-data';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import type { GitProviderOption } from '~/sync/git/providers/types';

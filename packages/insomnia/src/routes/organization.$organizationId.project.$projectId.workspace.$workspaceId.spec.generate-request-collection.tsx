@@ -4,6 +4,7 @@ import type { IRuleResult } from '@stoplight/spectral-core';
 import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { isGitProject } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
@@ -18,14 +19,14 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const apiSpec = await services.apiSpec.getByParentId(workspaceId);
   invariant(apiSpec, 'No API Specification was found');
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
 
   invariant(workspace, 'Workspace not found');
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   const isLintError = (result: IRuleResult) => result.severity === 0;
 

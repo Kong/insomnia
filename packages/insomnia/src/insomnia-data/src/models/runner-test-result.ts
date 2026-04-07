@@ -1,6 +1,6 @@
-import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
-import { database as db } from '../common/database';
-import type { BaseModel } from './types';
+import type { BaseModel } from '~/models/types';
+
+import type { RequestTestResult } from '../../../../../insomnia-scripting-environment/src/objects';
 
 export const name = 'Runner Test Result';
 
@@ -51,42 +51,4 @@ export function init() {
     responsesInfo: [],
     version: '1',
   };
-}
-
-export function migrate(doc: RunnerTestResult) {
-  return doc;
-}
-
-export function create(patch: Partial<RunnerTestResult> = {}) {
-  if (!patch.parentId) {
-    throw new Error('New RunnerTestResult missing `parentId` ' + JSON.stringify(patch));
-  }
-
-  return db.docCreate(type, patch);
-}
-
-export function update(testResult: RunnerTestResult, patch: Partial<RunnerTestResult>) {
-  return db.docUpdate(testResult, patch);
-}
-
-export function getByParentId(parentId: string) {
-  return db.findOne<RunnerTestResult>(type, { parentId });
-}
-
-export function getById(_id: string) {
-  return db.findOne<RunnerTestResult>(type, {
-    _id,
-  });
-}
-
-export function all() {
-  return db.find<RunnerTestResult>(type);
-}
-
-export function remove(item: RunnerTestResult) {
-  return db.remove<RunnerTestResult>(item);
-}
-
-export function findByParentId(parentId: string) {
-  return db.find<RunnerTestResult>(type, { parentId: parentId });
 }

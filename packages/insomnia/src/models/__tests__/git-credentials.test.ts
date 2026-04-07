@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { type BaseGitCredentialsV2, init, isGitCredentialsV2, supportsRenewal } from '../git-credentials';
-import * as models from '../index';
+import { type BaseGitCredentialsV2, models, services } from '~/insomnia-data';
+
+const { init, isGitCredentialsV2, supportsRenewal } = models.gitCredentials;
 
 describe('init()', () => {
   it('contains all required fields with correct default values', async () => {
@@ -47,7 +48,7 @@ describe('create()', () => {
       },
     };
 
-    const created = await models.gitCredentials.create(githubCredential);
+    const created = await services.gitCredentials.create(githubCredential);
 
     // Verify id format and timestamps
     expect(created._id).toMatch(/^git_creds_/);
@@ -75,7 +76,7 @@ describe('create()', () => {
     });
 
     // Verify persistence: retrieve from database and check all nested fields
-    const retrieved = await models.gitCredentials.getById(created._id);
+    const retrieved = await services.gitCredentials.getById(created._id);
     expect(retrieved).toMatchObject(created);
 
     // Verify type guard and renewal support
@@ -104,7 +105,7 @@ describe('create()', () => {
       },
     };
 
-    const created = await models.gitCredentials.create(gitlabCredential);
+    const created = await services.gitCredentials.create(gitlabCredential);
 
     expect(created._id).toMatch(/^git_creds_/);
     expect(created).toMatchObject({
@@ -129,7 +130,7 @@ describe('create()', () => {
     });
 
     // Verify persistence
-    const retrieved = await models.gitCredentials.getById(created._id);
+    const retrieved = await services.gitCredentials.getById(created._id);
     expect(retrieved).toMatchObject(created);
 
     expect(isGitCredentialsV2(created)).toBe(true);
@@ -152,7 +153,7 @@ describe('create()', () => {
       },
     };
 
-    const created = await models.gitCredentials.create(customCredential);
+    const created = await services.gitCredentials.create(customCredential);
 
     expect(created._id).toMatch(/^git_creds_/);
     expect(created).toMatchObject({
@@ -172,7 +173,7 @@ describe('create()', () => {
     });
 
     // Verify persistence
-    const retrieved = await models.gitCredentials.getById(created._id);
+    const retrieved = await services.gitCredentials.getById(created._id);
     expect(retrieved).toMatchObject(created);
 
     expect(isGitCredentialsV2(created)).toBe(true);
@@ -182,21 +183,21 @@ describe('create()', () => {
 
 describe('getById()', () => {
   it('returns null for non-existent id', async () => {
-    const retrieved = await models.gitCredentials.getById('git_creds_nonexistent');
+    const retrieved = await services.gitCredentials.getById('git_creds_nonexistent');
     expect(retrieved).toBeNull();
   });
 });
 
 describe('update()', () => {
   it('updates and persists credential changes', async () => {
-    const credential = await models.gitCredentials.create({
+    const credential = await services.gitCredentials.create({
       name: 'Original Name',
       provider: 'github',
       author: { name: 'Original User', email: 'original@example.com' },
       credentials: { token: 'original_token', scopes: ['repo'] },
     });
 
-    const updated = await models.gitCredentials.update(credential, {
+    const updated = await services.gitCredentials.update(credential, {
       name: 'Updated Name',
       credentials: {
         token: 'updated_token',
@@ -219,14 +220,14 @@ describe('update()', () => {
     });
 
     // Verify persistence
-    const retrieved = await models.gitCredentials.getById(updated._id);
+    const retrieved = await services.gitCredentials.getById(updated._id);
     expect(retrieved).toMatchObject(updated);
   });
 });
 
 describe('type guards', () => {
   it('isGitCredentialsV2 correctly identifies V2 credentials', async () => {
-    const created = await models.gitCredentials.create({
+    const created = await services.gitCredentials.create({
       name: 'V2 Credential',
       provider: 'github',
       author: { name: 'User', email: 'user@example.com' },
@@ -237,7 +238,7 @@ describe('type guards', () => {
 
   it('supportsRenewal returns correct values for different providers', async () => {
     // GitHub with refreshToken supports renewal
-    const githubWithRefresh = await models.gitCredentials.create({
+    const githubWithRefresh = await services.gitCredentials.create({
       name: 'GitHub',
       provider: 'github',
       author: { name: 'User', email: 'user@example.com' },
@@ -246,7 +247,7 @@ describe('type guards', () => {
     expect(supportsRenewal(githubWithRefresh)).toBe(true);
 
     // GitHub without refreshToken doesn't support renewal
-    const githubWithoutRefresh = await models.gitCredentials.create({
+    const githubWithoutRefresh = await services.gitCredentials.create({
       name: 'GitHub No Refresh',
       provider: 'github',
       author: { name: 'User', email: 'user@example.com' },
@@ -255,7 +256,7 @@ describe('type guards', () => {
     expect(supportsRenewal(githubWithoutRefresh)).toBe(false);
 
     // GitLab with refreshToken supports renewal
-    const gitlabWithRefresh = await models.gitCredentials.create({
+    const gitlabWithRefresh = await services.gitCredentials.create({
       name: 'GitLab',
       provider: 'gitlab',
       author: { name: 'User', email: 'user@example.com' },
@@ -264,7 +265,7 @@ describe('type guards', () => {
     expect(supportsRenewal(gitlabWithRefresh)).toBe(true);
 
     // Custom never supports renewal
-    const custom = await models.gitCredentials.create({
+    const custom = await services.gitCredentials.create({
       name: 'Custom',
       provider: 'custom',
       author: { name: 'User', email: 'user@example.com' },
@@ -276,16 +277,16 @@ describe('type guards', () => {
 
 describe('all() and remove()', () => {
   it('lists and removes credentials', async () => {
-    await models.gitCredentials.removeAll();
+    await services.gitCredentials.removeAll();
 
-    const cred1 = await models.gitCredentials.create({
+    const cred1 = await services.gitCredentials.create({
       name: 'Credential 1',
       provider: 'github',
       author: { name: 'User', email: 'user@example.com' },
       credentials: { token: 'token1' },
     });
 
-    const cred2 = await models.gitCredentials.create({
+    const cred2 = await services.gitCredentials.create({
       name: 'Credential 2',
       provider: 'gitlab',
       author: { name: 'User', email: 'user@example.com' },
@@ -293,15 +294,15 @@ describe('all() and remove()', () => {
     });
 
     // Verify all() returns both
-    let allCreds = await models.gitCredentials.all();
+    let allCreds = await services.gitCredentials.all();
     expect(allCreds.length).toBe(2);
 
     // Remove one and verify
-    await models.gitCredentials.remove(cred1);
-    allCreds = await models.gitCredentials.all();
+    await services.gitCredentials.remove(cred1);
+    allCreds = await services.gitCredentials.all();
     expect(allCreds.length).toBe(1);
     expect(allCreds[0]._id).toBe(cred2._id);
 
-    await models.gitCredentials.removeAll();
+    await services.gitCredentials.removeAll();
   });
 });

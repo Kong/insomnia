@@ -3,8 +3,8 @@ import type { TextFieldProps, TextProps, ValidationResult } from 'react-aria-com
 import { FieldError, Input as RaInput, Label, Text, TextField as RaTextField } from 'react-aria-components';
 import { twMerge } from 'tailwind-merge';
 
-import { Button } from '~/basic-components/button';
-import { Icon } from '~/basic-components/icon';
+import { Button } from '../../../basic-components/button';
+import { Icon } from '../../../basic-components/icon';
 
 interface CustomInputFieldProps extends TextFieldProps {
   label?: string;
@@ -50,7 +50,7 @@ export const Input = ({
             )}
           >
             {prefix && (
-              <span className="flex h-full shrink-0 items-center whitespace-nowrap border-r border-(--hl-sm) bg-(--hl-xs) px-2 text-sm text-(--hl)">
+              <span className="flex h-full shrink-0 items-center border-r border-(--hl-sm) bg-(--hl-xs) px-2 text-sm whitespace-nowrap text-(--hl)">
                 {prefix}
               </span>
             )}

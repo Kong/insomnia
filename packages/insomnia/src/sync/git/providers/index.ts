@@ -28,12 +28,6 @@ export type {
   ValidationResult,
 } from './types';
 
-// Export credential types from model
-export type { GitCredentials as GitCredentialData, OauthProviderName } from '~/models/git-credentials';
-
-// Export type guards from model
-export { isGitCredentialsV2, isGitCredentialsV1, isOAuthCredential, supportsRenewal } from '~/models/git-credentials';
-
 // Export registry class
 export { GitRemoteProviderRegistry } from './registry';
 

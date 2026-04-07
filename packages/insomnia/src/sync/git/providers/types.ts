@@ -1,7 +1,7 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { GitAuth } from 'isomorphic-git';
 
-import type { GitCredentials } from '~/models/git-credentials';
+import type { GitCredentials } from '~/insomnia-data';
 
 /**
  * Supported Git remote provider types

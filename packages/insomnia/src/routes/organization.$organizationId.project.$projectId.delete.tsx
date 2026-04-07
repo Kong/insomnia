@@ -3,6 +3,7 @@ import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { invariant } from '~/utils/invariant';
@@ -17,7 +18,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const user = await models.userSession.getOrCreate();
+  const user = await services.userSession.getOrCreate();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to delete a project');
 
@@ -33,11 +34,11 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     }
 
     if (project.gitRepositoryId) {
-      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
-      gitRepository && (await models.gitRepository.remove(gitRepository));
+      const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+      gitRepository && (await services.gitRepository.remove(gitRepository));
     }
 
-    await models.stats.incrementDeletedRequestsForDescendents(project);
+    await services.stats.incrementDeletedRequestsForDescendents(project);
     await models.project.remove(project);
 
     await database.flushChanges(bufferId);

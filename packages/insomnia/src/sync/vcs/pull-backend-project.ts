@@ -1,8 +1,9 @@
+import type { Workspace } from '~/insomnia-data';
+
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import type { RemoteProject } from '../../models/project';
-import { isWorkspace, type Workspace } from '../../models/workspace';
 import type { BackendProjectWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';
 import type { VCS } from './vcs';
@@ -53,7 +54,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
   for (const doc of (await vcs.allDocuments()) || []) {
     // When we pull a BackendProject we need to update the parent ID of the workspace so that it appears inside.
     // There can't be more than one workspace.
-    if (isWorkspace(doc)) {
+    if (models.workspace.isWorkspace(doc)) {
       doc.parentId = remoteProject._id;
       workspaceId = doc._id;
     }

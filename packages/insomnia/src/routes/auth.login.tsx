@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { href, redirect, useNavigate } from 'react-router';
 
+import { models } from '~/insomnia-data';
 import { SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
 import { SCRATCHPAD_PROJECT_ID } from '~/models/project';
-import { SCRATCHPAD_WORKSPACE_ID } from '~/models/workspace';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
@@ -161,7 +161,7 @@ const Component = () => {
               href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
                 organizationId: SCRATCHPAD_ORGANIZATION_ID,
                 projectId: SCRATCHPAD_PROJECT_ID,
-                workspaceId: SCRATCHPAD_WORKSPACE_ID,
+                workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
               }),
             );
           }}

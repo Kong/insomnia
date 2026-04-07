@@ -1,36 +1,9 @@
-import { database as db } from '../common/database';
-import { isGrpcRequestId } from './grpc-request';
-import type { BaseModel } from './types';
+import { database as db } from '../../src/database';
+import { models } from '../../src/models';
+import { isGrpcRequestId } from '../../src/models/grpc-request';
+import { type GrpcRequestMeta } from '../../src/models/types';
 
-export const name = 'gRPC Request Meta';
-
-export const type = 'GrpcRequestMeta';
-
-export const prefix = 'greqm';
-
-export const canDuplicate = false;
-
-export const canSync = false;
-
-interface BaseGrpcRequestMeta {
-  pinned: boolean;
-  lastActive: number;
-}
-
-export type GrpcRequestMeta = BaseModel & BaseGrpcRequestMeta;
-
-export const isGrpcRequestMeta = (model: Pick<BaseModel, 'type'>): model is GrpcRequestMeta => model.type === type;
-
-export function init() {
-  return {
-    pinned: false,
-    lastActive: 0,
-  };
-}
-
-export function migrate(doc: GrpcRequestMeta) {
-  return doc;
-}
+const { type } = models.grpcRequestMeta;
 
 export function create(patch: Partial<GrpcRequestMeta> = {}) {
   if (!patch.parentId) {

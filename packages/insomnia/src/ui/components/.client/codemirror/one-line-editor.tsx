@@ -6,8 +6,9 @@ import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codem
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import * as reactUse from 'react-use';
 
-import { DEBOUNCE_MILLIS, isMac } from '~/common/constants';
+import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
+import { isMac } from '~/common/platform';
 import type { KeyCombination } from '~/common/settings';
 import { getTemplateTags } from '~/plugins';
 import { useRootLoaderData } from '~/root';
@@ -118,7 +119,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         keyMap: getKeyMap(),
         extraKeys: CodeMirror.normalizeKeyMap({
           'Ctrl-Space': 'autocomplete',
-          [isMac() ? 'Cmd-F' : 'Ctrl-F']: () => {},
+          [isMac ? 'Cmd-F' : 'Ctrl-F']: () => {},
         }),
         gutters: [],
         mode: !handleRender

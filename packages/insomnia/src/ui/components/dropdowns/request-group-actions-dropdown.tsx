@@ -3,6 +3,7 @@ import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
@@ -113,7 +114,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
       color: 'danger',
       onDone: async (isYes: boolean) => {
         if (isYes) {
-          models.stats.incrementDeletedRequestsForDescendents(requestGroup);
+          services.stats.incrementDeletedRequestsForDescendents(requestGroup);
           deleteRequestGroupFetcher.submit({ organizationId, projectId, workspaceId, id: requestGroup._id });
         }
       },

@@ -17,25 +17,29 @@ import { parse, stringify } from 'yaml';
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
-import type { McpRequest } from '~/insomnia-data';
+import type {
+  ApiSpec,
+  GrpcRequest,
+  McpRequest,
+  MockRoute,
+  MockServer,
+  Workspace,
+  WorkspaceScope,
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { maskVaultEnvironmentData } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 
 import * as models from '../models';
-import type { ApiSpec } from '../models/api-spec';
 import type { CookieJar } from '../models/cookie-jar';
 import type { EnvironmentKvPairData } from '../models/environment';
 import { type Environment } from '../models/environment';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { MockRoute } from '../models/mock-route';
-import type { MockServer } from '../models/mock-server';
 import type { Request, RequestBody, RequestHeader, RequestParameter } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { UnitTest } from '../models/unit-test';
 import type { UnitTestSuite } from '../models/unit-test-suite';
 import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace, WorkspaceScope } from '../models/workspace';
 import { database } from './database';
 import {
   type Insomnia_GRPCRequest,
@@ -767,6 +771,24 @@ export function importInsomniaV5Data(rawData: string) {
   }
 }
 
+export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
+  const url = new URL(mcpUrl.trim());
+  const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
+  invariant(isHttp, 'MCP server URL must use http or https');
+  const mcpClient = {
+    type: 'mcpClient.insomnia/5.0' as const,
+    schema_version: INSOMNIA_SCHEMA_VERSION,
+    name: 'Imported MCP Client',
+    mcpRequest: {
+      name: 'Imported MCP Client',
+      url: mcpUrl.trim(),
+      transportType: 'streamable-http' as const,
+    },
+  };
+  const parsed = InsomniaFileSchema.parse(mcpClient);
+  return stringify(removeEmptyFields(parsed));
+}
+
 /**
  * Exports workspace data to Insomnia v5 format
  * This is the main export function that converts internal models to v5 YAML format
@@ -786,7 +808,7 @@ export async function getInsomniaV5DataExport({
   requestIds?: string[];
 }) {
   try {
-    const workspace = await models.workspace.getById(workspaceId);
+    const workspace = await services.workspace.getById(workspaceId);
 
     if (!workspace) {
       throw new Error('Workspace not found');

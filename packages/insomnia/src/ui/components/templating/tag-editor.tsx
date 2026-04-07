@@ -5,6 +5,8 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import type { CloudProviderCredential, Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
@@ -12,11 +14,9 @@ import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString, SECURITY_SETTINGS_PATH_LABEL } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
 import * as models from '../../../models';
-import { type CloudProviderCredential, type as cloudCredentialModelType } from '../../../models/cloud-credential';
 import type { BaseModel } from '../../../models/index';
 import { isRequest, type Request } from '../../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
-import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
 import * as pluginStore from '../../../plugins/context/store';
 import * as templating from '../../../templating';
@@ -28,6 +28,8 @@ import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { ArgConfigSubForm, couldRenderForm } from './tag-editor-arg-sub-form';
+
+const cloudCredentialModelType = models.cloudCredential.type;
 
 interface Props {
   defaultValue: string;
@@ -91,7 +93,7 @@ export const TagEditor: FC<Props> = props => {
       allDocs[doc.type].push(doc);
     }
     // add global Cloud Credential data
-    allDocs[cloudCredentialModelType] = await models.cloudCredential.all();
+    allDocs[cloudCredentialModelType] = await services.cloudCredential.all();
     allDocs[models.request.type] = sortRequests(
       // @ts-expect-error -- type unsoundness
       (allDocs[models.request.type] || []).concat(allDocs[models.requestGroup.type] || []),

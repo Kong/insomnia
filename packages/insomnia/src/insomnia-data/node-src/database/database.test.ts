@@ -1,5 +1,7 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
 import type { ChangeBufferEvent } from '../..';
@@ -210,7 +212,7 @@ describe('_repairDatabase()', async () => {
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
     const project = await models.project.create();
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       _id: 'w1',
       parentId: project._id,
     });
@@ -380,7 +382,7 @@ describe('_repairDatabase()', async () => {
   it('fixes duplicate cookie jars', async () => {
     // Create Workspace with no children
     const project = await models.project.create();
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       _id: 'w1',
       parentId: project._id,
     });
@@ -508,52 +510,52 @@ describe('_repairDatabase()', async () => {
 
   it('fixes the filename on an apiSpec', async () => {
     // Create Workspace with apiSpec child (migration in workspace will automatically create this as it is not mocked)
-    const w1 = await models.workspace.create({
+    const w1 = await services.workspace.create({
       _id: 'w1',
       name: 'Workspace 1',
     });
-    const w2 = await models.workspace.create({
+    const w2 = await services.workspace.create({
       _id: 'w2',
       name: 'Workspace 2',
     });
-    const w3 = await models.workspace.create({
+    const w3 = await services.workspace.create({
       _id: 'w3',
       name: 'Workspace 3',
     });
-    await models.apiSpec.updateOrCreateForParentId(w1._id, {
+    await services.apiSpec.updateOrCreateForParentId(w1._id, {
       fileName: '',
     });
-    await models.apiSpec.updateOrCreateForParentId(w2._id, {
+    await services.apiSpec.updateOrCreateForParentId(w2._id, {
       fileName: models.apiSpec.init().fileName,
     });
-    await models.apiSpec.updateOrCreateForParentId(w3._id, {
+    await services.apiSpec.updateOrCreateForParentId(w3._id, {
       fileName: 'Unique name',
     });
     // Make sure we have everything
-    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('');
-    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
-    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
+    expect((await services.apiSpec.getByParentId(w1._id))?.fileName).toBe('');
+    expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
+    expect((await services.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
     // Run the fix algorithm
     await repairDatabase();
     // Make sure things get adjusted
-    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
-    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
-    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
+    expect((await services.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
+    expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
+    expect((await services.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
   });
 
   it('fixes old git uris', async () => {
-    const oldRepoWithSuffix = await models.gitRepository.create({
+    const oldRepoWithSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
       uriNeedsMigration: true,
     });
-    const oldRepoWithoutSuffix = await models.gitRepository.create({
+    const oldRepoWithoutSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar',
       uriNeedsMigration: true,
     });
-    const newRepoWithSuffix = await models.gitRepository.create({
+    const newRepoWithSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
     });
-    const newRepoWithoutSuffix = await models.gitRepository.create({
+    const newRepoWithoutSuffix = await services.gitRepository.create({
       uri: 'https://github.com/foo/bar',
     });
     await repairDatabase();
@@ -590,7 +592,7 @@ describe('duplicate()', () => {
   it('should overwrite appropriate fields on the parent when duplicating', async () => {
     const date = 1_478_795_580_200;
     Date.now = vi.fn().mockReturnValue(date);
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       name: 'Test Workspace',
     });
     const newDescription = 'test';
@@ -611,7 +613,7 @@ describe('duplicate()', () => {
   });
 
   it('should should not call migrate when duplicating', async () => {
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       name: 'Test Workspace',
     });
     const spy = vi.spyOn(models.workspace, 'migrate');
@@ -620,7 +622,7 @@ describe('duplicate()', () => {
   });
 
   it('should rewrite chained request references when duplicating a folder', async () => {
-    const workspace = await models.workspace.create({ name: 'Workspace' });
+    const workspace = await services.workspace.create({ name: 'Workspace' });
     const folder = await models.requestGroup.create({ parentId: workspace._id, name: 'Folder' });
     const req1 = await models.request.create({
       parentId: folder._id,
@@ -673,13 +675,13 @@ describe('docCreate()', () => {
 describe('withAncestors()', () => {
   it('should return itself and all parents but exclude siblings', async () => {
     const spc = await models.project.create();
-    const wrk = await models.workspace.create({
+    const wrk = await services.workspace.create({
       parentId: spc._id,
     });
     const wrkReq = await models.request.create({
       parentId: wrk._id,
     });
-    const wrkGrpcReq = await models.grpcRequest.create({
+    const wrkGrpcReq = await services.grpcRequest.create({
       parentId: wrk._id,
     });
     const grp = await models.requestGroup.create({
@@ -688,7 +690,7 @@ describe('withAncestors()', () => {
     const grpReq = await models.request.create({
       parentId: grp._id,
     });
-    const grpGrpcReq = await models.grpcRequest.create({
+    const grpGrpcReq = await services.grpcRequest.create({
       parentId: grp._id,
     });
     // Workspace child searching for ancestors
@@ -713,7 +715,7 @@ describe('withAncestors()', () => {
 describe('getWithDescendants()', () => {
   it('should return specified model and all children', async () => {
     const project = await models.project.create();
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       _id: 'w1',
       parentId: project._id,
     });
@@ -769,7 +771,7 @@ describe('getWithDescendants()', () => {
       _id: 'req2',
       parentId: folder1._id,
     });
-    const grpcRequest1 = await models.grpcRequest.create({
+    const grpcRequest1 = await services.grpcRequest.create({
       _id: 'grpc1',
       parentId: workspace._id,
     });

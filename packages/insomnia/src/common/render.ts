@@ -1,6 +1,7 @@
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
+import type { GrpcRequest, GrpcRequestBody, Workspace } from '~/insomnia-data';
 import { type McpRequest, services } from '~/insomnia-data';
 
 import * as models from '../models';
@@ -10,13 +11,11 @@ import {
   vaultEnvironmentPath,
   vaultEnvironmentRuntimePath,
 } from '../models/environment';
-import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
-import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';
@@ -377,12 +376,12 @@ export async function getRenderContext({
   const ancestors = _ancestors || (await getRenderContextAncestors(request));
 
   const project = ancestors.find(isProject);
-  const workspace = ancestors.find(isWorkspace);
+  const workspace = ancestors.find(models.workspace.isWorkspace);
   if (!workspace) {
     throw new Error('Failed to render. Could not find workspace');
   }
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspace._id);
 
   let rootGlobalEnvironment: Environment | null = null;
   let subGlobalEnvironment: Environment | null = null;
@@ -551,7 +550,7 @@ export async function getRenderedRequestAndContext({
   context: Record<string, any>;
 }> {
   const ancestors = await getRenderContextAncestors(request);
-  const workspace = ancestors.find(isWorkspace);
+  const workspace = ancestors.find(models.workspace.isWorkspace);
   const requestGroups = ancestors.filter(isRequestGroup);
 
   const parentId = workspace ? workspace._id : 'n/a';

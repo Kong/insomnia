@@ -2,6 +2,8 @@ import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
+import type { Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';
@@ -9,7 +11,6 @@ import * as models from '../models';
 import { isRequest, type Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
-import { isWorkspace, type Workspace } from '../models/workspace';
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginApp from '../plugins/context/app';
@@ -52,7 +53,7 @@ export async function exportRequestsHAR(requests: BaseModel[], includePrivateDoc
       models.workspace.type,
       models.requestGroup.type,
     ]);
-    const workspace = ancestors.find(isWorkspace);
+    const workspace = ancestors.find(models.workspace.isWorkspace);
     mapRequestIdToWorkspace[request._id] = workspace;
 
     if (workspace == null || workspace._id in workspaceLookup) {
@@ -66,7 +67,7 @@ export async function exportRequestsHAR(requests: BaseModel[], includePrivateDoc
   const mapWorkspaceIdToEnvironmentId: Record<string, any> = {};
 
   for (const workspace of workspaces) {
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+    const workspaceMeta = await services.workspaceMeta.getByParentId(workspace._id);
     let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
     const environment = await models.environment.getById(environmentId || 'n/a');
 
@@ -111,12 +112,12 @@ export async function exportHarCurrentRequest(request: Request, response: Respon
     models.workspace.type,
     models.requestGroup.type,
   ]);
-  const workspace = ancestors.find(isWorkspace);
+  const workspace = ancestors.find(models.workspace.isWorkspace);
   if (workspace === null || workspace === undefined) {
     throw new TypeError('no workspace found for request');
   }
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspace._id);
   let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
   const environment = await models.environment.getById(environmentId || 'n/a');
   if (!environment || environment.isPrivate) {

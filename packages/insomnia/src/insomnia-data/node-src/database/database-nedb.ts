@@ -8,25 +8,25 @@ import NeDB from '@seald-io/nedb';
 
 import { generateId } from '~/common/misc';
 import type {
+  ApiSpec,
   ChangeBufferEvent,
   ChangeListener,
   ChangeType,
+  ClientCertificate,
+  CloudProviderCredential,
   DataStoreOptions,
+  GitRepository,
   IDatabase,
   Operation,
   Query,
+  Workspace,
+  WorkspaceMeta,
 } from '~/insomnia-data';
 import { mustGetModel } from '~/models';
-import type { ApiSpec } from '~/models/api-spec';
-import type { ClientCertificate } from '~/models/client-certificate';
-import type { CloudProviderCredential } from '~/models/cloud-credential';
 import type { CookieJar } from '~/models/cookie-jar';
 import { type Environment } from '~/models/environment';
-import type { GitRepository } from '~/models/git-repository';
 import type { AllTypes, BaseModel } from '~/models/index';
 import * as models from '~/models/index';
-import type { Workspace } from '~/models/workspace';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
 
 import { repairDatabase } from './repair-database';
 
