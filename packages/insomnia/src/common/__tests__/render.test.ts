@@ -1,12 +1,12 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import * as models from '../../models';
 import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
 import type { Environment } from '../../models/environment';
-import type { Workspace } from '../../models/workspace';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
@@ -625,7 +625,7 @@ describe('render tests', () => {
 
   describe('getRenderedGrpcRequestMessage()', () => {
     it('renders only the body for a grpc request ', async () => {
-      const w1 = await models.workspace.create();
+      const w1 = await services.workspace.create();
       const env = await models.environment.create({
         parentId: w1._id,
         data: {
@@ -633,7 +633,7 @@ describe('render tests', () => {
           host: 'testb.in:9000',
         },
       });
-      const grpcRequest = await models.grpcRequest.create({
+      const grpcRequest = await services.grpcRequest.create({
         parentId: w1._id,
         name: 'hi {{ foo }}',
         url: '{{ host }}',
@@ -656,7 +656,7 @@ describe('render tests', () => {
     let env: Environment;
 
     beforeEach(async () => {
-      w1 = await models.workspace.create();
+      w1 = await services.workspace.create();
       env = await models.environment.create({
         parentId: w1._id,
         data: {
@@ -667,7 +667,7 @@ describe('render tests', () => {
     });
 
     it('renders all grpc request properties', async () => {
-      const grpcRequest = await models.grpcRequest.create({
+      const grpcRequest = await services.grpcRequest.create({
         parentId: w1._id,
         name: 'hi {{ foo }}',
         url: '{{ host }}',
@@ -690,7 +690,7 @@ describe('render tests', () => {
     });
 
     it('renders but ignores the body for a grpc request ', async () => {
-      const grpcRequest = await models.grpcRequest.create({
+      const grpcRequest = await services.grpcRequest.create({
         parentId: w1._id,
         name: 'hi {{ foo }}',
         url: '{{ host }}',
@@ -717,7 +717,7 @@ describe('render tests', () => {
     });
 
     it('should still render with bad description', async () => {
-      const grpcRequest = await models.grpcRequest.create({
+      const grpcRequest = await services.grpcRequest.create({
         parentId: w1._id,
         name: 'hi {{ foo }}',
         url: '{{ host }}',

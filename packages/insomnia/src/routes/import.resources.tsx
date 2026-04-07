@@ -7,11 +7,11 @@ import {
   importResourcesToProject,
   importResourcesToWorkspace,
 } from '~/common/import';
+import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { isRemoteProject } from '~/models/project';
-import type { Workspace } from '~/models/workspace';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -71,7 +71,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
     if (!workspaceId && data.skipImportIfDuplicate) {
-      const existing = await findExistingImportedSpec(projectId);
+      const existing = await findExistingImportedSpec(projectId, organizationId);
       if (existing) {
         const matchedRequest = await findRequestInExistingWorkspace(
           existing.workspace,
@@ -83,6 +83,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
           done: true,
           singleImportedWorkspace: existing.workspace,
           singleImportedRequest: matchedRequest,
+          singleImportedProjectId: existing.workspace.parentId,
         };
       }
     }
@@ -145,7 +146,7 @@ export async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
       // Create default env, cookie jar, and meta
       await models.environment.getOrCreateForParentId(newWorkspace._id);
       await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-      await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+      await services.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
       try {
         const vcs = VCSInstance().newInstance();
         await initializeLocalBackendProjectAndMarkForSync({

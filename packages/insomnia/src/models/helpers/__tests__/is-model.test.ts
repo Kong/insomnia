@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { generateId } from '../../../common/misc';
-import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
 import * as models from '../../index';
 import { isRequest } from '../../request';
 import { isRequestGroup } from '../../request-group';
-import { isDesign, isWorkspace, WorkspaceScopeKeys } from '../../workspace';
 
 const { isProtoDirectory } = models.protoDirectory;
 const { isProtoFile } = models.protoFile;
@@ -19,7 +17,7 @@ describe('isGrpcRequest', () => {
 
   it.each(supported)('should return true: "%s"', type => {
     expect(
-      isGrpcRequest({
+      models.grpcRequest.isGrpcRequest({
         type,
       }),
     ).toBe(true);
@@ -27,7 +25,7 @@ describe('isGrpcRequest', () => {
 
   it.each(unsupported)('should return false: "%s"', type => {
     expect(
-      isGrpcRequest({
+      models.grpcRequest.isGrpcRequest({
         type,
       }),
     ).toBe(false);
@@ -39,11 +37,11 @@ describe('isGrpcRequestId', () => {
   const unsupported = allPrefixes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true if id is prefixed by "%s_"', prefix => {
-    expect(isGrpcRequestId(generateId(prefix))).toBe(true);
+    expect(models.grpcRequest.isGrpcRequestId(generateId(prefix))).toBe(true);
   });
 
   it.each(unsupported)('should return false if id is prefixed by "%s_"', prefix => {
-    expect(isGrpcRequestId(generateId(prefix))).toBe(false);
+    expect(models.grpcRequest.isGrpcRequestId(generateId(prefix))).toBe(false);
   });
 });
 
@@ -137,7 +135,7 @@ describe('isWorkspace', () => {
 
   it.each(supported)('should return true: "%s"', type => {
     expect(
-      isWorkspace({
+      models.workspace.isWorkspace({
         type,
       }),
     ).toBe(true);
@@ -145,7 +143,7 @@ describe('isWorkspace', () => {
 
   it.each(unsupported)('should return false: "%s"', type => {
     expect(
-      isWorkspace({
+      models.workspace.isWorkspace({
         type,
       }),
     ).toBe(false);
@@ -155,13 +153,13 @@ describe('isWorkspace', () => {
 describe('isDesign', () => {
   it('should be true', () => {
     const w = models.workspace.init();
-    w.scope = WorkspaceScopeKeys.design;
-    expect(isDesign(w)).toBe(true);
+    w.scope = models.workspace.WorkspaceScopeKeys.design;
+    expect(models.workspace.isDesign(w)).toBe(true);
   });
 
   it('should be false', () => {
     const w = models.workspace.init();
-    w.scope = WorkspaceScopeKeys.collection;
-    expect(isDesign(w)).toBe(false);
+    w.scope = models.workspace.WorkspaceScopeKeys.collection;
+    expect(models.workspace.isDesign(w)).toBe(false);
   });
 });

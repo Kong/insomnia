@@ -21,9 +21,9 @@ import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { Workspace } from '~/insomnia-data';
 import { initServices } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
-import type { Workspace } from '~/models/workspace';
 
 import type { RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
 import packageJson from '../package.json';

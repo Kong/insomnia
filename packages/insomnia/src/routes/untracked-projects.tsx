@@ -1,10 +1,10 @@
 import type { Organization } from 'insomnia-api';
 
 import { database } from '~/common/database';
+import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
 import type { Project } from '~/models/project';
-import type { Workspace } from '~/models/workspace';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/untracked-projects';

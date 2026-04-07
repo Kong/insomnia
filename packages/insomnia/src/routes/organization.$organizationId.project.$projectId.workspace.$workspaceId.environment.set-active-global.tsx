@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -14,10 +14,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const environmentId = formData.get('environmentId');
   invariant(typeof environmentId === 'string', 'Environment ID is required');
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   invariant(workspaceMeta, 'Workspace meta not found');
 
-  await models.workspaceMeta.update(workspaceMeta, { activeGlobalEnvironmentId: environmentId || null });
+  await services.workspaceMeta.update(workspaceMeta, { activeGlobalEnvironmentId: environmentId || null });
 
   return null;
 }

@@ -5,13 +5,11 @@ import { database } from '~/common/database';
 import { scopeToLabelMap } from '~/common/get-workspace-label';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort } from '~/common/sorting';
-import type { ApiSpec, GitRepository } from '~/insomnia-data';
+import type { ApiSpec, GitRepository, MockServer, WorkspaceMeta } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { sortProjects } from '~/models/helpers/project';
-import type { MockServer } from '~/models/mock-server';
 import { type Project } from '~/models/project';
-import { isDesign } from '~/models/workspace';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -19,7 +17,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 import { type InsomniaFile } from './organization.$organizationId.project.$projectId._index';
 
 async function getAllLocalFiles({ projectId }: { projectId: string }) {
-  const projectWorkspaces = await models.workspace.findByParentId(projectId);
+  const projectWorkspaces = await services.workspace.findByParentId(projectId);
   const [workspaceMetas, apiSpecs, mockServers] = await Promise.all([
     database.find<WorkspaceMeta>(models.workspaceMeta.type, {
       parentId: {
@@ -71,7 +69,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta?.modified || workspace.modified;
 
-    const modifiedLocally = isDesign(workspace) ? apiSpec?.modified || 0 : workspaceModified;
+    const modifiedLocally = models.workspace.isDesign(workspace) ? apiSpec?.modified || 0 : workspaceModified;
 
     // Span spec, workspace and sync related timestamps for card last modified label and sort order
     const lastModifiedFrom = [
@@ -84,7 +82,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
     const lastModifiedTimestamp = lastModifiedFrom.filter(isNotNullOrUndefined).sort(descendingNumberSort)[0];
 
     const hasUnsavedChanges = Boolean(
-      isDesign(workspace) &&
+      models.workspace.isDesign(workspace) &&
         gitRepository?.cachedGitLastCommitTime &&
         modifiedLocally > gitRepository?.cachedGitLastCommitTime,
     );

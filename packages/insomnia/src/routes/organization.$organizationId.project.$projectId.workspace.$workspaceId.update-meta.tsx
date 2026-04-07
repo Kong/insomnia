@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
+import type { WorkspaceMeta } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
@@ -11,7 +11,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const patch = (await request.json()) as Partial<WorkspaceMeta>;
 
-  await models.workspaceMeta.updateByParentId(workspaceId, patch);
+  await services.workspaceMeta.updateByParentId(workspaceId, patch);
 
   return null;
 }

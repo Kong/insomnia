@@ -48,7 +48,7 @@ describe('Request Model - Comprehensive Tests', () => {
 
   describe('Basic Request Creation', () => {
     it('should create a basic HTTP request', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_basic_test',
         name: 'Basic Test Workspace',
         parentId: 'proj_test',
@@ -75,7 +75,7 @@ describe('Request Model - Comprehensive Tests', () => {
     });
 
     it('should create a request with headers', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_headers',
         name: 'Headers Test Workspace',
         parentId: 'proj_test',
@@ -102,7 +102,7 @@ describe('Request Model - Comprehensive Tests', () => {
     });
 
     it('should create a request with parameters', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_params',
         name: 'Parameters Test Workspace',
         parentId: 'proj_test',
@@ -133,7 +133,7 @@ describe('Request Model - Comprehensive Tests', () => {
     let workspace: any;
 
     beforeEach(async () => {
-      workspace = await models.workspace.create({
+      workspace = await services.workspace.create({
         _id: `wrk_auth_${uuidv4()}`,
         name: 'Auth Test Workspace',
         parentId: `proj_test_${uuidv4()}`,
@@ -526,7 +526,7 @@ describe('Request Model - Comprehensive Tests', () => {
     let workspace: any;
 
     beforeEach(async () => {
-      workspace = await models.workspace.create({
+      workspace = await services.workspace.create({
         _id: `wrk_body_${uuidv4()}`,
         name: 'Body Test Workspace',
         parentId: `proj_test_${uuidv4()}`,
@@ -671,7 +671,7 @@ describe('Request Model - Comprehensive Tests', () => {
     let workspace: any;
 
     beforeEach(async () => {
-      workspace = await models.workspace.create({
+      workspace = await services.workspace.create({
         _id: `wrk_graphql_${uuidv4()}`,
         name: 'GraphQL Test Workspace',
         parentId: `proj_test_${uuidv4()}`,
@@ -738,7 +738,7 @@ describe('Request Model - Comprehensive Tests', () => {
     let request: any;
 
     beforeEach(async () => {
-      workspace = await models.workspace.create({
+      workspace = await services.workspace.create({
         _id: `wrk_update_${uuidv4()}`,
         name: 'Update Test Workspace',
         parentId: `proj_test_${uuidv4()}`,
@@ -812,7 +812,7 @@ describe('Request Model - Comprehensive Tests', () => {
     let request: any;
 
     beforeEach(async () => {
-      workspace = await models.workspace.create({
+      workspace = await services.workspace.create({
         _id: `wrk_delete_${uuidv4()}`,
         name: 'Delete Test Workspace',
         parentId: `proj_test_${uuidv4()}`,

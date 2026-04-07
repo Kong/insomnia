@@ -13,6 +13,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { MockServer, Workspace } from '~/insomnia-data';
 import { removeResponsesForRequest } from '~/models/helpers/response-operations';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
@@ -20,10 +21,8 @@ import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organiza
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as models from '../../../models/index';
-import type { MockServer } from '../../../models/mock-server';
 import { isGitProject, type Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
-import { isEnvironment, isMcp, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -53,7 +52,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
     }
   }, [project, gitRepoTreeFetcher]);
 
-  const isScratchpadWorkspace = isScratchpad(workspace);
+  const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
 
   const activeWorkspaceName = workspace.name;
 
@@ -136,7 +135,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   />
                 </TextField>
-                {project && isGitProject(project) && gitRepoTreeFetcher.data && !isMcp(workspace) && (
+                {project && isGitProject(project) && gitRepoTreeFetcher.data && !models.workspace.isMcp(workspace) && (
                   <TextField
                     name="fileName"
                     isRequired
@@ -171,7 +170,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     <FieldError className="text-xs text-red-500" />
                   </TextField>
                 )}
-                {!isMockServer(workspace) && (
+                {!models.workspace.isMockServer(workspace) && (
                   <>
                     <Label className="text-sm text-(--hl)" aria-label="Description">
                       Description
@@ -185,7 +184,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                       }}
                     />
                     <Input name="description" className="sr-only" value={description} />
-                    {!isEnvironment(workspace) && !isMcp(workspace) && (
+                    {!models.workspace.isEnvironment(workspace) && !models.workspace.isMcp(workspace) && (
                       <>
                         <Heading>Actions</Heading>
                         <PromptButton
@@ -205,7 +204,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     )}
                   </>
                 )}
-                {Boolean(isMockServer(workspace) && mockServer) && (
+                {Boolean(models.workspace.isMockServer(workspace) && mockServer) && (
                   <>
                     <Label className="text-sm text-(--hl)">Mock server type</Label>
                     {mockServer?.useInsomniaCloud ? <p>Cloud Mock</p> : <p>Self-hosted Mock</p>}

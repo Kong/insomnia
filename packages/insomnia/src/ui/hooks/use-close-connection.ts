@@ -1,7 +1,6 @@
 import { useCallback, useEffect } from 'react';
 
 import * as models from '../../models';
-import { isGrpcRequestId } from '../../models/grpc-request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from '../../models/request';
 import { isSocketIORequestId } from '../../models/socket-io-request';
 import { isWebSocketRequestId } from '../../models/websocket-request';
@@ -11,7 +10,7 @@ import uiEventBus from '../event-bus';
 // this hook is use for control when to close connections(websocket & SSE & grpc stream & graphql subscription)
 export const useCloseConnection = ({ organizationId }: { organizationId: string }) => {
   const closeConnectionById = async (id: string) => {
-    if (isGrpcRequestId(id)) {
+    if (models.grpcRequest.isGrpcRequestId(id)) {
       window.main.grpc.cancel(id);
     } else if (isWebSocketRequestId(id)) {
       window.main.webSocket.close({ requestId: id });

@@ -6,8 +6,8 @@ import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-compone
 import { Banner } from '~/basic-components/banner';
 import { Icon } from '~/basic-components/icon';
 import type { GitCredentials, GitRepository } from '~/insomnia-data';
+import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
-import { useGitProviderUpdateSignInFetcher } from '~/routes/git-credentials.update-sign-in';
 
 import { isOAuthAccessTokenExpired, shouldShowHttp40OAuthReauthHint } from './git-oauth-auth-utils';
 
@@ -35,17 +35,17 @@ export const GitOauthAuthBanner: FC<{
   const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
   const [error, setError] = useState('');
   const initSignInFetcher = useInitSignInToGitProviderFetcher();
-  const updateSignInFetcher = useGitProviderUpdateSignInFetcher();
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher();
 
   const initSignInError = getErrorResult(initSignInFetcher.data);
-  const updateSignInError = getErrorResult(updateSignInFetcher.data);
+  const completeSignInError = getErrorResult(completeSignInFetcher.data);
 
   useEffect(() => {
-    if (updateSignInFetcher.data && !updateSignInError) {
+    if (completeSignInFetcher.data && !completeSignInError) {
       setIsReauthModalOpen(false);
       setError('');
     }
-  }, [updateSignInFetcher.data, updateSignInError]);
+  }, [completeSignInFetcher.data, completeSignInError]);
 
   const expiredByExpiresAt = isOAuthAccessTokenExpired(selectedCredential);
   const http40Fallback =
@@ -130,7 +130,7 @@ export const GitOauthAuthBanner: FC<{
                         return;
                       }
 
-                      updateSignInFetcher.submit({ provider: provider.type, code, state });
+                      completeSignInFetcher.submit({ provider: provider.type, code, state });
                     }
                   }}
                 >
@@ -155,10 +155,10 @@ export const GitOauthAuthBanner: FC<{
                       {error}
                     </p>
                   )}
-                  {(initSignInError || updateSignInError) && (
+                  {(initSignInError || completeSignInError) && (
                     <p className="margin-bottom-sm flex items-start gap-2 rounded-xs border border-solid border-(--color-danger) bg-(--color-danger-bg) p-2 text-(--color-danger)">
                       <Icon icon="exclamation-triangle" className="mt-1 size-4" />
-                      <span>{initSignInError || updateSignInError}</span>
+                      <span>{initSignInError || completeSignInError}</span>
                     </p>
                   )}
                 </form>

@@ -21,32 +21,32 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { ApiSpec } from '~/insomnia-data';
+import type { ApiSpec, WorkspaceScope } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { isGitProject, type Project } from '../../../models/project';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
-  [WorkspaceScopeKeys.collection]: 'Request Collection',
-  [WorkspaceScopeKeys.environment]: 'Environment',
-  [WorkspaceScopeKeys.mockServer]: 'Mock Server',
-  [WorkspaceScopeKeys.design]: 'Design Document',
-  [WorkspaceScopeKeys.mcp]: 'MCP Client',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'Request Collection',
+  [models.workspace.WorkspaceScopeKeys.environment]: 'Environment',
+  [models.workspace.WorkspaceScopeKeys.mockServer]: 'Mock Server',
+  [models.workspace.WorkspaceScopeKeys.design]: 'Design Document',
+  [models.workspace.WorkspaceScopeKeys.mcp]: 'MCP Client',
 };
 
 const defaultNameByScope: Record<WorkspaceScope, string> = {
-  [WorkspaceScopeKeys.collection]: 'My Collection',
-  [WorkspaceScopeKeys.environment]: 'My Environment',
-  [WorkspaceScopeKeys.mockServer]: 'My Mock Server',
-  [WorkspaceScopeKeys.design]: 'My Design Document',
-  [WorkspaceScopeKeys.mcp]: 'My MCP Client',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'My Collection',
+  [models.workspace.WorkspaceScopeKeys.environment]: 'My Environment',
+  [models.workspace.WorkspaceScopeKeys.mockServer]: 'My Mock Server',
+  [models.workspace.WorkspaceScopeKeys.design]: 'My Design Document',
+  [models.workspace.WorkspaceScopeKeys.mcp]: 'My MCP Client',
 };
 
 export const NewWorkspaceModal = ({
@@ -107,7 +107,7 @@ export const NewWorkspaceModal = ({
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
-    if (createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer) {
+    if (createNewWorkspaceFetcher.state !== 'idle' && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
       setProgressMessage(0);
       const interval = setInterval(() => {
         setProgressMessage(prev => (prev + 1) % progressMessages.length);
@@ -121,7 +121,7 @@ export const NewWorkspaceModal = ({
 
   useEffect(() => {
     if (
-      scope === WorkspaceScopeKeys.mockServer &&
+      scope === models.workspace.WorkspaceScopeKeys.mockServer &&
       createNewWorkspaceFetcher.state === 'idle' &&
       createNewWorkspaceFetcher.data &&
       !createNewWorkspaceFetcher.data.error
@@ -137,7 +137,7 @@ export const NewWorkspaceModal = ({
   }, [gitRepoTreeFetcher, isOpen, project]);
 
   useEffect(() => {
-    if (isOpen && scope === WorkspaceScopeKeys.mockServer) {
+    if (isOpen && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
       window.main.trackSegmentEvent({
         event: SegmentEvent.mockCreateModalOpened,
       });
@@ -695,7 +695,8 @@ export const NewWorkspaceModal = ({
                 >
                   {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
                   <span>
-                    {createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer
+                    {createNewWorkspaceFetcher.state !== 'idle' &&
+                    scope === models.workspace.WorkspaceScopeKeys.mockServer
                       ? progressMessages[progressMessage]
                       : 'Create'}
                   </span>

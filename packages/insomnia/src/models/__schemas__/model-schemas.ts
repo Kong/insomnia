@@ -1,12 +1,12 @@
 import type { Schema } from '@develohpanda/fluent-builder';
 import clone from 'clone';
 
+import type { GrpcRequest, Workspace } from '~/insomnia-data';
+
 import { type AllTypes, type BaseModel, environment, grpcRequest, request, requestGroup, workspace } from '..';
 import { type Environment, EnvironmentKvPairDataType, EnvironmentType } from '../environment';
-import type { GrpcRequest } from '../grpc-request';
 import type { Request } from '../request';
 import type { RequestGroup } from '../request-group';
-import type { Workspace } from '../workspace';
 
 // move into fluent-builder
 const toSchema = <T>(obj: T): Schema<T> => {
