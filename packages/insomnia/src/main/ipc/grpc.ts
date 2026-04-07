@@ -28,10 +28,10 @@ import * as protoLoader from '@grpc/proto-loader';
 import electron, { type IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
 
+import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { version } from '../../../package.json';
-import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '../../models/grpc-request';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
 import { invariant } from '../../utils/invariant';

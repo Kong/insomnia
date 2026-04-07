@@ -22,11 +22,11 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const apiSpec = await services.apiSpec.getByParentId(workspaceId);
   invariant(apiSpec, 'No API Specification was found');
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
 
   invariant(workspace, 'Workspace not found');
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   const isLintError = (result: IRuleResult) => result.severity === 0;
 

@@ -144,7 +144,7 @@ const openCurlConnection = async (
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
   const environment = await models.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;

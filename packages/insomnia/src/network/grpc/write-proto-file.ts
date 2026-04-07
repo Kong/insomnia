@@ -2,12 +2,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import type { ProtoDirectory, ProtoFile } from '~/insomnia-data';
+import type { ProtoDirectory, ProtoFile, Workspace } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { isWorkspace, type Workspace } from '../../models/workspace';
 
 const { isProtoDirectory } = models.protoDirectory;
 const { isProtoFile } = models.protoFile;
@@ -59,9 +58,9 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     // Find the root ancestor directory
     const rootAncestorProtoDirectory = ancestors.find(
       // @ts-expect-error -- TSCONVERSION ancestor workspace can be undefined
-      c => isProtoDirectory(c) && c.parentId === ancestors.find(isWorkspace)._id,
+      c => isProtoDirectory(c) && c.parentId === ancestors.find(models.workspace.isWorkspace)._id,
     );
-    if (!ancestors.find(isWorkspace) || !rootAncestorProtoDirectory) {
+    if (!ancestors.find(models.workspace.isWorkspace) || !rootAncestorProtoDirectory) {
       // should never happen
       return {
         filePath: path.join(

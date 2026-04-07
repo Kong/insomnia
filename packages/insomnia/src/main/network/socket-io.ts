@@ -256,7 +256,7 @@ const openSocketIOConnection = async (
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
   // fallback to base environment
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
   const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));

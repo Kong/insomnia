@@ -16,9 +16,8 @@ import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import type { Settings } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
-import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
@@ -170,7 +169,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const workspaceData = useWorkspaceLoaderData();
 
   const navigate = useNavigate();
-  const isScratchpadWorkspace = workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace);
+  const isScratchpadWorkspace =
+    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData.activeWorkspace);
   const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;

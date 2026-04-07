@@ -52,7 +52,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (requestType === 'gRPC') {
     activeRequestId = (
-      await models.grpcRequest.create({
+      await services.grpcRequest.create({
         parentId: parentId || workspaceId,
         name: 'New Request',
       })

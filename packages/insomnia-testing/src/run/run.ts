@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import nodePath from 'node:path';
 
-import chai from 'chai';
+import * as chai from 'chai';
 import type { Reporter, ReporterConstructor } from 'mocha';
 import Mocha from 'mocha';
 

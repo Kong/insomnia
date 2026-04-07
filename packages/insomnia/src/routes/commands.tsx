@@ -2,24 +2,15 @@ import type { Organization } from 'insomnia-api';
 
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
-import { services } from '~/insomnia-data';
-import {
-  environment,
-  grpcRequest,
-  project,
-  request,
-  requestGroup,
-  webSocketRequest,
-  workspace,
-} from '~/models';
+import type { GrpcRequest, Workspace } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
+import { environment, grpcRequest, project, request, requestGroup, webSocketRequest, workspace } from '~/models';
 import type { Environment } from '~/models/environment';
-import type { GrpcRequest } from '~/models/grpc-request';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import { isRemoteProject, type Project } from '~/models/project';
 import type { Request } from '~/models/request';
 import type { RequestGroup } from '~/models/request-group';
 import type { WebSocketRequest } from '~/models/websocket-request';
-import { scopeToActivity, type Workspace } from '~/models/workspace';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -234,7 +225,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
-          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,
@@ -275,7 +266,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
-          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,

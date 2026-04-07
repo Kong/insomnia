@@ -3,10 +3,10 @@ import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
+import type { WorkspaceMeta } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
@@ -269,7 +269,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           selectedAuthorEmail,
         });
 
-        const projectWorkspaces = await models.workspace.findByParentId(project._id);
+        const projectWorkspaces = await services.workspace.findByParentId(project._id);
         const bufferId = await database.bufferChanges();
         const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
           parentId: { $in: projectWorkspaces.map(w => w._id) },
@@ -277,7 +277,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
         for (const workspaceMeta of workspaceMetas) {
           if (!workspaceMeta.gitFilePath) {
-            await models.workspaceMeta.update(workspaceMeta, {
+            await services.workspaceMeta.update(workspaceMeta, {
               gitFilePath: `insomnia.${workspaceMeta.parentId}.yaml`,
             });
           }

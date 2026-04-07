@@ -21,7 +21,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
   }
 
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const activeWorkspace = await services.workspace.getById(workspaceId);
   if (!activeWorkspace) {
     showResourceNotFoundToast(`MCP Client not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));

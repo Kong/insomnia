@@ -21,7 +21,6 @@ import {
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -158,7 +157,7 @@ export const useRootLoaderData = () => {
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
-  const workspaceCount = await models.workspace.count();
+  const workspaceCount = await services.workspace.count();
   const userSession = await services.userSession.getOrCreate();
   const cloudCredentials = await services.cloudCredential.all();
 

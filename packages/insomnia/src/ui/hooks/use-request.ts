@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
 
-import type { McpPayload, McpRequest, Settings } from '~/insomnia-data';
+import type { GrpcRequest, GrpcRequestMeta, McpPayload, McpRequest, Settings, WorkspaceMeta } from '~/insomnia-data';
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 import { useRequestUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-meta';
 import { useRequestUpdatePayloadActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';
@@ -9,8 +9,6 @@ import { useRequestGroupUpdateMetaActionFetcher } from '~/routes/organization.$o
 import { useWorkspaceUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
 import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
 
-import type { GrpcRequest } from '../../models/grpc-request';
-import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import type { Request } from '../../models/request';
 import type { RequestGroup } from '../../models/request-group';
 import type { RequestGroupMeta } from '../../models/request-group-meta';
@@ -18,7 +16,6 @@ import type { RequestMeta } from '../../models/request-meta';
 import type { SocketIOPayload } from '../../models/socket-io-payload';
 import type { SocketIORequest } from '../../models/socket-io-request';
 import type { WebSocketRequest } from '../../models/websocket-request';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
 
 export const useRequestPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {

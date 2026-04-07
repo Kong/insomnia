@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import type { MockRoute } from '~/models/mock-route';
+import type { MockRoute } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -14,15 +14,15 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   try {
     const patch = (await request.json()) as Partial<MockRoute>;
 
-    const mockRoute = await models.mockRoute.getById(mockRouteId);
+    const mockRoute = await services.mockRoute.getById(mockRouteId);
     invariant(mockRoute, 'Mock route is required');
 
     if (patch.name !== undefined) {
       invariant(typeof patch.name === 'string', 'Name is required');
       invariant(patch.name.startsWith('/'), 'Path must begin with a /');
 
-      const mockServer = await models.mockServer.getById(mockRoute.parentId);
-      const existingRoutes = await models.mockRoute.findByParentId(mockRoute.parentId);
+      const mockServer = await services.mockServer.getById(mockRoute.parentId);
+      const existingRoutes = await services.mockRoute.findByParentId(mockRoute.parentId);
 
       if (mockServer?.useInsomniaCloud) {
         const hasRouteInServer = existingRoutes.filter(m => m._id !== mockRouteId).find(m => m.name === patch.name);
@@ -45,7 +45,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       }
     }
 
-    await models.mockRoute.update(mockRoute, patch);
+    await services.mockRoute.update(mockRoute, patch);
 
     window.main.trackSegmentEvent({
       event: SegmentEvent.mockRouteEdit,

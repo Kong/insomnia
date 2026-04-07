@@ -67,9 +67,9 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const generateCode = useCallback(
     async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
-      const HTTPSnippet = (await import('httpsnippet')).default;
+      const { HTTPSnippet, availableTargets } = await import('httpsnippet');
 
-      const targets = HTTPSnippet.availableTargets();
+      const targets = availableTargets();
       const targetOrFallback = target || (targets.find(t => t.key === 'shell') as HTTPSnippetTarget);
       const clientOrFallback = client || (targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient);
 

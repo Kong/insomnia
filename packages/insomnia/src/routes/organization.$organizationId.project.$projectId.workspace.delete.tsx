@@ -1,9 +1,9 @@
 import { href, redirect } from 'react-router';
 
+import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { isRemoteProject, type Project } from '~/models/project';
-import { type Workspace } from '~/models/workspace';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
@@ -12,7 +12,7 @@ import { createFetcherSubmitHook } from '~/utils/router';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.delete';
 
 async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, localOnly: boolean) {
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 
   if (isRemoteProject(project) && !isGitSync) {
@@ -36,7 +36,7 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
 
 async function deleteWorkspaceFromLocal(workspace: Workspace) {
   await services.stats.incrementDeletedRequestsForDescendents(workspace);
-  await models.workspace.remove(workspace);
+  await services.workspace.remove(workspace);
 }
 
 async function deleteWorkspace(workspace: Workspace | null, project: Project | null, localOnly: boolean) {
@@ -70,7 +70,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const localOnly = formData.get('localOnly') === 'true';
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
   const msgObj = await deleteWorkspace(workspace, project, localOnly);

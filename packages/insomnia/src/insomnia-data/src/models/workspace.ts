@@ -1,17 +1,16 @@
 import type { Merge } from 'type-fest';
 
+import { strings } from '~/common/strings';
 import { services } from '~/insomnia-data';
-
-import { database as db } from '../common/database';
-import { strings } from '../common/strings';
-import { isProjectId } from './project';
-import type { BaseModel } from './types';
+import type { BaseModel } from '~/models/types';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
 export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
+
+export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
 
 export interface BaseWorkspace {
   name: string;
@@ -61,36 +60,6 @@ export function migrate(doc: Workspace) {
     console.log('[db] Error during workspace migration', e);
     throw e;
   }
-}
-
-export function getById(id?: string) {
-  return db.findOne<Workspace>(type, { _id: id });
-}
-
-export function findByParentId(parentId: string) {
-  return db.find<Workspace>(type, { parentId });
-}
-
-export async function create(patch: Partial<Workspace> = {}) {
-  expectParentToBeProject(patch.parentId);
-  return db.docCreate<Workspace>(type, patch);
-}
-
-export async function all() {
-  return await db.find<Workspace>(type);
-}
-
-export function count() {
-  return db.count(type);
-}
-
-export function update(workspace: Workspace, patch: Partial<Workspace>) {
-  expectParentToBeProject(patch.parentId);
-  return db.docUpdate(workspace, patch);
-}
-
-export function remove(workspace: Workspace) {
-  return db.remove(workspace);
 }
 
 function _migrateExtractClientCertificates(workspace: Workspace) {
@@ -156,14 +125,6 @@ function _migrateScope(workspace: MigrationWorkspace) {
       : WorkspaceScopeKeys.collection;
   return workspace as Workspace;
 }
-
-function expectParentToBeProject(parentId?: string | null) {
-  if (parentId && !isProjectId(parentId)) {
-    throw new Error('Expected the parent of a Workspace to be a Project');
-  }
-}
-
-export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
 
 export function isScratchpad(workspace?: Workspace) {
   return workspace?._id === SCRATCHPAD_WORKSPACE_ID;

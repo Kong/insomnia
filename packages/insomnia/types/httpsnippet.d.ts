@@ -15,18 +15,13 @@ declare module 'httpsnippet' {
     clients: HTTPSnippetClient[];
   }
 
-  class HTTPSnippet {
+  export function availableTargets(): HTTPSnippetTarget[];
+
+  export class HTTPSnippet {
     constructor(data: any);
     convert(target: string, options?: any): string | false;
 
     convert(target: string, client?: string, options?: any): string | false;
-
-    static addTarget(target: HTTPSnippetTarget): void;
-
-    static addTargetClient(target: string, client: HTTPSnippetClient): void;
-
-    static extName(target: string): string;
-    static availableTargets(): HTTPSnippetTarget[];
   }
 
   export default HTTPSnippet;
