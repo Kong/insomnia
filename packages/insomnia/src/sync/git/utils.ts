@@ -1,13 +1,23 @@
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
-import { isGitCredentialsV2 } from '~/models/git-credentials';
-import type { GitAuthor } from '~/models/git-repository';
-import { gitRemoteProviderRegistry, isGitCredentialsV1 } from '~/sync/git/providers';
+import { type GitAuthor, models, services } from '~/insomnia-data';
+import { gitRemoteProviderRegistry } from '~/sync/git/providers';
 import { invariant } from '~/utils/invariant';
 
-import { gitCredentials, gitRepository } from '../../models';
+const { isGitCredentialsV2, isGitCredentialsV1 } = models.gitCredentials;
 
 export const addDotGit = (url: string): string => (url.endsWith('.git') ? url : `${url}.git`);
+
+/**
+ * OAuth2 token responses often include `expires_in` (seconds until access token expires).
+ * We store an absolute ms timestamp on git credentials as `credentials.expiresAt`.
+ */
+export function expiresAtFromOAuthExpiresIn(expiresInSeconds?: number): number | undefined {
+  if (typeof expiresInSeconds !== 'number' || !Number.isFinite(expiresInSeconds) || expiresInSeconds <= 0) {
+    return undefined;
+  }
+  return Date.now() + Math.floor(expiresInSeconds) * 1000;
+}
 
 const onMessage: MessageCallback = message => {
   console.log(`[git-event] ${message}`);
@@ -19,7 +29,7 @@ const onAuthFailure = (credentialsId?: string | null): AuthFailureCallback => {
 
     try {
       invariant(credentialsId, 'No credentials ID provided for auth failure handling');
-      const credentials = await gitCredentials.getById(credentialsId);
+      const credentials = await services.gitCredentials.getById(credentialsId);
       invariant(credentials, 'Credentials not found for auth failure handling');
       invariant(isGitCredentialsV2(credentials), 'Legacy credentials are not supported');
 
@@ -55,7 +65,7 @@ const onAuth =
       };
     }
 
-    const credentials = await gitCredentials.getById(credentialsId);
+    const credentials = await services.gitCredentials.getById(credentialsId);
 
     if (!credentials || isGitCredentialsV1(credentials)) {
       console.log('[git-event] No credentials found or using legacy credentials');
@@ -80,7 +90,7 @@ const onAuth =
   };
 
 export const getAuthorFromGitRepository = async (gitRepositoryId: string): Promise<GitAuthor> => {
-  const gitRepo = await gitRepository.getById(gitRepositoryId);
+  const gitRepo = await services.gitRepository.getById(gitRepositoryId);
 
   if (!gitRepo || !gitRepo.credentialsId) {
     return {
@@ -89,7 +99,7 @@ export const getAuthorFromGitRepository = async (gitRepositoryId: string): Promi
     };
   }
 
-  const credentials = await gitCredentials.getById(gitRepo.credentialsId);
+  const credentials = await services.gitCredentials.getById(gitRepo.credentialsId);
 
   if (!credentials || isGitCredentialsV1(credentials)) {
     return {

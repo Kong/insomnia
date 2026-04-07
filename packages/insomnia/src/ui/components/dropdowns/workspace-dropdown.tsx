@@ -11,6 +11,7 @@ import {
   Dialog,
   Header,
   Heading,
+  Label,
   Menu,
   MenuItem,
   MenuSection,
@@ -18,9 +19,12 @@ import {
   Modal,
   ModalOverlay,
   Popover,
+  Radio,
+  RadioGroup,
 } from 'react-aria-components';
 import { href, useNavigate, useParams } from 'react-router';
 
+import type { Workspace } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
@@ -32,7 +36,6 @@ import * as models from '../../../models';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
-import { isMcp, isScratchpad, type Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -119,7 +122,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
     setActionPlugins(actionPlugins);
   }, []);
 
-  const isScratchpadWorkspace = isScratchpad(activeWorkspace);
+  const isScratchpadWorkspace = models.workspace.isScratchpad(activeWorkspace);
   const scratchpadActionList: {
     name: string;
     id: string;
@@ -190,7 +193,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
       action: () => void;
     }[];
   }[] = [
-    ...(isMcp(activeWorkspace)
+    ...(models.workspace.isMcp(activeWorkspace)
       ? []
       : [
           {
@@ -237,7 +240,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
       id: 'actions',
       icon: 'cog',
       items: [
-        ...(isMcp(activeWorkspace)
+        ...(models.workspace.isMcp(activeWorkspace)
           ? []
           : [
               {
@@ -452,11 +455,42 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     className="flex flex-col gap-4"
                   >
                     <input type="hidden" name="workspaceId" value={activeWorkspace._id} />
-                    <p>
-                      This will permanently delete the{' '}
-                      {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
-                      {getWorkspaceLabel(activeWorkspace).singular} {isRemoteProject(activeProject) ? 'remotely' : ''}.
-                    </p>
+                    <div>
+                      <p className="line-clamp-5">
+                        This will permanently delete the{' '}
+                        <strong className="break-all whitespace-pre-wrap">{activeWorkspace?.name}</strong>{' '}
+                        {getWorkspaceLabel(activeWorkspace).singular}
+                      </p>
+                      {isRemoteProject(activeProject) && (
+                        <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
+                          <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
+                          <div className="flex gap-2">
+                            <Radio
+                              value="true"
+                              aria-label="Remove Local Copy"
+                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
+                            >
+                              <div>
+                                <Heading className="text-lg font-bold">Remove Local Copy</Heading>
+                                <p className="pt-2">The project will still exist on the Cloud.</p>
+                              </div>
+                            </Radio>
+                            <Radio
+                              value="false"
+                              aria-label="Delete Permanently"
+                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
+                            >
+                              <div>
+                                <Heading className="text-lg font-bold">Delete Permanently</Heading>
+                                <p className="pt-2">
+                                  The project will be deleted everywhere. You cannot undo this action.
+                                </p>
+                              </div>
+                            </Radio>
+                          </div>
+                        </RadioGroup>
+                      )}
+                    </div>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>
                     )}

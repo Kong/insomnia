@@ -1,4 +1,6 @@
-import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
+import type { GrpcRequest } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
+
 import { isRequest, type Request } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import { type DashboardSortOrder, HTTP_METHODS, type SortOrder } from './constants';
@@ -45,8 +47,8 @@ export const httpMethodSort: SortFunction<Pick<SortableModel, 'type' | 'metaSort
       return isRequest(a) ? -1 : 1;
     }
 
-    if (isGrpcRequest(a) || isGrpcRequest(b)) {
-      return isGrpcRequest(a) ? -1 : 1;
+    if (models.grpcRequest.isGrpcRequest(a) || models.grpcRequest.isGrpcRequest(b)) {
+      return models.grpcRequest.isGrpcRequest(a) ? -1 : 1;
     }
   }
 

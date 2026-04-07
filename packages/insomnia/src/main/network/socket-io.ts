@@ -157,7 +157,7 @@ const getCertificates = async ({
   const caCertificate =
     (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
   const pemCertificates: string[] = [];
   const pemCertificateKeys: string[] = [];
@@ -256,7 +256,7 @@ const openSocketIOConnection = async (
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
   // fallback to base environment
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
   const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));

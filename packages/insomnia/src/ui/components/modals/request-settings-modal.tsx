@@ -3,13 +3,13 @@ import { OverlayContainer } from 'react-aria';
 import { useNavigate, useParams } from 'react-router';
 
 import type { McpRequest } from '~/insomnia-data';
+import type { GrpcRequest } from '~/insomnia-data';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
 import * as models from '../../../models';
-import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isRequest, type Request } from '../../../models/request';
 import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
@@ -108,7 +108,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     patchRequest(request._id, { [event.currentTarget.name]: event.currentTarget.checked ? true : false });
   };
   const updateReflectonApi = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    invariant(isGrpcRequest(request), 'Must be gRPC request');
+    invariant(models.grpcRequest.isGrpcRequest(request), 'Must be gRPC request');
     patchRequest(request._id, {
       reflectionApi: {
         ...request.reflectionApi,
@@ -243,7 +243,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
             {request && isSocketIORequest(request) && (
               <SocketIOPathSettings request={request} patchRequest={patchRequest} />
             )}
-            {request && isGrpcRequest(request) && (
+            {request && models.grpcRequest.isGrpcRequest(request) && (
               <>
                 <div className="form-control form-control--thin pad-top-sm">
                   <label>

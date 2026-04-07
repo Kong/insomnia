@@ -30,11 +30,11 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
+import { services } from '~/insomnia-data';
 import * as models from '~/models/index';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import { isGitProject } from '~/models/project';
 import { useRootLoaderData } from '~/root';
-import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
@@ -55,7 +55,7 @@ import { CertificatesModal } from '~/ui/components/modals/workspace-certificates
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
-import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import { showResourceNotFoundToast, showToast } from '~/ui/components/toast-notification';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
@@ -73,19 +73,19 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
   }
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   if (!workspace) {
     showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const apiSpec = await services.apiSpec.getByParentId(workspaceId);
   if (!apiSpec) {
     showResourceNotFoundToast(`API Specification not found for workspace: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
 
   const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
@@ -167,7 +167,6 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
 
-  const organizationData = useOrganizationLoaderData();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
 
   useEffect(() => {
@@ -354,6 +353,44 @@ const Component = ({ params }: Route.ComponentProps) => {
     showCookiesEditor: () => setIsCookieModalOpen(true),
   });
 
+  const specFormat = useMemo((): 'json' | 'yaml' | null => {
+    const contents = apiSpec.contents?.trim();
+    if (!contents) {
+      return null;
+    }
+    try {
+      JSON.parse(contents);
+      return 'json';
+    } catch {
+      return 'yaml';
+    }
+  }, [apiSpec.contents]);
+
+  const switchFormat = (to: 'json' | 'yaml') => {
+    const editorValue = editor.current?.getValue();
+    if (!editorValue) {
+      return;
+    }
+    let parsedSpec: string | undefined;
+    try {
+      // yaml parses json correctly
+      parsedSpec = YAML.parse(editorValue)
+
+    } catch {
+      showToast({
+        title: 'Failed to convert spec format',
+        icon: 'circle-exclamation',
+        status: 'error',
+        description: `Spec is not valid, cannot convert to ${to.toUpperCase()}`,
+      });
+      return;
+    }
+    const contents = to === 'json' ? JSON.stringify(parsedSpec, null, 2) : YAML.stringify(parsedSpec);
+    editor.current?.setValue(contents);
+    updateApiSpec({ organizationId, projectId, workspaceId, contents });
+
+  }
+
   const specActionList: SpecActionItem[] = [
     {
       id: 'generate-request-collection',
@@ -381,6 +418,17 @@ const Component = ({ params }: Route.ComponentProps) => {
         setIsSpecPaneOpen(!isSpecPaneOpen);
       },
     },
+    ...(specFormat === 'json' ? [{
+      id: 'convert-to-yaml',
+      name: 'Convert to YAML',
+      icon: <Icon className="w-3" icon="sync-alt" />,
+      action: () => switchFormat('yaml'),
+    }] : specFormat === 'yaml' ? [{
+      id: 'convert-to-json',
+      name: 'Convert to JSON',
+      icon: <Icon className="w-3" icon="sync-alt" />,
+      action: () => switchFormat('json'),
+    }] : []),
   ];
 
   const disabledKeys = specActionList.filter(item => item.isDisabled).map(item => item.id);
@@ -918,7 +966,6 @@ const Component = ({ params }: Route.ComponentProps) => {
               isOpen={isNewMockServerModalOpen}
               project={activeProject}
               storageRules={storageRules}
-              currentPlan={organizationData?.currentPlan}
               scope="mock-server"
               sourceApiSpec={apiSpec}
               onOpenChange={setNewMockServerModalOpen}

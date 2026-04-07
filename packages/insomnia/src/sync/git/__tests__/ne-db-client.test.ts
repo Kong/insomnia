@@ -11,6 +11,8 @@ import { createBuilder } from '@develohpanda/fluent-builder';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
+import { services } from '~/insomnia-data';
+
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
@@ -38,7 +40,7 @@ describe('NeDBClient', () => {
     });
 
     // Create test workspace
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_test',
       name: 'Test Workspace',
       parentId: 'proj_test',

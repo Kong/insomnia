@@ -1,9 +1,8 @@
 import { expect } from 'chai';
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
 import type { RequestHeader } from 'insomnia/src/models/request';
 import { filterClientCertificates } from 'insomnia/src/network/certificate';
 
-import type { Settings } from '~/insomnia-data';
+import type { ClientCertificate, Settings } from '~/insomnia-data';
 
 import { toPreRequestAuth } from './auth';
 import { getExistingConsole } from './console';

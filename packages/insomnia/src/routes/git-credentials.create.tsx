@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
-import { gitCredentials } from '~/models';
-import type { BaseGitCredentialsV2 } from '~/models/git-credentials';
+import { type BaseGitCredentialsV2, services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/git-credentials.create';
@@ -9,7 +8,7 @@ import type { Route } from './+types/git-credentials.create';
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as BaseGitCredentialsV2;
 
-  await gitCredentials.create(data);
+  await services.gitCredentials.create(data);
 
   return {
     success: true,

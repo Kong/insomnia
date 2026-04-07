@@ -14,6 +14,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { WorkspaceScope } from '~/insomnia-data';
 import { useGitProjectMigrateLegacyInsomniaFolderActionFetcher } from '~/routes/git.migrate-legacy-insomnia-folder-to-file';
 
 import {
@@ -22,7 +23,6 @@ import {
   scopeToLabelMap,
   scopeToTextColorMap,
 } from '../../../common/get-workspace-label';
-import type { WorkspaceScope } from '../../../models/workspace';
 import { Icon } from '../icon';
 
 export const GitProjectMigrationModal: FC<{

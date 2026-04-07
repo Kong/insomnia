@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import type { ClientCertificate } from '~/models/client-certificate';
+import { type ClientCertificate, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -11,10 +10,10 @@ type CertificatePatch = { _id: string } & Partial<ClientCertificate>;
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const patch = (await request.json()) as CertificatePatch;
-  const clientCertificate = await models.clientCertificate.getById(patch._id);
+  const clientCertificate = await services.clientCertificate.getById(patch._id);
   invariant(clientCertificate, 'Client Certificate not found');
 
-  await models.clientCertificate.update(clientCertificate, patch);
+  await services.clientCertificate.update(clientCertificate, patch);
 
   return null;
 }

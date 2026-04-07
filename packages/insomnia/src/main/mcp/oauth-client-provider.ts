@@ -11,7 +11,6 @@ import { getOauthRedirectUrl } from '~/common/constants';
 import { services } from '~/insomnia-data';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import type { ConnectionContext } from '~/main/mcp/common';
-import * as models from '~/models';
 import type { RequestAuthentication } from '~/models/request';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 import { invariant } from '~/utils/invariant';
@@ -129,7 +128,7 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
   async tokens(): Promise<OAuthTokens | undefined> {
     // Don't return tokens if not using MCP Auth Flow or if disabled
     if (this.isUsingMcpAuthFlow()) {
-      const token = await models.oAuth2Token.getOrCreateByParentId(this.context.requestId);
+      const token = await services.oAuth2Token.getOrCreateByParentId(this.context.requestId);
       if (token.accessToken) {
         return {
           access_token: token.accessToken,
@@ -143,8 +142,8 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     return undefined;
   }
   async saveTokens(tokens: OAuthTokens) {
-    const token = await models.oAuth2Token.getOrCreateByParentId(this.context.requestId);
-    await models.oAuth2Token.update(token, {
+    const token = await services.oAuth2Token.getOrCreateByParentId(this.context.requestId);
+    await services.oAuth2Token.update(token, {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token || '',
       identityToken: tokens.id_token || '',

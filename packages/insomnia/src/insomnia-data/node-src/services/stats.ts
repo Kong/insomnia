@@ -1,55 +1,13 @@
-import { database as db } from '../common/database';
-import { isGrpcRequest } from './grpc-request';
-import * as models from './index';
-import type { Project } from './project';
-import { isRequest } from './request';
-import type { RequestGroup } from './request-group';
-import { isSocketIORequest } from './socket-io-request';
-import type { BaseModel } from './types';
-import { isWebSocketRequest } from './websocket-request';
-import type { Workspace } from './workspace';
+import type { Workspace } from '~/insomnia-data';
+import { database as db, type Stats } from '~/insomnia-data';
+import * as models from '~/models';
+import type { Project } from '~/models/project';
+import type { RequestGroup } from '~/models/request-group';
 
-export const name = 'Stats';
-
-export const type = 'Stats';
-
-export const prefix = 'sta';
-
-export const canDuplicate = false;
-
-export const canSync = false;
-
-export interface BaseStats {
-  currentLaunch: number | null;
-  lastLaunch: number | null;
-  currentVersion: string | null;
-  lastVersion: string | null;
-  launches: number;
-  createdRequests: number;
-  deletedRequests: number;
-  executedRequests: number;
-}
-
-export type Stats = BaseModel & BaseStats;
-
-export const isStats = (model: Pick<BaseModel, 'type'>): model is Stats => model.type === type;
-
-export function init(): BaseStats {
-  return {
-    currentLaunch: null,
-    lastLaunch: null,
-    currentVersion: null,
-    lastVersion: null,
-    launches: 0,
-    createdRequests: 0,
-    deletedRequests: 0,
-    executedRequests: 0,
-  };
-}
-
-export function migrate(doc: Stats) {
-  return doc;
-}
+const { type } = models.stats;
+const { isRequest } = models.request;
+const { isWebSocketRequest } = models.webSocketRequest;
+const { isSocketIORequest } = models.socketIORequest;
 
 export function create(patch: Partial<Stats> = {}) {
   return db.docCreate<Stats>(type, patch);
@@ -113,8 +71,9 @@ export async function incrementCreatedRequestsForDescendents(doc: Workspace | Re
     models.webSocketRequest.type,
     models.socketIORequest.type,
   ]);
-  const requests =
-    docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc)) || isSocketIORequest(doc);
+  const requests = docs.filter(
+    doc => isRequest(doc) || models.grpcRequest.isGrpcRequest(doc) || isWebSocketRequest(doc) || isSocketIORequest(doc),
+  );
   await incrementRequestStats({
     createdRequests: requests.length,
   });
@@ -127,8 +86,9 @@ export async function incrementDeletedRequestsForDescendents(doc: Workspace | Re
     models.webSocketRequest.type,
     models.socketIORequest.type,
   ]);
-  const requests =
-    docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc)) || isSocketIORequest(doc);
+  const requests = docs.filter(
+    doc => isRequest(doc) || models.grpcRequest.isGrpcRequest(doc) || isWebSocketRequest(doc) || isSocketIORequest(doc),
+  );
   await incrementRequestStats({
     deletedRequests: requests.length,
   });

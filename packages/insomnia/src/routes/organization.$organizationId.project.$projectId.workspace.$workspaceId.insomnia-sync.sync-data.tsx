@@ -1,5 +1,6 @@
 import { href } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteBackendProjectsCache, remoteBranchesCache, remoteCompareCache } from '~/ui/sync-utils';
@@ -45,7 +46,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
         hasUncommittedChanges = true;
       }
       // update workspace meta with sync data, use for show unpushed changes on collection card
-      await models.workspaceMeta.updateByParentId(workspaceId, {
+      await services.workspaceMeta.updateByParentId(workspaceId, {
         hasUncommittedChanges,
         hasUnpushedChanges: compare?.ahead > 0,
       });

@@ -1,13 +1,13 @@
 import { getCollaborators } from 'insomnia-api';
 import { href } from 'react-router';
 
-import { userSession } from '~/models';
+import { services } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.collaborators';
 
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
-  const { id: sessionId } = await userSession.get();
+  const { id: sessionId } = await services.userSession.get();
 
   const { organizationId } = params;
 

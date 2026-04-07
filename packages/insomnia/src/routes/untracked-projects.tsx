@@ -1,10 +1,10 @@
 import type { Organization } from 'insomnia-api';
 
 import { database } from '~/common/database';
-import { userSession } from '~/models';
+import type { Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
 import type { Project } from '~/models/project';
-import type { Workspace } from '~/models/workspace';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/untracked-projects';
@@ -15,7 +15,7 @@ export interface UntrackedProjectsLoaderData {
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { accountId } = await userSession.getOrCreate();
+  const { accountId } = await services.userSession.getOrCreate();
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
   const listOfOrganizationIds = [...organizations.map(o => o.id), SCRATCHPAD_ORGANIZATION_ID];
 

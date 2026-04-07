@@ -3,6 +3,8 @@ import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { GrpcRequest } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -14,11 +16,9 @@ import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { Environment } from '../../../models/environment';
-import type { GrpcRequest } from '../../../models/grpc-request';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { SocketIORequest } from '../../../models/socket-io-request';
-import { incrementDeletedRequests } from '../../../models/stats';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
@@ -148,7 +148,7 @@ export const RequestActionsDropdown = ({
   const copyAsCurl = async () => {
     try {
       const har = await exportHarRequest(request._id, activeEnvironment._id);
-      const HTTPSnippet = (await import('httpsnippet')).default;
+      const { HTTPSnippet } = await import('httpsnippet');
       const snippet = new HTTPSnippet(har);
       const cmd = snippet.convert('shell', 'curl');
 
@@ -181,7 +181,7 @@ export const RequestActionsDropdown = ({
       color: 'danger',
       onDone: async (isYes: boolean) => {
         if (isYes) {
-          incrementDeletedRequests();
+          services.stats.incrementDeletedRequests();
           deleteRequestFetcher.submit({
             organizationId,
             projectId,

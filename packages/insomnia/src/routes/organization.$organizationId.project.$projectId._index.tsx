@@ -36,12 +36,10 @@ import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
+import type { ApiSpec, GitRepository, MockServer, Workspace, WorkspaceMeta, WorkspaceScope } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { userSession } from '~/models';
-import type { ApiSpec } from '~/models/api-spec';
-import type { GitRepository } from '~/models/git-repository';
 import { sortProjects } from '~/models/helpers/project';
-import type { MockServer } from '~/models/mock-server';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
 import {
   getProjectStorageTypeLabel,
@@ -50,8 +48,6 @@ import {
   isRemoteProject,
   type Project,
 } from '~/models/project';
-import { isDesign, type Workspace, type WorkspaceScope } from '~/models/workspace';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -152,7 +148,7 @@ export async function getProjectsWithGitRepositories({
 }
 
 async function getAllLocalFiles({ projectId }: { projectId: string }) {
-  const projectWorkspaces = await models.workspace.findByParentId(projectId);
+  const projectWorkspaces = await services.workspace.findByParentId(projectId);
   const [workspaceMetas, apiSpecs, mockServers] = await Promise.all([
     database.find<WorkspaceMeta>(models.workspaceMeta.type, {
       parentId: {
@@ -204,7 +200,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta?.modified || workspace.modified;
 
-    const modifiedLocally = isDesign(workspace) ? apiSpec?.modified || 0 : workspaceModified;
+    const modifiedLocally = models.workspace.isDesign(workspace) ? apiSpec?.modified || 0 : workspaceModified;
 
     // Span spec, workspace and sync related timestamps for card last modified label and sort order
     const lastModifiedFrom = [
@@ -217,7 +213,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
     const lastModifiedTimestamp = lastModifiedFrom.filter(isNotNullOrUndefined).sort(descendingNumberSort)[0];
 
     const hasUnsavedChanges = Boolean(
-      isDesign(workspace) &&
+      models.workspace.isDesign(workspace) &&
         gitRepository?.cachedGitLastCommitTime &&
         modifiedLocally > gitRepository?.cachedGitLastCommitTime,
     );
@@ -336,7 +332,7 @@ const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeatu
 };
 
 const checkSingleProjectSyncStatus = async (projectId: string) => {
-  const projectWorkspaces = await models.workspace.findByParentId(projectId);
+  const projectWorkspaces = await services.workspace.findByParentId(projectId);
   const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
     parentId: {
       $in: projectWorkspaces.map(w => w._id),
@@ -358,7 +354,7 @@ const CheckAllProjectSyncStatus = async (projects: Project[]) => {
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
   const fallbackLearningFeature = {
     active: false,
     title: '',
@@ -403,7 +399,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
-    project && isGitProject(project) ? await models.gitRepository.getById(project.gitRepositoryId || '') : null;
+    project && isGitProject(project) ? await services.gitRepository.getById(project.gitRepositoryId || '') : null;
 
   return {
     localFiles,
@@ -1217,7 +1213,6 @@ const Component = () => {
             isOpen
             project={activeProject}
             storageRules={storageRules}
-            currentPlan={organizationData?.currentPlan}
             scope={newWorkspaceModalState.scope}
             onOpenChange={isOpen => {
               setNewWorkspaceModalState({

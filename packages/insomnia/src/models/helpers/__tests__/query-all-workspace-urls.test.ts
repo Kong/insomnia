@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import * as models from '../../index';
 import { queryAllWorkspaceUrls } from '../query-all-workspace-urls';
 
 describe('queryAllWorkspaceUrls', () => {
   it('should return empty array when no requests exist', async () => {
-    const w = await models.workspace.create({
+    const w = await services.workspace.create({
       name: 'Workspace',
     });
     await expect(queryAllWorkspaceUrls(w._id, models.request.type)).resolves.toHaveLength(0);
@@ -13,7 +15,7 @@ describe('queryAllWorkspaceUrls', () => {
   });
 
   it('should return urls and exclude that of the selected request', async () => {
-    const w = await models.workspace.create({
+    const w = await services.workspace.create({
       name: 'Workspace',
     });
     const r1 = await models.request.create({
@@ -21,12 +23,12 @@ describe('queryAllWorkspaceUrls', () => {
       parentId: w._id,
       url: 'r1.url',
     });
-    const gr1 = await models.grpcRequest.create({
+    const gr1 = await services.grpcRequest.create({
       name: 'Grpc Request 1',
       parentId: w._id,
       url: 'gr1.url',
     });
-    const gr2 = await models.grpcRequest.create({
+    const gr2 = await services.grpcRequest.create({
       name: 'Grpc Request 2',
       parentId: w._id,
       url: 'gr2.url',
@@ -41,7 +43,7 @@ describe('queryAllWorkspaceUrls', () => {
       url: 'r2.url',
     });
     // Should ignore all of the following
-    await models.grpcRequest.create({
+    await services.grpcRequest.create({
       name: 'Duplicate grpc url',
       parentId: w._id,
       url: gr2.url,
@@ -56,12 +58,12 @@ describe('queryAllWorkspaceUrls', () => {
       parentId: f2._id,
       url: undefined,
     });
-    await models.grpcRequest.create({
+    await services.grpcRequest.create({
       name: 'Undefined url',
       parentId: w._id,
       url: undefined,
     });
-    const w2 = await models.workspace.create({
+    const w2 = await services.workspace.create({
       name: 'Workspace 2',
     });
     await models.request.create({
@@ -69,7 +71,7 @@ describe('queryAllWorkspaceUrls', () => {
       parentId: w2._id,
       url: 'diff.url',
     });
-    await models.grpcRequest.create({
+    await services.grpcRequest.create({
       name: 'Different workspace',
       parentId: w2._id,
       url: 'diff.url',

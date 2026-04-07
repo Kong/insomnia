@@ -1,9 +1,8 @@
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
 import type { CookieJar as InsomniaCookieJar } from 'insomnia/src/models/cookie-jar';
 import type { Request } from 'insomnia/src/models/request';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
-import type { Settings } from '~/insomnia-data';
+import type { ClientCertificate, Settings } from '~/insomnia-data';
 
 import type { ExecutionOption } from './execution';
 import type { RequestInfoOption } from './request-info';

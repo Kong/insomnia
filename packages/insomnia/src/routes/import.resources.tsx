@@ -1,10 +1,17 @@
 import { href } from 'react-router';
 
-import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
+import {
+  clearResourceCache,
+  findExistingImportedSpec,
+  findRequestInExistingWorkspace,
+  importResourcesToProject,
+  importResourcesToWorkspace,
+} from '~/common/import';
+import type { Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { isRemoteProject } from '~/models/project';
-import type { Workspace } from '~/models/workspace';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -20,6 +27,9 @@ interface ImportScannedResourcesParams {
   organizationId: string;
   projectId: string;
   workspaceId?: string;
+  endpoint?: string;
+  operationId?: string;
+  skipImportIfDuplicate?: boolean;
   options?: {
     overrideBaseEnvironmentData?: boolean;
   };
@@ -60,14 +70,44 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof organizationId === 'string', 'OrganizationId is required.');
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
-    const result = await importScannedResources({
+    if (!workspaceId && data.skipImportIfDuplicate) {
+      const existing = await findExistingImportedSpec(projectId, organizationId);
+      if (existing) {
+        const matchedRequest = await findRequestInExistingWorkspace(
+          existing.workspace,
+          data.endpoint,
+          data.operationId,
+        );
+        clearResourceCache(); // skipping import to navigate to existing, avoid stale resource cache
+        return {
+          done: true,
+          singleImportedWorkspace: existing.workspace,
+          singleImportedRequest: matchedRequest,
+          singleImportedProjectId: existing.workspace.parentId,
+        };
+      }
+    }
+
+    const importedWorkspaces = await importScannedResources({
       organizationId,
       projectId,
       workspaceId,
       options,
     });
+
+    if (data.endpoint || data.operationId) {
+      for (const ws of importedWorkspaces) {
+        if (!ws) continue;
+        const foundDeepLinkedRequest = await findRequestInExistingWorkspace(ws, data.endpoint, data.operationId);
+        if (foundDeepLinkedRequest) {
+          return { done: true, singleImportedWorkspace: ws, singleImportedRequest: foundDeepLinkedRequest };
+        }
+      }
+    }
+
     // When navigating, we are interested in knowing if there was only one workspace and only one request
-    const singleImportedWorkspace = Array.isArray(result) && result.length === 1 && result[0];
+    const singleImportedWorkspace =
+      Array.isArray(importedWorkspaces) && importedWorkspaces.length === 1 && importedWorkspaces[0];
     const requests = singleImportedWorkspace && (await requestOperations.findByParentId(singleImportedWorkspace._id));
     const singleImportedRequest = Array.isArray(requests) && requests.length === 1 && requests.at(0);
     return { done: true, singleImportedWorkspace, singleImportedRequest };
@@ -96,7 +136,7 @@ export const useImportResourcesFetcher = createFetcherSubmitHook(
 export async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
   const project = await models.project.getById(newWorkspace.parentId);
   invariant(project, 'Project not found');
-  const userSession = await models.userSession.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
 
   if (userSession.id && isRemoteProject(project)) {
     const storageRules = await fetchAndCacheOrganizationStorageRule(project.parentId);
@@ -106,7 +146,7 @@ export async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
       // Create default env, cookie jar, and meta
       await models.environment.getOrCreateForParentId(newWorkspace._id);
       await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-      await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+      await services.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
       try {
         const vcs = VCSInstance().newInstance();
         await initializeLocalBackendProjectAndMarkForSync({

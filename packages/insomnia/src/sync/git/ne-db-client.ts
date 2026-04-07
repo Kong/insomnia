@@ -21,7 +21,6 @@ import YAML from 'yaml';
 import { database as db } from '../../common/database';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { isWorkspace } from '../../models/workspace';
 import { resetKeys } from '../ignore-keys';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
@@ -146,7 +145,7 @@ export class NeDBClient {
     }
 
     // Special handling for workspaces: ensure they stay in the correct project
-    if (isWorkspace(doc)) {
+    if (models.workspace.isWorkspace(doc)) {
       console.log('[git] setting workspace parent to be that of the active project', {
         original: doc.parentId,
         new: this._projectId,

@@ -164,7 +164,7 @@ const openWebSocketConnection = async (
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
@@ -225,7 +225,7 @@ const openWebSocketConnection = async (
     const settings = await services.settings.get();
     const start = performance.now();
 
-    const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
+    const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'wss:');
     const pemCertificates: string[] = [];
     const pemCertificateKeys: KeyObject[] = [];

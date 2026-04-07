@@ -1,6 +1,7 @@
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { isRequestGroup } from '~/models/request-group';
 import { isRequestGroupMeta } from '~/models/request-group-meta';
@@ -12,7 +13,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { workspaceId } = params;
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
   const data = (await request.json()) as {
     toggle: 'collapse-all' | 'expand-all';
