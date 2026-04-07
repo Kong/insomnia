@@ -746,12 +746,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
             let results: { outer: string; inner: string | null }[] = [];
 
-            // Functions return plain strings
-            if (typeof selectedValues === 'string') {
-              results = [{ outer: selectedValues, inner: selectedValues }];
-            }
-
-            results = (selectedValues as Node[])
+            // Functions return plain strings, numbers, or a boolean—depending on the function.
+            if (typeof selectedValues === 'string' || typeof selectedValues === 'number' || typeof selectedValues === 'boolean') {
+              const str = String(selectedValues);
+              results = [{ outer: str, inner: str }];
+            } else {
+              results = (selectedValues as Node[])
               .filter(
                 sv =>
                   sv.nodeType === Node.ATTRIBUTE_NODE ||
@@ -771,6 +771,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
                 }
                 return { outer, inner: null };
               });
+            }
 
             if (results.length === 0) {
               throw new Error(`Returned no results: ${sanitizedFilter}`);

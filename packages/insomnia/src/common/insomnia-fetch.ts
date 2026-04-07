@@ -1,7 +1,7 @@
 import { type FetchConfig, ResponseFailError } from 'insomnia-api';
 
-import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from '../common/constants';
-import { generateId } from '../common/misc';
+import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from './constants';
+import { generateId } from './misc';
 
 // Adds headers, retries and opens deep links returned from the api
 export async function insomniaFetch<T = void>({
@@ -12,12 +12,10 @@ export async function insomniaFetch<T = void>({
   organizationId,
   origin,
   headers,
-  onlyResolveOnSuccess = false,
   timeout = INSOMNIA_FETCH_TIME_OUT,
 }: FetchConfig & {
   // It's not used at all, should be removed?
   retries?: number;
-  onlyResolveOnSuccess?: boolean;
 }): Promise<T> {
   const config: RequestInit = {
     method,
@@ -45,7 +43,7 @@ export async function insomniaFetch<T = void>({
       window.main.openDeepLink(uri);
     }
     const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
-    if (onlyResolveOnSuccess && !response.ok) {
+    if (!response.ok) {
       let errName = `CODE-${response.status}`;
       let errMsg = response.statusText;
       if (isJson) {

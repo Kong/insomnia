@@ -8,10 +8,10 @@ import { cosmiconfig } from 'cosmiconfig';
 import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
+import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import type { Request } from 'insomnia/src/models/request';
 import type { RequestGroup } from 'insomnia/src/models/request-group';
-import { insomniaFetch } from 'insomnia/src/ui/insomnia-fetch';
 import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
 import { configureFetch } from 'insomnia-api';
 import { generate, runTestsCli } from 'insomnia-testing';
@@ -59,8 +59,7 @@ if (!isDevelopment()) {
   process.removeAllListeners('warning');
 }
 
-// Force onlyResolveOnSuccess to true, will be removed after all usages are updated
-configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
+configureFetch(options => insomniaFetch({ ...options }));
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
   try {

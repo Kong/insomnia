@@ -6,9 +6,9 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
+import { insomniaFetch } from '~/common/insomnia-fetch';
 import { initDatabase, initServices, services } from '~/insomnia-data';
 import { database as clientDatabase } from '~/ui/database.client';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
@@ -37,8 +37,7 @@ initServices(window._dataServices);
 // Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
 delete window._dataServices;
 
-// Force onlyResolveOnSuccess to true, will be removed after all usages are updated
-configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
+configureFetch(options => insomniaFetch({ ...options }));
 
 await initPlugins();
 
