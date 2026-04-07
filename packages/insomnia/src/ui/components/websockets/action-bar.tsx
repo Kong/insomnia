@@ -7,9 +7,12 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
+import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import type { SocketIORequest } from '../../../models/socket-io-request';
+import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import type { WebSocketRequest } from '../../../models/websocket-request';
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../../../network/network';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
@@ -63,14 +66,20 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       // Render any nunjucks tags in the url/headers/authentication settings/cookies
 
       const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+      // Get parent folders for auth/header inheritance
+      const ancestors = await db.withAncestors<WebSocketRequest | SocketIORequest | RequestGroup>(request, [models.requestGroup.type]);
+      const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
+      // Apply auth/header inheritance from parent folders
+      const inheritedAuth = getOrInheritAuthentication({ request, requestGroups });
+      const inheritedHeaders = getOrInheritHeaders({ request, requestGroups });
       // Render any nunjucks tags in the url/headers/authentication settings/cookies
       const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
         request,
         environmentId,
         payload: {
           url: request.url,
-          headers: request.headers,
-          authentication: request.authentication,
+          headers: inheritedHeaders,
+          authentication: inheritedAuth,
           parameters: request.parameters.filter(p => !p.disabled),
           workspaceCookieJar,
         },

@@ -10,11 +10,14 @@ import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codem
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
+import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
+import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../../../network/network';
 import {
   useRequestLoaderData,
   type WebSocketRequestLoaderData,
@@ -91,13 +94,19 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
       const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
       if (!readyState) {
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+        // Get parent folders for auth/header inheritance
+        const ancestors = await db.withAncestors<WebSocketRequest | RequestGroup>(request, [models.requestGroup.type]);
+        const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
+        // Apply auth/header inheritance from parent folders
+        const inheritedAuth = getOrInheritAuthentication({ request, requestGroups });
+        const inheritedHeaders = getOrInheritHeaders({ request, requestGroups });
         const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
           request,
           environmentId,
           payload: {
             url: request.url,
-            headers: request.headers,
-            authentication: request.authentication,
+            headers: inheritedHeaders,
+            authentication: inheritedAuth,
             parameters: request.parameters.filter(p => !p.disabled),
             workspaceCookieJar,
           },
