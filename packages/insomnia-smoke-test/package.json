@@ -26,7 +26,7 @@
     "@types/oidc-provider": "^8.8.1",
     "@types/uuid": "^9.0.8",
     "@types/ws": "^8.18.1",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "esbuild-runner": "2.2.2",
     "express": "^4.21.2",
     "express-basic-auth": "^1.2.1",

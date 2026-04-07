@@ -88,20 +88,20 @@ test.describe('Cloud Sync', () => {
     const remoteBranchDiv = branchModal.getByLabel('Remote Branches list', { exact: true });
     await remoteBranchDiv.getByLabel('develop').getByRole('button', { name: 'Fetch' }).click();
     // validate remote branch fetched
-    await expect.soft(localBranchDiv.locator('[aria-label="develop"]')).toBeVisible();
+    await expect.soft(localBranchDiv.getByLabel('develop')).toBeVisible();
     // checkout master branch
     await localBranchDiv.getByLabel('master').getByRole('button', { name: 'Checkout' }).click();
     // delete local branch
     await localBranchDiv.getByLabel('develop').getByRole('button', { name: 'Delete' }).dblclick();
     // validate local branch deleted
-    await expect.soft(localBranchDiv.locator('[aria-label="develop"]')).toHaveCount(0);
+    await expect.soft(localBranchDiv.getByLabel('develop')).toHaveCount(0);
     // create new branch
     await branchModal.getByRole('textbox', { name: 'Branch name' }).fill('smoke-test-branch');
     await branchModal.getByRole('button', { name: 'Create' }).click();
     // validate new branch
-    await expect.soft(localBranchDiv.locator('[aria-label="smoke-test-branch"]')).toBeVisible();
+    await expect.soft(localBranchDiv.getByLabel('smoke-test-branch')).toBeVisible();
     await expect
-      .soft(localBranchDiv.locator('[aria-label="smoke-test-branch"]').getByRole('button', { name: 'Delete' }))
+      .soft(localBranchDiv.getByLabel('smoke-test-branch').getByRole('button', { name: 'Delete' }))
       .toBeDisabled();
     await page.getByRole('dialog').locator('[data-icon="x"]').click();
   });

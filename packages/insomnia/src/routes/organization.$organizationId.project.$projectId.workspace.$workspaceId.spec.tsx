@@ -54,7 +54,7 @@ import { CertificatesModal } from '~/ui/components/modals/workspace-certificates
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
-import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import { showResourceNotFoundToast, showToast } from '~/ui/components/toast-notification';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
@@ -352,6 +352,44 @@ const Component = ({ params }: Route.ComponentProps) => {
     showCookiesEditor: () => setIsCookieModalOpen(true),
   });
 
+  const specFormat = useMemo((): 'json' | 'yaml' | null => {
+    const contents = apiSpec.contents?.trim();
+    if (!contents) {
+      return null;
+    }
+    try {
+      JSON.parse(contents);
+      return 'json';
+    } catch {
+      return 'yaml';
+    }
+  }, [apiSpec.contents]);
+
+  const switchFormat = (to: 'json' | 'yaml') => {
+    const editorValue = editor.current?.getValue();
+    if (!editorValue) {
+      return;
+    }
+    let parsedSpec: string | undefined;
+    try {
+      // yaml parses json correctly
+      parsedSpec = YAML.parse(editorValue)
+
+    } catch {
+      showToast({
+        title: 'Failed to convert spec format',
+        icon: 'circle-exclamation',
+        status: 'error',
+        description: `Spec is not valid, cannot convert to ${to.toUpperCase()}`,
+      });
+      return;
+    }
+    const contents = to === 'json' ? JSON.stringify(parsedSpec, null, 2) : YAML.stringify(parsedSpec);
+    editor.current?.setValue(contents);
+    updateApiSpec({ organizationId, projectId, workspaceId, contents });
+
+  }
+
   const specActionList: SpecActionItem[] = [
     {
       id: 'generate-request-collection',
@@ -379,6 +417,17 @@ const Component = ({ params }: Route.ComponentProps) => {
         setIsSpecPaneOpen(!isSpecPaneOpen);
       },
     },
+    ...(specFormat === 'json' ? [{
+      id: 'convert-to-yaml',
+      name: 'Convert to YAML',
+      icon: <Icon className="w-3" icon="sync-alt" />,
+      action: () => switchFormat('yaml'),
+    }] : specFormat === 'yaml' ? [{
+      id: 'convert-to-json',
+      name: 'Convert to JSON',
+      icon: <Icon className="w-3" icon="sync-alt" />,
+      action: () => switchFormat('json'),
+    }] : []),
   ];
 
   const disabledKeys = specActionList.filter(item => item.isDisabled).map(item => item.id);
