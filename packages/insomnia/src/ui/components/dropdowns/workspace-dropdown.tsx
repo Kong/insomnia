@@ -459,7 +459,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                         This will permanently delete the{' '}
                         <strong className="break-all whitespace-pre-wrap">{activeWorkspace?.name}</strong>{' '}
                         {getWorkspaceLabel(activeWorkspace).singular}
-                      </p>{' '}
+                      </p>
                       {models.project.isRemoteProject(activeProject) && (
                         <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
                           <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>

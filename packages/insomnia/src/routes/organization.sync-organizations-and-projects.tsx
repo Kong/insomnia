@@ -3,7 +3,7 @@ import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import type { Project } from '~/insomnia-data';
-import { models,services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { findPersonalOrganization } from '~/models/organization';
 import { migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';

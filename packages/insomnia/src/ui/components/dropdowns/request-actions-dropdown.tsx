@@ -58,6 +58,7 @@ export const RequestActionsDropdown = ({
   const { settings } = useRootLoaderData()!;
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const patchRequestMeta = useRequestMetaPatcher();
+  const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
@@ -218,7 +219,7 @@ export const RequestActionsDropdown = ({
               name: 'Generate Code',
               action: generateCode,
               icon: 'code',
-              hint: settings.hotKeyRegistry.request_showGenerateCodeEditor,
+              hint: hotKeyRegistry.request_showGenerateCodeEditor,
             },
             {
               id: 'CopyAsCurl',
@@ -253,21 +254,21 @@ export const RequestActionsDropdown = ({
           name: 'Open in New Tab',
           action: openInNewTab,
           icon: 'external-link-alt',
-          hint: settings.hotKeyRegistry.request_openInNewTab,
+          hint: hotKeyRegistry.request_openInNewTab,
         },
         {
           id: 'Pin',
           name: isPinned ? 'Unpin' : 'Pin',
           action: togglePin,
           icon: 'thumbtack',
-          hint: settings.hotKeyRegistry.request_togglePin,
+          hint: hotKeyRegistry.request_togglePin,
         },
         {
           id: 'Duplicate',
           name: 'Duplicate',
           action: handleDuplicateRequest,
           icon: 'copy',
-          hint: settings.hotKeyRegistry.request_showDuplicate,
+          hint: hotKeyRegistry.request_showDuplicate,
         },
         {
           id: 'Rename',
@@ -283,13 +284,13 @@ export const RequestActionsDropdown = ({
           name: 'Delete',
           action: deleteRequest,
           icon: 'trash',
-          hint: settings.hotKeyRegistry.request_showDelete,
+          hint: hotKeyRegistry.request_showDelete,
         },
         {
           id: 'Settings',
           name: 'Settings',
           icon: 'gear',
-          hint: settings.hotKeyRegistry.request_showSettings,
+          hint: hotKeyRegistry.request_showSettings,
           action: () => {
             window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuSettingsClicked });
             setIsSettingsModalOpen(true);

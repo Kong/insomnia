@@ -227,7 +227,7 @@ export class RunCollectionResultReport {
         data: redactObject(env.data),
         ...(env.kvPairData
           ? {
-              kvPairData: env.kvPairData.map((pair: EnvironmentKvPairData) => ({
+              kvPairData: env.kvPairData.map(pair => ({
                 ...pair,
                 value: REDACTED_VALUE,
               })),
