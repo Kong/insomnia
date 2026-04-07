@@ -17,10 +17,10 @@ import {
 } from '~/common/constants';
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
+import type { MockRoute, MockServer } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
-import type { MockRoute } from '~/models/mock-route';
-import type { MockServer } from '~/models/mock-server';
 import type { Request, RequestHeader } from '~/models/request';
 import type { Response } from '~/models/response';
 import { useRootLoaderData } from '~/root';
@@ -50,9 +50,9 @@ export interface MockRouteLoaderData {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, mockRouteId } = params;
 
-  const mockServer = await models.mockServer.getByParentId(workspaceId);
+  const mockServer = await services.mockServer.getByParentId(workspaceId);
   invariant(mockServer, 'Mock server is required');
-  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  const mockRoute = await services.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'Mock route is required');
   // get current response via request children of
   // TODO: use the same request for try mock rather than creating lots of child requests

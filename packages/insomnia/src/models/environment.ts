@@ -1,11 +1,12 @@
 import * as crypto from 'node:crypto';
 
+import type { Workspace } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
+
 import { database as db } from '../common/database';
 import type { Project } from './project';
 import * as project from './project';
 import { type BaseModel } from './types';
-import type { Workspace } from './workspace';
-import * as workspace from './workspace';
 
 export const name = 'Environment';
 export const type = 'Environment';
@@ -59,9 +60,9 @@ export const removeAllSecrets = async (organizationIds: string[]) => {
     parentId: { $in: organizationIds },
   });
   const allProjectIds = allProjects.map(project => project._id);
-  const allGlobalEnvironmentWorkspaces = await db.find<Workspace>(workspace.type, {
+  const allGlobalEnvironmentWorkspaces = await db.find<Workspace>(models.workspace.type, {
     parentId: { $in: allProjectIds },
-    scope: workspace.WorkspaceScopeKeys.environment,
+    scope: models.workspace.WorkspaceScopeKeys.environment,
   });
   const allGlobalBaseEnvironments = await db.find<Environment>(type, {
     parentId: {

@@ -2,9 +2,13 @@ import { format } from 'date-fns';
 import type { TemplateTag } from 'insomnia/src/plugins';
 import type { PluginTemplateTag } from 'insomnia/src/templating/types';
 import { invariant } from 'insomnia/src/utils/invariant';
+import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
 
 import { fakerFunctions } from './faker-functions';
+
+const JSONBigStringParser = JSONBig({ storeAsString: true });
+
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
     templateTag: {
@@ -702,7 +706,10 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             let results;
 
             try {
-              bodyJSON = JSON.parse(body);
+              // Using JSONBig instead of JSON.parse because JSON can contain numbers larger than those representable by
+              // IEEE 754 and cause them to be rounded or transformed into scientific notation. Interpreting them as
+              // strings in the context of this tag allows for predictable piping from response to request.
+              bodyJSON = JSONBigStringParser.parse(body) as null | boolean | number | string | object | unknown[];
             } catch (err) {
               throw new Error(`Invalid JSON: ${err.message}`);
             }
@@ -739,12 +746,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
             let results: { outer: string; inner: string | null }[] = [];
 
-            // Functions return plain strings
-            if (typeof selectedValues === 'string') {
-              results = [{ outer: selectedValues, inner: selectedValues }];
-            }
-
-            results = (selectedValues as Node[])
+            // Functions return plain strings, numbers, or a boolean—depending on the function.
+            if (typeof selectedValues === 'string' || typeof selectedValues === 'number' || typeof selectedValues === 'boolean') {
+              const str = String(selectedValues);
+              results = [{ outer: str, inner: str }];
+            } else {
+              results = (selectedValues as Node[])
               .filter(
                 sv =>
                   sv.nodeType === Node.ATTRIBUTE_NODE ||
@@ -764,6 +771,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
                 }
                 return { outer, inner: null };
               });
+            }
 
             if (results.length === 0) {
               throw new Error(`Returned no results: ${sanitizedFilter}`);

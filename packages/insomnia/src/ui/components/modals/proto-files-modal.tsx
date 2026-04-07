@@ -238,7 +238,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       name: window.path.basename(filePath),
       protoText,
     });
-    const impacted = await models.grpcRequest.findByProtoFileId(updatedFile._id);
+    const impacted = await services.grpcRequest.findByProtoFileId(updatedFile._id);
     const requestIds = impacted.map(g => g._id);
     if (requestIds?.length) {
       requestIds.forEach(async requestId => window.main.grpc.cancel(requestId));

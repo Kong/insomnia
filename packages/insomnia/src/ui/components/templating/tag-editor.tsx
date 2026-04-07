@@ -5,7 +5,8 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import { type CloudProviderCredential, services } from '~/insomnia-data';
+import type { CloudProviderCredential, Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
@@ -16,7 +17,6 @@ import * as models from '../../../models';
 import type { BaseModel } from '../../../models/index';
 import { isRequest, type Request } from '../../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
-import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
 import * as pluginStore from '../../../plugins/context/store';
 import * as templating from '../../../templating';

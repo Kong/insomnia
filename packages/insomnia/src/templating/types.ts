@@ -2,19 +2,24 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 
 import type { Cookie } from 'tough-cookie';
 
-import type { CloudProviderCredential, McpRequest, OAuth2Token, Services } from '~/insomnia-data';
+import type {
+  CloudProviderCredential,
+  GrpcRequest,
+  McpRequest,
+  OAuth2Token,
+  Services,
+  Workspace,
+} from '~/insomnia-data';
 import type { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { GrpcRequest } from '../models/grpc-request';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { getLatestForRequestId, Response } from '../models/response';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PluginStore } from '../plugins/context/store';
 import type { extractNunjucksTagFromCoords } from './utils';
@@ -46,7 +51,8 @@ export type PluginToMainAPIPaths =
   | 'network.sendRequest'
   | 'network.sendRequestWithoutSideEffects'
   | 'plugin.getBundlePluginTemplateTags'
-  | 'plugin.executeBundlePluginTag';
+  | 'plugin.executeBundlePluginTag'
+  | 'plugin.executeBundlePluginMainAction';
 
 export type RenderedRequest = Request & {
   cookies: {

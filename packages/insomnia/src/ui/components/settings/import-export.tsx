@@ -12,7 +12,6 @@ import * as models from 'insomnia/src/models/index';
 import { type BaseModel, environment } from 'insomnia/src/models/index';
 import { isScratchpadOrganizationId } from 'insomnia/src/models/organization';
 import type { Project } from 'insomnia/src/models/project';
-import { isScratchpad, type Workspace } from 'insomnia/src/models/workspace';
 import { SegmentEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
@@ -25,6 +24,7 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
+import type { Workspace } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -695,7 +695,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     hideSettingsModal();
   };
   const isLoggedIn = userSession.id || organizationId || activeProject;
-  const isScratchPadWorkspace = isScratchpad(workspaceData?.activeWorkspace);
+  const isScratchPadWorkspace = models.workspace.isScratchpad(workspaceData?.activeWorkspace);
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
   const showImportButtons =
@@ -832,7 +832,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               {activeProject && (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
+                  isDisabled={
+                    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)
+                  }
                   onPress={() => setIsImportModalOpen(true)}
                 >
                   <Icon icon="file-import" />
@@ -842,7 +844,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               {features.bulkImport.enabled ? (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
+                  isDisabled={
+                    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)
+                  }
                   onPress={() => setIsImportProjectsModalOpen(true)}
                 >
                   <Icon icon="file-import" />
@@ -942,7 +946,7 @@ const ExportSection = ({
   setIsExportModalOpen: (value: boolean) => void;
   handleExportProjectToFile: () => void;
 }) => {
-  if (isScratchpad(workspace)) {
+  if (models.workspace.isScratchpad(workspace)) {
     return (
       <Button
         className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"

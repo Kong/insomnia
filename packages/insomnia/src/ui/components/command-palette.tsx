@@ -22,7 +22,7 @@ import { useNavigate, useParams } from 'react-router';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
-import { isGrpcRequest } from '~/models/grpc-request';
+import { models } from '~/insomnia-data';
 import { isRequest } from '~/models/request';
 import { isRequestGroup } from '~/models/request-group';
 import { isWebSocketRequest } from '~/models/websocket-request';
@@ -340,7 +340,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
             WS
           </span>
         ) : (
-          isGrpcRequest(request.item) && (
+          models.grpcRequest.isGrpcRequest(request.item) && (
             <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
               gRPC
             </span>
@@ -442,7 +442,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
             WS
           </span>
         ) : (
-          isGrpcRequest(request.item) && (
+          models.grpcRequest.isGrpcRequest(request.item) && (
             <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
               gRPC
             </span>

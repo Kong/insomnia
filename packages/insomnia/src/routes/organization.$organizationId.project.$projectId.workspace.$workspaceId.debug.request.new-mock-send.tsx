@@ -1,5 +1,6 @@
 import { href } from 'react-router';
 
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { Request } from '~/models/request';
 import {
@@ -19,7 +20,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   invariant(typeof patch.url === 'string', 'URL is required');
   invariant(typeof patch.method === 'string', 'method is required');
   invariant(typeof patch.parentId === 'string', 'mock route ID is required');
-  const mockRoute = await models.mockRoute.getById(patch.parentId);
+  const mockRoute = await services.mockRoute.getById(patch.parentId);
   invariant(mockRoute, 'mock route not found');
   // Get or create a testing request for this mock route
   const childRequests = await models.request.findByParentId(mockRoute._id);

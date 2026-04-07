@@ -20,7 +20,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { responseId } = await request.json();
   invariant(typeof responseId === 'string', 'Response ID is required');
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Active workspace meta not found');
   const isWebSocketRequest = isWebSocketRequestId(requestId);
   const isSocketIORequest = isSocketIORequestId(requestId);

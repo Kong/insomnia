@@ -2,6 +2,7 @@ import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } f
 import { OverlayContainer } from 'react-aria';
 import { href, useParams } from 'react-router';
 
+import type { Workspace } from '~/insomnia-data';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
 
@@ -12,7 +13,6 @@ import { strings } from '../../../common/strings';
 import { sortProjects } from '../../../models/helpers/project';
 import * as models from '../../../models/index';
 import type { Project } from '../../../models/project';
-import type { Workspace } from '../../../models/workspace';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

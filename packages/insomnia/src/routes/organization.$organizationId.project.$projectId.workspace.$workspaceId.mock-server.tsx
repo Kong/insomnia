@@ -24,8 +24,9 @@ import {
 } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import type { MockRoute } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { MockRoute } from '~/models/mock-route';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockRouteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
@@ -65,18 +66,18 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
   }
 
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const activeWorkspace = await services.workspace.getById(workspaceId);
   if (!activeWorkspace) {
     showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const activeMockServer = await models.mockServer.getByParentId(workspaceId);
+  const activeMockServer = await services.mockServer.getByParentId(workspaceId);
   if (!activeMockServer) {
     showResourceNotFoundToast(`Mock Server not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
-  const mockRoutes = await models.mockRoute.findByParentId(activeMockServer._id);
+  const mockRoutes = await services.mockRoute.findByParentId(activeMockServer._id);
 
   return {
     mockServerId: activeMockServer._id,

@@ -296,7 +296,7 @@ async function _createModelInstances() {
   await services.settings.getOrCreate();
   try {
     const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
-    const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
+    const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
       await models.project.create({
@@ -309,7 +309,7 @@ async function _createModelInstances() {
 
     if (!scratchPad) {
       console.log('[main] Initializing Scratch Pad');
-      await models.workspace.create({
+      await services.workspace.create({
         _id: models.workspace.SCRATCHPAD_WORKSPACE_ID,
         name: 'Scratch Pad',
         parentId: models.project.SCRATCHPAD_PROJECT_ID,

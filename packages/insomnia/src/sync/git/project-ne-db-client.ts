@@ -3,13 +3,14 @@ import path from 'node:path';
 import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
+import type { Workspace, WorkspaceMeta } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+
 import { database, database as db } from '../../common/database';
 import { extractErrorMessages } from '../../common/import';
 import { type InsomniaFile, InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
-import { isWorkspace, type Workspace } from '../../models/workspace';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
 import Stat from './stat';
 import { SystemError } from './system-error';
 
@@ -95,9 +96,9 @@ export class GitProjectNeDBClient {
 
     const bufferId = await db.bufferChanges();
 
-    const workspace = dataToImport.find(isWorkspace) as Workspace | undefined;
+    const workspace = dataToImport.find(models.workspace.isWorkspace) as Workspace | undefined;
 
-    const isExistingWorkspace = workspace && (await models.workspace.getById(workspace._id));
+    const isExistingWorkspace = workspace && (await services.workspace.getById(workspace._id));
 
     if (isExistingWorkspace) {
       const originDocs = await database.getWithDescendants(workspace);
@@ -111,7 +112,7 @@ export class GitProjectNeDBClient {
     }
 
     for (const doc of dataToImport) {
-      if (isWorkspace(doc)) {
+      if (models.workspace.isWorkspace(doc)) {
         console.log('[git] setting workspace parent to be that of the active project', {
           original: doc.parentId,
           new: this._projectId,
@@ -121,8 +122,8 @@ export class GitProjectNeDBClient {
         // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
         doc.parentId = this._projectId;
 
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
-        await models.workspaceMeta.update(workspaceMeta, { gitFilePath: filePath });
+        const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(doc._id);
+        await services.workspaceMeta.update(workspaceMeta, { gitFilePath: filePath });
       }
 
       await db.update(doc);

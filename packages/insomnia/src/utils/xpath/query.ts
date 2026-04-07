@@ -10,9 +10,11 @@ export const queryXPath = (xml: string, query?: string) => {
     throw new Error('Must pass an XPath query.');
   }
   const selectedValues = xpath.select(query, document as unknown as Node); // https://github.com/xmldom/xmldom/issues/724
-  // Functions return plain strings
-  if (typeof selectedValues === 'string') {
-    return [{ outer: selectedValues, inner: selectedValues }];
+
+  // Single values returned can be of type string (e.g. string(), substring()), number (e.g. count(), sum()), or boolean (e.g. boolean())
+  if (typeof selectedValues === 'string' || typeof selectedValues === 'number' || typeof selectedValues === 'boolean') {
+    const str = String(selectedValues);
+    return [{ outer: str, inner: str }];
   }
 
   return (selectedValues as Node[])
