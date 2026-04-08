@@ -50,11 +50,7 @@ class ImageCache {
           this.notifySubscribers(base);
         };
         img.onerror = () => {
-          entry.value = value;
-          entry.timestamp = Date.now();
-          entry.version = version;
-          resolve(value);
-          this.notifySubscribers(base);
+          // Leave the pending promise unresolved so Suspense stays on the fallback UI.
         };
         img.src = value;
       });
