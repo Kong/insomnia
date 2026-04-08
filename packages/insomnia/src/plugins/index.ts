@@ -3,8 +3,7 @@ import path from 'node:path';
 
 import electron from 'electron';
 
-import type { GrpcRequest, Request, RequestGroup, Workspace } from '~/insomnia-data';
-import type { SocketIORequest, WebSocketRequest } from '~/insomnia-data';
+import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { fetchFromTemplateWorkerDatabase } from '~/templating/base-extension-worker';

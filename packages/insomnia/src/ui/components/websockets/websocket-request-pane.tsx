@@ -5,14 +5,13 @@ import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import type { Environment, RequestPathParameter, WebSocketRequest } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
-import * as models from '../../../models';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import {
   useRequestLoaderData,
@@ -43,8 +42,8 @@ import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { Pane } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar, type WebSocketActionBarHandle } from './action-bar';
-const { getCombinedPathParametersFromUrl } = models.request;
 
+const { getCombinedPathParametersFromUrl } = models.request;
 const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
 
 const PaneReadOnlyBanner = () => {

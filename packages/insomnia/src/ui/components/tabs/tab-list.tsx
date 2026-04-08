@@ -410,7 +410,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         <MenuTrigger>
           <Button
             aria-label="Tab Plus"
-            className="mx-2.5 h-5 w-5 text-center hover:bg-(--hl-xs) data-pressed:bg-(--hl-sm)"
+            className="mx-[10px] h-[20px] w-[20px] text-center hover:bg-(--hl-xs) data-pressed:bg-(--hl-sm)"
           >
             <Icon icon="plus" className="cursor-pointer" />
           </Button>

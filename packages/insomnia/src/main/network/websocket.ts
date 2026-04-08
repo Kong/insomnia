@@ -223,7 +223,7 @@ const openWebSocketConnection = async (
 
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
-      .reduce<Record<string, string>>(reduceArrayToLowerCaseKeyedDictionary, {});
+      .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
     const settings = await services.settings.get();
     const start = performance.now();
 
@@ -280,9 +280,7 @@ const openWebSocketConnection = async (
         on: true,
         global: settings.followRedirects,
       }[request.settingFollowRedirects] ?? true;
-    const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']
-      ?.split(',')
-      .map((protocol: string) => protocol.trim());
+    const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']?.split(',').map(p => p.trim());
     const shouldUseProxy =
       settings.proxyEnabled && models.webSocketRequest.isWebSocketRequest(request) && request.settingUseProxy;
     const ws = new WebSocket(url, protocols, {
@@ -327,7 +325,7 @@ const openWebSocketConnection = async (
 
       const settings = await services.settings.get();
       const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      await services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
       if (request.settingStoreCookies) {
         const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
@@ -383,7 +381,7 @@ const openWebSocketConnection = async (
       };
       const settings = await services.settings.get();
       const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      await services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
       deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
     });
 
@@ -527,7 +525,7 @@ const createErrorResponse = async (
     error: message,
   };
   const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-  await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const deleteRequestMaps = async (

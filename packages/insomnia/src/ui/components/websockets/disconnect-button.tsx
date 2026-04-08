@@ -70,7 +70,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
         <DropdownItem aria-label="Disconnect this request">
           <ItemContent onClick={handleCloseThisRequest}>
             <div className="flex w-[25px] justify-evenly">
-              <div className="bg-success h-2.5 w-2.5 rounded-[50%]" />
+              <div className="bg-success h-[10px] w-[10px] rounded-[50%]" />
             </div>
             <div className="w-full pl-(--padding-xs) text-left">Disconnect this request</div>
           </ItemContent>

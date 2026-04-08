@@ -228,7 +228,7 @@ const createErrorResponse = async (
     error: message,
   };
   const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-  await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const openSocketIOConnection = async (
@@ -279,7 +279,7 @@ const openSocketIOConnection = async (
 
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
-      .reduce<Record<string, string>>(reduceArrayToLowerCaseKeyedDictionary, {});
+      .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
     // attach cookies to the request
     if (request.settingSendCookies && options.cookieJar.cookies.length) {
@@ -363,7 +363,7 @@ const openSocketIOConnection = async (
       };
 
       const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-      await services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
     });
 
     const engine = socket.io.engine;
