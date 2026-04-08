@@ -15,6 +15,7 @@ import {
   ScrollRestoration,
   useNavigate,
   useParams,
+  useRevalidator,
   useRouteLoaderData,
 } from 'react-router';
 
@@ -320,6 +321,13 @@ const Root = () => {
     key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   });
   const navigate = useNavigate();
+
+  const { revalidate } = useRevalidator();
+  useEffect(() => {
+    return window.main.on('git.db-synced', () => {
+      revalidate();
+    });
+  }, [revalidate]);
 
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
