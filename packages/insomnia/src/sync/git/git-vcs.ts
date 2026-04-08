@@ -98,7 +98,7 @@ interface FileStatus {
  * We should set this explicitly (even if set to an empty string), because we have other code (such as fs clients and unit tests) that depend on the clone directory.
  */
 export const GIT_CLONE_DIR = '.';
-const gitInternalDirName = 'git';
+const gitInternalDirName = '.git';
 export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
 export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName); // .git
 export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME); // .insomnia
