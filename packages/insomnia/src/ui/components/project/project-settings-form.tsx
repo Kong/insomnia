@@ -191,7 +191,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [canFetchEmails, selectedCredential, emailsFetcher]);
 
-  // Load git repo metadata (and surface auth errors) for HTTP 4xx fallback when expiresAt is unknown.
+  // Load credentials data (and surface auth errors) for HTTP 4xx fallback when expiresAt is unknown.
   useEffect(() => {
     if (
       showGitConnectionInfo &&
