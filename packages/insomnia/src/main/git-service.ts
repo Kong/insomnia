@@ -246,8 +246,9 @@ async function getGitFSClient({
  * even after a token has been revoked or a GitHub App has been uninstalled.
  * The REST endpoint reliably returns HTTP 401 in those cases.
  *
- * For all other providers we fall back to `fetchRemoteBranches` which uses the
- * git wire protocol and is sufficient for PAT / GitLab credentials.
+ * For providers that do not implement `validateCredentials` we fall back to
+ * `fetchRemoteBranches`, which uses the git wire protocol and performs a
+ * basic authentication check against the remote.
  *
  * Throws an error starting with `HTTP Error: 4xx` on auth failures so the
  * existing `shouldShowHttp40OAuthReauthHint` banner logic is triggered.
