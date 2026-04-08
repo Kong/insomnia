@@ -51,22 +51,24 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
     ? decompressObject<Request | WebSocketRequest | SocketIORequest>(latestRequestVersion.compressedRequest)
     : null;
 
-  const hasChanged = diffRequests(latestRequest, request);
+  const hasChanged = _diffRequests(latestRequest, request);
 
   if (hasChanged || !latestRequestVersion) {
+    // Create a new version if the request has been modified
     const compressedRequest = compressObject(request);
     return db.docCreate<RequestVersion>(type, {
       parentId,
       compressedRequest,
     });
   }
-
+  // Re-use the latest version if not modified since
   return latestRequestVersion;
 }
 
 export async function restore(requestVersionId: string) {
   const requestVersion = await getById(requestVersionId);
 
+  // Older responses won't have versions saved with them
   if (!requestVersion) {
     return null;
   }
@@ -83,6 +85,7 @@ export async function restore(requestVersionId: string) {
     return null;
   }
 
+  // Only restore fields that aren't blacklisted
   for (const field of FIELDS_TO_IGNORE) {
     if (field in requestPatch) {
       delete requestPatch[field];
@@ -91,21 +94,20 @@ export async function restore(requestVersionId: string) {
 
   return requestOperations.update(originalRequest, requestPatch);
 }
-
-function diffRequests(
-  previousRequest: Request | WebSocketRequest | SocketIORequest | McpRequest | null,
-  nextRequest: Request | WebSocketRequest | SocketIORequest | McpRequest,
+function _diffRequests(
+  rOld: Request | WebSocketRequest | SocketIORequest | McpRequest | null,
+  rNew: Request | WebSocketRequest | SocketIORequest | McpRequest,
 ) {
-  if (!previousRequest) {
+  if (!rOld) {
     return true;
   }
 
-  for (const key of Object.keys(previousRequest) as (keyof typeof previousRequest)[]) {
+  for (const key of Object.keys(rOld) as (keyof typeof rOld)[]) {
+    // Skip fields that aren't useful
     if (FIELDS_TO_IGNORE.find(field => field === key)) {
       continue;
     }
-
-    if (!deepEqual(previousRequest[key], nextRequest[key])) {
+    if (!deepEqual(rOld[key], rNew[key])) {
       return true;
     }
   }

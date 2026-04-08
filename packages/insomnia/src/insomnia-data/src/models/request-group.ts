@@ -5,12 +5,16 @@ import type { EnvironmentKvPairData, EnvironmentType } from './environment';
 import type { RequestAuthentication, RequestHeader } from './request';
 
 export const name = 'Folder';
-export const type = 'RequestGroup';
-export const prefix = 'fld';
-export const canDuplicate = true;
-export const canSync = true;
-export const optionalKeys = ['kvPairData', 'environmentType'];
 
+export const type = 'RequestGroup';
+
+export const prefix = 'fld';
+
+export const canDuplicate = true;
+
+export const canSync = true;
+// for those keys do not need to add in model init method
+export const optionalKeys = ['kvPairData', 'environmentType'];
 interface BaseRequestGroup {
   name: string;
   description: string;

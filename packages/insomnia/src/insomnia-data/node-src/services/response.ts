@@ -3,8 +3,8 @@ import type { Response } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
 
-import * as RequestVersionService from './request-version';
-import * as SettingsService from './settings';
+import * as requestVersionService from './request-version';
+import * as settingsService from './settings';
 
 const { type } = models.response;
 
@@ -13,7 +13,7 @@ export function getById(id: string) {
 }
 
 export function findByParentId(parentId: string) {
-  return db.find<Response>(type, { parentId });
+  return db.find<Response>(type, { parentId: parentId });
 }
 
 export async function all() {
@@ -24,7 +24,8 @@ export async function getLatestForRequestId(
   requestId: string,
   environmentId: string | null,
 ): Promise<Response | undefined> {
-  const shouldFilter = (await SettingsService.get()).filterResponsesByEnv;
+  // Filter responses by environment if setting is enabled
+  const shouldFilter = (await settingsService.get()).filterResponsesByEnv;
 
   const response = await db.findOne<Response>(
     type,
@@ -44,27 +45,31 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
   }
 
   const { parentId } = patch;
+  // Create request version snapshot
   const request = await requestOperations.getById(parentId);
-  const requestVersion = request ? await RequestVersionService.create(request) : null;
+  const requestVersion = request ? await requestVersionService.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
-
-  const settings = await SettingsService.get();
+  // Filter responses by environment if setting is enabled
+  const settings = await settingsService.get();
   const shouldQueryByEnvId = 'environmentId' in patch && settings.filterResponsesByEnv;
   const query = {
     parentId,
     ...(shouldQueryByEnvId ? { environmentId: patch.environmentId } : {}),
   };
 
+  // Delete all other responses before creating the new one
   const responsesToShow = Math.max(1, maxResponses);
-  const allResponses = await db.find<Response>(type, query, { modified: -1 }, responsesToShow);
-  const recentIds = allResponses.map(response => response._id);
 
+  const allResponses = await db.find<Response>(type, query, { modified: -1 }, responsesToShow);
+
+  const recentIds = allResponses.map(r => r._id);
+  // Remove all that were in the last query, except the first `maxResponses` IDs
   await db.removeWhere(type, {
     ...query,
     _id: {
       $nin: recentIds,
     },
   });
-
+  // Actually create the new response
   return db.docCreate(type, patch);
 }

@@ -35,11 +35,13 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
   if (requestMeta) {
     return update(requestMeta, patch);
   }
-
-  return create({
-    parentId,
-    ...patch,
-  });
+  const newPatch = Object.assign(
+    {
+      parentId,
+    },
+    patch,
+  );
+  return create(newPatch);
 }
 
 export function all() {

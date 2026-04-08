@@ -8,11 +8,19 @@ import { getOperationType } from '~/utils/graph-ql';
 import { deconstructQueryStringToParams } from '~/utils/url/querystring';
 
 export const name = 'Request';
+
 export const type = 'Request';
+
 export const prefix = 'req';
+
 export const canDuplicate = true;
+
 export const canSync = true;
 
+/**
+ * Basic Authentication configuration
+ * Uses username and password with optional ISO-8859-1 encoding
+ */
 export interface AuthTypeBasic {
   type: 'basic';
   useISO88591?: boolean;
@@ -20,7 +28,10 @@ export interface AuthTypeBasic {
   username?: string;
   password?: string;
 }
-
+/**
+ * API Key Authentication configuration
+ * Adds API key to headers or query parameters
+ */
 export interface AuthTypeAPIKey {
   type: 'apikey';
   disabled?: boolean;
@@ -29,6 +40,10 @@ export interface AuthTypeAPIKey {
   addTo?: string;
 }
 
+/**
+ * OAuth 2.0 Authentication configuration
+ * Supports all OAuth 2.0 grant types and flows
+ */
 export interface AuthTypeOAuth2 {
   type: 'oauth2';
   disabled?: boolean;
@@ -57,7 +72,6 @@ export interface AuthTypeOAuth2 {
   responseType?: OAuth2ResponseType;
   origin?: string;
 }
-
 export interface AuthTypeHawk {
   type: 'hawk';
   disabled?: boolean;
@@ -67,7 +81,6 @@ export interface AuthTypeHawk {
   ext?: string;
   validatePayload?: boolean;
 }
-
 export interface AuthTypeOAuth1 {
   type: 'oauth1';
   disabled?: boolean;
@@ -85,28 +98,24 @@ export interface AuthTypeOAuth1 {
   verifier?: string;
   includeBodyHash?: boolean;
 }
-
 export interface AuthTypeDigest {
   type: 'digest';
   disabled?: boolean;
   username?: string;
   password?: string;
 }
-
 export interface AuthTypeNTLM {
   type: 'ntlm';
   disabled?: boolean;
   username?: string;
   password?: string;
 }
-
 export interface AuthTypeBearer {
   type: 'bearer';
   disabled?: boolean;
   token?: string;
   prefix?: string;
 }
-
 export interface AuthTypeAwsIam {
   type: 'iam';
   disabled?: boolean;
@@ -116,12 +125,10 @@ export interface AuthTypeAwsIam {
   region?: string;
   service?: string;
 }
-
 export interface AuthTypeNetrc {
   type: 'netrc';
   disabled?: boolean;
 }
-
 export interface AuthTypeAsap {
   type: 'asap';
   disabled?: boolean;
@@ -132,7 +139,6 @@ export interface AuthTypeAsap {
   keyId: string;
   privateKey: string;
 }
-
 export interface AuthTypeNone {
   type: 'none';
   disabled?: boolean;
@@ -198,6 +204,7 @@ export interface RequestPathParameter {
 export const PATH_PARAMETER_REGEX = /\/:[^/?#:]+/g;
 
 export const getPathParametersFromUrl = (url: string): string[] => {
+  // Find all path parameters in the URL. Path parameters are defined as segments of the URL that start with a colon.
   const urlPathParameters =
     url
       .match(PATH_PARAMETER_REGEX)
@@ -212,23 +219,32 @@ export const getCombinedPathParametersFromUrl = (
   url: string,
   pathParameters: RequestPathParameter[],
 ): RequestPathParameter[] => {
+  // Extract path parameters from the URL
   const urlPathParameters = getPathParametersFromUrl(url);
+
+  // Initialize an empty array for saved path parameters
   let savedPathParameters: RequestPathParameter[] = [];
 
+  // Check if there are any path parameters in the active request
   if (pathParameters) {
-    savedPathParameters = pathParameters.filter(parameter => urlPathParameters.includes(parameter.name));
+    // Filter out the saved path parameters
+    savedPathParameters = pathParameters.filter(p => urlPathParameters.includes(p.name));
   }
 
+  // Initialize an empty set for unsaved URL path parameters
   let unsavedUrlPathParameters = new Set<RequestPathParameter>();
 
+  // Check if there are any path parameters in the URL
   if (urlPathParameters) {
+    // Filter out the unsaved URL path parameters
     unsavedUrlPathParameters = new Set(
       urlPathParameters
-        .filter(parameter => !savedPathParameters.map(saved => saved.name).includes(parameter))
-        .map(parameter => ({ name: parameter, value: '' })),
+        .filter(p => !savedPathParameters.map(p => p.name).includes(p))
+        .map(p => ({ name: p, value: '' })),
     );
   }
 
+  // Combine the saved and unsaved path parameters
   return [...savedPathParameters, ...unsavedUrlPathParameters];
 };
 
@@ -253,6 +269,7 @@ export interface BaseRequest {
   authentication: RequestAuthentication | {};
   metaSortKey: number;
   isPrivate: boolean;
+  // Settings
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
   settingDisableRenderRequestBody: boolean;
@@ -264,9 +281,11 @@ export interface BaseRequest {
 export type Request = BaseModel & BaseRequest;
 
 export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => model.type === type;
+
 export const isRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
+
 export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) =>
-  isRequest(model) && model.headers?.find(header => header.name === 'Accept')?.value === 'text/event-stream';
+  isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream';
 export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION;
 
@@ -285,6 +304,7 @@ export function init(): BaseRequest {
     isPrivate: false,
     pathParameters: undefined,
     afterResponseScript: undefined,
+    // Settings
     settingStoreCookies: true,
     settingSendCookies: true,
     settingDisableRenderRequestBody: false,
@@ -300,21 +320,31 @@ export function migrate(doc: Request): Request {
     doc = migrateWeirdUrls(doc);
     doc = migrateAuthType(doc);
     return doc;
-  } catch (error) {
-    console.log('[db] Error during request migration', error);
-    throw error;
+  } catch (e) {
+    console.log('[db] Error during request migration', e);
+    throw e;
   }
 }
 
+// ~~~~~~~~~~ //
+// Migrations //
+// ~~~~~~~~~~ //
+
+/**
+ * Migrate old body (string) to new body (object)
+ * @param request
+ */
 function migrateBody(request: Request) {
   if (request.body && typeof request.body === 'object') {
     return request;
   }
 
+  // Second, convert all existing urlencoded bodies to new format
   const contentType = getContentTypeFromHeaders(request.headers) || '';
   const wasFormUrlEncoded = !!contentType.match(/^application\/x-www-form-urlencoded/i);
 
   if (wasFormUrlEncoded) {
+    // Convert old-style form-encoded request bodies to new style
     request.body = {
       mimeType: CONTENT_TYPE_FORM_URLENCODED,
       params: deconstructQueryStringToParams(typeof request.body === 'string' ? request.body : '', false),
@@ -322,7 +352,7 @@ function migrateBody(request: Request) {
   } else if (!request.body && !contentType) {
     request.body = {};
   } else {
-    const rawBody = typeof request.body === 'string' ? request.body : '';
+    const rawBody: string = typeof request.body === 'string' ? request.body : '';
     request.body =
       typeof contentType !== 'string'
         ? {
@@ -337,7 +367,13 @@ function migrateBody(request: Request) {
   return request;
 }
 
+/**
+ * Fix some weird URLs that were caused by an old bug
+ * @param request
+ */
 function migrateWeirdUrls(request: Request) {
+  // Some people seem to have requests with URLs that don't have the indexOf
+  // function. This should clear that up. This can be removed at a later date.
   if (typeof request.url !== 'string') {
     request.url = '';
   }
@@ -345,11 +381,15 @@ function migrateWeirdUrls(request: Request) {
   return request;
 }
 
+/**
+ * Ensure the request.authentication.type property is added
+ * @param request
+ */
 function migrateAuthType(request: Request) {
   const isAuthSet = request?.authentication && 'username' in request.authentication && request.authentication.username;
-  // @ts-expect-error old model migration
+  // @ts-expect-error -- old model
   if (isAuthSet && !request.authentication.type) {
-    // @ts-expect-error old model migration
+    // @ts-expect-error -- old model
     request.authentication.type = 'basic';
   }
 

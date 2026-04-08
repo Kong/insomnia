@@ -36,17 +36,19 @@ export async function duplicate(requestGroup: RequestGroup, patch: Partial<Reque
     patch.name = `${requestGroup.name} (Copy)`;
   }
 
-  const query = {
+  const q = {
     metaSortKey: {
       $gt: requestGroup.metaSortKey,
     },
   };
 
-  const [nextRequestGroup] = await db.find<RequestGroup>(type, query, {
+  const [nextRequestGroup] = await db.find<RequestGroup>(type, q, {
     metaSortKey: 1,
   });
 
   const nextSortKey = nextRequestGroup ? nextRequestGroup.metaSortKey : requestGroup.metaSortKey + 100;
+
+  // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - requestGroup.metaSortKey) / 2;
   const metaSortKey = requestGroup.metaSortKey + sortKeyIncrement;
   return db.duplicate<RequestGroup>(requestGroup, {
