@@ -75,7 +75,7 @@ interface RealtimeActiveResponsePaneProps {
 const RealTimeActiveResponsePaneWrapper: FC<RealtimeActiveResponsePaneProps> = props => {
   const { response } = props;
   const protocol = useMemo(() => {
-    if (models.socketIoResponse.isSocketIOResponse(response)) {
+    if (models.socketIOResponse.isSocketIOResponse(response)) {
       return 'socketIO';
     }
     if (models.mcpResponse.isMcpResponse(response)) {
@@ -121,7 +121,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
   const isConnected = readyState === 'connected';
 
   const protocol = useMemo(() => {
-    if (models.socketIoResponse.isSocketIOResponse(response)) {
+    if (models.socketIOResponse.isSocketIOResponse(response)) {
       return 'socketIO';
     }
     if (models.mcpResponse.isMcpResponse(response)) {
@@ -136,7 +136,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
     setSelectedEvent((selected: EventType | null) => (selected?._id === event._id ? null : event));
   };
   const getEventView = (selectedEvent: EventType) => {
-    if (models.socketIoResponse.isSocketIOResponse(response)) {
+    if (models.socketIOResponse.isSocketIOResponse(response)) {
       return <SocketIOEventView event={selectedEvent as SocketIOEvent} key={selectedEvent._id} />;
     } else if (models.mcpResponse.isMcpResponse(response)) {
       return <McpEventView event={selectedEvent as McpEvent} key={selectedEvent._id} />;
@@ -219,11 +219,11 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
   }, [response.timelinePath, events.length]);
 
   const isLongRunning =
-    models.socketIoResponse.isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
+    models.socketIOResponse.isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
   const hideCookies =
-    models.socketIoResponse.isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
+    models.socketIOResponse.isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
   const hideHeaders =
-    models.socketIoResponse.isSocketIOResponse(response) ||
+    models.socketIOResponse.isSocketIOResponse(response) ||
     (models.mcpResponse.isMcpResponse(response) && response.transportType === models.mcpRequest.TRANSPORT_TYPES.STDIO);
 
   const cookieHeaders = hideCookies ? [] : getSetCookieHeaders(response.headers);
@@ -410,7 +410,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             <McpNotificationTab allEvents={allNotifications} />
           </TabPanel>
         )}
-        {!models.socketIoResponse.isSocketIOResponse(response) && (
+        {!models.socketIOResponse.isSocketIOResponse(response) && (
           <>
             <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
               <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">

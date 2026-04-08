@@ -23,7 +23,7 @@ import * as runnerTestResult from './runner-test-result';
 import * as settings from './settings';
 import * as socketIOPayload from './socket-io-payload';
 import * as socketIORequest from './socket-io-request';
-import * as socketIoResponse from './socket-io-response';
+import * as socketIOResponse from './socket-io-response';
 import * as stats from './stats';
 import * as unitTest from './unit-test';
 import * as unitTestResult from './unit-test-result';
@@ -67,7 +67,7 @@ export const models = {
   unitTestSuite,
   socketIOPayload,
   socketIORequest,
-  socketIoResponse,
+  socketIOResponse,
   webSocketPayload,
   webSocketRequest,
   webSocketResponse,

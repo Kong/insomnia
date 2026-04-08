@@ -47,7 +47,7 @@ export const webSocketRequest = models.webSocketRequest;
 export const webSocketResponse = models.webSocketResponse;
 export const socketIORequest = models.socketIORequest;
 export const socketIOPayload = models.socketIOPayload;
-export const socketIOResponse = models.socketIoResponse;
+export const socketIOResponse = models.socketIOResponse;
 export * as organization from './organization';
 export const userSession = models.userSession;
 export const cloudCredential = models.cloudCredential;
