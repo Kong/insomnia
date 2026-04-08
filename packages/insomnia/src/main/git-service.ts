@@ -265,7 +265,14 @@ async function validateGitCredentials({
   const credentials = await services.gitCredentials.getById(credentialsId);
   if (!credentials) return;
 
-  const provider = gitRemoteProviderRegistry.get(credentials.provider as GitRemoteProviderType);
+  if (!models.gitCredentials.isGitCredentialsV2(credentials)) {
+    // V1 (legacy) credentials may have provider 'githubapp', which is no longer
+    // registered. Falling back to fetchRemoteBranches would silently "pass" on
+    // public repos even when the token has been revoked, so we bail with a clear error.
+    throw new Error('Legacy git credentials are no longer supported. Please re-authenticate.');
+  }
+
+  const provider = gitRemoteProviderRegistry.get(credentials.provider);
 
   await (provider?.validateCredentials
     ? provider.validateCredentials(credentials)
@@ -307,7 +314,10 @@ export async function validateGitCredentialById({
     if (!credentials) {
       return { errors: ['Credential not found.'] };
     }
-    const provider = gitRemoteProviderRegistry.get(credentials.provider as GitRemoteProviderType);
+    if (!models.gitCredentials.isGitCredentialsV2(credentials)) {
+      return { errors: ['Legacy git credentials are no longer supported. Please re-authenticate.'] };
+    }
+    const provider = gitRemoteProviderRegistry.get(credentials.provider);
     if (provider?.validateCredentials) {
       await provider.validateCredentials(credentials);
     }
