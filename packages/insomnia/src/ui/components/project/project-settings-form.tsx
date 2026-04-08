@@ -419,9 +419,24 @@ export const ProjectSettingsForm: FC<Props> = ({
             <>
               <Divider />
               <div className="flex flex-col gap-2">
-                <div className="text-sm font-semibold">Local repository path</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-semibold">Local repository path</div>
+                  <Button
+                    onPress={() => {
+                      window.shell.showItemInFolder(repoPath);
+                    }}
+                    className="flex shrink-0 items-center gap-1.5 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-xs text-(--color-font) transition-colors hover:bg-(--hl-xs)"
+                    aria-label="Open repository folder"
+                  >
+                    <Icon icon={'folder'} />
+                    <span>Open repo folder</span>
+                  </Button>
+                </div>
                 <div className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate rounded-xs border border-solid border-(--hl-sm) bg-(--hl-xs) px-2 py-1 font-mono text-xs text-(--color-font)">
+                  <span
+                    title={repoPath}
+                    className="min-w-0 flex-1 truncate rounded-xs border border-solid border-(--hl-sm) bg-(--hl-xs) px-2 py-1 font-mono text-xs text-(--color-font)"
+                  >
                     {repoPath}
                   </span>
                   <Button
