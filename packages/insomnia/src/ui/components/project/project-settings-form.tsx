@@ -156,6 +156,16 @@ export const ProjectSettingsForm: FC<Props> = ({
     gitRepository?.credentialsId &&
     selectedProvider;
 
+  const showRepoPath =
+    storageType === 'git' &&
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
+    Boolean(gitRepository?._id);
+
+  const repoPath = showRepoPath
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository!._id)
+    : '';
+
   const showGitRepoForm =
     storageType === 'git' &&
     ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
@@ -184,6 +194,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const showEmailSelector = showGitConnectionInfo && canFetchEmails;
   const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (canFetchEmails && selectedCredential && emailsFetcher.state === 'idle' && !emailsFetcher.data) {
@@ -407,6 +418,34 @@ export const ProjectSettingsForm: FC<Props> = ({
                   </div>
                 </div>
               ) : null}
+            </>
+          )}
+          {showRepoPath && (
+            <>
+              <Divider />
+              <div className="flex flex-col gap-2">
+                <div className="text-sm font-semibold">Local repository path</div>
+                <div className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate rounded-xs border border-solid border-(--hl-sm) bg-(--hl-xs) px-2 py-1 font-mono text-xs text-(--color-font)">
+                    {repoPath}
+                  </span>
+                  <Button
+                    onPress={() => {
+                      window.clipboard.writeText(repoPath);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex shrink-0 items-center gap-1.5 rounded-xs border border-solid border-(--hl-sm) px-2 py-1 text-xs text-(--color-font) transition-colors hover:bg-(--hl-xs)"
+                    aria-label="Copy repository path"
+                  >
+                    <Icon icon={copied ? 'check' : 'copy'} />
+                    <span>{copied ? 'Copied!' : 'Copy'}</span>
+                  </Button>
+                </div>
+                <div className="text-xs text-(--hl-lg)">
+                  Open this path in your terminal to use native Git commands.
+                </div>
+              </div>
             </>
           )}
           {showGitRepoForm && (
