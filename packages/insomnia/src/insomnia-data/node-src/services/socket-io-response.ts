@@ -3,7 +3,7 @@ import * as requestOperations from '~/models/helpers/request-operations';
 
 import { database as db } from '../../src/database';
 import { type SocketIOResponse } from '../../src/models/types';
-import * as SettingsService from './settings';
+import * as settingsService from './settings';
 
 const { type } = models.socketIOResponse;
 
@@ -38,7 +38,7 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
     parentId,
   };
 
-  if ((await SettingsService.get()).filterResponsesByEnv && 'environmentId' in patch) {
+  if ((await settingsService.get()).filterResponsesByEnv && 'environmentId' in patch) {
     query.environmentId = patch.environmentId;
   }
 
@@ -59,7 +59,7 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
 export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
 
-  const shouldFilter = (await SettingsService.get()).filterResponsesByEnv;
+  const shouldFilter = (await settingsService.get()).filterResponsesByEnv;
 
   const response = await db.findOne<SocketIOResponse>(
     type,

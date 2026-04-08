@@ -4,7 +4,7 @@ import * as requestOperations from '~/models/helpers/request-operations';
 import { database as db } from '../../src/database';
 import { models } from '../../src/models';
 import { type WebSocketResponse } from '../../src/models/types';
-import * as SettingsService from './settings';
+import * as settingsService from './settings';
 
 const { type } = models.webSocketResponse;
 
@@ -36,7 +36,7 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
     parentId,
   };
 
-  if ((await SettingsService.get()).filterResponsesByEnv && 'environmentId' in patch) {
+  if ((await settingsService.get()).filterResponsesByEnv && 'environmentId' in patch) {
     query.environmentId = patch.environmentId;
   }
 
@@ -60,7 +60,7 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
 export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
 
-  const shouldFilter = (await SettingsService.get()).filterResponsesByEnv;
+  const shouldFilter = (await settingsService.get()).filterResponsesByEnv;
 
   const response = await db.findOne<WebSocketResponse>(
     type,
