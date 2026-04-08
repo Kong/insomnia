@@ -32,7 +32,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     : workspaceMeta?.gitRepositoryId;
 
   const rulesetPath = gitRepositoryId
-    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
     : '';
 
   const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });

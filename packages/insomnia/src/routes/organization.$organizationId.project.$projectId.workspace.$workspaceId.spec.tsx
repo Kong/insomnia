@@ -90,7 +90,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
   const rulesetPath = gitRepositoryId
-    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
     : '';
 
   let parsedSpec: OpenAPIV3.Document | undefined;
