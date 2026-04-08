@@ -37,6 +37,7 @@ import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
 import { fsClient } from '../sync/git/fs-client';
+import { migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
   fetchRemoteBranches,
   GIT_CLONE_DIR,
@@ -53,6 +54,7 @@ import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
 import { GitProjectNeDBClient } from '../sync/git/project-ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
+import { startWatcher, stopWatcher } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
@@ -224,11 +226,12 @@ async function getGitFSClient({
   // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
   const neDbClient = GitProjectNeDBClient.createClient(projectId);
 
-  // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
+  // All git metadata in the GIT_INTERNAL_DIR directory is stored in a .git/ directory on the filesystem
   const gitDataClient = fsClient(baseDir);
 
-  // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
-  const otherDataClient = fsClient(path.join(baseDir, 'other'));
+  // All non-YAML files are stored at the repository root (no separate 'other' subfolder)
+  // so that native Git tools can operate directly on the repository directory.
+  const otherDataClient = fsClient(baseDir);
 
   // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
   const routableFS = projectRoutableFSClient(otherDataClient, neDbClient, {
@@ -332,6 +335,17 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    const baseDir = path.join(
+      process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+      `version-control/git/${gitRepository._id}`,
+    );
+
+    // Migrate old directory structure (git/ → .git/, other/ → root) if needed.
+    // Only runs for the modern project-scoped flow (no workspaceId).
+    if (!workspaceId) {
+      await migrateRepoStructureIfNeeded(baseDir, projectId, gitRepository._id);
+    }
+
     const bufferId = await database.bufferChanges();
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
 
@@ -339,6 +353,8 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       let legacyInsomniaWorkspace;
       if (!workspaceId) {
         legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
+        // Ensure watcher is running (idempotent)
+        startWatcher(gitRepository._id, baseDir, projectId);
       }
 
       return {
@@ -383,6 +399,12 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     // Configure basic info
     await GitVCS.setAuthor();
     await GitVCS.addRemote(uri);
+
+    // Start file watcher for project-scoped repos so external YAML edits
+    // (native git CLI, VS Code, etc.) flow back into the database.
+    if (!workspaceId) {
+      startWatcher(gitRepository._id, baseDir, projectId);
+    }
 
     let legacyInsomniaWorkspace;
     if (!workspaceId) {
@@ -1363,6 +1385,9 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
   }
 
   await services.gitRepository.remove(repo);
+  // Stop the file watcher for this repository (project-scoped flow only).
+  stopWatcher(repo._id);
+
   await database.flushChanges(flushId);
 
   return null;
