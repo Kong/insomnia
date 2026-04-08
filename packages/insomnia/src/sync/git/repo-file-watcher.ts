@@ -34,13 +34,12 @@ import path from 'node:path';
 
 import { BrowserWindow } from 'electron';
 
+import { models, services, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
+
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { canSync } from '../../models';
-import * as models from '../../models';
-import { isWorkspace, type Workspace } from '../../models/workspace';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -482,11 +481,11 @@ class RepoFileWatcher {
 
   /** Remove DB documents that no longer appear in the imported YAML. */
   private async deleteOrphans(docs: NonNullable<ReturnType<typeof tryImportV5Data>['data']>): Promise<void> {
-    const workspace = docs.find(isWorkspace) as Workspace | undefined;
+    const workspace = docs.find(models.workspace.isWorkspace) as Workspace | undefined;
     if (!workspace) {
       return;
     }
-    const existingWorkspace = await models.workspace.getById(workspace._id);
+    const existingWorkspace = await services.workspace.getById(workspace._id);
     if (!existingWorkspace) {
       return;
     }
@@ -508,10 +507,10 @@ class RepoFileWatcher {
     const bufferId = await db.bufferChanges();
     try {
       for (const doc of docs) {
-        if (isWorkspace(doc)) {
+        if (models.workspace.isWorkspace(doc)) {
           doc.parentId = this.projectId;
-          const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
-          await models.workspaceMeta.update(workspaceMeta, {
+          const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(doc._id);
+          await services.workspaceMeta.update(workspaceMeta, {
             gitFilePath: this.toPosixRelPath(absPath),
           });
           this.lastKnownGitFilePath.set(doc._id, normalised);
