@@ -14,8 +14,16 @@ interface SearchableFields {
 }
 
 function isMatched(filter: string, doc: SearchableFields): boolean {
+  const searchTargets = [
+    doc.name,
+    doc.description,
+    ...(isRequestGroup(doc) ? [] : [doc.url]),
+  ]
+    .filter(field => field !== null && field !== undefined)
+    .map(field => String(field));
+
   return Boolean(
-    fuzzyMatchAll(filter, [doc.name, doc.description, ...(isRequestGroup(doc) ? [] : [doc.url!])], {
+    fuzzyMatchAll(filter, searchTargets, {
       splitSpace: false,
       loose: true,
     })?.indexes,
