@@ -20,7 +20,6 @@ import { documentationLinks } from '~/common/documentation';
 import type { Request, UnitTest, UnitTestSuite } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
 import { useTestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.delete';
 import { useTestRunActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.run';
@@ -153,7 +152,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                         {getMethodShortHand(request)}
                       </span>
                     )}
-                    {isWebSocketRequest(request) && (
+                    {models.webSocketRequest.isWebSocketRequest(request) && (
                       <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                         WS
                       </span>
@@ -205,7 +204,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                           {getMethodShortHand(request)}
                         </span>
                       )}
-                      {isWebSocketRequest(request) && (
+                      {models.webSocketRequest.isWebSocketRequest(request) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           WS
                         </span>

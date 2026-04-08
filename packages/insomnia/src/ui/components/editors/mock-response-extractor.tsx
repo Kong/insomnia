@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
-import { isSocketIOResponse } from '~/models/socket-io-response';
+import { models } from '~/insomnia-data';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import {
@@ -83,7 +83,11 @@ If you want to create a self-hosted mock server route from a request response in
       </div>
     );
   }
-  if (activeResponse && isSocketIOResponse(activeResponse) && !('contentType' in activeResponse)) {
+  if (
+    activeResponse &&
+    models.socketIOResponse.isSocketIOResponse(activeResponse) &&
+    !('contentType' in activeResponse)
+  ) {
     return (
       <div className="flex h-full flex-col justify-center px-32">
         <div className="flex place-content-center pb-8 text-9xl text-(--hl-md)">

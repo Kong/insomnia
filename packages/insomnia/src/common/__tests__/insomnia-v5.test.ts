@@ -12,7 +12,6 @@ import type { Request } from '~/insomnia-data';
 import { EnvironmentKvPairDataType, services } from '~/insomnia-data';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
-import * as models from '../../models';
 import { database as db } from '../database';
 import {
   getInsomniaV5DataExport,

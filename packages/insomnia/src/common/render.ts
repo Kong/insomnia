@@ -8,14 +8,14 @@ import type {
   McpRequest,
   Request,
   RequestGroup,
+  SocketIORequest,
   UserUploadEnvironment,
+  WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import * as models from '../models';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';

@@ -5,8 +5,6 @@ import type { ChangeBufferEvent } from '~/common/database';
 import type { CookieJar, McpTransportType, RequestAuthentication, RequestHeader } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isSocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequestId } from '~/models/websocket-request';
 import { getAuthHeader } from '~/network/authentication';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';
@@ -37,7 +35,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = (await request.json()) as ConnectActionParams;
 
-  if (isWebSocketRequestId(requestId)) {
+  if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
     window.main.webSocket.open({
       requestId,
       workspaceId,
@@ -84,7 +82,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       suppressUserAgent: rendered.suppressUserAgent,
     });
   }
-  if (isSocketIORequest(req)) {
+  if (models.socketIORequest.isSocketIORequest(req)) {
     window.main.socketIO.open({
       requestId,
       workspaceId,

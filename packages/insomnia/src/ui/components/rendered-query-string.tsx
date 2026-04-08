@@ -2,15 +2,20 @@ import classNames from 'classnames';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
-import type { Request, RequestAuthentication, RequestGroup, RequestParameter } from '~/insomnia-data';
+import type {
+  Request,
+  RequestAuthentication,
+  RequestGroup,
+  RequestParameter,
+  SocketIORequest,
+  WebSocketRequest,
+} from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import { SECURITY_SETTINGS_PATH_LABEL } from '../../common/misc';
 import * as models from '../../models';
-import type { SocketIORequest } from '../../models/socket-io-request';
-import type { WebSocketRequest } from '../../models/websocket-request';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
 import { RenderError } from '../../templating/render-error';

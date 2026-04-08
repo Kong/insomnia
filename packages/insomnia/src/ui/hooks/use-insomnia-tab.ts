@@ -11,13 +11,13 @@ import type {
   Project,
   Request,
   RequestGroup,
+  SocketIORequest,
   UnitTestSuite,
+  WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isSocketIORequest, type SocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequest, type WebSocketRequest } from '~/models/websocket-request';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
@@ -59,8 +59,8 @@ function inferTabType(resource: TabResource): TabType | null {
   if (
     isRequest(resource) ||
     models.grpcRequest.isGrpcRequest(resource) ||
-    isWebSocketRequest(resource) ||
-    isSocketIORequest(resource) ||
+    models.webSocketRequest.isWebSocketRequest(resource) ||
+    models.socketIORequest.isSocketIORequest(resource) ||
     models.mcpRequest.isMcpRequest(resource)
   ) {
     return 'request';
@@ -294,8 +294,8 @@ export const buildTabFromResource = async (params: AddTabParams, withTab?: boole
   if (
     isRequest(resource) ||
     models.grpcRequest.isGrpcRequest(resource) ||
-    isWebSocketRequest(resource) ||
-    isSocketIORequest(resource)
+    models.webSocketRequest.isWebSocketRequest(resource) ||
+    models.socketIORequest.isSocketIORequest(resource)
   ) {
     baseTab.tag = getRequestMethodShortHand(resource);
     baseTab.method = (resource as Request).method || '';

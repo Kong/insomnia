@@ -10,6 +10,9 @@ import type {
   RequestGroupMeta,
   RequestMeta,
   Settings,
+  SocketIOPayload,
+  SocketIORequest,
+  WebSocketRequest,
   WorkspaceMeta,
 } from '~/insomnia-data';
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
@@ -19,10 +22,6 @@ import { useRequestGroupUpdateActionFetcher } from '~/routes/organization.$organ
 import { useRequestGroupUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId.update-meta';
 import { useWorkspaceUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
 import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
-
-import type { SocketIOPayload } from '../../models/socket-io-payload';
-import type { SocketIORequest } from '../../models/socket-io-request';
-import type { WebSocketRequest } from '../../models/websocket-request';
 
 export const useRequestPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {

@@ -44,13 +44,20 @@ import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sort
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
-import type { Environment, GrpcRequest, Project, Request, RequestGroup, Workspace } from '~/insomnia-data';
+import type {
+  Environment,
+  GrpcRequest,
+  Project,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+  Workspace,
+} from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import * as models from '~/models';
 import { isScratchpadOrganizationId } from '~/models/organization';
-import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '~/models/websocket-request';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -496,10 +503,10 @@ const Debug = () => {
 
   const isRealtimeRequest =
     activeRequest &&
-    (isWebSocketRequest(activeRequest) ||
+    (models.webSocketRequest.isWebSocketRequest(activeRequest) ||
       isEventStreamRequest(activeRequest) ||
       isGraphqlSubscriptionRequest(activeRequest) ||
-      isSocketIORequest(activeRequest));
+      models.socketIORequest.isSocketIORequest(activeRequest));
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -1087,7 +1094,7 @@ const Debug = () => {
                     }}
                   >
                     <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
-                      <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
+                      <span className="absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                       {isRequest(item.doc) && (
                         <span
                           className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
@@ -1105,12 +1112,12 @@ const Debug = () => {
                           {getMethodShortHand(item.doc)}
                         </span>
                       )}
-                      {isWebSocketRequest(item.doc) && (
+                      {models.webSocketRequest.isWebSocketRequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           WS
                         </span>
                       )}
-                      {isSocketIORequest(item.doc) && (
+                      {models.socketIORequest.isSocketIORequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           IO
                         </span>
@@ -1161,7 +1168,7 @@ const Debug = () => {
                   let label = item.doc.name;
                   if (isRequest(item.doc)) {
                     label = `${getMethodShortHand(item.doc)} ${label}`;
-                  } else if (isWebSocketRequest(item.doc)) {
+                  } else if (models.webSocketRequest.isWebSocketRequest(item.doc)) {
                     label = `WS ${label}`;
                   } else if (models.grpcRequest.isGrpcRequest(item.doc)) {
                     label = `gRPC ${label}`;
@@ -1247,8 +1254,12 @@ const Debug = () => {
                             reloadRequests={reloadRequests}
                           />
                         )}
-                        {isWebSocketRequestId(requestId) && <WebSocketRequestPane environment={activeEnvironment} />}
-                        {isSocketIORequestId(requestId) && <SocketIORequestPane environment={activeEnvironment} />}
+                        {models.webSocketRequest.isWebSocketRequestId(requestId) && (
+                          <WebSocketRequestPane environment={activeEnvironment} />
+                        )}
+                        {models.socketIORequest.isSocketIORequestId(requestId) && (
+                          <SocketIORequestPane environment={activeEnvironment} />
+                        )}
                         {isRequestId(requestId) && (
                           <RequestPane
                             environmentId={activeEnvironment ? activeEnvironment._id : ''}
@@ -1524,7 +1535,7 @@ const CollectionGridListItem = ({
       >
         <span
           data-selected={isSelected}
-          className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors data-[selected=true]:bg-(--color-surprise)"
+          className="absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors data-[selected=true]:bg-(--color-surprise)"
         />
         <Button slot="drag" className="hidden" />
         {isRequest(item.doc) && (
@@ -1546,7 +1557,7 @@ const CollectionGridListItem = ({
             {getMethodShortHand(item.doc)}
           </span>
         )}
-        {isWebSocketRequest(item.doc) && (
+        {models.webSocketRequest.isWebSocketRequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1555,7 +1566,7 @@ const CollectionGridListItem = ({
             WS
           </span>
         )}
-        {isSocketIORequest(item.doc) && (
+        {models.socketIORequest.isSocketIORequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1593,8 +1604,8 @@ const CollectionGridListItem = ({
             }
           }}
         />
-        {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-        {isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
+        {models.webSocketRequest.isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+        {models.socketIORequest.isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
         {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}

@@ -1,11 +1,9 @@
 import React, { type FC, memo } from 'react';
 
-import type { GrpcRequest, McpRequest, Request } from '~/insomnia-data';
+import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
-import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 
 const { isEventStreamRequest, isRequest } = models.request;
 
@@ -50,7 +48,7 @@ export const getRequestMethodShortHand = (
     return getMethodShortHand(doc);
   }
 
-  if (isWebSocketRequest(doc)) {
+  if (models.webSocketRequest.isWebSocketRequest(doc)) {
     return 'WS';
   }
 
@@ -58,7 +56,7 @@ export const getRequestMethodShortHand = (
     return 'gRPC';
   }
 
-  if (isSocketIORequest(doc)) {
+  if (models.socketIORequest.isSocketIORequest(doc)) {
     return 'IO';
   }
 

@@ -3,12 +3,6 @@ import type { AllTypes, BaseModel } from '~/models/types';
 
 import { generateId } from '../common/misc';
 import { typedKeys } from '../utils';
-import * as _socketIOPayload from './socket-io-payload';
-import * as _socketIORequest from './socket-io-request';
-import * as _socketIoResponse from './socket-io-response';
-import * as _webSocketPayload from './websocket-payload';
-import * as _webSocketRequest from './websocket-request';
-import * as _webSocketResponse from './websocket-response';
 
 export type { AllTypes, BaseModel };
 // Reference to each model
@@ -40,14 +34,14 @@ export const protoFile = models.protoFile;
 export const protoDirectory = models.protoDirectory;
 export const grpcRequest = models.grpcRequest;
 export const grpcRequestMeta = models.grpcRequestMeta;
-export const webSocketPayload = _webSocketPayload;
-export const webSocketRequest = _webSocketRequest;
-export const socketIORequest = _socketIORequest;
-export const socketIOPayload = _socketIOPayload;
-export const socketIOResponse = _socketIoResponse;
-export const webSocketResponse = _webSocketResponse;
 export const workspace = models.workspace;
 export const workspaceMeta = models.workspaceMeta;
+export const webSocketPayload = models.webSocketPayload;
+export const webSocketRequest = models.webSocketRequest;
+export const webSocketResponse = models.webSocketResponse;
+export const socketIORequest = models.socketIORequest;
+export const socketIOPayload = models.socketIOPayload;
+export const socketIOResponse = models.socketIOResponse;
 export * as organization from './organization';
 export const userSession = models.userSession;
 export const cloudCredential = models.cloudCredential;

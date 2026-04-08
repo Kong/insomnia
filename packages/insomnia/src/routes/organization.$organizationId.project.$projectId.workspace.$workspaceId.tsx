@@ -18,14 +18,14 @@ import type {
   RequestGroup,
   RequestGroupMeta,
   RequestMeta,
+  SocketIORequest,
+  WebSocketRequest,
   Workspace,
   WorkspaceMeta,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { sortProjects } from '~/models/helpers/project';
-import type { SocketIORequest } from '~/models/socket-io-request';
-import type { WebSocketRequest } from '~/models/websocket-request';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';

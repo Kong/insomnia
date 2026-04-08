@@ -12,15 +12,19 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
-import type { CookieJar, Request, RequestAuthentication, RequestHeader } from '~/insomnia-data';
+import type {
+  BaseWebSocketRequest,
+  CookieJar,
+  Request,
+  RequestAuthentication,
+  RequestHeader,
+  WebSocketResponse,
+} from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
-import { webSocketRequest } from '../../models';
 import * as models from '../../models';
-import { type BaseWebSocketRequest, isWebSocketRequest } from '../../models/websocket-request';
-import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
@@ -148,7 +152,7 @@ const openWebSocketConnection = async (
 
   const request = options.isGraphqlSubscriptionRequest
     ? await services.request.getById(options.requestId)
-    : await webSocketRequest.getById(options.requestId);
+    : await services.webSocketRequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
@@ -219,7 +223,7 @@ const openWebSocketConnection = async (
 
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
-      .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+      .reduce<Record<string, string>>(reduceArrayToLowerCaseKeyedDictionary, {});
     const settings = await services.settings.get();
     const start = performance.now();
 
@@ -276,8 +280,11 @@ const openWebSocketConnection = async (
         on: true,
         global: settings.followRedirects,
       }[request.settingFollowRedirects] ?? true;
-    const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']?.split(',').map(p => p.trim());
-    const shouldUseProxy = settings.proxyEnabled && isWebSocketRequest(request) && request.settingUseProxy;
+    const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']
+      ?.split(',')
+      .map((protocol: string) => protocol.trim());
+    const shouldUseProxy =
+      settings.proxyEnabled && models.webSocketRequest.isWebSocketRequest(request) && request.settingUseProxy;
     const ws = new WebSocket(url, protocols, {
       headers: lowerCasedEnabledHeaders,
       ca: caCertificate,
@@ -319,8 +326,8 @@ const openWebSocketConnection = async (
       };
 
       const settings = await services.settings.get();
-      const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      await services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
       if (request.settingStoreCookies) {
         const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
@@ -375,8 +382,8 @@ const openWebSocketConnection = async (
         settingStoreCookies: request.settingStoreCookies,
       };
       const settings = await services.settings.get();
-      const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      await services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
       deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
     });
 
@@ -519,8 +526,8 @@ const createErrorResponse = async (
     statusMessage: 'Error',
     error: message,
   };
-  const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+  await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const deleteRequestMaps = async (
@@ -605,7 +612,7 @@ const closeWebSocketConnection = (options: { requestId: string }): void => {
 const closeAllWebSocketConnections = (): void => WebSocketConnections.forEach(ws => ws.close());
 
 const findMany = async (options: { responseId: string }): Promise<WebSocketEvent[]> => {
-  const response = await models.webSocketResponse.getById(options.responseId);
+  const response = await services.webSocketResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }

@@ -1,11 +1,16 @@
 import deepEqual from 'deep-equal';
 
 import { compressObject, decompressObject } from '~/common/misc';
-import type { GrpcRequest, McpRequest, Request, RequestVersion } from '~/insomnia-data';
+import type {
+  GrpcRequest,
+  McpRequest,
+  Request,
+  RequestVersion,
+  SocketIORequest,
+  WebSocketRequest,
+} from '~/insomnia-data';
 import { database, database as db, models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isSocketIORequest, type SocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequest, type WebSocketRequest } from '~/models/websocket-request';
 
 const { isRequest } = models.request;
 const { type } = models.requestVersion;
@@ -32,8 +37,8 @@ export function findByParentId(parentId: string) {
 export async function create(request: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest) {
   if (
     !isRequest(request) &&
-    !isWebSocketRequest(request) &&
-    !isSocketIORequest(request) &&
+    !models.webSocketRequest.isWebSocketRequest(request) &&
+    !models.socketIORequest.isSocketIORequest(request) &&
     !models.mcpRequest.isMcpRequest(request)
   ) {
     throw new Error(`New ${type} was not given a valid ${request.type} instance`);

@@ -8,15 +8,15 @@ import type {
   MockServer,
   Request,
   RequestGroup,
+  SocketIORequest,
   UnitTest,
   UnitTestSuite,
+  WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { canSync } from '~/models';
 import * as models from '~/models';
-import type { SocketIORequest } from '~/models/socket-io-request';
-import type { WebSocketRequest } from '~/models/websocket-request';
 import type { BackendProject, Compare, StatusCandidate } from '~/sync/types';
 import { invariant } from '~/utils/invariant';
 

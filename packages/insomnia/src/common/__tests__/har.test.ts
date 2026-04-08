@@ -308,7 +308,7 @@ describe('export', () => {
 
   describe('exportHarResponse()', () => {
     it('exports a default har response for an empty response', async () => {
-      const notFoundResponse = null;
+      const notFoundResponse = undefined;
       const harResponse = await exportHarResponse(notFoundResponse);
       expect(harResponse).toMatchObject({
         status: 0,

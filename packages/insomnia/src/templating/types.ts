@@ -14,13 +14,13 @@ import type {
   RequestGroup,
   Response,
   Services,
+  SocketIORequest,
   UserUploadEnvironment,
+  WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
 import type { getBodyBuffer } from '~/models/helpers/response-operations';
 
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PluginStore } from '../plugins/context/store';
 import type { extractNunjucksTagFromCoords } from './utils';

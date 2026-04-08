@@ -19,7 +19,9 @@ import type {
   RequestHeader,
   RequestParameter,
   Settings,
+  SocketIORequest,
   UserUploadEnvironment,
+  WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
 import { EnvironmentType, services } from '~/insomnia-data';
@@ -38,8 +40,6 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginData from '../plugins/context/data';
 import * as pluginNetwork from '../plugins/context/network';

@@ -10,7 +10,6 @@ import {
 } from '~/common/constants';
 import type { Request, RequestBody, RequestParameter } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import { SegmentEvent } from '~/ui/analytics';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { invariant } from '~/utils/invariant';
@@ -85,7 +84,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (requestType === 'WebSocket') {
     activeRequestId = (
-      await models.webSocketRequest.create({
+      await services.webSocketRequest.create({
         parentId: parentId || workspaceId,
         name: 'New WebSocket Request',
         headers: defaultHeaders,
@@ -94,7 +93,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (requestType === 'SocketIO') {
     activeRequestId = (
-      await models.socketIORequest.create({
+      await services.socketIORequest.create({
         parentId: parentId || workspaceId,
         name: 'New Socket.IO Request',
         headers: defaultHeaders,
