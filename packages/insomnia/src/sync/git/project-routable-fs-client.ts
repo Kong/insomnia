@@ -69,19 +69,49 @@ export function projectRoutableFSClient(
       return [...new Set([...insomniaFiles, ...defaultFiles])];
     }
 
-    // 3) YAML-first writes/reads: prefer insomniaFS (DB). If it throws, fall back to disk.
-    // Also, when writing, collect attempted content into writeFileMap to assist conflict UIs.
+    // 3) YAML files: dual-sync between disk (defaultFS) and DB (insomniaFS).
+    //
+    // - writeFile: write to disk first, then import into DB. Suppressed paths
+    //   (those being written by the watcher itself) skip the DB re-import to
+    //   prevent write loops. Collect content in writeFileMap for conflict UI.
+    // - readFile / stat / lstat: prefer disk; fall back to DB-export.
+    // - unlink: remove from both disk and DB.
     if (filePath.endsWith('.yaml')) {
-      try {
-        const result = await insomniaFS.promises[method]!(filePath, ...args);
-        if (method === 'writeFile' && writeFileMap) {
+      if (method === 'writeFile') {
+        // Write to disk first so the file is real and Git-accessible.
+        await defaultFS.promises.writeFile!(filePath, ...args);
+        // Then import into DB (insomniaFS.writeFile triggers tryImportV5Data).
+        try {
+          await insomniaFS.promises.writeFile!(filePath, ...args);
+        } catch {
+          // Non-fatal: disk write succeeded; DB import failure is logged inside insomniaFS.
+        }
+        if (writeFileMap) {
           writeFileMap[filePath.split(path.win32.sep).join(path.posix.sep)] = args[0].toString();
         }
-        return result;
-      } catch {
-        const result = await defaultFS.promises[method]!(filePath, ...args);
+        return;
+      }
 
-        return result;
+      if (method === 'unlink') {
+        // Best-effort removal from both stores.
+        await Promise.allSettled([defaultFS.promises.unlink!(filePath), insomniaFS.promises.unlink!(filePath)]);
+        return;
+      }
+
+      if (method === 'readFile' || method === 'stat' || method === 'lstat') {
+        // Prefer the real on-disk file; fall back to DB-generated content.
+        try {
+          return await defaultFS.promises[method]!(filePath, ...args);
+        } catch {
+          return await insomniaFS.promises[method]!(filePath, ...args);
+        }
+      }
+
+      // readlink and symlink: delegate to disk.
+      try {
+        return await defaultFS.promises[method]!(filePath, ...args);
+      } catch {
+        return await insomniaFS.promises[method]!(filePath, ...args);
       }
     }
 
