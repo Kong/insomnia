@@ -48,7 +48,7 @@ describe('NeDBClient', () => {
     });
 
     // Create test requests
-    await models.request.create({
+    await services.request.create({
       _id: 'req_test_1',
       name: 'Test Request 1',
       parentId: 'wrk_test',
@@ -57,7 +57,7 @@ describe('NeDBClient', () => {
       metaSortKey: 0,
     });
 
-    await models.request.create({
+    await services.request.create({
       _id: 'req_test_2',
       name: 'Test Request 2',
       parentId: 'wrk_test',
@@ -67,7 +67,7 @@ describe('NeDBClient', () => {
     });
 
     // Create private request (should not be accessible)
-    await models.request.create({
+    await services.request.create({
       _id: 'req_private',
       name: 'Private Request',
       parentId: 'wrk_test',

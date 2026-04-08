@@ -1,6 +1,7 @@
+import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from '~/insomnia-data';
+
 import { database } from '../common/database';
 import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
-import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
 import type { BaseModel } from './types';
 
 export const name = 'WebSocket Request';
@@ -105,5 +106,8 @@ export const findByParentId = (parentId: string) => database.find<WebSocketReque
 export const all = () => database.find<WebSocketRequest>(type);
 
 export function rewriteReferences(request: WebSocketRequest, idMapping: Map<string, string>): WebSocketRequest {
-  return { ...request, ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping) };
+  return {
+    ...request,
+    ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping),
+  };
 }

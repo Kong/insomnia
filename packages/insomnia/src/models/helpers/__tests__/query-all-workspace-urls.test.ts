@@ -18,7 +18,7 @@ describe('queryAllWorkspaceUrls', () => {
     const w = await services.workspace.create({
       name: 'Workspace',
     });
-    const r1 = await models.request.create({
+    const r1 = await services.request.create({
       name: 'Request 1',
       parentId: w._id,
       url: 'r1.url',
@@ -33,11 +33,11 @@ describe('queryAllWorkspaceUrls', () => {
       parentId: w._id,
       url: 'gr2.url',
     });
-    const f2 = await models.requestGroup.create({
+    const f2 = await services.requestGroup.create({
       name: 'Folder 2',
       parentId: w._id,
     });
-    const r2 = await models.request.create({
+    const r2 = await services.request.create({
       name: 'Request 2',
       parentId: f2._id,
       url: 'r2.url',
@@ -48,12 +48,12 @@ describe('queryAllWorkspaceUrls', () => {
       parentId: w._id,
       url: gr2.url,
     });
-    await models.request.create({
+    await services.request.create({
       name: 'Duplicate url',
       parentId: f2._id,
       url: r2.url,
     });
-    await models.request.create({
+    await services.request.create({
       name: 'Undefined url',
       parentId: f2._id,
       url: undefined,
@@ -66,7 +66,7 @@ describe('queryAllWorkspaceUrls', () => {
     const w2 = await services.workspace.create({
       name: 'Workspace 2',
     });
-    await models.request.create({
+    await services.request.create({
       name: 'Different workspace',
       parentId: w2._id,
       url: 'diff.url',

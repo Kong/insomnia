@@ -9,13 +9,13 @@ import type {
   MockRoute,
   MockServer,
   Project,
+  Request,
+  RequestGroup,
   UnitTestSuite,
   Workspace,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isRequest, type Request } from '~/models/request';
-import { isRequestGroup, type RequestGroup } from '~/models/request-group';
 import { isSocketIORequest, type SocketIORequest } from '~/models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '~/models/websocket-request';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
@@ -24,6 +24,9 @@ import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import type { BaseTab, TabType } from '../components/tabs/tab';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 interface InsomniaTabProps {
   organizationId: string;

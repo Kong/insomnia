@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 
+import type { ResponseHeader } from '~/insomnia-data';
 import { getBodyBuffer, getBodyStream } from '~/models/helpers/response-operations';
 
-import type { ResponseHeader } from '../../models/response';
 
 interface MaybeResponse {
   parentId?: string;

@@ -2,7 +2,6 @@ import { services } from '~/insomnia-data';
 
 import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
-import * as models from './index';
 import type { BaseModel } from './types';
 
 export const name = 'SocketIO Response';
@@ -71,7 +70,7 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
   const { parentId } = patch;
   // Create request version snapshot
   const request = await requestOperations.getById(parentId);
-  const requestVersion = request ? await models.requestVersion.create(request) : null;
+  const requestVersion = request ? await services.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
   const query: Record<string, any> = {

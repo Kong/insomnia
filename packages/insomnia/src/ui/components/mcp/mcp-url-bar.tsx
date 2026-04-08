@@ -4,10 +4,9 @@ import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-compo
 import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
-import type { McpRequest, Project } from '~/insomnia-data';
+import type { AuthTypeOAuth2, McpRequest, Project } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
-import type { AuthTypeOAuth2 } from '~/models/request';
 import { _buildBearerHeader } from '~/network/authentication';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 import { getBearerAuthHeader } from '~/network/bearer-auth/get-header';

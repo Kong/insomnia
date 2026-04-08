@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -11,12 +10,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
   const id = formData.get('id') as string;
 
-  const requestGroup = await models.requestGroup.getById(id);
+  const requestGroup = await services.requestGroup.getById(id);
   invariant(requestGroup, 'Request Group not found');
 
   services.stats.incrementDeletedRequestsForDescendents(requestGroup);
 
-  await models.requestGroup.remove(requestGroup);
+  await services.requestGroup.remove(requestGroup);
 
   return null;
 }

@@ -8,10 +8,10 @@ import {
 import { BrowserWindow, ipcMain } from 'electron';
 
 import { getOauthRedirectUrl } from '~/common/constants';
+import type { RequestAuthentication } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import type { ConnectionContext } from '~/main/mcp/common';
-import type { RequestAuthentication } from '~/models/request';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 import { invariant } from '~/utils/invariant';
 

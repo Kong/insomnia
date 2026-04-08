@@ -3,10 +3,10 @@ import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
 import { database as db } from '~/common/database';
-import { type McpResponse, services } from '~/insomnia-data';
+import type { Compression, McpResponse, Response } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import * as models from '~/models/index';
-import { type Compression, isResponse, type Response, type as responseType } from '~/models/response';
 import { isSocketIORequestId } from '~/models/socket-io-request';
 import { isSocketIOResponse, type SocketIOResponse, type as socketIOResponseType } from '~/models/socket-io-response';
 import { isWebSocketRequestId } from '~/models/websocket-request';
@@ -16,6 +16,8 @@ import {
   type WebSocketResponse,
 } from '~/models/websocket-response';
 import { deserializeNDJSON } from '~/utils/ndjson';
+
+const { isResponse, type: responseType } = models.response;
 
 export async function removeResponsesForRequest(requestId: string, environmentId?: string | null) {
   const settings = await services.settings.get();

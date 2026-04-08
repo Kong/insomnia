@@ -19,6 +19,12 @@ import * as pluginData from './plugin-data';
 import * as project from './project';
 import * as protoDirectory from './proto-directory';
 import * as protoFile from './proto-file';
+import * as request from './request';
+import * as requestGroup from './request-group';
+import * as requestGroupMeta from './request-group-meta';
+import * as requestMeta from './request-meta';
+import * as requestVersion from './request-version';
+import * as response from './response';
 import * as runnerTestResult from './runner-test-result';
 import * as settings from './settings';
 import * as stats from './stats';
@@ -45,6 +51,12 @@ export const models = {
   pluginData,
   protoDirectory,
   protoFile,
+  request,
+  requestGroup,
+  requestGroupMeta,
+  requestMeta,
+  requestVersion,
+  response,
   runnerTestResult,
   project,
   settings,

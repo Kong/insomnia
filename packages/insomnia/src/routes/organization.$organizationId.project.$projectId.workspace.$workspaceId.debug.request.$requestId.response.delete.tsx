@@ -34,7 +34,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   } else if (isMcpRequest) {
     responseModel = services.mcpResponse;
   } else {
-    responseModel = models.response;
+    responseModel = services.response;
   }
 
   const res = await responseModel.getById(responseId);
@@ -43,9 +43,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   await removeResponse(res);
   const response = await responseModel.getLatestForRequestId(requestId, workspaceMeta.activeEnvironmentId);
   if (response?.requestVersionId) {
-    await models.requestVersion.restore(response.requestVersionId);
+    await services.requestVersion.restore(response.requestVersionId);
   }
-  await models.requestMeta.updateOrCreateByParentId(requestId, {
+  await services.requestMeta.updateOrCreateByParentId(requestId, {
     activeResponseId: response?._id || null,
   });
 

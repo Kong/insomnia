@@ -21,7 +21,6 @@ import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organiza
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as models from '../../../models/index';
-import { isRequest } from '../../../models/request';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -197,7 +196,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                         <PromptButton
                           onClick={async () => {
                             const docs = await db.getWithDescendants(workspace, [models.request.type]);
-                            const requests = docs.filter(isRequest);
+                            const requests = docs.filter(models.request.isRequest);
                             for (const req of requests) {
                               await removeResponsesForRequest(req._id);
                             }

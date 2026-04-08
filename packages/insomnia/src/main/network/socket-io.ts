@@ -9,14 +9,13 @@ import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOpti
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import type { CookieJar } from '~/insomnia-data';
+import type { CookieJar, RequestAuthentication, RequestHeader } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { socketIORequest } from '../../models';
-import { type RequestAuthentication, type RequestHeader } from '../../models/request';
 import type { BaseSocketIORequest } from '../../models/socket-io-request';
 import type { SocketIOResponse } from '../../models/socket-io-response.ts';
 import { filterClientCertificates } from '../../network/certificate';
@@ -227,7 +226,7 @@ const createErrorResponse = async (
     error: message,
   };
   const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const openSocketIOConnection = async (
@@ -362,7 +361,7 @@ const openSocketIOConnection = async (
       };
 
       const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
     });
 
     const engine = socket.io.engine;

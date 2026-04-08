@@ -1,6 +1,6 @@
 import type { Root } from '@modelcontextprotocol/sdk/types.js';
 
-import type { RequestAuthentication, RequestHeader } from '~/models/request';
+import type { RequestAuthentication, RequestHeader } from '~/insomnia-data';
 import type { BaseModel } from '~/models/types';
 
 import type { EnvironmentKvPairData } from './environment';

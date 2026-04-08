@@ -1,6 +1,7 @@
+import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from '~/insomnia-data';
+
 import { database } from '../common/database';
 import { replaceIdsInFields } from './helpers/replace-ids-in-fields';
-import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
 import type { BaseModel } from './types';
 
 export const name = 'Socket.IO Request';
@@ -108,5 +109,8 @@ export async function duplicate(request: SocketIORequest, patch: Partial<SocketI
 }
 
 export function rewriteReferences(request: SocketIORequest, idMapping: Map<string, string>): SocketIORequest {
-  return { ...request, ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping) };
+  return {
+    ...request,
+    ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping),
+  };
 }

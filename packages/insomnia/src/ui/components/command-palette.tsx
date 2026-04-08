@@ -23,8 +23,6 @@ import { useNavigate, useParams } from 'react-router';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
 import { models } from '~/insomnia-data';
-import { isRequest } from '~/models/request';
-import { isRequestGroup } from '~/models/request-group';
 import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRootLoaderData } from '~/root';
 import { useCommandsLoaderFetcher } from '~/routes/commands';
@@ -41,6 +39,9 @@ import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { isPrimaryClickModifier } from '~/ui/utils';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);

@@ -5,14 +5,12 @@ import os from 'node:os';
 import iconv from 'iconv-lite';
 
 import { jarFromCookies } from '~/common/cookies';
-import type { Workspace } from '~/insomnia-data';
+import type { Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { database as db } from '../common/database';
 import * as models from '../models/index';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
@@ -133,7 +131,7 @@ export default class BaseExtension {
         openInBrowser: (url: string) => window.main.openInBrowser(url),
         models: {
           request: {
-            getById: models.request.getById,
+            getById: services.request.getById,
             getAncestors: async (request: any) => {
               const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
                 models.requestGroup.type,
@@ -163,7 +161,7 @@ export default class BaseExtension {
             },
           },
           response: {
-            getLatestForRequestId: models.response.getLatestForRequestId,
+            getLatestForRequestId: services.response.getLatestForRequestId,
             getBodyBuffer,
           },
           settings: {

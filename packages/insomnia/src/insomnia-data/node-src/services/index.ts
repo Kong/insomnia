@@ -18,6 +18,12 @@ import * as pluginDataService from './plugin-data';
 import * as projectService from './project';
 import * as protoDirectoryService from './proto-directory';
 import * as protoFileService from './proto-file';
+import * as requestService from './request';
+import * as requestGroupService from './request-group';
+import * as requestGroupMetaService from './request-group-meta';
+import * as requestMetaService from './request-meta';
+import * as requestVersionService from './request-version';
+import * as responseService from './response';
 import * as runnerTestResultService from './runner-test-result';
 import * as settingsService from './settings';
 import * as statsService from './stats';
@@ -47,6 +53,12 @@ export const servicesNodeImpl = {
   pluginData: pluginDataService,
   protoDirectory: protoDirectoryService,
   protoFile: protoFileService,
+  request: requestService,
+  requestGroup: requestGroupService,
+  requestGroupMeta: requestGroupMetaService,
+  requestMeta: requestMetaService,
+  requestVersion: requestVersionService,
+  response: responseService,
   runnerTestResult: runnerTestResultService,
   project: projectService,
   settings: settingsService,

@@ -1,11 +1,14 @@
 import { useCallback, useEffect } from 'react';
 
+import { services } from '~/insomnia-data';
+
 import * as models from '../../models';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from '../../models/request';
 import { isSocketIORequestId } from '../../models/socket-io-request';
 import { isWebSocketRequestId } from '../../models/websocket-request';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import uiEventBus from '../event-bus';
+
+const { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } = models.request;
 
 // this hook is use for control when to close connections(websocket & SSE & grpc stream & graphql subscription)
 export const useCloseConnection = ({ organizationId }: { organizationId: string }) => {
@@ -17,7 +20,7 @@ export const useCloseConnection = ({ organizationId }: { organizationId: string 
     } else if (isSocketIORequestId(id)) {
       window.main.socketIO.close({ requestId: id });
     } else if (isRequestId(id)) {
-      const request = await models.request.getById(id);
+      const request = await services.request.getById(id);
       if (request && isEventStreamRequest(request)) {
         window.main.curl.close({ requestId: id });
       } else if (request && isGraphqlSubscriptionRequest(request)) {

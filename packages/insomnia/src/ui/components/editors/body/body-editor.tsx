@@ -4,6 +4,9 @@ import React, { type FC, useCallback } from 'react';
 import { Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { Request, RequestBodyParameter } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
+
 import {
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
@@ -13,7 +16,6 @@ import {
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
-import { isEventStreamRequest, type Request, type RequestBodyParameter } from '../../../../models/request';
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
 import { AskModal } from '../../modals/ask-modal';
@@ -25,6 +27,8 @@ import { FormEditor } from './form-editor';
 import { GraphQLEditor } from './graph-ql-editor';
 import { RawEditor } from './raw-editor';
 import { UrlEncodedEditor } from './url-encoded-editor';
+
+const { isEventStreamRequest } = models.request;
 
 interface Props {
   request: Request;

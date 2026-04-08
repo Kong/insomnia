@@ -4,14 +4,14 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { Environment } from '~/insomnia-data';
+import type { Environment, RequestPathParameter } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { getAuthObjectOrNull } from '~/network/authentication';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
 
-import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import {
   type SocketIORequestLoaderData,
   useRequestLoaderData,
@@ -30,6 +30,8 @@ import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar } from '../websockets/action-bar';
 import { SocketIOBodyTabPane } from './body-tab-pane';
 import { SocketIOEventTabPane } from './event-tab-pane';
+
+const { getCombinedPathParametersFromUrl } = models.request;
 
 // TODO: extract to a separate file as common component
 const PaneReadOnlyBanner = () => {

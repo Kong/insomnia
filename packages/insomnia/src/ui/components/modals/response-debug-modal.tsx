@@ -1,10 +1,10 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
+import type { Response } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { getTimeline } from '~/models/helpers/response-operations';
 
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import * as models from '../../../models/index';
-import type { Response } from '../../../models/response';
 import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -41,7 +41,7 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
       show: async options => {
         let response = options.response;
         if (!response) {
-          response = await models.response.getById(options.responseId || 'n/a');
+          response = await services.response.getById(options.responseId || 'n/a');
         }
         if (!response) {
           console.error('No response found');

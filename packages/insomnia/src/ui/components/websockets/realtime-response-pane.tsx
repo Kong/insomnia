@@ -4,7 +4,8 @@ import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { docsMcpAuthentication } from '~/common/documentation';
-import { type McpResponse, models } from '~/insomnia-data';
+import type { McpResponse, RequestVersion, Response } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
 
@@ -14,8 +15,6 @@ import type { CurlEvent } from '../../../main/network/curl';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
-import type { RequestVersion } from '../../../models/request-version';
-import type { Response } from '../../../models/response';
 import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
 import { type WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';

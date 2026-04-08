@@ -44,20 +44,11 @@ import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sort
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
-import type { Environment, GrpcRequest, Project, Workspace } from '~/insomnia-data';
+import type { Environment, GrpcRequest, Project, Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import * as models from '~/models';
 import { isScratchpadOrganizationId } from '~/models/organization';
-import {
-  isEventStreamRequest,
-  isGraphqlSubscriptionRequest,
-  isRequest,
-  isRequestId,
-  type Request,
-} from '~/models/request';
-import { isRequestGroup, isRequestGroupId, type RequestGroup } from '~/models/request-group';
-import { getByParentId as getRequestMetaByParentId } from '~/models/request-meta';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '~/models/socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '~/models/websocket-request';
 import { useRootLoaderData } from '~/root';
@@ -130,6 +121,9 @@ import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/gr
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 
+const { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequest, isRequestId } = models.request;
+const { isRequestGroup, isRequestGroupId } = models.requestGroup;
+
 export interface GrpcMessage {
   id: string;
   text: string;
@@ -173,7 +167,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
     const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
-    const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
+    const activeRequest = activeRequestId ? await services.request.getById(activeRequestId) : null;
     // TODO(george): we should remove this after enabling the sidebar for the runner
     const startOfQuery = request.url.indexOf('?');
     const urlWithoutQuery = startOfQuery > 0 ? request.url.slice(0, startOfQuery) : request.url;
@@ -398,7 +392,7 @@ const Debug = () => {
       if (requestId) {
         const meta = models.grpcRequest.isGrpcRequestId(requestId)
           ? await services.grpcRequestMeta.getByParentId(requestId)
-          : await getRequestMetaByParentId(requestId);
+          : await services.requestMeta.getByParentId(requestId);
         patchRequestMeta(requestId, { pinned: !meta?.pinned });
       }
     },

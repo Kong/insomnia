@@ -1,8 +1,9 @@
+import type { RequestHeader } from '~/insomnia-data';
+
 import allCharsets from '../datasets/charsets';
 import allMimeTypes from '../datasets/content-types';
 import allEncodings from '../datasets/encodings';
 import allHeaderNames from '../datasets/header-names';
-import type { RequestHeader } from '../models/request';
 
 export const SINGLE_VALUE_HEADERS = [
   'proxy-authorization',

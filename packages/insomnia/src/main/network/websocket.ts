@@ -12,15 +12,13 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
-import type { CookieJar } from '~/insomnia-data';
+import type { CookieJar, Request, RequestAuthentication, RequestHeader } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
 import * as models from '../../models';
-import type { Request } from '../../models/request';
-import { type RequestAuthentication, type RequestHeader } from '../../models/request';
 import { type BaseWebSocketRequest, isWebSocketRequest } from '../../models/websocket-request';
 import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
@@ -149,7 +147,7 @@ const openWebSocketConnection = async (
   }
 
   const request = options.isGraphqlSubscriptionRequest
-    ? await models.request.getById(options.requestId)
+    ? await services.request.getById(options.requestId)
     : await webSocketRequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
@@ -322,7 +320,7 @@ const openWebSocketConnection = async (
 
       const settings = await services.settings.get();
       const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
       if (request.settingStoreCookies) {
         const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
@@ -378,7 +376,7 @@ const openWebSocketConnection = async (
       };
       const settings = await services.settings.get();
       const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
       deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
     });
 
@@ -522,7 +520,7 @@ const createErrorResponse = async (
     error: message,
   };
   const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const deleteRequestMaps = async (

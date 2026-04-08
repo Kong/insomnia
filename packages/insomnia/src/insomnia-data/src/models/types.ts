@@ -38,6 +38,34 @@ export type { Environment, EnvironmentKvPairData, UserUploadEnvironment } from '
 // Keep these enums in the shared entrypoint: unlike type-only exports, enums also exist at runtime,
 // so they must be re-exported as values here to preserve a single import path for both type and value usage.
 export { EnvironmentType, EnvironmentKvPairDataType } from './environment';
+export type {
+  AuthTypeAPIKey,
+  AuthTypeAsap,
+  AuthTypeAwsIam,
+  AuthTypeBasic,
+  AuthTypeBearer,
+  AuthTypeDigest,
+  AuthTypeHawk,
+  AuthTypeNetrc,
+  AuthTypeNone,
+  AuthTypeNTLM,
+  AuthTypeOAuth1,
+  AuthTypeOAuth2,
+  AuthTypeSingleToken,
+  OAuth2ResponseType,
+  Request,
+  RequestAuthentication,
+  RequestBody,
+  RequestBodyParameter,
+  RequestHeader,
+  RequestParameter,
+  RequestPathParameter,
+} from './request';
+export type { RequestGroup } from './request-group';
+export type { RequestGroupMeta } from './request-group-meta';
+export type { BaseRequestMeta, RequestAccordionKeys, RequestMeta } from './request-meta';
+export type { RequestVersion } from './request-version';
+export type { Compression, Response, ResponseHeader } from './response';
 export type { McpRequest, McpTransportType, McpServerPrimitiveTypes } from './mcp-request';
 export type { McpPayload } from './mcp-payload';
 export type { McpResponse } from './mcp-response';

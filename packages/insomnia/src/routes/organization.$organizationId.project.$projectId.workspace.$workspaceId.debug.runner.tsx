@@ -70,7 +70,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
   const responsesInfo = testResult.responsesInfo;
 
   for (const respInfo of responsesInfo) {
-    const resp = await models.response.getById(respInfo.responseId);
+    const resp = await services.response.getById(respInfo.responseId);
 
     if (resp) {
       const timeline = getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
@@ -1031,7 +1031,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
           });
 
-          const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(targetRequest.id, {
+          const activeRequestMeta = await services.requestMeta.updateOrCreateByParentId(targetRequest.id, {
             lastActive: Date.now(),
           });
           invariant(activeRequestMeta, 'Request meta not found');

@@ -13,6 +13,11 @@ import type {
   MockRoute,
   MockServer,
   Project,
+  Request,
+  RequestAuthentication,
+  RequestGroup,
+  RequestHeader,
+  RequestParameter,
   Settings,
   UserUploadEnvironment,
   Workspace,
@@ -33,15 +38,6 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import {
-  type BaseRequest,
-  isRequest,
-  type Request,
-  type RequestAuthentication,
-  type RequestHeader,
-  type RequestParameter,
-} from '../models/request';
-import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import * as pluginApp from '../plugins/context/app';
@@ -62,6 +58,9 @@ import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 export interface SendActionRuntime {
   appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
@@ -95,7 +94,7 @@ export function getOrInheritHeaders({
   request,
   requestGroups,
 }: {
-  request: Pick<BaseRequest, 'headers'>;
+  request: Pick<Request, 'headers'>;
   requestGroups: Pick<RequestGroup, 'headers'>[];
 }): RequestHeader[] {
   const httpHeaders = new Map<string, string>();
@@ -128,7 +127,7 @@ export function getOrInheritHeaders({
 }
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
 export const fetchRequestGroupData = async (requestGroupId: string) => {
-  const requestGroup = await models.requestGroup.getById(requestGroupId);
+  const requestGroup = await services.requestGroup.getById(requestGroupId);
   invariant(requestGroup, 'failed to find requestGroup ' + requestGroupId);
   const ancestors = await db.withAncestors<RequestGroup | Workspace | MockRoute | MockServer>(requestGroup, [
     models.requestGroup.type,
@@ -169,7 +168,7 @@ export const fetchRequestData = async (
   // Override the active environment id to use for the request
   overrideEnvironmentId?: string,
 ) => {
-  const request = await models.request.getById(requestId);
+  const request = await services.request.getById(requestId);
   invariant(request, 'failed to find request ' + requestId);
   const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | Project | MockRoute | MockServer>(
     request,
@@ -478,7 +477,7 @@ export async function savePatchesMadeByScript(patches: {
   mutatedContext.parentFolders.forEach(mutatedFolder => {
     const originalFolder = originalRequestGroups.find(originalFolder => originalFolder._id === mutatedFolder.id);
     if (originalFolder) {
-      models.requestGroup.update(originalFolder, {
+      services.requestGroup.update(originalFolder, {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {

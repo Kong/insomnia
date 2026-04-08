@@ -4,7 +4,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { Environment } from '~/insomnia-data';
+import type { Environment, RequestPathParameter } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -13,7 +13,6 @@ import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-edito
 
 import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
-import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import {
@@ -45,6 +44,7 @@ import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { Pane } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar, type WebSocketActionBarHandle } from './action-bar';
+const { getCombinedPathParametersFromUrl } = models.request;
 
 const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
 

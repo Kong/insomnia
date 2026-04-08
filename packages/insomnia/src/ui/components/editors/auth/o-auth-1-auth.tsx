@@ -1,6 +1,7 @@
 import React, { type FC } from 'react';
 
-import type { AuthTypeOAuth1 } from '../../../../models/request';
+import type { AuthTypeOAuth1 } from '~/insomnia-data';
+
 import {
   type OAuth1SignatureMethod,
   SIGNATURE_METHOD_HMAC_SHA1,

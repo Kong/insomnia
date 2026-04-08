@@ -2,12 +2,10 @@ import type { Organization } from 'insomnia-api';
 
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
-import type { Environment, GrpcRequest, Project, Workspace } from '~/insomnia-data';
+import type { Environment, GrpcRequest, Project, Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { environment, grpcRequest, project, request, requestGroup, webSocketRequest, workspace } from '~/models';
 import { isScratchpadOrganizationId } from '~/models/organization';
-import type { Request } from '~/models/request';
-import type { RequestGroup } from '~/models/request-group';
 import type { WebSocketRequest } from '~/models/websocket-request';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';

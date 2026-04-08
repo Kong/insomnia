@@ -18,7 +18,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
       _id: 'wrk_1',
       name: 'Workspace 1',
     });
-    const req1 = await models.request.create({
+    const req1 = await services.request.create({
       _id: 'req_1',
       name: 'Request 1',
       parentId: wrk1._id,
@@ -30,7 +30,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
       ],
       metaSortKey: 0,
     });
-    const req2 = await models.request.create({
+    const req2 = await services.request.create({
       _id: 'req_2',
       name: 'Request 2',
       parentId: wrk1._id,
@@ -57,7 +57,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
       _id: 'wrk_2',
       name: 'Workspace 2',
     });
-    await models.request.create({
+    await services.request.create({
       _id: 'req_3',
       name: 'Request 3',
       parentId: wrk2._id,
@@ -121,7 +121,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
       _id: 'wrk_2',
       name: 'Workspace 2',
     });
-    await models.request.create({
+    await services.request.create({
       _id: 'req_1',
       name: 'Request 1',
       parentId: wrk1._id,
@@ -132,7 +132,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
         },
       ],
     });
-    await models.request.create({
+    await services.request.create({
       _id: 'req_2',
       name: 'Request 2',
       parentId: wrk2._id,

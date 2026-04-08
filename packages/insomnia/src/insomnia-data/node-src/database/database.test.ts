@@ -37,8 +37,8 @@ describe('onChange()', () => {
     };
 
     db.onChange(callback);
-    const newDoc = await models.request.create(doc);
-    const updatedDoc = await models.request.update(newDoc, {
+    const newDoc = await services.request.create(doc);
+    const updatedDoc = await services.request.update(newDoc, {
       name: 'bar',
     });
     expect(changesSeen).toEqual([[['insert', newDoc, []]], [['update', updatedDoc, [{ name: 'bar' }]]]]);
@@ -60,9 +60,9 @@ describe('bufferChanges()', () => {
 
     db.onChange(callback);
     await db.bufferChanges();
-    const newDoc = await models.request.create(doc);
+    const newDoc = await services.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc);
+    const updatedDoc = await services.request.update(newDoc);
     // Assert no change seen before flush
     expect(changesSeen.length).toBe(0);
     // Assert changes seen after flush
@@ -97,9 +97,9 @@ describe('bufferChanges()', () => {
 
     db.onChange(callback);
     await db.bufferChanges();
-    const newDoc = await models.request.create(doc);
+    const newDoc = await services.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc);
+    const updatedDoc = await services.request.update(newDoc);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
     expect(changesSeen).toEqual([
@@ -124,9 +124,9 @@ describe('bufferChanges()', () => {
 
     db.onChange(callback);
     await db.bufferChanges(500);
-    const newDoc = await models.request.create(doc);
+    const newDoc = await services.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc);
+    const updatedDoc = await services.request.update(newDoc);
     await new Promise(resolve => setTimeout(resolve, 1000));
     expect(changesSeen).toEqual([
       [
@@ -152,9 +152,9 @@ describe('bufferChangesIndefinitely()', () => {
 
     db.onChange(callback);
     await db.bufferChangesIndefinitely();
-    const newDoc = await models.request.create(doc);
+    const newDoc = await services.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc);
+    const updatedDoc = await services.request.update(newDoc);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
     // Assert no change seen before flush
@@ -177,7 +177,7 @@ describe('requestCreate()', () => {
       name: 'My Request',
       parentId: 'wrk_123',
     };
-    const r = await models.request.create(patch);
+    const r = await services.request.create(patch);
     expect(Object.keys(r).length).toBe(24);
     expect(r._id).toMatch(/^req_[a-zA-Z0-9]{32}$/);
     expect(r.created).toBeGreaterThanOrEqual(now);
@@ -196,7 +196,7 @@ describe('requestCreate()', () => {
 
   it('throws when missing parentID', () => {
     const fn = () =>
-      models.request.create({
+      services.request.create({
         name: 'My Request',
       });
 
@@ -623,13 +623,13 @@ describe('duplicate()', () => {
 
   it('should rewrite chained request references when duplicating a folder', async () => {
     const workspace = await services.workspace.create({ name: 'Workspace' });
-    const folder = await models.requestGroup.create({ parentId: workspace._id, name: 'Folder' });
-    const req1 = await models.request.create({
+    const folder = await services.requestGroup.create({ parentId: workspace._id, name: 'Folder' });
+    const req1 = await services.request.create({
       parentId: folder._id,
       name: 'Request 1',
       url: 'https://example.com/first',
     });
-    const req2 = await models.request.create({
+    const req2 = await services.request.create({
       parentId: folder._id,
       name: 'Request 2',
       url: `https://example.com/{% response 'body', '${req1._id}', 'b64::JC5pZA==::46b', 'never', 60 %}`,
@@ -678,16 +678,16 @@ describe('withAncestors()', () => {
     const wrk = await services.workspace.create({
       parentId: spc._id,
     });
-    const wrkReq = await models.request.create({
+    const wrkReq = await services.request.create({
       parentId: wrk._id,
     });
     const wrkGrpcReq = await services.grpcRequest.create({
       parentId: wrk._id,
     });
-    const grp = await models.requestGroup.create({
+    const grp = await services.requestGroup.create({
       parentId: wrk._id,
     });
-    const grpReq = await models.request.create({
+    const grpReq = await services.request.create({
       parentId: grp._id,
     });
     const grpGrpcReq = await services.grpcRequest.create({
@@ -755,19 +755,19 @@ describe('getWithDescendants()', () => {
         },
       ],
     });
-    const folder1 = await models.requestGroup.create({
+    const folder1 = await services.requestGroup.create({
       _id: 'grp1',
       parentId: workspace._id,
     });
-    const folder2 = await models.requestGroup.create({
+    const folder2 = await services.requestGroup.create({
       _id: 'grp2',
       parentId: folder1._id,
     });
-    const request1 = await models.request.create({
+    const request1 = await services.request.create({
       _id: 'req1',
       parentId: workspace._id,
     });
-    const request2 = await models.request.create({
+    const request2 = await services.request.create({
       _id: 'req2',
       parentId: folder1._id,
     });

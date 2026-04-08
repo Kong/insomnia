@@ -1,7 +1,7 @@
 import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
-import type { RequestParameter } from '~/models/request';
+import type { RequestParameter } from '~/insomnia-data';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
