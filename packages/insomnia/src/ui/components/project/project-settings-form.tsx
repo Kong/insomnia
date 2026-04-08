@@ -191,19 +191,21 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [canFetchEmails, selectedCredential, emailsFetcher]);
 
+  const validateCredentialsFetcherLoad = validateCredentialsFetcher.load;
+
   // Load credentials data (and surface auth errors) for HTTP 4xx fallback when expiresAt is unknown.
+  // No data guard here so that a project ID change always re-fetches fresh data.
   useEffect(() => {
-    if (
-      showGitConnectionInfo &&
-      gitRepository?.uri &&
-      gitRepository?._id &&
-      project?._id &&
-      validateCredentialsFetcher.state === 'idle' &&
-      !validateCredentialsFetcher.data
-    ) {
-      validateCredentialsFetcher.load({ projectId: project._id });
+    if (showGitConnectionInfo && gitRepository?.uri && gitRepository?._id && project?._id) {
+      validateCredentialsFetcherLoad({ projectId: project._id });
     }
-  }, [showGitConnectionInfo, gitRepository?.uri, gitRepository?._id, project?._id, validateCredentialsFetcher]);
+  }, [
+    showGitConnectionInfo,
+    gitRepository?.uri,
+    gitRepository?._id,
+    project?._id,
+    validateCredentialsFetcherLoad,
+  ]);
 
   const credentialsValidationErrors =
     validateCredentialsFetcher.data && 'errors' in validateCredentialsFetcher.data
