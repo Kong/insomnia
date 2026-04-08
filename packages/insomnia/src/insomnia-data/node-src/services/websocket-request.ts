@@ -1,7 +1,6 @@
-import type { WebSocketRequest } from '~/insomnia-data';
-import * as models from '~/models';
-
 import { database } from '../../src/database';
+import { models } from '../../src/models';
+import { type WebSocketRequest } from '../../src/models/types';
 
 const { type, name } = models.webSocketRequest;
 
