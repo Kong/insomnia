@@ -158,7 +158,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   const showRepoPath =
     storageType === 'git' &&
     !isSwitchingStorageType(project!, storageType) &&
-    project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
+    project?.gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID &&
     Boolean(gitRepository?._id);
 
   const repoPath = showRepoPath
