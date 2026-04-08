@@ -63,7 +63,7 @@ export type {
 } from './request';
 export type { RequestGroup } from './request-group';
 export type { RequestGroupMeta } from './request-group-meta';
-export type { BaseRequestMeta, RequestAccordionKeys, RequestMeta } from './request-meta';
+export type { RequestAccordionKeys, RequestMeta } from './request-meta';
 export type { RequestVersion } from './request-version';
 export type { Compression, Response, ResponseHeader } from './response';
 export type { McpRequest, McpTransportType, McpServerPrimitiveTypes } from './mcp-request';

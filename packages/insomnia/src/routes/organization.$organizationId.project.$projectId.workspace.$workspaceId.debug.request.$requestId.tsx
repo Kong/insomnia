@@ -28,7 +28,6 @@ import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 export default Outlet;
-
 export interface WebSocketRequestLoaderData {
   activeRequest: WebSocketRequest;
   activeRequestMeta: RequestMeta;

@@ -18,8 +18,7 @@ import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { Environment, Request, RequestGroup, UserUploadEnvironment, Workspace } from '~/insomnia-data';
-import { initServices } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import { initServices, models } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 
 import type { RequestTestResult } from '../../insomnia-scripting-environment/src/objects';

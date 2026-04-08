@@ -1,3 +1,18 @@
+/**
+ * Request Model Definition
+ *
+ * This module defines the Request model for Insomnia, including all authentication types,
+ * request body types, and validation logic. It handles HTTP requests, WebSocket requests,
+ * and other request types with comprehensive authentication support.
+ *
+ * Key responsibilities:
+ * - Define request data structure and validation
+ * - Support multiple authentication methods (OAuth, Basic, API Key, etc.)
+ * - Handle different request body types (JSON, form data, raw text)
+ * - Provide GraphQL operation type detection
+ *
+ */
+
 import { OperationTypeNode } from 'graphql';
 
 import { CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET } from '~/common/constants';

@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
-import { EnvironmentType } from '~/insomnia-data';
+import { EnvironmentType, services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';

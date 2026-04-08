@@ -3,9 +3,9 @@ import { database as db } from '~/insomnia-data';
 import * as models from '~/models';
 
 const { type } = models.stats;
+const { isRequest } = models.request;
 const { isWebSocketRequest } = models.webSocketRequest;
 const { isSocketIORequest } = models.socketIORequest;
-const { isRequest } = models.request;
 
 export function create(patch: Partial<Stats> = {}) {
   return db.docCreate<Stats>(type, patch);
