@@ -674,6 +674,7 @@ export async function getRenderedRequestAndContext({
       url: renderedRequest.url,
       preRequestScript: renderedRequest.preRequestScript,
       afterResponseScript: renderedRequest.afterResponseScript,
+      konnectRouteKey: renderedRequest.konnectRouteKey,
     },
   };
 }

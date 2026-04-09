@@ -51,7 +51,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 }
 
 const Component = () => {
-  const { projects, projectsCount } = useLoaderData() as ProjectIndexLoaderData;
+  const { projects } = useLoaderData() as ProjectIndexLoaderData;
 
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -118,7 +118,6 @@ const Component = () => {
               <ProjectListSidebar
                 organizationId={organizationId}
                 projects={projectsWithPresence}
-                projectsCount={projectsCount}
                 storageRules={storageRules}
                 onCreateProject={() => setIsNewProjectModalOpen(true)}
               />

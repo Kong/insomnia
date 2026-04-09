@@ -7,8 +7,10 @@ import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
+import { KonnectSettings } from '~/ui/components/settings/konnect-settings';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
+import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -27,7 +29,7 @@ export interface SettingsModalHandle {
   show: (options?: { tab?: SettingsModalTabKey }) => void;
 }
 
-type SettingsModalTabKey = 'data' | 'keyboard' | 'themes' | 'plugins' | 'general' | 'proxy' | 'credentials' | 'ai';
+type SettingsModalTabKey = 'data' | 'keyboard' | 'themes' | 'plugins' | 'general' | 'proxy' | 'credentials' | 'ai' | 'konnect';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
@@ -35,6 +37,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
 
+  const { features } = useOrganizationPermissions();
   const [shouldShowAiSettingsTab, setShouldShowAiSettingsTab] = useState(false);
 
   useEffect(() => {
@@ -144,6 +147,14 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
                 AI Settings
               </Tab>
             )}
+            {features.konnectSync.enabled && (
+              <Tab
+                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                id="konnect"
+              >
+                Konnect
+              </Tab>
+            )}
           </TabList>
           <TabPanel className="h-full w-full overflow-y-auto" id="general">
             <General />
@@ -202,6 +213,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           {shouldShowAiSettingsTab && (
             <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="ai">
               <AISettings />
+            </TabPanel>
+          )}
+          {features.konnectSync.enabled && (
+            <TabPanel className="h-full w-full overflow-y-auto" id="konnect">
+              <KonnectSettings />
             </TabPanel>
           )}
         </Tabs>

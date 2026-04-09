@@ -438,7 +438,6 @@ const Component = () => {
     mockServersCount,
     mcpClientsCount,
     documentsCount,
-    projectsCount,
     learningFeaturePromise,
     remoteFilesPromise,
     projectsSyncStatusPromise,
@@ -792,7 +791,6 @@ const Component = () => {
                 organizationId={organizationId}
                 activeProjectId={activeProject?._id}
                 projects={projectsWithPresence}
-                projectsCount={projectsCount}
                 storageRules={storageRules}
                 onCreateProject={() => setIsNewProjectModalOpen(true)}
               />

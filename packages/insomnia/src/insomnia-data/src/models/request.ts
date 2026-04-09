@@ -290,6 +290,7 @@ export interface BaseRequest {
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
+  konnectRouteKey: string | null;
 }
 
 export type Request = BaseModel & BaseRequest;
@@ -325,6 +326,7 @@ export function init(): BaseRequest {
     settingEncodeUrl: true,
     settingRebuildPath: true,
     settingFollowRedirects: 'global',
+    konnectRouteKey: null,
   };
 }
 
@@ -345,5 +347,6 @@ export function rewriteReferences(request: Request, idMapping: Map<string, strin
       ],
       idMapping,
     ),
+    konnectRouteKey: null,
   };
 }

@@ -308,6 +308,7 @@ function getWorkspace(file: InsomniaFile): WithExportType<Workspace> {
     name: file.name || 'Imported Collection',
     parentId: '',
     scope: insomniaSchemaTypeToScope(file.type),
+    konnectServiceId: null,
   };
 }
 
@@ -558,6 +559,7 @@ function getCollection(
             afterResponseScript: item.scripts?.afterResponse || '',
             pathParameters: item.pathParameters || [],
             metaSortKey: item.meta?.sortKey ?? 0,
+            konnectRouteKey: null,
           };
 
           resources.push(request);
@@ -584,6 +586,7 @@ function getCollection(
               module: '',
             },
             protoFileId: item.protoFileId || '',
+            konnectRouteKey: null,
           };
 
           resources.push(grpcRequest);
@@ -611,6 +614,7 @@ function getCollection(
               settingSendCookies: data.settings.cookies.send,
               settingStoreCookies: data.settings.cookies.store,
               pathParameters: data.pathParameters || [],
+              konnectRouteKey: null,
             };
 
             resources.push(websocketRequest);
