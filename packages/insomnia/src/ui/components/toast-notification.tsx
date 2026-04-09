@@ -27,9 +27,12 @@ export interface RAToastContent {
 export const queue = new ToastQueue<RAToastContent>({
   // Wrap state updates in a CSS view transition.
   wrapUpdate(fn) {
-    if ('startViewTransition' in document) {
-      document.startViewTransition(() => {
+    if ('startViewTransition' in document && document.visibilityState === 'visible') {
+      const transition = document.startViewTransition(() => {
         flushSync(fn);
+      });
+      transition.ready.catch(error => {
+        console.warn('Transition error:', error.message);
       });
     } else {
       fn();
