@@ -321,7 +321,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 repoLoadErrors={credentialsValidationErrors}
                 provider={selectedProvider}
               />
-              {showEmailSelector && !credentialsValidationErrors ? (
+              {showEmailSelector && !credentialsValidationErrors?.length ? (
                 <div className="flex flex-col gap-2">
                   {isLoadingEmails ? (
                     <div className="flex items-center gap-2 text-sm">
@@ -399,7 +399,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                     </div>
                   )}
                 </div>
-              ) : selectedCredential?.author.email && !credentialsValidationErrors ? (
+              ) : selectedCredential?.author.email && !credentialsValidationErrors?.length ? (
                 <div className="text-[12px]">
                   <div className="flex">
                     <div className="w-[110px] font-semibold">Author Email</div>
