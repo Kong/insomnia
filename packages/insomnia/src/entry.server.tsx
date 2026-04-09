@@ -1,15 +1,11 @@
-import { PassThrough } from 'node:stream';
-
-import { createReadableStreamFromReadable } from '@react-router/node';
 import { isbot } from 'isbot';
-import type { RenderToPipeableStreamOptions } from 'react-dom/server';
-import { renderToPipeableStream } from 'react-dom/server';
+import { renderToReadableStream } from 'react-dom/server.browser';
 import type { EntryContext } from 'react-router';
 import { ServerRouter } from 'react-router';
 
 export const streamTimeout = 5000;
 
-export default function handleRequest(
+export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
@@ -18,48 +14,30 @@ export default function handleRequest(
   // If you have middleware enabled:
   // loadContext: unstable_RouterContextProvider
 ) {
-  return new Promise((resolve, reject) => {
-    let shellRendered = false;
-    const userAgent = request.headers.get('user-agent');
+  const userAgent = request.headers.get('user-agent');
+  const isBotOrSpa = (userAgent && isbot(userAgent)) || routerContext.isSpaMode;
 
-    // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
-    // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
-    const readyOption: keyof RenderToPipeableStreamOptions =
-      (userAgent && isbot(userAgent)) || routerContext.isSpaMode ? 'onAllReady' : 'onShellReady';
+  const abortController = new AbortController();
+  setTimeout(() => abortController.abort(), streamTimeout + 1000);
 
-    const { pipe, abort } = renderToPipeableStream(<ServerRouter context={routerContext} url={request.url} />, {
-      [readyOption]() {
-        shellRendered = true;
-        const body = new PassThrough();
-        const stream = createReadableStreamFromReadable(body);
+  const stream = await renderToReadableStream(<ServerRouter context={routerContext} url={request.url} />, {
+    signal: abortController.signal,
+    onError(error: unknown) {
+      responseStatusCode = 500;
+      console.error(error);
+    },
+  });
 
-        responseHeaders.set('Content-Type', 'text/html');
+  // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
+  // https://react.dev/reference/react-dom/server/renderToReadableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
+  if (isBotOrSpa) {
+    await stream.allReady;
+  }
 
-        resolve(
-          new Response(stream, {
-            headers: responseHeaders,
-            status: responseStatusCode,
-          }),
-        );
+  responseHeaders.set('Content-Type', 'text/html');
 
-        pipe(body);
-      },
-      onShellError(error: unknown) {
-        reject(error);
-      },
-      onError(error: unknown) {
-        responseStatusCode = 500;
-        // Log streaming rendering errors from inside the shell.  Don't log
-        // errors encountered during initial shell rendering since they'll
-        // reject and get logged in handleDocumentRequest.
-        if (shellRendered) {
-          console.error(error);
-        }
-      },
-    });
-
-    // Abort the rendering stream after the `streamTimeout` so it has time to
-    // flush down the rejected boundaries
-    setTimeout(abort, streamTimeout + 1000);
+  return new Response(stream, {
+    headers: responseHeaders,
+    status: responseStatusCode,
   });
 }
