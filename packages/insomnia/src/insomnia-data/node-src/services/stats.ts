@@ -1,6 +1,5 @@
 import type { Project, RequestGroup, Stats, Workspace } from '~/insomnia-data';
-import { database as db } from '~/insomnia-data';
-import * as models from '~/models';
+import { database as db, models } from '~/insomnia-data';
 
 const { type } = models.stats;
 const { isRequest } = models.request;

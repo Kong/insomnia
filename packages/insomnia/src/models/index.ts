@@ -1,9 +1,6 @@
 import { models } from '~/insomnia-data';
 import type { AllTypes, BaseModel } from '~/models/types';
 
-import { generateId } from '../common/misc';
-import { typedKeys } from '../utils';
-
 export type { AllTypes, BaseModel };
 // Reference to each model
 export const apiSpec = models.apiSpec;
@@ -49,57 +46,8 @@ export const mcpRequest = models.mcpRequest;
 export const mcpPayload = models.mcpPayload;
 export const mcpResponse = models.mcpResponse;
 
-export function all() {
-  // NOTE: This list should be from most to least specific (ie. parents above children)
-  // For example, stats, settings, project and workspace are global models, with project and workspace being the top-most parents,
-  // so they must be at the top
-  return [
-    stats,
-    settings,
-    project,
-    workspace,
-    workspaceMeta,
-    environment,
-    gitCredentials,
-    gitRepository,
-    cookieJar,
-    apiSpec,
-    requestGroup,
-    requestGroupMeta,
-    request,
-    requestVersion,
-    requestMeta,
-    response,
-    mockServer,
-    mockRoute,
-    oAuth2Token,
-    caCertificate,
-    clientCertificate,
-    pluginData,
-    unitTestSuite,
-    unitTestResult,
-    unitTest,
-    protoFile,
-    protoDirectory,
-    grpcRequest,
-    grpcRequestMeta,
-    runnerTestResult,
-    webSocketPayload,
-    webSocketRequest,
-    webSocketResponse,
-    userSession,
-    socketIORequest,
-    socketIOPayload,
-    socketIOResponse,
-    cloudCredential,
-    mcpRequest,
-    mcpResponse,
-    mcpPayload,
-  ] as const;
-}
-export function types() {
-  return all().map(model => model.type);
-}
+export const all = models.all;
+export const types = models.types;
 export const isValidType = (type: string): type is AllTypes => {
   return types().includes(type as AllTypes);
 };
@@ -142,51 +90,6 @@ export function rewriteReferences<T extends BaseModel>(doc: T, idMapping: Map<st
   return 'rewriteReferences' in model
     ? (model.rewriteReferences as unknown as (doc: T, idMapping: Map<string, string>) => T)(doc, idMapping)
     : doc;
-}
-
-export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
-  const model = getModel(type);
-
-  if (!model) {
-    const choices = all()
-      .map(m => m.type)
-      .join(', ');
-    throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
-  }
-
-  // Define global default fields
-  const objectDefaults = Object.assign(
-    {},
-    {
-      _id: null,
-      type: type,
-      parentId: null,
-      modified: Date.now(),
-      created: Date.now(),
-    },
-    model.init(),
-  );
-  const fullObject = Object.assign({}, objectDefaults, ...sources);
-
-  // Generate an _id if there isn't one yet
-  if (!fullObject._id) {
-    fullObject._id = generateId(model.prefix);
-  }
-
-  // Migrate the model
-  // NOTE: Do migration before pruning because we might need to look at those fields
-  const migratedDoc = ('migrate' in model ? model.migrate : (doc: T) => doc)(fullObject);
-  // optional keys do not generated in init method but should allow update.
-  // If we put those keys in init method, all related models will show as modified in git sync.
-  const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
-  // Prune extra keys from doc
-  for (const key of typedKeys(migratedDoc)) {
-    if (!(key in objectDefaults) && !modelOptionalKeys.includes(key)) {
-      delete migratedDoc[key];
-    }
-  }
-
-  return migratedDoc as T;
 }
 
 // Use function instead of object to avoid issues with circular dependencies

@@ -1,8 +1,7 @@
-import * as models from '~/models';
+import type { SocketIOResponse } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
 
-import { database as db } from '../../src/database';
-import { type SocketIOResponse } from '../../src/models/types';
 import * as requestVersionService from './request-version';
 import * as settingsService from './settings';
 

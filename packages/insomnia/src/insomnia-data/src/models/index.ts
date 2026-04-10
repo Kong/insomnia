@@ -1,86 +1,23 @@
 // models - export models that define the structure of the data and any related functions such as init, type guards
-import * as apiSpec from './api-spec';
-import * as caCertificate from './ca-certificate';
-import * as clientCertificate from './client-certificate';
-import * as cloudCredential from './cloud-credential';
-import * as cookieJar from './cookie-jar';
-import * as environment from './environment';
-import * as gitCredentials from './git-credentials';
-import * as gitRepository from './git-repository';
-import * as grpcRequest from './grpc-request';
-import * as grpcRequestMeta from './grpc-request-meta';
-import * as mcpPayload from './mcp-payload';
-import * as mcpRequest from './mcp-request';
-import * as mcpResponse from './mcp-response';
-import * as mockRoute from './mock-route';
-import * as mockServer from './mock-server';
-import * as oAuth2Token from './o-auth-2-token';
-import * as pluginData from './plugin-data';
-import * as project from './project';
-import * as protoDirectory from './proto-directory';
-import * as protoFile from './proto-file';
-import * as request from './request';
-import * as requestGroup from './request-group';
-import * as requestGroupMeta from './request-group-meta';
-import * as requestMeta from './request-meta';
-import * as requestVersion from './request-version';
-import * as response from './response';
-import * as runnerTestResult from './runner-test-result';
-import * as settings from './settings';
-import * as socketIOPayload from './socket-io-payload';
-import * as socketIORequest from './socket-io-request';
-import * as socketIOResponse from './socket-io-response';
-import * as stats from './stats';
-import * as unitTest from './unit-test';
-import * as unitTestResult from './unit-test-result';
-import * as unitTestSuite from './unit-test-suite';
-import * as userSession from './user-session';
-import * as webSocketPayload from './websocket-payload';
-import * as webSocketRequest from './websocket-request';
-import * as webSocketResponse from './websocket-response';
-import * as workspace from './workspace';
-import * as workspaceMeta from './workspace-meta';
+import * as dbModels from './db-models';
 
-export const models = {
-  apiSpec,
-  caCertificate,
-  clientCertificate,
-  cloudCredential,
-  gitCredentials,
-  gitRepository,
-  mcpPayload,
-  cookieJar,
-  environment,
-  mcpRequest,
-  mcpResponse,
-  oAuth2Token,
-  pluginData,
-  protoDirectory,
-  protoFile,
-  request,
-  requestGroup,
-  requestGroupMeta,
-  requestMeta,
-  requestVersion,
-  response,
-  runnerTestResult,
-  project,
-  settings,
-  stats,
-  userSession,
-  grpcRequest,
-  grpcRequestMeta,
-  workspace,
-  workspaceMeta,
-  mockRoute,
-  mockServer,
-  unitTest,
-  unitTestResult,
-  unitTestSuite,
-  socketIOPayload,
-  socketIORequest,
-  socketIOResponse,
-  webSocketPayload,
-  webSocketRequest,
-  webSocketResponse,
-} as const;
+export * from './db-models';
+
+// Type assertion to ensure dbModels has the expected structure
+dbModels satisfies Record<
+  string,
+  {
+    type: string;
+    name: string;
+    prefix: string;
+    optionalKeys?: string[];
+    canDuplicate: boolean;
+    canSync?: boolean;
+    init: () => unknown;
+    rewriteReferences?: (doc: any, idMapping: Map<string, string>) => any;
+  }
+>;
+
+export const all = () => Object.values(dbModels);
+
+export const types = () => all().map(model => model.type);
