@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /**
  * @typedef {Object} SerializableRequest
  * @property {string} url
