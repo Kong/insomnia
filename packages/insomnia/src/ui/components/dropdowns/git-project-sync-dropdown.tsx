@@ -174,7 +174,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
             title: 'Push failed',
             description: (
               <span>
-                Authentication is required.{' '}
+                Connection has expired.{' '}
                 <button
                   className="underline hover:opacity-70"
                   onClick={() => {
@@ -182,7 +182,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                     showSettingsModal({ tab: 'credentials' });
                   }}
                 >
-                  Fix credentials
+                  Re-authenticate
                 </button>
               </span>
             ),
@@ -251,7 +251,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
             title: 'Fetch failed',
             description: (
               <span>
-                Authentication is required.{' '}
+                Connection has expired.{' '}
                 <button
                   className="underline hover:opacity-70"
                   onClick={() => {
@@ -259,7 +259,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                     showSettingsModal({ tab: 'credentials' });
                   }}
                 >
-                  Fix credentials
+                  Re-authenticate
                 </button>
               </span>
             ),
@@ -365,7 +365,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               title: 'Pull failed',
               description: (
                 <span>
-                  Authentication is required.{' '}
+                  Connection has expired.{' '}
                   <button
                     className="underline hover:opacity-70"
                     onClick={() => {
@@ -373,7 +373,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                       showSettingsModal({ tab: 'credentials' });
                     }}
                   >
-                    Fix credentials
+                    Re-authenticate
                   </button>
                 </span>
               ),
