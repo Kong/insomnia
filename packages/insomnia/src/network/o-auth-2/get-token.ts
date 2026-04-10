@@ -434,7 +434,8 @@ const sendAccessTokenRequest = async (
   if (!settings.disableAppVersionUserAgent) {
     defaultHeaders.push(defaultUserAgentHeader);
   }
-  const newRequest: Request = await services.request.create({
+  const newRequest: Request = {
+    ...models.request.init(),
     // Do not inherit authentication from parent request or group since this is a special request
     authentication: {
       type: 'none',
@@ -449,7 +450,10 @@ const sendAccessTokenRequest = async (
     },
     _id: requestOrGroupId + '.other',
     parentId: requestOrGroupId,
-  });
+    type: models.request.type,
+    modified: Date.now(),
+    created: Date.now(),
+  };
 
   const renderResult = await tryToInterpolateRequest({ request: newRequest, environment: environment._id });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
