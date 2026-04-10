@@ -76,13 +76,13 @@ export const GitOauthAuthBanner: FC<{
     <div className="flex flex-col gap-2">
       <Banner
         type="warning"
-        className="bg-[rgba(var(--color-danger-rgb),0.5)] p-2 text-(--color-font-danger)"
+        className="gap-2 bg-[rgba(var(--color-danger-rgb),0.5)] p-2 text-(--color-font-danger)"
         message={
           <span>
             This connection has expired.{' '}
             <Button
               type="button"
-              className="inline cursor-pointer border-0 bg-transparent p-0 text-(--color-surprise) underline"
+              className="inline cursor-pointer border-0 bg-transparent p-0 underline"
               onPress={() => {
                 setIsReauthModalOpen(true);
                 setError('');
