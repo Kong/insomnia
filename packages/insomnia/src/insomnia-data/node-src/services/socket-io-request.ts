@@ -1,4 +1,4 @@
-import type { SocketIORequest  } from '~/insomnia-data';
+import type { SocketIORequest } from '~/insomnia-data';
 import { database, models } from '~/insomnia-data';
 
 const { type, name } = models.socketIORequest;

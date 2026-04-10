@@ -1,10 +1,10 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { BaseModel } from '../../../models';
-import * as models from '../../../models';
+import { models, services } from '~/insomnia-data';
+import type { BaseModel } from '~/models';
+
 import type { ChangeBufferEvent } from '../..';
 import { database as db } from '../..';
-import { services } from '../../src/services';
 import * as workspaceInitModel from './init-model/workspace';
 import { repairDatabase } from './repair-database';
 
@@ -650,7 +650,7 @@ describe('duplicate()', () => {
     expect(dupReq2!.url).toContain("{% response 'body',");
 
     // Original should be unchanged
-    const originalReq2 = await db.findOne<typeof req2>(models.request.type, { _id: req2._id });
+    const originalReq2 = await db.findOne(models.request.type, { _id: req2._id });
     expect(originalReq2!.url).toContain(req1._id);
   });
 });

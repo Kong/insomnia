@@ -1,4 +1,4 @@
-import type { UserSession  } from '~/insomnia-data';
+import type { UserSession } from '~/insomnia-data';
 import { database as db, models } from '~/insomnia-data';
 
 const { type } = models.userSession;

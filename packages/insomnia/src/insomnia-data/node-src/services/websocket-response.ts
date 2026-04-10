@@ -1,4 +1,4 @@
-import type { WebSocketResponse  } from '~/insomnia-data';
+import type { WebSocketResponse } from '~/insomnia-data';
 import { database as db, models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
 

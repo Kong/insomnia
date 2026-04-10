@@ -1,4 +1,4 @@
-import type { McpRequest  } from '~/insomnia-data';
+import type { McpRequest } from '~/insomnia-data';
 import { database as db, models } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 
