@@ -14,6 +14,7 @@ import type { Project, RemoteProject, Stats } from '~/insomnia-data';
 import { database, initDatabase, initServices, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
+import { RouterProcess } from '~/main/electron-router-process.js';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { runGitCredentialsMigration } from '~/sync/git/migrations';
@@ -121,6 +122,7 @@ app.on('ready', async () => {
   await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
   watchProxySettings();
+
   windowUtils.init();
 
   await runGitCredentialsMigration();
@@ -194,7 +196,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
   if (!hasVisibleWindows) {
     try {
       console.log('[main] creating new window for MacOS activate event');
-      windowUtils.createWindow();
+      windowUtils.createWindow(url);
     } catch {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.

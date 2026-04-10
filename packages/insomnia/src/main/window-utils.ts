@@ -12,9 +12,12 @@ import {
   Menu,
   type MenuItemConstructorOptions,
   MessageChannelMain,
+  protocol,
   screen,
   shell,
 } from 'electron';
+
+import { RouterProcess } from '~/main/electron-router-process.js';
 
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
@@ -186,6 +189,7 @@ export function createWindow(): ElectronBrowserWindow {
     }
   }
 
+  const routerProcess = new RouterProcess();
   const mainBrowserWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
     x: isVisibleOnAnyDisplay ? x : undefined,
@@ -249,9 +253,18 @@ export function createWindow(): ElectronBrowserWindow {
   // Load the html of the app.
   const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.local';
 
-  console.log(`[main] Loading ${appUrl}`);
+  routerProcess
+    .init()
+    .then(({ url }) => {
+      console.log(`[main] Loading ${appUrl}`);
+      mainBrowserWindow.loadURL(appUrl);
 
-  mainBrowserWindow.loadURL(appUrl);
+      protocol.handle('https', request => routerProcess.fetch(request));
+    })
+    .catch(err => {
+      console.error('Failed to initialize router process', err);
+    });
+
   // Emitted when the window is closed.
   mainBrowserWindow.on('closed', () => {
     if (browserWindows.get('Insomnia')) {
