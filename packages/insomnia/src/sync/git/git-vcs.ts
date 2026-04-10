@@ -1352,6 +1352,19 @@ export class GitVCS {
         }));
     }
 
+    function readRawBlob(filepath: string, oid: string) {
+      return git
+        .readBlob({
+          ..._baseOpts,
+          oid,
+          filepath,
+        })
+        .then(({ blob, oid: blobId }) => ({
+          rawContent: Buffer.from(blob).toString('utf8'),
+          blobId,
+        }));
+    }
+
     function readOursBlob(filepath: string) {
       return readBlob(filepath, oursHeadCommitOid);
     }
@@ -1361,13 +1374,30 @@ export class GitVCS {
     }
 
     for (const conflictType of conflictTypeList) {
-      const conflictPaths = conflictPathsObj[conflictType].filter(fp => fp.endsWith('.yaml'));
+      const conflictPaths = conflictPathsObj[conflictType];
       const message = {
         bothModified: 'both modified',
         deleteByUs: 'you deleted and they modified',
         deleteByTheirs: 'they deleted and you modified',
       }[conflictType];
       for (const conflictPath of conflictPaths) {
+        // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files
+        if (!conflictPath.endsWith('.yaml')) {
+          const theirsRaw =
+            conflictType !== 'deleteByTheirs' ? await readRawBlob(conflictPath, theirsHeadCommitOid) : null;
+          mergeConflicts.push({
+            key: conflictPath,
+            name: path.basename(conflictPath),
+            message,
+            mineBlob: null,
+            theirsBlob: theirsRaw?.blobId || null,
+            choose: null,
+            mergeResult: theirsRaw?.rawContent ?? '',
+            resolutionSource: RESOLUTION_SOURCE.MANUAL,
+          });
+          continue;
+        }
+
         let mineBlobContent = null;
         let mineBlobId = null;
 
@@ -1553,6 +1583,19 @@ export class GitVCS {
           }));
       }
 
+      function readRawBlob(filepath: string, oid: string) {
+        return git
+          .readBlob({
+            ..._baseOpts,
+            oid,
+            filepath,
+          })
+          .then(({ blob, oid: blobId }) => ({
+            rawContent: Buffer.from(blob).toString('utf8'),
+            blobId,
+          }));
+      }
+
       function readOursBlob(filepath: string) {
         return readBlob(filepath, oursHeadCommitOid);
       }
@@ -1562,13 +1605,30 @@ export class GitVCS {
       }
 
       for (const conflictType of conflictTypeList) {
-        const conflictPaths = conflictPathsObj[conflictType].filter(fp => fp.endsWith('.yaml'));
+        const conflictPaths = conflictPathsObj[conflictType];
         const message = {
           bothModified: 'both modified',
           deleteByUs: 'you deleted and they modified',
           deleteByTheirs: 'they deleted and you modified',
         }[conflictType];
         for (const conflictPath of conflictPaths) {
+          // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files
+          if (!conflictPath.endsWith('.yaml')) {
+            const theirsRaw =
+              conflictType !== 'deleteByTheirs' ? await readRawBlob(conflictPath, theirsHeadCommitOid) : null;
+            mergeConflicts.push({
+              key: conflictPath,
+              name: path.basename(conflictPath),
+              message,
+              mineBlob: null,
+              theirsBlob: theirsRaw?.blobId || null,
+              choose: null,
+              mergeResult: theirsRaw?.rawContent ?? '',
+              resolutionSource: RESOLUTION_SOURCE.MANUAL,
+            });
+            continue;
+          }
+
           let mineBlobContent = null;
           let mineBlobId = null;
 
