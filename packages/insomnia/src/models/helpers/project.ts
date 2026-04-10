@@ -11,7 +11,7 @@ import {
 import type { VCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 
-export const sortProjects = (projects: Project[]) => [
+export const sortProjects = <T extends Project>(projects: T[]) => [
   ...projects.filter(p => models.project.isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),
   ...projects.filter(p => !models.project.isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),
 ];

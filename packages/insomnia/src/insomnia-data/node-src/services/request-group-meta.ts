@@ -19,6 +19,11 @@ export function getByParentId(parentId: string) {
   return db.findOne<RequestGroupMeta>(type, { parentId });
 }
 
+export async function updateByParentId(parentId: string, patch: Partial<RequestGroupMeta> = {}) {
+  const meta = await getByParentId(parentId);
+  return meta && db.docUpdate<RequestGroupMeta>(meta, patch);
+}
+
 export function all() {
   return db.find<RequestGroupMeta>(type);
 }
