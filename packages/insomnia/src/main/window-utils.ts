@@ -32,10 +32,14 @@ const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
+const APP_HOSTNAME = 'insomnia-app.local';
 
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
+const sharedRouterProcess = new RouterProcess();
 let electronStorage: ElectronStorage | null = null;
 let hiddenWindowIsBusy = false;
+let sharedRouterProcessInitPromise: Promise<{ url: string | null }> | null = null;
+let sharedRouterProtocolRegistered = false;
 
 interface Bounds {
   height?: number;
@@ -47,6 +51,45 @@ interface Bounds {
 export function init() {
   initElectronStorage();
 }
+
+function ensureSharedRouterProcess(): Promise<{ url: string | null }> {
+  if (sharedRouterProcessInitPromise) {
+    return sharedRouterProcessInitPromise;
+  }
+
+  const initPromise = sharedRouterProcess.init() as Promise<{ url: string | null }>;
+  sharedRouterProcessInitPromise = initPromise;
+  initPromise.finally(() => {
+    if (sharedRouterProcessInitPromise === initPromise) {
+      sharedRouterProcessInitPromise = null;
+    }
+  });
+
+  return initPromise;
+}
+
+function ensureSharedRouterProtocolHandler() {
+  if (sharedRouterProtocolRegistered) {
+    return;
+  }
+
+  if (protocol.isProtocolHandled('https')) {
+    protocol.unhandle('https');
+  }
+
+  protocol.handle('https', request => {
+    const requestUrl = new URL(request.url);
+
+    if (requestUrl.hostname === APP_HOSTNAME) {
+      return sharedRouterProcess.fetch(request);
+    }
+
+    return net.fetch(request, { bypassCustomProtocolHandlers: true });
+  });
+
+  sharedRouterProtocolRegistered = true;
+}
+
 const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => {
   return await new Promise<void>(resolve => {
     // overwrite the closed handler
@@ -190,7 +233,6 @@ export function createWindow(): ElectronBrowserWindow {
     }
   }
 
-  const routerProcess = new RouterProcess();
   const mainBrowserWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
     x: isVisibleOnAnyDisplay ? x : undefined,
@@ -252,24 +294,11 @@ export function createWindow(): ElectronBrowserWindow {
   });
 
   // Load the html of the app.
-  const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.local';
+  const appUrl = process.env.APP_RENDER_URL || `https://${APP_HOSTNAME}`;
 
-  routerProcess
-    .init()
+  ensureSharedRouterProcess()
     .then(() => {
-      if (protocol.isProtocolHandled('https')) {
-        protocol.unhandle('https');
-      }
-
-      protocol.handle('https', request => {
-        const requestUrl = new URL(request.url);
-
-        if (requestUrl.hostname === 'insomnia-app.local') {
-          return routerProcess.fetch(request);
-        }
-
-        return net.fetch(request, { bypassCustomProtocolHandlers: true });
-      });
+      ensureSharedRouterProtocolHandler();
 
       console.log(`[main] Loading ${appUrl}`);
       mainBrowserWindow.loadURL(appUrl);
