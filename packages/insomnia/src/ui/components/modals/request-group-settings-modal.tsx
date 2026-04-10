@@ -46,7 +46,7 @@ export const RequestGroupSettingsModal = ({
     projectLoaderData?.files
       .map(w => w.workspace)
       .filter(isNotNullOrUndefined)
-      .filter(w => w.scope !== 'mock-server') || [];
+      .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
   const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   const patchRequestGroup = useRequestGroupPatcher();
 
