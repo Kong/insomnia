@@ -1,15 +1,16 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import { getById, update } from '~/models/helpers/request-operations';
-import { isRequestGroup, isRequestGroupId } from '~/models/request-group';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 
+const { isRequestGroup, isRequestGroupId } = models.requestGroup;
+
 const getCollectionItem = async (id: string) => {
-  const item = await (isRequestGroupId(id) ? models.requestGroup.getById(id) : getById(id));
+  const item = await (isRequestGroupId(id) ? services.requestGroup.getById(id) : getById(id));
 
   invariant(item, 'Item not found');
 
@@ -33,7 +34,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const parentId = dropPosition === 'after' && isRequestGroup(targetItem) ? targetItem._id : targetItem.parentId;
 
   await (isRequestGroup(item)
-    ? models.requestGroup.update(item, { parentId, metaSortKey })
+    ? services.requestGroup.update(item, { parentId, metaSortKey })
     : update(item, { parentId, metaSortKey }));
 
   return null;

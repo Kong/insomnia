@@ -4,9 +4,9 @@ import { href, redirect } from 'react-router';
 import { database } from '~/common/database';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
+import type { Project } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { EMPTY_GIT_PROJECT_ID, type Project } from '~/models/project';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { invariant } from '~/utils/invariant';
@@ -59,7 +59,7 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
   invariant(sessionId, 'User must be logged in to create a project');
 
   if (newProjectData.storageType === 'local') {
-    const project = await models.project.create({
+    const project = await services.project.create({
       name: newProjectData.name,
       parentId: organizationId,
     });
@@ -69,10 +69,10 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
 
   if (newProjectData.storageType === 'git') {
     if (newProjectData.connectRepositoryLater) {
-      const project = await models.project.create({
+      const project = await services.project.create({
         name: newProjectData.name,
         parentId: organizationId,
-        gitRepositoryId: EMPTY_GIT_PROJECT_ID,
+        gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID,
       });
       reportGitProjectCount(organizationId, sessionId);
 
@@ -104,7 +104,7 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
       name: newProjectData.name,
     });
 
-    const project = await models.project.create({
+    const project = await services.project.create({
       _id: newCloudProject.id,
       name: newCloudProject.name,
       remoteId: newCloudProject.id,

@@ -61,6 +61,7 @@ export default defineConfig([
     rules: {
       ...playwright.configs['flat/recommended'].rules,
       'playwright/expect-expect': 'off',
+      'playwright/missing-playwright-await': 'warn',
       'playwright/require-soft-assertions': 'error',
       'playwright/prefer-native-locators': 'error',
       'playwright/prefer-to-be': 'error',

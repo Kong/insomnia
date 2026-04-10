@@ -4,7 +4,6 @@ import { href, NavLink, redirect, useParams } from 'react-router';
 
 import { Icon } from '~/basic-components/icon';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -15,13 +14,13 @@ import { useWorkspaceLoaderData } from './organization.$organizationId.project.$
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { projectId, workspaceId, organizationId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
   }
 
-  const activeWorkspace = await models.workspace.getById(workspaceId);
+  const activeWorkspace = await services.workspace.getById(workspaceId);
   if (!activeWorkspace) {
     showResourceNotFoundToast(`MCP Client not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));

@@ -9,14 +9,14 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { configureFetch } from 'insomnia-api';
 
 import { getCurrentSessionId } from '~/account/session';
-import type { Stats } from '~/insomnia-data';
+import { insomniaFetch } from '~/common/insomnia-fetch';
+import type { Project, RemoteProject, Stats } from '~/insomnia-data';
 import { database, initDatabase, initServices, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { runGitCredentialsMigration } from '~/sync/git/migrations';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
@@ -40,7 +40,6 @@ import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
-import type { Project, RemoteProject } from './models/project';
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
@@ -55,8 +54,7 @@ initializeSentry();
 
 registerInsomniaProtocols();
 
-// Force onlyResolveOnSuccess to true, will be removed after all usages are updated
-configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
+configureFetch(options => insomniaFetch({ ...options }));
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -295,11 +293,11 @@ async function _createModelInstances() {
   await services.stats.get();
   await services.settings.getOrCreate();
   try {
-    const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
-    const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
+    const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
-      await models.project.create({
+      await services.project.create({
         _id: models.project.SCRATCHPAD_PROJECT_ID,
         name: getProductName(),
         remoteId: null,
@@ -309,7 +307,7 @@ async function _createModelInstances() {
 
     if (!scratchPad) {
       console.log('[main] Initializing Scratch Pad');
-      await models.workspace.create({
+      await services.workspace.create({
         _id: models.workspace.SCRATCHPAD_WORKSPACE_ID,
         name: 'Scratch Pad',
         parentId: models.project.SCRATCHPAD_PROJECT_ID,

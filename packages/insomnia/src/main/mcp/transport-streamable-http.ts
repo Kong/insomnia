@@ -9,12 +9,12 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
 import type { Dispatcher } from 'undici';
 
+import type { RequestHeader } from '~/insomnia-data';
 import { type McpResponse, services } from '~/insomnia-data';
 import { type ConnectionContext, getFetchDispatcher, writeEventLogAndNotify, writeTimeline } from '~/main/mcp/common';
 import { MCPAuthError, type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
-import type { RequestHeader } from '~/models/request';
 
 // Extend undici RequestInit to include dispatcher, it's in node.js fetch but not in dom fetch.
 interface NodeRequestInit extends RequestInit {
@@ -137,7 +137,7 @@ const wrappedFetch = async (
     };
     const settings = await services.settings.get();
     const res = await services.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
-    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+    services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
   }
 
   // Avoid infinite loop, only call auth flow once per request

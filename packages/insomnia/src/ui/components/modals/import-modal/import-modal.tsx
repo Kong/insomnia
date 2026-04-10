@@ -6,7 +6,7 @@ import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
-import { scopeToActivity } from '~/models/workspace';
+import { models } from '~/insomnia-data';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -20,7 +20,6 @@ import {
   type ImportSourceType,
   type ScanResult,
 } from '../../../../common/import';
-import { isScratchpadProject } from '../../../../models/project';
 import { invariant } from '../../../../utils/invariant';
 import { SegmentEvent } from '../../../analytics';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
@@ -180,6 +179,7 @@ export interface ImportSource {
   endpoint?: string;
   operationId?: string;
   autoScan?: boolean;
+  startedAt?: number;
 }
 
 interface ImportModalProps extends ModalProps {
@@ -243,12 +243,13 @@ export const ImportModal: FC<ImportModalProps> = ({
     const valid = scanResourcesFetcherData?.some(({ errors }) => !errors.length);
     if (!valid) return;
     dupCheckRef.current = true;
-    findExistingImportedSpec(defaultProjectId).then(existing => {
+    findExistingImportedSpec(defaultProjectId, organizationId).then(existing => {
       if (!existing) return setShowForm(true);
       findRequestInExistingWorkspace(existing.workspace, from.endpoint, from.operationId).then(req => {
+        const targetProjectId = existing.workspace.parentId || defaultProjectId;
         const path = req
-          ? `/organization/${organizationId}/project/${defaultProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
-          : `/organization/${organizationId}/project/${defaultProjectId}/workspace/${existing.workspace._id}/${scopeToActivity(existing.workspace.scope)}`;
+          ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
+          : `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/${models.workspace.scopeToActivity(existing.workspace.scope)}`;
         clearResourceCache();
         navigate(path);
         modalRef.current?.hide();
@@ -277,7 +278,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       });
       const workspace = importFetcher?.data?.singleImportedWorkspace;
       const request = importFetcher?.data?.singleImportedRequest;
-      const targetProjectId = createdProjectId || defaultProjectId;
+      const targetProjectId = importFetcher?.data?.singleImportedProjectId || createdProjectId || defaultProjectId;
       if (workspace && request) {
         navigate(
           `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/debug/request/${request._id}`,
@@ -286,7 +287,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       }
       if (workspace) {
         navigate(
-          `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
         );
         return modalRef.current?.hide();
       }
@@ -326,7 +327,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       : 'Import';
   const isScratchPad =
     defaultProjectId &&
-    isScratchpadProject({
+    models.project.isScratchpadProject({
       _id: defaultProjectId,
     });
 

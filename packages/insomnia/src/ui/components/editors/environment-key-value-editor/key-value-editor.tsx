@@ -13,11 +13,12 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import type { EnvironmentKvPairData } from '~/insomnia-data';
+import { EnvironmentKvPairDataType } from '~/insomnia-data';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
-import { type EnvironmentKvPairData, EnvironmentKvPairDataType } from '../../../../models/environment';
 import { base64decode } from '../../../../utils/vault';
 import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';

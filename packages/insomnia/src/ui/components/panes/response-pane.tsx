@@ -1,13 +1,13 @@
 import { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
+import { services } from '~/insomnia-data';
 import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
-import * as models from '../../../models';
 import { cancelRequestById } from '../../../network/cancellation';
 import {
   type RequestLoaderData,
@@ -50,7 +50,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     }
     const requestId = activeResponse.parentId;
     await patchRequestMeta(requestId, { responseFilter });
-    const meta = await models.requestMeta.getByParentId(requestId);
+    const meta = await services.requestMeta.getByParentId(requestId);
     if (!meta) {
       return;
     }

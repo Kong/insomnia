@@ -22,10 +22,7 @@ import { useNavigate, useParams } from 'react-router';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
-import { isGrpcRequest } from '~/models/grpc-request';
-import { isRequest } from '~/models/request';
-import { isRequestGroup } from '~/models/request-group';
-import { isWebSocketRequest } from '~/models/websocket-request';
+import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useCommandsLoaderFetcher } from '~/routes/commands';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -41,6 +38,9 @@ import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { isPrimaryClickModifier } from '~/ui/utils';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -335,12 +335,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           >
             {getMethodShortHand(request.item)}
           </span>
-        ) : isWebSocketRequest(request.item) ? (
+        ) : models.webSocketRequest.isWebSocketRequest(request.item) ? (
           <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             WS
           </span>
         ) : (
-          isGrpcRequest(request.item) && (
+          models.grpcRequest.isGrpcRequest(request.item) && (
             <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
               gRPC
             </span>
@@ -349,7 +349,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         name: request.name,
         presence: [],
         description: request.item.url,
-        textValue: `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`,
+        textValue: `${isRequest(request.item) ? request.item.method : models.webSocketRequest.isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`,
         openInNewTab: request.openInNewTab,
         action: request.action,
       })),
@@ -437,12 +437,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           >
             {getMethodShortHand(request.item)}
           </span>
-        ) : isWebSocketRequest(request.item) ? (
+        ) : models.webSocketRequest.isWebSocketRequest(request.item) ? (
           <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             WS
           </span>
         ) : (
-          isGrpcRequest(request.item) && (
+          models.grpcRequest.isGrpcRequest(request.item) && (
             <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
               gRPC
             </span>
@@ -460,7 +460,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           </span>
         ),
         textValue: !isRequestGroup(request.item)
-          ? `${isRequest(request.item) ? request.item.method : isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`
+          ? `${isRequest(request.item) ? request.item.method : models.webSocketRequest.isWebSocketRequest(request.item) ? 'WebSocket' : 'gRPC'} ${request.name}`
           : '',
         openInNewTab: 'openInNewTab' in request ? request.openInNewTab : undefined,
         action: request.action,

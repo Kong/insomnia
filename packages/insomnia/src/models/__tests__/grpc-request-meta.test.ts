@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import * as models from '../index';
 
 describe('init()', () => {
@@ -14,7 +16,7 @@ describe('init()', () => {
 describe('create()', () => {
   it('creates a valid GrpcRequest', async () => {
     Date.now = vi.fn().mockReturnValue(1_478_795_580_200);
-    const request = await models.grpcRequestMeta.create({
+    const request = await services.grpcRequestMeta.create({
       pinned: true,
       parentId: 'greq_124',
     });
@@ -28,12 +30,12 @@ describe('create()', () => {
       lastActive: 0,
     };
     expect(request).toEqual(expected);
-    expect(await models.grpcRequestMeta.getOrCreateByParentId(expected.parentId)).toEqual(expected);
+    expect(await services.grpcRequestMeta.getOrCreateByParentId(expected.parentId)).toEqual(expected);
   });
 
   it('fails when missing parentId', async () => {
     expect(() =>
-      models.grpcRequestMeta.create({
+      services.grpcRequestMeta.create({
         pinned: true,
       }),
     ).toThrow('New GrpcRequestMeta missing `parentId`');
@@ -41,7 +43,7 @@ describe('create()', () => {
 
   it('fails when parentId prefix is not that of a GrpcRequest', async () => {
     expect(() =>
-      models.grpcRequestMeta.create({
+      services.grpcRequestMeta.create({
         parentId: 'req_123',
       }),
     ).toThrow('Expected the parent of GrpcRequestMeta to be a GrpcRequest');

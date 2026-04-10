@@ -3,6 +3,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
@@ -14,9 +15,7 @@ import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
-import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -45,6 +44,7 @@ import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 import { Pane, PaneBody, PaneHeader } from './pane';
+const { isRequestGroup } = models.requestGroup;
 interface Props {
   grpcState: GrpcRequestState;
   setGrpcState: (states: GrpcRequestState) => void;

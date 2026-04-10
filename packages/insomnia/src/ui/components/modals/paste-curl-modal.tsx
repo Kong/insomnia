@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 
+import type { Request } from '~/insomnia-data';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
-import type { Request } from '../../../models/request';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

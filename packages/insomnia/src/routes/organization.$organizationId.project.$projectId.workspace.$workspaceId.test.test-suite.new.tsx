@@ -1,6 +1,6 @@
 import { href, redirect } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -14,7 +14,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
 
-  const unitTestSuite = await models.unitTestSuite.create({
+  const unitTestSuite = await services.unitTestSuite.create({
     parentId: workspaceId,
     name,
   });

@@ -2,10 +2,9 @@ import type { Organization } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
+import type { Project } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { Project } from '~/models/project';
-import { isEmptyGitProject } from '~/models/project';
 import { createFetcherLoadHook } from '~/utils/router';
 
 export async function clientLoader() {
@@ -24,7 +23,7 @@ export async function clientLoader() {
   const organizationMap = Object.fromEntries(organizations.map(o => [o.id, o]));
 
   const allConnectedGitProjects = allProjects.filter(
-    project => models.project.isGitProject(project) && !isEmptyGitProject(project),
+    project => models.project.isGitProject(project) && !models.project.isEmptyGitProject(project),
   );
   const gitRepoURIInfoMap: Record<string, { organizationName: string; projectName: string }> = {};
   await Promise.all(

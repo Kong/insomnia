@@ -1,4 +1,4 @@
-import type { RequestHeader } from '../../models/request';
+import type { RequestHeader } from '~/insomnia-data';
 
 export function getBasicAuthHeader(username?: string | null, password?: string | null, encoding = 'utf8') {
   const name = 'Authorization';

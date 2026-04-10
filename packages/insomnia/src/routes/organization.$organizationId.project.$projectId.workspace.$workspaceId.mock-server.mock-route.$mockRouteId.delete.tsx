@@ -1,6 +1,6 @@
 import { href, redirect } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -10,11 +10,11 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId, mockRouteId } = params;
   invariant(typeof mockRouteId === 'string', 'Mock route id is required');
-  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  const mockRoute = await services.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'mockRoute not found');
   const { isSelected } = await request.json();
 
-  await models.mockRoute.remove(mockRoute);
+  await services.mockRoute.remove(mockRoute);
 
   window.main.trackSegmentEvent({
     event: SegmentEvent.mockRouteDelete,

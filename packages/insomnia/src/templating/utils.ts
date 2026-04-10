@@ -1,9 +1,8 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { decryptSecretValue } from '~/utils/vault';
 
-import { vaultEnvironmentMaskValue } from '../models/environment';
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
 import objectPath from './third_party/object-path';
@@ -260,7 +259,7 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
     } else {
       // mask all secret values under vaultEnvironmentPath property in context
       Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
-        vaultEnvironmentData[vaultContextKey] = vaultEnvironmentMaskValue;
+        vaultEnvironmentData[vaultContextKey] = models.environment.vaultEnvironmentMaskValue;
       });
     }
   }

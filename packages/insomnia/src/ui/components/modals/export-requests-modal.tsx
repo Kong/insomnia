@@ -3,12 +3,10 @@ import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
+
 import { requestGroup } from '../../../models';
-import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, type Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import {
   type Child,
   useWorkspaceLoaderFetcher,
@@ -17,6 +15,8 @@ import {
 import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
+
+const { isRequest } = models.request;
 
 export interface Node {
   doc: Request | WebSocketRequest | GrpcRequest | RequestGroup | SocketIORequest;
@@ -120,17 +120,17 @@ export const RequestRow: FC<{
             {getMethodShortHand(request)}
           </span>
         )}
-        {isWebSocketRequest(request) && (
+        {models.webSocketRequest.isWebSocketRequest(request) && (
           <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             WS
           </span>
         )}
-        {isGrpcRequest(request) && (
+        {models.grpcRequest.isGrpcRequest(request) && (
           <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
             gRPC
           </span>
         )}
-        {isSocketIORequest(request) && (
+        {models.socketIORequest.isSocketIORequest(request) && (
           <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             IO
           </span>
@@ -151,7 +151,12 @@ export const Tree: FC<{
       return null;
     }
 
-    if (isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc)) {
+    if (
+      isRequest(node.doc) ||
+      models.grpcRequest.isGrpcRequest(node.doc) ||
+      models.webSocketRequest.isWebSocketRequest(node.doc) ||
+      models.socketIORequest.isSocketIORequest(node.doc)
+    ) {
       return (
         <RequestRow
           key={node.doc._id}
@@ -214,9 +219,9 @@ export const ExportRequestsModal = ({
     const createTreeNode = (child: Child): Node => {
       const docIsRequest =
         isRequest(child.doc) ||
-        isWebSocketRequest(child.doc) ||
-        isGrpcRequest(child.doc) ||
-        isSocketIORequest(child.doc);
+        models.grpcRequest.isGrpcRequest(child.doc) ||
+        models.webSocketRequest.isWebSocketRequest(child.doc) ||
+        models.socketIORequest.isSocketIORequest(child.doc);
       const children = child.children.map((child: Child) => createTreeNode(child));
       const totalRequests = +docIsRequest + children.reduce((acc, { totalRequests }) => acc + totalRequests, 0);
       return {
@@ -259,7 +264,10 @@ export const ExportRequestsModal = ({
 
   const getSelectedRequestIds = (node: Node): string[] => {
     const docIsRequest =
-      isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc);
+      isRequest(node.doc) ||
+      models.grpcRequest.isGrpcRequest(node.doc) ||
+      models.webSocketRequest.isWebSocketRequest(node.doc) ||
+      models.socketIORequest.isSocketIORequest(node.doc);
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }

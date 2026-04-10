@@ -1,15 +1,10 @@
 import orderedJSON from 'json-order';
 
+import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
+import { EnvironmentKvPairDataType, models } from '~/insomnia-data';
+
 import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { generateId } from '../common/misc';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  vaultEnvironmentMaskValue,
-  vaultEnvironmentPath,
-  vaultEnvironmentRuntimePath,
-} from '../models/environment';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
@@ -25,12 +20,12 @@ export const ensureKeyIsValid = (key: string, isRoot: boolean): string | null =>
     return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`;
   }
 
-  if (key === vaultEnvironmentPath && isRoot) {
-    return `"${vaultEnvironmentPath}" is a reserved key`;
+  if (key === models.environment.vaultEnvironmentPath && isRoot) {
+    return `"${models.environment.vaultEnvironmentPath}" is a reserved key`;
   }
 
-  if (key === vaultEnvironmentRuntimePath && isRoot) {
-    return `"${vaultEnvironmentRuntimePath}" is a reserved key`;
+  if (key === models.environment.vaultEnvironmentRuntimePath && isRoot) {
+    return `"${models.environment.vaultEnvironmentRuntimePath}" is a reserved key`;
   }
 
   return null;
@@ -71,7 +66,7 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
   Object.keys(ordered).forEach(key => {
     const val = ordered[key];
     // get all secret items from vaultEnvironmentPath
-    if (key === vaultEnvironmentPath && typeof val === 'object' && !Array.isArray(val)) {
+    if (key === models.environment.vaultEnvironmentPath && typeof val === 'object' && !Array.isArray(val)) {
       Object.keys(val).forEach(secretKey => {
         kvPair.push({
           id: generateId('envPair'),
@@ -101,11 +96,11 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
     const { name, value, type, enabled } = pair;
     if (enabled) {
       if (type === EnvironmentKvPairDataType.SECRET) {
-        if (!data[vaultEnvironmentPath]) {
+        if (!data[models.environment.vaultEnvironmentPath]) {
           // create object storing all secret items
-          data[vaultEnvironmentPath] = {};
+          data[models.environment.vaultEnvironmentPath] = {};
         }
-        data[vaultEnvironmentPath][name] = value;
+        data[models.environment.vaultEnvironmentPath][name] = value;
       } else {
         data[name] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
       }
@@ -126,17 +121,17 @@ export const maskVaultEnvironmentData = (environment: Environment) => {
       kvPairData?.forEach(pair => {
         const { type } = pair;
         if (type === EnvironmentKvPairDataType.SECRET) {
-          pair.value = vaultEnvironmentMaskValue;
+          pair.value = models.environment.vaultEnvironmentMaskValue;
         }
       });
       if (
         data &&
         typeof data === 'object' &&
-        data[vaultEnvironmentPath] &&
-        typeof data[vaultEnvironmentPath] === 'object'
+        data[models.environment.vaultEnvironmentPath] &&
+        typeof data[models.environment.vaultEnvironmentPath] === 'object'
       ) {
-        Object.keys(data[vaultEnvironmentPath]).forEach(vaultKey => {
-          data[vaultEnvironmentPath][vaultKey] = vaultEnvironmentMaskValue;
+        Object.keys(data[models.environment.vaultEnvironmentPath]).forEach(vaultKey => {
+          data[models.environment.vaultEnvironmentPath][vaultKey] = models.environment.vaultEnvironmentMaskValue;
         });
       }
     }

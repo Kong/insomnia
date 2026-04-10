@@ -3,7 +3,6 @@ import { getVault } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import { removeAllSecrets } from '~/models/environment';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.clear-vault-key';
@@ -20,7 +19,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   // User on other device has reset the vault key.
   if (resetVaultClientSessionId !== sessionId) {
     // remove all secret environment variables
-    await removeAllSecrets(organizations);
+    await services.environment.removeAllSecrets(organizations);
     // Update vault salt and delete vault key from session
     await services.userSession.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification

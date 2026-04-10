@@ -2,8 +2,9 @@ import { generate, runTests, type Test, type TestResults } from 'insomnia-testin
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
+import type { UnitTest } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { UnitTest } from '~/models/unit-test';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
@@ -48,7 +49,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   try {
     results = await runTests(src, { sendRequest });
-    const testResult = await models.unitTestResult.create({
+    const testResult = await services.unitTestResult.create({
       results,
       parentId: workspaceId,
     });
@@ -89,7 +90,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       id: '',
       title: 'Test Error',
     });
-    const testResult = await models.unitTestResult.create({
+    const testResult = await services.unitTestResult.create({
       results,
       parentId: workspaceId,
     });

@@ -72,7 +72,13 @@
     "typescript-eslint": "^8.29.0",
     "vitest": "^3.2.4"
   },
+  "overrides": {
+    "ajv-draft-04": {
+      "ajv": "$ajv"
+    }
+  },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "3.2.1"
+    "@getinsomnia/node-libcurl": "3.2.1",
+    "ajv": "^8.17.1"
   }
 }

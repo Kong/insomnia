@@ -1,6 +1,6 @@
-import { Cookie, CookieJar, type CookieJSON } from 'tough-cookie';
+import { Cookie as ToughCookie, CookieJar, type CookieJSON } from 'tough-cookie';
 
-import type { Cookie as CookieModel } from '../models/cookie-jar';
+import type { Cookie } from '~/insomnia-data';
 
 /**
  * Get a list of cookie objects from a request.jar()
@@ -22,7 +22,7 @@ export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => {
 /**
  * Get a request.jar() from a list of cookie objects
  */
-export const jarFromCookies = (cookies: Cookie[] | CookieModel[]) => {
+export const jarFromCookies = (cookies: Cookie[] | ToughCookie[]) => {
   let jar: CookieJar;
 
   try {
@@ -47,10 +47,10 @@ export const jarFromCookies = (cookies: Cookie[] | CookieModel[]) => {
   return jar;
 };
 
-export const cookieToString = (cookie: Parameters<typeof Cookie.fromJSON>[0] | Cookie) => {
+export const cookieToString = (cookie: Parameters<typeof ToughCookie.fromJSON>[0] | ToughCookie) => {
   // Cookie can either be a plain JS object or Cookie instance
-  if (!(cookie instanceof Cookie)) {
-    cookie = Cookie.fromJSON(cookie) as Cookie;
+  if (!(cookie instanceof ToughCookie)) {
+    cookie = ToughCookie.fromJSON(cookie) as ToughCookie;
 
     if (cookie === null) {
       throw new Error(`Unable to read cookie: ${cookie}`);
@@ -60,8 +60,8 @@ export const cookieToString = (cookie: Parameters<typeof Cookie.fromJSON>[0] | C
 
   // tough-cookie toString() doesn't put domain on all the time.
   // This hack adds when tough-cookie won't
-  if ((cookie as Cookie).domain && (cookie as Cookie).hostOnly) {
-    str += `; Domain=${(cookie as Cookie).domain}`;
+  if ((cookie as ToughCookie).domain && (cookie as ToughCookie).hostOnly) {
+    str += `; Domain=${(cookie as ToughCookie).domain}`;
   }
 
   return str;

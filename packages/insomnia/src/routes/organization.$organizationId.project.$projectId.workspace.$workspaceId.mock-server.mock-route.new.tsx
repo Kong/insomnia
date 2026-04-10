@@ -1,7 +1,7 @@
 import { href, redirect } from 'react-router';
 
-import * as models from '~/models';
-import type { MockRoute } from '~/models/mock-route';
+import type { MockRoute } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -19,8 +19,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     invariant(patch.name.startsWith('/'), 'Path must begin with a /');
 
     if (patch.parentId) {
-      const mockServer = await models.mockServer.getById(patch.parentId);
-      const existingRoutes = await models.mockRoute.findByParentId(patch.parentId);
+      const mockServer = await services.mockServer.getById(patch.parentId);
+      const existingRoutes = await services.mockRoute.findByParentId(patch.parentId);
 
       if (mockServer?.useInsomniaCloud) {
         const hasRouteInServer = existingRoutes.find(m => m.name === patch.name);
@@ -43,19 +43,19 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // TODO: use an alternate method to create new workspace and server together
     // create a mock server under the workspace with the same name
     if (patch.mockServerName) {
-      const collectionWorkspace = await models.workspace.getById(workspaceId);
+      const collectionWorkspace = await services.workspace.getById(workspaceId);
       invariant(collectionWorkspace, 'Collection workspace not found');
-      const mockWorkspace = await models.workspace.create({
+      const mockWorkspace = await services.workspace.create({
         name: collectionWorkspace.name,
         scope: 'mock-server',
         parentId: projectId,
       });
       invariant(mockWorkspace, 'Workspace not found');
-      const newMockServer = await models.mockServer.getOrCreateForParentId(mockWorkspace._id, {
+      const newMockServer = await services.mockServer.getOrCreateForParentId(mockWorkspace._id, {
         name: collectionWorkspace.name,
       });
       delete patch.mockServerName;
-      const mockRoute = await models.mockRoute.create({ ...patch, parentId: newMockServer._id });
+      const mockRoute = await services.mockRoute.create({ ...patch, parentId: newMockServer._id });
 
       window.main.trackSegmentEvent({
         event: SegmentEvent.mockRouteCreate,
@@ -74,9 +74,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       );
     }
     invariant(patch.parentId, 'parentId is required');
-    const mockServer = await models.mockServer.getById(patch.parentId);
+    const mockServer = await services.mockServer.getById(patch.parentId);
     invariant(mockServer, 'Mock server not found');
-    const mockRoute = await models.mockRoute.create(patch);
+    const mockRoute = await services.mockRoute.create(patch);
 
     window.main.trackSegmentEvent({
       event: SegmentEvent.mockRouteCreate,

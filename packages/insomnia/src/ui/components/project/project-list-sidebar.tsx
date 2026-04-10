@@ -3,8 +3,8 @@ import { Button, GridList, GridListItem, Heading, Input, SearchField } from 'rea
 import { useNavigate } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { GitRepository } from '~/insomnia-data';
-import { isGitProject, isRemoteProject, type Project, SCRATCHPAD_PROJECT_ID } from '~/models/project';
+import type { GitRepository, Project } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 
 import { AvatarGroup } from '../avatar';
@@ -115,12 +115,18 @@ export const ProjectListSidebar = ({
               <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                 <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                 <Icon
-                  icon={isRemoteProject(item) ? 'globe-americas' : isGitProject(item) ? ['fab', 'git-alt'] : 'laptop'}
+                  icon={
+                    models.project.isRemoteProject(item)
+                      ? 'globe-americas'
+                      : models.project.isGitProject(item)
+                        ? ['fab', 'git-alt']
+                        : 'laptop'
+                  }
                 />
                 <span className={'truncate'}>{item.name}</span>
                 <span className="flex-1" />
                 {item.presence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={item.presence} />}
-                {item._id !== SCRATCHPAD_PROJECT_ID && (
+                {item._id !== models.project.SCRATCHPAD_PROJECT_ID && (
                   <ProjectDropdown organizationId={organizationId} project={item} storageRules={storageRules} />
                 )}
               </div>

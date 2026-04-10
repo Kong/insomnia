@@ -37,8 +37,8 @@ describe('onChange()', () => {
     };
 
     db.onChange(callback);
-    const newDoc = await models.request.create(doc);
-    const updatedDoc = await models.request.update(newDoc, {
+    const newDoc = await services.request.create(doc);
+    const updatedDoc = await services.request.update(newDoc, {
       name: 'bar',
     });
     expect(changesSeen).toEqual([[['insert', newDoc, []]], [['update', updatedDoc, [{ name: 'bar' }]]]]);
@@ -60,9 +60,9 @@ describe('bufferChanges()', () => {
 
     db.onChange(callback);
     await db.bufferChanges();
-    const newDoc = await models.request.create(doc);
+    const newDoc = await services.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc);
+    const updatedDoc = await services.request.update(newDoc);
     // Assert no change seen before flush
     expect(changesSeen.length).toBe(0);
     // Assert changes seen after flush
@@ -97,9 +97,9 @@ describe('bufferChanges()', () => {
 
     db.onChange(callback);
     await db.bufferChanges();
-    const newDoc = await models.request.create(doc);
+    const newDoc = await services.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc);
+    const updatedDoc = await services.request.update(newDoc);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
     expect(changesSeen).toEqual([
@@ -124,9 +124,9 @@ describe('bufferChanges()', () => {
 
     db.onChange(callback);
     await db.bufferChanges(500);
-    const newDoc = await models.request.create(doc);
+    const newDoc = await services.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc);
+    const updatedDoc = await services.request.update(newDoc);
     await new Promise(resolve => setTimeout(resolve, 1000));
     expect(changesSeen).toEqual([
       [
@@ -152,9 +152,9 @@ describe('bufferChangesIndefinitely()', () => {
 
     db.onChange(callback);
     await db.bufferChangesIndefinitely();
-    const newDoc = await models.request.create(doc);
+    const newDoc = await services.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc);
+    const updatedDoc = await services.request.update(newDoc);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
     // Assert no change seen before flush
@@ -177,7 +177,7 @@ describe('requestCreate()', () => {
       name: 'My Request',
       parentId: 'wrk_123',
     };
-    const r = await models.request.create(patch);
+    const r = await services.request.create(patch);
     expect(Object.keys(r).length).toBe(24);
     expect(r._id).toMatch(/^req_[a-zA-Z0-9]{32}$/);
     expect(r.created).toBeGreaterThanOrEqual(now);
@@ -196,7 +196,7 @@ describe('requestCreate()', () => {
 
   it('throws when missing parentID', () => {
     const fn = () =>
-      models.request.create({
+      services.request.create({
         name: 'My Request',
       });
 
@@ -211,13 +211,13 @@ describe('_repairDatabase()', async () => {
 
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
-    const project = await models.project.create();
-    const workspace = await models.workspace.create({
+    const project = await services.project.create();
+    const workspace = await services.workspace.create({
       _id: 'w1',
       parentId: project._id,
     });
     // Create one set of sub environments
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b1',
       parentId: 'w1',
       data: {
@@ -225,14 +225,14 @@ describe('_repairDatabase()', async () => {
         b1: true,
       },
     });
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b1_sub1',
       parentId: 'b1',
       data: {
         foo: '1',
       },
     });
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b1_sub2',
       parentId: 'b1',
       data: {
@@ -240,7 +240,7 @@ describe('_repairDatabase()', async () => {
       },
     });
     // Create second set of sub environments
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b2',
       parentId: 'w1',
       data: {
@@ -248,14 +248,14 @@ describe('_repairDatabase()', async () => {
         b2: true,
       },
     });
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b2_sub1',
       parentId: 'b2',
       data: {
         foo: '3',
       },
     });
-    await models.environment.create({
+    await services.environment.create({
       _id: 'b2_sub2',
       parentId: 'b2',
       data: {
@@ -381,14 +381,14 @@ describe('_repairDatabase()', async () => {
 
   it('fixes duplicate cookie jars', async () => {
     // Create Workspace with no children
-    const project = await models.project.create();
-    const workspace = await models.workspace.create({
+    const project = await services.project.create();
+    const workspace = await services.workspace.create({
       _id: 'w1',
       parentId: project._id,
     });
     expect((await db.getWithDescendants(workspace)).length).toBe(1);
     // Create one set of sub environments
-    await models.cookieJar.create({
+    await services.cookieJar.create({
       _id: 'j1',
       parentId: 'w1',
       cookies: [
@@ -406,7 +406,7 @@ describe('_repairDatabase()', async () => {
         },
       ],
     });
-    await models.cookieJar.create({
+    await services.cookieJar.create({
       _id: 'j2',
       parentId: 'w1',
       cookies: [
@@ -510,15 +510,15 @@ describe('_repairDatabase()', async () => {
 
   it('fixes the filename on an apiSpec', async () => {
     // Create Workspace with apiSpec child (migration in workspace will automatically create this as it is not mocked)
-    const w1 = await models.workspace.create({
+    const w1 = await services.workspace.create({
       _id: 'w1',
       name: 'Workspace 1',
     });
-    const w2 = await models.workspace.create({
+    const w2 = await services.workspace.create({
       _id: 'w2',
       name: 'Workspace 2',
     });
-    const w3 = await models.workspace.create({
+    const w3 = await services.workspace.create({
       _id: 'w3',
       name: 'Workspace 3',
     });
@@ -592,7 +592,7 @@ describe('duplicate()', () => {
   it('should overwrite appropriate fields on the parent when duplicating', async () => {
     const date = 1_478_795_580_200;
     Date.now = vi.fn().mockReturnValue(date);
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       name: 'Test Workspace',
     });
     const newDescription = 'test';
@@ -613,7 +613,7 @@ describe('duplicate()', () => {
   });
 
   it('should should not call migrate when duplicating', async () => {
-    const workspace = await models.workspace.create({
+    const workspace = await services.workspace.create({
       name: 'Test Workspace',
     });
     const spy = vi.spyOn(models.workspace, 'migrate');
@@ -622,14 +622,14 @@ describe('duplicate()', () => {
   });
 
   it('should rewrite chained request references when duplicating a folder', async () => {
-    const workspace = await models.workspace.create({ name: 'Workspace' });
-    const folder = await models.requestGroup.create({ parentId: workspace._id, name: 'Folder' });
-    const req1 = await models.request.create({
+    const workspace = await services.workspace.create({ name: 'Workspace' });
+    const folder = await services.requestGroup.create({ parentId: workspace._id, name: 'Folder' });
+    const req1 = await services.request.create({
       parentId: folder._id,
       name: 'Request 1',
       url: 'https://example.com/first',
     });
-    const req2 = await models.request.create({
+    const req2 = await services.request.create({
       parentId: folder._id,
       name: 'Request 2',
       url: `https://example.com/{% response 'body', '${req1._id}', 'b64::JC5pZA==::46b', 'never', 60 %}`,
@@ -674,23 +674,23 @@ describe('docCreate()', () => {
 
 describe('withAncestors()', () => {
   it('should return itself and all parents but exclude siblings', async () => {
-    const spc = await models.project.create();
-    const wrk = await models.workspace.create({
+    const spc = await services.project.create();
+    const wrk = await services.workspace.create({
       parentId: spc._id,
     });
-    const wrkReq = await models.request.create({
+    const wrkReq = await services.request.create({
       parentId: wrk._id,
     });
-    const wrkGrpcReq = await models.grpcRequest.create({
+    const wrkGrpcReq = await services.grpcRequest.create({
       parentId: wrk._id,
     });
-    const grp = await models.requestGroup.create({
+    const grp = await services.requestGroup.create({
       parentId: wrk._id,
     });
-    const grpReq = await models.request.create({
+    const grpReq = await services.request.create({
       parentId: grp._id,
     });
-    const grpGrpcReq = await models.grpcRequest.create({
+    const grpGrpcReq = await services.grpcRequest.create({
       parentId: grp._id,
     });
     // Workspace child searching for ancestors
@@ -714,12 +714,12 @@ describe('withAncestors()', () => {
 
 describe('getWithDescendants()', () => {
   it('should return specified model and all children', async () => {
-    const project = await models.project.create();
-    const workspace = await models.workspace.create({
+    const project = await services.project.create();
+    const workspace = await services.workspace.create({
       _id: 'w1',
       parentId: project._id,
     });
-    const cookieJar1 = await models.cookieJar.create({
+    const cookieJar1 = await services.cookieJar.create({
       _id: 'j1',
       parentId: workspace._id,
       cookies: [
@@ -737,7 +737,7 @@ describe('getWithDescendants()', () => {
         },
       ],
     });
-    const cookieJar2 = await models.cookieJar.create({
+    const cookieJar2 = await services.cookieJar.create({
       _id: 'j2',
       parentId: workspace._id,
       cookies: [
@@ -755,41 +755,41 @@ describe('getWithDescendants()', () => {
         },
       ],
     });
-    const folder1 = await models.requestGroup.create({
+    const folder1 = await services.requestGroup.create({
       _id: 'grp1',
       parentId: workspace._id,
     });
-    const folder2 = await models.requestGroup.create({
+    const folder2 = await services.requestGroup.create({
       _id: 'grp2',
       parentId: folder1._id,
     });
-    const request1 = await models.request.create({
+    const request1 = await services.request.create({
       _id: 'req1',
       parentId: workspace._id,
     });
-    const request2 = await models.request.create({
+    const request2 = await services.request.create({
       _id: 'req2',
       parentId: folder1._id,
     });
-    const grpcRequest1 = await models.grpcRequest.create({
+    const grpcRequest1 = await services.grpcRequest.create({
       _id: 'grpc1',
       parentId: workspace._id,
     });
-    const websocketRequest1 = await models.webSocketRequest.create({
+    const websocketRequest1 = await services.webSocketRequest.create({
       _id: 'ws1',
       parentId: workspace._id,
     });
-    const socketIORequest1 = await models.socketIORequest.create({
+    const socketIORequest1 = await services.socketIORequest.create({
       _id: 'socket1',
       parentId: workspace._id,
     });
 
-    const environment1 = await models.environment.create({
+    const environment1 = await services.environment.create({
       _id: 'env1',
       parentId: workspace._id,
     });
 
-    const environment2 = await models.environment.create({
+    const environment2 = await services.environment.create({
       _id: 'env2',
       parentId: environment1._id,
     });

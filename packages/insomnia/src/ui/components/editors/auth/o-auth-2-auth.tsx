@@ -1,13 +1,12 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import type { OAuth2Token } from '~/insomnia-data';
+import type { AuthTypeOAuth2, OAuth2ResponseType, OAuth2Token, RequestAuthentication } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
-import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,

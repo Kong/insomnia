@@ -9,13 +9,13 @@ import {
 import { fetchTeamProjects } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
+import type { Project } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { database } from '../common/database';
 import { project } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
-import type { Project } from '../models/project';
 import { VCSInstance } from '../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,
@@ -200,7 +200,7 @@ async function syncTeamProjects({
   // this will create a new project for any remote projects that don't exist in the current organization
   await Promise.all(
     remoteProjectsThatNeedToBeCreated.map(async prj => {
-      await project.create({
+      await services.project.create({
         remoteId: prj.id,
         name: prj.name,
         parentId: organizationId,
@@ -217,7 +217,7 @@ async function syncTeamProjects({
     remoteProjectsThatNeedToBeUpdated.map(async prj => {
       const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
       if (remoteProject && remoteProject.name !== prj.name) {
-        await project.update(prj, {
+        await services.project.update(prj, {
           name: remoteProject.name,
         });
       }
@@ -239,7 +239,7 @@ async function syncTeamProjects({
 
   await Promise.all(
     removedRemoteProjects.map(async prj => {
-      await project.update(prj, {
+      await services.project.update(prj, {
         remoteId: null,
       });
     }),

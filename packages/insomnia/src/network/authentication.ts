@@ -1,6 +1,7 @@
 import * as Hawk from 'hawk';
 
-import type { AuthTypeOAuth2, RequestAuthentication, RequestParameter } from '../models/request';
+import type { AuthTypeOAuth2, RequestAuthentication, RequestParameter } from '~/insomnia-data';
+
 import type { RenderedRequest } from '../templating/types';
 import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
 import { getBasicAuthHeader } from './basic-auth/get-header';

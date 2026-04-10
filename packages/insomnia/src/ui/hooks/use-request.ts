@@ -1,6 +1,20 @@
 import { useParams } from 'react-router';
 
-import type { McpPayload, McpRequest, Settings } from '~/insomnia-data';
+import type {
+  GrpcRequest,
+  GrpcRequestMeta,
+  McpPayload,
+  McpRequest,
+  Request,
+  RequestGroup,
+  RequestGroupMeta,
+  RequestMeta,
+  Settings,
+  SocketIOPayload,
+  SocketIORequest,
+  WebSocketRequest,
+  WorkspaceMeta,
+} from '~/insomnia-data';
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 import { useRequestUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-meta';
 import { useRequestUpdatePayloadActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';
@@ -8,17 +22,6 @@ import { useRequestGroupUpdateActionFetcher } from '~/routes/organization.$organ
 import { useRequestGroupUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId.update-meta';
 import { useWorkspaceUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
 import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
-
-import type { GrpcRequest } from '../../models/grpc-request';
-import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
-import type { Request } from '../../models/request';
-import type { RequestGroup } from '../../models/request-group';
-import type { RequestGroupMeta } from '../../models/request-group-meta';
-import type { RequestMeta } from '../../models/request-meta';
-import type { SocketIOPayload } from '../../models/socket-io-payload';
-import type { SocketIORequest } from '../../models/socket-io-request';
-import type { WebSocketRequest } from '../../models/websocket-request';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
 
 export const useRequestPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {

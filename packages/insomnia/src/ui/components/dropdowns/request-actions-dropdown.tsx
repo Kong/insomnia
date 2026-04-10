@@ -3,7 +3,15 @@ import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { services } from '~/insomnia-data';
+import type {
+  Environment,
+  GrpcRequest,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+} from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -14,12 +22,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { Environment } from '../../../models/environment';
-import type { GrpcRequest } from '../../../models/grpc-request';
-import { isRequest, type Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import type { SocketIORequest } from '../../../models/socket-io-request';
-import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -35,6 +37,8 @@ import { AskModal } from '../modals/ask-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
+
+const { isRequest } = models.request;
 
 interface Props {
   activeEnvironment: Environment;
@@ -148,7 +152,7 @@ export const RequestActionsDropdown = ({
   const copyAsCurl = async () => {
     try {
       const har = await exportHarRequest(request._id, activeEnvironment._id);
-      const HTTPSnippet = (await import('httpsnippet')).default;
+      const { HTTPSnippet } = await import('httpsnippet');
       const snippet = new HTTPSnippet(har);
       const cmd = snippet.convert('shell', 'curl');
 

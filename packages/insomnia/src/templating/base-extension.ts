@@ -5,14 +5,12 @@ import os from 'node:os';
 import iconv from 'iconv-lite';
 
 import { jarFromCookies } from '~/common/cookies';
+import type { Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { database as db } from '../common/database';
 import * as models from '../models/index';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
@@ -133,7 +131,7 @@ export default class BaseExtension {
         openInBrowser: (url: string) => window.main.openInBrowser(url),
         models: {
           request: {
-            getById: models.request.getById,
+            getById: services.request.getById,
             getAncestors: async (request: any) => {
               const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
                 models.requestGroup.type,
@@ -147,23 +145,23 @@ export default class BaseExtension {
             update: services.cloudCredential.update,
           },
           workspace: {
-            getById: models.workspace.getById,
+            getById: services.workspace.getById,
           },
           oAuth2Token: {
             getByRequestId: services.oAuth2Token.getByParentId,
           },
           cookieJar: {
             getOrCreateForParentId: (parentId: string) => {
-              return models.cookieJar.getOrCreateForParentId(parentId);
+              return services.cookieJar.getOrCreateForParentId(parentId);
             },
             getCookiesForUrl: async (parentId: string, url: string) => {
-              const cookies = await models.cookieJar.getOrCreateForParentId(parentId);
+              const cookies = await services.cookieJar.getOrCreateForParentId(parentId);
               const jar = jarFromCookies(cookies.cookies);
               return jar.getCookiesSync(url);
             },
           },
           response: {
-            getLatestForRequestId: models.response.getLatestForRequestId,
+            getLatestForRequestId: services.response.getLatestForRequestId,
             getBodyBuffer,
           },
           settings: {

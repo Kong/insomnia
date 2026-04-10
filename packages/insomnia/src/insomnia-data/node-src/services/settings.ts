@@ -1,9 +1,8 @@
-import { database as db, models, type Settings } from '~/insomnia-data';
-
-const { type } = models.settings;
+import type { Settings } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 
 export async function all() {
-  let settingsList = await db.find<Settings>(type);
+  let settingsList = await db.find<Settings>(models.settings.type);
 
   if (settingsList?.length === 0) {
     settingsList = [await getOrCreate()];
@@ -13,7 +12,7 @@ export async function all() {
 }
 
 async function create() {
-  const settings = await db.docCreate<Settings>(type);
+  const settings = await db.docCreate<Settings>(models.settings.type);
   return settings;
 }
 
@@ -29,7 +28,7 @@ export async function patch(settingsPatch: Partial<Settings>) {
 }
 
 export async function getOrCreate() {
-  const result = await db.findOne<Settings>(type);
+  const result = await db.findOne<Settings>(models.settings.type);
 
   if (!result) {
     return await create();
