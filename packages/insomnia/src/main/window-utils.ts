@@ -12,6 +12,7 @@ import {
   Menu,
   type MenuItemConstructorOptions,
   MessageChannelMain,
+  net,
   protocol,
   screen,
   shell,
@@ -255,11 +256,23 @@ export function createWindow(): ElectronBrowserWindow {
 
   routerProcess
     .init()
-    .then(({ url }) => {
+    .then(() => {
+      if (protocol.isProtocolHandled('https')) {
+        protocol.unhandle('https');
+      }
+
+      protocol.handle('https', request => {
+        const requestUrl = new URL(request.url);
+
+        if (requestUrl.hostname === 'insomnia-app.local') {
+          return routerProcess.fetch(request);
+        }
+
+        return net.fetch(request, { bypassCustomProtocolHandlers: true });
+      });
+
       console.log(`[main] Loading ${appUrl}`);
       mainBrowserWindow.loadURL(appUrl);
-
-      protocol.handle('https', request => routerProcess.fetch(request));
     })
     .catch(err => {
       console.error('Failed to initialize router process', err);

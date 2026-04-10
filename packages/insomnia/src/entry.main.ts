@@ -196,7 +196,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
   if (!hasVisibleWindows) {
     try {
       console.log('[main] creating new window for MacOS activate event');
-      windowUtils.createWindow(url);
+      windowUtils.createWindow();
     } catch {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.

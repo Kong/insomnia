@@ -1,20 +1,29 @@
+/* eslint-env node */
+
 import * as fsp from 'node:fs/promises';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import process from 'node:process';
+import { fileURLToPath, URL } from 'node:url';
 
 import * as mime from 'mime-types';
 import { createRequestHandler } from 'react-router';
 
+const { fetch, Response } = globalThis;
+
 // Logic for dev/prod DX was adopted from https://github.com/jacob-ebey/remix-electron-llamafile/blob/main/electron/index.js
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const appRoot = path.resolve(__dirname, '..');
+const packageRoot = path.resolve(appRoot, '..');
 
 const DEVELOPMENT = process.env.NODE_ENV !== 'production';
 
 const viteDevServer = DEVELOPMENT
   ? await import('vite').then(vite =>
       vite.createServer({
+        configFile: path.resolve(packageRoot, 'vite.config.ts'),
+        root: packageRoot,
         server: {
-          // middlewareMode: true,
+          port: 5173,
           strictPort: true,
           hmr: {
             host: 'localhost',
@@ -23,44 +32,37 @@ const viteDevServer = DEVELOPMENT
             protocol: 'ws',
           },
         },
-        resolve: {
-          alias: {
-            '~': path.resolve(__dirname, 'app'),
-          },
-        },
-        publicDir: path.resolve(__dirname, 'public'),
       }),
     )
   : undefined;
 
 const build = async () => {
   if (viteDevServer) {
-    return viteDevServer.ssrLoadModule('virtual:react-router/server-build'); // as Promise<ServerBuild>;
+    return viteDevServer.ssrLoadModule('virtual:react-router/server-build');
   }
-  // @ts-ignore @TODO Make sure this is using the correct build path in production
-  return import('./build/server/index.js'); // as Promise<ServerBuild>
+
+  return import('./build/server/index.js');
 };
 
 let port = '';
 if (viteDevServer) {
   await viteDevServer.listen(5173);
   const address = viteDevServer.httpServer?.address();
+
   if (address && typeof address !== 'string') {
-    port = ':' + address.port;
+    port = `:${address.port}`;
   } else if (address) {
     const url = new URL(address);
-    port = ':' + url.port;
+    port = `:${url.port}`;
   } else {
     throw new Error('Failed to get dev server port');
   }
 }
 
 function createAppRequestHandler() {
-  let requestHandler = createRequestHandler(build);
+  const requestHandler = createRequestHandler(build);
 
   return async request => {
-    //: Request) => {
-    // Buffer console logs during request handling
     const originalConsole = {
       log: console.log,
       error: console.error,
@@ -71,7 +73,6 @@ function createAppRequestHandler() {
 
     const logBuffer = [];
 
-    // Override console methods to buffer logs
     console.log = (...args) => logBuffer.push({ type: 'log', args });
     console.error = (...args) => logBuffer.push({ type: 'error', args });
     console.warn = (...args) => logBuffer.push({ type: 'warn', args });
@@ -94,22 +95,16 @@ function createAppRequestHandler() {
 
     try {
       const url = new URL(request.url);
-
       const response = await requestHandler(request);
 
-      if (
-        response.status === 404 && // Try to handle the request as a static file
-        url.pathname !== '/' &&
-        (request.method === 'GET' || request.method === 'HEAD')
-      ) {
+      if (response.status === 404 && url.pathname !== '/' && (request.method === 'GET' || request.method === 'HEAD')) {
         if (viteDevServer) {
-          // First, try to serve from public directory
-          const staticFile = path.resolve(__dirname, 'public' + url.pathname);
+          const staticFile = path.resolve(appRoot, 'static' + url.pathname);
 
           if (
             await fsp
               .stat(staticFile)
-              .then(s => s.isFile())
+              .then(stat => stat.isFile())
               .catch(() => false)
           ) {
             return new Response(await fsp.readFile(staticFile), {
@@ -119,7 +114,6 @@ function createAppRequestHandler() {
             });
           }
 
-          // For other requests, proxy to Vite's dev server
           try {
             const vitePort = viteDevServer.config.server.port || 5173;
             const viteHost = viteDevServer.config.server.host || 'localhost';
@@ -141,7 +135,6 @@ function createAppRequestHandler() {
             console.error('Proxy error:', proxyError);
           }
 
-          // Fallback to transform request for imports
           if (request.method === 'HEAD') {
             return new Response(null, {
               headers: {
@@ -152,8 +145,6 @@ function createAppRequestHandler() {
           }
 
           try {
-            // Simply let Vite handle ALL requests normally
-            // Don't try to intercept asset requests - let Vite's dev server handle them
             const transformed = await viteDevServer.transformRequest(url.pathname + url.search);
 
             if (transformed) {
@@ -167,12 +158,8 @@ function createAppRequestHandler() {
         } else {
           try {
             const assetDir = path.resolve(__dirname, path.join('build', 'client'));
-            const requestedPath = path
-              .normalize(url.pathname)
-              // Remove leading ../
-              .replace(/^(\.\.[/\\])+/, '');
+            const requestedPath = path.normalize(url.pathname).replace(/^((\.\.)[/\\])+/, '');
 
-            // Adopted from https://www.electronjs.org/docs/latest/api/protocol#protocolhandlescheme-handler
             const pathToServe = path.resolve(assetDir, requestedPath.slice(1));
             const relativePath = path.relative(assetDir, pathToServe);
             const isSafe = relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath);
@@ -181,7 +168,7 @@ function createAppRequestHandler() {
               throw new Error('Invalid file path');
             }
 
-            const isFile = await fsp.stat(pathToServe).then(s => s.isFile());
+            const isFile = await fsp.stat(pathToServe).then(stat => stat.isFile());
             if (isFile) {
               return new Response(await fsp.readFile(pathToServe), {
                 headers: {
@@ -189,19 +176,16 @@ function createAppRequestHandler() {
                 },
               });
             }
-          } catch (e) {
-            console.error('Error serving static file:', e);
+          } catch (error) {
+            console.error('Error serving static file:', error);
           }
         }
       }
 
-      // If the request is not a static file, handle it with the React Router
-      // Restore console and flush buffered logs only when returning the response
       restoreConsole();
       flushLogs();
       return response;
     } catch (error) {
-      // Restore console in case of error but don't flush logs
       restoreConsole();
       flushLogs();
       console.error('ROUTING ERROR', error);

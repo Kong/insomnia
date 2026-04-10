@@ -1,11 +1,9 @@
-/* eslint-disable no-undef */
-
 import path from 'node:path';
 import { styleText } from 'node:util';
 
 import electron, { app, dialog, MessageChannelMain, utilityProcess } from 'electron';
 
-import { sendRequestViaUtilityProcess } from './message-channel-http-adapter.js';
+import { sendRequestViaUtilityProcess } from './message-channel-http-adapter.mjs';
 
 const ROUTER_PROCESS_LOG = styleText('bgGray', ' Router Process ');
 

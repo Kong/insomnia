@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 console.log('[router-process] Router worker started');
-import { initElectronRouter } from './electron.router.js';
-import { handleIncomingRequest } from './message-channel-http-adapter.js';
+import { initElectronRouter } from './electron.router.mjs';
+import { handleIncomingRequest } from './message-channel-http-adapter.mjs';
 const { createAppRequestHandler, url } = initElectronRouter();
 
 const requestHandler = createAppRequestHandler();
