@@ -89,7 +89,7 @@ export const GitOauthAuthBanner: FC<{
                 initSignInFetcher.submit({ provider: provider.type });
               }}
             >
-              Reauthenticate with {provider.displayName}
+              Re-authenticate with {provider.displayName}
             </Button>{' '}
             to continue.
           </span>
@@ -111,7 +111,7 @@ export const GitOauthAuthBanner: FC<{
             {({ close }) => (
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-2">
-                  <Heading className="text-2xl">Reauthenticate {provider.displayName} Credential</Heading>
+                  <Heading className="text-2xl">Re-authenticate {provider.displayName} Credential</Heading>
                   <Button
                     className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={close}
