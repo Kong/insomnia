@@ -1361,7 +1361,7 @@ export class GitVCS {
     }
 
     for (const conflictType of conflictTypeList) {
-      const conflictPaths = conflictPathsObj[conflictType];
+      const conflictPaths = conflictPathsObj[conflictType].filter(fp => fp.endsWith('.yaml'));
       const message = {
         bothModified: 'both modified',
         deleteByUs: 'you deleted and they modified',
@@ -1562,7 +1562,7 @@ export class GitVCS {
       }
 
       for (const conflictType of conflictTypeList) {
-        const conflictPaths = conflictPathsObj[conflictType];
+        const conflictPaths = conflictPathsObj[conflictType].filter(fp => fp.endsWith('.yaml'));
         const message = {
           bothModified: 'both modified',
           deleteByUs: 'you deleted and they modified',
