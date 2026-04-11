@@ -43,10 +43,11 @@ export const runScript = async ({
     '__bridgeSettle__',         // Awaits all tracked promises before returning
     ...maskNames,             // Masked globals from the security policy (e.g. eval → undefined)
   ];
+  const strictMode = context.settings.scriptStrictModeEnabled !== false;
   const scriptBody = [
     `__bridgeReset__();`,               // Start with a clean async task slate for this script run
     `await (async function() {`,        // IIFE gives the user script its own lexical scope
-    `  'use strict';`,                  // Strict mode: this === undefined, prevents silent errors
+    ...(strictMode ? [`  'use strict';`] : []),  // Strict mode: this === undefined, prevents silent errors
     `  const $ = insomnia;`,            // Postman-compat alias for the insomnia scripting object
     `  ${script}`,                      // User script body
     `})();`,
@@ -55,6 +56,19 @@ export const runScript = async ({
     `await __bridgeSettle__();`,        // Drain any fire-and-forget promises the script created
     `return insomnia;`,                 // Return the (possibly mutated) insomnia context
   ].join('\n');
+
+  // const scriptBody = [
+  //   `const $ = insomnia;`,
+  //   `__bridgeReset__();`,
+  //   `try {`,
+  //   `  ${script}`,
+  //   `  await __waitForAllTestsDone__();`,
+  //   `} finally {`,
+  //   `  __bridgeStop__();`,
+  //   `  await __bridgeSettle__();`,
+  //   `}`,
+  //   `return insomnia;`,
+  // ].join('\n');
 
   const executeScript = AsyncFunction(...scriptParams, scriptBody);
 

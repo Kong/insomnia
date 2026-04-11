@@ -2,7 +2,7 @@ import { Switch } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
 
-import { type ASTRule, blockedPropertyRules, blockedRootRules, interceptorRules, maskRules, type ThreatRule } from '../../../scripting/script-security-policy';
+import { type ASTRule, blockedPropertyRules, blockedRootRules, maskRules, type ThreatRule } from '../../../scripting/script-security-policy';
 import { useSettingsPatcher } from '../../hooks/use-request';
 
 const DISABLED_TOOLTIP = 'Enable the script sandbox to configure individual rules';
@@ -25,19 +25,19 @@ const RuleToggle = ({
       {name && <span className="font-mono text-sm font-medium text-(--color-font)">{name}</span>}
       <p className="text-xs text-(--hl)">{description}</p>
     </div>
-    <span className="group relative inline-flex h-6 w-11 shrink-0">
+    <span className="group/tooltip relative inline-flex h-6 w-11 shrink-0">
       <Switch
         isSelected={isEnabled}
         onChange={onChange}
         isDisabled={isDisabled}
-        className="group flex items-center gap-2"
+        className="group/switch flex items-center gap-2"
       >
-        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled:cursor-not-allowed group-data-disabled:opacity-50 group-data-selected:bg-(--color-surprise)">
-          <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected:translate-x-5" />
+        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full border-2 border-solid border-transparent bg-(--hl-md) transition-colors group-data-disabled/switch:cursor-not-allowed group-data-disabled/switch:opacity-50 group-data-selected/switch:bg-(--color-surprise)">
+          <span className="h-5 w-5 translate-x-0 rounded-full bg-white transition-transform group-data-selected/switch:translate-x-5" />
         </div>
       </Switch>
       {isDisabled && (
-        <div className="pointer-events-none absolute top-full right-0 z-50 mt-1 hidden max-w-[300px] min-w-[180px] rounded border border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-center text-sm wrap-break-word whitespace-normal text-(--color-font) group-hover:block">
+        <div className="pointer-events-none absolute top-full right-0 z-50 mt-1 hidden max-w-[300px] min-w-[180px] rounded border border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-center text-sm wrap-break-word whitespace-normal text-(--color-font) group-hover/tooltip:block">
           {DISABLED_TOOLTIP}
         </div>
       )}
@@ -55,6 +55,7 @@ const RuleCard = ({
   title,
   description,
   rules,
+  standaloneRules,
   groups,
   disabledNames,
   sandboxEnabled,
@@ -63,6 +64,7 @@ const RuleCard = ({
   title: string;
   description: string;
   rules?: (ThreatRule | ASTRule)[];
+  standaloneRules?: (ThreatRule | ASTRule)[];
   groups?: RuleGroup[];
   disabledNames: string[];
   sandboxEnabled: boolean;
@@ -84,6 +86,20 @@ const RuleCard = ({
           onChange={enabled => onToggle([rule.name], enabled)}
         />
       ))}
+      {standaloneRules && standaloneRules.length > 0 && (
+        <div className="ml-2 flex flex-col gap-4 border-l-2 border-solid border-(--hl-sm) pl-3">
+          {standaloneRules.map(rule => (
+            <RuleToggle
+              key={rule.name}
+              name={rule.name}
+              description={rule.description}
+              isEnabled={!disabledNames.includes(rule.name)}
+              isDisabled={!sandboxEnabled}
+              onChange={enabled => onToggle([rule.name], enabled)}
+            />
+          ))}
+        </div>
+      )}
       {groups?.map(group => {
         const groupNames = group.rules.map(r => r.name);
         const allEnabled = groupNames.every(n => !disabledNames.includes(n));
@@ -115,6 +131,7 @@ export const ScriptingSettings = () => {
   const patchSettings = useSettingsPatcher();
 
   const sandboxEnabled = settings.scriptSandboxEnabled !== false;
+  const strictModeEnabled = settings.scriptStrictModeEnabled !== false;
   const disabledRules = settings.disabledSecurityRules ?? [];
   const disabledProperties = settings.disabledBlockedProperties ?? [];
   const disabledRoots = settings.disabledBlockedRoots ?? [];
@@ -146,6 +163,8 @@ export const ScriptingSettings = () => {
 
   const ungroupedMaskRules = maskRules.filter(r => !GROUPED_MASK_NAMES.has(r.name));
 
+  const STANDALONE_PROPERTY_NAMES = new Set(['mainModule', 'constructor']);
+
   const GROUPED_PROPERTY_NAMES = new Set([
     'prototype', '__proto__', 'getPrototypeOf', 'setPrototypeOf',
     'getFunction', 'getThis', 'prepareStackTrace', 'captureStackTrace',
@@ -171,7 +190,8 @@ export const ScriptingSettings = () => {
     },
   ];
 
-  const ungroupedBlockedPropertyRules = blockedPropertyRules.filter(r => !GROUPED_PROPERTY_NAMES.has(r.name));
+  const standaloneBlockedPropertyRules = blockedPropertyRules.filter(r => STANDALONE_PROPERTY_NAMES.has(r.name));
+  const ungroupedBlockedPropertyRules = blockedPropertyRules.filter(r => !GROUPED_PROPERTY_NAMES.has(r.name) && !STANDALONE_PROPERTY_NAMES.has(r.name));
 
   const GROUPED_ROOT_NAMES = new Set([
     'globalThis', 'global', 'window', 'self', 'frames',
@@ -228,17 +248,17 @@ export const ScriptingSettings = () => {
               </div>
             </Switch>
           </div>
+          <div className="ml-2 border-l-2 border-solid border-(--hl-sm) pl-3">
+            <RuleToggle
+              name="use strict"
+              description="Wraps scripts with 'use strict' preventing the accidental creation of global variables and blocking restricted features."
+              isEnabled={strictModeEnabled}
+              isDisabled={!sandboxEnabled}
+              onChange={enabled => patchSettings({ scriptStrictModeEnabled: enabled })}
+            />
+          </div>
         </div>
       </div>
-
-      <RuleCard
-        title="Interceptor Rules"
-        description="Replaces specific global functions with restricted versions that limit their built-in capability."
-        rules={interceptorRules}
-        disabledNames={disabledRules}
-        sandboxEnabled={sandboxEnabled}
-        onToggle={makeToggler('disabledSecurityRules', disabledRules)}
-      />
 
       <RuleCard
         title="Mask Rules"
@@ -254,6 +274,7 @@ export const ScriptingSettings = () => {
         title="Blocked Properties"
         description="Prevents specific properties from being accessed on any object."
         rules={ungroupedBlockedPropertyRules}
+        standaloneRules={standaloneBlockedPropertyRules}
         groups={blockedPropertyGroups}
         disabledNames={disabledProperties}
         sandboxEnabled={sandboxEnabled}

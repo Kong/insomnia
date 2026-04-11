@@ -29,6 +29,10 @@ export interface SandboxContext {
 const SANDBOX_BLOCKED_PROPERTIES = new Set(blockedPropertyRules.map(r => r.name));
 const SANDBOX_BLOCKED_ROOTS = new Set(blockedRootRules.map(r => r.name));
 
+// These interceptor rules always apply — they cannot be disabled via settings and run even when
+// the sandbox is turned off, because they gate access to critical host APIs (require, window, eval).
+const ALWAYS_ON_INTERCEPTORS = new Set(['require', 'window', 'eval']);
+
 // Walks a MemberExpression down to its root Identifier.
 function getMemberRoot(node: any): string | null {
   if (node.type === 'Identifier') return node.name;
@@ -75,7 +79,9 @@ export function checkSandboxViolations(
       // try next sourceType
     }
   }
+  // We should evenutally drop non-valid JavaScript.   
   if (!tree) {
+    // throw new Error();
     return;
   }
 
@@ -314,14 +320,16 @@ export async function prepareSandbox(
       activeSandboxCheck(script);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      console.log('[sandbox] security policy violation:', error.message);
       (error as NodeJS.ErrnoException).code = 'SECURITY_POLICY_VIOLATION';
       throw error;
     }
 
     // prevents mutate via insomnia._settings.
     sandboxContext = { ...context, settings: deepFreeze({ ...context.settings }) };
-    const disabledRules = context.settings.disabledSecurityRules ?? [];
+    // Always-on interceptors cannot be disabled via settings — filter them out before applying user overrides.
+    const disabledRules = (context.settings.disabledSecurityRules ?? []).filter(
+      name => !ALWAYS_ON_INTERCEPTORS.has(name),
+    );
     const activePolicy = disabledRules.reduce(
       (policy, ruleName) => policy.withoutRule(ruleName),
       securityPolicy,
@@ -329,6 +337,11 @@ export async function prepareSandbox(
     ({ names: maskNames, values: maskValues } = activePolicy.buildMaskScope(activeSandboxCheck));
   } else {
     console.warn('[sandbox] script sandbox is disabled — running script without security checks');
+    // Even with the sandbox off, always apply the require/window/eval interceptors.
+    const alwaysOnPolicy = new ScriptSecurityPolicy(
+      interceptorRules.filter(r => ALWAYS_ON_INTERCEPTORS.has(r.name)),
+    );
+    ({ names: maskNames, values: maskValues } = alwaysOnPolicy.buildMaskScope(checkSandboxViolations));
   }
 
   const executionContext = await initInsomniaObject(sandboxContext, scriptConsole.log);

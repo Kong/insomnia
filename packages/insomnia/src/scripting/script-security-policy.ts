@@ -8,8 +8,8 @@ export interface ASTRule {
 
 export const blockedPropertyRules: ASTRule[] = [
   { name: 'prototype',         description: 'Prototype mutation — direct assignment (e.g. Promise.prototype.then = ...) can corrupt built-ins for all code in the sandbox.' },
-  { name: 'mainModule',        description: 'Module system bypass — process.mainModule.require is a common path to reach the real require from inside a restricted environment.' },
-  { name: 'constructor',       description: 'Function constructor escape — accessing .constructor on any object walks up to AsyncFunction or Function, escaping parameter-level masking.' },
+  { name: 'mainModule',        description: 'Prevents accessing the reference property to the top-level module object.' },
+  { name: 'constructor',       description: 'Prevents accessing .constructor on any object.' },
   { name: '__proto__',         description: 'Prototype mutation — direct prototype chain manipulation; can reassign an object\'s prototype to a host object.' },
   { name: 'prepareStackTrace',  description: 'Stack inspection escape — V8 stack trace hook (CVE-2023-29017, CVE-2023-30547); a crafted Error can run arbitrary code during stringify.' },
   { name: 'captureStackTrace',  description: 'Stack inspection — V8 method that captures the current call stack onto an object, exposing stack frame host objects.' },

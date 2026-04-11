@@ -76,6 +76,7 @@ export function init(): BaseSettings {
     vaultSecretCacheDuration: 30,
     dataFolders: [],
     scriptSandboxEnabled: true,
+    scriptStrictModeEnabled: true,
     disabledSecurityRules: [],
     disabledBlockedProperties: [],
     disabledBlockedRoots: [],
