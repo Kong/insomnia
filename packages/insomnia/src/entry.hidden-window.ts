@@ -15,19 +15,16 @@ Sentry.init({
 
 window.bridge.onmessage(
   async (data: { script: string; context: RequestContext }, callback: ({ error }: { error: string }) => void) => {
-    console.log(`[hidden-window] message received, script length=${data.script.length}, timeout=${data.context.timeout ?? 5000}ms`);
     window.bridge.setBusy(true);
 
     try {
       const timeout = data.context.timeout || 5000;
       const timeoutPromise = new window.bridge.Promise((resolve: ({ error }: { error: string }) => void) => {
         setTimeout(() => {
-          console.log('[hidden-window] timeout reached');
           resolve({ error: 'Timeout: Running script took too long' });
         }, timeout);
       });
       const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
-      console.log('[hidden-window] script completed successfully');
       callback(result);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
