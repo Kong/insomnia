@@ -660,14 +660,17 @@ test.describe('unhappy paths', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify
-    await expect.soft(page.getByTestId('response-pane')).toContainText('my custom error');
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .toContainText(`my custom error`);
 
     await page.getByRole('tab', { name: 'Scripts' }).click();
     await page.getByTestId('CodeEditor').getByRole('textbox').press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
     await editor.fill(`insomnia.INVALID_FIELD.set('', '')`);
 
-    await page.getByRole('tab', { name: 'Body' }).click();
+    // Wait for the CodeEditor debounce (100ms) to fire and persist the new script to the DB
+    await page.waitForTimeout(200);
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
