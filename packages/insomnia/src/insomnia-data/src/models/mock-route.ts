@@ -1,4 +1,4 @@
-import type { RequestHeader } from '~/models/request';
+import type { RequestHeader } from '~/insomnia-data';
 import type { BaseModel } from '~/models/types';
 
 export const name = 'Mock Route';

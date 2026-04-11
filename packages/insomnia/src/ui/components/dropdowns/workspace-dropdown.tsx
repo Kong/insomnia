@@ -33,8 +33,6 @@ import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import * as models from '../../../models';
-import { isRequest } from '../../../models/request';
-import { isRequestGroup } from '../../../models/request-group';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -98,8 +96,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
         };
 
         const docs = await db.getWithDescendants(workspace, [models.request.type]);
-        const requests = docs.filter(isRequest).filter(doc => !doc.isPrivate);
-        const requestGroups = docs.filter(isRequestGroup);
+        const requests = docs.filter(models.request.isRequest).filter(doc => !doc.isPrivate);
+        const requestGroups = docs.filter(models.requestGroup.isRequestGroup);
         await action(context, {
           requestGroups,
           requests,

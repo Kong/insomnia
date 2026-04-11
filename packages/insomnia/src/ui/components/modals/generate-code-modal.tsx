@@ -2,11 +2,11 @@ import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import type { Request } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { exportHarWithRequest } from '../../../common/har';
-import type { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';

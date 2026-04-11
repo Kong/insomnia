@@ -1,9 +1,6 @@
-import type { CloudProviderCredential, Workspace } from '~/insomnia-data';
+import type { CloudProviderCredential, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
 
 import packageJson from '../../package.json';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
 import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';

@@ -2,11 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
 import { getMockServiceBinURL } from '../../../common/constants';
-import * as models from '../../../models';
 import { useTimeoutWhen } from '../../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
@@ -125,7 +125,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
                 icon="code"
                 label="Generate Client Code"
                 onClick={async () => {
-                  const request = await models.request.getByParentId(mockRoute._id);
+                  const request = await services.request.getByParentId(mockRoute._id);
                   request &&
                     showModal(GenerateCodeModal, {
                       request: { ...request, url: getMockServiceBinURL(mockServer, pathInput) },

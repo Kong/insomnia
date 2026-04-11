@@ -13,6 +13,8 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { Request, RequestBody, RequestHeader, RequestParameter } from '~/insomnia-data';
+
 import {
   CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
@@ -27,7 +29,6 @@ import {
   getContentTypeName,
   METHOD_POST,
 } from '../../../common/constants';
-import type { Request, RequestBody, RequestHeader, RequestParameter } from '../../../models/request';
 import {
   type RequestLoaderData,
   useRequestLoaderData,

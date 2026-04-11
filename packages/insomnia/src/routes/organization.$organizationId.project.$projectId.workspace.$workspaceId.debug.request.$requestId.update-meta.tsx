@@ -1,9 +1,8 @@
 import { href } from 'react-router';
 
-import type { GrpcRequestMeta } from '~/insomnia-data';
+import type { GrpcRequestMeta, RequestMeta } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { RequestMeta } from '~/models/request-meta';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -17,7 +16,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     await services.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     return null;
   }
-  await models.requestMeta.updateOrCreateByParentId(requestId, patch);
+  await services.requestMeta.updateOrCreateByParentId(requestId, patch);
   return null;
 }
 

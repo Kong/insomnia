@@ -2,7 +2,6 @@ import { href, redirect } from 'react-router';
 
 import { getMockServiceBinURL } from '~/common/constants';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -39,15 +38,15 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     },
   });
 
-  const requestFolder = await models.requestGroup.create({
+  const requestFolder = await services.requestGroup.create({
     name: 'Mock Server Requests',
     parentId: collectionWorkspace._id,
   });
 
-  await models.requestGroupMeta.create({ parentId: requestFolder._id, collapsed: false });
+  await services.requestGroupMeta.create({ parentId: requestFolder._id, collapsed: false });
 
   for (const mockRoute of mockRoutes) {
-    await models.request.create({
+    await services.request.create({
       name: `${mockRoute.name}`,
       url: '{{ mockbin_base_url }}' + mockRoute.name,
       method: mockRoute.method.toUpperCase(),

@@ -6,7 +6,6 @@ import { parse } from 'yaml';
 
 import { EnvironmentKvPairDataType, EnvironmentType, services } from '~/insomnia-data';
 
-import { request, requestGroup } from '../../models';
 import * as importUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
 import { tryImportV5Data } from '../insomnia-v5';
@@ -162,7 +161,7 @@ describe('importRaw()', () => {
 
     const workspacesCount = await services.workspace.count();
     const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
-    const curlRequests = await request.findByParentId(projectWorkspaces[0]._id);
+    const curlRequests = await services.request.findByParentId(projectWorkspaces[0]._id);
 
     expect(workspacesCount).toBe(1);
 
@@ -192,7 +191,7 @@ describe('importRaw()', () => {
       workspaceId: existingWorkspace._id,
     });
 
-    const curlRequests = await request.findByParentId(existingWorkspace._id);
+    const curlRequests = await services.request.findByParentId(existingWorkspace._id);
 
     expect(curlRequests[0]).toMatchObject({
       body: {
@@ -220,8 +219,8 @@ describe('importRaw()', () => {
 
     const projectWorkspaces = await services.workspace.findByParentId(projectToImportTo._id);
 
-    const requestGroups = await requestGroup.findByParentId(projectWorkspaces[0]._id);
-    const requests = await request.findByParentId(requestGroups[0]._id);
+    const requestGroups = await services.requestGroup.findByParentId(projectWorkspaces[0]._id);
+    const requests = await services.request.findByParentId(requestGroups[0]._id);
 
     expect(requests[0]).toMatchObject({
       url: 'https://insomnia.rest',
@@ -247,8 +246,8 @@ describe('importRaw()', () => {
       workspaceId: existingWorkspace._id,
     });
 
-    const requestGroups = await requestGroup.findByParentId(existingWorkspace._id);
-    const requests = await request.findByParentId(requestGroups[0]._id);
+    const requestGroups = await services.requestGroup.findByParentId(existingWorkspace._id);
+    const requests = await services.request.findByParentId(requestGroups[0]._id);
 
     expect(requests[0]).toMatchObject({
       url: 'https://insomnia.rest',
@@ -495,7 +494,7 @@ describe('importRaw()', () => {
     const workspaces = await importUtil.importResourcesToProject({ projectId: proj._id });
     expect(workspaces).toHaveLength(1);
 
-    const reqs = await request.findByParentId(workspaces[0]._id);
+    const reqs = await services.request.findByParentId(workspaces[0]._id);
     expect(reqs).toHaveLength(1);
   });
 

@@ -1,6 +1,7 @@
 import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
+import type { RequestHeader } from '~/insomnia-data';
 import {
   useMockRouteLoaderData,
   useMockRoutePatcher,
@@ -8,7 +9,6 @@ import {
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import type { RequestHeader } from '../../../models/request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {

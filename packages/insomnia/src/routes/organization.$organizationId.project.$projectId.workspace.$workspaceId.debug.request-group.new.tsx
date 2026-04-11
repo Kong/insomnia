@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
-import { EnvironmentType } from '~/insomnia-data';
-import * as models from '~/models';
+import { EnvironmentType, services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
@@ -13,9 +12,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const parentId = formData.get('parentId') as string;
   // New folder environment to be key-value pair by default;
   const environmentType = (formData.get('environmentType') as EnvironmentType) || EnvironmentType.KVPAIR;
-  const requestGroup = await models.requestGroup.create({ parentId: parentId || workspaceId, name, environmentType });
+  const requestGroup = await services.requestGroup.create({ parentId: parentId || workspaceId, name, environmentType });
 
-  await models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: false });
+  await services.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: false });
 
   return null;
 }

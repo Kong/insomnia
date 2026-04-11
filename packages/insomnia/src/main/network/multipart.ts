@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { lookup } from 'mime-types';
 
-import type { RequestBodyParameter } from '../../models/request';
+import type { RequestBodyParameter } from '~/insomnia-data';
 
 export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
 

@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
+import type { Request, RequestGroup } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import {
@@ -19,9 +20,6 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import type { Request } from '../../models/request';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '../../models/request';
-import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
@@ -45,6 +43,8 @@ import { InputVaultKeyModal } from './modals/input-vault-key-modal';
 import { PromptModal } from './modals/prompt-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
+const { isRequestGroup } = models.requestGroup;
+const { isEventStreamRequest, isGraphqlSubscriptionRequest } = models.request;
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;

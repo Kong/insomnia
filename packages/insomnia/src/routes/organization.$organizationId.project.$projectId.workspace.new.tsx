@@ -212,7 +212,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           ];
 
       const activeRequestId = (
-        await models.request.create({
+        await services.request.create({
           parentId: workspace._id,
           method: METHOD_GET,
           name: 'My first request',

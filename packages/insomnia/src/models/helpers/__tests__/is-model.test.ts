@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { generateId } from '../../../common/misc';
 import * as models from '../../index';
-import { isRequest } from '../../request';
-import { isRequestGroup } from '../../request-group';
 
 const { isProtoDirectory } = models.protoDirectory;
 const { isProtoFile } = models.protoFile;
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);

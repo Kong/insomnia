@@ -56,6 +56,8 @@ const config = {
     mergeASARs: false,
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
+      NSLocalNetworkUsageDescription:
+        'Insomnia needs permission to connect to local APIs and development servers such as localhost, 127.0.0.1, or other LAN hosts.',
     },
     // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
     notarize: true,

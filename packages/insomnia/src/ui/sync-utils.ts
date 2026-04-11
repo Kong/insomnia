@@ -6,17 +6,17 @@ import type {
   McpRequest,
   MockRoute,
   MockServer,
+  Request,
+  RequestGroup,
+  SocketIORequest,
   UnitTest,
   UnitTestSuite,
+  WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { canSync } from '~/models';
 import * as models from '~/models';
-import type { Request } from '~/models/request';
-import type { RequestGroup } from '~/models/request-group';
-import type { SocketIORequest } from '~/models/socket-io-request';
-import type { WebSocketRequest } from '~/models/websocket-request';
 import type { BackendProject, Compare, StatusCandidate } from '~/sync/types';
 import { invariant } from '~/utils/invariant';
 
@@ -69,7 +69,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   // first recursion to get all the folders ids in order to use nedb search by an array
   const flattenFoldersIntoList = async (id: string): Promise<string[]> => {
     const parentIds: string[] = [id];
-    const folderIds = (await models.requestGroup.findByParentId(id)).map(r => r._id);
+    const folderIds = (await services.requestGroup.findByParentId(id)).map(r => r._id);
     if (folderIds.length) {
       await Promise.all(folderIds.map(async folderIds => parentIds.push(...(await flattenFoldersIntoList(folderIds)))));
     }

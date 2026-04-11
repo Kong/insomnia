@@ -1,7 +1,7 @@
 import { href, redirect, useRouteLoaderData } from 'react-router';
 
-import * as models from '~/models';
-import type { RequestGroup } from '~/models/request-group';
+import type { RequestGroup } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
@@ -13,7 +13,7 @@ export interface RequestGroupLoaderData {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, requestGroupId, workspaceId } = params;
 
-  const activeRequestGroup = await models.requestGroup.getById(requestGroupId);
+  const activeRequestGroup = await services.requestGroup.getById(requestGroupId);
   if (!activeRequestGroup) {
     showResourceNotFoundToast(`Folder not found: ${requestGroupId}`);
     throw redirect(

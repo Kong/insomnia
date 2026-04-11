@@ -1,36 +1,19 @@
 import deepEqual from 'deep-equal';
 
-import type { GrpcRequest, McpRequest } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import { compressObject, decompressObject } from '~/common/misc';
+import type {
+  GrpcRequest,
+  McpRequest,
+  Request,
+  RequestVersion,
+  SocketIORequest,
+  WebSocketRequest,
+} from '~/insomnia-data';
+import { database, database as db, models } from '~/insomnia-data';
+import * as requestOperations from '~/models/helpers/request-operations';
 
-import { database, database as db } from '../common/database';
-import { compressObject, decompressObject } from '../common/misc';
-import * as requestOperations from '../models/helpers/request-operations';
-import { isRequest, type Request } from './request';
-import { isSocketIORequest, type SocketIORequest } from './socket-io-request';
-import type { BaseModel } from './types';
-import { isWebSocketRequest, type WebSocketRequest } from './websocket-request';
-
-/* When viewing a specific request, the user can click the Send button to test-send it.
-Each time the user sends the request, the parameters may differ—they might edit the body, headers, and so on—and Insomnia records every sent request as history.
-When the user browses the send history for a request and selects one of the entries, the current request is restored to the exact state it had when that request was sent, including the body, headers, and other settings.
-A Request Version is essentially a snapshot of the request at the moment it was test-sent. */
-
-export const name = 'Request Version';
-
-export const type = 'RequestVersion';
-
-export const prefix = 'rvr';
-
-export const canDuplicate = false;
-
-export const canSync = false;
-
-interface BaseRequestVersion {
-  compressedRequest: string | null;
-}
-
-export type RequestVersion = BaseModel & BaseRequestVersion;
+const { isRequest } = models.request;
+const { type } = models.requestVersion;
 
 const FIELDS_TO_IGNORE = [
   '_id',
@@ -43,18 +26,6 @@ const FIELDS_TO_IGNORE = [
   'name',
 ] as const;
 
-export const isRequestVersion = (model: Pick<BaseModel, 'type'>): model is RequestVersion => model.type === type;
-
-export function init() {
-  return {
-    compressedRequest: null,
-  };
-}
-
-export function migrate(doc: RequestVersion) {
-  return doc;
-}
-
 export function getById(id: string) {
   return db.findOne<RequestVersion>(type, { _id: id });
 }
@@ -66,8 +37,8 @@ export function findByParentId(parentId: string) {
 export async function create(request: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest) {
   if (
     !isRequest(request) &&
-    !isWebSocketRequest(request) &&
-    !isSocketIORequest(request) &&
+    !models.webSocketRequest.isWebSocketRequest(request) &&
+    !models.socketIORequest.isSocketIORequest(request) &&
     !models.mcpRequest.isMcpRequest(request)
   ) {
     throw new Error(`New ${type} was not given a valid ${request.type} instance`);
@@ -75,7 +46,7 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
 
   const parentId = request._id;
   const latestRequestVersion = await database.findOne<RequestVersion>(
-    'RequestVersion',
+    type,
     {
       parentId,
     },

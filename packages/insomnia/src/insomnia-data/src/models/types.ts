@@ -38,6 +38,34 @@ export type { Environment, EnvironmentKvPairData, UserUploadEnvironment } from '
 // Keep these enums in the shared entrypoint: unlike type-only exports, enums also exist at runtime,
 // so they must be re-exported as values here to preserve a single import path for both type and value usage.
 export { EnvironmentType, EnvironmentKvPairDataType } from './environment';
+export type {
+  AuthTypeAPIKey,
+  AuthTypeAsap,
+  AuthTypeAwsIam,
+  AuthTypeBasic,
+  AuthTypeBearer,
+  AuthTypeDigest,
+  AuthTypeHawk,
+  AuthTypeNetrc,
+  AuthTypeNone,
+  AuthTypeNTLM,
+  AuthTypeOAuth1,
+  AuthTypeOAuth2,
+  AuthTypeSingleToken,
+  OAuth2ResponseType,
+  Request,
+  RequestAuthentication,
+  RequestBody,
+  RequestBodyParameter,
+  RequestHeader,
+  RequestParameter,
+  RequestPathParameter,
+} from './request';
+export type { RequestGroup } from './request-group';
+export type { RequestGroupMeta } from './request-group-meta';
+export type { RequestAccordionKeys, RequestMeta } from './request-meta';
+export type { RequestVersion } from './request-version';
+export type { Compression, Response, ResponseHeader } from './response';
 export type { McpRequest, McpTransportType, McpServerPrimitiveTypes } from './mcp-request';
 export type { McpPayload } from './mcp-payload';
 export type { McpResponse } from './mcp-response';
@@ -61,3 +89,9 @@ export type { MockServer } from './mock-server';
 export type { UnitTest } from './unit-test';
 export type { UnitTestResult } from './unit-test-result';
 export type { UnitTestSuite } from './unit-test-suite';
+export type { SocketIOPayload } from './socket-io-payload';
+export type { BaseSocketIORequest, SocketIOEventListener, SocketIORequest } from './socket-io-request';
+export type { SocketIOResponse } from './socket-io-response';
+export type { WebSocketPayload } from './websocket-payload';
+export type { BaseWebSocketRequest, WebSocketRequest } from './websocket-request';
+export type { WebSocketResponse } from './websocket-response';

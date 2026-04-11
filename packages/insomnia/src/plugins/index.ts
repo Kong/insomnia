@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import electron from 'electron';
 
-import type { GrpcRequest, Workspace } from '~/insomnia-data';
+import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { fetchFromTemplateWorkerDatabase } from '~/templating/base-extension-worker';
@@ -13,10 +13,6 @@ import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
@@ -389,7 +385,7 @@ export function getPluginCommonContext({
           : electron.shell.openExternal(url),
       models: {
         request: {
-          getById: models.request.getById,
+          getById: services.request.getById,
           getAncestors: async (request: any) => {
             const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
               models.requestGroup.type,
@@ -414,7 +410,7 @@ export function getPluginCommonContext({
           },
         },
         response: {
-          getLatestForRequestId: models.response.getLatestForRequestId,
+          getLatestForRequestId: services.response.getLatestForRequestId,
           getBodyBuffer,
         },
         settings: {

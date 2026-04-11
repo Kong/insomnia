@@ -26,8 +26,15 @@ import type {
   McpRequest,
   MockRoute,
   MockServer,
+  Request,
+  RequestBody,
+  RequestGroup,
+  RequestHeader,
+  RequestParameter,
+  SocketIORequest,
   UnitTest,
   UnitTestSuite,
+  WebSocketRequest,
   Workspace,
   WorkspaceScope,
 } from '~/insomnia-data';
@@ -36,10 +43,6 @@ import { maskVaultEnvironmentData } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 
 import * as models from '../models';
-import type { Request, RequestBody, RequestHeader, RequestParameter } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
 import { database } from './database';
 import {
   type Insomnia_GRPCRequest,

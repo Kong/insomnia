@@ -55,7 +55,7 @@ describe('Request Model - Comprehensive Tests', () => {
         scope: 'collection',
       });
 
-      const request = await models.request.create({
+      const request = await services.request.create({
         _id: 'req_basic',
         name: 'Basic Request',
         parentId: workspace._id,
@@ -88,7 +88,7 @@ describe('Request Model - Comprehensive Tests', () => {
         { name: 'X-Custom-Header', value: 'custom-value' },
       ];
 
-      const request = await models.request.create({
+      const request = await services.request.create({
         _id: 'req_headers',
         name: 'Request with Headers',
         parentId: workspace._id,
@@ -115,7 +115,7 @@ describe('Request Model - Comprehensive Tests', () => {
         { name: 'sort', value: 'created_at' },
       ];
 
-      const request = await models.request.create({
+      const request = await services.request.create({
         _id: 'req_params',
         name: 'Request with Parameters',
         parentId: workspace._id,
@@ -150,7 +150,7 @@ describe('Request Model - Comprehensive Tests', () => {
           useISO88591: false,
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_basic_auth',
           name: 'Basic Auth Request',
           parentId: workspace._id,
@@ -171,7 +171,7 @@ describe('Request Model - Comprehensive Tests', () => {
           useISO88591: true,
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_basic_auth_iso',
           name: 'Basic Auth ISO Request',
           parentId: workspace._id,
@@ -194,7 +194,7 @@ describe('Request Model - Comprehensive Tests', () => {
           addTo: 'header',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_apikey_header',
           name: 'API Key Header Request',
           parentId: workspace._id,
@@ -215,7 +215,7 @@ describe('Request Model - Comprehensive Tests', () => {
           addTo: 'query',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_apikey_query',
           name: 'API Key Query Request',
           parentId: workspace._id,
@@ -245,7 +245,7 @@ describe('Request Model - Comprehensive Tests', () => {
           resource: 'https://api.example.com',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_oauth2_auth_code',
           name: 'OAuth2 Auth Code Request',
           parentId: workspace._id,
@@ -268,7 +268,7 @@ describe('Request Model - Comprehensive Tests', () => {
           scope: 'read write',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_oauth2_client_creds',
           name: 'OAuth2 Client Creds Request',
           parentId: workspace._id,
@@ -293,7 +293,7 @@ describe('Request Model - Comprehensive Tests', () => {
           scope: 'read write',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_oauth2_password',
           name: 'OAuth2 Password Request',
           parentId: workspace._id,
@@ -315,7 +315,7 @@ describe('Request Model - Comprehensive Tests', () => {
           password: 'testpass',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_digest_auth',
           name: 'Digest Auth Request',
           parentId: workspace._id,
@@ -337,7 +337,7 @@ describe('Request Model - Comprehensive Tests', () => {
           password: 'testpass',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_ntlm_auth',
           name: 'NTLM Auth Request',
           parentId: workspace._id,
@@ -362,7 +362,7 @@ describe('Request Model - Comprehensive Tests', () => {
           service: 'execute-api',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_aws_iam_auth',
           name: 'AWS IAM Auth Request',
           parentId: workspace._id,
@@ -387,7 +387,7 @@ describe('Request Model - Comprehensive Tests', () => {
           validatePayload: true,
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_hawk_auth',
           name: 'Hawk Auth Request',
           parentId: workspace._id,
@@ -409,7 +409,7 @@ describe('Request Model - Comprehensive Tests', () => {
           prefix: 'Bearer',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_bearer_auth',
           name: 'Bearer Auth Request',
           parentId: workspace._id,
@@ -440,7 +440,7 @@ describe('Request Model - Comprehensive Tests', () => {
           verifier: 'test-verifier',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_oauth1_auth',
           name: 'OAuth 1.0 Auth Request',
           parentId: workspace._id,
@@ -466,7 +466,7 @@ describe('Request Model - Comprehensive Tests', () => {
           additionalClaims: '{"customClaim": "custom-value"}',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_asap_auth',
           name: 'ASAP Auth Request',
           parentId: workspace._id,
@@ -487,7 +487,7 @@ describe('Request Model - Comprehensive Tests', () => {
           token: 'test-single-token',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_single_token_auth',
           name: 'Single Token Auth Request',
           parentId: workspace._id,
@@ -507,7 +507,7 @@ describe('Request Model - Comprehensive Tests', () => {
           type: 'netrc',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_netrc_auth',
           name: 'Netrc Auth Request',
           parentId: workspace._id,
@@ -541,7 +541,7 @@ describe('Request Model - Comprehensive Tests', () => {
           text: '{"name": "test", "value": 123}',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_json_body',
           name: 'JSON Body Request',
           parentId: workspace._id,
@@ -565,7 +565,7 @@ describe('Request Model - Comprehensive Tests', () => {
           ],
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_form_data_body',
           name: 'Form Data Body Request',
           parentId: workspace._id,
@@ -589,7 +589,7 @@ describe('Request Model - Comprehensive Tests', () => {
           ],
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_multipart_body',
           name: 'Multipart Body Request',
           parentId: workspace._id,
@@ -610,7 +610,7 @@ describe('Request Model - Comprehensive Tests', () => {
           text: 'This is raw text content',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_raw_text_body',
           name: 'Raw Text Body Request',
           parentId: workspace._id,
@@ -631,7 +631,7 @@ describe('Request Model - Comprehensive Tests', () => {
           text: '<?xml version="1.0"?><root><item>value</item></root>',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_xml_body',
           name: 'XML Body Request',
           parentId: workspace._id,
@@ -652,7 +652,7 @@ describe('Request Model - Comprehensive Tests', () => {
           fileName: 'test.bin',
         };
 
-        const request = await models.request.create({
+        const request = await services.request.create({
           _id: 'req_binary_body',
           name: 'Binary Body Request',
           parentId: workspace._id,
@@ -680,7 +680,7 @@ describe('Request Model - Comprehensive Tests', () => {
     });
 
     it('should detect GraphQL query operation', async () => {
-      const request = await models.request.create({
+      const request = await services.request.create({
         _id: 'req_graphql_query',
         name: 'GraphQL Query',
         parentId: workspace._id,
@@ -699,7 +699,7 @@ describe('Request Model - Comprehensive Tests', () => {
     });
 
     it('should detect GraphQL mutation operation', async () => {
-      const request = await models.request.create({
+      const request = await services.request.create({
         _id: 'req_graphql_mutation',
         name: 'GraphQL Mutation',
         parentId: workspace._id,
@@ -716,7 +716,7 @@ describe('Request Model - Comprehensive Tests', () => {
     });
 
     it('should detect GraphQL subscription operation', async () => {
-      const request = await models.request.create({
+      const request = await services.request.create({
         _id: 'req_graphql_subscription',
         name: 'GraphQL Subscription',
         parentId: workspace._id,
@@ -745,7 +745,7 @@ describe('Request Model - Comprehensive Tests', () => {
         scope: 'collection',
       });
 
-      request = await models.request.create({
+      request = await services.request.create({
         _id: `req_update_${uuidv4()}`,
         name: 'Update Request',
         parentId: workspace._id,
@@ -756,7 +756,7 @@ describe('Request Model - Comprehensive Tests', () => {
     });
 
     it('should update request name', async () => {
-      const updatedRequest = await models.request.update(request, {
+      const updatedRequest = await services.request.update(request, {
         name: 'Updated Request Name',
       });
 
@@ -764,7 +764,7 @@ describe('Request Model - Comprehensive Tests', () => {
     });
 
     it('should update request URL', async () => {
-      const updatedRequest = await models.request.update(request, {
+      const updatedRequest = await services.request.update(request, {
         url: 'https://api.example.com/updated',
       });
 
@@ -772,7 +772,7 @@ describe('Request Model - Comprehensive Tests', () => {
     });
 
     it('should update request method', async () => {
-      const updatedRequest = await models.request.update(request, {
+      const updatedRequest = await services.request.update(request, {
         method: 'POST',
       });
 
@@ -785,7 +785,7 @@ describe('Request Model - Comprehensive Tests', () => {
         { name: 'Authorization', value: 'Bearer new-token' },
       ];
 
-      const updatedRequest = await models.request.update(request, {
+      const updatedRequest = await services.request.update(request, {
         headers: newHeaders,
       });
 
@@ -799,7 +799,7 @@ describe('Request Model - Comprehensive Tests', () => {
         password: 'newpass',
       };
 
-      const updatedRequest = await models.request.update(request, {
+      const updatedRequest = await services.request.update(request, {
         authentication: newAuth,
       });
 
@@ -819,7 +819,7 @@ describe('Request Model - Comprehensive Tests', () => {
         scope: 'collection',
       });
 
-      request = await models.request.create({
+      request = await services.request.create({
         _id: `req_delete_${uuidv4()}`,
         name: 'Delete Request',
         parentId: workspace._id,
@@ -830,9 +830,9 @@ describe('Request Model - Comprehensive Tests', () => {
     });
 
     it('should delete request', async () => {
-      await models.request.remove(request);
+      await services.request.remove(request);
 
-      const deletedRequest = await models.request.getById(request._id);
+      const deletedRequest = await services.request.getById(request._id);
       expect(deletedRequest).toBeUndefined();
     });
   });

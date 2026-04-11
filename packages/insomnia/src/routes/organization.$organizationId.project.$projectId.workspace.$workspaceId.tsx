@@ -14,24 +14,26 @@ import type {
   GrpcRequestMeta,
   MockServer,
   Project,
+  Request,
+  RequestGroup,
+  RequestGroupMeta,
+  RequestMeta,
+  SocketIORequest,
+  WebSocketRequest,
   Workspace,
   WorkspaceMeta,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { sortProjects } from '~/models/helpers/project';
-import type { Request } from '~/models/request';
-import { isRequestGroup, type RequestGroup } from '~/models/request-group';
-import type { RequestGroupMeta } from '~/models/request-group-meta';
-import type { RequestMeta } from '~/models/request-meta';
-import type { SocketIORequest } from '~/models/socket-io-request';
-import type { WebSocketRequest } from '~/models/websocket-request';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+
+const { isRequestGroup } = models.requestGroup;
 
 export type Collection = Child[];
 
@@ -149,7 +151,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   // first recursion to get all the folders ids in order to use nedb search by an array
   const flattenFoldersIntoList = async (id: string): Promise<string[]> => {
     const parentIds: string[] = [id];
-    const folderIds = (await models.requestGroup.findByParentId(id)).map(r => r._id);
+    const folderIds = (await services.requestGroup.findByParentId(id)).map(r => r._id);
     if (folderIds.length) {
       await Promise.all(folderIds.map(async folderIds => parentIds.push(...(await flattenFoldersIntoList(folderIds)))));
     }

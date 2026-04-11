@@ -10,8 +10,6 @@ import { pick } from 'es-toolkit';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
-import type { Request } from 'insomnia/src/models/request';
-import type { RequestGroup } from 'insomnia/src/models/request-group';
 import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
 import { configureFetch } from 'insomnia-api';
 import { generate, runTestsCli } from 'insomnia-testing';
@@ -19,7 +17,7 @@ import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { Environment, UserUploadEnvironment, Workspace } from '~/insomnia-data';
+import type { Environment, Request, RequestGroup, UserUploadEnvironment, Workspace } from '~/insomnia-data';
 import { initServices, models } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 

@@ -1,9 +1,10 @@
-import type { GrpcRequest } from '~/insomnia-data';
+import type { GrpcRequest, Request, RequestGroup } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 
-import { isRequest, type Request } from '../models/request';
-import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import { type DashboardSortOrder, HTTP_METHODS, type SortOrder } from './constants';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 type SortableModel = Request | RequestGroup | GrpcRequest;
 type SortFunction<SortableType> = (a: SortableType, b: SortableType) => number;

@@ -6,8 +6,9 @@ import crypto from 'node:crypto';
 
 import OAuth1 from 'oauth-1.0a';
 
+import type { RequestAuthentication, RequestBody } from '~/insomnia-data';
+
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
-import type { RequestAuthentication, RequestBody } from '../../models/request';
 import type { OAuth1SignatureMethod } from './constants';
 import {
   SIGNATURE_METHOD_HMAC_SHA1,

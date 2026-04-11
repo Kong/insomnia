@@ -8,11 +8,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
+import type { Request } from '~/insomnia-data';
 import { EnvironmentKvPairDataType, services } from '~/insomnia-data';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
-import * as models from '../../models';
-import type { Request } from '../../models/request';
 import { database as db } from '../database';
 import {
   getInsomniaV5DataExport,
@@ -168,7 +167,7 @@ collection: []
         scope: 'collection',
       });
 
-      await models.request.create({
+      await services.request.create({
         _id: 'req_export_test',
         name: 'Export Test Request',
         parentId: workspace._id,
@@ -244,7 +243,7 @@ collection: []
         data: {},
       });
 
-      const req1 = await models.request.create({
+      const req1 = await services.request.create({
         _id: 'req_filter_1',
         name: 'Request 1',
         parentId: workspace._id,
@@ -252,7 +251,7 @@ collection: []
         method: 'GET',
       });
 
-      await models.request.create({
+      await services.request.create({
         _id: 'req_filter_2',
         name: 'Request 2',
         parentId: workspace._id,

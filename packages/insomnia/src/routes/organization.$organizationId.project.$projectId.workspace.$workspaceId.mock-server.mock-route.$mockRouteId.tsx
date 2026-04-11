@@ -17,12 +17,10 @@ import {
 } from '~/common/constants';
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
-import type { MockRoute, MockServer } from '~/insomnia-data';
+import type { MockRoute, MockServer, Request, RequestHeader, Response } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
-import type { Request, RequestHeader } from '~/models/request';
-import type { Response } from '~/models/response';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
@@ -56,7 +54,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(mockRoute, 'Mock route is required');
   // get current response via request children of
   // TODO: use the same request for try mock rather than creating lots of child requests
-  const reqIds = (await models.request.findByParentId(mockRouteId)).map(r => r._id);
+  const reqIds = (await services.request.findByParentId(mockRouteId)).map(r => r._id);
 
   const activeResponse = await db.findOne<Response>(
     models.response.type,

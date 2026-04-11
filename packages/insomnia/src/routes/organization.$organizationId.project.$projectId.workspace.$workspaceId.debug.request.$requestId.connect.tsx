@@ -2,20 +2,18 @@ import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import { href } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
-import type { CookieJar, McpTransportType } from '~/insomnia-data';
+import type { CookieJar, McpTransportType, RequestAuthentication, RequestHeader } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import type { RequestAuthentication, RequestHeader } from '~/models/request';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '~/models/request';
-import { isRequestMeta } from '~/models/request-meta';
-import { isSocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequestId } from '~/models/websocket-request';
 import { getAuthHeader } from '~/network/authentication';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
+
+const { isGraphqlSubscriptionRequest, isEventStreamRequest } = models.request;
+const { isRequestMeta } = models.requestMeta;
 
 export interface ConnectActionParams {
   url: string;
@@ -37,7 +35,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = (await request.json()) as ConnectActionParams;
 
-  if (isWebSocketRequestId(requestId)) {
+  if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
     window.main.webSocket.open({
       requestId,
       workspaceId,
@@ -84,7 +82,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       suppressUserAgent: rendered.suppressUserAgent,
     });
   }
-  if (isSocketIORequest(req)) {
+  if (models.socketIORequest.isSocketIORequest(req)) {
     window.main.socketIO.open({
       requestId,
       workspaceId,

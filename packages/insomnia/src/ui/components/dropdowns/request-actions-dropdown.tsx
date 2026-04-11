@@ -3,8 +3,15 @@ import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { Environment, GrpcRequest } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type {
+  Environment,
+  GrpcRequest,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+} from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -15,10 +22,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import { isRequest, type Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import type { SocketIORequest } from '../../../models/socket-io-request';
-import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -34,6 +37,8 @@ import { AskModal } from '../modals/ask-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
+
+const { isRequest } = models.request;
 
 interface Props {
   activeEnvironment: Environment;

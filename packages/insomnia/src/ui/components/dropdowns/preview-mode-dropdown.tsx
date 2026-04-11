@@ -1,12 +1,11 @@
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
+import { models } from '~/insomnia-data';
 import { getTimeline } from '~/models/helpers/response-operations';
 
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import { isRequest } from '../../../models/request';
-import { isResponse } from '../../../models/response';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -28,7 +27,12 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
   const handleDownloadNormal = useCallback(() => download(false), [download]);
 
   const exportAsHAR = useCallback(async () => {
-    if (!activeResponse || !activeRequest || !isRequest(activeRequest) || !isResponse(activeResponse)) {
+    if (
+      !activeResponse ||
+      !activeRequest ||
+      !models.request.isRequest(activeRequest) ||
+      !models.response.isResponse(activeResponse)
+    ) {
       console.warn('Nothing to download');
       return;
     }
@@ -53,7 +57,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
   }, [activeRequest, activeResponse]);
 
   const exportDebugFile = useCallback(async () => {
-    if (!activeResponse || !activeRequest || !isResponse(activeResponse)) {
+    if (!activeResponse || !activeRequest || !models.response.isResponse(activeResponse)) {
       console.warn('Nothing to download');
       return;
     }

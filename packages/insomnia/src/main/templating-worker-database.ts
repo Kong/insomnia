@@ -7,17 +7,14 @@ import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
-import type { CloudProviderCredential, Workspace } from '~/insomnia-data';
+import type { CloudProviderCredential, Request as DBRequest, RequestGroup, Response, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { getBodyBuffer, readCurlResponse } from '~/models/helpers/response-operations';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
-import * as models from '../models';
-import type { Request as DBRequest } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
+import type * as models from '../models';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
@@ -90,7 +87,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return crypto.createHash('md5').update(body.input).digest(body.encoding);
   },
   'request.getById': async (body: { id: string }) => {
-    return await models.request.getById(body.id);
+    return await services.request.getById(body.id);
   },
   'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: models.AllTypes[] }) => {
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
@@ -110,7 +107,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return jar.getCookiesSync(body.url);
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
-    return await models.response.getLatestForRequestId(body.requestId, body.environmentId);
+    return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
     return await getBodyBuffer(body.response, body.readFailureValue);
@@ -176,7 +173,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       timelinePath,
       responseId,
     );
-    return await models.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
+    return await services.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
   },
   // use libcurl to send request without side effects(do not write to database about request and response)
   'network.sendRequestWithoutSideEffects': async (body: {

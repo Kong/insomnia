@@ -18,13 +18,25 @@ import * as pluginDataService from './plugin-data';
 import * as projectService from './project';
 import * as protoDirectoryService from './proto-directory';
 import * as protoFileService from './proto-file';
+import * as requestService from './request';
+import * as requestGroupService from './request-group';
+import * as requestGroupMetaService from './request-group-meta';
+import * as requestMetaService from './request-meta';
+import * as requestVersionService from './request-version';
+import * as responseService from './response';
 import * as runnerTestResultService from './runner-test-result';
 import * as settingsService from './settings';
+import * as socketIOPayloadService from './socket-io-payload';
+import * as socketIORequestService from './socket-io-request';
+import * as socketIOResponseService from './socket-io-response';
 import * as statsService from './stats';
 import * as unitTestService from './unit-test';
 import * as unitTestResultService from './unit-test-result';
 import * as unitTestSuiteService from './unit-test-suite';
 import * as userSessionService from './user-session';
+import * as webSocketPayloadService from './websocket-payload';
+import * as webSocketRequestService from './websocket-request';
+import * as webSocketResponseService from './websocket-response';
 import * as workspaceService from './workspace';
 import * as workspaceMetaService from './workspace-meta';
 
@@ -47,6 +59,12 @@ export const servicesNodeImpl = {
   pluginData: pluginDataService,
   protoDirectory: protoDirectoryService,
   protoFile: protoFileService,
+  request: requestService,
+  requestGroup: requestGroupService,
+  requestGroupMeta: requestGroupMetaService,
+  requestMeta: requestMetaService,
+  requestVersion: requestVersionService,
+  response: responseService,
   runnerTestResult: runnerTestResultService,
   project: projectService,
   settings: settingsService,
@@ -61,4 +79,10 @@ export const servicesNodeImpl = {
   unitTest: unitTestService,
   unitTestResult: unitTestResultService,
   unitTestSuite: unitTestSuiteService,
+  socketIOPayload: socketIOPayloadService,
+  socketIORequest: socketIORequestService,
+  socketIOResponse: socketIOResponseService,
+  webSocketPayload: webSocketPayloadService,
+  webSocketRequest: webSocketRequestService,
+  webSocketResponse: webSocketResponseService,
 } satisfies Record<string, Record<string, (...args: never[]) => Promise<unknown>>>;

@@ -9,22 +9,21 @@ import type {
   McpResponse,
   MockRoute,
   MockServer,
+  Request,
+  RequestMeta,
+  RequestVersion,
+  Response,
+  SocketIOPayload,
+  SocketIORequest,
+  SocketIOResponse,
+  WebSocketRequest,
+  WebSocketResponse,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import type { BaseModel } from '~/models';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
-import { isGraphqlSubscriptionRequest } from '~/models/request';
-import { type Request } from '~/models/request';
-import { type RequestMeta } from '~/models/request-meta';
-import type { RequestVersion } from '~/models/request-version';
-import type { Response } from '~/models/response';
-import type { SocketIOPayload } from '~/models/socket-io-payload';
-import { isSocketIORequest, type SocketIORequest } from '~/models/socket-io-request';
-import type { SocketIOResponse } from '~/models/socket-io-response';
-import { isWebSocketRequest, type WebSocketRequest } from '~/models/websocket-request';
-import { isWebSocketResponse, type WebSocketResponse } from '~/models/websocket-response';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
@@ -70,15 +69,19 @@ export interface RequestLoaderData {
   mockServerAndRoutes: (MockServer & { routes: MockRoute[] })[];
 }
 
-const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequest | GrpcRequest) => {
+const { isGraphqlSubscriptionRequest } = models.request;
+const getResponseOperations = (request: Request | WebSocketRequest | SocketIORequest | GrpcRequest) => {
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(request);
-  if (isWebSocketRequest(request) || isGraphqlWsRequest) {
-    return 'webSocketResponse' as const;
+
+  if (models.webSocketRequest.isWebSocketRequest(request) || isGraphqlWsRequest) {
+    return services.webSocketResponse;
   }
-  if (isSocketIORequest(request)) {
-    return 'socketIOResponse' as const;
+
+  if (models.socketIORequest.isSocketIORequest(request)) {
+    return services.socketIOResponse;
   }
-  return 'response' as const;
+
+  return services.response;
 };
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
@@ -122,7 +125,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       requestVersions: [],
     } as GrpcRequestLoaderData;
   }
-  const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
+  const activeRequestMeta = await services.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
   const { filterResponsesByEnv } = await services.settings.get();
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(activeRequest);
 
@@ -145,16 +148,16 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       activeResponse: activeResponse || null,
       requestPayload,
       responses,
-      requestVersions: await models.requestVersion.findByParentId(requestId),
+      requestVersions: await services.requestVersion.findByParentId(requestId),
     } as McpRequestLoaderData;
   }
 
-  const responseModelName = getResponseModelName(activeRequest);
+  const responseOperations = getResponseOperations(activeRequest);
 
   const activeResponse = activeRequestMeta.activeResponseId
-    ? await models[responseModelName].getById(activeRequestMeta.activeResponseId)
-    : await models[responseModelName].getLatestForRequestId(requestId, activeWorkspaceMeta.activeEnvironmentId);
-  const allResponses = (await models[responseModelName].findByParentId(requestId)) as (
+    ? await responseOperations.getById(activeRequestMeta.activeResponseId)
+    : await responseOperations.getLatestForRequestId(requestId, activeWorkspaceMeta.activeEnvironmentId);
+  const allResponses = (await responseOperations.findByParentId(requestId)) as (
     | Response
     | WebSocketResponse
     | SocketIOResponse
@@ -187,7 +190,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     routes: mockRoutes.filter(route => route.parentId === mockServer._id),
   }));
   // set empty activeResponse if graphql websocket request and activeResponse is not websocket response
-  if (isGraphqlWsRequest && activeResponse && !isWebSocketResponse(activeResponse)) {
+  if (isGraphqlWsRequest && activeResponse && !models.webSocketResponse.isWebSocketResponse(activeResponse)) {
     return {
       activeRequest,
       activeRequestMeta,
@@ -198,14 +201,14 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     } as RequestLoaderData | WebSocketRequestLoaderData;
   }
 
-  if (isSocketIORequest(activeRequest)) {
-    const socketIOPayload = await models.socketIOPayload.getOrCreateByParentId(requestId);
+  if (models.socketIORequest.isSocketIORequest(activeRequest)) {
+    const socketIOPayload = await services.socketIOPayload.getOrCreateByParentId(requestId);
     return {
       activeRequest,
       activeRequestMeta,
       activeResponse,
       responses,
-      requestVersions: await models.requestVersion.findByParentId(requestId),
+      requestVersions: await services.requestVersion.findByParentId(requestId),
       mockServerAndRoutes,
       requestPayload: socketIOPayload,
     } as SocketIORequestLoaderData;
@@ -216,7 +219,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     activeRequestMeta,
     activeResponse,
     responses,
-    requestVersions: await models.requestVersion.findByParentId(requestId),
+    requestVersions: await services.requestVersion.findByParentId(requestId),
     mockServerAndRoutes,
   } as RequestLoaderData | WebSocketRequestLoaderData;
 }

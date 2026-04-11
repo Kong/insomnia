@@ -1,51 +1,12 @@
-import { services } from '~/insomnia-data';
+import * as models from '~/models';
+import * as requestOperations from '~/models/helpers/request-operations';
 
-import { database as db } from '../common/database';
-import * as requestOperations from './helpers/request-operations';
-import * as models from './index';
-import type { BaseModel } from './types';
+import { database as db } from '../../src/database';
+import { type SocketIOResponse } from '../../src/models/types';
+import * as requestVersionService from './request-version';
+import * as settingsService from './settings';
 
-export const name = 'SocketIO Response';
-
-export const type = 'SocketIOResponse';
-
-export const prefix = 'socketIO-res';
-
-export const canDuplicate = false;
-
-export const canSync = false;
-
-export interface BaseSocketIOResponse {
-  // Event logs are stored on the filesystem
-  eventLogPath: string;
-  // Actual timelines are stored on the filesystem
-  timelinePath: string;
-  requestVersionId: string | null;
-  environmentId: string | null;
-  elapsedTime: number;
-  error: string;
-  url: string;
-}
-
-export type SocketIOResponse = BaseModel & BaseSocketIOResponse;
-
-export const isSocketIOResponse = (model: Pick<BaseModel, 'type'>): model is SocketIOResponse => model.type === type;
-
-export function init(): BaseSocketIOResponse {
-  return {
-    timelinePath: '',
-    eventLogPath: '',
-    requestVersionId: null,
-    environmentId: null,
-    elapsedTime: 0,
-    error: '',
-    url: '',
-  };
-}
-
-export function migrate(doc: SocketIOResponse) {
-  return doc;
-}
+const { type } = models.socketIOResponse;
 
 export function update(doc: SocketIOResponse, patch: Partial<SocketIOResponse>) {
   return db.docUpdate(doc, patch);
@@ -71,14 +32,14 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
   const { parentId } = patch;
   // Create request version snapshot
   const request = await requestOperations.getById(parentId);
-  const requestVersion = request ? await models.requestVersion.create(request) : null;
+  const requestVersion = request ? await requestVersionService.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
   const query: Record<string, any> = {
     parentId,
   };
 
-  if ((await services.settings.get()).filterResponsesByEnv && 'environmentId' in patch) {
+  if ((await settingsService.get()).filterResponsesByEnv && 'environmentId' in patch) {
     query.environmentId = patch.environmentId;
   }
 
@@ -99,7 +60,7 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
 export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
 
-  const shouldFilter = (await services.settings.get()).filterResponsesByEnv;
+  const shouldFilter = (await settingsService.get()).filterResponsesByEnv;
 
   const response = await db.findOne<SocketIOResponse>(
     type,
