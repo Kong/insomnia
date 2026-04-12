@@ -208,6 +208,7 @@ test.describe('pre-request features tests', () => {
         }),
     };
   });
+
   test('run test cases', async ({ page }) => {
     for (const tc of testCases) {
       console.log(`Running test case: ${tc.name}`);
@@ -230,6 +231,7 @@ test.describe('pre-request features tests', () => {
       tc.customVerify(bodyJson);
     }
   });
+
   test('send request with content type', async ({ page }) => {
     await page.getByTestId('settings-button').click();
     await page.getByTestId('dataFolders').click();
@@ -669,8 +671,8 @@ test.describe('unhappy paths', () => {
     await page.keyboard.press('Backspace');
     await editor.fill(`insomnia.INVALID_FIELD.set('', '')`);
 
-    // Wait for the CodeEditor debounce (100ms) to fire and persist the new script to the DB
-    await page.waitForTimeout(200);
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -705,7 +707,10 @@ test.describe('sandbox features', () => {
     
     // enter script that accesses a property on 'this'. 
     await editor.fill(`insomnia.environment.set('result', String(this?.process));`);
-    await page.waitForTimeout(200);
+
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify blocked-root error
@@ -741,7 +746,10 @@ test.describe('sandbox features', () => {
     await page.getByRole('tab', { name: 'Scripts' }).click();
     const editor = page.getByTestId('CodeEditor').getByRole('textbox');
     await editor.fill(`insomnia.environment.set('result', typeof Object.prototype.toString);`);
-    await page.waitForTimeout(200);
+    
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+    
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify blocked-property error
@@ -756,6 +764,7 @@ test.describe('sandbox features', () => {
     const protoMutationSwitch = page.locator('div:has(> h4:has-text("Prototype Mutation")) label[data-react-aria-pressable]');
     await protoMutationSwitch.scrollIntoViewIfNeeded();
     await protoMutationSwitch.click();
+    await expect.soft(protoMutationSwitch).not.toHaveAttribute('data-selected');
     await page.locator('.app').press('Escape');
 
     // re-send — prototype access now allowed; Object.prototype.toString is a function
@@ -776,7 +785,9 @@ test.describe('sandbox features', () => {
     await page.getByRole('tab', { name: 'Scripts' }).click();
     const editor = page.getByTestId('CodeEditor').getByRole('textbox');
     await editor.fill(`const f = new Function('return 42'); insomnia.environment.set('result', f());`);
-    await page.waitForTimeout(200);
+    
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
 
     // send — Function masked to undefined → V8 uses the identifier name: "Function is not a constructor"
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -792,6 +803,7 @@ test.describe('sandbox features', () => {
     const runtimeApisSwitch = page.locator('div:has(> h4:has-text("Runtime APIs")) label[data-react-aria-pressable]');
     await runtimeApisSwitch.scrollIntoViewIfNeeded();
     await runtimeApisSwitch.click();
+    await expect.soft(runtimeApisSwitch).not.toHaveAttribute('data-selected');
     await page.locator('.app').press('Escape');
 
     // re-send — Function is now the real constructor; script returns 42
@@ -803,6 +815,7 @@ test.describe('sandbox features', () => {
       .soft(page.locator('[data-testid="response-status-tag"]:visible'))
       .toContainText('200 OK');
   });
+
   test('Layered security / unblocked properties resolve undefined', async ({ page }) => {
     await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
 
@@ -810,7 +823,10 @@ test.describe('sandbox features', () => {
     await page.getByRole('tab', { name: 'Scripts' }).click();
     const editor = page.getByTestId('CodeEditor').getByRole('textbox');
     await editor.fill(`insomnia.environment.set('result', String(process?.version));`);
-    await page.waitForTimeout(200);
+    
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+    
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify blocked-root error
@@ -825,7 +841,7 @@ test.describe('sandbox features', () => {
     const nodeInternalsSwitch = page.locator('xpath=//h4[normalize-space(text())="Node.js Internals"]/following-sibling::div[1]//label[@data-react-aria-pressable]');
     await nodeInternalsSwitch.scrollIntoViewIfNeeded();
     await nodeInternalsSwitch.click();
-    await page.waitForTimeout(300);
+    await expect.soft(nodeInternalsSwitch).not.toHaveAttribute('data-selected');
     await page.locator('.app').press('Escape');
 
     // process?.version === undefined. 
