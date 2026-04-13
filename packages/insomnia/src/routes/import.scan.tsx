@@ -79,11 +79,12 @@ export const scanImportResources = async (data: {
     // zip file is for postman data dump
     for (const zipFilePath of zipFilePaths) {
       const postmanDataDumpRawData = await getFilesFromPostmanExportedDataDump(zipFilePath);
+      const zipBaseName = window.path.basename(zipFilePath);
 
       function trans({ contentStr, oriFileName }: ImportEntry): ImportEntry {
         return {
           contentStr,
-          oriFileName: `${oriFileName} in ${window.path.basename(zipFilePath)}`,
+          oriFileName: `${oriFileName} in ${zipBaseName}`,
         };
       }
 
