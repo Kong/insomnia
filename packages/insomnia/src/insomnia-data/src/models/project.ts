@@ -73,6 +73,11 @@ export function isDefaultOrganizationProject(project: Project) {
   return project.remoteId?.startsWith('proj_team') || project.remoteId?.startsWith('proj_org');
 }
 
+export const sortProjects = (projects: Project[]) => [
+  ...projects.filter(project => isDefaultOrganizationProject(project)).sort((a, b) => a.name.localeCompare(b.name)),
+  ...projects.filter(project => !isDefaultOrganizationProject(project)).sort((a, b) => a.name.localeCompare(b.name)),
+];
+
 export function getDefaultProjectStorageType(
   storageRules: StorageRules,
   project?: Project,

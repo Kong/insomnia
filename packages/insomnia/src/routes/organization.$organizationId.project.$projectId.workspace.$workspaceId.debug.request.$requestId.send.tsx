@@ -18,7 +18,6 @@ import { services } from '~/insomnia-data';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
-import { getBodyStream } from '~/models/helpers/response-operations';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -69,7 +68,7 @@ export interface RunnerContextForRequest {
   responseId: string;
 }
 
-const writeToDownloadPath = (
+const writeToDownloadPath = async (
   downloadPathAndName: string,
   responsePatch: ResponsePatch,
   requestMeta: RequestMeta,
@@ -78,7 +77,7 @@ const writeToDownloadPath = (
   invariant(downloadPathAndName, 'filename should be set by now');
 
   const to = createWriteStream(downloadPathAndName);
-  const readStream = getBodyStream(responsePatch);
+  const readStream = await services.helpers.getBodyStream(responsePatch);
   if (!readStream || typeof readStream === 'string') {
     return null;
   }
@@ -317,7 +316,7 @@ export const sendActionImplementation = async (options: {
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
       : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
-    writeToDownloadPath(
+    void writeToDownloadPath(
       path.join(requestMeta.downloadPath, name),
       responsePatch,
       requestMeta,
@@ -336,7 +335,7 @@ export const sendActionImplementation = async (options: {
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
   window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-  writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  void writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
   return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
 };
 

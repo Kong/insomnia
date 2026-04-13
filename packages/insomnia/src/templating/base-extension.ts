@@ -7,7 +7,6 @@ import iconv from 'iconv-lite';
 import { jarFromCookies } from '~/common/cookies';
 import type { Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { database as db } from '../common/database';
 import * as models from '../models/index';
@@ -162,7 +161,7 @@ export default class BaseExtension {
           },
           response: {
             getLatestForRequestId: services.response.getLatestForRequestId,
-            getBodyBuffer,
+            getBodyBuffer: services.helpers.getBodyBuffer,
           },
           settings: {
             get: services.settings.get,

@@ -4,7 +4,6 @@ import { Cookie as ToughCookie } from 'tough-cookie';
 
 import type { Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';
 import * as models from '../models';
@@ -389,7 +388,7 @@ function mapCookie(cookie: ToughCookie) {
 }
 
 async function getResponseContent(response: Response) {
-  let body = await getBodyBuffer(response);
+  let body = await services.helpers.getBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);

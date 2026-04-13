@@ -14,7 +14,6 @@ import type {
   Response,
 } from '~/insomnia-data';
 import { database as db, models, services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
 import { version } from '../../../package.json';
@@ -317,7 +316,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
 
   const statusCode = response.statusCode || 0;
-  const bodyBuffer = await getBodyBuffer(response);
+  const bodyBuffer = await services.helpers.getBodyBuffer(response);
 
   if (statusCode === 401) {
     // If the refresh token was rejected due an unauthorized request, we will
@@ -365,7 +364,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
 }
 
 export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {
-  const bodyBuffer = await getBodyBuffer(response);
+  const bodyBuffer = await services.helpers.getBodyBuffer(response);
   if (!bodyBuffer) {
     return {
       xResponseId: response._id,

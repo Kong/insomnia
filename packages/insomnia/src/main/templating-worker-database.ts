@@ -9,7 +9,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { jarFromCookies } from '~/common/cookies';
 import type { CloudProviderCredential, Request as DBRequest, RequestGroup, Response, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { getBodyBuffer, readCurlResponse } from '~/models/helpers/response-operations';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
@@ -110,7 +109,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
-    return await getBodyBuffer(body.response, body.readFailureValue);
+    return await services.helpers.getBodyBuffer(body.response, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
     const doc = await services.pluginData.getByKey(body.pluginName, body.key);
@@ -217,7 +216,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     if (!lastRedirect) {
       throw new Error('Error in response: the lastRedirect is not defined');
     }
-    const bodyResult = await readCurlResponse({
+    const bodyResult = await services.helpers.readCurlResponse({
       bodyPath: responseBodyPath,
       bodyCompression: patch.bodyCompression,
     });

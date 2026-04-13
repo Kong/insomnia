@@ -5,7 +5,6 @@ import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har'
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
 import { strings } from 'insomnia/src/common/strings';
-import * as requestOperations from 'insomnia/src/models/helpers/request-operations';
 import { SegmentEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
@@ -19,7 +18,7 @@ import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } f
 import { href, useParams } from 'react-router';
 
 import type { BaseModel, Environment, Project, Workspace } from '~/insomnia-data';
-import { database, models } from '~/insomnia-data';
+import { database, models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -302,7 +301,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
     onDone: async selectedFormat => {
       const requests: BaseModel[] = [];
       for (const requestId of requestIds) {
-        const request = await requestOperations.getById(requestId);
+        const request = await services.helpers.getRequestById(requestId);
         if (request) {
           requests.push(request);
         }

@@ -1,7 +1,6 @@
 import { href, redirect } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -13,10 +12,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 
   const formData = await request.formData();
   const id = formData.get('id') as string;
-  const req = await requestOperations.getById(id);
+  const req = await services.helpers.getRequestById(id);
   invariant(req, 'Request not found');
   services.stats.incrementDeletedRequests();
-  await requestOperations.remove(req);
+  await services.helpers.removeRequest(req);
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Workspace meta not found');
 

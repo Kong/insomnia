@@ -15,7 +15,6 @@ import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
-import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -235,7 +234,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                 defaultValue={activeRequest.url}
                 placeholder="grpcb.in:9000"
                 onChange={url => patchRequest(requestId, { url })}
-                getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
+                getAutocompleteConstants={() =>
+                  services.helpers.queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)
+                }
               />
             </div>
             <div className="flex flex-1 items-center gap-(--padding-xs) pr-(--padding-sm)">

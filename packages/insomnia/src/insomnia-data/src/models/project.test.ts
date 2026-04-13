@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { sortProjects } from '../project';
+import { models } from '~/insomnia-data';
 
 const defaultOrgProject = { name: 'a', remoteId: 'proj_team_123456789345678987654', _id: 'not important' };
 
@@ -11,7 +11,7 @@ const remote0 = { name: '0', remoteId: 'notNull', _id: 'remote0' };
 describe('sortProjects', () => {
   it('sorts projects by default > local > remote > name', () => {
     const unSortedProjects = [remoteA, defaultOrgProject, remoteB, remote0];
-    const result = sortProjects(unSortedProjects);
+    const result = models.project.sortProjects(unSortedProjects);
 
     const sortedProjects = [defaultOrgProject, remote0, remoteA, remoteB];
     expect(result).toEqual(sortedProjects);

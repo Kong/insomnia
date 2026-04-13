@@ -22,8 +22,6 @@ import type {
 import { services } from '~/insomnia-data';
 import type { BaseModel } from '~/models';
 import * as models from '~/models';
-import * as requestOperations from '~/models/helpers/request-operations';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
@@ -93,7 +91,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
 
-  const activeRequest = await requestOperations.getById(requestId);
+  const activeRequest = await services.helpers.getRequestById(requestId);
   if (!activeRequest) {
     showResourceNotFoundToast(`Request not found: ${requestId}`);
     if (activeWorkspace.scope === 'mcp') {
@@ -175,7 +173,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
     // Oversized repsonses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
-      const buffer = await getBodyBuffer(activeResponse);
+      const buffer = await services.helpers.getBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
     }
   }

@@ -8,6 +8,7 @@ import * as gitCredentialsService from './git-credentials';
 import * as gitRepositoryService from './git-repository';
 import * as grpcRequestService from './grpc-request';
 import * as grpcRequestMetaService from './grpc-request-meta';
+import * as helpersService from './helpers';
 import * as mcpPayloadService from './mcp-payload';
 import * as mcpRequestService from './mcp-request';
 import * as mcpResponseService from './mcp-response';
@@ -85,4 +86,5 @@ export const servicesNodeImpl = {
   webSocketPayload: webSocketPayloadService,
   webSocketRequest: webSocketRequestService,
   webSocketResponse: webSocketResponseService,
+  helpers: helpersService,
 } satisfies Record<string, Record<string, (...args: never[]) => Promise<unknown>>>;

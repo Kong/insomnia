@@ -8,7 +8,6 @@ import { descendingNumberSort } from '~/common/sorting';
 import type { ApiSpec, GitRepository, MockServer, Project, WorkspaceMeta } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { sortProjects } from '~/models/helpers/project';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -122,7 +121,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       parentId: organizationId,
     })) || [];
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
   const files = await getAllLocalFiles({ projectId });
 
   return {

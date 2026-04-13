@@ -7,7 +7,6 @@ import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import type { GitRepository, Project } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { sortProjects } from '~/models/helpers/project';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { getProjectsWithGitRepositories } from '~/routes/organization.$organizationId.project.$projectId._index';
@@ -41,7 +40,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   }
 
   const organizationProjects = await getProjectsWithGitRepositories({ organizationId });
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
 
   return {
     projects,

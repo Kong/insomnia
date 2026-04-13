@@ -8,7 +8,6 @@ import { useRequestNewActionFetcher } from '~/routes/organization.$organizationI
 
 import { database } from '../../../common/database';
 import { strings } from '../../../common/strings';
-import { sortProjects } from '../../../models/helpers/project';
 import * as models from '../../../models/index';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -42,7 +41,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
       const organizationProjects = await database.find<Project>(models.project.type, {
         parentId: organizationId,
       });
-      setProjectOptions(sortProjects(organizationProjects));
+      setProjectOptions(models.project.sortProjects(organizationProjects));
       setSelectedProjectId(organizationProjects[0]?._id || '');
     })();
   }, [organizationId]);

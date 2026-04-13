@@ -45,7 +45,6 @@ import type {
   WorkspaceScope,
 } from '~/insomnia-data';
 import { database, models, services } from '~/insomnia-data';
-import { sortProjects } from '~/models/helpers/project';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -392,7 +391,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
 
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 

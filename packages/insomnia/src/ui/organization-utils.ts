@@ -12,7 +12,6 @@ import { projectLock } from '~/common/project';
 import type { Project } from '~/insomnia-data';
 import { database, models, services } from '~/insomnia-data';
 
-import { updateLocalProjectToRemote } from '../models/helpers/project';
 import { VCSInstance } from '../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,
@@ -102,7 +101,7 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
 
       // If any of those fail projects will still be under the organization as local projects
       for (const project of localProjects) {
-        updateLocalProjectToRemote({
+        services.project.updateLocalProjectToRemote({
           project,
           organizationId: personalOrganizationId,
           sessionId,

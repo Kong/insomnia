@@ -5,7 +5,6 @@ import electron from 'electron';
 
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { fetchFromTemplateWorkerDatabase } from '~/templating/base-extension-worker';
 
 import type { ParsedApiSpec } from '../common/api-specs';
@@ -411,7 +410,7 @@ export function getPluginCommonContext({
         },
         response: {
           getLatestForRequestId: services.response.getLatestForRequestId,
-          getBodyBuffer,
+          getBodyBuffer: services.helpers.getBodyBuffer,
         },
         settings: {
           get: services.settings.get,

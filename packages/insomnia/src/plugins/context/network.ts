@@ -2,7 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import type { Request, ResponseHeader } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { readCurlResponse } from '~/models/helpers/response-operations';
 
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import {
@@ -113,7 +112,7 @@ export function init(): {
         if (!lastRedirect) {
           throw new Error('Error in response: the lastRedirect is not defined');
         }
-        const bodyResult = await readCurlResponse({
+        const bodyResult = await services.helpers.readCurlResponse({
           bodyPath: responseBodyPath,
           bodyCompression: patch.bodyCompression,
         });
