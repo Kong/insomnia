@@ -77,6 +77,11 @@ const NODE_BUILTIN_REPORT_ENV = 'INSOMNIA_NODE_IMPORT_REPORT';
 const NODE_BUILTIN_REPORT_FILE = path.resolve(__dirname, '.reports', 'renderer-node-imports.json');
 const VIRTUAL_NODE_PREFIX = 'virtual:external:node:';
 
+export const normalizeModuleIdForFs = (id: string) => {
+  const suffixIndex = id.search(/[?#]/);
+  return suffixIndex === -1 ? id : id.slice(0, suffixIndex);
+};
+
 type ImportKind = 'dynamic-import' | 'export' | 'import' | 'require';
 
 interface ImportLocation {
@@ -93,14 +98,11 @@ interface NodeBuiltinImportRecord {
   rawSpecifiers: string[];
 }
 
-let totalWarnings = 0;
-
 function DetectNodeBuiltinImports() {
   const builtins = new Set(builtinModules);
   let isSsrBuild = false;
   const records = new Map<string, NodeBuiltinImportRecord>();
   const reportEnabled = process.env[NODE_BUILTIN_REPORT_ENV] === '1';
-  const seenImportWarnings = new Set<string>();
   const seenTransforms = new Set<string>();
 
   const normalizeSpecifier = (source: string) => {
@@ -239,15 +241,6 @@ function DetectNodeBuiltinImports() {
           rawSpecifiers: [...entry.rawSpecifiers],
         });
       }
-
-      const warningKey = `${relativeImporter}::${builtin}`;
-      if (seenImportWarnings.has(warningKey)) {
-        continue;
-      }
-
-      seenImportWarnings.add(warningKey);
-      totalWarnings += 1;
-      console.warn(`⚠️  ${totalWarnings} File "${relativeImporter}" imports Node builtin module "${builtin}"`);
     }
 
     if (importsByBuiltin.size === 0) {
@@ -310,11 +303,12 @@ function DetectNodeBuiltinImports() {
       if (isSsrBuild) return null;
       if (options?.ssr) return null;
       if (id.includes('node_modules')) return null;
-      if (!path.isAbsolute(id) || !fs.existsSync(id)) return null;
-      if (seenTransforms.has(id)) return null;
+      const normalizedId = normalizeModuleIdForFs(id);
+      if (!path.isAbsolute(normalizedId) || !fs.existsSync(normalizedId)) return null;
+      if (seenTransforms.has(normalizedId)) return null;
 
-      seenTransforms.add(id);
-      recordNodeBuiltinImports(id, code);
+      seenTransforms.add(normalizedId);
+      recordNodeBuiltinImports(normalizedId, code);
       return null;
     },
 
