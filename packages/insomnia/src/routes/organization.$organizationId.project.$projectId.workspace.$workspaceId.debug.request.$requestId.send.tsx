@@ -66,6 +66,8 @@ export interface RunnerContextForRequest {
   responseId: string;
 }
 
+const DOWNLOAD_READ_FAILURE = '[sendAction] failed to read response body for download';
+
 const writeToDownloadPath = async (
   downloadPathAndName: string,
   responsePatch: ResponsePatch,
@@ -75,13 +77,19 @@ const writeToDownloadPath = async (
   invariant(downloadPathAndName, 'filename should be set by now');
 
   try {
-    const bodyBuffer = await getBodyBuffer(responsePatch);
-    await window.main.writeFile({
-      path: downloadPathAndName,
-      content: typeof bodyBuffer === 'string' ? Buffer.alloc(0) : bodyBuffer,
-    });
-    responsePatch.error = `Saved to ${downloadPathAndName}`;
+    const bodyBuffer = await getBodyBuffer(responsePatch, DOWNLOAD_READ_FAILURE);
+
+    if (typeof bodyBuffer === 'string') {
+      responsePatch.error = `Failed to save to ${downloadPathAndName}: unable to read response body`;
+    } else {
+      await window.main.writeFile({
+        path: downloadPathAndName,
+        content: bodyBuffer,
+      });
+      responsePatch.error = `Saved to ${downloadPathAndName}`;
+    }
   } catch (err) {
+    responsePatch.error = `Failed to save to ${downloadPathAndName}`;
     console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
   }
 
