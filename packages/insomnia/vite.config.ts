@@ -306,6 +306,7 @@ function DetectNodeBuiltinImports() {
     },
 
     transform(code: string, id: string, options?: { ssr?: boolean }) {
+      if (!reportEnabled) return null;
       if (isSsrBuild) return null;
       if (options?.ssr) return null;
       if (id.includes('node_modules')) return null;
