@@ -2,9 +2,10 @@ import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
 import { models } from '~/insomnia-data';
-import { getTimeline } from '~/models/helpers/response-operations';
+import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 
-import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
+import { getPreviewModeName, LARGE_RESPONSE_MB, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
+import { showToast } from '../toast-notification';
 import { exportHarCurrentRequest } from '../../../common/har';
 import {
   type RequestLoaderData,
@@ -78,14 +79,36 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    if (filePath && activeResponse.bodyBuffer) {
-      await window.main.writeFile({
-        path: filePath,
-        content: headers + '\n' + activeResponse.bodyBuffer.toString('utf8') || '',
-      });
+    if (filePath) {
+      try {
+        let body: Buffer;
+        if (activeResponse.bodyBuffer) {
+          body = activeResponse.bodyBuffer;
+        } else if (activeResponse.bodyPath) {
+          const raw = await getBodyBuffer(activeResponse);
+          body = typeof raw === 'string' ? Buffer.from(raw) : raw;
+        } else {
+          body = Buffer.alloc(0);
+        }
+        await window.main.writeFile({
+          path: filePath,
+          content: headers + '\n' + body.toString('utf8'),
+        });
+      } catch (error) {
+        console.error('Failed to read response body for debug export', error);
+        showToast({
+          icon: 'circle-exclamation',
+          title: 'Export failed',
+          description: 'Could not read the response body from disk.',
+          status: 'error',
+        });
+      }
     }
   }, [activeRequest, activeResponse]);
-  const shouldPrettifyOption = activeResponse?.contentType.includes('json');
+  const isJsonResponse = activeResponse?.contentType.includes('json');
+  const isLargeResponse = activeResponse
+    ? Math.max(activeResponse.bytesContent ?? 0, activeResponse.bytesRead ?? 0) > LARGE_RESPONSE_MB * 1024 * 1024
+    : false;
 
   return (
     <Dropdown
@@ -116,8 +139,18 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
           <ItemContent icon="save" label="Export raw response" onClick={handleDownloadNormal} />
         </DropdownItem>
         <DropdownItem aria-label="Export prettified response">
-          {shouldPrettifyOption && (
-            <ItemContent icon="save" label="Export prettified response" onClick={handleDownloadPrettify} />
+          {isJsonResponse && (
+            <ItemContent
+              icon="save"
+              label={
+                isLargeResponse
+                  ? `Export prettified response (must be <${LARGE_RESPONSE_MB}MB)`
+                  : 'Export prettified response'
+              }
+              isDisabled={isLargeResponse}
+              className={isLargeResponse ? 'opacity-50' : ''}
+              onClick={handleDownloadPrettify}
+            />
           )}
         </DropdownItem>
         <DropdownItem aria-label="Export HTTP debug">
