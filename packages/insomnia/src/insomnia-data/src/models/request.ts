@@ -291,6 +291,7 @@ export interface BaseRequest {
   settingRebuildPath: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
   konnectRouteKey?: string | null;
+  konnectManagedHeaderNames?: string[] | null;
 }
 
 export type Request = BaseModel & BaseRequest;
@@ -304,7 +305,7 @@ export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) =>
 export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION;
 
-export const optionalKeys = ['konnectRouteKey'];
+export const optionalKeys = ['konnectRouteKey', 'konnectManagedHeaderNames'];
 
 export function init(): BaseRequest {
   return {

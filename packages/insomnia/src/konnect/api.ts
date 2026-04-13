@@ -62,7 +62,10 @@ async function fetchWithRetry(url: string, pat: string, signal?: AbortSignal): P
       : Math.min(BASE_DELAY_MS * 2 ** attempt, MAX_DELAY_MS);
 
     console.log(`[konnect] Rate limited. Retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`);
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(resolve, delay);
+      signal?.addEventListener('abort', () => { clearTimeout(timer); reject(signal.reason); }, { once: true });
+    });
     attempt++;
   }
 }

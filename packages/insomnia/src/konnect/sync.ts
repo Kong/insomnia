@@ -86,14 +86,20 @@ function buildRequestName(
 
 /**
  * Merges Konnect-managed headers into an existing header array.
- * Konnect headers (by name) are replaced/added at the front; user-added headers are preserved.
+ * Konnect header names are stored lowercase at the API boundary, so all comparisons
+ * here are direct string equality. Previously Konnect-managed headers that are no
+ * longer incoming are removed using the persisted `prevManagedNames` set — on first
+ * sync this will be empty so no existing headers are incorrectly stripped.
+ * User-added headers outside that set are always preserved.
  */
 function mergeHeaders(
   existing: { name: string; value: string }[],
   konnect: { name: string; value: string }[],
+  prevManagedNames: string[],
 ): { name: string; value: string }[] {
-  const konnectNames = new Set(konnect.map(h => h.name));
-  const userHeaders = existing.filter(h => !konnectNames.has(h.name));
+  const incomingNames = new Set(konnect.map(h => h.name));
+  const prevManaged = new Set(prevManagedNames);
+  const userHeaders = existing.filter(h => !incomingNames.has(h.name) && !prevManaged.has(h.name));
   return [...konnect, ...userHeaders];
 }
 
@@ -119,13 +125,19 @@ const L4_PROTOCOLS = new Set(['tcp', 'tls', 'udp', 'tls_passthrough']);
 
 /**
  * Returns true if the Konnect-managed portion of the existing headers differs from the incoming ones.
- * User-added headers are ignored — only the headers that Konnect owns are compared.
+ * Konnect header names are stored lowercase at the API boundary, so all comparisons are direct
+ * string equality. `prevManagedNames` is used to detect the case where all Konnect headers were
+ * removed from the route — incoming is empty but there are still managed headers to clean up.
  */
 function konnectHeadersChanged(
   existing: { name: string; value: string }[],
   incoming: { name: string; value: string }[],
+  prevManagedNames: string[],
 ): boolean {
-  if (incoming.length === 0) { return false; }
+  const prevManaged = new Set(prevManagedNames);
+  if (incoming.length === 0) {
+    return existing.some(h => prevManaged.has(h.name));
+  }
   const incomingByName = new Map(incoming.map(h => [h.name, h.value]));
   let matched = 0;
   for (const h of existing) {
@@ -183,7 +195,7 @@ async function syncGrpcRoute(
   const grpcProtocols = route.protocols.filter(p => p === 'grpc' || p === 'grpcs') as ('grpc' | 'grpcs')[];
   const multiProtocol = grpcProtocols.length > 1;
   const paths = route.paths ?? [null];
-  const metadata = Object.entries(route.headers ?? {}).map(([n, values]: [string, string[]]) => ({ name: n, value: values[0] }));
+  const metadata = Object.entries(route.headers ?? {}).map(([n, values]: [string, string[]]) => ({ name: n.toLowerCase(), value: values[0] }));
 
   const routeFolderId = await upsertRouteFolder(workspaceId, routeDisplayName(route), route.id);
 
@@ -208,14 +220,15 @@ async function syncGrpcRoute(
       const name = baseName;
       const existing = existingByKey.get(key);
 
+      const konnectManagedHeaderNames = metadata.map(h => h.name);
       if (existing) {
-        const merged = mergeHeaders(existing.metadata ?? [], metadata);
-        if (existing.url !== url || existing.name !== name || existing.protoMethodName !== protoMethodName || konnectHeadersChanged(existing.metadata ?? [], metadata)) {
-          await insoservices.grpcRequest.update(existing, { url, name, protoMethodName, metadata: merged });
+        const merged = mergeHeaders(existing.metadata ?? [], metadata, existing.konnectManagedHeaderNames ?? []);
+        if (existing.url !== url || existing.name !== name || existing.protoMethodName !== protoMethodName || konnectHeadersChanged(existing.metadata ?? [], metadata, existing.konnectManagedHeaderNames ?? [])) {
+          await insoservices.grpcRequest.update(existing, { url, name, protoMethodName, metadata: merged, konnectManagedHeaderNames });
           routeCounts.updated++;
         }
       } else {
-        await insoservices.grpcRequest.create({ parentId, url, name, protoMethodName, metadata, konnectRouteKey: key });
+        await insoservices.grpcRequest.create({ parentId, url, name, protoMethodName, metadata, konnectRouteKey: key, konnectManagedHeaderNames });
         routeCounts.created++;
       }
     }
@@ -256,14 +269,15 @@ async function syncWsRoute(
       const name = baseName;
       const existing = existingByKey.get(key);
 
+      const konnectManagedHeaderNames = headers.map(h => h.name);
       if (existing) {
-        const merged = mergeHeaders(existing.headers ?? [], headers);
-        if (existing.url !== url || existing.name !== name || konnectHeadersChanged(existing.headers ?? [], headers)) {
-          await insoservices.webSocketRequest.update(existing, { url, name, headers: merged });
+        const merged = mergeHeaders(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? []);
+        if (existing.url !== url || existing.name !== name || konnectHeadersChanged(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? [])) {
+          await insoservices.webSocketRequest.update(existing, { url, name, headers: merged, konnectManagedHeaderNames });
           routeCounts.updated++;
         }
       } else {
-        await insoservices.webSocketRequest.create({ parentId, url, name, headers, konnectRouteKey: key });
+        await insoservices.webSocketRequest.create({ parentId, url, name, headers, konnectRouteKey: key, konnectManagedHeaderNames });
         routeCounts.created++;
       }
     }
@@ -307,14 +321,15 @@ async function syncHttpRoute(
         const name = baseName;
         const existing = existingByKey.get(key);
 
+        const konnectManagedHeaderNames = headers.map(h => h.name);
         if (existing) {
-          const merged = mergeHeaders(existing.headers ?? [], headers);
-          if (existing.method !== method || existing.url !== url || existing.name !== name || konnectHeadersChanged(existing.headers ?? [], headers)) {
-            await insoservices.request.update(existing, { method, url, name, headers: merged });
+          const merged = mergeHeaders(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? []);
+          if (existing.method !== method || existing.url !== url || existing.name !== name || konnectHeadersChanged(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? [])) {
+            await insoservices.request.update(existing, { method, url, name, headers: merged, konnectManagedHeaderNames });
             routeCounts.updated++;
           }
         } else {
-          await insoservices.request.create({ parentId, method, url, name, headers, konnectRouteKey: key });
+          await insoservices.request.create({ parentId, method, url, name, headers, konnectRouteKey: key, konnectManagedHeaderNames });
           routeCounts.created++;
         }
       }
@@ -355,9 +370,18 @@ async function deleteStaleRequests(
     routeCounts.deleted++;
   }
 
-  // Delete orphaned folders (route removed from Konnect)
+  // Delete orphaned folders (route removed from Konnect) and empty sub-folders
+  // (path/protocol renamed — requests were already deleted above, leaving the sub-folder empty).
+  const folderIds = existingData.folders.map(f => f._id);
+  const foldersWithChildren = new Set<string>([
+    ...(await db.find<Request>(models.request.type, { parentId: { $in: folderIds } })).map(r => r.parentId),
+    ...(await db.find<WebSocketRequest>(models.webSocketRequest.type, { parentId: { $in: folderIds } })).map(r => r.parentId),
+    ...(await db.find<GrpcRequest>(models.grpcRequest.type, { parentId: { $in: folderIds } })).map(r => r.parentId),
+    ...(await db.find<RequestGroup>(models.requestGroup.type, { parentId: { $in: folderIds } })).map(f => f.parentId),
+  ]);
   for (const folder of existingData.folders) {
-    if (folder.konnectRouteId && !incomingRouteIds.has(folder.konnectRouteId)) {
+    if (!folder.konnectRouteId) { continue; }
+    if (!incomingRouteIds.has(folder.konnectRouteId) || !foldersWithChildren.has(folder._id)) {
       await insoservices.requestGroup.remove(folder);
     }
   }
@@ -371,78 +395,73 @@ async function syncServiceWorkspace(
   skippedRoutes: SkippedRoute[],
 ): Promise<void> {
   const { pat, controlPlane, project, region, globalEnvironmentId, signal, onProgress } = ctx;
-  const bufferId = await db.bufferChanges();
 
-  try {
-    const serviceName = service.name ?? `Gateway Service ${service.id}`;
+  const serviceName = service.name ?? `Gateway Service ${service.id}`;
 
-    // Upsert workspace for this service
-    let workspace: Workspace;
-    if (existingWorkspace) {
-      if (existingWorkspace.name !== serviceName) {
-        workspace = await insoservices.workspace.update(existingWorkspace, { name: serviceName });
-        counts.services.updated++;
-      } else {
-        workspace = existingWorkspace;
-      }
+  // Upsert workspace for this service
+  let workspace: Workspace;
+  if (existingWorkspace) {
+    if (existingWorkspace.name !== serviceName) {
+      workspace = await insoservices.workspace.update(existingWorkspace, { name: serviceName });
+      counts.services.updated++;
     } else {
-      workspace = await insoservices.workspace.create({ parentId: project._id, name: serviceName, scope: 'collection', konnectServiceId: service.id });
-      counts.services.created++;
+      workspace = existingWorkspace;
     }
-    counts.services.total++;
-
-    // Set project-level env as the active global env for this workspace
-    const workspaceMeta = await insoservices.workspaceMeta.getOrCreateByParentId(workspace._id);
-    if (workspaceMeta.activeGlobalEnvironmentId !== globalEnvironmentId) {
-      await insoservices.workspaceMeta.update(workspaceMeta, { activeGlobalEnvironmentId: globalEnvironmentId });
-    }
-    await insoservices.cookieJar.getOrCreateForParentId(workspace._id);
-
-    const incomingRoutes = await fetchRoutesForService(pat, controlPlane.id, service.id, region, signal);
-    const existingData = await loadExistingRequestData(workspace._id);
-    const incomingKeys = new Set<string>();
-    const incomingRouteIds = new Set<string>();
-
-    for (const route of incomingRoutes) {
-      signal?.throwIfAborted();
-      incomingRouteIds.add(route.id);
-      const isL4 = route.protocols.every(p => L4_PROTOCOLS.has(p));
-      const isGrpc = route.protocols.some(p => p === 'grpc' || p === 'grpcs');
-      const isWs = route.protocols.some(p => p === 'ws' || p === 'wss');
-
-      const routeName = routeDisplayName(route);
-
-      if (isL4) {
-        counts.routes.skipped++;
-        skippedRoutes.push({ routeName, reason: `Unsupported protocol: ${route.protocols.join(', ')}`, serviceName });
-        continue;
-      }
-
-      // Routes matched by SNI cannot be represented — Insomnia derives SNI implicitly
-      // from the URL hostname and has no SNI override.
-      if ((route.snis?.length ?? 0) > 0) {
-        counts.routes.skipped++;
-        skippedRoutes.push({ routeName, reason: 'Route uses SNI matching — unsupported in Insomnia', serviceName });
-        continue;
-      }
-
-      if (isGrpc) {
-        await syncGrpcRoute(route, workspace._id, existingData.maps.grpc, counts.routes, incomingKeys);
-      } else {
-        // Host header only applies to HTTP/WS — gRPC uses :authority which Insomnia derives from the URL
-        const headers = [
-          ...(route.hosts?.[0] ? [{ name: 'Host', value: route.hosts[0] }] : []),
-          ...Object.entries(route.headers ?? {}).map(([name, values]) => ({ name, value: values[0] })),
-        ];
-        await (isWs ? syncWsRoute(route, workspace._id, headers, existingData.maps.ws, counts.routes, incomingKeys) : syncHttpRoute(route, workspace._id, headers, existingData.maps.http, counts.routes, incomingKeys));
-      }
-    }
-
-    await deleteStaleRequests(existingData, incomingKeys, incomingRouteIds, counts.routes);
-    onProgress?.(`Synced ${serviceName} in ${controlPlane.name}`);
-  } finally {
-    await db.flushChanges(bufferId);
+  } else {
+    workspace = await insoservices.workspace.create({ parentId: project._id, name: serviceName, scope: 'collection', konnectServiceId: service.id });
+    counts.services.created++;
   }
+  counts.services.total++;
+
+  // Set project-level env as the active global env for this workspace
+  const workspaceMeta = await insoservices.workspaceMeta.getOrCreateByParentId(workspace._id);
+  if (workspaceMeta.activeGlobalEnvironmentId !== globalEnvironmentId) {
+    await insoservices.workspaceMeta.update(workspaceMeta, { activeGlobalEnvironmentId: globalEnvironmentId });
+  }
+  await insoservices.cookieJar.getOrCreateForParentId(workspace._id);
+
+  const incomingRoutes = await fetchRoutesForService(pat, controlPlane.id, service.id, region, signal);
+  const existingData = await loadExistingRequestData(workspace._id);
+  const incomingKeys = new Set<string>();
+  const incomingRouteIds = new Set<string>();
+
+  for (const route of incomingRoutes) {
+    signal?.throwIfAborted();
+    incomingRouteIds.add(route.id);
+    const isL4 = route.protocols.every(p => L4_PROTOCOLS.has(p));
+    const isGrpc = route.protocols.some(p => p === 'grpc' || p === 'grpcs');
+    const isWs = route.protocols.some(p => p === 'ws' || p === 'wss');
+
+    const routeName = routeDisplayName(route);
+
+    if (isL4) {
+      counts.routes.skipped++;
+      skippedRoutes.push({ routeName, reason: `Unsupported protocol: ${route.protocols.join(', ')}`, serviceName });
+      continue;
+    }
+
+    // Routes matched by SNI cannot be represented — Insomnia derives SNI implicitly
+    // from the URL hostname and has no SNI override.
+    if ((route.snis?.length ?? 0) > 0) {
+      counts.routes.skipped++;
+      skippedRoutes.push({ routeName, reason: 'Route uses SNI matching — unsupported in Insomnia', serviceName });
+      continue;
+    }
+
+    if (isGrpc) {
+      await syncGrpcRoute(route, workspace._id, existingData.maps.grpc, counts.routes, incomingKeys);
+    } else {
+      // Host header only applies to HTTP/WS — gRPC uses :authority which Insomnia derives from the URL
+      const headers = [
+        ...(route.hosts?.[0] ? [{ name: 'host', value: route.hosts[0] }] : []),
+        ...Object.entries(route.headers ?? {}).map(([name, values]) => ({ name: name.toLowerCase(), value: values[0] })),
+      ];
+      await (isWs ? syncWsRoute(route, workspace._id, headers, existingData.maps.ws, counts.routes, incomingKeys) : syncHttpRoute(route, workspace._id, headers, existingData.maps.http, counts.routes, incomingKeys));
+    }
+  }
+
+  await deleteStaleRequests(existingData, incomingKeys, incomingRouteIds, counts.routes);
+  onProgress?.(`Synced ${serviceName} in ${controlPlane.name}`);
 }
 
 /** Upserts the project-level environment workspace and syncs Konnect proxy URL vars into it. Returns the environment id. */
@@ -532,28 +551,33 @@ async function syncControlPlane(
 
   const ctx: ServiceSyncContext = { pat, controlPlane, project, region, globalEnvironmentId, signal, onProgress };
   const CONCURRENCY = 5;
-  for (let i = 0; i < services.length; i += CONCURRENCY) {
-    signal?.throwIfAborted();
-    const batch = services.slice(i, i + CONCURRENCY);
-    const batchResults = await Promise.all(batch.map(async service => {
-      const localCounts = { services: zeroCounts(), routes: zeroCounts() };
-      const localSkipped: SkippedRoute[] = [];
-      await syncServiceWorkspace(ctx, service, existingWorkspaceByServiceId.get(service.id), localCounts, localSkipped);
-      return { counts: localCounts, skipped: localSkipped };
-    }));
-    for (const { counts, skipped } of batchResults) {
-      mergeCounts(acc.serviceCounts, counts.services);
-      mergeCounts(acc.routeCounts, counts.routes);
-      acc.skippedRoutes.push(...skipped);
+  const bufferId = await db.bufferChanges();
+  try {
+    for (let i = 0; i < services.length; i += CONCURRENCY) {
+      signal?.throwIfAborted();
+      const batch = services.slice(i, i + CONCURRENCY);
+      const batchResults = await Promise.all(batch.map(async service => {
+        const localCounts = { services: zeroCounts(), routes: zeroCounts() };
+        const localSkipped: SkippedRoute[] = [];
+        await syncServiceWorkspace(ctx, service, existingWorkspaceByServiceId.get(service.id), localCounts, localSkipped);
+        return { counts: localCounts, skipped: localSkipped };
+      }));
+      for (const { counts, skipped } of batchResults) {
+        mergeCounts(acc.serviceCounts, counts.services);
+        mergeCounts(acc.routeCounts, counts.routes);
+        acc.skippedRoutes.push(...skipped);
+      }
     }
-  }
 
-  // Delete stale workspaces (services removed from this Control Plane)
-  for (const workspace of existingWorkspaces) {
-    if (!incomingServiceIds.has(workspace.konnectServiceId!)) {
-      await insoservices.workspace.remove(workspace);
-      acc.serviceCounts.deleted++;
+    // Delete stale workspaces (services removed from this Control Plane)
+    for (const workspace of existingWorkspaces) {
+      if (!incomingServiceIds.has(workspace.konnectServiceId!)) {
+        await insoservices.workspace.remove(workspace);
+        acc.serviceCounts.deleted++;
+      }
     }
+  } finally {
+    await db.flushChanges(bufferId);
   }
 }
 

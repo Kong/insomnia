@@ -5,6 +5,8 @@ import type { SyncResult } from '../../konnect/sync';
 import { syncKonnect } from '../../konnect/sync';
 import { SegmentEvent } from '../analytics';
 
+const REVALIDATE_DEBOUNCE_MS = 500;
+
 interface KonnectSyncState {
   syncing: boolean;
   progress: string;
@@ -22,17 +24,21 @@ export interface UseKonnectSyncResult {
 export function useKonnectSync(): UseKonnectSyncResult {
   const [state, setState] = useState<KonnectSyncState>({ syncing: false, progress: '', error: null });
   const abortRef = useRef<AbortController | null>(null);
+  const revalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { revalidate } = useRevalidator();
 
   const startSync = async (organizationId: string): Promise<SyncResult | null> => {
-    const pat = await window.main.secretStorage.getSecret('konnectPat');
-    if (!pat) {
-      setState({ syncing: false, progress: '', error: 'No PAT found. Go to Preferences → Konnect to add one.' });
-      return null;
-    }
+    if (abortRef.current) { return null; }
 
     const controller = new AbortController();
     abortRef.current = controller;
+
+    const pat = await window.main.secretStorage.getSecret('konnectPat');
+    if (!pat) {
+      abortRef.current = null;
+      setState({ syncing: false, progress: '', error: 'No PAT found. Go to Preferences → Konnect to add one.' });
+      return null;
+    }
     setState({ syncing: true, progress: 'Starting sync...', error: null });
 
     const result = await syncKonnect({
@@ -41,11 +47,13 @@ export function useKonnectSync(): UseKonnectSyncResult {
       signal: controller.signal,
       onProgress: message => {
         setState(s => ({ ...s, progress: message }));
-        revalidate();
+        if (revalidateTimerRef.current) { clearTimeout(revalidateTimerRef.current); }
+        revalidateTimerRef.current = setTimeout(revalidate, REVALIDATE_DEBOUNCE_MS);
       },
     });
 
     abortRef.current = null;
+    if (revalidateTimerRef.current) { clearTimeout(revalidateTimerRef.current); revalidateTimerRef.current = null; }
     revalidate();
 
     const cancelled = controller.signal.aborted;
@@ -59,6 +67,7 @@ export function useKonnectSync(): UseKonnectSyncResult {
       event: SegmentEvent.kongKonnectSyncCompleted,
       properties: {
         success: result.success,
+        cancelled,
         control_planes_total: result.controlPlanes.total,
         control_planes_created: result.controlPlanes.created,
         control_planes_updated: result.controlPlanes.updated,
@@ -73,7 +82,7 @@ export function useKonnectSync(): UseKonnectSyncResult {
         routes_deleted: result.routes.deleted,
         routes_skipped: result.routes.skipped,
         duration_ms: result.durationMs,
-        ...(result.error ? { error: result.error } : {}),
+        ...(!cancelled && result.error ? { error: result.error } : {}),
       },
     });
 

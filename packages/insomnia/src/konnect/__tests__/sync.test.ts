@@ -239,7 +239,7 @@ describe('Feature: HTTP Route Sync', () => {
     expect(httpReq).toMatchObject({ url: 'http://{{ _.proxy_host }}', name: 'Route route-1' });
     expect(httpsReq).toMatchObject({ url: 'https://{{ _.proxy_host }}', name: 'Route route-1' });
     for (const req of requests) {
-      expect(req.headers).toEqual(expect.arrayContaining([{ name: 'Host', value: 'host-only.example.com' }]));
+      expect(req.headers).toEqual(expect.arrayContaining([{ name: 'host', value:'host-only.example.com' }]));
     }
   });
 
@@ -255,7 +255,7 @@ describe('Feature: HTTP Route Sync', () => {
     const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(requests).toHaveLength(1);
     expect(requests[0]).toMatchObject({ url: 'http://{{ _.proxy_host }}', name: 'Route route-1' });
-    expect(requests[0].headers).toEqual(expect.arrayContaining([{ name: 'X-Service', value: 'header-only' }]));
+    expect(requests[0].headers).toEqual(expect.arrayContaining([{ name: 'x-service', value: 'header-only' }]));
   });
 
   it('Scenario: Route headers synced onto the request — first value only', async () => {
@@ -275,8 +275,8 @@ describe('Feature: HTTP Route Sync', () => {
     const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(requests[0].headers).toEqual(
       expect.arrayContaining([
-        { name: 'X-Api-Version', value: '2' },
-        { name: 'X-Region', value: 'us-east' },
+        { name: 'x-api-version', value: '2' },
+        { name: 'x-region', value: 'us-east' },
       ]),
     );
   });
@@ -292,7 +292,7 @@ describe('Feature: HTTP Route Sync', () => {
 
     const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(requests[0].headers).toEqual(
-      expect.arrayContaining([{ name: 'Host', value: 'route-hosts.example.com' }]),
+      expect.arrayContaining([{ name: 'host', value:'route-hosts.example.com' }]),
     );
   });
 
@@ -365,7 +365,7 @@ describe('Feature: Request Naming', () => {
 
     const [req] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(req.name).toBe('users-root');
-    expect(req.headers).toEqual(expect.arrayContaining([{ name: 'Host', value: 'naming-route-name.example.com' }]));
+    expect(req.headers).toEqual(expect.arrayContaining([{ name: 'host', value:'naming-route-name.example.com' }]));
   });
 
   it('Scenario: No path, no name — name falls back to "Route {routeId}"', async () => {
@@ -386,7 +386,7 @@ describe('Feature: Request Naming', () => {
 
     const [req] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(req.name).toBe('Route a1b2c3d4-e5f6-7890-abcd-ef1234567890');
-    expect(req.headers).toEqual(expect.arrayContaining([{ name: 'X-Service', value: 'naming-no-name' }]));
+    expect(req.headers).toEqual(expect.arrayContaining([{ name: 'x-service', value: 'naming-no-name' }]));
   });
 
   it('Scenario: methods null — all default methods use path in name', async () => {
@@ -521,6 +521,102 @@ describe('Feature: Re-sync', () => {
     const allRequests = await db.find(models.request.type, { parentId: { $in: [workspaces[0]._id] } });
     // Only the konnect-managed request should remain
     expect(allRequests.filter((r: any) => r.konnectRouteKey == null)).toHaveLength(0);
+  });
+
+  it('Scenario: Re-sync removes Konnect-managed Host header when hosts is cleared', async () => {
+    // First sync — route has a hosts entry, produces a Host header
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['/api'], protocols: ['http'], hosts: ['api.example.com'] })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const [after1] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(after1.headers).toEqual(expect.arrayContaining([{ name: 'host', value:'api.example.com' }]));
+    expect(after1.konnectManagedHeaderNames).toContain('host');
+
+    // Second sync — hosts cleared; Host header should be removed
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['/api'], protocols: ['http'], hosts: null })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const [after2] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(after2.headers.map((h: any) => h.name)).not.toContain('host');
+  });
+
+  it('Scenario: Re-sync removes a Konnect-managed route header when it is dropped from the route', async () => {
+    // First sync — route has X-Tenant header
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['/api'], protocols: ['http'], headers: { 'X-Tenant': ['acme'] } })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const [after1] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(after1.headers).toEqual(expect.arrayContaining([{ name: 'x-tenant', value: 'acme' }]));
+
+    // Second sync — X-Tenant removed from route
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['/api'], protocols: ['http'], headers: null })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const [after2] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(after2.headers.map((h: any) => h.name)).not.toContain('x-tenant');
+  });
+
+  it('Scenario: Re-sync preserves user-added headers when Konnect-managed headers are removed', async () => {
+    // First sync — route has Host header
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['/api'], protocols: ['http'], hosts: ['api.example.com'] })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    // User adds their own header
+    const [created] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    await insoservices.request.update(created, {
+      headers: [...(created.headers ?? []), { name: 'X-My-Token', value: 'secret' }],
+    });
+
+    // Second sync — hosts cleared; Host removed, user header preserved
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['/api'], protocols: ['http'], hosts: null })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const [after2] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(after2.headers.map((h: any) => h.name)).not.toContain('host');
+    expect(after2.headers).toEqual(expect.arrayContaining([{ name: 'X-My-Token', value: 'secret' }]));
+  });
+
+  it('Scenario: Re-sync removes empty sub-folders when route path changes', async () => {
+    // First sync — multi-path route creates sub-folders
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['/v1/users', '/v2/users'], protocols: ['http'] })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const folders1 = await db.find(models.requestGroup.type, { konnectRouteId: 'route-uuid-1' });
+    // Route folder + 2 sub-folders
+    expect(folders1.length).toBeGreaterThanOrEqual(2);
+
+    // Second sync — path list changes; /v1/users gone, /v3/users added
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['/v2/users', '/v3/users'], protocols: ['http'] })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const folders2 = await db.find(models.requestGroup.type, { konnectRouteId: 'route-uuid-1' });
+    // The /v1/users sub-folder should have been removed (it has no children)
+    const folderNames = folders2.map((f: any) => f.name);
+    expect(folderNames).not.toContain('/v1/users');
   });
 
   it('Scenario: Re-sync resets method if the user changed it', async () => {
@@ -717,7 +813,7 @@ describe('Feature: gRPC Route Sync', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     const [grpcReq] = konnectRequests(await db.find(models.grpcRequest.type, { konnectRouteKey: { $ne: null } }));
-    expect(grpcReq.metadata?.map((m: any) => m.name)).not.toContain('Host');
+    expect(grpcReq.metadata?.map((m: any) => m.name)).not.toContain('host');
   });
 
   it('Scenario: grpcs with snis — skipped', async () => {
@@ -743,8 +839,8 @@ describe('Feature: gRPC Route Sync', () => {
 
     const [grpcReq] = konnectRequests(await db.find(models.grpcRequest.type, { konnectRouteKey: { $ne: null } }));
     expect(grpcReq.metadata).toEqual(expect.arrayContaining([
-      { name: 'X-Api-Version', value: '2' },
-      { name: 'X-Tenant', value: 'acme' },
+      { name: 'x-api-version', value: '2' },
+      { name: 'x-tenant', value: 'acme' },
     ]));
   });
 });
@@ -815,7 +911,7 @@ describe('Feature: WebSocket Route Sync', () => {
     const [wsReq] = konnectRequests(await db.find(models.webSocketRequest.type, { konnectRouteKey: { $ne: null } }));
     expect(wsReq.name).toBe('ws-chat-service');
     expect(wsReq.url).toBe('wss://{{ _.proxy_host }}');
-    expect(wsReq.headers).toEqual(expect.arrayContaining([{ name: 'Host', value: 'ws-name.example.com' }]));
+    expect(wsReq.headers).toEqual(expect.arrayContaining([{ name: 'host', value:'ws-name.example.com' }]));
   });
 
   it('Scenario: paths null, no route name — name falls back to "Route {routeId}"', async () => {
@@ -828,7 +924,7 @@ describe('Feature: WebSocket Route Sync', () => {
 
     const [wsReq] = konnectRequests(await db.find(models.webSocketRequest.type, { konnectRouteKey: { $ne: null } }));
     expect(wsReq.name).toBe('Route ws-uuid-no-name');
-    expect(wsReq.headers).toEqual(expect.arrayContaining([{ name: 'Host', value: 'ws-no-name.example.com' }]));
+    expect(wsReq.headers).toEqual(expect.arrayContaining([{ name: 'host', value:'ws-no-name.example.com' }]));
   });
 
   it('Scenario: Multiple paths — one request per path', async () => {
@@ -854,7 +950,7 @@ describe('Feature: WebSocket Route Sync', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     const [wsReq] = konnectRequests(await db.find(models.webSocketRequest.type, { konnectRouteKey: { $ne: null } }));
-    expect(wsReq.headers).toEqual(expect.arrayContaining([{ name: 'X-Tenant', value: 'acme' }]));
+    expect(wsReq.headers).toEqual(expect.arrayContaining([{ name: 'x-tenant', value: 'acme' }]));
   });
 
   it('Scenario: hosts present — synced as Host header', async () => {
@@ -866,7 +962,7 @@ describe('Feature: WebSocket Route Sync', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     const [wsReq] = konnectRequests(await db.find(models.webSocketRequest.type, { konnectRouteKey: { $ne: null } }));
-    expect(wsReq.headers).toEqual(expect.arrayContaining([{ name: 'Host', value: 'ws-hosts.example.com' }]));
+    expect(wsReq.headers).toEqual(expect.arrayContaining([{ name: 'host', value:'ws-hosts.example.com' }]));
   });
 
   it('Scenario: wss with snis — skipped', async () => {
@@ -1100,7 +1196,7 @@ describe('Feature: Wildcard and Edge-Case Hosts', () => {
 
     const [req] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(req.url).toBe('http://{{ _.proxy_host }}/api');
-    expect(req.headers).toEqual(expect.arrayContaining([{ name: 'Host', value: '*.example.com' }]));
+    expect(req.headers).toEqual(expect.arrayContaining([{ name: 'host', value:'*.example.com' }]));
   });
 
   it('Scenario: Fully invalid route (no matching fields) — creates requests with "Route {uuid}" name', async () => {

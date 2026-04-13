@@ -129,10 +129,11 @@ export const ProjectListSidebar = ({
   konnectSyncEnabled,
 }: ProjectListSidebarProps) => {
 
-  const [activeTab, setActiveTab] = reactUse.useLocalStorage<'projects' | 'konnect'>(
+  const [storedTab, setActiveTab] = reactUse.useLocalStorage<'projects' | 'konnect'>(
     `${organizationId}:sidebar-tab`,
     'projects',
   );
+  const activeTab = !konnectSyncEnabled ? 'projects' : (storedTab ?? 'projects');
 
   const [projectListFilter, setProjectListFilter] = reactUse.useLocalStorage(
     `${organizationId}:project-list-filter`,
@@ -276,7 +277,6 @@ export const ProjectListSidebar = ({
         <Button
           aria-label="Create new Project"
           onPress={onCreateProject}
-          isDisabled={nonKonnectProjects.length === 0}
           className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <Icon icon="plus-circle" />

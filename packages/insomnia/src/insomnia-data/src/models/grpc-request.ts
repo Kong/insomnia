@@ -35,6 +35,7 @@ interface BaseGrpcRequest {
     module: string;
   };
   konnectRouteKey?: string | null;
+  konnectManagedHeaderNames?: string[] | null;
 }
 
 export type GrpcRequest = BaseModel & BaseGrpcRequest;
@@ -43,7 +44,7 @@ export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequ
 
 export const isGrpcRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
-export const optionalKeys = ['konnectRouteKey'];
+export const optionalKeys = ['konnectRouteKey', 'konnectManagedHeaderNames'];
 
 export function rewriteReferences(request: GrpcRequest, idMapping: Map<string, string>): GrpcRequest {
   return {
