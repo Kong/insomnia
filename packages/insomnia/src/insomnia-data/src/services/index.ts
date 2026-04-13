@@ -1,5 +1,8 @@
-import { type Services } from '../../node-src/types';
+// Keep the Services type tied to the node implementation without creating a runtime import cycle.
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="../../node-src/types.d.ts" />
 
+type Services = ServicesNodeImpl;
 export type { Services };
 
 let servicesImplementation: Services | null = null;

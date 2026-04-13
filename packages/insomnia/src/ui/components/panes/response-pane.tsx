@@ -2,6 +2,7 @@ import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { services } from '~/insomnia-data';
+import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 
@@ -36,8 +37,6 @@ interface Props {
   activeRequestId: string;
 }
 
-type ResponseTimeline = Awaited<ReturnType<typeof services.helpers.getTimeline>>;
-
 export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const { activeRequest, activeRequestMeta, activeResponse, responses, requestVersions } =
     useRequestLoaderData() as RequestLoaderData;
@@ -71,7 +70,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     (prettify: boolean) => downloadResponseBody(activeRequest, activeResponse, prettify),
     [activeRequest, activeResponse],
   );
-  const [timeline, setTimeline] = useState<ResponseTimeline>([]);
+  const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -81,9 +80,9 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
       return;
     }
 
-    void services.helpers.getTimeline(activeResponse).then(nextTimeline => {
+    void services.helpers.getResponseTimeline(activeResponse).then(responseTimeline => {
       if (!isCancelled) {
-        setTimeline(nextTimeline);
+        setTimeline(responseTimeline);
       }
     });
 

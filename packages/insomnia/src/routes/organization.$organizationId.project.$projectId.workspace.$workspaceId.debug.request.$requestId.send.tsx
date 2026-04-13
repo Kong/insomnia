@@ -76,7 +76,7 @@ const writeToDownloadPath = async (
   invariant(downloadPathAndName, 'filename should be set by now');
 
   const to = createWriteStream(downloadPathAndName);
-  const readStream = await services.helpers.getBodyStream(responsePatch);
+  const readStream = await services.helpers.getResponseBodyStream(responsePatch);
   if (!readStream || typeof readStream === 'string') {
     return null;
   }

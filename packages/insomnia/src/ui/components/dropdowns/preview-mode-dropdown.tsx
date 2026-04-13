@@ -61,7 +61,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const timeline = await services.helpers.getTimeline(activeResponse);
+    const timeline = await services.helpers.getResponseTimeline(activeResponse);
     const headers = timeline
       .filter(v => v.name === 'HeaderIn')
       .map(v => v.value)

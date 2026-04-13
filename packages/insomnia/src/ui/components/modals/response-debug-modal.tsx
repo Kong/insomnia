@@ -46,7 +46,7 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
           console.error('No response found');
           return;
         }
-        const timeline = await services.helpers.getTimeline(response, options.showBody);
+        const timeline = await services.helpers.getResponseTimeline(response, options.showBody);
         setState({
           responseId: response._id,
           timeline,

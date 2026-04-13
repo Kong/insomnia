@@ -71,7 +71,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
     const resp = await services.response.getById(respInfo.responseId);
 
     if (resp) {
-      const timeline = (await services.helpers.getTimeline(resp, true)) as unknown as ResponseTimelineEntry[];
+      const timeline = (await services.helpers.getResponseTimeline(resp, true)) as unknown as ResponseTimelineEntry[];
       timelines = [
         ...timelines,
         {

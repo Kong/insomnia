@@ -7,24 +7,28 @@ import * as requestService from '../request';
 import * as socketIORequestService from '../socket-io-request';
 import * as webSocketRequestService from '../websocket-request';
 
-type RequestLike = Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest;
-
-export async function findRequestByParentId(parentId: string): Promise<RequestLike[]> {
-  const [requests, grpcRequests, webSocketRequests, socketIORequests] = await Promise.all([
+export function findRequestByParentId(
+  parentId: string,
+): Promise<(Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest)[]> {
+  return Promise.all([
     requestService.findByParentId(parentId),
     grpcRequestService.findByParentId(parentId),
     webSocketRequestService.findByParentId(parentId),
     socketIORequestService.findByParentId(parentId),
+  ]).then(([requests, grpcRequests, webSocketRequests, socketIORequests]) => [
+    ...requests,
+    ...grpcRequests,
+    ...webSocketRequests,
+    ...socketIORequests,
   ]);
-
-  return [...requests, ...grpcRequests, ...webSocketRequests, ...socketIORequests];
 }
 
-export function getRequestById(requestId: string): Promise<RequestLike | undefined> {
+export function getRequestById(
+  requestId: string,
+): Promise<Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest | undefined> {
   if (models.grpcRequest.isGrpcRequestId(requestId)) {
     return grpcRequestService.getById(requestId);
   }
-
   if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
     return webSocketRequestService.getById(requestId);
   }
@@ -36,15 +40,13 @@ export function getRequestById(requestId: string): Promise<RequestLike | undefin
   if (models.mcpRequest.isMcpRequestId(requestId)) {
     return mcpRequestService.getById(requestId);
   }
-
   return requestService.getById(requestId);
 }
 
-export function removeRequest(request: RequestLike) {
+export function removeRequest(request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest) {
   if (models.grpcRequest.isGrpcRequest(request)) {
     return grpcRequestService.remove(request);
   }
-
   if (models.webSocketRequest.isWebSocketRequest(request)) {
     return webSocketRequestService.remove(request);
   }
@@ -66,13 +68,11 @@ export function updateRequest<T extends object>(request: T, patch: Partial<T> = 
     // @ts-expect-error -- TSCONVERSION
     return grpcRequestService.update(request, patch);
   }
-
   // @ts-expect-error -- TSCONVERSION
   if (models.webSocketRequest.isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return webSocketRequestService.update(request, patch);
   }
-
   // @ts-expect-error -- TSCONVERSION
   if (models.socketIORequest.isSocketIORequest(request)) {
     // @ts-expect-error -- TSCONVERSION
@@ -95,19 +95,16 @@ export function duplicateRequest<T extends object>(request: T, patch: Partial<T>
     // @ts-expect-error -- TSCONVERSION
     return grpcRequestService.duplicate(request, patch);
   }
-
   // @ts-expect-error -- TSCONVERSION
   if (models.webSocketRequest.isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return webSocketRequestService.duplicate(request, patch);
   }
-
   // @ts-expect-error -- TSCONVERSION
   if (models.socketIORequest.isSocketIORequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return socketIORequestService.duplicate(request, patch);
   }
-
   // @ts-expect-error -- TSCONVERSION
   return requestService.duplicate(request, patch);
 }

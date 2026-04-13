@@ -47,7 +47,7 @@ export const MockResponsePane = () => {
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
-        const timeline = await services.helpers.getTimeline(activeResponse, true);
+        const timeline = await services.helpers.getResponseTimeline(activeResponse, true);
         setTimeline(timeline);
       }
     };
@@ -363,7 +363,7 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath) {
                 return;
               }
-              const timeline = await services.helpers.getTimeline(activeResponse);
+              const timeline = await services.helpers.getResponseTimeline(activeResponse);
               const headers = timeline
                 .filter(v => v.name === 'HeaderIn')
                 .map(v => v.value)
