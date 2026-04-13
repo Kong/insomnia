@@ -18,8 +18,7 @@ import {
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
 import type { MockRoute, MockServer, Request, RequestHeader, Response } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';

@@ -1,8 +1,7 @@
-import type { Project, Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { BaseModel, Project, Workspace } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { database } from '../../common/database';
-import { type BaseModel, canSync } from '../../models';
 import type { StatusCandidate } from '../types';
 import type { VCS } from './vcs';
 
@@ -17,7 +16,7 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({
   await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
   // Everything unstaged
-  const candidates = (await database.getWithDescendants(workspace)).filter(canSync).map(
+  const candidates = (await database.getWithDescendants(workspace)).filter(models.canSync).map(
     (doc: BaseModel): StatusCandidate => ({
       key: doc._id,
       name: doc.name || '',

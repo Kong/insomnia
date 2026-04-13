@@ -25,11 +25,10 @@
  */
 
 import { database } from '~/common/database';
-import { type GitCredentials, type GitRepository, services } from '~/insomnia-data';
+import type { GitCredentials, GitRepository } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type ElectronStorage from '~/main/electron-storage';
 import { initElectronStorage } from '~/main/window-utils';
-
-import * as models from '../../models';
 
 const { isGitCredentialsOAuth } = models.gitRepository;
 const { isGitCredentialsV1 } = models.gitCredentials;

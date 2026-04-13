@@ -8,8 +8,7 @@ import {
   importResourcesToWorkspace,
 } from '~/common/import';
 import type { Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,

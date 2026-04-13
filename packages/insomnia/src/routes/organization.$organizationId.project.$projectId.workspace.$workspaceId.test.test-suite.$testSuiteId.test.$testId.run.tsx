@@ -3,8 +3,7 @@ import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import type { UnitTest } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';

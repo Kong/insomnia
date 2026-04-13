@@ -7,13 +7,19 @@ import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
-import type { CloudProviderCredential, Request as DBRequest, RequestGroup, Response, Workspace } from '~/insomnia-data';
+import type {
+  AllTypes,
+  CloudProviderCredential,
+  Request as DBRequest,
+  RequestGroup,
+  Response,
+  Workspace,
+} from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
-import type * as models from '../models';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
@@ -88,7 +94,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'request.getById': async (body: { id: string }) => {
     return await services.request.getById(body.id);
   },
-  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: models.AllTypes[] }) => {
+  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: AllTypes[] }) => {
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
   },
   'workspace.getById': async (body: { id: string }) => {

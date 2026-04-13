@@ -11,7 +11,7 @@ import { configureFetch } from 'insomnia-api';
 import { getCurrentSessionId } from '~/account/session';
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import type { Project, RemoteProject, Stats } from '~/insomnia-data';
-import { database, initDatabase, initServices, services } from '~/insomnia-data';
+import { database, initDatabase, initServices, models, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { registerPathHandlers } from '~/main/ipc/path';
@@ -39,7 +39,7 @@ import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import * as models from './models/index';
+
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)

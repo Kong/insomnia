@@ -14,9 +14,7 @@ import type {
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { canSync } from '~/models';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import type { BackendProject, Compare, StatusCandidate } from '~/sync/types';
 import { invariant } from '~/utils/invariant';
 
@@ -133,7 +131,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     syncItemsList.push(activeApiSpec);
   }
 
-  const syncItems: StatusCandidate[] = syncItemsList.filter(canSync).map(i => ({
+  const syncItems: StatusCandidate[] = syncItemsList.filter(models.canSync).map(i => ({
     key: i._id,
     name: i.name || '',
     document: i,

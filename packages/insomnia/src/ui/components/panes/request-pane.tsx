@@ -5,11 +5,10 @@ import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import type { RequestParameter, Settings } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
-import * as models from '../../../models';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {

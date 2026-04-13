@@ -2,6 +2,7 @@ import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import type {
+  BaseModel,
   GrpcRequest,
   GrpcRequestMeta,
   McpPayload,
@@ -19,9 +20,7 @@ import type {
   WebSocketRequest,
   WebSocketResponse,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import type { BaseModel } from '~/models';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';

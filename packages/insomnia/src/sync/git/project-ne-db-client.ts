@@ -4,13 +4,12 @@ import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
 import type { Workspace, WorkspaceMeta } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { database, database as db } from '../../common/database';
 import { extractErrorMessages } from '../../common/import';
 import { type InsomniaFile, InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
-import * as models from '../../models';
 import Stat from './stat';
 import { SystemError } from './system-error';
 

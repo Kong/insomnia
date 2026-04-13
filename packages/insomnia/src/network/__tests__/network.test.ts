@@ -4,7 +4,7 @@ import nodePath from 'node:path';
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
@@ -13,7 +13,6 @@ import { HttpVersions } from '../../common/settings';
 import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
-import * as models from '../../models';
 import * as networkUtils from '../network';
 import { getSetCookiesFromResponseHeaders } from '../network';
 

@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { type CloudProviderCredential, models } from '~/insomnia-data';
+import type { CloudProviderCredential } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import type { NunjucksParsedTag } from '~/templating/types';
 

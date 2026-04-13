@@ -1,4 +1,4 @@
-import { type RemoteProject, type Workspace } from '~/insomnia-data';
+import type { RemoteProject, Workspace } from '~/insomnia-data';
 import { database, models } from '~/insomnia-data';
 
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';

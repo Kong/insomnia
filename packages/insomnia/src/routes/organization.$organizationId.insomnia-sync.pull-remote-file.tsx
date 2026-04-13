@@ -1,7 +1,6 @@
 import { href, redirect } from 'react-router';
 
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { pullBackendProject } from '~/sync/vcs/pull-backend-project';
 import { invariant } from '~/utils/invariant';

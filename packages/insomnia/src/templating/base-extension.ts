@@ -6,10 +6,9 @@ import iconv from 'iconv-lite';
 
 import { jarFromCookies } from '~/common/cookies';
 import type { Request, RequestGroup, Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { database as db } from '../common/database';
-import * as models from '../models/index';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
