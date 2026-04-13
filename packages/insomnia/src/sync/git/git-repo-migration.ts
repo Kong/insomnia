@@ -29,6 +29,7 @@ import { database as db } from '../../common/database';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 import { initElectronStorage } from '../../main/window-utils';
 
+// cspell:ignore worktree
 const MIGRATION_KEY_PREFIX = 'GIT_STRUCTURE_V2_';
 
 // In-memory guard against concurrent migrations for the same repo.
@@ -84,6 +85,13 @@ async function moveDirectoryContents(srcDir: string, destDir: string): Promise<v
       });
       await fs.promises.unlink(srcPath);
     } else {
+      const destExists = await fs.promises
+        .access(destPath)
+        .then(() => true)
+        .catch(() => false);
+      if (destExists) {
+        console.warn('[git-migration] Overwriting existing file during move:', destPath);
+      }
       await fs.promises.rename(srcPath, destPath).catch(async () => {
         // Cross-device rename falls back to copy + delete
         await fs.promises.copyFile(srcPath, destPath);
@@ -108,6 +116,31 @@ async function dirExists(dirPath: string): Promise<boolean> {
     return stat.isDirectory();
   } catch {
     return false;
+  }
+}
+
+/**
+ * Remove `core.worktree` from `.git/config` if present.
+ *
+ * isomorphic-git does not write `core.worktree`, but a user or an external
+ * tool might have added it. After migration the worktree is the default
+ * (parent of `.git/`), so any stale entry must be stripped to prevent native
+ * git commands from resolving to the wrong path.
+ */
+async function sanitizeGitConfig(gitDir: string): Promise<void> {
+  const configPath = path.join(gitDir, 'config');
+  try {
+    const original = await fs.promises.readFile(configPath, 'utf8');
+    const sanitized = original
+      .split('\n')
+      .filter(line => !/^\s*worktree\s*=/.test(line))
+      .join('\n');
+    if (sanitized !== original) {
+      await fs.promises.writeFile(configPath, sanitized, 'utf8');
+      console.log('[git-migration] Removed stale core.worktree from .git/config');
+    }
+  } catch {
+    // Config may not exist yet or is unreadable — not fatal
   }
 }
 
@@ -154,6 +187,9 @@ export async function migrateRepoStructureIfNeeded(
             await moveDirectoryContents(oldGitDir, newGitDir);
           })
         : moveDirectoryContents(oldGitDir, newGitDir));
+
+      // Strip stale core.worktree entries — the new layout uses the default.
+      await sanitizeGitConfig(newGitDir);
     }
 
     // Step 2: Collapse other/ → repo root
@@ -204,30 +240,44 @@ async function _flushWorkspacesToDisk(baseDir: string, projectId: string): Promi
       continue;
     }
 
-    // Don't overwrite an existing file — trust disk as the primary store
-    try {
-      await fs.promises.access(absPath);
-      continue; // file already exists
-    } catch {
-      // file does not exist — write it
+    // Don't overwrite an existing file — trust disk as the primary store.
+    // Use an atomic write (tmp → rename) so a mid-write crash never leaves a
+    // truncated file that blocks future retries.
+    const fileAlreadyExists = await fs.promises
+      .access(absPath)
+      .then(() => true)
+      .catch(() => false);
+
+    if (!fileAlreadyExists) {
+      try {
+        const yamlContent = await getInsomniaV5DataExport({
+          workspaceId: workspace._id,
+          includePrivateEnvironments: false,
+        });
+
+        if (!yamlContent?.trim()) {
+          console.warn('[git-migration] Empty export for workspace', workspace._id, '— skipping');
+          continue;
+        }
+
+        const tmpPath = `${absPath}.migration.tmp`;
+        await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
+        await fs.promises.writeFile(tmpPath, yamlContent, 'utf8');
+        await fs.promises.rename(tmpPath, absPath).catch(async err => {
+          await fs.promises.unlink(tmpPath).catch(() => {});
+          throw err;
+        });
+        console.log('[git-migration] Flushed workspace to disk:', absPath);
+      } catch (err) {
+        console.warn('[git-migration] Could not flush workspace', workspace._id, err);
+        continue; // Skip DB reconciliation if the file was not written
+      }
     }
 
+    // Always reconcile the DB — runs whether we just wrote the file or it already
+    // existed. This ensures gitFilePath is persisted even if a previous run wrote
+    // the file but crashed before updating the DB.
     try {
-      const yamlContent = await getInsomniaV5DataExport({
-        workspaceId: workspace._id,
-        includePrivateEnvironments: false,
-      });
-
-      if (!yamlContent?.trim()) {
-        console.warn('[git-migration] Empty export for workspace', workspace._id, '— skipping');
-        continue;
-      }
-
-      await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-      await fs.promises.writeFile(absPath, yamlContent, 'utf8');
-      console.log('[git-migration] Flushed workspace to disk:', absPath);
-
-      // Ensure workspaceMeta records the correct gitFilePath
       if (workspaceMeta && !workspaceMeta.gitFilePath) {
         await services.workspaceMeta.update(workspaceMeta, { gitFilePath });
       } else if (!workspaceMeta) {
@@ -235,7 +285,7 @@ async function _flushWorkspacesToDisk(baseDir: string, projectId: string): Promi
         await services.workspaceMeta.update(meta, { gitFilePath });
       }
     } catch (err) {
-      console.warn('[git-migration] Could not flush workspace', workspace._id, err);
+      console.warn('[git-migration] Could not update workspace metadata for', workspace._id, err);
     }
   }
 }
