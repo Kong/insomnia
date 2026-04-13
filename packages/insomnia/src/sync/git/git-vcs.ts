@@ -11,7 +11,7 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
 import { hasSignificantChanges } from '../../common/significant-diff-detection';
-import { type MergeConflict, RESOLUTION_SOURCE } from '../types';
+import { type AutoResolvedConflict, type MergeConflict, RESOLUTION_SOURCE } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
@@ -1323,6 +1323,7 @@ export class GitVCS {
   async buildManualResolutionFromTrees() {
     const { oursBranch, theirsBranch } = await this.getBranchPair();
     const mergeConflicts: MergeConflict[] = [];
+    const autoResolvedConflicts: AutoResolvedConflict[] = [];
     const conflictPathsObj = await this.findConflictLikeChanges(oursBranch, theirsBranch);
 
     const conflictTypeList: (keyof ConflictPaths)[] = ['bothModified', 'deleteByUs', 'deleteByTheirs'];
@@ -1352,19 +1353,6 @@ export class GitVCS {
         }));
     }
 
-    function readRawBlob(filepath: string, oid: string) {
-      return git
-        .readBlob({
-          ..._baseOpts,
-          oid,
-          filepath,
-        })
-        .then(({ blob, oid: blobId }) => ({
-          rawContent: Buffer.from(blob).toString('utf8'),
-          blobId,
-        }));
-    }
-
     function readOursBlob(filepath: string) {
       return readBlob(filepath, oursHeadCommitOid);
     }
@@ -1381,19 +1369,12 @@ export class GitVCS {
         deleteByTheirs: 'they deleted and you modified',
       }[conflictType];
       for (const conflictPath of conflictPaths) {
-        // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files
+        // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+        // Collect for deferred staging in continueMerge() so cancel has zero side effects.
         if (!conflictPath.endsWith('.yaml')) {
-          const theirsRaw =
-            conflictType !== 'deleteByTheirs' ? await readRawBlob(conflictPath, theirsHeadCommitOid) : null;
-          mergeConflicts.push({
-            key: conflictPath,
-            name: path.basename(conflictPath),
-            message,
-            mineBlob: null,
-            theirsBlob: theirsRaw?.blobId || null,
-            choose: null,
-            mergeResult: theirsRaw?.rawContent ?? '',
-            resolutionSource: RESOLUTION_SOURCE.MANUAL,
+          autoResolvedConflicts.push({
+            filepath: conflictPath,
+            action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
           });
           continue;
         }
@@ -1442,6 +1423,7 @@ export class GitVCS {
 
     throw new MergeConflictError('Need to solve merge conflicts first', {
       conflicts: mergeConflicts,
+      autoResolvedConflicts,
       labels: {
         ours: `${oursBranch} ${oursHeadCommitOid}`,
         theirs: `${theirsBranch} ${theirsHeadCommitOid}`,
@@ -1551,6 +1533,7 @@ export class GitVCS {
     const { filepaths, bothModified, deleteByUs, deleteByTheirs } = mergeConflictError.data;
     if (filepaths.length) {
       const mergeConflicts: MergeConflict[] = [];
+      const autoResolvedConflicts: AutoResolvedConflict[] = [];
       const conflictPathsObj = {
         bothModified,
         deleteByUs,
@@ -1583,19 +1566,6 @@ export class GitVCS {
           }));
       }
 
-      function readRawBlob(filepath: string, oid: string) {
-        return git
-          .readBlob({
-            ..._baseOpts,
-            oid,
-            filepath,
-          })
-          .then(({ blob, oid: blobId }) => ({
-            rawContent: Buffer.from(blob),
-            blobId,
-          }));
-      }
-
       function readOursBlob(filepath: string) {
         return readBlob(filepath, oursHeadCommitOid);
       }
@@ -1612,19 +1582,12 @@ export class GitVCS {
           deleteByTheirs: 'they deleted and you modified',
         }[conflictType];
         for (const conflictPath of conflictPaths) {
-          // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files
+          // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+          // Collect for deferred staging in continueMerge() so cancel has zero side effects.
           if (!conflictPath.endsWith('.yaml')) {
-            const theirsRaw =
-              conflictType !== 'deleteByTheirs' ? await readRawBlob(conflictPath, theirsHeadCommitOid) : null;
-            mergeConflicts.push({
-              key: conflictPath,
-              name: path.basename(conflictPath),
-              message,
-              mineBlob: null,
-              theirsBlob: theirsRaw?.blobId || null,
-              choose: null,
-              mergeResult: theirsRaw?.rawContent ?? '',
-              resolutionSource: RESOLUTION_SOURCE.MANUAL,
+            autoResolvedConflicts.push({
+              filepath: conflictPath,
+              action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
             });
             continue;
           }
@@ -1693,6 +1656,7 @@ export class GitVCS {
 
       throw new MergeConflictError('Need to solve merge conflicts first', {
         conflicts: mergeConflicts,
+        autoResolvedConflicts,
         labels: {
           ours: `${oursBranch} ${oursHeadCommitOid}`,
           theirs: `${theirsBranch} ${theirsHeadCommitOid}`,
@@ -1708,14 +1672,31 @@ export class GitVCS {
   // create a commit after resolving merge conflicts
   async continueMerge({
     handledMergeConflicts,
+    autoResolvedConflicts,
     commitMessage,
     commitParent,
   }: {
     handledMergeConflicts: MergeConflict[];
+    autoResolvedConflicts?: AutoResolvedConflict[];
     commitMessage: string;
     commitParent: string[];
   }) {
     console.log('[git] continue to merge after resolving merge conflicts', await this.getCurrentBranch());
+
+    // Stage auto-resolved non-YAML files (deferred from conflict collection)
+    for (const autoResolved of autoResolvedConflicts ?? []) {
+      if (autoResolved.action === 'delete') {
+        await git.remove({ ...this._baseOpts, filepath: autoResolved.filepath });
+      } else {
+        await git.checkout({
+          ...this._baseOpts,
+          ref: commitParent[1],
+          filepaths: [autoResolved.filepath],
+          force: true,
+        });
+        await git.add({ ...this._baseOpts, filepath: autoResolved.filepath });
+      }
+    }
 
     for (const conflict of handledMergeConflicts) {
       assertIsPromiseFsClient(this._baseOpts.fs);
@@ -2037,6 +2018,7 @@ export class MergeConflictError extends Error {
     msg: string,
     data: {
       conflicts: MergeConflict[];
+      autoResolvedConflicts: AutoResolvedConflict[];
       labels: {
         ours: string;
         theirs: string;
