@@ -25,7 +25,6 @@ describe('init()', () => {
       },
       metaSortKey: -1_478_795_580_200,
       isPrivate: false,
-      konnectRouteKey: null,
     });
   });
 });
@@ -59,7 +58,6 @@ describe('create()', () => {
       },
       metaSortKey: -1_478_795_580_200,
       isPrivate: false,
-      konnectRouteKey: null,
       type: 'GrpcRequest',
     };
     expect(request).toEqual(expected);

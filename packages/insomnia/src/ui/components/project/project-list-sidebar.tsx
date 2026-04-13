@@ -10,7 +10,6 @@ import type { SyncResult } from '~/konnect/sync';
 import { SegmentEvent } from '~/ui/analytics';
 
 import { useKonnectSync } from '../../hooks/use-konnect-sync';
-import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { AvatarGroup } from '../avatar';
 import { ProjectDropdown } from '../dropdowns/project-dropdown';
 import { Icon } from '../icon';
@@ -33,6 +32,7 @@ interface ProjectListSidebarProps {
   projects: ProjectWithPresence[];
   storageRules: StorageRules;
   onCreateProject: () => void;
+  konnectSyncEnabled: boolean;
 }
 
 const TAB_CLASS_ACTIVE = 'border-b-2 border-solid border-b-(--color-surprise) px-3 py-1 text-xs uppercase text-(--color-font)';
@@ -126,8 +126,8 @@ export const ProjectListSidebar = ({
   projects,
   storageRules,
   onCreateProject,
+  konnectSyncEnabled,
 }: ProjectListSidebarProps) => {
-  const { features } = useOrganizationPermissions();
 
   const [activeTab, setActiveTab] = reactUse.useLocalStorage<'projects' | 'konnect'>(
     `${organizationId}:sidebar-tab`,
@@ -153,7 +153,7 @@ export const ProjectListSidebar = ({
   const filteredKonnectProjects = filterByName(konnectProjects, konnectFilter);
 
   const handleSync = async () => {
-    if (!features.konnectSync.enabled) {
+    if (!konnectSyncEnabled) {
       return;
     }
 
@@ -196,7 +196,7 @@ export const ProjectListSidebar = ({
       <button className={activeTab === 'projects' ? TAB_CLASS_ACTIVE : TAB_CLASS_INACTIVE} onClick={() => setActiveTab('projects')}>
         Projects ({nonKonnectProjects.length})
       </button>
-      {features.konnectSync.enabled && (
+      {konnectSyncEnabled && (
         <button className={activeTab === 'konnect' ? TAB_CLASS_ACTIVE : TAB_CLASS_INACTIVE} onClick={() => setActiveTab('konnect')}>
           Konnect ({konnectProjects.length})
         </button>
@@ -204,7 +204,7 @@ export const ProjectListSidebar = ({
     </div>
   );
 
-  if (activeTab === 'konnect' && features.konnectSync.enabled) {
+  if (activeTab === 'konnect' && konnectSyncEnabled) {
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         {tabBar}

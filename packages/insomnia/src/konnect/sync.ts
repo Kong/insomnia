@@ -339,8 +339,8 @@ async function deleteStaleRequests(
     ...[...existingData.maps.grpc.values()].filter(r => !incomingKeys.has(r.konnectRouteKey!)).map(r => () => insoservices.grpcRequest.remove(r)),
   ];
 
-  // Delete user-added requests (no konnectRouteKey) that live in the workspace or its folders
-  const noKeyQuery = { parentId: { $in: existingData.parentIds }, konnectRouteKey: null };
+  // Delete user-added requests (no konnectRouteKey) that live in the workspace or its folders.
+  const noKeyQuery = { parentId: { $in: existingData.parentIds }, $or: [{ konnectRouteKey: null }, { konnectRouteKey: { $exists: false } }] };
   const userHttp = await db.find<Request>(models.request.type, noKeyQuery);
   const userWs = await db.find<WebSocketRequest>(models.webSocketRequest.type, noKeyQuery);
   const userGrpc = await db.find<GrpcRequest>(models.grpcRequest.type, noKeyQuery);

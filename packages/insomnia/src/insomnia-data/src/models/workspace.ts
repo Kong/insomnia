@@ -14,7 +14,7 @@ export interface BaseWorkspace {
   description: string;
   certificates?: any; // deprecated
   scope: 'design' | 'collection' | 'mock-server' | 'environment' | 'mcp';
-  konnectServiceId: string | null;
+  konnectServiceId?: string | null;
 }
 
 export type WorkspaceScope = BaseWorkspace['scope'];
@@ -31,6 +31,8 @@ export type Workspace = BaseModel & BaseWorkspace;
 
 export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => model.type === type;
 
+export const optionalKeys = ['konnectServiceId'];
+
 export const isDesign = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.design;
 
 export const isCollection = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.collection;
@@ -46,7 +48,6 @@ export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
   description: '',
   scope: WorkspaceScopeKeys.collection,
-  konnectServiceId: null,
 });
 
 export function isScratchpad(workspace?: Workspace) {

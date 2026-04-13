@@ -34,7 +34,7 @@ interface BaseGrpcRequest {
     apiKey: string;
     module: string;
   };
-  konnectRouteKey: string | null;
+  konnectRouteKey?: string | null;
 }
 
 export type GrpcRequest = BaseModel & BaseGrpcRequest;
@@ -42,6 +42,8 @@ export type GrpcRequest = BaseModel & BaseGrpcRequest;
 export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequest => model.type === type;
 
 export const isGrpcRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
+
+export const optionalKeys = ['konnectRouteKey'];
 
 export function rewriteReferences(request: GrpcRequest, idMapping: Map<string, string>): GrpcRequest {
   return {
@@ -71,6 +73,5 @@ export function init(): BaseGrpcRequest {
       apiKey: '',
       module: 'buf.build/connectrpc/eliza',
     },
-    konnectRouteKey: null,
   };
 }

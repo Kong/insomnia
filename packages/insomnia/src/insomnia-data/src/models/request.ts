@@ -290,7 +290,7 @@ export interface BaseRequest {
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
-  konnectRouteKey: string | null;
+  konnectRouteKey?: string | null;
 }
 
 export type Request = BaseModel & BaseRequest;
@@ -303,6 +303,8 @@ export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream';
 export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION;
+
+export const optionalKeys = ['konnectRouteKey'];
 
 export function init(): BaseRequest {
   return {
@@ -326,7 +328,6 @@ export function init(): BaseRequest {
     settingEncodeUrl: true,
     settingRebuildPath: true,
     settingFollowRedirects: 'global',
-    konnectRouteKey: null,
   };
 }
 

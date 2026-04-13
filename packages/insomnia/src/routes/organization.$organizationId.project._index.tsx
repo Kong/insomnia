@@ -22,6 +22,7 @@ import { ProjectListSidebar } from '~/ui/components/project/project-list-sidebar
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
@@ -61,6 +62,7 @@ const Component = () => {
   const organizationData = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
+  const { features } = useOrganizationPermissions();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -120,6 +122,7 @@ const Component = () => {
                 projects={projectsWithPresence}
                 storageRules={storageRules}
                 onCreateProject={() => setIsNewProjectModalOpen(true)}
+                konnectSyncEnabled={features.konnectSync.enabled}
               />
             </div>
           </Panel>
