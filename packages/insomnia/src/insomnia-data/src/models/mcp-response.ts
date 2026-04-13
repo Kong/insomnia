@@ -1,7 +1,6 @@
-import type { ResponseHeader } from '~/insomnia-data';
-import type { BaseModel } from '~/models/types';
-
+import type { BaseModel } from './base-types';
 import { type McpTransportType, TRANSPORT_TYPES } from './mcp-request';
+import type { ResponseHeader } from './response';
 
 export const name = 'Mcp Response';
 export const type = 'McpResponse';

@@ -1,8 +1,8 @@
 import type { StorageRules } from 'insomnia-api';
 
-import type { BaseModel } from '~/models/types';
+import { generateId } from '~/common/misc';
 
-import { generateId } from '../../../common/misc';
+import type { BaseModel } from './base-types';
 
 export const name = 'Project';
 export const type = 'Project';

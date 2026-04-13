@@ -1,5 +1,5 @@
+import type { AllTypes, BaseModel } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
-import type { AllTypes, BaseModel } from '~/models/types';
 
 export type { AllTypes, BaseModel };
 // Reference to each model
@@ -39,12 +39,12 @@ export const webSocketResponse = models.webSocketResponse;
 export const socketIORequest = models.socketIORequest;
 export const socketIOPayload = models.socketIOPayload;
 export const socketIOResponse = models.socketIOResponse;
-export * as organization from './organization';
 export const userSession = models.userSession;
 export const cloudCredential = models.cloudCredential;
 export const mcpRequest = models.mcpRequest;
 export const mcpPayload = models.mcpPayload;
 export const mcpResponse = models.mcpResponse;
+export const organization = models.organization;
 
 export const all = models.all;
 export const types = models.types;

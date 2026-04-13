@@ -41,10 +41,10 @@ import {
 import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
-import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
 import type {
+  ChangeBufferEvent,
   Environment,
   GrpcRequest,
   Project,
@@ -54,10 +54,8 @@ import type {
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
-import * as models from '~/models';
-import { isScratchpadOrganizationId } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -1200,7 +1198,7 @@ const Debug = () => {
             </div>
           </div>
 
-          {isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
+          {models.organization.isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
 
           <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}

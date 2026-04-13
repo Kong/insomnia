@@ -4,7 +4,15 @@ import clone from 'clone';
 import type { Environment, GrpcRequest, Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { EnvironmentKvPairDataType, EnvironmentType } from '~/insomnia-data';
 
-import { type AllTypes, type BaseModel, environment, grpcRequest, request, requestGroup, workspace } from '..';
+import {
+  type AllTypes,
+  type BaseModel,
+  environment,
+  grpcRequest,
+  request,
+  requestGroup,
+  workspace,
+} from '../../models';
 
 // move into fluent-builder
 const toSchema = <T>(obj: T): Schema<T> => {

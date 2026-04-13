@@ -32,7 +32,6 @@ import {
   DEFAULT_SIDEBAR_SIZE,
   getAppWebsiteBaseURL,
 } from '~/common/constants';
-import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
@@ -45,10 +44,8 @@ import type {
   WorkspaceMeta,
   WorkspaceScope,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { database, models, services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -480,7 +477,7 @@ const Component = () => {
   const { billing } = useOrganizationPermissions();
 
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }
@@ -507,8 +504,10 @@ const Component = () => {
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
   const isUserOwner =
-    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
-  const isPersonalOrg = organization && isPersonalOrganization(organization);
+    organization &&
+    userSession.accountId &&
+    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const isPersonalOrg = organization && models.organization.isPersonalOrganization(organization);
 
   const tabNavigate = useTabNavigate();
 

@@ -30,9 +30,7 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
-import { services } from '~/insomnia-data';
-import * as models from '~/models/index';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
@@ -86,7 +84,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
 
-  const gitRepositoryId = models.project.isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const gitRepositoryId = models.project.isGitProject(project)
+    ? project.gitRepositoryId
+    : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
   const rulesetPath = gitRepositoryId
@@ -169,7 +169,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
 
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }
@@ -373,8 +373,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     let parsedSpec: string | undefined;
     try {
       // yaml parses json correctly
-      parsedSpec = YAML.parse(editorValue)
-
+      parsedSpec = YAML.parse(editorValue);
     } catch {
       showToast({
         title: 'Failed to convert spec format',
@@ -387,8 +386,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     const contents = to === 'json' ? JSON.stringify(parsedSpec, null, 2) : YAML.stringify(parsedSpec);
     editor.current?.setValue(contents);
     updateApiSpec({ organizationId, projectId, workspaceId, contents });
-
-  }
+  };
 
   const specActionList: SpecActionItem[] = [
     {
@@ -417,17 +415,25 @@ const Component = ({ params }: Route.ComponentProps) => {
         setIsSpecPaneOpen(!isSpecPaneOpen);
       },
     },
-    ...(specFormat === 'json' ? [{
-      id: 'convert-to-yaml',
-      name: 'Convert to YAML',
-      icon: <Icon className="w-3" icon="sync-alt" />,
-      action: () => switchFormat('yaml'),
-    }] : specFormat === 'yaml' ? [{
-      id: 'convert-to-json',
-      name: 'Convert to JSON',
-      icon: <Icon className="w-3" icon="sync-alt" />,
-      action: () => switchFormat('json'),
-    }] : []),
+    ...(specFormat === 'json'
+      ? [
+          {
+            id: 'convert-to-yaml',
+            name: 'Convert to YAML',
+            icon: <Icon className="w-3" icon="sync-alt" />,
+            action: () => switchFormat('yaml'),
+          },
+        ]
+      : specFormat === 'yaml'
+        ? [
+            {
+              id: 'convert-to-json',
+              name: 'Convert to JSON',
+              icon: <Icon className="w-3" icon="sync-alt" />,
+              action: () => switchFormat('json'),
+            },
+          ]
+        : []),
   ];
 
   const disabledKeys = specActionList.filter(item => item.isDisabled).map(item => item.id);

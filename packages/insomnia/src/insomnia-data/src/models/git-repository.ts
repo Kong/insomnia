@@ -1,4 +1,4 @@
-import type { BaseModel } from '~/models/types';
+import type { BaseModel } from './base-types';
 
 export type OauthProviderName = 'gitlab' | 'github' | 'custom';
 
