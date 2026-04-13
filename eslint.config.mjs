@@ -22,6 +22,11 @@ const rendererNodeMigrationOffenders = [
   'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx',
   'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.update.tsx',
 ];
+const rendererNodeRestrictionIgnores = [
+  ...rendererNodeMigrationOffenders,
+  'packages/insomnia/src/common/__tests__/**/*.{ts,tsx}',
+  'packages/insomnia/src/common/send-request.ts',
+];
 
 export default defineConfig([
   // https://typescript-eslint.io/getting-started#additional-configs
@@ -88,7 +93,7 @@ export default defineConfig([
       'packages/insomnia/src/routes/**/*.{ts,tsx}',
       'packages/insomnia/src/common/**/*.{ts,tsx}',
     ],
-    ignores: rendererNodeMigrationOffenders,
+    ignores: rendererNodeRestrictionIgnores,
     rules: {
       'no-restricted-imports': [
         'error',
