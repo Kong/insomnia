@@ -1,23 +1,30 @@
 import {
+  createTeamProject,
   fetchTeamProjects,
   getCurrentPlan,
   getOrganizations,
   getOrganizationStorageRule,
   getUserProfile,
+  isApiError,
   type Organization,
   type StorageRules,
 } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
-import type { Project } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
+import type { Project, Workspace } from '~/insomnia-data';
+import { database, database as db, models, services } from '~/insomnia-data';
+import { invariant } from '~/utils/invariant';
 
+import {
+  initializeLocalBackendProjectAndMarkForSync,
+  pushSnapshotOnInitialize,
+} from '../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
-import { invariant } from '../utils/invariant';
+import type { VCS } from '../sync/vcs/vcs';
 
 // Create an in-memory storage to store the storage rules
 const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
@@ -86,6 +93,72 @@ export async function syncOrganizations(sessionId: string, accountId: string) {
   }
 }
 
+async function updateLocalProjectToRemote({
+  project,
+  vcs,
+  sessionId,
+  organizationId,
+}: {
+  project: Project;
+  vcs: VCS;
+  sessionId: string;
+  organizationId: string;
+}) {
+  try {
+    const newCloudProject = await createTeamProject({
+      sessionId,
+      organizationId,
+      name: project.name,
+    });
+    const updatedProject = await services.project.update(project, {
+      name: newCloudProject.name,
+      remoteId: newCloudProject.id,
+    });
+
+    const projectWorkspaces = await db.find<Workspace>(models.workspace.type, {
+      parentId: updatedProject._id,
+    });
+
+    for (const workspace of projectWorkspaces) {
+      const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+      try {
+        if (!workspaceMeta.gitRepositoryId) {
+          invariant(vcs, 'VCS must be initialized');
+
+          await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
+          await pushSnapshotOnInitialize({ vcs, workspace, project: updatedProject });
+        }
+      } catch (error) {
+        console.warn(
+          'Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.',
+          error,
+        );
+      }
+    }
+  } catch (error: unknown) {
+    if (isApiError(error)) {
+      let errorMessage = 'An unexpected error occurred while connecting the project. Please try again.';
+
+      if (error.name === 'FORBIDDEN' || error.name === 'NEEDS_TO_UPGRADE') {
+        errorMessage = error.message;
+      }
+
+      return {
+        error: errorMessage,
+      };
+    }
+
+    return {
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  return {
+    error: null,
+  };
+}
+
 export async function migrateProjectsUnderOrganization(personalOrganizationId: string, sessionId: string) {
   if (await shouldMigrateProjectUnderOrganization()) {
     await migrateProjectsIntoOrganization({
@@ -101,7 +174,7 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
 
       // If any of those fail projects will still be under the organization as local projects
       for (const project of localProjects) {
-        services.project.updateLocalProjectToRemote({
+        updateLocalProjectToRemote({
           project,
           organizationId: personalOrganizationId,
           sessionId,

@@ -395,8 +395,9 @@ export async function readBodyFromPath(
   } else if (!response.bodyPath) {
     return '';
   }
-
-  const readResponseResult = await services.helpers.readCurlResponse({
+  const nodejsReadCurlResponse =
+    process.type === 'renderer' ? window.bridge.readCurlResponse : services.helpers.readCurlResponse;
+  const readResponseResult = await nodejsReadCurlResponse({
     bodyPath: response.bodyPath,
     bodyCompression: response.bodyCompression,
   });
