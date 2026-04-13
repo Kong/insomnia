@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { href } from 'react-router';
 
 import { models, services } from '~/insomnia-data';
@@ -69,15 +67,15 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   if (models.project.isGitProject(project)) {
     const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
-    const existingPathDir = path.dirname(workspaceMeta.gitFilePath || '');
-    let fileName = path.basename(workspaceMeta.gitFilePath || '');
+    const existingPathDir = window.path.dirname(workspaceMeta.gitFilePath || '');
+    let fileName = window.path.basename(workspaceMeta.gitFilePath || '');
 
     if (patch.fileName && typeof patch.fileName === 'string') {
       fileName = patch.fileName;
     }
 
     await services.workspaceMeta.update(workspaceMeta, {
-      gitFilePath: path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(fileName)),
+      gitFilePath: window.path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(fileName)),
     });
   }
 

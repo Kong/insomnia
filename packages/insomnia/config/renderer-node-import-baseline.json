@@ -161,10 +161,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/routes/import.scan.tsx",
-      "builtin": "path"
-    },
-    {
       "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send.tsx",
       "builtin": "fs"
     },
@@ -173,23 +169,11 @@
       "builtin": "path"
     },
     {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx",
-      "builtin": "path"
-    },
-    {
       "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx",
       "builtin": "fs"
     },
     {
       "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.update.tsx",
       "builtin": "path"
     },
     {
