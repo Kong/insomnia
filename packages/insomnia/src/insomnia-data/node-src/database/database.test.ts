@@ -1,11 +1,11 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
+import type { BaseModel } from '~/models';
 
-import type { BaseModel } from '../../../models';
-import * as models from '../../../models';
 import type { ChangeBufferEvent } from '../..';
 import { database as db } from '../..';
+import * as workspaceInitModel from './init-model/workspace';
 import { repairDatabase } from './repair-database';
 
 describe('init()', () => {
@@ -30,9 +30,9 @@ describe('onChange()', () => {
       parentId: 'nothing',
       name: 'foo',
     };
-    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent<BaseModel>[]) => {
       changesSeen.push(change);
     };
 
@@ -52,9 +52,9 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent<BaseModel>[]) => {
       changesSeen.push(change);
     };
 
@@ -89,9 +89,9 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent<BaseModel>[]) => {
       changesSeen.push(change);
     };
 
@@ -116,9 +116,9 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent<BaseModel>[]) => {
       changesSeen.push(change);
     };
 
@@ -144,9 +144,9 @@ describe('bufferChangesIndefinitely()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent<BaseModel>[]) => {
       changesSeen.push(change);
     };
 
@@ -392,13 +392,11 @@ describe('_repairDatabase()', async () => {
       _id: 'j1',
       parentId: 'w1',
       cookies: [
-        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '1',
         },
-        // @ts-expect-error -- TSCONVERSION
         {
           id: 'j1_1',
           key: 'j1',
@@ -410,13 +408,11 @@ describe('_repairDatabase()', async () => {
       _id: 'j2',
       parentId: 'w1',
       cookies: [
-        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '2',
         },
-        // @ts-expect-error -- TSCONVERSION
         {
           id: 'j2_1',
           key: 'j2',
@@ -616,7 +612,7 @@ describe('duplicate()', () => {
     const workspace = await services.workspace.create({
       name: 'Test Workspace',
     });
-    const spy = vi.spyOn(models.workspace, 'migrate');
+    const spy = vi.spyOn(workspaceInitModel, 'migrate');
     await db.duplicate(workspace);
     expect(spy).not.toHaveBeenCalled();
   });
@@ -663,7 +659,7 @@ describe('docCreate()', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('should call migrate when creating', async () => {
-    const spy = vi.spyOn(models.workspace, 'migrate');
+    const spy = vi.spyOn(workspaceInitModel, 'migrate');
     await db.docCreate(models.workspace.type, {
       name: 'Test Workspace',
     });
@@ -723,13 +719,11 @@ describe('getWithDescendants()', () => {
       _id: 'j1',
       parentId: workspace._id,
       cookies: [
-        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '1',
         },
-        // @ts-expect-error -- TSCONVERSION
         {
           id: 'j1_1',
           key: 'j1',
@@ -741,13 +735,11 @@ describe('getWithDescendants()', () => {
       _id: 'j2',
       parentId: workspace._id,
       cookies: [
-        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '2',
         },
-        // @ts-expect-error -- TSCONVERSION
         {
           id: 'j2_1',
           key: 'j2',

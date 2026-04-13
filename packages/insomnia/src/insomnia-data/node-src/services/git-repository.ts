@@ -1,4 +1,5 @@
-import { database as db, type GitRepository, models } from '~/insomnia-data';
+import type { GitRepository } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 
 const type = models.gitRepository.type;
 

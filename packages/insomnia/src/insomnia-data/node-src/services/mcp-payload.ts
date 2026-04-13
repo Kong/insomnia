@@ -1,6 +1,5 @@
-import { database } from '../../src/database';
-import { models } from '../../src/models';
-import { type McpPayload } from '../../src/models/types';
+import type { McpPayload } from '~/insomnia-data';
+import { database, models } from '~/insomnia-data';
 
 const { type, name } = models.mcpPayload;
 

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
-import * as models from '../index';
+import { migrate as migrateWorkspace } from './workspace';
+
 describe('migrate()', () => {
   it('migrates client certificates properly', async () => {
     const workspace = await services.workspace.create({
@@ -18,7 +19,7 @@ describe('migrate()', () => {
         },
       ],
     });
-    const migratedWorkspace = await models.workspace.migrate(workspace);
+    const migratedWorkspace = await migrateWorkspace(workspace);
     const certs = await services.clientCertificate.findByParentId(workspace._id);
 
     // Delete modified and created so we can assert them
@@ -58,26 +59,22 @@ describe('migrate()', () => {
     ]);
     expect(migratedWorkspace.certificates).toBeUndefined();
     // Make sure we don't create new certs if we migrate again
-    await models.workspace.migrate(migratedWorkspace);
+    await migrateWorkspace(migratedWorkspace);
     const certsAgain = await services.clientCertificate.findByParentId(workspace._id);
     expect(certsAgain.length).toBe(2);
   });
 
   it('translates the scope correctly', async () => {
     const specW = await services.workspace.create({
-      // @ts-expect-error intentionally incorrect - old scope type
       scope: 'spec',
     });
     const debugW = await services.workspace.create({
-      // @ts-expect-error intentionally incorrect - old scope type
       scope: 'debug',
     });
     const nullW = await services.workspace.create({
-      // @ts-expect-error intentionally incorrect - old scope type
       scope: null,
     });
     const somethingElseW = await services.workspace.create({
-      // @ts-expect-error intentionally incorrect - old scope type
       scope: 'something',
     });
     const designW = await services.workspace.create({
@@ -86,10 +83,10 @@ describe('migrate()', () => {
     const collectionW = await services.workspace.create({
       scope: models.workspace.WorkspaceScopeKeys.collection,
     });
-    await models.workspace.migrate(specW);
-    await models.workspace.migrate(debugW);
-    await models.workspace.migrate(nullW);
-    await models.workspace.migrate(somethingElseW);
+    await migrateWorkspace(specW);
+    await migrateWorkspace(debugW);
+    await migrateWorkspace(nullW);
+    await migrateWorkspace(somethingElseW);
     expect(specW.scope).toBe(models.workspace.WorkspaceScopeKeys.design);
     expect(debugW.scope).toBe(models.workspace.WorkspaceScopeKeys.collection);
     expect(nullW.scope).toBe(models.workspace.WorkspaceScopeKeys.collection);

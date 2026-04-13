@@ -1,7 +1,5 @@
-import { type WebSocketPayload } from '~/insomnia-data';
-
-import { database } from '../../src/database';
-import { models } from '../../src/models';
+import type { WebSocketPayload } from '~/insomnia-data';
+import { database, models } from '~/insomnia-data';
 
 const { type, name } = models.webSocketPayload;
 
