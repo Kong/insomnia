@@ -51,6 +51,8 @@ export type HandleChannels =
   | 'git.diffFileLoader'
   | 'git.discardChanges'
   | 'git.fetchGitRemoteBranches'
+  | 'git.validateGitRepositoryCredentials'
+  | 'git.validateGitCredentialById'
   | 'git.getGitBranches'
   | 'git.getRepositoryDirectoryTree'
   | 'git.gitChangesLoader'

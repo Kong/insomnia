@@ -15,9 +15,11 @@ import { Icon } from '~/basic-components/icon';
 import { type GitCredentials, models, type ProviderEmail } from '~/insomnia-data';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useGitValidateCredentialFetcher } from '~/routes/git.validate-credential';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { Checkbox } from '~/ui/components/base/checkbox';
 import { Input } from '~/ui/components/base/input';
+import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-setup';
 import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remote-branch-select';
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
@@ -52,6 +54,7 @@ interface Props {
   credentials: GitCredentials[];
   providers: GitProviderOption[];
   formId: string;
+  onCredentialValidationChange?: (isInvalid: boolean) => void;
 }
 
 export const GitRepoForm: FC<Props> = ({
@@ -63,6 +66,7 @@ export const GitRepoForm: FC<Props> = ({
   credentials,
   providers,
   formId,
+  onCredentialValidationChange,
 }) => {
   const allConnectedReposLoaderFetcher = useAllConnectedReposLoaderFetcher();
   const allConnectedReposLoaderFetcherLoad = allConnectedReposLoaderFetcher.load;
@@ -74,6 +78,7 @@ export const GitRepoForm: FC<Props> = ({
   const allConnectedRepoURIInfoMap = allConnectedReposLoaderFetcher.data;
 
   const [isCredentialSelectOpen, setIsCredentialSelectOpen] = useState(false);
+  const validateCredentialFetcher = useGitValidateCredentialFetcher();
 
   const selectedCredentialsId = projectData.credentialsId || credentials?.[0]?._id;
   const selectedCredential = credentials.find(c => c._id === selectedCredentialsId);
@@ -89,6 +94,18 @@ export const GitRepoForm: FC<Props> = ({
   const availableEmails = getCredentialEmails(selectedCredential);
   const showEmailSelector = availableEmails.length > 1;
   const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
+
+  const isCredentialInvalid =
+    validateCredentialFetcher.state !== 'idle' ||
+    Boolean(
+      validateCredentialFetcher.data &&
+        'errors' in validateCredentialFetcher.data &&
+        validateCredentialFetcher.data.errors,
+    );
+
+  useEffect(() => {
+    onCredentialValidationChange?.(isCredentialInvalid);
+  }, [isCredentialInvalid, onCredentialValidationChange]);
 
   return (
     <ErrorBoundary>
@@ -137,10 +154,9 @@ export const GitRepoForm: FC<Props> = ({
             aria-label="Git Credentials"
             name="credentialsId"
             onSelectionChange={id => {
-              setProjectData(prev => ({
-                ...prev,
-                credentialsId: id as string,
-              }));
+              const newCredentialsId = id as string;
+              setProjectData(prev => ({ ...prev, credentialsId: newCredentialsId }));
+              validateCredentialFetcher.load({ credentialsId: newCredentialsId });
             }}
             defaultSelectedKey={credentials?.[0]?._id}
           >
@@ -208,7 +224,26 @@ export const GitRepoForm: FC<Props> = ({
               </div>
             </Popover>
           </Select>
-          {showEmailSelector && (
+          {validateCredentialFetcher.state !== 'idle' && (
+            <div className="flex items-center gap-2 text-sm">
+              <Icon icon="spinner" className="animate-spin" />
+              <span>Validating credential...</span>
+            </div>
+          )}
+          {selectedProvider && (
+            <GitOauthAuthBanner
+              selectedCredential={selectedCredential}
+              provider={selectedProvider}
+              repoLoadErrors={
+                validateCredentialFetcher.state === 'idle' &&
+                validateCredentialFetcher.data &&
+                'errors' in validateCredentialFetcher.data
+                  ? validateCredentialFetcher.data.errors
+                  : undefined
+              }
+            />
+          )}
+          {showEmailSelector && !isCredentialInvalid && (
             <Select
               onOpenChange={setIsEmailSelectOpen}
               isOpen={isEmailSelectOpen}
@@ -262,7 +297,7 @@ export const GitRepoForm: FC<Props> = ({
               </Popover>
             </Select>
           )}
-          {selectedProvider && (
+          {selectedProvider && !isCredentialInvalid && (
             <>
               {selectedProvider.supportsFetchRepos ? (
                 <GitRepositorySelect
@@ -297,7 +332,9 @@ export const GitRepoForm: FC<Props> = ({
             </>
           )}
 
-          <GitRemoteBranchSelect credentialsId={selectedCredentialsId} url={projectData.uri || ''} isDisabled={false} />
+          {!isCredentialInvalid && (
+            <GitRemoteBranchSelect credentialsId={selectedCredentialsId} url={projectData.uri || ''} isDisabled={false} />
+          )}
         </Form>
       )}
     </ErrorBoundary>
