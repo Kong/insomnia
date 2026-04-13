@@ -1591,7 +1591,7 @@ export class GitVCS {
             filepath,
           })
           .then(({ blob, oid: blobId }) => ({
-            rawContent: Buffer.from(blob).toString('utf8'),
+            rawContent: Buffer.from(blob),
             blobId,
           }));
       }
