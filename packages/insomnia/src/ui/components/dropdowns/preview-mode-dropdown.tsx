@@ -5,7 +5,6 @@ import { models } from '~/insomnia-data';
 import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 
 import { getPreviewModeName, LARGE_RESPONSE_MB, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
-import { showToast } from '../toast-notification';
 import { exportHarCurrentRequest } from '../../../common/har';
 import {
   type RequestLoaderData,
@@ -13,6 +12,7 @@ import {
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { showToast } from '../toast-notification';
 
 interface Props {
   download: (pretty: boolean) => any;

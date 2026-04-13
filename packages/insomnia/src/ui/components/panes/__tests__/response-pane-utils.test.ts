@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getBodyBuffer } from '../../../../models/helpers/response-operations';
 import { showToast } from '../../../../ui/components/toast-notification';
-
 import { downloadResponseBody } from '../response-pane-utils';
 
 vi.mock('../../../../models/helpers/response-operations', () => ({
