@@ -238,6 +238,96 @@ async function getGitFSClient({
   return routableFS;
 }
 
+/**
+ * Validate that the stored Git credential is currently accepted by the remote.
+ *
+ * For GitHub credentials the GitHub REST API (`GET /user`) is used because the
+ * git wire protocol (`listServerRefs`) can succeed anonymously on public repos
+ * even after a token has been revoked or a GitHub App has been uninstalled.
+ * The REST endpoint reliably returns HTTP 401 in those cases.
+ *
+ * For providers that do not implement `validateCredentials` we fall back to
+ * `fetchRemoteBranches`, which uses the git wire protocol and performs a
+ * basic authentication check against the remote.
+ *
+ * Throws an error starting with `HTTP Error: 4xx` on auth failures so the
+ * existing `shouldShowHttp40OAuthReauthHint` banner logic is triggered.
+ */
+async function validateGitCredentials({
+  credentialsId,
+  uri,
+}: {
+  credentialsId?: string | null;
+  uri: string;
+}): Promise<void> {
+  if (!credentialsId) return;
+
+  const credentials = await services.gitCredentials.getById(credentialsId);
+  if (!credentials) return;
+
+  if (!models.gitCredentials.isGitCredentialsV2(credentials)) {
+    // V1 (legacy) credentials may have provider 'githubapp', which is no longer
+    // registered. Falling back to fetchRemoteBranches would silently "pass" on
+    // public repos even when the token has been revoked, so we bail with a clear error.
+    throw new Error('Legacy git credentials are no longer supported. Please re-authenticate.');
+  }
+
+  const provider = gitRemoteProviderRegistry.get(credentials.provider);
+
+  await (provider?.validateCredentials
+    ? provider.validateCredentials(credentials)
+    : fetchRemoteBranches({ uri: parseGitToHttpsURL(uri), credentialsId }));
+}
+
+export async function validateGitRepositoryCredentials({
+  projectId,
+  workspaceId,
+}: {
+  projectId: string;
+  workspaceId?: string;
+}): Promise<{ errors?: string[] }> {
+  try {
+    const gitRepository = await getGitRepository({ projectId, workspaceId });
+    await validateGitCredentials({
+      credentialsId: gitRepository.credentialsId,
+      uri: gitRepository.uri,
+    });
+    return {};
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error validating git credentials.';
+    return { errors: [errorMessage] };
+  }
+}
+
+/**
+ * Validates a credential by its ID without requiring a repo URI.
+ * Works for OAuth providers (GitHub, GitLab) which have a dedicated validate endpoint.
+ * PAT/custom credentials are skipped since they require a repo URI to validate.
+ */
+export async function validateGitCredentialById({
+  credentialsId,
+}: {
+  credentialsId: string;
+}): Promise<{ errors?: string[] }> {
+  try {
+    const credentials = await services.gitCredentials.getById(credentialsId);
+    if (!credentials) {
+      return { errors: ['Credential not found.'] };
+    }
+    if (!models.gitCredentials.isGitCredentialsV2(credentials)) {
+      return { errors: ['Legacy git credentials are no longer supported. Please re-authenticate.'] };
+    }
+    const provider = gitRemoteProviderRegistry.get(credentials.provider);
+    if (provider?.validateCredentials) {
+      await provider.validateCredentials(credentials);
+    }
+    return {};
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error validating git credentials.';
+    return { errors: [errorMessage] };
+  }
+}
+
 export async function loadGitRepository({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
@@ -284,6 +374,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         credentialsId,
         legacyDiff: Boolean(workspaceId),
       });
+
+      // GitVCS.init() opens the local repo without a network call, so explicitly
+      // verify credentials here to surface revoked tokens as HTTP 4xx errors.
+      await validateGitCredentials({ credentialsId, uri });
     }
 
     // Configure basic info
@@ -359,6 +453,14 @@ export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: st
     };
   } catch (e) {
     console.error(e);
+    if (
+      e instanceof Errors.UserCanceledError ||
+      (e instanceof Errors.HttpError && (e.data.statusCode === 401 || e.data.statusCode === 403))
+    ) {
+      return {
+        errors: [GitVCSOperationErrors.AuthenticationRequiredError],
+      };
+    }
     return {
       errors: ['Failed to fetch from remote'],
     };
@@ -400,6 +502,7 @@ export interface GitChangesLoaderData {
     }[];
   };
   branch: string;
+  gitRepository?: GitRepository | null;
   errors?: string[];
 }
 
@@ -423,6 +526,7 @@ export const gitChangesLoader = async ({
     return {
       branch,
       changes,
+      gitRepository,
     };
   } catch {
     return {
@@ -1392,6 +1496,16 @@ export const commitAndPushToGitRepoAction = async ({
   message: string;
 }): Promise<CommitToGitRepoResult> => {
   const repo = await getGitRepository({ workspaceId, projectId });
+
+  // Validate credentials before committing to prevent orphaned local commits
+  // when the subsequent push would fail due to authentication issues.
+  try {
+    await validateGitCredentials({ credentialsId: repo.credentialsId, uri: repo.uri });
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Authentication failed';
+    return { errors: [errorMessage] };
+  }
+
   try {
     await GitVCS.setAuthor();
     await GitVCS.commit(message);
@@ -1769,15 +1883,17 @@ export const pushToGitRemoteAction = async ({
   try {
     canPush = await GitVCS.canPush(gitRepository.credentialsId);
   } catch (err) {
-    if (err instanceof Errors.HttpError) {
-      if (err.data.statusCode === 401 || err.data.statusCode === 403) {
-        // If we get a 401 or 403, it means that the user does not have permissions to push to this repository
-        return {
-          errors: [`${err.data.statusMessage}, it seems that you do not have permissions to push to this repository.`],
-          gitRepository,
-        };
-      }
+    if (
+      err instanceof Errors.UserCanceledError ||
+      (err instanceof Errors.HttpError && (err.data.statusCode === 401 || err.data.statusCode === 403))
+    ) {
+      return {
+        errors: [GitVCSOperationErrors.AuthenticationRequiredError],
+        gitRepository,
+      };
+    }
 
+    if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
         gitRepository,
@@ -1829,6 +1945,16 @@ export const pushToGitRemoteAction = async ({
         errors: [
           'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
         ],
+      };
+    }
+
+    if (
+      err instanceof Errors.UserCanceledError ||
+      (err instanceof Errors.HttpError && (err.data.statusCode === 401 || err.data.statusCode === 403))
+    ) {
+      return {
+        errors: [GitVCSOperationErrors.AuthenticationRequiredError],
+        gitRepository,
       };
     }
 
@@ -1923,6 +2049,16 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
   } catch (err: unknown) {
     if (err instanceof MergeConflictError) {
       return err.data;
+    }
+
+    if (
+      err instanceof Errors.UserCanceledError ||
+      (err instanceof Errors.HttpError && (err.data.statusCode === 401 || err.data.statusCode === 403))
+    ) {
+      return {
+        success: false,
+        errors: [GitVCSOperationErrors.AuthenticationRequiredError],
+      };
     }
 
     let errorMessage = getErrorMessage(err);
@@ -2508,6 +2644,8 @@ export interface GitServiceAPI {
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
   fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
+  validateGitRepositoryCredentials: typeof validateGitRepositoryCredentials;
+  validateGitCredentialById: typeof validateGitCredentialById;
 
   initSignInToGitProvider: typeof initSignInToGitProvider;
   completeSignInToGitProvider: typeof completeSignInToGitProvider;
@@ -2525,6 +2663,15 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.getGitBranches', (_, options: Parameters<typeof getGitBranches>[0]) => getGitBranches(options));
   ipcMainHandle('git.fetchGitRemoteBranches', (_, options: Parameters<typeof fetchGitRemoteBranches>[0]) =>
     fetchGitRemoteBranches(options),
+  );
+  ipcMainHandle(
+    'git.validateGitRepositoryCredentials',
+    (_, options: Parameters<typeof validateGitRepositoryCredentials>[0]) =>
+      validateGitRepositoryCredentials(options),
+  );
+  ipcMainHandle(
+    'git.validateGitCredentialById',
+    (_, options: Parameters<typeof validateGitCredentialById>[0]) => validateGitCredentialById(options),
   );
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));

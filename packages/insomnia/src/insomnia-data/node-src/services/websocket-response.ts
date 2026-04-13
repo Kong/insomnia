@@ -1,8 +1,7 @@
+import type { WebSocketResponse } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
 
-import { database as db } from '../../src/database';
-import { models } from '../../src/models';
-import { type WebSocketResponse } from '../../src/models/types';
 import * as requestVersionService from './request-version';
 import * as settingsService from './settings';
 

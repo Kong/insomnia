@@ -1,9 +1,8 @@
-import { database as db } from '../../src/database';
-import { models } from '../../src/models';
-import { isGrpcRequestId } from '../../src/models/grpc-request';
-import { type GrpcRequestMeta } from '../../src/models/types';
+import type { GrpcRequestMeta } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 
 const { type } = models.grpcRequestMeta;
+const { isGrpcRequestId } = models.grpcRequest;
 
 export function create(patch: Partial<GrpcRequestMeta> = {}) {
   if (!patch.parentId) {

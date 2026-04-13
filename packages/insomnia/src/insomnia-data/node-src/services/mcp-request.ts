@@ -1,8 +1,6 @@
+import type { McpRequest } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
-
-import { database as db } from '../../src/database';
-import { models } from '../../src/models';
-import { type McpRequest } from '../../src/models/types';
 
 const { type } = models.mcpRequest;
 

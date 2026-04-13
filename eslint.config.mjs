@@ -11,6 +11,23 @@ import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+const rendererBuiltinSpecifiers = [...builtinModules, ...builtinModules.map(moduleName => `node:${moduleName}`)];
+const rendererNodeMigrationOffenders = [
+  'packages/insomnia/src/common/misc.ts',
+  'packages/insomnia/src/common/significant-diff-detection.ts',
+  'packages/insomnia/src/routes/import.scan.tsx',
+  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send.tsx',
+  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection.tsx',
+  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx',
+  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx',
+  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.update.tsx',
+];
+const rendererNodeRestrictionIgnores = [
+  ...rendererNodeMigrationOffenders,
+  'packages/insomnia/src/common/__tests__/**/*.{ts,tsx}',
+  'packages/insomnia/src/common/send-request.ts',
+];
+
 export default defineConfig([
   // https://typescript-eslint.io/getting-started#additional-configs
   eslint.configs.recommended,
@@ -73,13 +90,15 @@ export default defineConfig([
   {
     files: [
       'packages/insomnia/src/ui/**/*.{ts,tsx}',
-      // TODO: 'packages/insomnia/src/common/**/*.{ts,tsx}',
+      'packages/insomnia/src/routes/**/*.{ts,tsx}',
+      'packages/insomnia/src/common/**/*.{ts,tsx}',
     ],
+    ignores: rendererNodeRestrictionIgnores,
     rules: {
       'no-restricted-imports': [
         'error',
         {
-          paths: builtinModules.map(m => `node:${m}`),
+          paths: rendererBuiltinSpecifiers,
         },
       ],
     },

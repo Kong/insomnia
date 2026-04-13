@@ -1,6 +1,5 @@
-import { database as db } from '../../src/database';
-import { models } from '../../src/models';
-import { type Workspace } from '../../src/models/types';
+import type { Workspace } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 
 const { type } = models.workspace;
 

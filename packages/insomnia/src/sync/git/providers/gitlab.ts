@@ -171,6 +171,27 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
   }
 
   /**
+   * Validate credentials against the GitLab API.
+   * Hits `GET /user` — lightweight and authoritative: returns 401 when the
+   * token is revoked or has expired (and auto-renewal is not possible).
+   */
+  async validateCredentials(credential: GitCredentials): Promise<void> {
+    if (!isGitCredentialsV2(credential) || credential.provider !== 'gitlab') {
+      throw new Error('Invalid credential type for GitLab provider');
+    }
+
+    const response = await net.fetch(`${this.config.apiUrl}/user`, {
+      headers: {
+        Authorization: `Bearer ${credential.credentials?.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+    }
+  }
+
+  /**
    * Fetch projects (repositories) accessible by the credential
    */
   async fetchRepositories(credential: GitCredentials): Promise<ProviderRepository[]> {

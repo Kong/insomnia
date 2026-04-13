@@ -1,6 +1,5 @@
-import { database } from '../../src/database';
-import { models } from '../../src/models';
-import { type SocketIORequest } from '../../src/models/types';
+import type { SocketIORequest } from '~/insomnia-data';
+import { database, models } from '~/insomnia-data';
 
 const { type, name } = models.socketIORequest;
 
