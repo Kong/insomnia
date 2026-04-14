@@ -107,7 +107,11 @@ const writeResponseBodyToFile = async (
 
     return options.destinationPath;
   } catch (err) {
-    throw new Error(err);
+    if (err instanceof Error) {
+      throw err;
+    }
+
+    throw new Error(String(err));
   }
 };
 
