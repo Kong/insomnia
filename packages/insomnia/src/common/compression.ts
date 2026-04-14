@@ -7,7 +7,7 @@ const bytesToBase64 = (bytes: Uint8Array) => {
 
   let binary = '';
   for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
+    binary += String.fromCodePoint(byte);
   }
 
   return btoa(binary);
@@ -21,7 +21,7 @@ const base64ToBytes = (input: string) => {
   const binary = atob(input);
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index++) {
-    bytes[index] = binary.charCodeAt(index);
+    bytes[index] = binary.codePointAt(index)!;
   }
 
   return bytes;
