@@ -306,10 +306,9 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
 
     // Start file watcher for project-scoped repos so external YAML edits
     // (native git CLI, VS Code, etc.) flow back into the database.
+    // The watcher automatically imports all YAML files during creation.
     if (!workspaceId) {
       await repoFileWatcherRegistry.startWatcher(gitRepository._id, baseDir, projectId);
-      // Import all YAML files from disk into the DB after init/clone
-      await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
     }
 
     let legacyInsomniaWorkspace;
@@ -940,13 +939,12 @@ export const cloneGitRepoAction = async ({
         await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
       }
 
-      // Start watcher and import all YAML files after clone
+      // Start watcher — it automatically imports all YAML files during creation
       const cloneBaseDir = path.join(
         process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
         `version-control/git/${gitRepository._id}`,
       );
       await repoFileWatcherRegistry.startWatcher(gitRepository._id, cloneBaseDir, project._id);
-      await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
 
       const updateRepository = await services.gitRepository.getById(gitRepository._id);
       invariant(updateRepository, 'Git Repository not found');

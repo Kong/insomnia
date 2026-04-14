@@ -14,6 +14,15 @@
  *     re-exports the workspace YAML and writes it to disk so that `git status` /
  *     `git diff` reflect the change.
  *
+ * Initialisation (self-contained via `create()`):
+ *   1. Load workspace→file mappings from DB (for rename detection).
+ *   2. Import **all** YAML files from disk into the DB.  This populates the
+ *      mtime + content-hash tracking maps as a side-effect.
+ *   3. Start fs.watch, polling, and the DB→FS change listener.
+ *
+ *   Because step 2 runs before step 3, the watchers never fire for files that
+ *   were already imported — there is no ordering trap for callers.
+ *
  * Loop prevention (content-hash + serial queue):
  *   All sync work is routed through a single serial {@link SyncQueue}. Tasks
  *   execute one at a time — an import and a flush can never race.
@@ -118,10 +127,21 @@ class RepoFileWatcher {
 
   static async create(repoDir: string, projectId: string, notifier: WatcherNotifier): Promise<RepoFileWatcher> {
     const watcher = new RepoFileWatcher(repoDir, projectId, notifier);
-    await watcher.initTrackingState();
+
+    // 1. Load workspace-to-file mappings from the DB for rename detection.
+    await watcher.loadKnownGitFilePaths();
+
+    // 2. Import all YAML files into the DB so it reflects disk state.
+    //    This populates lastSyncMtime + lastWrittenHash as a side-effect,
+    //    which prevents step 3's watchers from re-importing the same files.
+    await watcher.importAllFiles();
+
+    // 3. Start watching for ongoing changes (fs.watch + polling + DB listener).
+    //    Safe to start now because tracking state is already populated.
     watcher.startFsWatch();
     watcher.startPolling();
     watcher.registerDbChangeListener();
+
     return watcher;
   }
 
@@ -179,9 +199,12 @@ class RepoFileWatcher {
   /**
    * Import all YAML files in the repo directory into the DB.
    *
-   * Called after bulk git operations (clone, pull, merge, checkout) so the DB
-   * reflects the new disk state. Content-hash dedup makes this idempotent —
-   * files that haven't changed are skipped.
+   * Called during watcher creation and after bulk git operations (clone, pull,
+   * merge, checkout) so the DB reflects the current disk state.
+   *
+   * Always bypasses the mtime fast-path (`forceRead`) so every file is read
+   * and compared by content-hash. This makes the method safe to call at any
+   * point — regardless of what tracking state has already been recorded.
    *
    * Also detects workspace YAML files that were removed from disk (e.g. deleted
    * on the remote) and removes the corresponding workspaces from the DB.
@@ -195,8 +218,10 @@ class RepoFileWatcher {
 
     // Import each file through the queue so they serialise with any
     // concurrent flush that may still be pending.
+    // forceRead=true bypasses the mtime fast-path so every file is
+    // actually read and imported regardless of tracking state.
     for (const absPath of yamlFiles) {
-      this.queue.enqueue(() => this.importFile(absPath));
+      this.queue.enqueue(() => this.importFile(absPath, true));
     }
 
     // Detect deleted files: workspaces in DB whose YAML is no longer on disk.
@@ -379,10 +404,10 @@ class RepoFileWatcher {
    *  When an existing workspace is reimported, DB documents that no longer
    *  appear in the YAML are removed (e.g. a request deleted on the remote).
    */
-  private async importFile(absPath: string): Promise<void> {
+  private async importFile(absPath: string, forceRead = false): Promise<void> {
     const normalised = path.normalize(absPath);
 
-    const result = await this.readIfChanged(absPath, normalised);
+    const result = await this.readIfChanged(absPath, normalised, forceRead);
     if (!result) {
       return;
     }
@@ -405,6 +430,7 @@ class RepoFileWatcher {
   private async readIfChanged(
     absPath: string,
     normalised: string,
+    forceRead = false,
   ): Promise<{ content: string; hash: string; mtimeMs: number } | null> {
     // ── Check if file still exists ───────────────────────────────────
     let fileStat: fs.Stats;
@@ -416,9 +442,13 @@ class RepoFileWatcher {
     }
 
     // ── Fast-path: mtime unchanged → skip ────────────────────────────
-    const lastMtime = this.lastSyncMtime.get(normalised);
-    if (lastMtime !== undefined && fileStat.mtimeMs <= lastMtime) {
-      return null;
+    // Bypassed when forceRead is true (e.g. importAllFiles after git
+    // operations) so every file is always read and compared by content.
+    if (!forceRead) {
+      const lastMtime = this.lastSyncMtime.get(normalised);
+      if (lastMtime !== undefined && fileStat.mtimeMs <= lastMtime) {
+        return null;
+      }
     }
 
     // ── Read file ────────────────────────────────────────────────────
@@ -643,32 +673,21 @@ class RepoFileWatcher {
   }
 
   /**
-   * Populate initial tracking state:
-   * - Scan all YAML files on disk and record their mtimes.
-   * - Load existing workspace gitFilePath mappings from the DB so rename
-   *   detection works from the start.
+   * Load existing workspace → gitFilePath mappings from the DB so rename
+   * detection works from the start.
+   *
+   * Note: we intentionally do NOT pre-scan file mtimes here. The initial
+   * {@link importAllFiles} call in {@link create} populates both
+   * `lastSyncMtime` and `lastWrittenHash` as a side-effect of importing.
+   * Pre-scanning mtimes would cause `importAllFiles` to skip files it
+   * hasn't actually imported yet.
    */
-  private async initTrackingState(): Promise<void> {
-    await this.scanMtimes(this.repoDir);
-
-    // Populate lastKnownGitFilePath from existing workspaceMeta records
+  private async loadKnownGitFilePaths(): Promise<void> {
     const entries = await this.getWorkspacesWithMeta();
     for (const { workspace, meta } of entries) {
       if (meta?.gitFilePath) {
         const absPath = path.normalize(path.join(this.repoDir, meta.gitFilePath));
         this.lastKnownGitFilePath.set(workspace._id, absPath);
-      }
-    }
-  }
-
-  private async scanMtimes(dir: string): Promise<void> {
-    const yamlFiles = await this.collectYamlFiles(dir);
-    for (const absPath of yamlFiles) {
-      try {
-        const stat = await fs.promises.stat(absPath);
-        this.lastSyncMtime.set(absPath, stat.mtimeMs);
-      } catch {
-        /* ignore */
       }
     }
   }
