@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import type { OpenAPIV3 } from 'openapi-types';
@@ -86,11 +84,13 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
 
-  const gitRepositoryId = models.project.isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const gitRepositoryId = models.project.isGitProject(project)
+    ? project.gitRepositoryId
+    : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
   const rulesetPath = gitRepositoryId
-    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
     : '';
 
   let parsedSpec: OpenAPIV3.Document | undefined;
@@ -373,8 +373,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     let parsedSpec: string | undefined;
     try {
       // yaml parses json correctly
-      parsedSpec = YAML.parse(editorValue)
-
+      parsedSpec = YAML.parse(editorValue);
     } catch {
       showToast({
         title: 'Failed to convert spec format',
@@ -387,8 +386,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     const contents = to === 'json' ? JSON.stringify(parsedSpec, null, 2) : YAML.stringify(parsedSpec);
     editor.current?.setValue(contents);
     updateApiSpec({ organizationId, projectId, workspaceId, contents });
-
-  }
+  };
 
   const specActionList: SpecActionItem[] = [
     {
@@ -417,17 +415,25 @@ const Component = ({ params }: Route.ComponentProps) => {
         setIsSpecPaneOpen(!isSpecPaneOpen);
       },
     },
-    ...(specFormat === 'json' ? [{
-      id: 'convert-to-yaml',
-      name: 'Convert to YAML',
-      icon: <Icon className="w-3" icon="sync-alt" />,
-      action: () => switchFormat('yaml'),
-    }] : specFormat === 'yaml' ? [{
-      id: 'convert-to-json',
-      name: 'Convert to JSON',
-      icon: <Icon className="w-3" icon="sync-alt" />,
-      action: () => switchFormat('json'),
-    }] : []),
+    ...(specFormat === 'json'
+      ? [
+          {
+            id: 'convert-to-yaml',
+            name: 'Convert to YAML',
+            icon: <Icon className="w-3" icon="sync-alt" />,
+            action: () => switchFormat('yaml'),
+          },
+        ]
+      : specFormat === 'yaml'
+        ? [
+            {
+              id: 'convert-to-json',
+              name: 'Convert to JSON',
+              icon: <Icon className="w-3" icon="sync-alt" />,
+              action: () => switchFormat('json'),
+            },
+          ]
+        : []),
   ];
 
   const disabledKeys = specActionList.filter(item => item.isDisabled).map(item => item.id);
