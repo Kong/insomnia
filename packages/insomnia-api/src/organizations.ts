@@ -88,6 +88,7 @@ export interface FeatureList {
   aiMockServers: FeatureStatus;
   aiCommitMessages: FeatureStatus;
   aiMcpClient: FeatureStatus;
+  konnectSync: FeatureStatus;
 }
 
 export interface Billing {
