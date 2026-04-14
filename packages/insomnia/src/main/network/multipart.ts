@@ -9,8 +9,9 @@ import path from 'node:path';
 import { lookup } from 'mime-types';
 
 import type { RequestBodyParameter } from '~/insomnia-data';
+import { DEFAULT_BOUNDARY } from '../../network/multipart-constants';
 
-export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
+export { DEFAULT_BOUNDARY };
 
 interface Multipart {
   boundary: typeof DEFAULT_BOUNDARY;

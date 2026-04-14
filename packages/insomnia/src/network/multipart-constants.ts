@@ -1,0 +1,1 @@
+export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';

@@ -12,7 +12,7 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
 } from '../common/misc';
-import { DEFAULT_BOUNDARY } from '../main/network/multipart';
+import { DEFAULT_BOUNDARY } from './multipart-constants';
 
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 
