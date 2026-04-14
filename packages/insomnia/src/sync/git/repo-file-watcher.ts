@@ -192,6 +192,15 @@ class RepoFileWatcher {
       this.flushDebounce = null;
     }
 
+    // Cancel all pending debounced imports and enqueue them immediately.
+    // This ensures all external changes are in the queue before we flush,
+    // preventing the flush from overwriting un-imported external edits.
+    for (const [absPath, timer] of this.debounceTimers) {
+      clearTimeout(timer);
+      this.debounceTimers.delete(absPath);
+      this.queue.enqueue(() => this.importFile(absPath));
+    }
+
     this.queue.enqueue(() => this.flushProjectWorkspacesToDisk());
     await this.queue.waitUntilDone();
   }
