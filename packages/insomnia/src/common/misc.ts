@@ -1,10 +1,8 @@
-import path from 'node:path';
-import zlib from 'node:zlib';
-
 import fuzzysort from 'fuzzysort';
 import { v4 as uuidv4 } from 'uuid';
 
 import { DEBOUNCE_MILLIS } from './constants';
+export { compressObject, decompressObject } from './compression';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -147,20 +145,6 @@ export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]
   return v(...args);
 }
 
-export function compressObject(obj: any) {
-  const compressed = zlib.gzipSync(JSON.stringify(obj));
-  return compressed.toString('base64');
-}
-
-export function decompressObject<ObjectType>(input: string | null): ObjectType | null {
-  if (typeof input !== 'string') {
-    return null;
-  }
-
-  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
-  return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
-}
-
 /**
  * Escape a dynamic string for use inside of a regular expression
  * @param str - string to escape
@@ -264,34 +248,6 @@ export function unescapeForwardSlash(str: string): string {
     // Even count: all backslashes are literal escapes; leave the sequence unchanged
     return match;
   });
-}
-
-export const normalizeFolderPath = (p: string) => {
-  const normalized = path.normalize(p);
-  // Preserve filesystem roots as-is (e.g. "/" on POSIX, "C:\" on Windows)
-  if (normalized === path.parse(normalized).root) {
-    return normalized;
-  }
-  return normalized.replace(/[/\\]+$/, '');
-};
-
-export type FolderValidationResult =
-  | { ok: true; normalizedValue: string }
-  | { ok: false; error: string };
-
-export function validateFolderInput(input: string, existing: string[]): FolderValidationResult {
-  const trimmed = input.trim();
-  if (trimmed === '') {
-    return { ok: false, error: 'Enter a folder path to add.' };
-  }
-  const normalized = normalizeFolderPath(trimmed);
-  if (trimmed !== normalized) {
-    return { ok: false, error: `Invalid folder path format. Did you mean "${normalized}"?` };
-  }
-  if (existing.some(v => normalizeFolderPath(v) === normalized)) {
-    return { ok: false, error: 'Duplicate folders are not allowed.' };
-  }
-  return { ok: true, normalizedValue: normalized };
 }
 
 export const SECURITY_SETTINGS_PATH_LABEL = "Insomnia Preferences → General → Security";

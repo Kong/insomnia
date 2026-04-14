@@ -17,18 +17,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/common/misc.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/common/misc.ts",
-      "builtin": "zlib"
-    },
-    {
-      "importer": "src/common/significant-diff-detection.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/main/importers/importers/curl.ts",
       "builtin": "url"
     },
@@ -227,10 +215,6 @@
     {
       "importer": "src/utils/plugin.ts",
       "builtin": "path"
-    },
-    {
-      "importer": "src/utils/url/querystring.ts",
-      "builtin": "url"
     }
   ]
 }

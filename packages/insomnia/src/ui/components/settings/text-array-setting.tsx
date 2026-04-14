@@ -4,7 +4,7 @@ import { ListBox, ListBoxItem } from 'react-aria-components';
 import { useRootLoaderData } from '~/root';
 import { invariant } from '~/utils/invariant';
 
-import { validateFolderInput } from '../../../common/misc';
+import { validateFolderInput } from './folder-path';
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
