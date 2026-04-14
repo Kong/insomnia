@@ -49,6 +49,7 @@ export const ProjectCreateForm: FC<Props> = ({
   }
 
   const [error, setError] = useState<string | null>(null);
+  const [isGitCredentialInvalid, setIsGitCredentialInvalid] = useState(false);
 
   const [projectData, setProjectData] = useState<ProjectData>({
     name: defaultProjectName,
@@ -134,6 +135,7 @@ export const ProjectCreateForm: FC<Props> = ({
               setActiveView={setActiveView}
               credentials={credentials}
               providers={providers}
+              onCredentialValidationChange={setIsGitCredentialInvalid}
             />
           )}
         </div>
@@ -173,7 +175,7 @@ export const ProjectCreateForm: FC<Props> = ({
               <Button
                 type="submit"
                 form={FORMID}
-                isDisabled={!isGitSyncEnabled}
+                isDisabled={!isGitSyncEnabled || isGitCredentialInvalid}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 Scan for files

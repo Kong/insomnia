@@ -27,9 +27,11 @@ import {
 import { useParams } from 'react-router';
 import { type TreeData, useTreeData } from 'react-stately';
 
+import { Banner } from '~/basic-components/banner';
 import { Button as BasicButton } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
+import type { GitCredentials, GitRepository } from '~/insomnia-data';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
@@ -38,10 +40,18 @@ import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
+import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
+import {
+  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  useGitProviderCompleteSignInFetcher,
+} from '~/routes/git-credentials.complete-sign-in';
 import type { GitFileType } from '~/sync/git/git-vcs';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { SegmentEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
+import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
+import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
@@ -111,6 +121,9 @@ interface GeneratedCommitsFormProps {
   setShowConfirmDiscardAndPullModal: (show: boolean) => void;
   onCommitSuccess: (options: { push: boolean }) => void;
   diffChanges: (params: { path: string; staged: boolean }) => void;
+  gitRepository?: GitRepository | null;
+  selectedCredential?: GitCredentials | null;
+  selectedProvider?: GitProviderOption | null;
 }
 
 interface FileItem {
@@ -272,10 +285,34 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   setShowConfirmDiscardAndPullModal,
   onCommitSuccess,
   diffChanges,
+  gitRepository,
+  selectedCredential,
+  selectedProvider,
 }) => {
   const commitsFetcher = useGitProjectCommitsActionFetcher();
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [operationError, setOperationError] = useState<string | null>(null);
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
+  const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
+  useEffect(() => {
+    const prevState = prevCompleteSignInStateRef.current;
+    prevCompleteSignInStateRef.current = completeSignInFetcher.state;
+    const hasError =
+      completeSignInFetcher.data &&
+      typeof completeSignInFetcher.data === 'object' &&
+      'errors' in completeSignInFetcher.data &&
+      Array.isArray((completeSignInFetcher.data as { errors: unknown }).errors) &&
+      (completeSignInFetcher.data as { errors: string[] }).errors.length > 0;
+    if (
+      (prevState === 'submitting' || prevState === 'loading') &&
+      completeSignInFetcher.state === 'idle' &&
+      completeSignInFetcher.data &&
+      !hasError
+    ) {
+      setOperationError(null);
+    }
+  }, [completeSignInFetcher.state, completeSignInFetcher.data]);
   const isCommitting = commitsFetcher.state !== 'idle';
   const canCommitAndPull = changes.staged.length > 0 && changes.unstaged.length === 0;
 
@@ -290,7 +327,12 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
     const isSuccess =
       ('success' in commitsFetcher.data && commitsFetcher.data.success) ||
       ('errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0);
+    if (hasErrors && 'errors' in commitsFetcher.data) {
+      setOperationError((commitsFetcher.data.errors as string[]).join('\n'));
+      return;
+    }
     if (isSuccess && !hasErrors) {
+      setOperationError(null);
       onCommitSuccess({ push: action === 'commit-push' });
     }
   }, [commitsFetcher.data, onCommitSuccess, isCommitting]);
@@ -494,6 +536,36 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           </Button>
         </div>
       )}
+      {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+        <GitOauthAuthBanner
+          selectedCredential={selectedCredential}
+          gitRepository={gitRepository}
+          repoLoadErrors={[operationError]}
+          provider={selectedProvider}
+        />
+      ) : operationError && selectedCredential?.provider === 'custom' ? (
+        <Banner
+          type="warning"
+          className="bg-[rgba(var(--color-danger-rgb),0.5)] p-2 text-(--color-font-danger)"
+          message={
+            <span>
+              Remote connection is unavailable. Ensure your{' '}
+              <Button
+                type="button"
+                className="inline cursor-pointer border-0 bg-transparent p-0 text-(--color-surprise) underline"
+                onPress={() => showSettingsModal({ tab: 'credentials' })}
+              >
+                PAT Credential
+              </Button>{' '}
+              is valid, then try again.
+            </span>
+          }
+        />
+      ) : operationError ? (
+        <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
+          <Icon icon="exclamation-triangle" /> {operationError}
+        </p>
+      ) : null}
     </form>
   );
 };
@@ -509,6 +581,9 @@ interface ManualCommitFormProps {
   setDiscardData: (data: { paths: string[]; filesCount: number }) => void;
   stageChanges: (paths: string[]) => void;
   unstageChanges: (paths: string[]) => void;
+  gitRepository?: GitRepository | null;
+  selectedCredential?: GitCredentials | null;
+  selectedProvider?: GitProviderOption | null;
 }
 
 const ManualCommitForm: FC<ManualCommitFormProps> = ({
@@ -522,6 +597,9 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   setDiscardData,
   stageChanges,
   unstageChanges,
+  gitRepository,
+  selectedCredential,
+  selectedProvider,
 }) => {
   const commitFetcher = useGitProjectCommitActionFetcher();
 
@@ -530,6 +608,26 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   const [message, setMessage] = useState('');
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
+  const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
+  useEffect(() => {
+    const prevState = prevCompleteSignInStateRef.current;
+    prevCompleteSignInStateRef.current = completeSignInFetcher.state;
+    const hasError =
+      completeSignInFetcher.data &&
+      typeof completeSignInFetcher.data === 'object' &&
+      'errors' in completeSignInFetcher.data &&
+      Array.isArray((completeSignInFetcher.data as { errors: unknown }).errors) &&
+      (completeSignInFetcher.data as { errors: string[] }).errors.length > 0;
+    if (
+      (prevState === 'submitting' || prevState === 'loading') &&
+      completeSignInFetcher.state === 'idle' &&
+      completeSignInFetcher.data &&
+      !hasError
+    ) {
+      setOperationError(null);
+    }
+  }, [completeSignInFetcher.state, completeSignInFetcher.data]);
 
   const isCommitting = commitFetcher.state !== 'idle';
   const canCommitAndPull = stagedCount > 0 && unstagedCount === 0;
@@ -662,11 +760,29 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             </Button>
           </div>
         )}
-        {operationError && (
+        {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+          <GitOauthAuthBanner
+            selectedCredential={selectedCredential}
+            gitRepository={gitRepository}
+            repoLoadErrors={[operationError]}
+            provider={selectedProvider}
+          />
+        ) : operationError && selectedCredential?.provider === 'custom' ? (
+          <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
+            <Icon icon="exclamation-triangle" /> Remote connection is unavailable. Ensure your{' '}
+            <Button
+              className="inline cursor-pointer border-0 bg-transparent p-0 text-(--color-font-danger) underline"
+              onPress={() => showSettingsModal({ tab: 'credentials' })}
+            >
+              PAT Credential
+            </Button>{' '}
+            is valid, then try again.
+          </p>
+        ) : operationError ? (
           <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
             <Icon icon="exclamation-triangle" /> {operationError}
           </p>
-        )}
+        ) : null}
       </form>
 
       <div className="grid auto-rows-auto gap-2 overflow-y-auto">
@@ -989,6 +1105,7 @@ const OriginalGitProjectStagingModal: FC<
   const [discardData, setDiscardData] = React.useState<DiscardData | null>(null);
 
   const gitChangesFetcher = useGitProjectChangesFetcher();
+  const gitCredentialsFetcher = useGitCredentialsLoaderFetcher();
 
   const undoUnstagedChangesFetcher = useGitProjectDiscardActionFetcher();
   const diffChangesFetcher = useGitProjectDiffLoaderFetcher();
@@ -1020,6 +1137,12 @@ const OriginalGitProjectStagingModal: FC<
     }
   }, [projectId, gitChangesFetcher]);
 
+  useEffect(() => {
+    if (gitCredentialsFetcher.state === 'idle' && !gitCredentialsFetcher.data) {
+      gitCredentialsFetcher.load();
+    }
+  }, [gitCredentialsFetcher]);
+
   const { changes } = gitChangesFetcher.data || {
     changes: {
       staged: [],
@@ -1028,6 +1151,12 @@ const OriginalGitProjectStagingModal: FC<
     branch: '',
     statusNames: {},
   };
+
+  const gitRepository = gitChangesFetcher.data?.gitRepository ?? null;
+  const credentials = gitCredentialsFetcher.data?.credentials ?? [];
+  const providers = gitCredentialsFetcher.data?.providers ?? [];
+  const selectedCredential = credentials.find(c => c._id === gitRepository?.credentialsId) ?? null;
+  const selectedProvider = providers.find(p => p.type === selectedCredential?.provider) ?? null;
 
   const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data : null;
 
@@ -1241,6 +1370,9 @@ const OriginalGitProjectStagingModal: FC<
                         setShowConfirmDiscardAndPullModal={setShowConfirmDiscardAndPullModal}
                         onCommitSuccess={handleCommitSuccess}
                         diffChanges={diffChanges}
+                        gitRepository={gitRepository}
+                        selectedCredential={selectedCredential}
+                        selectedProvider={selectedProvider}
                       />
                     )}
 
@@ -1256,6 +1388,9 @@ const OriginalGitProjectStagingModal: FC<
                         setDiscardData={setDiscardData}
                         stageChanges={stageChanges}
                         unstageChanges={unstageChanges}
+                        gitRepository={gitRepository}
+                        selectedCredential={selectedCredential}
+                        selectedProvider={selectedProvider}
                       />
                     )}
                   </div>

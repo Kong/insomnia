@@ -112,6 +112,27 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
   }
 
   /**
+   * Validate credentials against the GitHub API.
+   * Hits `GET /user` — lightweight and authoritative: returns 401 when the
+   * token is revoked or the GitHub App has been uninstalled.
+   */
+  async validateCredentials(credential: GitCredentials): Promise<void> {
+    if (!isGitCredentialsV2(credential) || credential.provider !== 'github') {
+      throw new Error('Invalid credential type for GitHub provider');
+    }
+
+    const response = await net.fetch(`${this.config.apiUrl}/user`, {
+      headers: {
+        Authorization: `token ${credential.credentials.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+    }
+  }
+
+  /**
    * Fetch repositories accessible by the credential
    */
   async fetchRepositories(credentials: GitCredentials, refresh?: boolean): Promise<ProviderRepository[]> {

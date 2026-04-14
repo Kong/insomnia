@@ -45,6 +45,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Check renderer Node import baseline
+        run: npm run check:renderer-node-imports
+
       - name: Type checks
         run: npm run type-check
 
