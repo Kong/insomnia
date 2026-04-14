@@ -23,13 +23,13 @@ import type { ImportEntry } from '../main/importers/entities';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import * as models from '../models/index';
 import { type AllTypes, type BaseModel, getModel } from '../models/index';
-import { pathWithParamsAsPathParameters } from './path-with-params';
 import { invariant } from '../utils/invariant';
 import { parseApiSpec, type ParsedApiSpec } from './api-specs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
+import { pathWithParamsAsPathParameters } from './path-with-params';
 
 const { isRequest } = models.request;
 const { isApiSpec } = models.apiSpec;

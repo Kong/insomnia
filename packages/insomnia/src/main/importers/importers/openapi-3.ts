@@ -6,7 +6,6 @@ import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import YAML from 'yaml';
 
 import { pathWithParamsAsPathParameters } from '../../../common/path-with-params';
-
 import type { Converter, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
 
