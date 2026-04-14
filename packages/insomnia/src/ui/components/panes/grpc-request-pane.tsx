@@ -66,6 +66,17 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   const { settings } = useRootLoaderData()!;
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
+  const editorRef = useRef<CodeEditorHandle>(null);
+  const gitVersion = useGitVCSVersion();
+  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
+  const { updateTabById } = useInsomniaTabContext();
+
+  const applyReflectionResult = (loadedMethods: typeof methods) => {
+    const stillValid = loadedMethods.some(m => m.fullPath === activeRequest.protoMethodName);
+    patchRequest(requestId, { protoFileId: '', protoMethodName: stillValid ? activeRequest.protoMethodName : '' });
+  };
+
   reactUse.useMount(async () => {
     if (activeRequest.protoFileId) {
       console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
@@ -117,15 +128,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           : {}),
       };
       const methods = await window.main.grpc.loadMethodsFromReflection(renderedWithCertificates);
+      applyReflectionResult(methods);
       setGrpcState({ ...grpcState, methods });
     }
   });
-  const editorRef = useRef<CodeEditorHandle>(null);
-  const gitVersion = useGitVCSVersion();
-  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
-  const patchRequest = useRequestPatcher();
-
-  const { updateTabById } = useInsomniaTabContext();
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
@@ -322,8 +328,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                         : {}),
                     };
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
+                    applyReflectionResult(methods);
                     setGrpcState({ ...grpcState, methods });
-                    patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
                   } catch (error) {
                     showModal(ErrorModal, { error, ...getGrpcConnectionErrorDetails(error) });
                   }

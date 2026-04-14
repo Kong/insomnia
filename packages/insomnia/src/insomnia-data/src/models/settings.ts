@@ -44,6 +44,7 @@ export function init(): BaseSettings {
     fontSize: 13,
     fontVariantLigatures: false,
     forceVerticalLayout,
+    hasKonnectPat: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',

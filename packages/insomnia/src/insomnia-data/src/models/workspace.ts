@@ -14,6 +14,7 @@ export interface BaseWorkspace {
   description: string;
   certificates?: any; // deprecated
   scope: 'design' | 'collection' | 'mock-server' | 'environment' | 'mcp';
+  konnectServiceId?: string | null;
 }
 
 export type WorkspaceScope = BaseWorkspace['scope'];
@@ -29,6 +30,8 @@ export const WorkspaceScopeKeys = {
 export type Workspace = BaseModel & BaseWorkspace;
 
 export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => model.type === type;
+
+export const optionalKeys = ['konnectServiceId'];
 
 export const isDesign = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.design;
 

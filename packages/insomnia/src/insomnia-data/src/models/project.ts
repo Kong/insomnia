@@ -31,6 +31,8 @@ export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchp
 interface CommonProject {
   name: string;
   mcpStdioAccess?: boolean;
+  konnectControlPlaneId?: string | null;
+  konnectClusterType?: string | null;
 }
 
 export interface RemoteProject extends BaseModel, CommonProject {
@@ -53,6 +55,8 @@ export type Project = LocalProject | RemoteProject | GitProject;
 export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => model.type === type;
 
 export const isProjectId = (id: string | null) => id?.startsWith(`${prefix}_`);
+
+export const optionalKeys = ['konnectControlPlaneId', 'konnectClusterType'];
 
 export function init(): Partial<Project> {
   return {
