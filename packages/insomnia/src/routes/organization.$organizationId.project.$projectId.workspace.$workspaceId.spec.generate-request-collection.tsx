@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import type { IRuleResult } from '@stoplight/spectral-core';
 import { href, redirect } from 'react-router';
 
@@ -29,10 +27,12 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   const isLintError = (result: IRuleResult) => result.severity === 0;
 
-  const gitRepositoryId = models.project.isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const gitRepositoryId = models.project.isGitProject(project)
+    ? project.gitRepositoryId
+    : workspaceMeta?.gitRepositoryId;
 
   const rulesetPath = gitRepositoryId
-    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
     : '';
 
   const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
