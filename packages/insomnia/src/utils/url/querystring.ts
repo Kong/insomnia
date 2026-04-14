@@ -201,6 +201,10 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
   const { strictNullHandling = false } = options || {};
   const urlWithProto = setDefaultProtocol(url);
 
+  if (!urlWithProto) {
+    return '';
+  }
+
   if (!encode) {
     return urlWithProto;
   }
