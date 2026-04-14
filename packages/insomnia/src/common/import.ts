@@ -17,14 +17,13 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { insecureReadFile } from '~/main/secure-read-file';
 
 import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
-import { pathWithParamsAsPathParameters } from '../main/importers/importers/openapi-3';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import * as models from '../models/index';
 import { type AllTypes, type BaseModel, getModel } from '../models/index';
+import { pathWithParamsAsPathParameters } from './path-with-params';
 import { invariant } from '../utils/invariant';
 import { parseApiSpec, type ParsedApiSpec } from './api-specs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
@@ -79,6 +78,16 @@ const isSubEnvironmentResource = (environment: Environment) => {
 
 export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) => id === 'insomnia-4';
 
+const importMainConvertModule = async () => {
+  const modulePath = '../main/importers/convert';
+  return import(/* @vite-ignore */ modulePath);
+};
+
+const importSecureReadFileModule = async () => {
+  const modulePath = '../main/secure-read-file';
+  return import(/* @vite-ignore */ modulePath);
+};
+
 export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   const url = new URL(uri);
 
@@ -93,7 +102,11 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    // allow reading the file as it is chosen by user
+    if (process.type === 'renderer') {
+      return window.main.insecureReadFile({ path });
+    }
+
+    const { insecureReadFile } = await importSecureReadFileModule();
     return insecureReadFile(path);
   }
   // Treat everything else as raw text
@@ -204,8 +217,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          const processFork =
-            process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
+          const processFork = process.type === 'renderer' ? window.main.parseImport : (await importMainConvertModule()).convert;
           result = (await processFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {

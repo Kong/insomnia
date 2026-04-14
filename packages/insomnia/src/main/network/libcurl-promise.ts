@@ -28,7 +28,7 @@ import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } 
 import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
 import { insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
-import { parseHeaderStrings } from './parse-header-strings';
+import { parseHeaderStrings } from '../../network/parse-header-strings';
 export interface CurlRequestOptions {
   requestId: string; // for cancellation
   req: RequestUsedHere;

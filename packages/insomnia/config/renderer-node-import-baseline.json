@@ -17,22 +17,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/main/importers/importers/curl.ts",
-      "builtin": "url"
-    },
-    {
-      "importer": "src/main/importers/importers/openapi-3.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/main/importers/importers/openapi-3.ts",
-      "builtin": "url"
-    },
-    {
-      "importer": "src/main/importers/importers/swagger-2.ts",
-      "builtin": "crypto"
-    },
-    {
       "importer": "src/main/network/libcurl-promise.ts",
       "builtin": "fs"
     },
@@ -55,10 +39,6 @@
     {
       "importer": "src/main/network/multipart.ts",
       "builtin": "path"
-    },
-    {
-      "importer": "src/main/network/parse-header-strings.ts",
-      "builtin": "url"
     },
     {
       "importer": "src/main/secure-read-file.ts",

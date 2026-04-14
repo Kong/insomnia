@@ -18,7 +18,7 @@ import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { invariant } from '../../utils/invariant';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { createConfiguredCurlInstance } from './libcurl-promise';
-import { parseHeaderStrings } from './parse-header-strings';
+import { parseHeaderStrings } from '../../network/parse-header-strings';
 
 export interface CurlConnection extends Curl {
   _id: string;
