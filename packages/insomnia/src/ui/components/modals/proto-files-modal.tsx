@@ -8,7 +8,6 @@ import * as models from '~/models';
 
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
-import { ProtoDirectoryLoader } from '../../../network/grpc/proto-directory-loader';
 import { writeProtoFile } from '../../../network/grpc/write-proto-file';
 import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -21,6 +20,12 @@ import { AlertModal } from './alert-modal';
 
 const { isProtoDirectory } = models.protoDirectory;
 const { isProtoFile } = models.protoFile;
+
+interface ProtoDirectoryImportResult {
+  createdDir: ProtoDirectory | null;
+  createdIds: string[];
+  error: Error | null;
+}
 
 const tryToSelectFilePath = async () => {
   try {
@@ -100,6 +105,71 @@ const getProtoDirectories = async (workspaceId: string) => {
   return expandedDirs;
 };
 
+const createProtoFileFromPath = async (filePath: string, parentId: string, createdIds: string[]) => {
+  const fileName = window.path.basename(filePath);
+  if (!fileName.toLowerCase().endsWith('.proto')) {
+    return false;
+  }
+
+  const protoText = await window.main.insecureReadFile({ path: filePath });
+  const { _id } = await services.protoFile.create({
+    name: fileName,
+    parentId,
+    protoText,
+  });
+  createdIds.push(_id);
+  return true;
+};
+
+const createProtoDirectoryFromPath = async (
+  dirPath: string,
+  parentId: string,
+  createdIds: string[],
+): Promise<ProtoDirectory | null> => {
+  const entries = await window.main.readDir({ path: dirPath });
+  const newDirId = models.protoDirectory.createId();
+  let filesFound = false;
+
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    const entryHasProtoFiles = await (entry.type === 'directory'
+      ? createProtoDirectoryFromPath(entry.path, newDirId, createdIds).then(Boolean)
+      : createProtoFileFromPath(entry.path, newDirId, createdIds));
+
+    filesFound = filesFound || entryHasProtoFiles;
+  }
+
+  if (!filesFound) {
+    return null;
+  }
+
+  const createdProtoDir = await services.protoDirectory.create({
+    _id: newDirId,
+    name: window.path.basename(dirPath),
+    parentId,
+  });
+  createdIds.push(createdProtoDir._id);
+  return createdProtoDir;
+};
+
+const importProtoDirectory = async (dirPath: string, workspaceId: string): Promise<ProtoDirectoryImportResult> => {
+  const createdIds: string[] = [];
+
+  try {
+    const createdDir = await createProtoDirectoryFromPath(dirPath, workspaceId, createdIds);
+    return {
+      createdDir,
+      createdIds,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      createdDir: null,
+      createdIds,
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
+  }
+};
+
 export interface Props {
   defaultId?: string;
   onSave?: (arg0: string) => Promise<void>;
@@ -146,7 +216,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       return;
     }
     try {
-      const result = await new ProtoDirectoryLoader(filePath, workspaceId).load();
+      const result = await importProtoDirectory(filePath, workspaceId);
       createdIds = result.createdIds;
       const { error, createdDir } = result;
 
