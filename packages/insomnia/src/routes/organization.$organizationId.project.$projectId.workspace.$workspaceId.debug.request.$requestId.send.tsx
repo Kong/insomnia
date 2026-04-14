@@ -15,7 +15,6 @@ import { services } from '~/insomnia-data';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -66,8 +65,6 @@ export interface RunnerContextForRequest {
   responseId: string;
 }
 
-const DOWNLOAD_READ_FAILURE = '[sendAction] failed to read response body for download';
-
 const writeToDownloadPath = async (
   downloadPathAndName: string,
   responsePatch: ResponsePatch,
@@ -77,14 +74,13 @@ const writeToDownloadPath = async (
   invariant(downloadPathAndName, 'filename should be set by now');
 
   try {
-    const bodyBuffer = await getBodyBuffer(responsePatch, DOWNLOAD_READ_FAILURE);
-
-    if (typeof bodyBuffer === 'string') {
+    if (!responsePatch.bodyPath) {
       responsePatch.error = `Failed to save to ${downloadPathAndName}: unable to read response body`;
     } else {
-      await window.main.writeFile({
-        path: downloadPathAndName,
-        content: bodyBuffer,
+      await window.main.writeResponseBodyToFile({
+        sourcePath: responsePatch.bodyPath,
+        destinationPath: downloadPathAndName,
+        bodyCompression: responsePatch.bodyCompression,
       });
       responsePatch.error = `Saved to ${downloadPathAndName}`;
     }

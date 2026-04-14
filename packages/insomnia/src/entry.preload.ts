@@ -188,6 +188,7 @@ const main: Window['main'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
+  writeResponseBodyToFile: options => ipcRenderer.invoke('writeResponseBodyToFile', options),
   insecureReadFile: options => ipcRenderer.invoke('insecureReadFile', options),
   insecureReadFileWithEncoding: options => ipcRenderer.invoke('insecureReadFileWithEncoding', options),
   secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),

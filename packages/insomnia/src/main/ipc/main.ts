@@ -1,6 +1,8 @@
 import fs, { mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { pipeline } from 'node:stream/promises';
+import zlib from 'node:zlib';
 
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
@@ -87,6 +89,28 @@ const readDir = async (_: unknown, options: { path: string }) => {
   }
 };
 
+const writeResponseBodyToFile = async (
+  _: unknown,
+  options: { sourcePath: string; destinationPath: string; bodyCompression?: 'zip' | null },
+) => {
+  try {
+    const dir = path.dirname(options.destinationPath);
+    await fs.promises.mkdir(dir, { recursive: true });
+
+    await (options.bodyCompression === 'zip'
+      ? pipeline(
+          fs.createReadStream(options.sourcePath),
+          zlib.createGunzip(),
+          fs.createWriteStream(options.destinationPath),
+        )
+      : fs.promises.copyFile(options.sourcePath, options.destinationPath));
+
+    return options.destinationPath;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -105,6 +129,11 @@ export interface RendererToMainBridgeAPI {
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
+  writeResponseBodyToFile: (options: {
+    sourcePath: string;
+    destinationPath: string;
+    bodyCompression?: 'zip' | null;
+  }) => Promise<string>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -252,6 +281,7 @@ export function registerMainHandlers() {
       throw new Error(err);
     }
   });
+  ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
 
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
