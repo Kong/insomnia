@@ -285,20 +285,10 @@ class RepoFileWatcher {
       const gitFilePath: string = meta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
       const absPath = path.normalize(path.join(this.repoDir, gitFilePath));
 
-      // Detect gitFilePath rename: if the path changed, delete the old file
+      // Detect gitFilePath rename: if the path changed, we'll delete the old
+      // file *after* the new one is successfully written to avoid data loss.
       const previousAbsPath = this.lastKnownGitFilePath.get(workspace._id);
-      if (previousAbsPath && previousAbsPath !== absPath) {
-        try {
-          await fs.promises.unlink(previousAbsPath);
-          console.log('[repo-file-watcher] Removed old file after rename:', previousAbsPath, '→', absPath);
-        } catch {
-          // Old file may already be gone — that's fine
-        }
-        // Clean up tracking for the old path so the watcher doesn't
-        // try to re-import a file that no longer exists
-        this.lastSyncMtime.delete(previousAbsPath);
-        this.lastWrittenHash.delete(previousAbsPath);
-      }
+      const isRename = previousAbsPath && previousAbsPath !== absPath;
 
       try {
         const yamlContent = await getInsomniaV5DataExport({
@@ -315,6 +305,20 @@ class RepoFileWatcher {
 
         await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
         await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+
+        // New file written successfully — now safe to remove the old one
+        if (isRename) {
+          try {
+            await fs.promises.unlink(previousAbsPath);
+            console.log('[repo-file-watcher] Removed old file after rename:', previousAbsPath, '→', absPath);
+          } catch {
+            // Old file may already be gone — that's fine
+          }
+          // Clean up tracking for the old path so the watcher doesn't
+          // try to re-import a file that no longer exists
+          this.lastSyncMtime.delete(previousAbsPath);
+          this.lastWrittenHash.delete(previousAbsPath);
+        }
 
         // Record hash + mtime so the FS→DB side skips this echo
         this.lastWrittenHash.set(absPath, hash);
