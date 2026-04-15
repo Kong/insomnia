@@ -469,3 +469,4 @@ This migration is complete when:
 2. The baseline file is empty or reduced to intentionally permitted entries.
 3. Lint restrictions can be tightened by removing temporary offender exclusions.
 4. The main BrowserWindow runs with `nodeIntegration: false` without renderer regressions.
+5. Security audit of changes is complete, including the writeResponseBodyToFile preload function.
