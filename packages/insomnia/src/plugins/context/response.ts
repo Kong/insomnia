@@ -1,7 +1,28 @@
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 
 import type { ResponseHeader } from '~/insomnia-data';
-import { getBodyBuffer, getBodyStream } from '~/models/helpers/response-operations';
+import type { Compression } from '~/insomnia-data';
+import { getBodyBuffer } from '~/models/helpers/response-operations';
+
+function getBodyStream(
+  response?: { bodyPath?: string; bodyCompression?: Compression },
+  readFailureValue?: string,
+) {
+  if (!response?.bodyPath) {
+    return null;
+  }
+  try {
+    fs.statSync(response.bodyPath);
+  } catch (err) {
+    console.warn('Failed to read response body', err.message);
+    return readFailureValue === undefined ? null : readFailureValue;
+  }
+  if (response.bodyCompression === 'zip') {
+    return fs.createReadStream(response.bodyPath).pipe(zlib.createGunzip());
+  }
+  return fs.createReadStream(response.bodyPath);
+}
 
 
 interface MaybeResponse {

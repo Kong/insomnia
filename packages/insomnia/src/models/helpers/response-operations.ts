@@ -1,5 +1,3 @@
-import type { Readable } from 'node:stream';
-
 import { database as db } from '~/common/database';
 import type { Compression, McpResponse, Response, SocketIOResponse, WebSocketResponse } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
@@ -67,31 +65,6 @@ export function removeResponse(response: Response | WebSocketResponse | SocketIO
   }
   return db.remove(response);
 }
-
-// getBodyStream is only called from main-process plugin code — dynamic imports keep
-// node:fs and node:zlib out of the renderer bundle.
-export const getBodyStream = (
-  response?: { bodyPath?: string; bodyCompression?: Compression },
-  readFailureValue?: string,
-): Readable | string | null => {
-  if (!response?.bodyPath) {
-    return null;
-  }
-  const modulePath = 'node:fs';
-  const fs = require(modulePath);
-  try {
-    fs.statSync(response.bodyPath);
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return readFailureValue === undefined ? null : readFailureValue;
-  }
-  if (response.bodyCompression === 'zip') {
-    const zlibPath = 'node:zlib';
-    const zlib = require(zlibPath);
-    return fs.createReadStream(response.bodyPath).pipe(zlib.createGunzip());
-  }
-  return fs.createReadStream(response.bodyPath);
-};
 
 export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
