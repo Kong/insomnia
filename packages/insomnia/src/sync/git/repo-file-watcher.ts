@@ -434,7 +434,7 @@ class RepoFileWatcher {
     }
 
     await this.deleteOrphans(docs);
-    await this.upsertDocs(absPath, normalised, docs, result.hash, result.mtimeMs);
+    await this.upsertDocs(absPath, normalised, docs);
 
     this.notifyRenderer();
   }
@@ -547,8 +547,6 @@ class RepoFileWatcher {
     absPath: string,
     normalised: string,
     docs: NonNullable<ReturnType<typeof tryImportV5Data>['data']>,
-    hash: string,
-    mtimeMs: number,
   ): Promise<void> {
     const bufferId = await db.bufferChanges();
     try {
