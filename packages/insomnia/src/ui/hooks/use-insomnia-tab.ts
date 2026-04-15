@@ -112,6 +112,28 @@ const buildSearchString = (searchParams: URLSearchParams) => {
   return search ? `?${search}` : '';
 };
 
+export function buildResourceUrl({
+  organizationId,
+  projectId,
+  workspaceId,
+  resource,
+}: {
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
+  resource: TabResource;
+}) {
+  const type = inferTabType(resource);
+  if (!type) return '';
+
+  return buildTabUrl(type, {
+    organizationId,
+    projectId,
+    workspaceId,
+    resourceId: resource._id,
+  });
+}
+
 // Build tab URL based on type and params
 const buildTabUrl = (
   type: TabType,

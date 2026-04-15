@@ -41,6 +41,7 @@ import { SvgIcon } from '~/ui/components/svg-icon';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { isPrimaryClickModifier } from '~/ui/utils';
@@ -381,6 +382,7 @@ const Component = () => {
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
         <OrganizationTabList />
+        <WorkspacePaneHeader hasSettings={false} />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
             <Routes>

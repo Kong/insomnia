@@ -43,6 +43,7 @@ import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { CertificatesModal } from '~/ui/components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
+import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { isPrimaryClickModifier } from '~/ui/utils';
@@ -465,6 +466,7 @@ const Component = () => {
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
         <OrganizationTabList />
+        <WorkspacePaneHeader hasSettings />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className="pane-one theme--pane relative overflow-hidden">
             <Routes>

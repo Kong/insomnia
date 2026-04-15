@@ -53,6 +53,7 @@ import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast, showToast } from '~/ui/components/toast-notification';
+import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
@@ -981,6 +982,7 @@ const Component = ({ params }: Route.ComponentProps) => {
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
         <OrganizationTabList />
+        <WorkspacePaneHeader hasSettings={false} />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
             <div className="flex h-full w-full flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
