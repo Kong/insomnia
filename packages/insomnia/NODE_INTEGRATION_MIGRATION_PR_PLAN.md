@@ -262,7 +262,6 @@ Purpose:
 Primary files:
 
 - `src/network/network.ts`
-- `src/network/grpc/proto-directory-loader.tsx`
 - `src/network/grpc/write-proto-file.ts`
 - `src/network/o-auth-1/get-token.ts`
 - `src/network/o-auth-2/get-token.ts`
@@ -284,8 +283,6 @@ Suggested reviewers:
 
 Baseline entries to remove:
 
-- `src/network/grpc/proto-directory-loader.tsx -> fs`
-- `src/network/grpc/proto-directory-loader.tsx -> path`
 - `src/network/grpc/write-proto-file.ts -> fs`
 - `src/network/grpc/write-proto-file.ts -> os`
 - `src/network/grpc/write-proto-file.ts -> path`
