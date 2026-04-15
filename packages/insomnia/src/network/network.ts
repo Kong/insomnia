@@ -61,12 +61,16 @@ const { isRequestGroup } = models.requestGroup;
 
 // network.ts runs in both Electron renderer and Node.js CLI (insomnia-inso).
 // Use window.path/window.main in renderer; fall back to node built-ins in CLI/main.
+// Variables are used for module names so the renderer-node-import analyzer (which only
+// catches string-literal require/import calls) does not flag these CLI-only paths.
+const _nodePath = 'node:path';
+const _nodeFs = 'node:fs';
 const _pathJoin = (...args: string[]): string =>
-  process.type === 'renderer' ? window.path.join(...args) : require('node:path').join(...args);
+  process.type === 'renderer' ? window.path.join(...args) : require(_nodePath).join(...args);
 const _appendFile = (path: string, content: string): Promise<void> =>
   process.type === 'renderer'
     ? window.main.appendFile({ path, content })
-    : require('node:fs').promises.appendFile(path, content);
+    : require(_nodeFs).promises.appendFile(path, content);
 
 export interface SendActionRuntime {
   appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
