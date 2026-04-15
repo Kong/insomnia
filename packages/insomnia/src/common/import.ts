@@ -221,7 +221,8 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          const processFork = process.type === 'renderer' ? window.main.parseImport : (await importMainConvertModule()).convert;
+          const processFork =
+            process.type === 'renderer' ? window.main.parseImport : (await importMainConvertModule()).convert;
           result = (await processFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
