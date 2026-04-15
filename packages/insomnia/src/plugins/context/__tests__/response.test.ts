@@ -4,8 +4,6 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { services } from '~/insomnia-data';
-
 import * as plugin from '../response';
 
 describe('init()', () => {
@@ -36,7 +34,7 @@ describe('response.*', () => {
   it('works for basic and full response', async () => {
     const bodyPath = path.join(tmpdir(), 'response.zip');
     fs.writeFileSync(bodyPath, Buffer.from('Hello World!'));
-    const response = await services.response.create({
+    const response = {
       bodyPath,
       bodyCompression: null,
       parentId: 'req_1',
@@ -45,7 +43,7 @@ describe('response.*', () => {
       statusMessage: 'OK',
       bytesRead: 123,
       elapsedTime: 321,
-    });
+    };
     const result = plugin.init(response);
     expect(result.response.getRequestId()).toBe('req_1');
     expect(result.response.getStatusCode()).toBe(200);

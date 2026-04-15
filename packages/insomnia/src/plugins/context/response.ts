@@ -1,8 +1,8 @@
 import fs from 'node:fs';
+import type { Readable } from 'node:stream';
+import zlib from 'node:zlib';
 
 import type { ResponseHeader } from '~/insomnia-data';
-import { getBodyBuffer, getBodyStream } from '~/models/helpers/response-operations';
-
 
 interface MaybeResponse {
   parentId?: string;
@@ -11,9 +11,47 @@ interface MaybeResponse {
   bytesRead?: number;
   bytesContent?: number;
   bodyPath?: string;
+  bodyCompression?: 'zip' | null;
   elapsedTime?: number;
   headers?: ResponseHeader[];
 }
+
+const getBodyBuffer = async (response?: MaybeResponse): Promise<Buffer> => {
+  if (!response?.bodyPath) {
+    return Buffer.alloc(0);
+  }
+
+  try {
+    const rawBuffer = await fs.promises.readFile(response.bodyPath);
+    if (response.bodyCompression === 'zip') {
+      return await new Promise((resolve, reject) =>
+        zlib.gunzip(rawBuffer, (err, buffer) => (err ? reject(err) : resolve(buffer))),
+      );
+    }
+
+    return rawBuffer;
+  } catch {
+    return Buffer.alloc(0);
+  }
+};
+
+const getBodyStream = (response?: MaybeResponse): Readable | null => {
+  if (!response?.bodyPath) {
+    return null;
+  }
+
+  try {
+    fs.statSync(response.bodyPath);
+  } catch {
+    return null;
+  }
+
+  if (response.bodyCompression === 'zip') {
+    return fs.createReadStream(response.bodyPath).pipe(zlib.createGunzip());
+  }
+
+  return fs.createReadStream(response.bodyPath);
+};
 
 export function init(response?: MaybeResponse) {
   if (!response) {
