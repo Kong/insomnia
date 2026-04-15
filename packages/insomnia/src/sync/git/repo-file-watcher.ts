@@ -425,6 +425,9 @@ class RepoFileWatcher {
       return;
     }
 
+    this.lastWrittenHash.set(normalised, result.hash);
+    this.lastSyncMtime.set(normalised, result.mtimeMs);
+
     const docs = this.parseAndValidate(absPath, normalised, result.content);
     if (!docs) {
       return;
@@ -560,9 +563,6 @@ class RepoFileWatcher {
         }
         await db.update(doc);
       }
-
-      this.lastWrittenHash.set(normalised, hash);
-      this.lastSyncMtime.set(normalised, mtimeMs);
     } finally {
       await db.flushChanges(bufferId);
     }
