@@ -19,6 +19,23 @@ export function getByParentId(parentId: string) {
   return db.findOne<RequestGroupMeta>(type, { parentId });
 }
 
+export async function getOrCreateForParentId(workspaceId: string, patch: Partial<RequestGroupMeta> = {}) {
+  const spec = await db.findOne<RequestGroupMeta>(type, {
+    parentId: workspaceId,
+  });
+
+  if (!spec) {
+    return db.docCreate<RequestGroupMeta>(type, { ...patch, parentId: workspaceId });
+  }
+
+  return spec;
+}
+
+export async function updateOrCreateForParentId(workspaceId: string, patch: Partial<RequestGroupMeta> = {}) {
+  const spec = await getOrCreateForParentId(workspaceId);
+  return db.docUpdate(spec, patch);
+}
+
 export async function updateByParentId(parentId: string, patch: Partial<RequestGroupMeta> = {}) {
   const meta = await getByParentId(parentId);
   return meta && db.docUpdate<RequestGroupMeta>(meta, patch);

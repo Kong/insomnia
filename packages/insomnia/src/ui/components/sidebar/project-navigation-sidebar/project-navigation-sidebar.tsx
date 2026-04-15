@@ -7,7 +7,7 @@ import * as reactUse from 'react-use';
 
 import { fuzzyMatchAll } from '~/common/misc';
 import type { RequestGroup, Workspace } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
@@ -490,8 +490,8 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
         )}
       </div>
 
-      {isProjectTabActive && <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>}
-      {isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
+      {!isProjectTabActive && syncing && <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>}
+      {!isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
 
       <div ref={parentRef} className="flex-1 overflow-y-auto py-(--padding-sm)">
         <GridList

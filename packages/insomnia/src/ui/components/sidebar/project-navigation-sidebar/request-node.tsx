@@ -96,7 +96,6 @@ export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
         <Icon icon="folder" className={ICON_CLASS} />
       ) : (
         <>
-          {/* <span className="w-4 shrink-0" /> */}
           <MethodBadge doc={doc} />
         </>
       )}
