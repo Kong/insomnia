@@ -1,12 +1,9 @@
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 
 import type { ResponseHeader } from '~/insomnia-data';
 import type { Compression } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
-
-// Variable avoids static detection by the renderer-node-import analyzer;
-// getBodyStream only runs in the plugin Node.js context, never in the renderer.
-const _zlib = 'node:zlib';
 
 function getBodyStream(
   response?: { bodyPath?: string; bodyCompression?: Compression },
@@ -22,7 +19,7 @@ function getBodyStream(
     return readFailureValue === undefined ? null : readFailureValue;
   }
   if (response.bodyCompression === 'zip') {
-    return fs.createReadStream(response.bodyPath).pipe(require(_zlib).createGunzip());
+    return fs.createReadStream(response.bodyPath).pipe(zlib.createGunzip());
   }
   return fs.createReadStream(response.bodyPath);
 }

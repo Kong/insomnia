@@ -1,6 +1,20 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+// Polyfill the window.path / window.app / window.main subset used by network.ts when
+// running in the Node.js CLI context (insomnia-inso). In the Electron renderer these are
+// provided by the preload bridge; here 'electron' resolves to the send-request shim.
+if (typeof window === 'undefined') {
+  const electronApp = (require('electron') as { app: { getPath: (name: string) => string } }).app;
+  (globalThis as any).window = {
+    path: { join: path.join.bind(path) },
+    app: { getPath: (name: string) => electronApp.getPath(name) },
+    main: {
+      appendFile: ({ path: p, content: c }: { path: string; content: string }) => fs.appendFile(p, c),
+    },
+  };
+}
+
 import type { Environment, Settings, UserUploadEnvironment } from '~/insomnia-data';
 import { database, initDatabase, services } from '~/insomnia-data';
 import { createNedbDatabase } from '~/insomnia-data/node';
