@@ -30,6 +30,7 @@
     "esbuild-runner": "2.2.2",
     "express": "^4.21.2",
     "express-basic-auth": "^1.2.1",
+    "git-http-mock-server": "^2.0.0",
     "graphql": "^16.10.0",
     "graphql-http": "^1.22.4",
     "http-errors": "^2.0.0",

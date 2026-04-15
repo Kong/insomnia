@@ -2,10 +2,12 @@ import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:https';
 import nodePath from 'node:path';
+import path from 'node:path';
 
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import express from 'express';
+import gitMiddleware from 'git-http-mock-server/middleware';
 import { createHandler } from 'graphql-http/lib/use/http';
 
 import { basicAuthRouter } from './basic-auth';
@@ -151,6 +153,15 @@ app.get('/v1/oauth/azure/config', (_req, res) => {
     clientRedirectURI: 'https://login.microsoftonline.com',
   });
 });
+
+app.use(
+  '/git',
+  gitMiddleware({
+    root: path.join(__dirname, '../fixtures/git-repo'),
+    glob: '*',
+    route: '/',
+  }),
+);
 
 startWebSocketServer(
   app.listen(port, () => {
