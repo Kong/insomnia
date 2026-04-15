@@ -473,7 +473,9 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     );
 
     // Migrate old directory structure (git/ → .git/, other/ → root) if needed.
-    // Only runs for the modern project-scoped flow (no workspaceId).
+    // Only the project-scoped flow uses this layout; the legacy workspace-scoped
+    // flow (workspaceId present) has a different directory structure entirely.
+    // Must run before any VCS initialization or git operation (including diff).
     if (!workspaceId) {
       await migrateRepoStructureIfNeeded(baseDir, projectId, gitRepository._id);
     }

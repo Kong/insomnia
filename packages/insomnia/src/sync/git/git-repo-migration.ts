@@ -15,38 +15,64 @@
  *   {baseDir}/insomnia.{id}.yaml  ← Insomnia YAML on disk AND in DB
  *
  * The migration is:
- *  1. Idempotent – guarded by an ElectronStorage flag per repository.
+ *  1. Idempotent – version-stamped via `GitRepository.repoMigrationVersion` in
+ *     the DB. When an older app version runs `docUpdate` on the same record it
+ *     prunes unknown fields, so the stamp is cleared and the migration re-runs
+ *     on the next upgrade (correct behavior after a version rollback).
  *  2. Best-effort – errors are logged but never fatal; the app still loads.
- *  3. Run once at repository load time (before VCS initialisation).
+ *  3. Run once at repository load time (before VCS initialization).
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { models, services, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
+import type { GitRepository, Workspace, WorkspaceMeta } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
-import { initElectronStorage } from '../../main/window-utils';
+import * as models from '../../models';
 
 // cspell:ignore worktree
-const MIGRATION_KEY_PREFIX = 'GIT_STRUCTURE_V2_';
+/**
+ * Increment this constant whenever a new migration step is added.
+ * Existing repos will re-run the migration on the next app start.
+ */
+const CURRENT_MIGRATION_VERSION = 1;
 
-// In-memory guard against concurrent migrations for the same repo.
-const _inProgress = new Set<string>();
+// In-memory guard against concurrent migrations for the same repo within a
+// single process. The DB version stamp handles cross-process / cross-session
+// idempotency.
+const inProgressMigrations = new Set<string>();
 
-function getMigrationKey(gitRepositoryId: string): string {
-  return `${MIGRATION_KEY_PREFIX}${gitRepositoryId}`;
+// ---------------------------------------------------------------------------
+// Idempotency helpers  (DB-backed, version-stamped)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true if the migration has already run at the current version AND
+ * the on-disk layout looks correct. The disk check takes precedence so that a
+ * downgrade that recreates the old directories is always caught.
+ */
+async function hasMigrated(baseDir: string, gitRepositoryId: string): Promise<boolean> {
+  // Disk override: old layout directories mean migration is definitely needed.
+  if (await dirExists(path.join(baseDir, 'git'))) return false;
+  if (await dirExists(path.join(baseDir, 'other'))) return false;
+
+  const gitRepo = await db.findOne<GitRepository>(models.gitRepository.type, {
+    _id: gitRepositoryId,
+  });
+  return (gitRepo?.repoMigrationVersion ?? 0) >= CURRENT_MIGRATION_VERSION;
 }
 
-function hasMigrated(gitRepositoryId: string): boolean {
-  const storage = initElectronStorage();
-  return Boolean(storage.getItem<number>(getMigrationKey(gitRepositoryId)));
-}
-
-function markMigrated(gitRepositoryId: string): void {
-  const storage = initElectronStorage();
-  storage.setItem(getMigrationKey(gitRepositoryId), 1);
+async function markMigrated(gitRepositoryId: string): Promise<void> {
+  const gitRepo = await db.findOne<GitRepository>(models.gitRepository.type, {
+    _id: gitRepositoryId,
+  });
+  if (gitRepo) {
+    await db.docUpdate<GitRepository>(gitRepo, {
+      repoMigrationVersion: CURRENT_MIGRATION_VERSION,
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -162,11 +188,16 @@ export async function migrateRepoStructureIfNeeded(
   projectId: string,
   gitRepositoryId: string,
 ): Promise<void> {
-  if (hasMigrated(gitRepositoryId) || _inProgress.has(gitRepositoryId)) {
+  // Fast synchronous guard first — avoids the async DB lookup for concurrent calls.
+  if (inProgressMigrations.has(gitRepositoryId)) {
     return;
   }
 
-  _inProgress.add(gitRepositoryId);
+  if (await hasMigrated(baseDir, gitRepositoryId)) {
+    return;
+  }
+
+  inProgressMigrations.add(gitRepositoryId);
 
   console.log(`[git-migration] Starting structure migration for repo ${gitRepositoryId}`);
 
@@ -202,14 +233,14 @@ export async function migrateRepoStructureIfNeeded(
     // Step 3: Flush all Insomnia YAML workspaces to disk so they become real files.
     // This is a best-effort bootstrap; the routable FS client will keep disk in sync
     // for all subsequent Git operations.
-    await _flushWorkspacesToDisk(baseDir, projectId);
+    await flushWorkspacesToDisk(baseDir, projectId);
 
-    markMigrated(gitRepositoryId);
+    await markMigrated(gitRepositoryId);
     console.log(`[git-migration] Migration complete for repo ${gitRepositoryId}`);
   } catch (err) {
     console.error('[git-migration] Migration failed (non-fatal):', err);
   } finally {
-    _inProgress.delete(gitRepositoryId);
+    inProgressMigrations.delete(gitRepositoryId);
   }
 }
 
@@ -217,7 +248,7 @@ export async function migrateRepoStructureIfNeeded(
  * Write any workspace in `projectId` that doesn't yet have an on-disk YAML
  * file to `baseDir`. This bootstraps the dual-sync state for existing repos.
  */
-async function _flushWorkspacesToDisk(baseDir: string, projectId: string): Promise<void> {
+async function flushWorkspacesToDisk(baseDir: string, projectId: string): Promise<void> {
   const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: projectId });
 
   // Batch-fetch all workspace metadata to avoid N+1 queries.
@@ -279,10 +310,17 @@ async function _flushWorkspacesToDisk(baseDir: string, projectId: string): Promi
     // the file but crashed before updating the DB.
     try {
       if (workspaceMeta && !workspaceMeta.gitFilePath) {
-        await services.workspaceMeta.update(workspaceMeta, { gitFilePath });
+        await db.docUpdate<WorkspaceMeta>(workspaceMeta, { gitFilePath });
       } else if (!workspaceMeta) {
-        const meta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
-        await services.workspaceMeta.update(meta, { gitFilePath });
+        let meta = await db.findOne<WorkspaceMeta>(models.workspaceMeta.type, {
+          parentId: workspace._id,
+        });
+        if (!meta) {
+          meta = await db.docCreate<WorkspaceMeta>(models.workspaceMeta.type, {
+            parentId: workspace._id,
+          });
+        }
+        await db.docUpdate<WorkspaceMeta>(meta, { gitFilePath });
       }
     } catch (err) {
       console.warn('[git-migration] Could not update workspace metadata for', workspace._id, err);
