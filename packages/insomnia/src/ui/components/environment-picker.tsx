@@ -53,7 +53,9 @@ export const EnvironmentPicker = ({
   };
 
   const { features } = useOrganizationPermissions();
-  const isUsingInsomniaCloudSync = Boolean(models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingInsomniaCloudSync = Boolean(
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+  );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
@@ -91,10 +93,10 @@ export const EnvironmentPicker = ({
     <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
       <Button
         aria-label="Manage Environments"
-        className="flex max-w-full flex-col items-start gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+        className="flex max-w-full items-start gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
       >
         {activeGlobalEnvironment && activeGlobalBaseEnvironment && (
-          <div className="flex w-full flex-col">
+          <div className="flex w-full">
             <div className="flex w-full items-center gap-2">
               <Icon
                 icon={
@@ -110,10 +112,7 @@ export const EnvironmentPicker = ({
                 className="w-5 shrink-0"
               />
               <span className="truncate">{activeGlobalEnvironment.name}</span>
-            </div>
-            <div className="flex w-full items-center gap-2">
-              <Icon icon="0" className="invisible w-5 shrink-0" />
-              <span className="shrink truncate text-xs text-(--hl)">{activeGlobalBaseEnvironment.workspaceName}</span>
+              <Icon icon="plus" className="w-3 shrink-0 text-(--hl)" />
             </div>
           </div>
         )}
