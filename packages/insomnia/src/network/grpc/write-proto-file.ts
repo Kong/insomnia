@@ -1,7 +1,3 @@
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-
 import type { ProtoDirectory, ProtoFile, Workspace } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
@@ -21,21 +17,18 @@ const recursiveWriteProtoDirectory = async (
   descendants: BaseModel[],
   currentDirPath: string,
 ): Promise<string[]> => {
-  // Increment folder path
-  const dirPath = path.join(currentDirPath, dir.name);
-  fs.mkdirSync(dirPath, { recursive: true });
-  // Get and write proto files
+  const dirPath = window.path.join(currentDirPath, dir.name);
+  await window.main.mkdir({ path: dirPath });
   const files = descendants.filter(isProtoFile).filter(f => f.parentId === dir._id);
   await Promise.all(
-    files.map(protoFile => {
-      const fullPath = path.join(dirPath, protoFile.name);
-      if (fs.existsSync(fullPath)) {
+    files.map(async protoFile => {
+      const fullPath = window.path.join(dirPath, protoFile.name);
+      if (await window.main.fileExists({ path: fullPath })) {
         return;
       }
-      fs.promises.writeFile(fullPath, protoFile.protoText);
+      await window.main.writeFile({ path: fullPath, content: protoFile.protoText });
     }),
   );
-  // Get and write subdirectories
   const createdDirs = await Promise.all(
     descendants
       .filter(f => isProtoDirectory(f) && f.parentId === dir._id)
@@ -45,25 +38,20 @@ const recursiveWriteProtoDirectory = async (
 };
 
 export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
-  // Find all ancestors
   const ancestors = await db.withAncestors<ProtoFile | ProtoDirectory | Workspace>(protoFile, [
     models.protoDirectory.type,
     models.workspace.type,
   ]);
   const ancestorDirectories = ancestors.filter(isProtoDirectory);
 
-  // Is this file part of a directory?
   if (ancestorDirectories.length) {
-    // Write proto file tree from root directory
-    // Find the root ancestor directory
     const rootAncestorProtoDirectory = ancestors.find(
       // @ts-expect-error -- TSCONVERSION ancestor workspace can be undefined
       c => isProtoDirectory(c) && c.parentId === ancestors.find(models.workspace.isWorkspace)._id,
     );
     if (!ancestors.find(models.workspace.isWorkspace) || !rootAncestorProtoDirectory) {
-      // should never happen
       return {
-        filePath: path.join(
+        filePath: window.path.join(
           ...ancestorDirectories
             .map(f => f.name)
             .reverse()
@@ -73,19 +61,18 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
         dirs: [],
       };
     }
-    // Find all descendants of the root ancestor directory
     const descendants = await db.getWithDescendants(rootAncestorProtoDirectory);
     const treeRootDirs = await recursiveWriteProtoDirectory(
       rootAncestorProtoDirectory,
       descendants,
-      path.join(
-        os.tmpdir(),
+      window.path.join(
+        window.app.getPath('temp'),
         'insomnia-grpc',
         `${rootAncestorProtoDirectory._id}.${rootAncestorProtoDirectory.modified}`,
       ),
     );
     return {
-      filePath: path.join(
+      filePath: window.path.join(
         ...ancestorDirectories
           .map(f => f.name)
           .reverse()
@@ -95,22 +82,17 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
       dirs: treeRootDirs,
     };
   }
-  // Write single file
-  // Create temp folder
-  const rootDir = path.join(os.tmpdir(), 'insomnia-grpc');
-  fs.mkdirSync(rootDir, { recursive: true });
+
+  const rootDir = window.path.join(window.app.getPath('temp'), 'insomnia-grpc');
+  await window.main.mkdir({ path: rootDir });
 
   const filePath = `${protoFile._id}.${protoFile.modified}.proto`;
-  const result = {
-    filePath,
-    dirs: [rootDir],
-  };
-  // Check if file already exists
-  const fullPath = path.join(rootDir, filePath);
-  if (fs.existsSync(fullPath)) {
+  const result = { filePath, dirs: [rootDir] };
+
+  const fullPath = window.path.join(rootDir, filePath);
+  if (await window.main.fileExists({ path: fullPath })) {
     return result;
   }
-  // Write file
-  await fs.promises.writeFile(fullPath, protoFile.protoText);
+  await window.main.writeFile({ path: fullPath, content: protoFile.protoText });
   return result;
 };

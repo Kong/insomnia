@@ -144,6 +144,10 @@ export interface RendererToMainBridgeAPI {
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
+  appendFile: (options: { path: string; content: string }) => Promise<void>;
+  mkdir: (options: { path: string }) => Promise<void>;
+  fileExists: (options: { path: string }) => Promise<boolean>;
+  deleteFile: (options: { path: string }) => Promise<void>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
     destinationPath: string;
@@ -297,6 +301,24 @@ export function registerMainHandlers() {
     }
   });
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
+  ipcMainHandle('appendFile', async (_, options: { path: string; content: string }) => {
+    await fs.promises.appendFile(options.path, options.content);
+  });
+  ipcMainHandle('mkdir', async (_, options: { path: string }) => {
+    await fs.promises.mkdir(options.path, { recursive: true });
+  });
+  ipcMainHandle('fileExists', async (_, options: { path: string }) => {
+    try {
+      await fs.promises.access(options.path);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
+  ipcMainHandle('deleteFile', async (_, options: { path: string }) => {
+    await fs.promises.unlink(options.path).catch(() => {});
+  });
 
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;

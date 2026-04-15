@@ -1,46 +1,60 @@
-import crypto from 'node:crypto';
-
 import { getOauthRelayUrl } from '~/common/constants';
 import type { DefaultBrowserRedirectParam } from '~/common/misc';
 
-export const encryptOAuthUrl = (authCodeUrlStr: string) => {
-  const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-    modulusLength: 3072,
-    publicKeyEncoding: { type: 'spki', format: 'pem' },
-    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-  });
+function derToPem(der: ArrayBuffer): string {
+  const bytes = new Uint8Array(der);
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCodePoint(byte);
+  }
+  const b64 = btoa(binary);
+  const wrapped = b64.match(/.{1,64}/g)!.join('\n');
+  return `-----BEGIN PUBLIC KEY-----\n${wrapped}\n-----END PUBLIC KEY-----`;
+}
 
-  const relayUrl = `${getOauthRelayUrl()}?authCodeUrl=${encodeURIComponent(authCodeUrlStr)}&publicKey=${encodeURIComponent(publicKey)}`;
+export const encryptOAuthUrl = async (authCodeUrlStr: string) => {
+  const { publicKey, privateKey } = await globalThis.crypto.subtle.generateKey(
+    {
+      name: 'RSA-OAEP',
+      modulusLength: 3072,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+    },
+    true,
+    ['encrypt', 'decrypt'],
+  );
 
-  const decryptOAuthResult = (result: DefaultBrowserRedirectParam): string => {
+  const spki = await globalThis.crypto.subtle.exportKey('spki', publicKey);
+  const publicKeyPem = derToPem(spki);
+
+  const relayUrl = `${getOauthRelayUrl()}?authCodeUrl=${encodeURIComponent(authCodeUrlStr)}&publicKey=${encodeURIComponent(publicKeyPem)}`;
+
+  const decryptOAuthResult = async (result: DefaultBrowserRedirectParam): Promise<string> => {
     if ('redirectUrl' in result) {
       return result.redirectUrl;
     }
 
     const { encryptedRedirectUrl, encryptedKey, iv } = result;
-    const aesKey = crypto.privateDecrypt(
-      {
-        key: privateKey,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-        oaepHash: 'sha256',
-      },
+
+    const aesKeyBuf = await globalThis.crypto.subtle.decrypt(
+      { name: 'RSA-OAEP' },
+      privateKey,
       Buffer.from(encryptedKey, 'base64'),
     );
-    const encryptedBuf = Buffer.from(encryptedRedirectUrl, 'base64');
-    const authTag = encryptedBuf.slice(-16);
-    const ciphertext = encryptedBuf.slice(0, -16);
-    // nosemgrep: javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length
-    const decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, Buffer.from(iv, 'base64'), {
-      authTagLength: 16,
-    });
-    decipher.setAuthTag(authTag);
 
-    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
-    return decrypted;
+    const cryptoAesKey = await globalThis.crypto.subtle.importKey('raw', aesKeyBuf, { name: 'AES-GCM' }, false, [
+      'decrypt',
+    ]);
+
+    // encryptedRedirectUrl is ciphertext || authTag(16 bytes) — SubtleCrypto AES-GCM expects this layout
+    const decrypted = await globalThis.crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: Buffer.from(iv, 'base64'), tagLength: 128 },
+      cryptoAesKey,
+      Buffer.from(encryptedRedirectUrl, 'base64'),
+    );
+
+    return new TextDecoder().decode(decrypted);
   };
 
-  return {
-    relayUrl,
-    decryptOAuthResult,
-  };
+  return { relayUrl, decryptOAuthResult };
 };

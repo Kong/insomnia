@@ -1,7 +1,8 @@
-import { type FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { services } from '~/insomnia-data';
+import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
@@ -84,6 +85,15 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const testResultCountTagColor =
     totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-(--hl-sm)';
 
+  const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
+  useEffect(() => {
+    if (!activeResponse) {
+      setTimeline([]);
+      return;
+    }
+    getTimeline(activeResponse).then(setTimeline);
+  }, [activeResponse]);
+
   if (!activeRequest) {
     return <BlankPane type="response" />;
   }
@@ -103,7 +113,6 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     );
   }
 
-  const timeline = getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
 
   return (

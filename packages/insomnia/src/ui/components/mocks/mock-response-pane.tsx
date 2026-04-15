@@ -364,7 +364,7 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath) {
                 return;
               }
-              const timeline = getTimeline(activeResponse);
+              const timeline = await getTimeline(activeResponse);
               const headers = timeline
                 .filter(v => v.name === 'HeaderIn')
                 .map(v => v.value)

@@ -135,6 +135,10 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
+  | 'appendFile'
+  | 'deleteFile'
+  | 'fileExists'
+  | 'mkdir'
   | 'writeFile'
   | 'writeResponseBodyToFile';
 

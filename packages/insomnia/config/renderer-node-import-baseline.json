@@ -53,62 +53,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/models/helpers/response-operations.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/models/helpers/response-operations.ts",
-      "builtin": "zlib"
-    },
-    {
-      "importer": "src/network/grpc/proto-directory-loader.tsx",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/grpc/proto-directory-loader.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "os"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/network/network.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/network.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/network/o-auth-1/get-token.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/network/o-auth-2/get-token.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/network/o-auth-2/get-token.ts",
-      "builtin": "querystring"
-    },
-    {
-      "importer": "src/network/o-auth-2/utils.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/network/url-matches-cert-host.ts",
-      "builtin": "url"
-    },
-    {
       "importer": "src/plugins/context/response.ts",
       "builtin": "fs"
     },

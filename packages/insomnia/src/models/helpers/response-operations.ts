@@ -1,6 +1,4 @@
-import fs from 'node:fs';
 import type { Readable } from 'node:stream';
-import zlib from 'node:zlib';
 
 import { database as db } from '~/common/database';
 import type { Compression, McpResponse, Response, SocketIOResponse, WebSocketResponse } from '~/insomnia-data';
@@ -39,14 +37,14 @@ export async function removeResponsesForRequest(requestId: string, environmentId
   ) {
     const toDelete = await db.find<WebSocketResponse | SocketIOResponse | McpResponse>(type, query);
     for (const doc of toDelete) {
-      fs.promises.unlink(doc.eventLogPath);
-      fs.promises.unlink(doc.timelinePath);
+      window.main.deleteFile({ path: doc.eventLogPath });
+      window.main.deleteFile({ path: doc.timelinePath });
     }
   } else if (type === responseType) {
     const toDelete = await db.find<Response>(type, query);
     for (const doc of toDelete) {
-      fs.promises.unlink(doc.bodyPath);
-      fs.promises.unlink(doc.timelinePath);
+      window.main.deleteFile({ path: doc.bodyPath });
+      window.main.deleteFile({ path: doc.timelinePath });
     }
   }
 
@@ -61,15 +59,17 @@ export function removeResponse(response: Response | WebSocketResponse | SocketIO
     models.socketIOResponse.isSocketIOResponse(response) ||
     models.mcpResponse.isMcpResponse(response)
   ) {
-    fs.promises.unlink(response.eventLogPath);
-    fs.promises.unlink(response.timelinePath);
+    window.main.deleteFile({ path: response.eventLogPath });
+    window.main.deleteFile({ path: response.timelinePath });
   } else if (isResponse(response)) {
-    fs.promises.unlink(response.bodyPath);
-    fs.promises.unlink(response.timelinePath);
+    window.main.deleteFile({ path: response.bodyPath });
+    window.main.deleteFile({ path: response.timelinePath });
   }
   return db.remove(response);
 }
 
+// getBodyStream is only called from main-process plugin code — dynamic imports keep
+// node:fs and node:zlib out of the renderer bundle.
 export const getBodyStream = (
   response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: string,
@@ -77,22 +77,25 @@ export const getBodyStream = (
   if (!response?.bodyPath) {
     return null;
   }
+  const modulePath = 'node:fs';
+  const fs = require(modulePath);
   try {
-    fs.statSync(response?.bodyPath);
+    fs.statSync(response.bodyPath);
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return readFailureValue === undefined ? null : readFailureValue;
   }
-  if (response?.bodyCompression === 'zip') {
-    return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
+  if (response.bodyCompression === 'zip') {
+    const zlibPath = 'node:zlib';
+    const zlib = require(zlibPath);
+    return fs.createReadStream(response.bodyPath).pipe(zlib.createGunzip());
   }
-  return fs.createReadStream(response?.bodyPath);
+  return fs.createReadStream(response.bodyPath);
 };
 
 export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
   const bodyBufferOrErrMsg = await getBodyBuffer(options, readFailureMsg);
-  // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
 
   if (!bodyBufferOrErrMsg) {
     return { body: '', error: readFailureMsg };
@@ -106,7 +109,7 @@ export const readCurlResponse = async (options: { bodyPath?: string; bodyCompres
   return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
 };
 
-export function getTimeline(response: Response, showBody?: boolean) {
+export async function getTimeline(response: Response, showBody?: boolean): Promise<ResponseTimelineEntry[]> {
   const { timelinePath, bodyPath } = response;
 
   if (!timelinePath) {
@@ -114,8 +117,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
   }
 
   try {
-    const rawBuffer = fs.readFileSync(timelinePath);
-    const timelineString = rawBuffer.toString();
+    const timelineString = await window.main.insecureReadFile({ path: timelinePath });
     const timeline = deserializeNDJSON(timelineString);
 
     const body: ResponseTimelineEntry[] = showBody
@@ -123,12 +125,11 @@ export function getTimeline(response: Response, showBody?: boolean) {
           {
             name: 'DataOut',
             timestamp: Date.now(),
-            value: fs.readFileSync(bodyPath).toString(),
+            value: await window.main.insecureReadFile({ path: bodyPath }),
           },
         ]
       : [];
-    const output = [...timeline, ...body];
-    return output;
+    return [...timeline, ...body];
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return [];
@@ -140,18 +141,35 @@ export const getBodyBuffer = async (
   readFailureValue?: string,
 ): Promise<Buffer | string> => {
   if (!response?.bodyPath) {
-    // No body, so return empty Buffer
     return Buffer.alloc(0);
   }
   try {
-    // TODO: unpick this read buffer so it can be used as a simple string reader
-    const rawBuffer = await fs.promises.readFile(response?.bodyPath);
-    if (response?.bodyCompression === 'zip') {
-      return new Promise((resolve, reject) =>
-        zlib.gunzip(rawBuffer, (err, buffer) => (err ? reject(err) : resolve(buffer))),
-      );
+    const content = await window.main.insecureReadFile({ path: response.bodyPath });
+    const rawBuffer = Buffer.from(content, 'binary');
+    if (response.bodyCompression === 'zip') {
+      const ds = new DecompressionStream('gzip');
+      const writer = ds.writable.getWriter();
+      const reader = ds.readable.getReader();
+      writer.write(rawBuffer);
+      writer.close();
+      const chunks: Uint8Array[] = [];
+      let done = false;
+      while (!done) {
+        const { value, done: d } = await reader.read();
+        if (value) {
+          chunks.push(value);
+        }
+        done = d;
+      }
+      const total = chunks.reduce((n, c) => n + c.length, 0);
+      const out = new Uint8Array(total);
+      let offset = 0;
+      for (const chunk of chunks) {
+        out.set(chunk, offset);
+        offset += chunk.length;
+      }
+      return Buffer.from(out);
     }
-
     return rawBuffer;
   } catch (err) {
     console.warn('Failed to read response body', err.message);

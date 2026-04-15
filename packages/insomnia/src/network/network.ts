@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import nodePath from 'node:path';
-
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
@@ -154,11 +151,8 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
-  const responsesDir = nodePath.join(
-    (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-    'responses',
-  );
-  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+  const responsesDir = window.path.join(window.app.getPath('userData'), 'responses');
+  const timelinePath = window.path.join(responsesDir, responseId + '.timeline');
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -221,12 +215,8 @@ export const fetchRequestData = async (
   const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const responsesDir = nodePath.join(
-    process.env['INSOMNIA_DATA_PATH'] ||
-      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-    'responses',
-  );
-  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+  const responsesDir = window.path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
+  const timelinePath = window.path.join(responsesDir, responseId + '.timeline');
 
   return {
     request,
@@ -265,12 +255,8 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const responsesDir = nodePath.join(
-    process.env['INSOMNIA_DATA_PATH'] ||
-      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-    'responses',
-  );
-  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+  const responsesDir = window.path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
+  const timelinePath = window.path.join(responsesDir, responseId + '.timeline');
 
   return {
     environment,
@@ -666,10 +652,10 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       parentFolders: output.parentFolders,
     };
   } catch (err) {
-    await fs.promises.appendFile(
-      timelinePath,
-      serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
-    );
+    await window.main.appendFile({
+      path: timelinePath,
+      content: serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
+    });
     // stack trace is ignored as it is always from preload
     const errMessage = err.message ? err.message : err;
     return { error: errMessage };
@@ -1114,6 +1100,6 @@ async function _applyResponsePluginHooks(
 }
 export const defaultSendActionRuntime = {
   appendTimeline: async (timelinePath: string, logs: string[]) => {
-    await fs.promises.appendFile(timelinePath, logs.join('\n'));
+    await window.main.appendFile({ path: timelinePath, content: logs.join('\n') });
   },
 };
