@@ -365,9 +365,43 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
   );
 
-  const toggleRequestGroup = async (_requestGroup: RequestGroup) => {
-    // TODO SUPPORT REQUEST FOLDER TOGGLE
-  };
+  const toggleRequestGroup = useCallback(
+    async (requestGroup: RequestGroup) => {
+      // Do not update toggle state if there is an active filter
+      if (!projectNavigationSidebarFilter) {
+        const requestGroupId = requestGroup._id;
+        const requestGroupMeta = await services.requestGroupMeta.getByParentId(requestGroupId);
+        const newCollapsed = requestGroupMeta ? !requestGroupMeta.collapsed : false;
+        await services.requestGroupMeta.updateOrCreateForParentId(requestGroupId!, { collapsed: newCollapsed });
+        const toggleItemChildrenIds: string[] = [];
+        setFlatItems(prev => {
+          return prev.map(item => {
+            if (item.kind === 'collectionChild') {
+              const { children, doc } = item;
+              if (doc._id === requestGroupId) {
+                // Update the toggle item first and get its children ids
+                toggleItemChildrenIds.push(...(children?.map(c => c.doc._id) ?? []));
+                return {
+                  ...item,
+                  collapsed: newCollapsed,
+                  hidden: false,
+                };
+                // recursively hide all children of the toggle item
+              } else if (toggleItemChildrenIds.includes(doc._id)) {
+                toggleItemChildrenIds.push(...(children?.map(c => c.doc._id) ?? []));
+                return {
+                  ...item,
+                  hidden: newCollapsed,
+                };
+              }
+            }
+            return item;
+          });
+        });
+      }
+    },
+    [projectNavigationSidebarFilter],
+  );
 
   // Derive selected key from current route
   const selectedKeys = useMemo(() => {
