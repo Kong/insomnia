@@ -44,6 +44,7 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
+import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
@@ -474,6 +475,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
         <OrganizationTabList />
+        <WorkspacePaneHeader hasSettings={false} />
         <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
           <div className="flex w-full shrink-0 basis-(--line-height-sm) items-center justify-between gap-2 overflow-hidden p-(--padding-sm)">
             <Heading className="flex grow items-center gap-2 overflow-hidden px-4 py-2 text-lg">

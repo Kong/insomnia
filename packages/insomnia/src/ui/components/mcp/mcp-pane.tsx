@@ -57,6 +57,7 @@ import { MCPCertificatesModal } from '~/ui/components/modals/mcp-certificates-mo
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
+import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
@@ -554,6 +555,7 @@ export const McpPane = () => {
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel className="flex flex-col">
         <OrganizationTabList currentPage="mcp" />
+        <WorkspacePaneHeader hasSettings />
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Panel id="mcp-request-pane" order={1} minSize={10} className="pane-one theme--pane">
             <McpRequestPane

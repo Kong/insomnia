@@ -82,22 +82,18 @@ import { RequestGroupActionsDropdown } from '~/ui/components/dropdowns/request-g
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
-import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { McpPane } from '~/ui/components/mcp/mcp-pane';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { CookiesModal } from '~/ui/components/modals/cookies-modal';
 import { ErrorModal } from '~/ui/components/modals/error-modal';
 import { GenerateCodeModal } from '~/ui/components/modals/generate-code-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { PasteCurlModal } from '~/ui/components/modals/paste-curl-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { RequestSettingsModal } from '~/ui/components/modals/request-settings-modal';
-import { CertificatesModal } from '~/ui/components/modals/workspace-certificates-modal';
-import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { GrpcRequestPane } from '~/ui/components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '~/ui/components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '~/ui/components/panes/placeholder-request-pane';
@@ -110,6 +106,7 @@ import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
+import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
 import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
@@ -250,9 +247,6 @@ const Debug = () => {
     activeWorkspace,
     activeProject,
     activeEnvironment,
-    activeCookieJar,
-    caCertificate,
-    clientCertificates,
     grpcRequests,
     collection: _collection,
   } = useWorkspaceLoaderData()!;
@@ -286,12 +280,8 @@ const Debug = () => {
       ...INITIAL_GRPC_REQUEST_STATE,
     })),
   );
-  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
-  const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
-  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const patchRequest = useRequestPatcher();
   const patchGroup = useRequestGroupPatcher();
@@ -475,9 +465,6 @@ const Debug = () => {
           }),
       });
     },
-    environment_showEditor: () => setEnvironmentModalOpen(true),
-    environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
-    showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor: () => {
       if (activeRequest && isRequest(activeRequest)) {
         showModal(GenerateCodeModal, { request: activeRequest });
@@ -801,6 +788,7 @@ const Debug = () => {
   }, [settings.forceVerticalLayout, direction]);
 
   const tabNavigate = useTabNavigate();
+  const isDesign = Boolean(activeWorkspace && models.workspace.isDesign(activeWorkspace));
 
   return (
     <PanelGroup
@@ -840,58 +828,9 @@ const Debug = () => {
                 </Breadcrumb>
               </Breadcrumbs>
             </div>
-            {models.workspace.isDesign(activeWorkspace) && (
+            {isDesign && (
               <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
             )}
-            <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
-              <div className="flex w-full items-center justify-between gap-2">
-                <EnvironmentPicker
-                  isOpen={isEnvironmentPickerOpen}
-                  onOpenChange={isOpen => {
-                    setIsEnvironmentPickerOpen(isOpen);
-                    if (isOpen) {
-                      window.main.trackSegmentEvent({
-                        event: SegmentEvent.requestEnvironmentClicked,
-                      });
-                    }
-                  }}
-                  onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
-                />
-              </div>
-              <Button
-                onPress={() => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.requestAddCookiesClicked,
-                  });
-                  setIsCookieModalOpen(true);
-                }}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              >
-                <Icon icon="cookie-bite" className="w-5 shrink-0" />
-                <span className="truncate">
-                  {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
-                  {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
-                </span>
-              </Button>
-              <Button
-                onPress={() => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.requestAddCertificatesClicked,
-                  });
-                  setCertificatesModalOpen(true);
-                }}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              >
-                <Icon icon="file-contract" className="w-5 shrink-0" />
-                <span className="truncate">
-                  {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
-                  {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                    .length > 0
-                    ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
-                    : ''}
-                </span>
-              </Button>
-            </div>
           </div>
           <div className="flex flex-1 flex-col overflow-hidden">
             <div className="flex justify-between gap-1 p-(--padding-sm)">
@@ -1203,7 +1142,6 @@ const Debug = () => {
           {isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
 
           <WorkspaceSyncDropdown />
-          {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isImportModalOpen && (
             <ImportModal
               onHide={() => setIsImportModalOpen(false)}
@@ -1215,8 +1153,6 @@ const Debug = () => {
               defaultWorkspaceId={workspaceId}
             />
           )}
-          {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
-          {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
           {isPasteCurlModalOpen && (
             <PasteCurlModal
               onImport={req => {
@@ -1236,6 +1172,7 @@ const Debug = () => {
       <Panel className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
+        {!panel && !isScratchpadOrganizationId(organizationId) && <WorkspacePaneHeader hasSettings />}
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Routes>
             <RouteComponent
