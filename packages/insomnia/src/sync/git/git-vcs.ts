@@ -1692,6 +1692,7 @@ export class GitVCS {
           ...this._baseOpts,
           ref: commitParent[1],
           filepaths: [autoResolved.filepath],
+          noUpdateHead: true,
           force: true,
         });
         await git.add({ ...this._baseOpts, filepath: autoResolved.filepath });
