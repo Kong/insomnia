@@ -247,9 +247,6 @@ const Debug = () => {
     activeWorkspace,
     activeProject,
     activeEnvironment,
-    activeCookieJar,
-    caCertificate,
-    clientCertificates,
     grpcRequests,
     collection: _collection,
   } = useWorkspaceLoaderData()!;
@@ -284,12 +281,8 @@ const Debug = () => {
       ...INITIAL_GRPC_REQUEST_STATE,
     })),
   );
-  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
-  const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
-  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const patchRequest = useRequestPatcher();
   const patchGroup = useRequestGroupPatcher();
@@ -473,9 +466,6 @@ const Debug = () => {
           }),
       });
     },
-    environment_showEditor: () => setEnvironmentModalOpen(true),
-    environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
-    showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor: () => {
       if (activeRequest && isRequest(activeRequest)) {
         showModal(GenerateCodeModal, { request: activeRequest });
@@ -843,55 +833,6 @@ const Debug = () => {
               {models.workspace.isDesign(activeWorkspace) && (
                 <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
               )}
-              <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
-                <div className="flex w-full items-center justify-between gap-2">
-                  <EnvironmentPicker
-                    isOpen={isEnvironmentPickerOpen}
-                    onOpenChange={isOpen => {
-                      setIsEnvironmentPickerOpen(isOpen);
-                      if (isOpen) {
-                        window.main.trackSegmentEvent({
-                          event: SegmentEvent.requestEnvironmentClicked,
-                        });
-                      }
-                    }}
-                    onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
-                  />
-                </div>
-                <Button
-                  onPress={() => {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.requestAddCookiesClicked,
-                    });
-                    setIsCookieModalOpen(true);
-                  }}
-                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="cookie-bite" className="w-5 shrink-0" />
-                  <span className="truncate">
-                    {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
-                    {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
-                  </span>
-                </Button>
-                <Button
-                  onPress={() => {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.requestAddCertificatesClicked,
-                    });
-                    setCertificatesModalOpen(true);
-                  }}
-                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="file-contract" className="w-5 shrink-0" />
-                  <span className="truncate">
-                    {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
-                    {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                      .length > 0
-                      ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
-                      : ''}
-                  </span>
-                </Button>
-              </div>
             </div>
             <div className="flex flex-1 flex-col overflow-hidden">
               <div className="flex justify-between gap-1 p-(--padding-sm)">
@@ -1199,11 +1140,6 @@ const Debug = () => {
                 </GridList>
               </div>
             </div>
-
-            <WorkspaceSyncDropdown />
-            {isEnvironmentModalOpen && (
-              <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />
-            )}
             {isImportModalOpen && (
               <ImportModal
                 onHide={() => setIsImportModalOpen(false)}
@@ -1215,8 +1151,6 @@ const Debug = () => {
                 defaultWorkspaceId={workspaceId}
               />
             )}
-            {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
-            {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
             {isPasteCurlModalOpen && (
               <PasteCurlModal
                 onImport={req => {
