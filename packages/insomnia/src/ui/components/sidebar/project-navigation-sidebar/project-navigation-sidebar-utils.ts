@@ -179,7 +179,7 @@ export function flattenCollectionChildren(
     }
   }
 
-  const rootRequests = requestsByParentId.get(workspaceId) || [];
+  const rootRequests = (requestsByParentId.get(workspaceId) || []).sort(metaSortKeySort);
   const stack: { doc: AllRequestDoc; level: number; parentIsCollapsed: boolean; ancestors: string[] }[] = [
     ...rootRequests,
   ]

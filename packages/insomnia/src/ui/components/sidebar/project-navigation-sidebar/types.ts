@@ -45,6 +45,7 @@ export interface CollectionChildFlatItem extends BaseFlatItem<Child['doc']> {
   workspace: Workspace;
   // nested children for request group
   children?: Child[];
+  ancestors?: string[];
   level: number;
   pinned: boolean;
 }
