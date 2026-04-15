@@ -32,6 +32,7 @@ import {
 import { ProjectNode } from './project-node';
 import { RequestNode } from './request-node';
 import type { FlatItem } from './types';
+import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
 
 interface ProjectNavigationSidebarProps {
@@ -313,6 +314,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
               project: project,
               workspace: workspace,
               children: child.children,
+              ancestors: child.ancestors,
               doc: child.doc,
               collapsed: child.collapsed,
               hidden: child.hidden,
@@ -412,8 +414,6 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     return [];
   }, [activeRequestGroupId, activeRequestId, activeWorkspaceId, activeProjectId]);
 
-  // const reorderFetcher = useDebugReorderActionFetcher();
-
   const parentRef = useRef<HTMLDivElement>(null);
   const visibleFlatItems = useMemo(() => flatItems.filter(i => !i.hidden), [flatItems]);
   const virtualizer = useVirtualizer({
@@ -422,6 +422,11 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     estimateSize: useCallback(() => 32, []),
     overscan: 10,
     getItemKey: index => visibleFlatItems[index].doc._id,
+  });
+  const sidebarDragAndDropHooks = useSidebarDragAndDrop({
+    flatItems,
+    organizationId,
+    virtualizer,
   });
 
   return (
@@ -493,7 +498,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       {!isProjectTabActive && syncing && <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>}
       {!isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
 
-      <div ref={parentRef} className="flex-1 overflow-y-auto py-(--padding-sm) group/tree">
+      <div ref={parentRef} className="group/tree flex-1 overflow-y-auto py-(--padding-sm)">
         <GridList
           aria-label="Project Navigation Tree"
           items={virtualizer.getVirtualItems()}
@@ -501,7 +506,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
           className="outline-hidden"
           selectedKeys={selectedKeys}
           selectionMode="single"
-          // dragAndDropHooks={dragAndDropHooks}
+          dragAndDropHooks={sidebarDragAndDropHooks}
         >
           {virtualItem => {
             const item = visibleFlatItems[virtualItem.index];
