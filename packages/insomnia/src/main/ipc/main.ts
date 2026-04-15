@@ -99,7 +99,9 @@ const writeResponseBodyToFile = async (
   const allowedResponsesDir = path.join(userdataDirectory, 'responses');
   const resolvedSource = path.resolve(options.sourcePath);
   if (!resolvedSource.startsWith(allowedResponsesDir + path.sep) || !resolvedSource.endsWith('.response')) {
-    throw new Error('writeResponseBodyToFile: sourcePath is outside the allowed responses directory');
+    throw new Error(
+      'writeResponseBodyToFile: sourcePath is outside the allowed responses directory or does not end in .response',
+    );
   }
 
   try {
