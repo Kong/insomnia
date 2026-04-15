@@ -78,6 +78,10 @@ const isSubEnvironmentResource = (environment: Environment) => {
 
 export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) => id === 'insomnia-4';
 
+// These helpers load main-process modules lazily via a runtime string so that Vite
+// does not statically analyse or bundle them into the renderer. The path string is
+// kept out of the import() call itself to prevent bundler rewriting; the
+// /* @vite-ignore */ comment suppresses the remaining Vite warning.
 const importMainConvertModule = async () => {
   const modulePath = '../main/importers/convert';
   return import(/* @vite-ignore */ modulePath);

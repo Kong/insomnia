@@ -53,6 +53,7 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
       headers.push(authHeader);
     }
 
+    // Guard on finalUrl: new URL() would throw on undefined, and AWS signing is meaningless without a target URL.
     if (isAWSIAM && finalUrl) {
       const hostHeader = getHostHeader(headers)?.value;
       const contentTypeHeader = getContentTypeHeader(headers)?.value;
