@@ -12,8 +12,6 @@ import type { RequestBodyParameter } from '~/insomnia-data';
 
 import { DEFAULT_BOUNDARY } from '../../network/multipart-constants';
 
-export { DEFAULT_BOUNDARY };
-
 interface Multipart {
   boundary: typeof DEFAULT_BOUNDARY;
   filePath: string;
