@@ -3,7 +3,7 @@ import { Button, GridList, GridListItem } from 'react-aria-components';
 import { href, useNavigate, useParams } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
-import { scratchPadTutorialList } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.tutorial.$panel';
+import { scratchPadTutorialList } from '~/routes/organization.$organizationId.project.$projectId.tutorial.$panel';
 import { Icon } from '~/ui/components/icon';
 
 export const ScratchPadTutorialPanel = () => {
@@ -83,9 +83,7 @@ export const ScratchPadTutorialPanel = () => {
         onSelectionChange={keys => {
           if (keys !== 'all') {
             const selected = Array.from(keys.values())[0].toString();
-            navigate(
-              `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/tutorial/${selected}`,
-            );
+            navigate(`/organization/${organizationId}/project/${projectId}/tutorial/${selected}`);
           }
         }}
       >
