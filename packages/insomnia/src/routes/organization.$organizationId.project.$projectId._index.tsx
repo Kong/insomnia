@@ -1,5 +1,4 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import { getLearningFeature } from 'insomnia-api';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -106,7 +105,6 @@ export interface ProjectLoaderData {
   activeProject?: Project;
   activeProjectGitRepository?: GitRepository;
   projects: (Project & { gitRepository?: GitRepository })[];
-  learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
   projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
 }
@@ -297,33 +295,6 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
   return [];
 }
 
-interface LearningFeature {
-  active: boolean;
-  title: string;
-  message: string;
-  cta: string;
-  url: string;
-}
-
-const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
-  let learningFeature = fallbackLearningFeature;
-  const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
-  const lastFetched = lastFetchedString ? Number.parseInt(lastFetchedString, 10) : 0;
-  const oneDay = 86_400_000;
-  const hasOneDayPassedSinceLastFetch = Date.now() - lastFetched > oneDay;
-  const wasDismissed = window.localStorage.getItem('learning-feature-dismissed');
-  const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
-  if (wasNotDismissedAndOneDayHasPassed) {
-    try {
-      learningFeature = await getLearningFeature();
-      window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
-    } catch {
-      console.log('[project] Could not fetch learning feature data.');
-    }
-  }
-  return learningFeature;
-};
-
 const checkSingleProjectSyncStatus = async (projectId: string) => {
   const projectWorkspaces = await services.workspace.findByParentId(projectId);
   const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
@@ -348,13 +319,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   const { id: sessionId } = await services.userSession.getOrCreate();
-  const fallbackLearningFeature = {
-    active: false,
-    title: '',
-    message: '',
-    cta: '',
-    url: '',
-  };
+
   if (!projectId) {
     return {
       localFiles: [],
@@ -385,7 +350,6 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   ]);
 
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
-  const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
   const projects = sortProjects(organizationProjects);
 
@@ -398,7 +362,6 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
   return {
     localFiles,
-    learningFeaturePromise,
     remoteFilesPromise,
     projects,
     projectsCount: organizationProjects.length,
@@ -879,7 +842,7 @@ const Component = () => {
                       <div className="flex h-5 gap-2">
                         <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
                           <div
-                            className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                            className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-5 w-5 items-center justify-center rounded-s-sm px-2`}
                           >
                             <Icon
                               icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]}

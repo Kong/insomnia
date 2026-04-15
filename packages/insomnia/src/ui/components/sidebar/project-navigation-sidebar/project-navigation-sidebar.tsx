@@ -1,18 +1,23 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, GridList, GridListItem, Heading, Input, SearchField } from 'react-aria-components';
+import { Button, GridList, GridListItem, Input, SearchField } from 'react-aria-components';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { fuzzyMatchAll } from '~/common/misc';
 import type { RequestGroup, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
+import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
+import { showModal } from '~/ui/components/modals';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
+import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
@@ -32,9 +37,40 @@ import { WorkspaceNode } from './workspace-node';
 interface ProjectNavigationSidebarProps {
   storageRules: StorageRules;
   activeNodeId?: string;
+  konnectSyncEnabled: boolean;
 }
 
-export const ProjectNavigationSidebar = ({ storageRules }: ProjectNavigationSidebarProps) => {
+function showSkippedRoutesModal(result: SyncResult | null) {
+  if (!result?.success || !result.skippedRoutes.length) {
+    return;
+  }
+  const byService = new Map<string, string[]>();
+  for (const { serviceName, routeName, reason } of result.skippedRoutes) {
+    const list = byService.get(serviceName) ?? [];
+    list.push(`${routeName} — ${reason}`);
+    byService.set(serviceName, list);
+  }
+  showModal(AlertModal, {
+    title: 'Skipped Routes',
+    message: (
+      <div>
+        <p>{result.skippedRoutes.length} route(s) were skipped because they cannot be represented in Insomnia:</p>
+        {[...byService.entries()].map(([service, routes]) => (
+          <div key={service} style={{ margin: '8px 0' }}>
+            <strong>{service}</strong>
+            <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+              {routes.map(r => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    ),
+  });
+}
+
+export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: ProjectNavigationSidebarProps) => {
   const navigate = useNavigate();
   const {
     organizationId,
@@ -65,6 +101,21 @@ export const ProjectNavigationSidebar = ({ storageRules }: ProjectNavigationSide
     `${organizationId}:project-navigation-sidebar-filter`,
     '',
   );
+  const [konnectFilter, setKonnectFilter] = reactUse.useLocalStorage(
+    `${organizationId}:project-navigation-konnect-filter`,
+    '',
+  );
+  const [storedTab, setActiveTab] = reactUse.useLocalStorage<'projects' | 'konnect'>(
+    `${organizationId}:sidebar-tab`,
+    'projects',
+  );
+  const activeTab = !konnectSyncEnabled ? 'projects' : (storedTab ?? 'projects');
+  const isProjectTabActive = activeTab === 'projects';
+  const { syncing, progress, error: syncError, startSync, cancelSync } = useKonnectSync();
+
+  const nonKonnectProjects = projects.filter(p => !p.konnectControlPlaneId);
+  const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
+
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
@@ -82,28 +133,75 @@ export const ProjectNavigationSidebar = ({ storageRules }: ProjectNavigationSide
 
   const projectsWithPresence = useMemo(
     () =>
-      projects.map(project => {
-        const projectPresence = presence
-          .filter(p => p.project === project.remoteId)
-          .filter(p => p.acct !== userSession.accountId)
-          .map(user => {
-            return {
-              key: user.acct,
-              alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-              src: user.avatar,
-            };
-          });
-        return {
-          ...project,
-          presence: projectPresence,
-          hasUncommittedOrUnpushedChanges:
-            checkAllProjectSyncStatus?.[project._id] ||
-            project.gitRepository?.hasUncommittedChanges ||
-            project.gitRepository?.hasUnpushedChanges,
-        };
-      }),
-    [projects, presence, userSession.accountId, checkAllProjectSyncStatus],
+      projects
+        .filter(isProjectTabActive ? p => !p.konnectControlPlaneId : p => p.konnectControlPlaneId != null)
+        .map(project => {
+          const projectPresence = presence
+            .filter(p => p.project === project.remoteId)
+            .filter(p => p.acct !== userSession.accountId)
+            .map(user => {
+              return {
+                key: user.acct,
+                alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+                src: user.avatar,
+              };
+            });
+          return {
+            ...project,
+            presence: projectPresence,
+            hasUncommittedOrUnpushedChanges:
+              checkAllProjectSyncStatus?.[project._id] ||
+              project.gitRepository?.hasUncommittedChanges ||
+              project.gitRepository?.hasUnpushedChanges,
+          };
+        }),
+    [projects, isProjectTabActive, presence, checkAllProjectSyncStatus, userSession.accountId],
   );
+
+  const handleSync = async () => {
+    if (!konnectSyncEnabled) {
+      return;
+    }
+
+    const runAndNotify = async () => {
+      const result = await startSync(organizationId);
+      showSkippedRoutesModal(result);
+    };
+
+    const isResync = konnectProjects.length > 0;
+    if (isResync) {
+      showModal(AskModal, {
+        title: 'Re-sync Konnect',
+        message: (
+          <div>
+            <p>Re-syncing will make the following changes:</p>
+            <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
+              <li>
+                <strong>Reset</strong> — request method, URL, name, and Konnect-managed headers
+              </li>
+              <li>
+                <strong>Delete</strong> — requests added manually or no longer in Konnect
+              </li>
+              <li>
+                <strong>Preserve</strong> — body, auth, query params, scripts, description, and user-added headers
+              </li>
+            </ul>
+            <p>This cannot be undone. Continue?</p>
+          </div>
+        ),
+        yesText: 'Re-sync',
+        noText: 'Cancel',
+        color: 'warning',
+        onDone: async (confirmed: boolean) => {
+          if (confirmed) {
+            await runAndNotify();
+          }
+        },
+      });
+    } else {
+      await runAndNotify();
+    }
+  };
 
   useEffect(() => {
     // clear caches on any router data change to avoid showing stale data
@@ -136,6 +234,7 @@ export const ProjectNavigationSidebar = ({ storageRules }: ProjectNavigationSide
     const buildWorkspaceAndCollectionData = async () => {
       const items: FlatItem[] = [];
       // Array of project and collection workspace ids that should get data from db
+
       const projectIds = projectsWithPresence.map(p => p._id);
       const collectionWorkspaceIds: string[] = [];
       const workspacesByProject = await tryToGetWorkspacesFromCache(projectIds);
@@ -244,7 +343,13 @@ export const ProjectNavigationSidebar = ({ storageRules }: ProjectNavigationSide
       setFlatItems(items);
     };
     buildWorkspaceAndCollectionData();
-  }, [expandedProjectAndWorkspaceIds, organizationId, projectNavigationSidebarFilter, projectsWithPresence]);
+  }, [
+    expandedProjectAndWorkspaceIds,
+    isProjectTabActive,
+    organizationId,
+    projectNavigationSidebarFilter,
+    projectsWithPresence,
+  ]);
 
   const toggleProjectOrWorkspace = useCallback(
     (projectOrWorkspaceId: string) => {
@@ -287,14 +392,28 @@ export const ProjectNavigationSidebar = ({ storageRules }: ProjectNavigationSide
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <Heading className="p-(--padding-sm) text-xs uppercase">Projects ({projects.length})</Heading>
+      <div className="flex shrink-0 border-b border-solid border-b-(--hl-md)">
+        {['projects', 'konnect'].map(tabName => (
+          <button
+            key={tabName}
+            className={
+              activeTab === tabName
+                ? 'border-b-2 border-solid border-b-(--color-surprise) px-3 py-1 text-xs text-(--color-font) uppercase'
+                : 'border-b-2 border-solid border-b-transparent px-3 py-1 text-xs text-(--hl) uppercase hover:bg-(--hl-xs)'
+            }
+            onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
+          >
+            {tabName === 'projects' ? `Projects (${nonKonnectProjects.length})` : `Konnect (${konnectProjects.length})`}
+          </button>
+        ))}
+      </div>
       <div className="flex justify-between gap-1 p-(--padding-sm)">
         <SearchField
           aria-label="Projects filter"
           className="group relative flex-1"
-          value={filterInputValue}
+          value={isProjectTabActive ? filterInputValue : konnectFilter}
           isDisabled={projects.length === 0}
-          onChange={setFilterInputValue}
+          onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
         >
           <Input
             placeholder="Filter"
@@ -306,16 +425,39 @@ export const ProjectNavigationSidebar = ({ storageRules }: ProjectNavigationSide
             </Button>
           </div>
         </SearchField>
-        <Button
-          aria-label="Create new Project"
-          onPress={() => setIsNewProjectModalOpen(true)}
-          isDisabled={projects.length === 0}
-          className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-        >
-          <Icon icon="plus" className="h-2.5 w-2.5" />
-          <span>New Project</span>
-        </Button>
+        {isProjectTabActive ? (
+          <Button
+            aria-label="Create new Project"
+            onPress={() => setIsNewProjectModalOpen(true)}
+            isDisabled={projects.length === 0}
+            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          >
+            <Icon icon="plus" className="h-2.5 w-2.5" />
+            <span>New Project</span>
+          </Button>
+        ) : syncing ? (
+          <Button
+            aria-label="Cancel sync"
+            onPress={() => cancelSync()}
+            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          >
+            Cancel
+            <Icon icon="stop-circle" />
+          </Button>
+        ) : (
+          <Button
+            aria-label="Sync Konnect"
+            onPress={handleSync}
+            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          >
+            Sync
+            <Icon icon="refresh" />
+          </Button>
+        )}
       </div>
+
+      {isProjectTabActive && <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>}
+      {isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
 
       <div ref={parentRef} className="flex-1 overflow-y-auto py-(--padding-sm)">
         <GridList
