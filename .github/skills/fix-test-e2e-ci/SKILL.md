@@ -7,11 +7,13 @@ argument-hint: 'Describe the failing job, failing test, and any error output fro
 # Fix test-e2e.yaml CI Failures
 
 ## When to Use
+
 - `test-e2e.yaml` failed in CI.
 - You need to reproduce smoke test failures quickly without waiting for a bundle build.
 - You want to run the `Smoke` Playwright project against a local dev app.
 
 ## Procedure
+
 1. Start the app in dev-watch mode:
    ```bash
    npm run watch:app
@@ -24,5 +26,6 @@ argument-hint: 'Describe the failing job, failing test, and any error output fro
 4. Re-run the same `test:dev` command after each change to confirm the failure is resolved.
 
 ## Notes
+
 - This path skips the bundle/build step, so it is faster for first-pass debugging.
 - If the issue only reproduces in bundle mode, switch to the CLI bundle debug workflow skill.

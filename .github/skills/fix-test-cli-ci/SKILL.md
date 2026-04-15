@@ -7,11 +7,13 @@ argument-hint: 'Provide failing test-cli-yaml logs or the failing test name from
 # Fix test-cli-yaml CI Failures
 
 ## When to Use
+
 - `test-cli-yaml` failed in CI.
 - `inso` bundle tests fail locally or in GitHub Actions.
 - You suspect node module/runtime differences between Node.js and Electron.
 
 ## Procedure
+
 1. Ensure Node.js native dependencies are installed (not Electron-targeted variants):
    ```bash
    npm run install-libcurl-node
@@ -30,5 +32,6 @@ argument-hint: 'Provide failing test-cli-yaml logs or the failing test name from
    ```
 
 ## Notes
+
 - Keep the smoke-test server running while bundle tests execute.
 - If failures are specific to packaged binaries, follow up with `npm run test:binary -w insomnia-inso`.
