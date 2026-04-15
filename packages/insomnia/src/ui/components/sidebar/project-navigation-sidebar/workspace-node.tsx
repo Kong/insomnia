@@ -24,7 +24,7 @@ export const WorkspaceNode = ({ item, onToggle }: WorkspaceNodeProps) => {
   return (
     <div className={`${ROW_CLASS} group`} style={{ paddingLeft: '2em' }}>
       <span className={ACTIVE_BORDER_CLASS} />
-      <span className={GUIDE_LINE_CSS} style={{ left: '1.5em' }} />
+      <span className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`} style={{ left: '1.5em' }} />
       <Button
         aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${workspaceName}`}
         onPress={() => onToggle(workspaceId)}

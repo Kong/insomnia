@@ -81,8 +81,16 @@ export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
 
   return (
     <div className={ROW_CLASS} style={{ paddingLeft: `${level + 3}rem`, paddingRight: '8px' }}>
-      <span className={GUIDE_LINE_CSS} style={{ left: '1.5em' }} />
-      <span className={GUIDE_LINE_CSS} style={{ left: '2.5em' }} />
+      {Array.from({ length: level + 2 }, (_, i) => {
+        const isActive = i === level + 1;
+        return (
+          <span
+            key={i}
+            className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm) ${isActive ? 'group-hover:bg-(--hl-sm)' : ''}`}
+            style={{ left: `${i + 1.5}em` }}
+          />
+        );
+      })}
       <span className={ACTIVE_BORDER_CLASS} />
       <Button
         aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${doc.name}`}

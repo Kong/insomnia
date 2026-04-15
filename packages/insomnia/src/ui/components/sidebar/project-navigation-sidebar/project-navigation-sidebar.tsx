@@ -493,7 +493,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       {!isProjectTabActive && syncing && <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>}
       {!isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
 
-      <div ref={parentRef} className="flex-1 overflow-y-auto py-(--padding-sm)">
+      <div ref={parentRef} className="flex-1 overflow-y-auto py-(--padding-sm) group/tree">
         <GridList
           aria-label="Project Navigation Tree"
           items={virtualizer.getVirtualItems()}

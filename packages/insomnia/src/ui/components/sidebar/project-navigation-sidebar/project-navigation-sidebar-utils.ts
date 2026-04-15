@@ -259,7 +259,7 @@ export const ROW_CLASS =
 
 export const ACTIVE_BORDER_CLASS =
   'absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)';
-export const GUIDE_LINE_CSS = 'absolute inset-y-0 w-px bg-(--hl-sm)';
+export const GUIDE_LINE_CSS = 'absolute inset-y-0 w-px bg-transparent transition-colors';
 
 // for toggle button
 export const TOGGLE_BTN_CLASS =
