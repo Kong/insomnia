@@ -23,12 +23,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { models, services, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
+
 import { database as db } from '../../common/database';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 import { initElectronStorage } from '../../main/window-utils';
-import * as models from '../../models';
-import type { Workspace } from '../../models/workspace';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
 
 const MIGRATION_KEY_PREFIX = 'GIT_STRUCTURE_V2_';
 
@@ -196,10 +195,10 @@ async function _flushWorkspacesToDisk(baseDir: string, projectId: string): Promi
 
       // Ensure workspaceMeta records the correct gitFilePath
       if (workspaceMeta && !workspaceMeta.gitFilePath) {
-        await models.workspaceMeta.update(workspaceMeta, { gitFilePath });
+        await services.workspaceMeta.update(workspaceMeta, { gitFilePath });
       } else if (!workspaceMeta) {
-        const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-        await models.workspaceMeta.update(meta, { gitFilePath });
+        const meta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+        await services.workspaceMeta.update(meta, { gitFilePath });
       }
     } catch (err) {
       console.warn('[git-migration] Could not flush workspace', workspace._id, err);
