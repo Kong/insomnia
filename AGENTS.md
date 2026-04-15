@@ -24,6 +24,20 @@ npm run type-check    # TypeScript check all workspaces
 npm test              # Tests all workspaces (or: npm test -w packages/insomnia)
 ```
 
+## Local validation CI issues
+Run from repo root if test-e2e.yaml github action fails
+
+```bash
+npm run watch:app                                                   # Start vite dev server
+npm run test:dev -w packages/insomnia-smoke-test -- --project=Smoke # Run e2e tests pointing at vite dev server
+```
+
+Run from repo root is test-cli.yaml github action fails
+
+```bash
+npm run serve -w insomnia-smoke-test   # Start echo server
+npm run test:bundle -w insomnia-inso # Run cli e2e tests pointing at esbuild output
+
 ## Repository Structure
 `packages/`
   `insomnia/`                ← Main Electron app
