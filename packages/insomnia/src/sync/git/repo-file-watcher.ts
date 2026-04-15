@@ -1,78 +1,163 @@
 /**
- * RepoFileWatcher
+ * RepoFileWatcher — Bidirectional sync between on-disk Git repo and NeDB.
  *
- * Watches an on-disk git repository directory for changes to Insomnia YAML
- * files made by external tools (native git CLI, VS Code, etc.) and imports
- * them back into the NeDB database so the Insomnia UI stays in sync.
+ * Two pipelines, one serial queue:
  *
- * Strategy:
- *  - Primary:  `fs.watch` with `recursive: true` (Windows + macOS).
- *              On Linux, individual subdirectories are watched manually because
- *              Node's `fs.watch` does not support `recursive` there.
- *  - Fallback: Periodic polling (default 10 s) compares mtime against the last
- *              known sync time so no change is ever permanently missed.
+ *   FS → DB  (inbound)
+ *     External tools (git CLI, VS Code, manual edits) modify YAML files on disk.
+ *     Detected via `fs.watch` (primary) and periodic polling (fallback, 10 s).
+ *     The file is parsed and upserted into NeDB. Orphaned DB documents that no
+ *     longer appear in the YAML are removed.
  *
- * Write-loop prevention:
- *  When Insomnia itself writes a YAML file (e.g. via git pull / merge), it
- *  calls `suppressPath` before the write and `unsuppressPath` after. Events
- *  for suppressed paths are silently dropped.
+ *   DB → FS  (outbound)
+ *     The Insomnia UI changes a synced document in NeDB. A `db.onChange` listener
+ *     re-exports the workspace YAML and writes it to disk so that `git status` /
+ *     `git diff` reflect the change.
+ *
+ * Initialisation (self-contained via `create()`):
+ *   1. Load workspace→file mappings from DB (for rename detection).
+ *   2. Import **all** YAML files from disk into the DB.  This populates the
+ *      mtime + content-hash tracking maps as a side-effect.
+ *   3. Start fs.watch, polling, and the DB→FS change listener.
+ *
+ *   Because step 2 runs before step 3, the watchers never fire for files that
+ *   were already imported — there is no ordering trap for callers.
+ *
+ * Loop prevention (content-hash + serial queue):
+ *   All sync work is routed through a single serial {@link SyncQueue}. Tasks
+ *   execute one at a time — an import and a flush can never race.
+ *
+ *   When the DB→FS flush writes a file, it records the SHA-256 of the content it
+ *   wrote in `lastWrittenHash`. When the FS→DB import reads a file, it computes
+ *   the hash and compares:
+ *     • Match   → our own write echoing back via fs.watch — skip.
+ *     • No match → genuine external change — import.
+ *
+ *   `lastSyncMtime` is kept as a cheap fast-path: if the mtime hasn't changed
+ *   since the last sync, the file is skipped without even reading it.
  */
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+
+import { BrowserWindow } from 'electron';
+
+import { models, services, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { canSync } from '../../models';
-import * as models from '../../models';
-import { isWorkspace } from '../../models/workspace';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
+import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
 const DEBOUNCE_MS = 300;
 const GIT_DIR = '.git';
 
+export type FileIssueKind = 'conflict' | 'parse-error';
+
+export interface FileIssue {
+  /** Absolute path to the problematic file. */
+  filePath: string;
+  /** Relative path from the repo root (posix separators). */
+  relPath: string;
+  /** What went wrong. */
+  kind: FileIssueKind;
+  /** Human-readable detail (e.g. parser error message). */
+  message: string;
+}
+
+/** Compute a SHA-256 hex digest of a string. */
+function contentHash(content: string): string {
+  return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
+}
+
+export interface WatcherNotifier {
+  onDbSynced: () => void;
+  onProblemsChanged: (problems: FileIssue[]) => void;
+}
+
 class RepoFileWatcher {
   private readonly repoDir: string;
   private readonly projectId: string;
+  private readonly notifier: WatcherNotifier;
 
   private fsWatchers: fs.FSWatcher[] = [];
   private pollTimer: ReturnType<typeof setInterval> | null = null;
-  /** mtime (ms) of the last successful import for each absolute file path */
-  private lastSyncMtime = new Map<string, number>();
-  /** Paths currently being written by Insomnia – watcher events are dropped for these */
-  private suppressedPaths = new Set<string>();
   private debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
-  /** True while Insomnia is writing YAML to disk – prevents the onChange flush from looping */
-  private isFlushing = false;
   /** Debounce timer for the DB→disk outbound flush */
   private flushDebounce: ReturnType<typeof setTimeout> | null = null;
   /** Set to true by stop() so async callbacks can bail out cleanly */
   private stopped = false;
 
-  constructor(repoDir: string, projectId: string) {
+  /**
+   * Serial queue — every FS→DB import and DB→FS flush is enqueued here.
+   * Guarantees at most one sync task runs at a time.
+   */
+  private queue = new SyncQueue();
+
+  /** mtime (ms) of the last successful sync for each normalised absolute path. */
+  private lastSyncMtime = new Map<string, number>();
+
+  /**
+   * SHA-256 of the YAML content last written to disk by the DB→FS flush.
+   * Used by the FS→DB import to detect and skip echo events (our own writes).
+   */
+  private lastWrittenHash = new Map<string, string>();
+
+  /**
+   * Last known absolute path for each workspace, keyed by workspace _id.
+   * Used to detect gitFilePath renames so the old file can be removed.
+   */
+  private lastKnownGitFilePath = new Map<string, string>();
+
+  /**
+   * Files that could not be imported due to conflicts or parse errors.
+   * Keyed by normalised absolute path. Cleared when the file is
+   * successfully imported or deleted.
+   */
+  private problemFiles = new Map<string, FileIssue>();
+
+  private constructor(repoDir: string, projectId: string, notifier: WatcherNotifier) {
     this.repoDir = repoDir;
     this.projectId = projectId;
-
-    this.startFsWatch();
-    this.startPolling();
-    this.registerDbChangeListener();
-    // Populate initial mtimes so that future external changes (e.g. git restore)
-    // can be detected by comparing disk mtime against this baseline.
-    this.initSyncMtimes().catch(err => {
-      console.warn('[repo-file-watcher] init mtime scan error:', err);
-    });
+    this.notifier = notifier;
   }
+
+  static async create(repoDir: string, projectId: string, notifier: WatcherNotifier): Promise<RepoFileWatcher> {
+    const watcher = new RepoFileWatcher(repoDir, projectId, notifier);
+
+    // 1. Load workspace-to-file mappings from the DB for rename detection.
+    await watcher.loadKnownGitFilePaths();
+
+    // 2. Import all YAML files into the DB so it reflects disk state.
+    //    This populates lastSyncMtime + lastWrittenHash as a side-effect,
+    //    which prevents step 3's watchers from re-importing the same files.
+    await watcher.importAllFiles();
+
+    // 3. Start watching for ongoing changes (fs.watch + polling + DB listener).
+    //    Safe to start now because tracking state is already populated.
+    watcher.startFsWatch();
+    watcher.startPolling();
+    watcher.registerDbChangeListener();
+
+    return watcher;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public API
+  // ---------------------------------------------------------------------------
 
   stop(): void {
     this.stopped = true;
+    this.queue.stop();
 
     for (const w of this.fsWatchers) {
       try {
         w.close();
       } catch {
-        // ignore
+        /* ignore */
       }
     }
 
@@ -90,164 +175,168 @@ class RepoFileWatcher {
   }
 
   /**
-   * Suppress watcher events for `filePath` to prevent write loops when Insomnia
-   * itself is writing the file. Call `unsuppress` once the write is done.
+   * Force an immediate DB→FS flush, bypassing the debounce timer.
+   * Resolves once all currently-enqueued work (including the flush) is done.
+   *
+   * The git service should call this before any git operation (status, diff,
+   * pull, merge, checkout, commit) to ensure the working tree is up-to-date.
    */
-  suppress(filePath: string): void {
-    this.suppressedPaths.add(path.normalize(filePath));
+  async flushNow(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+
+    // Cancel any pending debounced flush — we're doing it immediately
+    if (this.flushDebounce) {
+      clearTimeout(this.flushDebounce);
+      this.flushDebounce = null;
+    }
+
+    // Cancel all pending debounced imports and enqueue them immediately.
+    // This ensures all external changes are in the queue before we flush,
+    // preventing the flush from overwriting un-imported external edits.
+    for (const [absPath, timer] of this.debounceTimers) {
+      clearTimeout(timer);
+      this.debounceTimers.delete(absPath);
+      this.queue.enqueue(() => this.importFile(absPath));
+    }
+
+    this.queue.enqueue(() => this.flushProjectWorkspacesToDisk());
+    await this.queue.waitUntilDone();
   }
 
-  /** Resume watching a previously suppressed path. */
-  unsuppress(filePath: string): void {
-    this.suppressedPaths.delete(path.normalize(filePath));
+  /**
+   * Import all YAML files in the repo directory into the DB.
+   *
+   * Called during watcher creation and after bulk git operations (clone, pull,
+   * merge, checkout) so the DB reflects the current disk state.
+   *
+   * Always bypasses the mtime fast-path (`forceRead`) so every file is read
+   * and compared by content-hash. This makes the method safe to call at any
+   * point — regardless of what tracking state has already been recorded.
+   *
+   * Also detects workspace YAML files that were removed from disk (e.g. deleted
+   * on the remote) and removes the corresponding workspaces from the DB.
+   */
+  async importAllFiles(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+
+    const yamlFiles = await this.collectYamlFiles(this.repoDir);
+
+    // Import each file through the queue so they serialise with any
+    // concurrent flush that may still be pending.
+    // forceRead=true bypasses the mtime fast-path so every file is
+    // actually read and imported regardless of tracking state.
+    for (const absPath of yamlFiles) {
+      this.queue.enqueue(() => this.importFile(absPath, true));
+    }
+
+    // Detect deleted files: workspaces in DB whose YAML is no longer on disk.
+    this.queue.enqueue(() => this.removeOrphanedWorkspaces(yamlFiles));
+
+    await this.queue.waitUntilDone();
   }
 
   // ---------------------------------------------------------------------------
-  // Private methods
+  // DB → FS direction (outbound)
   // ---------------------------------------------------------------------------
 
   /**
    * Register a database onChange listener that flushes workspace YAML to disk
-   * whenever synced documents change (DB → disk direction).
-   *
-   * This is the counterpart to the fs.watch flow (disk → DB). Without this,
-   * changes made through the Insomnia UI would update the DB but leave stale
-   * files on disk, so isomorphic-git would see no diff.
+   * whenever synced documents change.
    */
   private registerDbChangeListener(): void {
     db.onChange(changes => {
-      // Drop if watcher was stopped or if we're in the middle of a flush (loop guard)
-      if (this.stopped || this.isFlushing) {
+      if (this.stopped) {
         return;
       }
 
-      // Only react to changes for syncable documents
       const hasSyncableChange = changes.some(([, doc]) => canSync(doc));
       if (!hasSyncableChange) {
         return;
       }
 
-      // Debounce: coalesce rapid bursts (e.g. importing a large collection) into one flush
+      // Debounce: coalesce rapid bursts into one flush
       if (this.flushDebounce) {
         clearTimeout(this.flushDebounce);
       }
       this.flushDebounce = setTimeout(() => {
         this.flushDebounce = null;
-        this.flushProjectWorkspacesToDisk().catch(err => {
-          console.warn('[repo-file-watcher] DB→disk flush error:', err);
-        });
+        this.queue.enqueue(() => this.flushProjectWorkspacesToDisk());
       }, DEBOUNCE_MS);
     });
   }
 
   /**
    * Re-export every workspace in the project to its on-disk YAML file.
-   * Called after DB changes so that `git status` / `git diff` reflect the
-   * current database state.
+   * Skips writes when the exported content is identical to what was last
+   * written (content-hash dedup).
    */
   private async flushProjectWorkspacesToDisk(): Promise<void> {
-    // Guard: skip if the watcher was stopped or a previous flush is still running
-    if (this.stopped || this.isFlushing) {
-      return;
-    }
+    const entries = await this.getWorkspacesWithMeta();
 
-    this.isFlushing = true;
-    try {
-      const workspaces = await db.find(models.workspace.type, { parentId: this.projectId });
+    for (const { workspace, meta } of entries) {
+      if (this.stopped) {
+        return;
+      }
 
-      for (const workspace of workspaces) {
-        const workspaceMeta = await db.findOne<WorkspaceMeta>(models.workspaceMeta.type, {
-          parentId: workspace._id,
+      const gitFilePath: string = meta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
+      const absPath = path.normalize(path.join(this.repoDir, gitFilePath));
+
+      // Detect gitFilePath rename: if the path changed, we'll delete the old
+      // file *after* the new one is successfully written to avoid data loss.
+      const previousAbsPath = this.lastKnownGitFilePath.get(workspace._id);
+      const isRename = previousAbsPath && previousAbsPath !== absPath;
+
+      try {
+        const yamlContent = await getInsomniaV5DataExport({
+          workspaceId: workspace._id,
+          includePrivateEnvironments: false,
         });
 
-        const gitFilePath: string = workspaceMeta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
-        const absPath = path.normalize(path.join(this.repoDir, gitFilePath));
+        const hash = contentHash(yamlContent);
 
-        // Before overwriting, check whether the file was externally modified
-        // (e.g. via `git restore`) since we last tracked it. If the disk mtime is
-        // newer than our baseline, defer to the disk version by importing it into
-        // the DB and skipping the write — this respects the user's git operation.
-        const lastKnownMtime = this.lastSyncMtime.get(absPath);
-        if (lastKnownMtime !== undefined) {
-          try {
-            const diskStat = await fs.promises.stat(absPath);
-            if (diskStat.mtimeMs > lastKnownMtime) {
-              await this.importFile(absPath);
-              continue;
-            }
-          } catch {
-            // File doesn't exist on disk yet — proceed to write it.
-          }
-        }
-
-        // Suppress the path so the fs.watch event triggered by our own write
-        // does not reimport the file we just wrote.
-        this.suppressedPaths.add(absPath);
-        try {
-          const yamlContent = await getInsomniaV5DataExport({
-            workspaceId: workspace._id,
-            includePrivateEnvironments: false,
-          });
-
-          await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-          await fs.promises.writeFile(absPath, yamlContent, 'utf8');
-
-          // Update the tracked mtime so the polling loop doesn't re-import the file
-          const stat = await fs.promises.stat(absPath);
-          this.lastSyncMtime.set(absPath, stat.mtimeMs);
-        } catch (err) {
-          console.warn('[repo-file-watcher] Could not flush workspace to disk:', workspace._id, err);
-        } finally {
-          // Unsuppress after a short delay to let the fs.watch event fire and be dropped
-          setTimeout(() => this.suppressedPaths.delete(absPath), DEBOUNCE_MS * 2);
-        }
-      }
-    } finally {
-      this.isFlushing = false;
-    }
-  }
-
-  /**
-   * Scan all YAML files in the repo directory and record their current mtimes as
-   * the initial baseline. This lets `flushProjectWorkspacesToDisk` detect files
-   * that are subsequently modified externally (e.g. via `git restore`) by
-   * comparing against this snapshot.
-   */
-  private async initSyncMtimes(): Promise<void> {
-    await this.scanMtimes(this.repoDir);
-  }
-
-  private async scanMtimes(dir: string): Promise<void> {
-    let entries: fs.Dirent[];
-    try {
-      entries = await fs.promises.readdir(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-
-    for (const entry of entries) {
-      const absPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === GIT_DIR) {
+        // Skip writing if the content hasn't changed
+        if (this.lastWrittenHash.get(absPath) === hash) {
           continue;
         }
-        await this.scanMtimes(absPath);
-      } else if (entry.isFile() && entry.name.endsWith('.yaml')) {
-        try {
-          const stat = await fs.promises.stat(absPath);
-          this.lastSyncMtime.set(path.normalize(absPath), stat.mtimeMs);
-        } catch {
-          // ignore
+
+        await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
+        await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+
+        // New file written successfully — now safe to remove the old one
+        if (isRename) {
+          try {
+            await fs.promises.unlink(previousAbsPath);
+            console.log('[repo-file-watcher] Removed old file after rename:', previousAbsPath, '→', absPath);
+          } catch {
+            // Old file may already be gone — that's fine
+          }
+          // Clean up tracking for the old path so the watcher doesn't
+          // try to re-import a file that no longer exists
+          this.lastSyncMtime.delete(previousAbsPath);
+          this.lastWrittenHash.delete(previousAbsPath);
         }
+
+        // Record hash + mtime so the FS→DB side skips this echo
+        this.lastWrittenHash.set(absPath, hash);
+        this.lastKnownGitFilePath.set(workspace._id, absPath);
+        const stat = await fs.promises.stat(absPath);
+        this.lastSyncMtime.set(absPath, stat.mtimeMs);
+      } catch (err) {
+        console.warn('[repo-file-watcher] Could not flush workspace to disk:', workspace._id, err);
       }
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // FS → DB direction (inbound)
+  // ---------------------------------------------------------------------------
 
   private startFsWatch(): void {
     try {
-      // On Windows and macOS, `recursive: true` covers the whole tree in one call.
-      // On Linux this option is silently ignored, so we fall back to watching the
-      // root directory only and rely on polling to catch deep changes.
       const watcher = fs.watch(this.repoDir, { recursive: true }, (_eventType, filename) => {
         if (!filename) {
           return;
@@ -275,45 +364,34 @@ class RepoFileWatcher {
   }
 
   private async pollDirectory(dir: string): Promise<void> {
-    let entries: fs.Dirent[];
-    try {
-      entries = await fs.promises.readdir(dir, { withFileTypes: true });
-    } catch {
-      return;
+    const yamlFiles = await this.collectYamlFiles(dir);
+    const seenPaths = new Set<string>(yamlFiles);
+
+    for (const absPath of yamlFiles) {
+      try {
+        const stat = await fs.promises.stat(absPath);
+        const lastMtime = this.lastSyncMtime.get(absPath) ?? 0;
+        if (stat.mtimeMs > lastMtime) {
+          this.queue.enqueue(() => this.importFile(absPath));
+        }
+      } catch {
+        // File may have been removed between readdir and stat
+      }
     }
 
-    for (const entry of entries) {
-      const absPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        // Skip .git internals
-        if (entry.name === GIT_DIR) {
-          continue;
-        }
-        await this.pollDirectory(absPath);
-      } else if (entry.isFile() && entry.name.endsWith('.yaml')) {
-        try {
-          const stat = await fs.promises.stat(absPath);
-          const lastMtime = this.lastSyncMtime.get(absPath) ?? 0;
-          if (stat.mtimeMs > lastMtime) {
-            await this.importFile(absPath);
-          }
-        } catch {
-          // File may have been removed between readdir and stat; ignore.
-        }
+    // Detect deletions: check tracked files that no longer exist on disk
+    for (const [trackedPath] of this.lastSyncMtime) {
+      if (!seenPaths.has(trackedPath)) {
+        this.queue.enqueue(() => this.importFile(trackedPath));
       }
     }
   }
 
   private scheduleImport(absPath: string): void {
-    // Only process YAML files outside .git
-    if (!absPath.endsWith('.yaml')) {
-      return;
-    }
-    if (this.isInGitDir(absPath)) {
+    if (this.stopped || !absPath.endsWith('.yaml') || this.isInGitDir(absPath)) {
       return;
     }
 
-    // Debounce: discard previous timer for this path
     const existing = this.debounceTimers.get(absPath);
     if (existing) {
       clearTimeout(existing);
@@ -321,12 +399,236 @@ class RepoFileWatcher {
 
     const timer = setTimeout(() => {
       this.debounceTimers.delete(absPath);
-      this.importFile(absPath).catch(err => {
-        console.warn('[repo-file-watcher] import error for', absPath, err);
-      });
+      this.queue.enqueue(() => this.importFile(absPath));
     }, DEBOUNCE_MS);
 
     this.debounceTimers.set(absPath, timer);
+  }
+
+  /**
+   * Read a YAML file from disk and import its documents into the DB.
+   *
+   * Loop prevention:
+   *  1. mtime fast-path — if mtime is unchanged, skip without reading.
+   *  2. content-hash   — if the file hash matches `lastWrittenHash`, the file
+   *     was written by our own DB→FS flush; skip.
+   *
+   * Orphan deletion:
+   *  When an existing workspace is reimported, DB documents that no longer
+   *  appear in the YAML are removed (e.g. a request deleted on the remote).
+   */
+  private async importFile(absPath: string, forceRead = false): Promise<void> {
+    const normalised = path.normalize(absPath);
+
+    const result = await this.readIfChanged(absPath, normalised, forceRead);
+    if (!result) {
+      return;
+    }
+
+    this.lastWrittenHash.set(normalised, result.hash);
+    this.lastSyncMtime.set(normalised, result.mtimeMs);
+
+    const docs = this.parseAndValidate(absPath, normalised, result.content);
+    if (!docs) {
+      return;
+    }
+
+    await this.deleteOrphans(docs);
+    await this.upsertDocs(absPath, normalised, docs);
+
+    this.notifyRenderer();
+  }
+
+  /**
+   * Read a file from disk if it has changed since the last sync.
+   * Returns the content, its hash, and the mtime — or null if skipped.
+   */
+  private async readIfChanged(
+    absPath: string,
+    normalised: string,
+    forceRead = false,
+  ): Promise<{ content: string; hash: string; mtimeMs: number } | null> {
+    // ── Check if file still exists ───────────────────────────────────
+    let fileStat: fs.Stats;
+    try {
+      fileStat = await fs.promises.stat(absPath);
+    } catch {
+      await this.handleFileDeletion(normalised);
+      return null;
+    }
+
+    // ── Fast-path: mtime unchanged → skip ────────────────────────────
+    // Bypassed when forceRead is true (e.g. importAllFiles after git
+    // operations) so every file is always read and compared by content.
+    if (!forceRead) {
+      const lastMtime = this.lastSyncMtime.get(normalised);
+      if (lastMtime !== undefined && fileStat.mtimeMs <= lastMtime) {
+        return null;
+      }
+    }
+
+    // ── Read file ────────────────────────────────────────────────────
+    let content: string;
+    try {
+      content = await fs.promises.readFile(absPath, 'utf8');
+    } catch {
+      await this.handleFileDeletion(normalised);
+      return null;
+    }
+
+    // ── Content-hash dedup: skip if this is our own write ────────────
+    const hash = contentHash(content);
+    if (this.lastWrittenHash.get(normalised) === hash) {
+      this.lastSyncMtime.set(normalised, fileStat.mtimeMs);
+      return null;
+    }
+
+    return { content, hash, mtimeMs: fileStat.mtimeMs };
+  }
+
+  /**
+   * Validate and parse YAML content. Returns parsed documents or null
+   * if the content is not valid Insomnia V5 YAML (with problems tracked).
+   */
+  private parseAndValidate(
+    absPath: string,
+    normalised: string,
+    content: string,
+  ): ReturnType<typeof tryImportV5Data>['data'] | null {
+    const firstLine = content.split('\n')[0].trim();
+    if (!InsomniaFileTypeValues.some(t => firstLine.includes(t))) {
+      return null;
+    }
+
+    if (content.split('\n').some(l => l.startsWith('<<<<<<<') || l.startsWith('>>>>>>>'))) {
+      this.addProblem(normalised, {
+        filePath: absPath,
+        relPath: this.toPosixRelPath(absPath),
+        kind: 'conflict',
+        message: 'File contains Git conflict markers and cannot be imported.',
+      });
+      return null;
+    }
+
+    const { data: docs, error } = tryImportV5Data(content);
+    if (error || !docs) {
+      this.addProblem(normalised, {
+        filePath: absPath,
+        relPath: this.toPosixRelPath(absPath),
+        kind: 'parse-error',
+        message: typeof error === 'string' ? error : `Failed to parse: ${String(error)}`,
+      });
+      return null;
+    }
+
+    this.clearProblem(normalised);
+    return docs;
+  }
+
+  /** Remove DB documents that no longer appear in the imported YAML. */
+  private async deleteOrphans(docs: NonNullable<ReturnType<typeof tryImportV5Data>['data']>): Promise<void> {
+    const workspace = docs.find(models.workspace.isWorkspace) as Workspace | undefined;
+    if (!workspace) {
+      return;
+    }
+    const existingWorkspace = await services.workspace.getById(workspace._id);
+    if (!existingWorkspace) {
+      return;
+    }
+    const originDocs = await db.getWithDescendants(existingWorkspace);
+    const deletedDocs = originDocs.filter(originDoc => !docs.some(d => d._id === originDoc._id) && canSync(originDoc));
+    for (const doc of deletedDocs) {
+      await db.unsafeRemove(doc);
+    }
+  }
+
+  /** Upsert parsed documents into the DB and update tracking state. */
+  private async upsertDocs(
+    absPath: string,
+    normalised: string,
+    docs: NonNullable<ReturnType<typeof tryImportV5Data>['data']>,
+  ): Promise<void> {
+    const bufferId = await db.bufferChanges();
+    try {
+      for (const doc of docs) {
+        if (models.workspace.isWorkspace(doc)) {
+          doc.parentId = this.projectId;
+          const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(doc._id);
+          await services.workspaceMeta.update(workspaceMeta, {
+            gitFilePath: this.toPosixRelPath(absPath),
+          });
+          this.lastKnownGitFilePath.set(doc._id, normalised);
+        }
+        await db.update(doc);
+      }
+    } finally {
+      await db.flushChanges(bufferId);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Handle a YAML file that was deleted from disk.
+   * Finds the workspace whose `gitFilePath` maps to this path and removes
+   * it (plus all descendants) from the DB.
+   */
+  private async handleFileDeletion(normalised: string): Promise<void> {
+    // Only act if we were previously tracking this file
+    if (!this.lastSyncMtime.has(normalised) && !this.lastWrittenHash.has(normalised)) {
+      return;
+    }
+
+    const relPath = this.toPosixRelPath(normalised);
+
+    // Find the workspace whose gitFilePath matches this deleted file
+    const entries = await this.getWorkspacesWithMeta();
+    for (const { workspace, meta } of entries) {
+      if (meta?.gitFilePath === relPath) {
+        console.log('[repo-file-watcher] File deleted, removing workspace:', workspace._id, relPath);
+        await this.removeWorkspaceWithDescendants(workspace);
+        this.notifyRenderer();
+        break;
+      }
+    }
+
+    // Clean up tracking maps
+    this.lastSyncMtime.delete(normalised);
+    this.lastWrittenHash.delete(normalised);
+    this.clearProblem(normalised);
+  }
+
+  /** Convert an absolute path to a posix-style path relative to the repo root. */
+  private toPosixRelPath(absPath: string): string {
+    return path.relative(this.repoDir, absPath).split(path.sep).join(path.posix.sep);
+  }
+
+  /** Remove a workspace and all its descendants from the DB inside a buffered batch. */
+  private async removeWorkspaceWithDescendants(workspace: Workspace): Promise<void> {
+    const descendants = await db.getWithDescendants(workspace);
+    const bufferId = await db.bufferChanges();
+    try {
+      for (const doc of descendants) {
+        await db.unsafeRemove(doc);
+      }
+    } finally {
+      await db.flushChanges(bufferId);
+    }
+  }
+
+  /** Fetch all workspaces in this project together with their metadata. */
+  private async getWorkspacesWithMeta(): Promise<{ workspace: Workspace; meta: WorkspaceMeta | undefined }[]> {
+    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this.projectId });
+    const results: { workspace: Workspace; meta: WorkspaceMeta | undefined }[] = [];
+    for (const workspace of workspaces) {
+      const meta = await db.findOne<WorkspaceMeta>(models.workspaceMeta.type, {
+        parentId: workspace._id,
+      });
+      results.push({ workspace, meta });
+    }
+    return results;
   }
 
   private isInGitDir(absPath: string): boolean {
@@ -334,107 +636,228 @@ class RepoFileWatcher {
     return rel.startsWith(GIT_DIR + path.sep) || rel === GIT_DIR;
   }
 
-  private async importFile(absPath: string): Promise<void> {
-    const normalised = path.normalize(absPath);
-
-    // Drop events for paths Insomnia is currently writing
-    if (this.suppressedPaths.has(normalised)) {
-      return;
-    }
-
-    let content: string;
+  /** Recursively collect all `.yaml` files under `dir` as normalised absolute paths, skipping `.git`. */
+  private async collectYamlFiles(dir: string): Promise<string[]> {
+    const result: string[] = [];
+    let entries: fs.Dirent[];
     try {
-      content = await fs.promises.readFile(absPath, 'utf8');
+      entries = await fs.promises.readdir(dir, { withFileTypes: true });
     } catch {
-      // File deleted or not readable; ignore
-      return;
+      return result;
     }
-
-    // Skip files that don't look like Insomnia V5 YAML
-    const firstLine = content.split('\n')[0].trim();
-    const isInsomniaFile = InsomniaFileTypeValues.some(t => firstLine.includes(t));
-    if (!isInsomniaFile) {
-      return;
-    }
-
-    // Skip files that contain Git conflict markers — they are not importable yet
-    const lines = content.split('\n');
-    if (lines.some(l => l.startsWith('<<<<<<<') || l.startsWith('>>>>>>>'))) {
-      console.warn('[repo-file-watcher] Skipping conflicted file:', absPath);
-      return;
-    }
-
-    const { data: docs, error } = tryImportV5Data(content);
-    if (error || !docs) {
-      console.warn('[repo-file-watcher] Failed to parse', absPath, error);
-      return;
-    }
-
-    const bufferId = await db.bufferChanges();
-    try {
-      for (const doc of docs) {
-        if (isWorkspace(doc)) {
-          doc.parentId = this.projectId;
-          // Update workspaceMeta with the relative file path so routing still works
-          const relPath = path.relative(this.repoDir, absPath);
-          const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
-          await models.workspaceMeta.update(workspaceMeta, {
-            gitFilePath: relPath.split(path.sep).join(path.posix.sep),
-          });
+    for (const entry of entries) {
+      const absPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === GIT_DIR) {
+          continue;
         }
-        await db.update(doc);
+        const nested = await this.collectYamlFiles(absPath);
+        result.push(...nested);
+      } else if (entry.isFile() && entry.name.endsWith('.yaml')) {
+        result.push(path.normalize(absPath));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Remove workspaces from the DB whose YAML file no longer exists on disk.
+   * Handles the case where a workspace was deleted on the remote and the user
+   * pulls / checks out a branch that doesn't contain it.
+   */
+  private async removeOrphanedWorkspaces(currentDiskFiles: string[]): Promise<void> {
+    const diskFileSet = new Set(currentDiskFiles.map(f => path.normalize(f)));
+    const entries = await this.getWorkspacesWithMeta();
+
+    for (const { workspace, meta } of entries) {
+      if (!meta?.gitFilePath) {
+        continue;
       }
 
-      // Record the mtime so polling doesn't re-import the same version
-      try {
-        const stat = await fs.promises.stat(absPath);
-        this.lastSyncMtime.set(normalised, stat.mtimeMs);
-      } catch {
-        // ignore stat failure
+      const absPath = path.normalize(path.join(this.repoDir, meta.gitFilePath));
+      if (!diskFileSet.has(absPath)) {
+        // Workspace YAML no longer on disk — remove from DB
+        console.log('[repo-file-watcher] Removing orphaned workspace:', workspace._id);
+        await this.removeWorkspaceWithDescendants(workspace);
       }
-    } finally {
-      await db.flushChanges(bufferId);
     }
   }
+
+  /**
+   * Load existing workspace → gitFilePath mappings from the DB so rename
+   * detection works from the start.
+   *
+   * Note: we intentionally do NOT pre-scan file mtimes here. The initial
+   * {@link importAllFiles} call in {@link create} populates both
+   * `lastSyncMtime` and `lastWrittenHash` as a side-effect of importing.
+   * Pre-scanning mtimes would cause `importAllFiles` to skip files it
+   * hasn't actually imported yet.
+   */
+  private async loadKnownGitFilePaths(): Promise<void> {
+    const entries = await this.getWorkspacesWithMeta();
+    for (const { workspace, meta } of entries) {
+      if (meta?.gitFilePath) {
+        const absPath = path.normalize(path.join(this.repoDir, meta.gitFilePath));
+        this.lastKnownGitFilePath.set(workspace._id, absPath);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Problem tracking
+  // ---------------------------------------------------------------------------
+
+  /** Record a problem (conflict or parse error) for the given file path. */
+  private addProblem(normalised: string, issue: FileIssue): void {
+    this.problemFiles.set(normalised, issue);
+    console.warn(`[repo-file-watcher] ${issue.kind}: ${issue.relPath} — ${issue.message}`);
+    this.notifyProblemsChanged();
+  }
+
+  /** Clear a previously recorded problem for the given file path. */
+  private clearProblem(normalised: string): void {
+    if (this.problemFiles.delete(normalised)) {
+      this.notifyProblemsChanged();
+    }
+  }
+
+  /** Return a snapshot of all current file problems. */
+  getProblems(): FileIssue[] {
+    return Array.from(this.problemFiles.values());
+  }
+
+  // ---------------------------------------------------------------------------
+  // Notifications
+  // ---------------------------------------------------------------------------
+
+  /** Notify the renderer that the DB was synced from disk. */
+  private notifyRenderer(): void {
+    this.notifier.onDbSynced();
+  }
+
+  /** Notify the renderer that the set of file problems changed. */
+  private notifyProblemsChanged(): void {
+    this.notifier.onProblemsChanged(this.getProblems());
+  }
 }
 
 // ---------------------------------------------------------------------------
-// Module-level registry & public API
+// Registry — manages per-repo watcher instances
 // ---------------------------------------------------------------------------
 
-/** Per-repo-id watcher instances */
-const watchers = new Map<string, RepoFileWatcher>();
+export class RepoFileWatcherRegistry {
+  private watchers = new Map<string, RepoFileWatcher>();
+  /** Tracks in-flight create() calls to prevent duplicate watchers. */
+  private pending = new Map<string, Promise<void>>();
+  private readonly notifier: WatcherNotifier;
 
-/**
- * Start watching `repoDir` for external YAML changes.
- * Safe to call multiple times for the same repoId; subsequent calls are no-ops.
- */
-export function startWatcher(repoId: string, repoDir: string, projectId: string): void {
-  if (watchers.has(repoId)) {
-    return;
+  constructor(notifier: WatcherNotifier) {
+    this.notifier = notifier;
   }
-  watchers.set(repoId, new RepoFileWatcher(repoDir, projectId));
-}
 
-/** Stop watching and clean up resources for a given repoId. */
-export function stopWatcher(repoId: string): void {
-  const watcher = watchers.get(repoId);
-  if (!watcher) {
-    return;
+  /**
+   * Start watching `repoDir` for external YAML changes.
+   * Safe to call multiple times for the same repoId; concurrent calls
+   * for the same repoId coalesce into a single create.
+   */
+  async startWatcher(repoId: string, repoDir: string, projectId: string): Promise<void> {
+    if (this.watchers.has(repoId)) {
+      return;
+    }
+
+    // If a create is already in flight for this repoId, wait for it
+    const inflight = this.pending.get(repoId);
+    if (inflight) {
+      await inflight;
+      return;
+    }
+
+    const promise = RepoFileWatcher.create(repoDir, projectId, this.notifier)
+      .then(watcher => {
+        this.watchers.set(repoId, watcher);
+      })
+      .finally(() => {
+        this.pending.delete(repoId);
+      });
+
+    this.pending.set(repoId, promise);
+    await promise;
   }
-  watcher.stop();
-  watchers.delete(repoId);
+
+  /** Stop watching and clean up resources for a given repoId. */
+  stopWatcher(repoId: string): void {
+    const watcher = this.watchers.get(repoId);
+    if (!watcher) {
+      return;
+    }
+    watcher.stop();
+    this.watchers.delete(repoId);
+  }
+
+  /** Stop all active watchers. Useful for app shutdown. */
+  stopAll(): void {
+    for (const watcher of this.watchers.values()) {
+      watcher.stop();
+    }
+    this.watchers.clear();
+  }
+
+  /**
+   * Force an immediate DB→FS flush for the given repo, then wait for all
+   * pending sync work to complete.
+   *
+   * Call before any git operation (status, diff, pull, merge, checkout, commit)
+   * to ensure the working tree reflects the latest DB state.
+   */
+  flushNow(repoId: string): Promise<void> {
+    const watcher = this.watchers.get(repoId);
+    if (!watcher) {
+      return Promise.resolve();
+    }
+    return watcher.flushNow();
+  }
+
+  /**
+   * Import all YAML files in the repo directory into the DB.
+   *
+   * Call after bulk git operations (clone, pull, merge, checkout) so the DB
+   * reflects the new disk state. Content-hash dedup makes repeated calls cheap.
+   */
+  importAllFiles(repoId: string): Promise<void> {
+    const watcher = this.watchers.get(repoId);
+    if (!watcher) {
+      return Promise.resolve();
+    }
+    return watcher.importAllFiles();
+  }
+
+  /**
+   * Return a snapshot of all current file problems (conflicts, parse errors)
+   * for the given repo. Returns an empty array if the watcher is not running.
+   */
+  getProblems(repoId: string): FileIssue[] {
+    const watcher = this.watchers.get(repoId);
+    if (!watcher) {
+      return [];
+    }
+    return watcher.getProblems();
+  }
 }
 
-/**
- * Suppress watcher events for `filePath` to prevent write loops when Insomnia
- * itself is writing the file. Call `unsuppressPath` once the write is done.
- */
-export function suppressPath(repoId: string, filePath: string): void {
-  watchers.get(repoId)?.suppress(filePath);
+/** Default notifier that broadcasts to all Electron BrowserWindows. */
+function createElectronNotifier(): WatcherNotifier {
+  return {
+    onDbSynced: () => {
+      for (const w of BrowserWindow.getAllWindows()) {
+        w.webContents.send('git.db-synced');
+      }
+    },
+    onProblemsChanged: problems => {
+      for (const w of BrowserWindow.getAllWindows()) {
+        w.webContents.send('git.file-problems-changed', problems);
+      }
+    },
+  };
 }
 
-/** Resume watching a previously suppressed path. */
-export function unsuppressPath(repoId: string, filePath: string): void {
-  watchers.get(repoId)?.unsuppress(filePath);
-}
+export const repoFileWatcherRegistry = new RepoFileWatcherRegistry(createElectronNotifier());

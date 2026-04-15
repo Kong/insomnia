@@ -52,9 +52,8 @@ import GitVCS, {
 } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
-import { GitProjectNeDBClient } from '../sync/git/project-ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
-import { startWatcher, stopWatcher } from '../sync/git/repo-file-watcher';
+import { repoFileWatcherRegistry } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
@@ -223,18 +222,17 @@ async function getGitFSClient({
   }
 
   // Project FS Client
-  // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
-  const neDbClient = GitProjectNeDBClient.createClient(projectId);
-
   // All git metadata in the GIT_INTERNAL_DIR directory is stored in a .git/ directory on the filesystem
   const gitDataClient = fsClient(baseDir);
 
-  // All non-YAML files are stored at the repository root (no separate 'other' subfolder)
-  // so that native Git tools can operate directly on the repository directory.
-  const otherDataClient = fsClient(baseDir);
+  // All files (YAML + non-YAML) are stored at the repository root so that
+  // native Git tools can operate directly on the repository directory.
+  // The RepoFileWatcher is solely responsible for syncing YAML ↔ NeDB.
+  const diskClient = fsClient(baseDir);
 
-  // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
-  const routableFS = projectRoutableFSClient(otherDataClient, neDbClient, {
+  // The routable FS client routes prefix-matched paths (e.g. .git) to
+  // specialised FS clients; everything else goes to the disk client.
+  const routableFS = projectRoutableFSClient(diskClient, {
     [GIT_INTERNAL_DIR]: gitDataClient,
   });
 
@@ -354,7 +352,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       if (!workspaceId) {
         legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
         // Ensure watcher is running (idempotent)
-        startWatcher(gitRepository._id, baseDir, projectId);
+        await repoFileWatcherRegistry.startWatcher(gitRepository._id, baseDir, projectId);
       }
 
       return {
@@ -402,8 +400,9 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
 
     // Start file watcher for project-scoped repos so external YAML edits
     // (native git CLI, VS Code, etc.) flow back into the database.
+    // The watcher automatically imports all YAML files during creation.
     if (!workspaceId) {
-      startWatcher(gitRepository._id, baseDir, projectId);
+      await repoFileWatcherRegistry.startWatcher(gitRepository._id, baseDir, projectId);
     }
 
     let legacyInsomniaWorkspace;
@@ -537,6 +536,8 @@ export const gitChangesLoader = async ({
 }): Promise<GitChangesLoaderData> => {
   try {
     const gitRepository = await getGitRepository({ projectId, workspaceId });
+    // Flush DB changes to disk before checking git status
+    await repoFileWatcherRegistry.flushNow(gitRepository._id);
     const branch = await GitVCS.getCurrentBranch();
 
     const { changes, hasUncommittedChanges } = await getGitChanges();
@@ -1042,6 +1043,13 @@ export const cloneGitRepoAction = async ({
         await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
       }
 
+      // Start watcher — it automatically imports all YAML files during creation
+      const cloneBaseDir = path.join(
+        process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+        `version-control/git/${gitRepository._id}`,
+      );
+      await repoFileWatcherRegistry.startWatcher(gitRepository._id, cloneBaseDir, project._id);
+
       const updateRepository = await services.gitRepository.getById(gitRepository._id);
       invariant(updateRepository, 'Git Repository not found');
 
@@ -1386,7 +1394,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
 
   await services.gitRepository.remove(repo);
   // Stop the file watcher for this repository (project-scoped flow only).
-  stopWatcher(repo._id);
+  repoFileWatcherRegistry.stopWatcher(repo._id);
 
   await database.flushChanges(flushId);
 
@@ -1408,6 +1416,8 @@ export const commitToGitRepoAction = async ({
 }): Promise<CommitToGitRepoResult> => {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
+    // Flush DB changes to disk before committing
+    await repoFileWatcherRegistry.flushNow(gitRepository._id);
     await GitVCS.setAuthor();
     await GitVCS.commit(message);
 
@@ -1452,7 +1462,9 @@ export const multipleCommitToGitRepoAction = async ({
     files: string[];
   }[];
 }) => {
-  await getGitRepository({ projectId, workspaceId });
+  const gitRepository = await getGitRepository({ projectId, workspaceId });
+  // Flush DB changes to disk before committing
+  await repoFileWatcherRegistry.flushNow(gitRepository._id);
   await GitVCS.setAuthor();
 
   for (const commit of commits) {
@@ -1532,6 +1544,8 @@ export const commitAndPushToGitRepoAction = async ({
   }
 
   try {
+    // Flush DB changes to disk before committing
+    await repoFileWatcherRegistry.flushNow(repo._id);
     await GitVCS.setAuthor();
     await GitVCS.commit(message);
 
@@ -1714,6 +1728,9 @@ export const checkoutGitBranchAction = async ({
     const bufferId = await database.bufferChanges();
     await GitVCS.checkout(branch);
 
+    // Import all YAML files from disk into the DB after checkout
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+
     const log = (await GitVCS.log({ depth: 1 })) || [];
 
     const author = log[0] ? log[0].commit.author : null;
@@ -1810,6 +1827,11 @@ export const mergeGitBranch = async ({
     // isomorphic-git does not update the working area after merge, we need to do it manually by checking out the current branch
     const currentBranch = await GitVCS.getCurrentBranch();
     await GitVCS.checkout(currentBranch);
+
+    // Import all YAML files from disk into the DB after merge + checkout
+    const gitRepoId = gitRepository._id;
+    await repoFileWatcherRegistry.importAllFiles(gitRepoId);
+
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'merge_branch'),
       providerName,
@@ -1902,6 +1924,9 @@ export const pushToGitRemoteAction = async ({
   force?: boolean;
 }): Promise<PushToGitRemoteResult> => {
   const gitRepository = await getGitRepository({ projectId, workspaceId });
+
+  // Flush DB changes to disk before pushing
+  await repoFileWatcherRegistry.flushNow(gitRepository._id);
 
   // Check if there is anything to push
   let canPush = false;
@@ -2051,6 +2076,10 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
 
     const bufferId = await database.bufferChanges();
     await GitVCS.pullWithConflictSupport(gitRepository.credentialsId);
+
+    // Import all YAML files from disk into the DB after pull
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'pull'),
       providerName: credentials.provider,
@@ -2139,6 +2168,9 @@ export const continueMerge = async ({
       commitParent,
     });
 
+    // Import all YAML files from disk into the DB after merge resolution
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+
     const log = (await GitVCS.log({ depth: 1 })) || [];
 
     const author = log[0] ? log[0].commit.author : null;
@@ -2200,6 +2232,8 @@ export const discardChangesAction = async ({
 
     await GitVCS.discardChanges(files);
 
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+
     await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime: Date.now(),
     });
@@ -2235,6 +2269,8 @@ export const gitStatusAction = async ({
 }): Promise<GitStatusResult> => {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
+    // Flush DB changes to disk before checking git status
+    await repoFileWatcherRegistry.flushNow(gitRepository._id);
     const { hasUncommittedChanges, changes } = await getGitChanges();
     const localChanges = changes.staged.length + changes.unstaged.length;
 
