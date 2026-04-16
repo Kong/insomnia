@@ -1,8 +1,6 @@
-import type { Icon, IconProp } from '@fortawesome/fontawesome-svg-core';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 
-import { models } from '~/insomnia-data';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
@@ -10,7 +8,7 @@ import type { PaneBreadcrumb } from '~/ui/components/pane-header';
 import { ResourceIcon } from '~/ui/components/workspace/resource-icon';
 import { buildResourceUrl } from '~/ui/hooks/use-insomnia-tab';
 
-export function useWorkspaceBreadcrumbs() {
+export function useWorkspaceBreadcrumbs({ isMcp }: { isMcp: boolean }) {
   const { activeWorkspace, activeProject, collection } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
@@ -70,7 +68,7 @@ export function useWorkspaceBreadcrumbs() {
     );
   }
 
-  if (activeRequest) {
+  if (activeRequest && !isMcp) {
     breadcrumbs.push({
       id: activeRequest._id,
       label: activeRequest.name || 'Untitled request',

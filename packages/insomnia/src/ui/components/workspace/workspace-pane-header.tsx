@@ -20,8 +20,6 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
   const { activeCookieJar, caCertificate, clientCertificates, activeWorkspace } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
 
-  const breadcrumbs = useWorkspaceBreadcrumbs();
-
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
@@ -34,6 +32,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
   });
 
   const isMcp = activeWorkspace && models.workspace.isMcp(activeWorkspace);
+  const breadcrumbs = useWorkspaceBreadcrumbs({ isMcp });
 
   const caStatus = !isMcp
     ? null
