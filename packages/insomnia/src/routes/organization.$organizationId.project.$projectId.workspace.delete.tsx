@@ -5,6 +5,7 @@ import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
+import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -20,6 +21,8 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
       await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
       // For cloud sync workspaces, delete only local file or also delete remote copy
       await (localOnly ? vcs.removeBackendProjectsForRoot(workspace._id) : vcs.archiveProject());
+      // Emit cloud sync file change event when cloud sync workspace is deleted to refresh the remote projects list cache
+      uiEventBus.emit(CLOUD_SYNC_FILE_CHANGE);
     } catch (err) {
       return {
         error:

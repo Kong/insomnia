@@ -3,11 +3,11 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { href, redirect, useParams } from 'react-router';
 
 import { logout } from '~/account/session';
+import { getProjectsWithGitRepositories } from '~/common/project';
 import type { GitRepository, Project } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
 import { isScratchpadOrganizationId } from '~/models/organization';
-import { getProjectsWithGitRepositories } from '~/routes/organization.$organizationId.project.$projectId._index';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';

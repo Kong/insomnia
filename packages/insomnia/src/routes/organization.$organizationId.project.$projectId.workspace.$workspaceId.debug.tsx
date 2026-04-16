@@ -37,11 +37,11 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router';
-import { useLocalStorage } from 'react-use';
+import * as reactUse from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { type ChangeBufferEvent } from '~/common/database';
-import { generateId, isNotNullOrUndefined } from '~/common/misc';
+import { generateId } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
 import type {
   Environment,
@@ -76,24 +76,19 @@ import { DocumentTab } from '~/ui/components/document-tab';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '~/ui/components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
-import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
-import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { McpPane } from '~/ui/components/mcp/mcp-pane';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { CookiesModal } from '~/ui/components/modals/cookies-modal';
 import { ErrorModal } from '~/ui/components/modals/error-modal';
 import { GenerateCodeModal } from '~/ui/components/modals/generate-code-modal';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { PasteCurlModal } from '~/ui/components/modals/paste-curl-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { RequestSettingsModal } from '~/ui/components/modals/request-settings-modal';
-import { CertificatesModal } from '~/ui/components/modals/workspace-certificates-modal';
-import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { GrpcRequestPane } from '~/ui/components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '~/ui/components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '~/ui/components/panes/placeholder-request-pane';
@@ -271,7 +266,7 @@ const Debug = () => {
     panel?: string;
   };
 
-  const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:collection-list-filter`);
+  const [filter, setFilter] = reactUse.useLocalStorage<string>(`${workspaceId}:collection-list-filter`);
   const collection = useFilteredRequests(_collection, filter ?? '');
   const isDesignWorkspace = models.workspace.isDesign(activeWorkspace);
 

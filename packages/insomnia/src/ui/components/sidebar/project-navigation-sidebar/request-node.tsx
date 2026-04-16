@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
-import type {
-  GrpcRequest,
-  McpRequest,
-  Request,
-  RequestGroup,
-  SocketIORequest,
-  WebSocketRequest,
-} from '~/insomnia-data';
+import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '~/ui/components/dropdowns/request-group-actions-dropdown';
@@ -80,7 +73,7 @@ export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
 
   return (
-    <div className={ROW_CLASS} style={{ paddingLeft: `${level + 3}rem`, paddingRight: '8px' }}>
+    <div className={ROW_CLASS} style={{ paddingLeft: `${level + 3}rem` }}>
       {Array.from({ length: level + 2 }, (_, i) => {
         const isActive = i === level + 1;
         return (

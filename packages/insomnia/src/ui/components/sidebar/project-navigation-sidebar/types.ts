@@ -1,3 +1,4 @@
+import type { InsomniaFile } from '~/common/project';
 import type { GitRepository, Project, Workspace, WorkspaceMeta } from '~/insomnia-data';
 import type { BaseModel } from '~/models/types';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -36,6 +37,15 @@ export interface WorkspaceFlatItem extends BaseFlatItem<Workspace> {
   // parent project
   project: ProjectWithPresence;
 }
+
+//unsynced workspace in clod sync project
+type UnsyncedWorkspaceDoc = InsomniaFile & { _id: string };
+export type UnsyncedWorkspaceFlatItem = Exclude<BaseFlatItem<any>, 'doc'> &
+  Pick<WorkspaceFlatItem, 'project'> & {
+    kind: 'unsyncedWorkspace';
+    doc: UnsyncedWorkspaceDoc;
+  };
+
 // Collection child items including all kinds of request and request group (folder)
 export interface CollectionChildFlatItem extends BaseFlatItem<Child['doc']> {
   kind: 'collectionChild';
@@ -50,4 +60,4 @@ export interface CollectionChildFlatItem extends BaseFlatItem<Child['doc']> {
   pinned: boolean;
 }
 
-export type FlatItem = ProjectFlatItem | WorkspaceFlatItem | CollectionChildFlatItem;
+export type FlatItem = ProjectFlatItem | WorkspaceFlatItem | CollectionChildFlatItem | UnsyncedWorkspaceFlatItem;
