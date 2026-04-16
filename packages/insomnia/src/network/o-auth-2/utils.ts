@@ -49,7 +49,6 @@ export const encryptOAuthUrl = async (authCodeUrlStr: string) => {
     ]);
 
     // encryptedRedirectUrl is base64(ciphertext || authTag); AES-GCM expects that layout
-    // nosemgrep: javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length
     const decrypted = await cryptoApi.subtle.decrypt(
       { name: 'AES-GCM', iv: Buffer.from(iv, 'base64'), tagLength: 128 },
       importedAesKey,
