@@ -465,15 +465,17 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
           </div>
         </SearchField>
         {isProjectTabActive ? (
-          <Button
-            aria-label="Create new Project"
-            onPress={() => setIsNewProjectModalOpen(true)}
-            isDisabled={projects.length === 0}
-            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          >
-            <Icon icon="plus" className="h-2.5 w-2.5" />
-            <span>New Project</span>
-          </Button>
+          !isScratchPad && (
+            <Button
+              aria-label="Create new Project"
+              onPress={() => setIsNewProjectModalOpen(true)}
+              isDisabled={projects.length === 0}
+              className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            >
+              <Icon icon="plus" className="h-2.5 w-2.5" />
+              <span>New Project</span>
+            </Button>
+          )
         ) : syncing ? (
           <Button
             aria-label="Cancel sync"
@@ -539,16 +541,15 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                     !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
                   } else if (item.kind === 'workspace') {
                     toggleProjectOrWorkspace(docId);
-                    !isScratchPad &&
-                      tabNavigate(
-                        {
-                          organization: organizationId,
-                          project: item.project,
-                          workspace: item.doc,
-                          item: item.doc,
-                        },
-                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
-                      );
+                    tabNavigate(
+                      {
+                        organization: organizationId,
+                        project: item.project,
+                        workspace: item.doc,
+                        item: item.doc,
+                      },
+                      { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                    );
                   } else if (item.kind === 'collectionChild') {
                     if (models.requestGroup.isRequestGroup(doc)) {
                       toggleRequestGroup(doc);

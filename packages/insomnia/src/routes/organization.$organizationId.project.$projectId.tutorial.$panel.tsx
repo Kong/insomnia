@@ -1,6 +1,5 @@
 import type { IconName, IconPrefix } from '@fortawesome/fontawesome-svg-core';
 import { Button } from 'react-aria-components';
-import { Panel } from 'react-resizable-panels';
 import { href, useNavigate, useParams } from 'react-router';
 
 import { ErrorBoundary } from '~/ui/components/error-boundary';
@@ -102,11 +101,9 @@ const Tutorial = () => {
   const { panel } = useParams() as { panel?: string };
 
   return (
-    <Panel className="pane-one theme--pane" minSize={35} maxSize={90}>
-      <ErrorBoundary showAlert>
-        <TutorialContent panel={panel} />
-      </ErrorBoundary>
-    </Panel>
+    <ErrorBoundary showAlert>
+      <TutorialContent panel={panel} />
+    </ErrorBoundary>
   );
 };
 
