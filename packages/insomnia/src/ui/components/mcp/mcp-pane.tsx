@@ -38,6 +38,7 @@ import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { McpActionsDropdown } from '~/ui/components/dropdowns/mcp-actions-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { McpRequestPane, type RequestPaneTabs } from '~/ui/components/mcp/mcp-request-pane';
 import {
   type PrimitiveSubItem,
@@ -350,6 +351,10 @@ export const McpPane = () => {
       setMcpServerData(emptyServerData);
     }
   }, [activeResponse?._id, readyState]);
+
+  useDocBodyKeyboardShortcuts({
+    sidebar_toggle: toggleSidebar,
+  });
 
   return (
     <div className="flex h-full flex-col">
