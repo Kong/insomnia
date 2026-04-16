@@ -1,6 +1,5 @@
 import { href, redirect } from 'react-router';
 
-import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
 import type { Project } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
@@ -34,7 +33,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
     const data = importInsomniaV5Data(workspaceExport);
 
-    const newWorkspace = await importResourcesToNewWorkspace({
+    const newWorkspace = await window.main.importResourcesToNewWorkspace({
       projectId: newProject._id,
       workspaceToImport: {
         ...oldWorkspace,
@@ -49,8 +48,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
           description: 'Import Insomnia v5 data',
         },
       },
-      syncNewWorkspaceIfNeeded,
     });
+    await syncNewWorkspaceIfNeeded(newWorkspace);
 
     return redirect(
       `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {

@@ -6,65 +6,66 @@ import { parse } from 'yaml';
 
 import { EnvironmentKvPairDataType, EnvironmentType, services } from '~/insomnia-data';
 
-import * as importUtil from '../import';
+import * as importUtil from '../../main/import';
+import * as sharedImportUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
 import { tryImportV5Data } from '../insomnia-v5';
 import { generateId } from '../misc';
 
 describe('pathPatternMatches', () => {
   it('should match exact paths', () => {
-    expect(importUtil.pathPatternMatches('/users', '/users')).toBe(true);
-    expect(importUtil.pathPatternMatches('/users/list', '/users/list')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/users', '/users')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/users/list', '/users/list')).toBe(true);
   });
 
   it('should not match different paths', () => {
-    expect(importUtil.pathPatternMatches('/users', '/user')).toBe(false);
-    expect(importUtil.pathPatternMatches('/users', '/users/123')).toBe(false);
-    expect(importUtil.pathPatternMatches('/users/list', '/users')).toBe(false);
+    expect(sharedImportUtil.pathPatternMatches('/users', '/user')).toBe(false);
+    expect(sharedImportUtil.pathPatternMatches('/users', '/users/123')).toBe(false);
+    expect(sharedImportUtil.pathPatternMatches('/users/list', '/users')).toBe(false);
   });
 
   it('should match paths with path parameters', () => {
-    expect(importUtil.pathPatternMatches('/users/:id', '/users/123')).toBe(true);
-    expect(importUtil.pathPatternMatches('/users/:userId/orders/:orderId', '/users/abc/orders/xyz')).toBe(true);
-    expect(importUtil.pathPatternMatches('/api/:version/resource', '/api/v1/resource')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/users/:id', '/users/123')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/users/:userId/orders/:orderId', '/users/abc/orders/xyz')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/api/:version/resource', '/api/v1/resource')).toBe(true);
   });
 
   it('should not match when path param is empty', () => {
-    expect(importUtil.pathPatternMatches('/users/:id', '/users/')).toBe(false);
-    expect(importUtil.pathPatternMatches('/users/:id', '/users')).toBe(false);
+    expect(sharedImportUtil.pathPatternMatches('/users/:id', '/users/')).toBe(false);
+    expect(sharedImportUtil.pathPatternMatches('/users/:id', '/users')).toBe(false);
   });
 
   it('should be case insensitive for static segments', () => {
-    expect(importUtil.pathPatternMatches('/Users', '/users')).toBe(true);
-    expect(importUtil.pathPatternMatches('/USERS/LIST', '/users/list')).toBe(true);
-    expect(importUtil.pathPatternMatches('/api/v1', '/API/V1')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/Users', '/users')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/USERS/LIST', '/users/list')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/api/v1', '/API/V1')).toBe(true);
   });
 
   it('should handle empty pattern', () => {
-    expect(importUtil.pathPatternMatches('', '/users')).toBe(false);
+    expect(sharedImportUtil.pathPatternMatches('', '/users')).toBe(false);
   });
 
   it('should reject patterns over 200 characters', () => {
     const longPattern = '/' + 'a'.repeat(200);
-    expect(importUtil.pathPatternMatches(longPattern, '/aaaa')).toBe(false);
+    expect(sharedImportUtil.pathPatternMatches(longPattern, '/aaaa')).toBe(false);
   });
 
   it('should match paths with different segment counts (prefix matching)', () => {
-    expect(importUtil.pathPatternMatches('/basic', '/v1/basic')).toBe(true);
-    expect(importUtil.pathPatternMatches('/users', '/api/v1/users')).toBe(true);
-    expect(importUtil.pathPatternMatches('/key/header', '/v1/key/header')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/basic', '/v1/basic')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/users', '/api/v1/users')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/key/header', '/v1/key/header')).toBe(true);
   });
 
   it('should handle leading slashes consistently', () => {
-    expect(importUtil.pathPatternMatches('users', 'users')).toBe(true);
-    expect(importUtil.pathPatternMatches('users', '/users')).toBe(true);
-    expect(importUtil.pathPatternMatches('/users', 'users')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('users', 'users')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('users', '/users')).toBe(true);
+    expect(sharedImportUtil.pathPatternMatches('/users', 'users')).toBe(true);
   });
 });
 
 describe('mcpUrlToInsomniaV5Yaml', () => {
   it('should produce YAML matching the MCP client export shape (schema_version, mcpRequest)', () => {
-    const yaml = importUtil.mcpUrlToInsomniaV5Yaml('https://example.com/mcp?x=1#y');
+    const yaml = sharedImportUtil.mcpUrlToInsomniaV5Yaml('https://example.com/mcp?x=1#y');
     const doc = parse(yaml) as Record<string, unknown>;
     expect(doc).toMatchObject({
       type: 'mcpClient.insomnia/5.0',
@@ -85,28 +86,28 @@ describe('mcpUrlToInsomniaV5Yaml', () => {
     ['https://example.com/mcp#fragment'],
     ['http://examples.com/mcp'],
   ])('should embed the MCP URL %s in mcpRequest.url', url => {
-    const doc = parse(importUtil.mcpUrlToInsomniaV5Yaml(url)) as { mcpRequest: { url: string } };
+    const doc = parse(sharedImportUtil.mcpUrlToInsomniaV5Yaml(url)) as { mcpRequest: { url: string } };
     expect(doc.mcpRequest.url).toBe(url);
   });
 
   it('should throw an error if the MCP URL is not a valid HTTP URL', () => {
-    expect(() => importUtil.mcpUrlToInsomniaV5Yaml('ftp://example.com')).toThrow(
+    expect(() => sharedImportUtil.mcpUrlToInsomniaV5Yaml('ftp://example.com')).toThrow(
       'MCP server URL must use http or https',
     );
-    expect(() => importUtil.mcpUrlToInsomniaV5Yaml('not-a-url')).toThrow('Invalid URL: not-a-url');
+    expect(() => sharedImportUtil.mcpUrlToInsomniaV5Yaml('not-a-url')).toThrow('Invalid URL: not-a-url');
   });
 
   it('escape sequences in the MCP URL are unmodified', () => {
     const cases = ['https://example.com/foo\\nbar', 'https://example.com/foo\\tbar'] as const;
     for (const input of cases) {
-      const yaml = importUtil.mcpUrlToInsomniaV5Yaml(input);
+      const yaml = sharedImportUtil.mcpUrlToInsomniaV5Yaml(input);
       const doc = parse(yaml) as { mcpRequest: { url: string } };
       expect(doc.mcpRequest.url).toBe(input);
     }
   });
 
   it('should be accepted by the v5 importer', () => {
-    const yaml = importUtil.mcpUrlToInsomniaV5Yaml('https://example.com/mcp');
+    const yaml = sharedImportUtil.mcpUrlToInsomniaV5Yaml('https://example.com/mcp');
     const { data, error } = tryImportV5Data(yaml);
     expect(error).toBeUndefined();
     expect(data.length).toBeGreaterThan(0);
@@ -119,23 +120,23 @@ describe('mcpUrlToInsomniaV5Yaml', () => {
 
 describe('isApiSpecImport()', () => {
   it.each(['swagger2', 'openapi3'])('should return true if spec id is %o', (id: string) => {
-    expect(importUtil.isApiSpecImport({ id })).toBe(true);
+    expect(sharedImportUtil.isApiSpecImport({ id })).toBe(true);
   });
 
   it('should return false if spec id is not valid', () => {
     const id = 'invalid-id';
-    expect(importUtil.isApiSpecImport({ id })).toBe(false);
+    expect(sharedImportUtil.isApiSpecImport({ id })).toBe(false);
   });
 });
 
 describe('isInsomniaV4Import()', () => {
   it.each(['insomnia-4'])('should return true if spec id is %o', (id: string) => {
-    expect(importUtil.isInsomniaV4Import({ id })).toBe(true);
+    expect(sharedImportUtil.isInsomniaV4Import({ id })).toBe(true);
   });
 
   it('should return false if spec id is not valid', () => {
     const id = 'invalid-id';
-    expect(importUtil.isInsomniaV4Import({ id })).toBe(false);
+    expect(sharedImportUtil.isInsomniaV4Import({ id })).toBe(false);
   });
 });
 

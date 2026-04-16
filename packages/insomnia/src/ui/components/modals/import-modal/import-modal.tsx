@@ -5,6 +5,8 @@ import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } 
 import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
+import type { ScanResult } from '~/common/import';
+import type { ImportSourceType } from '~/common/import-source';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { models } from '~/insomnia-data';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
@@ -13,13 +15,6 @@ import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$or
 import { createProject } from '~/routes/organization.$organizationId.project.new';
 import { Checkbox } from '~/ui/components/base/checkbox';
 
-import {
-  clearResourceCache,
-  findExistingImportedSpec,
-  findRequestInExistingWorkspace,
-  type ImportSourceType,
-  type ScanResult,
-} from '../../../../common/import';
 import { invariant } from '../../../../utils/invariant';
 import { SegmentEvent } from '../../../analytics';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
@@ -243,14 +238,14 @@ export const ImportModal: FC<ImportModalProps> = ({
     const valid = scanResourcesFetcherData?.some(({ errors }) => !errors.length);
     if (!valid) return;
     dupCheckRef.current = true;
-    findExistingImportedSpec(defaultProjectId, organizationId).then(existing => {
+    window.main.findExistingImportedSpec(defaultProjectId, organizationId).then(existing => {
       if (!existing) return setShowForm(true);
-      findRequestInExistingWorkspace(existing.workspace, from.endpoint, from.operationId).then(req => {
+      window.main.findRequestInExistingWorkspace(existing.workspace, from.endpoint, from.operationId).then(req => {
         const targetProjectId = existing.workspace.parentId || defaultProjectId;
         const path = req
           ? `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/debug/request/${req._id}`
           : `/organization/${organizationId}/project/${targetProjectId}/workspace/${existing.workspace._id}/${models.workspace.scopeToActivity(existing.workspace.scope)}`;
-        clearResourceCache();
+        void window.main.clearImportResourceCache();
         navigate(path);
         modalRef.current?.hide();
       });

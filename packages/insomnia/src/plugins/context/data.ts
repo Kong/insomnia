@@ -2,7 +2,6 @@ import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { exportWorkspacesHAR } from '../../common/har';
-import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 
 
@@ -32,17 +31,17 @@ export const init = (activeProjectId?: string) => ({
           return;
         }
 
-        const content = await fetchImportContentFromURI({
+        const content = await window.main.fetchImportContentFromURI({
           uri,
         });
 
-        await scanResources([
+        await window.main.scanResources([
           {
             contentStr: content,
           },
         ]);
 
-        await importResourcesToProject({
+        await window.main.importResourcesToProject({
           projectId: activeProjectId,
         });
       },
@@ -50,13 +49,13 @@ export const init = (activeProjectId?: string) => ({
         if (!activeProjectId) {
           return;
         }
-        await scanResources([
+        await window.main.scanResources([
           {
             contentStr: content,
           },
         ]);
 
-        await importResourcesToProject({
+        await window.main.importResourcesToProject({
           projectId: activeProjectId,
         });
       },

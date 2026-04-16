@@ -1,7 +1,6 @@
 import type { IRuleResult } from '@stoplight/spectral-core';
 import { href, redirect } from 'react-router';
 
-import { importResourcesToWorkspace, scanResources } from '~/common/import';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { SegmentEvent } from '~/ui/analytics';
@@ -44,13 +43,13 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     throw new Error('Error Generating Configuration');
   }
 
-  const scannedResources = await scanResources([
+  const scannedResources = await window.main.scanResources([
     {
       contentStr: apiSpec.contents,
     },
   ]);
 
-  await importResourcesToWorkspace({
+  await window.main.importResourcesToWorkspace({
     workspaceId,
   });
 

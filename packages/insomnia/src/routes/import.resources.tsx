@@ -1,53 +1,16 @@
 import { href } from 'react-router';
 
-import {
-  clearResourceCache,
-  findExistingImportedSpec,
-  findRequestInExistingWorkspace,
-  importResourcesToProject,
-  importResourcesToWorkspace,
-} from '~/common/import';
 import type { Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
+import type { ImportScannedResourcesParams, ImportScannedResourcesResult } from '~/main/import';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/import.resources';
 
-interface ImportScannedResourcesParams {
-  organizationId: string;
-  projectId: string;
-  workspaceId?: string;
-  endpoint?: string;
-  operationId?: string;
-  skipImportIfDuplicate?: boolean;
-  options?: {
-    overrideBaseEnvironmentData?: boolean;
-  };
-}
-
-export const importScannedResources = async ({
-  organizationId,
-  projectId,
-  workspaceId,
-  options,
-}: ImportScannedResourcesParams) => {
-  invariant(organizationId && typeof organizationId === 'string', 'OrganizationId is required.');
-  invariant(projectId && typeof projectId === 'string', 'ProjectId is required.');
-
-  const project = await services.project.getById(projectId);
-  invariant(project, 'Project not found.');
-
-  return await (typeof workspaceId === 'string' && workspaceId
-    ? importResourcesToWorkspace({
-        workspaceId: workspaceId,
-        overrideBaseEnvironmentData: options?.overrideBaseEnvironmentData ?? true,
-      })
-    : importResourcesToProject({
-        projectId: project._id,
-        syncNewWorkspaceIfNeeded,
-      }));
+export const importScannedResources = async (
+  data: ImportScannedResourcesParams,
+): Promise<ImportScannedResourcesResult> => {
+  return window.main.importScannedResources(data);
 };
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
@@ -61,48 +24,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
     invariant(typeof organizationId === 'string', 'OrganizationId is required.');
     invariant(typeof projectId === 'string', 'ProjectId is required.');
-
-    if (!workspaceId && data.skipImportIfDuplicate) {
-      const existing = await findExistingImportedSpec(projectId, organizationId);
-      if (existing) {
-        const matchedRequest = await findRequestInExistingWorkspace(
-          existing.workspace,
-          data.endpoint,
-          data.operationId,
-        );
-        clearResourceCache(); // skipping import to navigate to existing, avoid stale resource cache
-        return {
-          done: true,
-          singleImportedWorkspace: existing.workspace,
-          singleImportedRequest: matchedRequest,
-          singleImportedProjectId: existing.workspace.parentId,
-        };
-      }
-    }
-
-    const importedWorkspaces = await importScannedResources({
+    return await importScannedResources({
+      ...data,
       organizationId,
       projectId,
       workspaceId,
       options,
     });
-
-    if (data.endpoint || data.operationId) {
-      for (const ws of importedWorkspaces) {
-        if (!ws) continue;
-        const foundDeepLinkedRequest = await findRequestInExistingWorkspace(ws, data.endpoint, data.operationId);
-        if (foundDeepLinkedRequest) {
-          return { done: true, singleImportedWorkspace: ws, singleImportedRequest: foundDeepLinkedRequest };
-        }
-      }
-    }
-
-    // When navigating, we are interested in knowing if there was only one workspace and only one request
-    const singleImportedWorkspace =
-      Array.isArray(importedWorkspaces) && importedWorkspaces.length === 1 && importedWorkspaces[0];
-    const requests = singleImportedWorkspace && (await requestOperations.findByParentId(singleImportedWorkspace._id));
-    const singleImportedRequest = Array.isArray(requests) && requests.length === 1 && requests.at(0);
-    return { done: true, singleImportedWorkspace, singleImportedRequest };
   } catch (error) {
     console.error('Failed to import resources:', error);
     return {

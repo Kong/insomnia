@@ -20,6 +20,18 @@ import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { type Services, services } from '~/insomnia-data';
+import {
+  clearResourceCache,
+  fetchImportContentFromURI,
+  findExistingImportedSpec,
+  findRequestInExistingWorkspace,
+  importResourcesToNewWorkspace,
+  importResourcesToProject,
+  importResourcesToWorkspace,
+  importScannedResources,
+  scanImportResources,
+  scanResources,
+} from '~/main/import';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -132,7 +144,17 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   initializeWorkspaceBackendProject: typeof initializeWorkspaceBackendProject;
+  clearImportResourceCache: () => Promise<void>;
+  fetchImportContentFromURI: typeof fetchImportContentFromURI;
+  findExistingImportedSpec: typeof findExistingImportedSpec;
+  findRequestInExistingWorkspace: typeof findRequestInExistingWorkspace;
+  importResourcesToNewWorkspace: typeof importResourcesToNewWorkspace;
+  importResourcesToProject: typeof importResourcesToProject;
+  importResourcesToWorkspace: typeof importResourcesToWorkspace;
+  importScannedResources: typeof importScannedResources;
   parseImport: typeof convert;
+  scanImportResources: typeof scanImportResources;
+  scanResources: typeof scanResources;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
   writeResponseBodyToFile: (options: {
@@ -280,6 +302,42 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('initializeWorkspaceBackendProject', async (_, options: Parameters<typeof initializeWorkspaceBackendProject>[0]) => {
     return initializeWorkspaceBackendProject(options);
+  });
+  ipcMainHandle('fetchImportContentFromURI', async (_, options: Parameters<typeof fetchImportContentFromURI>[0]) => {
+    return fetchImportContentFromURI(options);
+  });
+  ipcMainHandle('scanImportResources', async (_, options: Parameters<typeof scanImportResources>[0]) => {
+    return scanImportResources(options);
+  });
+  ipcMainHandle('scanResources', async (_, ...args: Parameters<typeof scanResources>) => {
+    return scanResources(...args);
+  });
+  ipcMainHandle('clearImportResourceCache', async () => {
+    clearResourceCache();
+  });
+  ipcMainHandle('findExistingImportedSpec', async (_, ...args: Parameters<typeof findExistingImportedSpec>) => {
+    return findExistingImportedSpec(...args);
+  });
+  ipcMainHandle(
+    'findRequestInExistingWorkspace',
+    async (_, ...args: Parameters<typeof findRequestInExistingWorkspace>) => {
+      return findRequestInExistingWorkspace(...args);
+    },
+  );
+  ipcMainHandle('importResourcesToProject', async (_, options: Parameters<typeof importResourcesToProject>[0]) => {
+    return importResourcesToProject(options);
+  });
+  ipcMainHandle(
+    'importResourcesToNewWorkspace',
+    async (_, options: Parameters<typeof importResourcesToNewWorkspace>[0]) => {
+      return importResourcesToNewWorkspace(options);
+    },
+  );
+  ipcMainHandle('importResourcesToWorkspace', async (_, options: Parameters<typeof importResourcesToWorkspace>[0]) => {
+    return importResourcesToWorkspace(options);
+  });
+  ipcMainHandle('importScannedResources', async (_, options: Parameters<typeof importScannedResources>[0]) => {
+    return importScannedResources(options);
   });
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Buffer }) => {
     try {
