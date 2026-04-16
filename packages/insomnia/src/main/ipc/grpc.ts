@@ -64,10 +64,23 @@ export interface gRPCBridgeAPI {
   writeProtoFile: (protoFileId: string) => Promise<{ filePath: string; dirs: string[] }>;
 }
 
+const grpcOptions = {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+};
+
 export const writeProtoFileById = async (protoFileId: string): Promise<{ filePath: string; dirs: string[] }> => {
   const protoFile = await services.protoFile.getById(protoFileId);
   invariant(protoFile, `Proto file ${protoFileId} not found`);
-  return writeProtoFile(protoFile);
+  const result = await writeProtoFile(protoFile);
+  await protoLoader.load(result.filePath, {
+    ...grpcOptions,
+    includeDirs: result.dirs,
+  });
+  return result;
 };
 
 export function registergRPCHandlers() {
@@ -81,13 +94,6 @@ export function registergRPCHandlers() {
   ipcMainHandle('grpc.writeProtoFile', (_, protoFileId: string) => writeProtoFileById(protoFileId));
 }
 
-const grpcOptions = {
-  keepCase: true,
-  longs: String,
-  enums: String,
-  defaults: true,
-  oneofs: true,
-};
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
   const definition = await protoLoader.load(filePath, {
     ...grpcOptions,

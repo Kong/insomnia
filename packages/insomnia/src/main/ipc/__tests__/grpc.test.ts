@@ -12,10 +12,15 @@ import { loadMethodsFromReflection, writeProtoFileById } from '../grpc';
 vi.mock('grpc-reflection-js');
 vi.mock('@connectrpc/connect-node');
 vi.mock('../../../network/grpc/write-proto-file');
+vi.mock('@grpc/proto-loader', async importOriginal => {
+  const actual = await importOriginal();
+  return { ...actual, load: vi.fn().mockResolvedValue({}) };
+});
 
 describe('writeProtoFileById', () => {
   it('resolves proto file from services and delegates to writeProtoFile', async () => {
     const { writeProtoFile } = await import('../../../network/grpc/write-proto-file');
+    const { load } = await import('@grpc/proto-loader');
     const w = await services.workspace.create();
     const pf = await services.protoFile.create({ parentId: w._id, protoText: 'text' });
     const expected = { filePath: 'foo.proto', dirs: ['/tmp/insomnia-grpc'] };
@@ -24,6 +29,7 @@ describe('writeProtoFileById', () => {
     const result = await writeProtoFileById(pf._id);
 
     expect(writeProtoFile).toHaveBeenCalledWith(expect.objectContaining({ _id: pf._id }));
+    expect(load).toHaveBeenCalledWith('foo.proto', expect.objectContaining({ includeDirs: ['/tmp/insomnia-grpc'] }));
     expect(result).toEqual(expected);
   });
 
