@@ -78,6 +78,7 @@ export type HandleChannels =
   | 'git.getGitProviderEmails'
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
+  | 'grpc.writeProtoFile'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'

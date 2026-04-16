@@ -5,10 +5,32 @@ import * as grpcReflection from 'grpc-reflection-js';
 import protobuf from 'protobufjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadMethodsFromReflection } from '../grpc';
+import { services } from '~/insomnia-data';
+
+import { loadMethodsFromReflection, writeProtoFileById } from '../grpc';
 
 vi.mock('grpc-reflection-js');
 vi.mock('@connectrpc/connect-node');
+vi.mock('../../../network/grpc/write-proto-file');
+
+describe('writeProtoFileById', () => {
+  it('resolves proto file from services and delegates to writeProtoFile', async () => {
+    const { writeProtoFile } = await import('../../../network/grpc/write-proto-file');
+    const w = await services.workspace.create();
+    const pf = await services.protoFile.create({ parentId: w._id, protoText: 'text' });
+    const expected = { filePath: 'foo.proto', dirs: ['/tmp/insomnia-grpc'] };
+    vi.mocked(writeProtoFile).mockResolvedValue(expected);
+
+    const result = await writeProtoFileById(pf._id);
+
+    expect(writeProtoFile).toHaveBeenCalledWith(expect.objectContaining({ _id: pf._id }));
+    expect(result).toEqual(expected);
+  });
+
+  it('throws when the proto file is not found', async () => {
+    await expect(writeProtoFileById('nonexistent-id')).rejects.toThrow('Proto file nonexistent-id not found');
+  });
+});
 
 describe('loadMethodsFromReflection', () => {
   describe('one service reflection', () => {

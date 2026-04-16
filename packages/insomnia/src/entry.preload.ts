@@ -97,6 +97,7 @@ const grpc: gRPCBridgeAPI = {
   closeAll: () => ipcRenderer.send('grpc.closeAll'),
   loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
+  writeProtoFile: protoFileId => ipcRenderer.invoke('grpc.writeProtoFile', protoFileId),
 };
 
 const secretStorage: secretStorageBridgeAPI = {

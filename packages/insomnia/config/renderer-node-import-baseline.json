@@ -81,26 +81,6 @@
       "builtin": "zlib"
     },
     {
-      "importer": "src/network/grpc/proto-directory-loader.tsx",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/grpc/proto-directory-loader.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "os"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/network/network.ts",
       "builtin": "fs"
     },
