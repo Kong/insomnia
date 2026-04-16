@@ -319,38 +319,6 @@ const Component = () => {
                 </Breadcrumbs>
               </div>
               <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
-              <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
-                <div className="flex w-full items-center justify-between gap-2">
-                  <EnvironmentPicker
-                    isOpen={isEnvironmentPickerOpen}
-                    onOpenChange={setIsEnvironmentPickerOpen}
-                    onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
-                  />
-                </div>
-                <Button
-                  onPress={() => setIsCookieModalOpen(true)}
-                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="cookie-bite" className="w-5 shrink-0" />
-                  <span className="truncate">
-                    {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
-                    {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
-                  </span>
-                </Button>
-                <Button
-                  onPress={() => setCertificatesModalOpen(true)}
-                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="file-contract" className="w-5 shrink-0" />
-                  <span className="truncate">
-                    {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
-                    {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                      .length > 0
-                      ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
-                      : ''}
-                  </span>
-                </Button>
-              </div>
             </div>
             <div className="p-(--padding-sm)">
               <Button
