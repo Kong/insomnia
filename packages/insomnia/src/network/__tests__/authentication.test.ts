@@ -1,6 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { oauth1SignRequest } from '~/main/ipc/oauth';
 
 import { _buildBearerHeader, getAuthHeader, getAuthObjectOrNull, getAuthQueryParams } from '../authentication';
+
+beforeEach(() => {
+  // Provide a window.main stub so OAuth1 IPC calls resolve via the real signing implementation.
+  // In the Node.js test environment window may be undefined; define it on globalThis.
+  const g = globalThis as any;
+  g.window ??= {};
+  g.window.main = {
+    oauthCrypto: {
+      getOAuth1AuthHeader: (params: Parameters<typeof oauth1SignRequest>[0]) =>
+        Promise.resolve(oauth1SignRequest(params)),
+    },
+  };
+});
 
 describe('OAuth 1.0', () => {
   it('Does OAuth 1.0', async () => {

@@ -6,6 +6,7 @@ import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
+import type { OAuthCryptoBridgeAPI } from './main/ipc/oauth';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { AIFeatureNames } from './main/llm-config-service';
 import type { CurlBridgeAPI } from './main/network/curl';
@@ -208,6 +209,9 @@ const main: Window['main'] = {
   grpc,
   curl,
   secretStorage,
+  oauthCrypto: {
+    getOAuth1AuthHeader: params => ipcRenderer.invoke('oauthCrypto.getOAuth1AuthHeader', params),
+  } satisfies OAuthCryptoBridgeAPI,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),

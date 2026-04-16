@@ -111,6 +111,7 @@ export type HandleChannels =
   | 'mcp.primitive.unsubscribeResource'
   | 'mcp.readyState'
   | 'multipartBufferToArray'
+  | 'oauthCrypto.getOAuth1AuthHeader'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
   | 'openPath'

@@ -60,6 +60,8 @@ import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
+import type { OAuthCryptoBridgeAPI } from './oauth';
+import { registerOAuthHandlers } from './oauth';
 import type { secretStorageBridgeAPI } from './secret-storage';
 
 let lintProcess: Electron.UtilityProcess | null = null;
@@ -159,6 +161,7 @@ export interface RendererToMainBridgeAPI {
   git: GitServiceAPI;
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
+  oauthCrypto: OAuthCryptoBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
@@ -212,6 +215,7 @@ export interface RendererToMainBridgeAPI {
 }
 
 export function registerMainHandlers() {
+  registerOAuthHandlers();
   ipcMainOn('addExecutionStep', (_, options: { requestId: string; stepName: string }) => {
     addExecutionStep(options.requestId, options.stepName);
   });

@@ -170,14 +170,14 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     if (this.context.abortController.signal.aborted) {
       throw new Error('MCP Connection aborted');
     }
-    const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authorizationUrl.toString());
+    const { relayUrl, decryptOAuthResult } = await encryptOAuthUrl(authorizationUrl.toString());
     BrowserWindow.getAllWindows().forEach(window => {
       window.webContents.send('show-oauth-authorization-modal', relayUrl);
     });
     const redirectedResult = await authorizeUserInDefaultBrowser({
       url: relayUrl,
     });
-    const redirectedTo = decryptOAuthResult(redirectedResult);
+    const redirectedTo = await decryptOAuthResult(redirectedResult);
     const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
     const { code: authorizationCode, error, error_description, error_uri } = redirectParams;
     if (error) {

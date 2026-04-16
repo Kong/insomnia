@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import querystring from 'node:querystring';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -133,10 +132,16 @@ export const getOAuth2Token = async (
       // default to S256 if usePkce is true and pkceMethod is not defined
       const pkceMethod =
         authentication.usePkce && !authentication.pkceMethod ? PKCE_CHALLENGE_S256 : authentication.pkceMethod;
-      const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
+      const codeVerifier = authentication.usePkce
+        ? encodePKCE(Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(32))))
+        : '';
       const codeChallenge =
         authentication.usePkce && pkceMethod === PKCE_CHALLENGE_S256
-          ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest())
+          ? encodePKCE(
+              Buffer.from(
+                await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier)),
+              ),
+            )
           : codeVerifier;
       const authCodeUrl = new URL(authentication.authorizationUrl);
       const responseType: OAuth2ResponseType = 'code';
@@ -160,7 +165,7 @@ export const getOAuth2Token = async (
       let redirectedTo: string | null = null;
       if (authentication.useDefaultBrowser) {
         const authCodeUrlStr = authCodeUrl.toString();
-        const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authCodeUrlStr);
+        const { relayUrl, decryptOAuthResult } = await encryptOAuthUrl(authCodeUrlStr);
 
         uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
           status: 'getting_code',
@@ -173,7 +178,7 @@ export const getOAuth2Token = async (
           url: relayUrl,
         });
 
-        redirectedTo = decryptOAuthResult(result);
+        redirectedTo = await decryptOAuthResult(result);
       } else {
         redirectedTo = await window.main.authorizeUserInWindow({
           url: authCodeUrl.toString(),
