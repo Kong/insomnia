@@ -112,6 +112,7 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
 export const getKonnectApiBaseURL = () => env.KONNECT_API_URL || 'https://global.api.konghq.com';
+export const isKonnectSyncEnabled = () => !!env.KONNECT_SYNC_ENABLED;
 
 // App website
 export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';

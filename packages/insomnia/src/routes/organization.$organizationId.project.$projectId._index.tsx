@@ -31,6 +31,7 @@ import {
   dashboardSortOrderName,
   DEFAULT_SIDEBAR_SIZE,
   getAppWebsiteBaseURL,
+  isKonnectSyncEnabled,
 } from '~/common/constants';
 import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
@@ -793,7 +794,7 @@ const Component = () => {
                 projects={projectsWithPresence}
                 storageRules={storageRules}
                 onCreateProject={() => setIsNewProjectModalOpen(true)}
-                konnectSyncEnabled={features.konnectSync.enabled}
+                konnectSyncEnabled={isKonnectSyncEnabled() && features.konnectSync.enabled}
               />
               {activeProject && (
                 <>
