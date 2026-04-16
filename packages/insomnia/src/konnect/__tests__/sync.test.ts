@@ -6,7 +6,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { initDatabase, models, services as insoservices, type Request } from '~/insomnia-data';
+import { initDatabase, models, type Request,services as insoservices } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import { mainDatabase } from '../../main/database.main';
@@ -96,7 +96,7 @@ function mockFetch(
  * NeDB's `$ne: null` matches documents where the field is absent (legacy records).
  * Always post-filter to get only genuinely Konnect-managed records.
  */
-const konnectRequests = (docs: any[]): Request[] => docs.filter((r: any) => r.konnectRouteKey != null);
+const konnectRequests = (docs: any[]) => docs.filter((r: any) => r.konnectRouteKey != null);
 const konnectWorkspaces = (docs: any[]) => docs.filter((w: any) => w.konnectServiceId != null);
 const konnectProjects = (docs: any[]) => docs.filter((p: any) => p.konnectControlPlaneId != null);
 
@@ -561,7 +561,7 @@ describe('Feature: Re-sync', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     const [after2] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
-    expect(after2.headers.map(h => h.name)).not.toContain('host');
+    expect(after2.headers.map((h: any) => h.name)).not.toContain('host');
   });
 
   it('Scenario: Re-sync removes a Konnect-managed route header when it is dropped from the route', async () => {
@@ -583,7 +583,7 @@ describe('Feature: Re-sync', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     const [after2] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
-    expect(after2.headers.map(h => h.name)).not.toContain('x-tenant');
+    expect(after2.headers.map((h: any) => h.name)).not.toContain('x-tenant');
   });
 
   it('Scenario: Re-sync preserves user-added headers when Konnect-managed headers are removed', async () => {
@@ -608,7 +608,7 @@ describe('Feature: Re-sync', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     const [after2] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
-    expect(after2.headers.map(h => h.name)).not.toContain('host');
+    expect(after2.headers.map((h: any) => h.name)).not.toContain('host');
     expect(after2.headers).toEqual(expect.arrayContaining([{ name: 'X-My-Token', value: 'secret' }]));
   });
 
@@ -1561,6 +1561,29 @@ describe('Feature: Expression-Based Routes', () => {
     for (const req of requests) {
       expect(req.url).toContain('/api/v1');
     }
+  });
+
+  it('Scenario: Repeated predicates in OR expansion — deduplicates methods/paths/hosts', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http'],
+        // Each branch repeats the same method and path — a common pattern when
+        // parenthesised OR expansions duplicate shared predicates.
+        expression:
+          '(http.method == "GET" && http.path == "/api" && http.host == "a.example.com") || ' +
+          '(http.method == "GET" && http.path == "/api" && http.host == "a.example.com")',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    // After dedup: 1 method × 1 path × 1 protocol = 1 request (not 4)
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({ method: 'GET', url: 'http://{{ _.proxy_host }}/api' });
   });
 
   it('Scenario: tls.sni expression — skipped', async () => {

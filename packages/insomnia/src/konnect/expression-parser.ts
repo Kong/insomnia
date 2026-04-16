@@ -33,13 +33,13 @@ export type ApplyExpressionResult =
  * In practice it seems more likely that this would be two separate routes.
  */
 export function extractFieldsFromExpression(expression: string): ExtractedRouteFields {
-  const methodMatches = [...expression.matchAll(/http\.method\s*==\s*"([A-Z]+)"/g)].map(m => m[1]);
+  const methodMatches = [...new Set([...expression.matchAll(/http\.method\s*==\s*"([A-Z]+)"/g)].map(m => m[1]))];
   const pathExact = [...expression.matchAll(/http\.path\s*==\s*"([^"]+)"/g)].map(m => m[1]);
   const pathPrefix = [...expression.matchAll(/http\.path\s*\^=\s*"([^"]+)"/g)].map(m => m[1]);
-  const hostMatches = [...expression.matchAll(/http\.host\s*==\s*"([^"]+)"/g)].map(m => m[1]);
+  const hostMatches = [...new Set([...expression.matchAll(/http\.host\s*==\s*"([^"]+)"/g)].map(m => m[1]))];
   const headerMatches = [...expression.matchAll(/http\.headers\.(\w+)\s*==\s*"([^"]+)"/g)];
 
-  const allPaths = [...pathExact, ...pathPrefix];
+  const allPaths = [...new Set([...pathExact, ...pathPrefix])];
 
   let headers: Record<string, string[]> | null = null;
   if (headerMatches.length > 0) {
