@@ -352,14 +352,14 @@ export const McpPane = () => {
   }, [activeResponse?._id, readyState]);
 
   return (
-    <div className="h-full">
+    <div className="flex h-full flex-col">
       <OrganizationTabList currentPage="mcp" />
       <WorkspacePaneHeader hasSettings />
       <PanelGroup
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
         id="wrapper"
-        className="new-sidebar h-full w-full text-(--color-font)"
+        className="new-sidebar min-h-0 flex-1 w-full text-(--color-font)"
         direction="horizontal"
       >
         <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
