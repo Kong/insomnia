@@ -1,31 +1,69 @@
 ---
 name: fix-test-e2e-ci
-description: 'Debug failures in test-e2e.yaml locally without a build step. Use when GitHub Actions e2e smoke tests fail, vite dev runtime issues appear, or Smoke project Playwright checks are flaky.'
-argument-hint: 'Describe the failing job, failing test, and any error output from test-e2e.yaml'
+description: 'Debug failures from test-e2e.yml locally. Includes both CI-parity reproduction (app-build + test:build) and faster dev-runtime triage for Smoke Playwright tests.'
+argument-hint: 'Provide the failing test-e2e.yml logs, a link to the failing workflow run, and the failing test title or file if available'
 ---
 
-# Fix test-e2e.yaml CI Failures
+# Fix test-e2e.yml CI Failures
 
 ## When to Use
 
-- `test-e2e.yaml` failed in CI.
-- You need to reproduce smoke test failures quickly without waiting for a bundle build.
-- You want to run the `Smoke` Playwright project against a local dev app.
+- `.github/workflows/test-e2e.yml` or the `e2e App Tests` workflow failed in CI.
+- You want CI-parity reproduction with the same build-mode test command used in CI.
+- You want a faster dev-runtime loop after confirming the same failure locally.
 
 ## Procedure
 
-1. Start the app in dev-watch mode:
+1. Start from the failing CI evidence.
+   - Use the workflow run logs/artifacts to capture the failing test title, file, and first actionable error.
+   - Download CI traces from the smoke-test artifact when available.
+2. Reproduce with CI-parity commands first (same mode as CI):
+   ```bash
+   npm run app-build
+   ```
+   ```bash
+   npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+   ```
+3. Re-run only the failing test while iterating (instead of the full suite):
+   - By file:
+
+   ```bash
+   npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke tests/smoke/<failing-file>.test.ts
+   ```
+
+   - By test title:
+
+   ```bash
+   npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke --grep "<failing test title>"
+   ```
+
+4. If CI-parity passes but you still need a faster loop for investigation, switch to dev runtime:
    ```bash
    npm run watch:app
    ```
-2. In a separate terminal, run the smoke tests against the dev runtime:
    ```bash
    npm run test:dev -w packages/insomnia-smoke-test -- --project=Smoke
    ```
-3. Keep `watch:app` running while you iterate on fixes.
-4. Re-run the same `test:dev` command after each change to confirm the failure is resolved.
+   Keep `watch:app` running while iterating.
 
 ## Notes
 
-- This path skips the bundle/build step, so it is faster for first-pass debugging.
-- If the issue only reproduces in bundle mode, switch to the CLI bundle debug workflow skill.
+- CI currently runs `npm run app-build` + `npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke`.
+- Dev runtime (`watch:app` + `test:dev`) is useful for quick local triage, but not a strict CI match.
+- Playwright debugging options:
+  - Inspector: `PWDEBUG=1 npm run test:smoke:dev`
+  - API logs: `DEBUG=pw:api npm run test:smoke:dev`
+  - Browser console logs: `DEBUG=pw:browser npm run test:smoke:dev`
+  - WebServer logs: `DEBUG=pw:WebServer npm run test:smoke:dev`
+- Local traces are written under `packages/insomnia-smoke-test/traces` and can be opened with:
+  ```bash
+  npx playwright show-trace packages/insomnia-smoke-test/traces/<trace-folder>/trace.zip
+  ```
+- Success criteria:
+  - The failing Smoke test passes with the CI-parity command (`test:build`).
+  - The full Smoke project passes in build mode after your fix.
+
+## Teardown
+
+- Stop any long-running watch/test terminals (for example `watch:app`) after validation is complete.
+- Playwright itself should teardown the smoke test server, but if you have any lingering processes or ports in use, stop those as well.
