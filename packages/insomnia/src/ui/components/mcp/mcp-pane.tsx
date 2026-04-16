@@ -75,7 +75,7 @@ export const McpPane = () => {
   const [requestPaneActiveTab, setRequestPaneActiveTab] = useState<RequestPaneTabs>('params');
   const patchRequest = useRequestPatcher();
   const requestId = activeRequest._id;
-  const { activeEnvironment, caCertificate } = useWorkspaceLoaderData()!;
+  const { activeEnvironment } = useWorkspaceLoaderData()!;
   const readyState = useMcpReadyState({ requestId });
   const parentRef = useRef<HTMLDivElement>(null);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
