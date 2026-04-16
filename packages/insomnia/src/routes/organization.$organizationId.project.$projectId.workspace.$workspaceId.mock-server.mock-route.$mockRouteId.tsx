@@ -102,7 +102,15 @@ export const mockRouteToHar = ({
   headersArray: RequestHeader[];
   body: string;
 }): Har.Response => {
-  const validHeaders = headersArray.filter(({ name }) => !!name);
+  const validHeaders = headersArray
+    .filter(({ name }) => !!name)
+    .map(h => ({
+      id: h.id || '',
+      name: h.name,
+      value: h.value,
+      description: h.description || '',
+      disabled: h.disabled ?? false,
+    }));
   return {
     status: +statusCode,
     statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
@@ -183,6 +191,13 @@ export const MockRouteRoute = () => {
         return '';
       }
       console.log('[mock] Error: invalid response from remote', { res, mockbinUrl });
+      if (res && typeof res === 'object') {
+        const errorRes = res as { error?: string; message?: string };
+        const parts = [errorRes.error, errorRes.message].filter(Boolean);
+        if (parts.length > 0) {
+          return parts.join('\n');
+        }
+      }
       return 'Unexpected response, see console for details';
     } catch (e) {
       if (isApiError(e)) {
