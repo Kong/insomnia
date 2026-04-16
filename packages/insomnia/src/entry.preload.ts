@@ -185,6 +185,7 @@ const main: Window['main'] = {
   multipartBufferToArray: options => ipcRenderer.invoke('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     ipcRenderer.invoke('installPlugin', lookupName, allowScopedPackageNames),
+  initializeWorkspaceBackendProject: options => ipcRenderer.invoke('initializeWorkspaceBackendProject', options),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
@@ -240,6 +241,7 @@ const main: Window['main'] = {
   },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
+  syncNewWorkspaceIfNeeded: options => ipcRenderer.invoke('syncNewWorkspaceIfNeeded', options),
   getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
   generateMockRouteDataFromSpec: (
     openApiSpec: string | undefined,
