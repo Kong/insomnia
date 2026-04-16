@@ -1,4 +1,4 @@
-import type { User, UserEncryptionKeys } from '@kong/insomnia-api-sdk';
+import type { User, UserEncryptionKeys } from '@getinsomnia/insomnia-v3-fetch';
 
 import { fetch } from './fetch';
 
@@ -15,7 +15,7 @@ export const logout = ({ sessionId }: { sessionId: string }) => {
 
 // GET /v3/users/me
 export const getUserProfile = async ({ sessionId }: { sessionId: string }): Promise<User> => {
-  return fetch<User>({ method: 'GET', path: '/v3/users/me', sessionId });
+  return await fetch<User>({ method: 'GET', path: '/v3/users/me', sessionId });
 };
 
 // GET /v3/users/me/encryption-keys

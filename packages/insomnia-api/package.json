@@ -22,9 +22,10 @@
   },
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx --cache",
-    "type-check": "tsc --noEmit --project tsconfig.json"
+    "type-check": "tsc --noEmit --project tsconfig.json",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@kong/insomnia-api-sdk": "^1.0.0"
+    "@getinsomnia/insomnia-v3-fetch": "^1.0.1"
   }
 }

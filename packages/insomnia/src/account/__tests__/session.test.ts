@@ -22,6 +22,12 @@ vi.mock('../crypt', () => ({
   decryptAES: vi.fn(),
 }));
 
+interface MockWindowMain {
+  loginStateChange: ReturnType<typeof vi.fn>;
+}
+
+const getWindowMain = () => (window as unknown as { main: MockWindowMain }).main;
+
 // Fixtures
 const SESSION_ID = 'test-session-id';
 const RAW_KEY = 'raw-key-material';
@@ -41,6 +47,7 @@ const mockEncryptionKeys = {
 
 const mockUserProfile = {
   id: 'account-123',
+  created_at: new Date('2026-01-01T00:00:00Z'),
   email: 'test@example.com',
   first_name: 'Jane',
   last_name: 'Doe',
@@ -89,7 +96,7 @@ describe('absorbKey', () => {
   it('triggers loginStateChange after storing session', async () => {
     await absorbKey(SESSION_ID, RAW_KEY);
 
-    expect(window.main.loginStateChange).toHaveBeenCalledOnce();
+    expect(getWindowMain().loginStateChange).toHaveBeenCalledOnce();
   });
 
   it('falls back to current session id when none is provided', async () => {
@@ -113,7 +120,7 @@ describe('absorbKey', () => {
 });
 
 describe('getPrivateKey', () => {
-  it('decrypts and returns the private key from session', async () => {
+  it('decrypts and returns the private key from session, and throws when keys are missing', async () => {
     const mockPrivateKey = { kty: 'RSA', d: 'private' };
     vi.mocked(crypt.decryptAES).mockReturnValue(JSON.stringify(mockPrivateKey));
 
@@ -132,18 +139,19 @@ describe('getPrivateKey', () => {
 
     expect(crypt.decryptAES).toHaveBeenCalledWith(MOCK_SYMMETRIC_KEY, MOCK_ENC_PRIVATE_KEY);
     expect(privateKey).toEqual(mockPrivateKey);
-  });
 
-  it('throws when session is empty', async () => {
-    // Ensure no session exists by checking with blank id
-    const session = await getUserSession();
-    if (session.id) {
-      // Clear session by setting empty values (direct service call not available here,
-      // so we test the happy path only when needed)
-      return;
-    }
+    await setSessionData(
+      '',
+      '',
+      '',
+      '',
+      '',
+      null as unknown as JsonWebKey,
+      {} as JsonWebKey,
+      null as unknown as crypt.AESMessage,
+    );
 
-    await expect(getPrivateKey()).rejects.toThrow("Can't get private key: session is blank.");
+    await expect(getPrivateKey()).rejects.toThrow("Can't get private key: session is missing keys.");
   });
 });
 
@@ -195,7 +203,7 @@ describe('logout', () => {
 
     await logout();
 
-    expect(window.main.loginStateChange).toHaveBeenCalledOnce();
+    expect(getWindowMain().loginStateChange).toHaveBeenCalledOnce();
   });
 
   it('does not throw if the API call fails', async () => {

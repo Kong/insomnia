@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getEncryptionKeys, getUserProfile } from '../user';
 
-const mockFetch = vi.fn();
+const { mockFetch } = vi.hoisted(() => ({
+  mockFetch: vi.fn(),
+}));
 
 vi.mock('../fetch', () => ({
   fetch: mockFetch,
@@ -104,6 +106,10 @@ describe('getEncryptionKeys', () => {
 
     await getEncryptionKeys({ sessionId: 'sess_xyz' });
 
-    expect(mockFetch).toHaveBeenCalledWith({ method: 'GET', path: '/v3/users/me/encryption-keys', sessionId: 'sess_xyz' });
+    expect(mockFetch).toHaveBeenCalledWith({
+      method: 'GET',
+      path: '/v3/users/me/encryption-keys',
+      sessionId: 'sess_xyz',
+    });
   });
 });
