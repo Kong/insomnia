@@ -86,13 +86,15 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
               className="flex h-7 items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               <Icon icon="file-contract" className="w-4 shrink-0" />
-              <span className="truncate">
-                Certificates{' '}
-                {!isMcp &&
-                  ([...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                    .length > 0
-                    ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
-                    : '')}
+              <span className="inline-flex items-center gap-1 truncate">
+                <span className="truncate">
+                  Certificates{' '}
+                  {!isMcp &&
+                    ([...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
+                      .length > 0
+                      ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
+                      : '')}
+                </span>
                 {isMcp && caStatus !== 'default' && (
                   <Icon
                     icon="circle"
@@ -101,7 +103,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
                         success: 'text-(--color-success)',
                         warning: 'text-(--color-warning)',
                       }[caStatus!]
-                    } h-2 w-2`}
+                    } h-2 w-2 shrink-0`}
                   />
                 )}
               </span>
