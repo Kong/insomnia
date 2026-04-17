@@ -27,7 +27,6 @@ import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import { sortProjects } from '~/models/helpers/project';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -259,12 +258,11 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   let vcsVersion = null;
   if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
     try {
-      const vcs = VCSInstance();
-      await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
+      await window.main.sync.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
       if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
-        await pushSnapshotOnInitialize({ vcs, workspace: activeWorkspace, project: activeProject });
+        await pushSnapshotOnInitialize({ vcs: window.main.sync, workspace: activeWorkspace, project: activeProject });
       }
-      vcsVersion = await vcs.getVersion();
+      vcsVersion = await window.main.sync.getVersion();
     } catch (err) {
       console.warn('Failed to initialize VCS', err);
     }

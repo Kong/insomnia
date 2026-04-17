@@ -7,8 +7,8 @@ import { database } from '../../common/database';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
+  type SyncVCSLike,
 } from '../../sync/vcs/initialize-backend-project';
-import type { VCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 
 export const sortProjects = (projects: Project[]) => [
@@ -23,7 +23,7 @@ export async function updateLocalProjectToRemote({
   organizationId,
 }: {
   project: Project;
-  vcs: VCS;
+  vcs: SyncVCSLike;
   sessionId: string;
   organizationId: string;
 }) {

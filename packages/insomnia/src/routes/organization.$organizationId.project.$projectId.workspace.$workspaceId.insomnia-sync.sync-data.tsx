@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteBackendProjectsCache, remoteBranchesCache, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook, createFetcherSubmitHook } from '~/utils/router';
@@ -14,22 +13,21 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
-    const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
-    const localBranches = (await vcs.getBranchNames()).sort();
-    const currentBranch = await vcs.getCurrentBranchName();
-    const history = (await vcs.getHistory()).sort((a, b) => (b.created > a.created ? 1 : -1));
-    const historyCount = await vcs.getHistoryCount();
-    const status = await vcs.status(syncItems);
+    const localBranches = (await window.main.sync.getBranchNames()).sort();
+    const currentBranch = await window.main.sync.getCurrentBranchName();
+    const history = (await window.main.sync.getHistory()).sort((a, b) => (b.created > a.created ? 1 : -1));
+    const historyCount = await window.main.sync.getHistoryCount();
+    const status = await window.main.sync.status(syncItems);
 
     let remoteBranches: string[] = [];
     let compare = { ahead: 0, behind: 0 };
     try {
-      remoteBranches = (remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())).sort();
-      compare = remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
+      remoteBranches = (remoteBranchesCache[workspaceId] || (await window.main.sync.getRemoteBranchNames())).sort();
+      compare = remoteCompareCache[workspaceId] || (await window.main.sync.compareRemoteBranch());
       const remoteBackendProjects =
         remoteBackendProjectsCache[project.remoteId] ||
-        (await vcs.remoteBackendProjects({
+        (await window.main.sync.remoteBackendProjects({
           teamId: project.parentId,
           teamProjectId: project.remoteId,
         }));
@@ -75,10 +73,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   invariant(project.remoteId, 'Project is not remote');
 
   try {
-    const vcs = VCSInstance();
-    const remoteBranches = (await vcs.getRemoteBranchNames()).sort();
-    const compare = await vcs.compareRemoteBranch();
-    const remoteBackendProjects = await vcs.remoteBackendProjects({
+    const remoteBranches = (await window.main.sync.getRemoteBranchNames()).sort();
+    const compare = await window.main.sync.compareRemoteBranch();
+    const remoteBackendProjects = await window.main.sync.remoteBackendProjects({
       teamId: project.parentId,
       teamProjectId: project.remoteId,
     });

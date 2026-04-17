@@ -15,6 +15,7 @@ import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSess
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
 import { init as initPlugins } from './plugins';
 import { applyColorScheme } from './plugins/misc';
+import { registerSyncMergeConflictListener } from './sync/vcs/insomnia-sync';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
@@ -42,6 +43,7 @@ configureFetch(options => insomniaFetch({ ...options }));
 await initPlugins();
 
 await migrateFromLocalStorage();
+registerSyncMergeConflictListener();
 
 try {
   window.showAlert = options => showModal(AlertModal, options);

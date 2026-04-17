@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 import type { Services } from '~/insomnia-data';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
+import type { BackendProject } from '~/sync/types';
+import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 
 import type { GitServiceAPI } from './main/git-service';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
@@ -114,16 +116,72 @@ const electronStorage: electronStorageBridgeAPI = {
   getItem: key => ipcRenderer.invoke('electronStorage.getItem', key),
   setItem: (key, value) => ipcRenderer.invoke('electronStorage.setItem', key, value),
 };
+let activeBackendProject: BackendProject | null = null;
+
+const refreshActiveBackendProject = async () => {
+  activeBackendProject = await ipcRenderer.invoke('sync.invoke', 'getActiveBackendProject');
+  return activeBackendProject;
+};
+
+const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
+  try {
+    return (await ipcRenderer.invoke('sync.invoke', methodName, ...args)) as T;
+  } catch (error) {
+    if (isUserAbortResolveMergeConflictError(error)) {
+      throw new UserAbortResolveMergeConflictError(
+        'message' in error && typeof error.message === 'string' ? error.message : undefined,
+      );
+    }
+
+    throw error;
+  }
+};
+
+const invokeSyncMethodAndRefresh = async <T>(methodName: string, ...args: unknown[]) => {
+  const result = await invokeSyncMethod<T>(methodName, ...args);
+  await refreshActiveBackendProject();
+  return result;
+};
+
 const sync: SyncBridgeAPI = {
-  invoke: (methodName, ...args) => ipcRenderer.invoke('sync.invoke', methodName, ...args),
+  archiveProject: () => invokeSyncMethodAndRefresh('archiveProject'),
+  checkout: (...args) => invokeSyncMethod('checkout', ...args),
+  compareRemoteBranch: () => invokeSyncMethod('compareRemoteBranch'),
+  fork: (...args) => invokeSyncMethod('fork', ...args),
+  getActiveBackendProject: () => activeBackendProject,
+  getBranchNames: () => invokeSyncMethod('getBranchNames'),
+  getCurrentBranchName: () => invokeSyncMethod('getCurrentBranchName'),
+  getHistory: (...args) => invokeSyncMethod('getHistory', ...args),
+  getHistoryCount: () => invokeSyncMethod('getHistoryCount'),
+  getRemoteBranchNames: () => invokeSyncMethod('getRemoteBranchNames'),
+  getVersion: () => invokeSyncMethod('getVersion'),
+  hasBackendProject: () => activeBackendProject !== null,
+  localBackendProjects: () => invokeSyncMethod('localBackendProjects'),
+  merge: (...args) => invokeSyncMethod('merge', ...args),
+  pull: (...args) => invokeSyncMethod('pull', ...args),
   pullRemoteBackendProject: options => ipcRenderer.invoke('sync.pullRemoteBackendProject', options),
+  push: (...args) => invokeSyncMethod('push', ...args),
+  remoteBackendProjects: (...args) => invokeSyncMethod('remoteBackendProjects', ...args),
+  removeBackendProjectsForRoot: (...args) => invokeSyncMethodAndRefresh('removeBackendProjectsForRoot', ...args),
+  removeBranch: (...args) => invokeSyncMethod('removeBranch', ...args),
+  removeRemoteBranch: (...args) => invokeSyncMethod('removeRemoteBranch', ...args),
+  rollback: (...args) => invokeSyncMethod('rollback', ...args),
+  rollbackToLatest: (...args) => invokeSyncMethod('rollbackToLatest', ...args),
   resolveConflict: options => ipcRenderer.send('sync.resolveConflict', options),
   cancelConflict: options => ipcRenderer.send('sync.cancelConflict', options),
+  stage: (...args) => invokeSyncMethod('stage', ...args),
+  status: (...args) => invokeSyncMethod('status', ...args),
+  switchAndCreateBackendProjectIfNotExist: (...args) =>
+    invokeSyncMethodAndRefresh('switchAndCreateBackendProjectIfNotExist', ...args),
+  takeSnapshot: (...args) => invokeSyncMethod('takeSnapshot', ...args),
+  unstage: (...args) => invokeSyncMethod('unstage', ...args),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
 };
+
+void refreshActiveBackendProject();
 
 const git: GitServiceAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),

@@ -6,11 +6,16 @@ import { type BaseModel, canSync } from '../../models';
 import type { StatusCandidate } from '../types';
 import type { VCS } from './vcs';
 
+export type SyncVCSLike = Pick<
+  VCS,
+  'hasBackendProject' | 'push' | 'stage' | 'status' | 'switchAndCreateBackendProjectIfNotExist' | 'takeSnapshot'
+>;
+
 export const initializeLocalBackendProjectAndMarkForSync = async ({
   vcs,
   workspace,
 }: {
-  vcs: VCS;
+  vcs: SyncVCSLike;
   workspace: Workspace;
 }) => {
   // Create local project
@@ -41,7 +46,7 @@ export const pushSnapshotOnInitialize = async ({
   workspace,
   project: { _id: projectId, remoteId: projectRemoteId, parentId },
 }: {
-  vcs: VCS;
+  vcs: SyncVCSLike;
   workspace: Workspace;
   project: Project;
 }) => {

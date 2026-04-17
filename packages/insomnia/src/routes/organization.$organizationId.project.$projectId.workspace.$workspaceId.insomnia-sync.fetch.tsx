@@ -2,7 +2,6 @@ import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { services } from '~/insomnia-data';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -17,13 +16,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-  const vcs = VCSInstance();
-  const currentBranch = await vcs.getCurrentBranchName();
+  const currentBranch = await window.main.sync.getCurrentBranchName();
 
   try {
     invariant(project.remoteId, 'Project is not remote');
-    await vcs.checkout([], branch);
-    const delta = await vcs.pull({
+    await window.main.sync.checkout([], branch);
+    const delta = await window.main.sync.pull({
       candidates: [],
       teamId: project.parentId,
       teamProjectId: project.remoteId,
@@ -33,7 +31,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta);
   } catch (err) {
-    await vcs.checkout([], currentBranch);
+    await window.main.sync.checkout([], currentBranch);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while fetching remote branch.';
     return {
       error: errorMessage,
