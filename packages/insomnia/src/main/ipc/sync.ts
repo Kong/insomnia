@@ -1,6 +1,7 @@
 import type { IpcRendererEvent } from 'electron';
 
 import type { MergeConflict } from '~/sync/types';
+import type { VCS } from '~/sync/vcs/vcs';
 
 import {
   cancelPendingSyncConflict,
@@ -11,8 +12,38 @@ import {
 } from '../sync-vcs';
 import { ipcMainHandle, ipcMainOn } from './electron';
 
-export interface SyncBridgeAPI {
-  invoke: <T = unknown>(methodName: string, ...args: unknown[]) => Promise<T>;
+type SyncBridgeMethods = Pick<
+  VCS,
+  | 'archiveProject'
+  | 'checkout'
+  | 'compareRemoteBranch'
+  | 'fork'
+  | 'getBranchNames'
+  | 'getCurrentBranchName'
+  | 'getHistory'
+  | 'getHistoryCount'
+  | 'getRemoteBranchNames'
+  | 'getVersion'
+  | 'localBackendProjects'
+  | 'merge'
+  | 'pull'
+  | 'push'
+  | 'remoteBackendProjects'
+  | 'removeBackendProjectsForRoot'
+  | 'removeBranch'
+  | 'removeRemoteBranch'
+  | 'rollback'
+  | 'rollbackToLatest'
+  | 'stage'
+  | 'status'
+  | 'switchAndCreateBackendProjectIfNotExist'
+  | 'takeSnapshot'
+  | 'unstage'
+>;
+
+export interface SyncBridgeAPI extends SyncBridgeMethods {
+  getActiveBackendProject: VCS['getActiveBackendProject'];
+  hasBackendProject: VCS['hasBackendProject'];
   pullRemoteBackendProject: (options: PullRemoteBackendProjectOptions) => Promise<{
     projectId: string;
     workspaceId: string;

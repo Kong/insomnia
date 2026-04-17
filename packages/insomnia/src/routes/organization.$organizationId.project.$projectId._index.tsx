@@ -55,7 +55,6 @@ import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
@@ -266,12 +265,10 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
       `remoteId: ${remoteId}`,
     );
 
-    const vcs = VCSInstance();
-
     const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
-      vcs.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
+      window.main.sync.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
       // Remote backend projects are fetched from the backend since they are not stored locally
-      vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
+      window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
     ]);
     console.log(
       `[getAllRemoteFiles] found allPulledBackendProjectsForRemoteId: ${allPulledBackendProjectsForRemoteId.length} and allFetchedRemoteBackendProjectsForRemoteId: ${allFetchedRemoteBackendProjectsForRemoteId.length} for remoteId: ${remoteId}`,

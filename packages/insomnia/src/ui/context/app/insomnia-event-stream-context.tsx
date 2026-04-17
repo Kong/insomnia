@@ -12,7 +12,6 @@ import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organiz
 import { useStorageRulesActionFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
 import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
 
 const InsomniaEventStreamContext = createContext<{
@@ -73,8 +72,7 @@ const isSameWorkspaceWithRemote = (workspaceId: string | undefined, remoteWorksp
   if (!workspaceId || !remoteWorkspaceId) {
     return false;
   }
-  const vcs = VCSInstance();
-  const currentBackendProject = vcs.getActiveBackendProject();
+  const currentBackendProject = window.main.sync.getActiveBackendProject();
   if (
     currentBackendProject &&
     currentBackendProject?.id === remoteWorkspaceId &&

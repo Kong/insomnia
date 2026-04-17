@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { remoteCompareCache, vcsSegmentEventProperties } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
@@ -17,8 +16,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   invariant(project.remoteId, 'Project is not remote');
 
   try {
-    const vcs = VCSInstance();
-    await vcs.push({
+    await window.main.sync.push({
       teamId: project.parentId,
       teamProjectId: project.remoteId,
     });

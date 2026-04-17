@@ -14,7 +14,6 @@ import { database } from '../common/database';
 import { project } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
-import { VCSInstance } from '../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
@@ -106,7 +105,7 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
           project,
           organizationId: personalOrganizationId,
           sessionId,
-          vcs: VCSInstance(),
+          vcs: window.main.sync,
         });
       }
     }
