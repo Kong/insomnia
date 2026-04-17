@@ -247,8 +247,8 @@ Implementation notes:
 
 - Introduce a narrow storage-oriented bridge for read, write, rename, compression, and VCS-adjacent path work.
 - Avoid mixing import, plugin, or network behavior into this PR.
-- Move the vcs instance entirely to main, expose its functions over IPC.
-- create an envent listener in the renderer to handle events from the conflictHandler function passed into vcs.
+- Move the vcs class entirely to main, simplify it down so its clear what internal state it has, expose its functions over IPC.
+- create an event listener in the renderer to handle events from the conflictHandler function passed into vcs.
 
 Expected risk: high
 
