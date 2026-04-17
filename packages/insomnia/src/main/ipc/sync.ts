@@ -1,0 +1,58 @@
+import type { IpcRendererEvent } from 'electron';
+
+import type { MergeConflict } from '~/sync/types';
+
+import {
+  cancelPendingSyncConflict,
+  invokeMainVCS,
+  type PullRemoteBackendProjectOptions,
+  pullRemoteBackendProjectWithSingleton,
+  resolvePendingSyncConflict,
+} from '../sync-vcs';
+import { ipcMainHandle, ipcMainOn } from './electron';
+
+export interface SyncBridgeAPI {
+  invoke: <T = unknown>(methodName: string, ...args: unknown[]) => Promise<T>;
+  pullRemoteBackendProject: (options: PullRemoteBackendProjectOptions) => Promise<{
+    projectId: string;
+    workspaceId: string;
+  }>;
+  resolveConflict: (options: { requestId: string; conflicts: MergeConflict[] }) => void;
+  cancelConflict: (options: { requestId: string }) => void;
+  on: (
+    channel: 'sync.merge-conflicts',
+    listener: (
+      event: IpcRendererEvent,
+      options: {
+        requestId: string;
+        conflicts: MergeConflict[];
+        labels: { ours: string; theirs: string };
+      },
+    ) => void,
+  ) => () => void;
+}
+
+export const registerSyncHandlers = () => {
+  ipcMainHandle('sync.invoke', (event, methodName: string, ...args: unknown[]) => {
+    return invokeMainVCS(event.sender, methodName, ...args);
+  });
+
+  ipcMainHandle('sync.pullRemoteBackendProject', (event, options: PullRemoteBackendProjectOptions) => {
+    return pullRemoteBackendProjectWithSingleton(event.sender, options);
+  });
+
+  ipcMainOn('sync.resolveConflict', (event, options: { requestId: string; conflicts: MergeConflict[] }) => {
+    resolvePendingSyncConflict({
+      requestId: options.requestId,
+      sender: event.sender,
+      conflicts: options.conflicts,
+    });
+  });
+
+  ipcMainOn('sync.cancelConflict', (event, options: { requestId: string }) => {
+    cancelPendingSyncConflict({
+      requestId: options.requestId,
+      sender: event.sender,
+    });
+  });
+};

@@ -93,38 +93,6 @@
       "builtin": "fs/promises"
     },
     {
-      "importer": "src/sync/store/drivers/file-system-driver.ts",
-      "builtin": "fs/promises"
-    },
-    {
-      "importer": "src/sync/store/drivers/file-system-driver.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/sync/store/drivers/graceful-rename.ts",
-      "builtin": "fs/promises"
-    },
-    {
-      "importer": "src/sync/store/hooks/compress.ts",
-      "builtin": "zlib"
-    },
-    {
-      "importer": "src/sync/store/index.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/sync/vcs/util.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/sync/vcs/vcs.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/sync/vcs/vcs.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/templating/base-extension.ts",
       "builtin": "crypto"
     },

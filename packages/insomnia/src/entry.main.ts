@@ -31,6 +31,7 @@ import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
+import { registerSyncHandlers } from './main/ipc/sync';
 import log, { initializeLogging } from './main/log';
 import { registerCurlHandlers } from './main/network/curl';
 import { registerMcpHandlers } from './main/network/mcp';
@@ -94,6 +95,7 @@ app.on('ready', async () => {
   registerMcpHandlers();
   registerSecretStorageHandlers();
   registerElectronStorageHandlers();
+  registerSyncHandlers();
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
