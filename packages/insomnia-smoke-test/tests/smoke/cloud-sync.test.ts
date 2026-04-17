@@ -69,6 +69,7 @@ test.describe('Cloud Sync', () => {
   });
 
   test.beforeEach(async () => {
+    await postJson('/__test-config/cloud-sync/reset', {});
     await setStorageRule({ enableCloudSync: true });
   });
 
