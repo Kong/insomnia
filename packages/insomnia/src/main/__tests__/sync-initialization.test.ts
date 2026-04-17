@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
+import { getMainVCS } from '~/main/cloud-sync/vcs';
 import { services } from '~/insomnia-data';
-import { getMainVCS } from '~/main/sync-vcs';
 import * as models from '~/models';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 
-import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '../sync-initialization';
+import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '../cloud-sync/initialization';
 
 vi.mock('~/common/organization-storage-rules', () => ({
   fetchAndCacheOrganizationStorageRule: vi.fn(),
@@ -41,7 +41,7 @@ vi.mock('~/models', () => ({
   },
 }));
 
-vi.mock('~/main/sync-vcs', () => ({
+vi.mock('~/main/cloud-sync/vcs', () => ({
   getMainVCS: vi.fn(),
 }));
 
