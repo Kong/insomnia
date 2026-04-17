@@ -36,6 +36,7 @@ export type HandleChannels =
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'generateCommitsFromDiff'
   | 'generateMockRouteDataFromSpec'
+  | 'getAuthHeader'
   | 'getExecution'
   | 'getLocalStorageDataFromFileOrigin'
   | 'git.abortMerge'

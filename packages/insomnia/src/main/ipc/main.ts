@@ -20,7 +20,8 @@ import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
-import { type Services, services } from '~/insomnia-data';
+import type { RequestHeader, Services } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -33,7 +34,7 @@ import type {
 } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
-import type { PluginTemplateTag } from '../../templating/types';
+import type { PluginTemplateTag, RenderedRequest } from '../../templating/types';
 import type { SegmentEvent } from '../analytics';
 import { setCurrentOrganizationId, trackPageView, trackSegmentEvent } from '../analytics';
 import {
@@ -46,6 +47,7 @@ import { backup, restoreBackup } from '../backup';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
+import { getAuthHeader as getAuthHeaderInMain } from '../network/get-auth-header';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import type { McpBridgeAPI } from '../network/mcp';
 import {
@@ -140,6 +142,7 @@ export interface RendererToMainBridgeAPI {
     destinationPath: string;
     bodyCompression?: 'zip' | null;
   }) => Promise<string>;
+  getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<RequestHeader | undefined>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -289,6 +292,9 @@ export function registerMainHandlers() {
     }
   });
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
+  ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
+    return getAuthHeaderInMain(renderedRequest, url);
+  });
 
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
