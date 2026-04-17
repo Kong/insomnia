@@ -1,6 +1,6 @@
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 import { services } from '~/insomnia-data';
-import { getMainVCS } from '~/main/sync-vcs';
+import { getMainVCS } from '~/main/cloud-sync/vcs';
 import * as models from '~/models';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { invariant } from '~/utils/invariant';

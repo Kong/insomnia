@@ -3,14 +3,14 @@ import type { IpcRendererEvent } from 'electron';
 import type { MergeConflict } from '~/sync/types';
 import type { VCS } from '~/sync/vcs/vcs';
 
+import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import {
   cancelPendingSyncConflict,
   invokeMainVCS,
   type PullRemoteBackendProjectOptions,
   pullRemoteBackendProjectWithSingleton,
   resolvePendingSyncConflict,
-} from '../sync-vcs';
-import { ipcMainHandle, ipcMainOn } from './electron';
+} from './vcs';
 
 type SyncBridgeMethods = Pick<
   VCS,
