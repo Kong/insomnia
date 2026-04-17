@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
-import { getMainVCS } from '~/main/cloud-sync/vcs';
 import { services } from '~/insomnia-data';
+import { getMainVCS } from '~/main/cloud-sync/vcs';
 import * as models from '~/models';
-import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
+import {
+  initializeLocalBackendProjectAndMarkForSync,
+  pushSnapshotOnInitialize,
+} from '~/sync/vcs/initialize-backend-project';
 
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '../cloud-sync/initialization';
 
