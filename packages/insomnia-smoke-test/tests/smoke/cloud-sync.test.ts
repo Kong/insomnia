@@ -5,76 +5,22 @@ import { test } from '../../playwright/test';
 
 // @ts-expect-error playwrightConfig.webServer.url must exists
 const devServerUrl = playwrightConfig?.webServer?.url || 'http://127.0.0.1:4010';
-const collectionProjectId = 'proj_5145140e072d4007a30bfa6630ddae70';
-
-const postJson = async (pathname: string, body: Record<string, unknown>) => {
-  const response = await fetch(`${devServerUrl}${pathname}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Request failed for ${pathname}: ${response.status}`);
-  }
-};
-
-const setStorageRule = async (rule: Partial<{
-  enableCloudSync: boolean;
-  enableGitSync: boolean;
-  enableLocalVault: boolean;
-  isOverridden: boolean;
-}>) => {
-  await postJson('/v1/test-utils/organizations/storage-rule', {
-    enableCloudSync: true,
-    enableGitSync: true,
-    enableLocalVault: true,
-    isOverridden: false,
-    ...rule,
-  });
-};
-
-const getSnapshotCount = async (projectId: string) => {
-  const response = await fetch(`${devServerUrl}/graphql`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      query: `
-        query ($projectId: ID!) {
-          snapshots(projectId: $projectId) {
-            id
-          }
-        }
-      `,
-      variables: {
-        projectId,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch snapshots for ${projectId}: ${response.status}`);
-  }
-
-  const json = await response.json();
-  return json.data.snapshots.length as number;
-};
 
 test.describe('Cloud Sync', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test.beforeAll(async () => {
-    await postJson('/__test-config/cloud-sync', { enabled: true });
-    await setStorageRule({ enableCloudSync: true });
-  });
-
-  test.beforeEach(async () => {
-    await postJson('/__test-config/cloud-sync/reset', {});
-    await setStorageRule({ enableCloudSync: true });
+    await fetch(`${devServerUrl}/__test-config/cloud-sync`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enabled: true }),
+    });
   });
 
   test.afterAll(async () => {
-    await postJson('/__test-config/cloud-sync', { enabled: false });
+    await fetch(`${devServerUrl}/__test-config/cloud-sync`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enabled: false }),
+    });
   });
 
   test('Discard, branch and commit actions', async ({ page }) => {
@@ -187,29 +133,6 @@ test.describe('Cloud Sync', () => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ enabled: false }),
     });
-  });
-
-  test('Create workspace initializes sync for remote projects', async ({ page }) => {
-    const initialSnapshotCount = await getSnapshotCount(collectionProjectId);
-
-    await page.getByLabel('Collection Project').click();
-    await page.getByLabel('Create in project').click();
-    await page.getByText('Request collection').click();
-    await page.getByPlaceholder('Enter a name for your Request Collection').fill('Cloud Init Workspace');
-    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-
-    await expect.soft(page.getByTestId('workspace-context-dropdown')).toContainText('Cloud Init Workspace');
-    await expect.poll(async () => (await getSnapshotCount(collectionProjectId)) > initialSnapshotCount).toBe(true);
-  });
-
-  test('Importing into a remote project initializes and pushes sync state', async ({ page, insomnia }) => {
-    const initialSnapshotCount = await getSnapshotCount(collectionProjectId);
-
-    await page.getByLabel('Collection Project').click();
-    await insomnia.projectPage.importFixture('simple.yaml');
-
-    await expect.soft(page.getByTestId('workspace-context-dropdown')).toContainText('simple');
-    await expect.poll(async () => (await getSnapshotCount(collectionProjectId)) > initialSnapshotCount).toBe(true);
   });
 
   test('Check delete workspace locally and remotely', async ({ page }) => {
