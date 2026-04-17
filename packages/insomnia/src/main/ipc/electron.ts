@@ -134,6 +134,8 @@ export type HandleChannels =
   | 'socketIO.event.findMany'
   | 'socketIO.event.send'
   | 'syncNewWorkspaceIfNeeded'
+  | 'sync.invoke'
+  | 'sync.pullRemoteBackendProject'
   | 'socketIO.open'
   | 'socketIO.readyState'
   | 'webSocket.event.findMany'
@@ -192,6 +194,8 @@ export type MainOnChannels =
   | 'mcp.closeAll'
   | 'mcp.client.responseElicitationRequest'
   | 'mcp.client.responseSamplingRequest'
+  | 'sync.cancelConflict'
+  | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
   | 'writeText';
 
@@ -211,6 +215,7 @@ export type RendererOnChannels =
   | 'shell:open'
   | 'show-notification'
   | 'show-toast'
+  | 'sync.merge-conflicts'
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'

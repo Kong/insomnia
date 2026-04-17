@@ -1,16 +1,9 @@
-import { app } from 'electron';
-
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 import { services } from '~/insomnia-data';
+import { getMainVCS } from '~/main/sync-vcs';
 import * as models from '~/models';
-import { createVCS } from '~/sync/vcs/create-vcs';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { invariant } from '~/utils/invariant';
-
-const createMainVCS = () =>
-  createVCS({
-    dataPath: process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-  });
 
 export const initializeWorkspaceBackendProject = async ({ workspaceId }: { workspaceId: string }) => {
   const workspace = await services.workspace.getById(workspaceId);
@@ -26,7 +19,7 @@ export const initializeWorkspaceBackendProject = async ({ workspaceId }: { works
     return;
   }
 
-  const vcs = createMainVCS();
+  const vcs = getMainVCS();
   await initializeLocalBackendProjectAndMarkForSync({
     vcs,
     workspace,
@@ -57,7 +50,7 @@ export const syncNewWorkspaceIfNeeded = async ({ workspaceId }: { workspaceId: s
   await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   try {
-    const vcs = createMainVCS();
+    const vcs = getMainVCS();
     await initializeLocalBackendProjectAndMarkForSync({
       vcs,
       workspace,

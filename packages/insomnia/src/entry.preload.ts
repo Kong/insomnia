@@ -8,6 +8,7 @@ import type { GitServiceAPI } from './main/git-service';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
+import type { SyncBridgeAPI } from './main/ipc/sync';
 import type { AIFeatureNames } from './main/llm-config-service';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
@@ -113,6 +114,16 @@ const electronStorage: electronStorageBridgeAPI = {
   getItem: key => ipcRenderer.invoke('electronStorage.getItem', key),
   setItem: (key, value) => ipcRenderer.invoke('electronStorage.setItem', key, value),
 };
+const sync: SyncBridgeAPI = {
+  invoke: (methodName, ...args) => ipcRenderer.invoke('sync.invoke', methodName, ...args),
+  pullRemoteBackendProject: options => ipcRenderer.invoke('sync.pullRemoteBackendProject', options),
+  resolveConflict: options => ipcRenderer.send('sync.resolveConflict', options),
+  cancelConflict: options => ipcRenderer.send('sync.cancelConflict', options),
+  on: (channel, listener) => {
+    ipcRenderer.on(channel, listener);
+    return () => ipcRenderer.removeListener(channel, listener);
+  },
+};
 
 const git: GitServiceAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
@@ -217,6 +228,7 @@ const main: Window['main'] = {
   curl,
   secretStorage,
   electronStorage,
+  sync,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
