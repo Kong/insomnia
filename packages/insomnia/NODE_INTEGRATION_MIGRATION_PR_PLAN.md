@@ -227,7 +227,7 @@ Status: candidate
 
 Purpose:
 
-- Move local project sync storage behind a minimal privileged boundary so renderer code stops owning filesystem, compression, and VCS-path details.
+- Move local project sync storage so renderer code stops owning filesystem, compression, and VCS-path details.
 
 Single feature scope:
 
@@ -246,8 +246,9 @@ Primary files:
 Implementation notes:
 
 - Introduce a narrow storage-oriented bridge for read, write, rename, compression, and VCS-adjacent path work.
-- Keep sync orchestration in the renderer, but move privileged file operations to main.
 - Avoid mixing import, plugin, or network behavior into this PR.
+- Move the vcs instance entirely to main, expose its functions over IPC.
+- create an envent listener in the renderer to handle events from the conflictHandler function passed into vcs.
 
 Expected risk: high
 
