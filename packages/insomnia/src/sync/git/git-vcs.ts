@@ -1318,6 +1318,8 @@ export class GitVCS {
         commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
       };
     }
+
+    return;
   }
 
   async buildManualResolutionFromTrees() {
@@ -1419,6 +1421,17 @@ export class GitVCS {
           mergeResult: suggestedMergeResult,
         });
       }
+    }
+
+    // If all conflicts were auto-resolved (no YAML conflicts), complete the merge automatically
+    if (mergeConflicts.length === 0 && autoResolvedConflicts.length > 0) {
+      await this.continueMerge({
+        handledMergeConflicts: [],
+        autoResolvedConflicts,
+        commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+        commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+      });
+      return { autoResolved: true };
     }
 
     throw new MergeConflictError('Need to solve merge conflicts first', {
@@ -1652,6 +1665,17 @@ export class GitVCS {
             mergeResult: suggestedMergeResult,
           });
         }
+      }
+
+      // If all conflicts were auto-resolved (no YAML conflicts), complete the merge automatically
+      if (mergeConflicts.length === 0 && autoResolvedConflicts.length > 0) {
+        await this.continueMerge({
+          handledMergeConflicts: [],
+          autoResolvedConflicts,
+          commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+          commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+        });
+        return { autoResolved: true };
       }
 
       throw new MergeConflictError('Need to solve merge conflicts first', {
