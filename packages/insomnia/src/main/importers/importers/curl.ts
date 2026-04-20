@@ -4,6 +4,7 @@ import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
 
 import type { RequestAuthentication } from '~/insomnia-data';
 
+import { getAppVersion } from '../../../common/constants';
 import { type Converter, type ImportRequest, type Parameter } from '../entities';
 
 export const id = 'curl';
@@ -240,6 +241,11 @@ const buildRequestObject = ({
       name: 'Cookie',
       value: cookieHeaderValue,
     });
+  }
+  // Mirror request creation: inject a default User-Agent if the command omits one
+  const hasUserAgent = headers.some(header => header.name.toLowerCase() === 'user-agent');
+  if (!hasUserAgent) {
+    headers.push({ name: 'User-Agent', value: `insomnia/${getAppVersion()}` });
   }
   const dataParameters = pairsToDataParameters(pairsByName);
   let body = {};

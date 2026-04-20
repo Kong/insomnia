@@ -192,22 +192,42 @@ describe('curl', () => {
     {
       name: 'should handle -H with space after colon',
       curl: "curl https://example.com -H 'X-Host: example.com'",
-      expected: { headers: [{ name: 'X-Host', value: 'example.com' }] },
+      expected: {
+        headers: [
+          { name: 'X-Host', value: 'example.com' },
+          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
+        ],
+      },
     },
     {
       name: 'should handle -H with no space after colon',
       curl: "curl https://example.com -H 'X-Host:example.com'",
-      expected: { headers: [{ name: 'X-Host', value: 'example.com' }] },
+      expected: {
+        headers: [
+          { name: 'X-Host', value: 'example.com' },
+          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
+        ],
+      },
     },
     {
       name: 'should handle -H for Content-Type',
       curl: "curl https://example.com -H 'Content-Type:application/x-www-form-urlencoded'",
-      expected: { headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }] },
+      expected: {
+        headers: [
+          { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
+          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
+        ],
+      },
     },
     {
       name: 'should handle -H with leading spaces before flag',
       curl: "curl https://example.com    -H 'Content-Type:application/x-www-form-urlencoded'",
-      expected: { headers: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }] },
+      expected: {
+        headers: [
+          { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
+          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
+        ],
+      },
     },
     // auth
     {
@@ -225,7 +245,7 @@ describe('curl', () => {
       curl: `curl http://httpbin.org/get -H 'Authorization: Bearer mytoken123'`,
       expected: {
         authentication: { type: 'bearer', token: 'mytoken123' },
-        headers: [],
+        headers: [{ name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) }],
       },
     },
     {
@@ -233,7 +253,32 @@ describe('curl', () => {
       curl: `curl http://httpbin.org/get -H 'x-foo: x-bar' -H 'Authorization: Bearer mytoken123' `,
       expected: {
         authentication: { type: 'bearer', token: 'mytoken123' },
-        headers: [{ name: 'x-foo', value: 'x-bar' }],
+        headers: [
+          { name: 'x-foo', value: 'x-bar' },
+          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
+        ],
+      },
+    },
+    // User-Agent injection
+    {
+      name: 'should inject default User-Agent when none is provided',
+      curl: 'curl https://example.com',
+      expected: {
+        headers: [{ name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) }],
+      },
+    },
+    {
+      name: 'should not override an explicit User-Agent header',
+      curl: "curl https://example.com -H 'User-Agent: my-agent/1.0'",
+      expected: {
+        headers: [{ name: 'User-Agent', value: 'my-agent/1.0' }],
+      },
+    },
+    {
+      name: 'should not override a lowercased user-agent header',
+      curl: "curl https://example.com -H 'user-agent: my-agent/1.0'",
+      expected: {
+        headers: [{ name: 'user-agent', value: 'my-agent/1.0' }],
       },
     },
   ];
