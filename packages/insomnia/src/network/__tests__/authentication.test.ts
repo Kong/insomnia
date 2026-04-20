@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { _buildBearerHeader, getAuthHeader, getAuthObjectOrNull, getAuthQueryParams } from '../authentication';
+import { getAuthHeader } from '../../main/network/get-auth-header';
+import { _buildBearerHeader, getAuthObjectOrNull, getAuthQueryParams } from '../authentication';
 
 describe('OAuth 1.0', () => {
   it('Does OAuth 1.0', async () => {

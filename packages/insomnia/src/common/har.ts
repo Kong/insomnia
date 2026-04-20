@@ -293,6 +293,10 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
 
   // Set auth header if we have it
   if (!hasAuthHeader(renderedRequest.headers)) {
+    const getAuthHeader =
+      process.type === 'renderer'
+        ? window.main.getAuthHeader
+        : (await import('../main/network/get-auth-header')).getAuthHeader;
     const header = await getAuthHeader(renderedRequest, url);
 
     if (header) {

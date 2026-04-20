@@ -1,11 +1,6 @@
 import type { RequestAuthentication, RequestParameter } from '~/insomnia-data';
 
-import type { RenderedRequest } from '../templating/types';
 import { QUERY_PARAMS } from './api-key/constants';
-
-export async function getAuthHeader(renderedRequest: RenderedRequest, url: string) {
-  return (await import('../main/network/get-auth-header')).getAuthHeader(renderedRequest, url);
-}
 
 export function getAuthQueryParams(authentication: RequestAuthentication) {
   if (authentication.disabled) {
