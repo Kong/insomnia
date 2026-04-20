@@ -231,7 +231,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <OrganizationSelect
                       organizationId={organizationId}
                       organizations={organizations || []}
-                      onSelect={id => navigate(`/organization/${id}`)}
+                      onSelect={id => {
+                        window.main.trackSegmentEvent({ event: SegmentEvent.organizationSwitched });
+                        navigate(`/organization/${id}`);
+                      }}
                     />
                   )}
 

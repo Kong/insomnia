@@ -11,6 +11,7 @@ import { models, services } from '~/insomnia-data';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
+import { SegmentEvent } from '~/ui/analytics';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
@@ -102,6 +103,15 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     `${organizationId}:project-navigation-sidebar-filter`,
     '',
   );
+
+  useEffect(() => {
+    if (projectNavigationSidebarFilter) {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.projectListFiltered,
+      });
+    }
+  }, [projectNavigationSidebarFilter]);
+
   const [konnectFilter, setKonnectFilter] = reactUse.useLocalStorage(
     `${organizationId}:project-navigation-konnect-filter`,
     '',
@@ -538,6 +548,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                   const docId = doc._id;
                   if (item.kind === 'project') {
                     toggleProjectOrWorkspace(docId);
+                    window.main.trackSegmentEvent({ event: SegmentEvent.projectSwitched });
                     !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
                   } else if (item.kind === 'workspace') {
                     toggleProjectOrWorkspace(docId);

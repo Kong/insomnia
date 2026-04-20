@@ -117,6 +117,9 @@ export enum SegmentEvent {
   mcpResponseHeadersCopyAllClicked = 'mcp-response-headers-copy-all-clicked',
   kongKonnectPatValidated = 'kong-konnect-pat-validated',
   kongKonnectSyncCompleted = 'kong-konnect-sync-completed',
+  projectListFiltered = 'project-list-filtered',
+  projectSwitched = 'project-switched',
+  organizationSwitched = 'organization-switched',
 }
 
 type PushPull = 'push' | 'pull';
