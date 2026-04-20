@@ -68,6 +68,7 @@ jobs:
         run: npm --workspaces version prerelease --preid="alpha-pr-$(git rev-parse --short HEAD)" --no-git-tag-version
 
       - name: Package
+        if: ${{ matrix.os != 'windows-latest' }}
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
