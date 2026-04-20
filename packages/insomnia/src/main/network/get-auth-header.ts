@@ -40,6 +40,9 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
   if (authentication.type === 'apikey' && authentication.addTo === COOKIE) {
     const { key, value } = authentication;
+    if (!key || !value) {
+      return undefined;
+    }
     return {
       name: 'Cookie',
       value: `${key}=${value}`,
