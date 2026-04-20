@@ -11,7 +11,7 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
 import { hasSignificantChanges } from '../../common/significant-diff-detection';
-import { type MergeConflict, RESOLUTION_SOURCE } from '../types';
+import { type AutoResolvedConflict, type MergeConflict, RESOLUTION_SOURCE } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
@@ -1318,11 +1318,14 @@ export class GitVCS {
         commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
       };
     }
+
+    return;
   }
 
   async buildManualResolutionFromTrees() {
     const { oursBranch, theirsBranch } = await this.getBranchPair();
     const mergeConflicts: MergeConflict[] = [];
+    const autoResolvedConflicts: AutoResolvedConflict[] = [];
     const conflictPathsObj = await this.findConflictLikeChanges(oursBranch, theirsBranch);
 
     const conflictTypeList: (keyof ConflictPaths)[] = ['bothModified', 'deleteByUs', 'deleteByTheirs'];
@@ -1368,6 +1371,16 @@ export class GitVCS {
         deleteByTheirs: 'they deleted and you modified',
       }[conflictType];
       for (const conflictPath of conflictPaths) {
+        // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+        // Collect for deferred staging in continueMerge() so cancel has zero side effects.
+        if (!conflictPath.endsWith('.yaml')) {
+          autoResolvedConflicts.push({
+            filepath: conflictPath,
+            action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
+          });
+          continue;
+        }
+
         let mineBlobContent = null;
         let mineBlobId = null;
 
@@ -1410,8 +1423,20 @@ export class GitVCS {
       }
     }
 
+    // If all conflicts were auto-resolved (no YAML conflicts), complete the merge automatically
+    if (mergeConflicts.length === 0 && autoResolvedConflicts.length > 0) {
+      await this.continueMerge({
+        handledMergeConflicts: [],
+        autoResolvedConflicts,
+        commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+        commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+      });
+      return { autoResolved: true };
+    }
+
     throw new MergeConflictError('Need to solve merge conflicts first', {
       conflicts: mergeConflicts,
+      autoResolvedConflicts,
       labels: {
         ours: `${oursBranch} ${oursHeadCommitOid}`,
         theirs: `${theirsBranch} ${theirsHeadCommitOid}`,
@@ -1521,6 +1546,7 @@ export class GitVCS {
     const { filepaths, bothModified, deleteByUs, deleteByTheirs } = mergeConflictError.data;
     if (filepaths.length) {
       const mergeConflicts: MergeConflict[] = [];
+      const autoResolvedConflicts: AutoResolvedConflict[] = [];
       const conflictPathsObj = {
         bothModified,
         deleteByUs,
@@ -1569,6 +1595,16 @@ export class GitVCS {
           deleteByTheirs: 'they deleted and you modified',
         }[conflictType];
         for (const conflictPath of conflictPaths) {
+          // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+          // Collect for deferred staging in continueMerge() so cancel has zero side effects.
+          if (!conflictPath.endsWith('.yaml')) {
+            autoResolvedConflicts.push({
+              filepath: conflictPath,
+              action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
+            });
+            continue;
+          }
+
           let mineBlobContent = null;
           let mineBlobId = null;
 
@@ -1631,8 +1667,20 @@ export class GitVCS {
         }
       }
 
+      // If all conflicts were auto-resolved (no YAML conflicts), complete the merge automatically
+      if (mergeConflicts.length === 0 && autoResolvedConflicts.length > 0) {
+        await this.continueMerge({
+          handledMergeConflicts: [],
+          autoResolvedConflicts,
+          commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+          commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+        });
+        return { autoResolved: true };
+      }
+
       throw new MergeConflictError('Need to solve merge conflicts first', {
         conflicts: mergeConflicts,
+        autoResolvedConflicts,
         labels: {
           ours: `${oursBranch} ${oursHeadCommitOid}`,
           theirs: `${theirsBranch} ${theirsHeadCommitOid}`,
@@ -1648,14 +1696,32 @@ export class GitVCS {
   // create a commit after resolving merge conflicts
   async continueMerge({
     handledMergeConflicts,
+    autoResolvedConflicts,
     commitMessage,
     commitParent,
   }: {
     handledMergeConflicts: MergeConflict[];
+    autoResolvedConflicts?: AutoResolvedConflict[];
     commitMessage: string;
     commitParent: string[];
   }) {
     console.log('[git] continue to merge after resolving merge conflicts', await this.getCurrentBranch());
+
+    // Stage auto-resolved non-YAML files (deferred from conflict collection)
+    for (const autoResolved of autoResolvedConflicts ?? []) {
+      if (autoResolved.action === 'delete') {
+        await git.remove({ ...this._baseOpts, filepath: autoResolved.filepath });
+      } else {
+        await git.checkout({
+          ...this._baseOpts,
+          ref: commitParent[1],
+          filepaths: [autoResolved.filepath],
+          noUpdateHead: true,
+          force: true,
+        });
+        await git.add({ ...this._baseOpts, filepath: autoResolved.filepath });
+      }
+    }
 
     for (const conflict of handledMergeConflicts) {
       assertIsPromiseFsClient(this._baseOpts.fs);
@@ -1977,6 +2043,7 @@ export class MergeConflictError extends Error {
     msg: string,
     data: {
       conflicts: MergeConflict[];
+      autoResolvedConflicts: AutoResolvedConflict[];
       labels: {
         ours: string;
         theirs: string;

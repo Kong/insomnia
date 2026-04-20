@@ -55,7 +55,7 @@ import { GitProjectNeDBClient } from '../sync/git/project-ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
-import type { MergeConflict } from '../sync/types';
+import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
 import { invariant } from '../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
@@ -2092,12 +2092,14 @@ export const continueMerge = async ({
   projectId,
   workspaceId,
   handledMergeConflicts,
+  autoResolvedConflicts,
   commitMessage,
   commitParent,
 }: {
   projectId: string;
   workspaceId?: string;
   handledMergeConflicts: MergeConflict[];
+  autoResolvedConflicts?: AutoResolvedConflict[];
   commitMessage: string;
   commitParent: string[];
 }) => {
@@ -2107,6 +2109,7 @@ export const continueMerge = async ({
 
     await GitVCS.continueMerge({
       handledMergeConflicts,
+      autoResolvedConflicts,
       commitMessage,
       commitParent,
     });

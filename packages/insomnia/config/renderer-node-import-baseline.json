@@ -17,18 +17,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/common/misc.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/common/misc.ts",
-      "builtin": "zlib"
-    },
-    {
-      "importer": "src/common/significant-diff-detection.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/main/importers/importers/curl.ts",
       "builtin": "url"
     },
@@ -93,26 +81,6 @@
       "builtin": "zlib"
     },
     {
-      "importer": "src/network/grpc/proto-directory-loader.tsx",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/grpc/proto-directory-loader.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "os"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/network/network.ts",
       "builtin": "fs"
     },
@@ -161,19 +129,19 @@
       "builtin": "path"
     },
     {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send.tsx",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send.tsx",
+      "importer": "src/routes/import.scan.tsx",
       "builtin": "path"
     },
     {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx",
-      "builtin": "fs"
+      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection.tsx",
+      "builtin": "path"
     },
     {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx",
+      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx",
+      "builtin": "path"
+    },
+    {
+      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.update.tsx",
       "builtin": "path"
     },
     {
@@ -227,10 +195,6 @@
     {
       "importer": "src/utils/plugin.ts",
       "builtin": "path"
-    },
-    {
-      "importer": "src/utils/url/querystring.ts",
-      "builtin": "url"
     }
   ]
 }

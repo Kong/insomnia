@@ -296,7 +296,7 @@ describe('Feature: HTTP Route Sync', () => {
     );
   });
 
-  it('Scenario: Regex path — tilde prefix stripped in URL and name', async () => {
+  it('Scenario: Regex path with shorthand class — falls back to /:path with path parameter', async () => {
     vi.stubGlobal('fetch', mockFetch(
       [makeCp()],
       [makeService()],
@@ -307,9 +307,27 @@ describe('Feature: HTTP Route Sync', () => {
 
     const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(requests[0]).toMatchObject({
-      url: 'http://{{ _.proxy_host }}/regex/\\d+',
-      name: '/regex/\\d+',
+      url: 'http://{{ _.proxy_host }}/:path',
+      name: '~/regex/\\d+',
     });
+    expect(requests[0].pathParameters).toEqual([{ name: 'path', value: '' }]);
+  });
+
+  it('Scenario: Regex path with named capture group — parsed to colon param in URL and pathParameters', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()],
+      [makeService()],
+      [makeRoute({ methods: ['GET'], paths: ['~/api/users/(?<userId>[0-9]+)'], protocols: ['http'] })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests[0]).toMatchObject({
+      url: 'http://{{ _.proxy_host }}/api/users/:userid',
+      name: '/api/users/:userid',
+    });
+    expect(requests[0].pathParameters).toEqual([{ name: 'userid', value: '' }]);
   });
 
   it('Scenario: strip_path and preserve_host — ignored (no effect on request URL)', async () => {
@@ -639,6 +657,57 @@ describe('Feature: Re-sync', () => {
 
     const [updated] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(updated.method).toBe('GET');
+  });
+
+  it('Scenario: Re-sync preserves user-filled path param value when regex is unchanged', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['~/api/users/(?<userId>[0-9]+)'], protocols: ['http'] })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    // User fills in the path param value
+    const [created] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    await insoservices.request.update(created, { pathParameters: [{ name: 'userid', value: '42' }] });
+
+    // Re-sync — same regex, no change
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['~/api/users/(?<userId>[0-9]+)'], protocols: ['http'] })],
+    ));
+    const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    expect(result.routes.updated).toBe(0);
+    const [unchanged] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(unchanged.pathParameters).toEqual([{ name: 'userid', value: '42' }]);
+  });
+
+  it('Scenario: Re-sync when regex capture group is renamed — old value dropped, new empty param created', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['~/api/users/(?<userId>[0-9]+)'], protocols: ['http'] })],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    // User fills in the path param value
+    const [created] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    await insoservices.request.update(created, { pathParameters: [{ name: 'userid', value: '42' }] });
+
+    // Re-sync — capture group renamed from userId to accountId.
+    // The raw regex path is part of the route key, so a different capture group name
+    // produces a different key -> the old request is deleted and a new one is created.
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({ id: 'route-uuid-1', methods: ['GET'], paths: ['~/api/users/(?<accountId>[0-9]+)'], protocols: ['http'] })],
+    ));
+    const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    expect(result.routes.created).toBe(1);
+    expect(result.routes.deleted).toBe(1);
+    const [updated] = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(updated.url).toBe('http://{{ _.proxy_host }}/api/users/:accountid');
+    // Old 'userid' value is gone; new 'accountid' param starts empty
+    expect(updated.pathParameters).toEqual([{ name: 'accountid', value: '' }]);
   });
 });
 
@@ -1127,6 +1196,85 @@ describe('Feature: Environment Variable Mapping', () => {
     const apiKey = (updated.kvPairData ?? []).find((kv: any) => kv.name === 'api_key');
     expect(proxyHost?.value).toBe('myproxy.example.com');
     expect(apiKey?.value).toBe('secret-123');
+  });
+
+  it('Scenario: Sync auto-fills proxy vars from control plane proxy_urls', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp({
+        proxy_urls: [
+          { host: 'proxy.example.com', port: 8443, protocol: 'https' },
+          { host: 'grpc.example.com', port: 9090, protocol: 'grpc' },
+          { host: 'grpcs.example.com', port: 443, protocol: 'grpcs' },
+        ],
+      })],
+      [], [],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
+    const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
+    const proxyHost = (env.kvPairData ?? []).find((kv: any) => kv.name === 'proxy_host');
+    const grpcProxyHost = (env.kvPairData ?? []).find((kv: any) => kv.name === 'grpc_proxy_host');
+    const grpcsProxyHost = (env.kvPairData ?? []).find((kv: any) => kv.name === 'grpcs_proxy_host');
+    expect(proxyHost?.value).toBe('proxy.example.com:8443');
+    expect(grpcProxyHost?.value).toBe('grpc.example.com:9090');
+    expect(grpcsProxyHost?.value).toBe('grpcs.example.com:443');
+  });
+
+  it('Scenario: Sync does not overwrite user-entered proxy values with proxy_urls', async () => {
+    // First sync without proxy_urls → empty vars
+    vi.stubGlobal('fetch', mockFetch([makeCp()], [], []));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    // User fills in proxy_host manually
+    const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
+    const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
+    const updatedKvPairs = (env.kvPairData ?? []).map((kv: any) =>
+      kv.name === 'proxy_host' ? { ...kv, value: 'user-chosen.example.com' } : kv,
+    );
+    await insoservices.environment.update(env, { kvPairData: updatedKvPairs });
+
+    // Re-sync with proxy_urls that would provide a different value
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp({
+        proxy_urls: [
+          { host: 'api-provided.example.com', port: 80, protocol: 'http' },
+        ],
+      })],
+      [], [],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const updated = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
+    const proxyHost = (updated.kvPairData ?? []).find((kv: any) => kv.name === 'proxy_host');
+    expect(proxyHost?.value).toBe('user-chosen.example.com');
+  });
+
+  it('Scenario: Re-sync fills empty proxy vars when proxy_urls become available', async () => {
+    // First sync without proxy_urls → empty vars
+    vi.stubGlobal('fetch', mockFetch([makeCp()], [], []));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
+    const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
+    const proxyHost = (env.kvPairData ?? []).find((kv: any) => kv.name === 'proxy_host');
+    expect(proxyHost?.value).toBe('');
+
+    // Re-sync with proxy_urls now available
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp({
+        proxy_urls: [
+          { host: 'newly-available.example.com', port: 443, protocol: 'https' },
+        ],
+      })],
+      [], [],
+    ));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const updated = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
+    const updatedProxyHost = (updated.kvPairData ?? []).find((kv: any) => kv.name === 'proxy_host');
+    expect(updatedProxyHost?.value).toBe('newly-available.example.com');
   });
 });
 
