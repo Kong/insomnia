@@ -12,7 +12,7 @@ import type { RequestAuthentication } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import type { ConnectionContext } from '~/main/mcp/common';
-import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
+import { encryptOAuthUrl } from '~/main/network/o-auth-2/get-token';
 import { invariant } from '~/utils/invariant';
 
 export class MCPAuthError extends Error {

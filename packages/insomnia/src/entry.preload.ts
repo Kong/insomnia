@@ -199,6 +199,8 @@ const main: Window['main'] = {
   writeResponseBodyToFile: options => ipcRenderer.invoke('writeResponseBodyToFile', options),
   getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<RequestHeader | undefined> =>
     ipcRenderer.invoke('getAuthHeader', renderedRequest, url),
+  initNewOAuthSession: () => ipcRenderer.invoke('initNewOAuthSession'),
+  getOAuth2Token: options => ipcRenderer.invoke('getOAuth2Token', options),
   insecureReadFile: options => ipcRenderer.invoke('insecureReadFile', options),
   insecureReadFileWithEncoding: options => ipcRenderer.invoke('insecureReadFileWithEncoding', options),
   secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),

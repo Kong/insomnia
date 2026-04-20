@@ -9,8 +9,6 @@ import { HydratedRouter } from 'react-router/dom';
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import { initDatabase, initServices, services } from '~/insomnia-data';
 import { database as clientDatabase } from '~/ui/database.client';
-import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
-
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
 import { init as initPlugins } from './plugins';
@@ -129,7 +127,7 @@ if (insomniaSession) {
 const appSettings = await services.settings.getOrCreate();
 
 if (appSettings.clearOAuth2SessionOnRestart) {
-  await clearOAuthWindowSessionId();
+  window.main.initNewOAuthSession();
 }
 
 applyColorScheme(appSettings);

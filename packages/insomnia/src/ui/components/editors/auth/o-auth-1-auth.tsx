@@ -8,7 +8,7 @@ import {
   SIGNATURE_METHOD_HMAC_SHA256,
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
-} from '../../../../network/o-auth-1/constants';
+} from '../../../../main/network/o-auth-1/get-token';
 import {
   type RequestLoaderData,
   useRequestLoaderData,

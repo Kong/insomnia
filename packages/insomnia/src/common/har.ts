@@ -8,7 +8,6 @@ import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { BaseModel } from '../models';
 import * as models from '../models';
-import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginRequest from '../plugins/context/request';

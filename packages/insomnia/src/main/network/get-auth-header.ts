@@ -6,8 +6,8 @@ import type { RenderedRequest } from '~/templating/types';
 import { COOKIE, HEADER } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
-import getOAuth1Token from '../../network/o-auth-1/get-token';
-import { getOAuth2Token } from '../../network/o-auth-2/get-token';
+import getOAuth1Token from './o-auth-1/get-token';
+import { getOAuth2Token } from './o-auth-2/get-token';
 
 const buildBearerHeader = (accessToken: string, prefix?: string): RequestHeader | undefined => {
   if (!accessToken) {

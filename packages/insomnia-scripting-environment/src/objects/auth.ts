@@ -1,4 +1,4 @@
-import type { OAuth1SignatureMethod } from 'insomnia/src/network/o-auth-1/constants';
+import type { OAuth1SignatureMethod } from 'insomnia/src/main/network/o-auth-1/get-token';
 
 import type { OAuth2ResponseType, RequestAuthentication } from '~/insomnia-data';
 

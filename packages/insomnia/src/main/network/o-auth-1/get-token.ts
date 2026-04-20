@@ -1,21 +1,15 @@
-/**
- * Get an OAuth1Token object and also handle storing/saving/refreshing
- * @returns {Promise.<void>}
- */
 import crypto from 'node:crypto';
 
 import OAuth1 from 'oauth-1.0a';
 
 import type { RequestAuthentication, RequestBody } from '~/insomnia-data';
 
-import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
-import type { OAuth1SignatureMethod } from './constants';
-import {
-  SIGNATURE_METHOD_HMAC_SHA1,
-  SIGNATURE_METHOD_HMAC_SHA256,
-  SIGNATURE_METHOD_PLAINTEXT,
-  SIGNATURE_METHOD_RSA_SHA1,
-} from './constants';
+import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
+export type OAuth1SignatureMethod = 'HMAC-SHA1' | 'RSA-SHA1' | 'HMAC-SHA256' | 'PLAINTEXT';
+export const SIGNATURE_METHOD_HMAC_SHA1: OAuth1SignatureMethod = 'HMAC-SHA1';
+export const SIGNATURE_METHOD_HMAC_SHA256: OAuth1SignatureMethod = 'HMAC-SHA256';
+export const SIGNATURE_METHOD_RSA_SHA1: OAuth1SignatureMethod = 'RSA-SHA1';
+export const SIGNATURE_METHOD_PLAINTEXT: OAuth1SignatureMethod = 'PLAINTEXT';
 
 function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {
@@ -65,9 +59,7 @@ export default async function getToken(
     url: url,
     method: method,
     includeBodyHash: false,
-    data: {
-      // These are conditionally filled in below
-    },
+    data: {},
   };
 
   if (authentication.callback) {
@@ -114,7 +106,6 @@ export default async function getToken(
       secret: authentication.privateKey || '',
     };
 
-    // We override getSigningKey for RSA-SHA1 because we don't want ddo/oauth-1.0a to percentEncode the token
     oauth.getSigningKey = function (tokenSecret) {
       return tokenSecret || '';
     };
