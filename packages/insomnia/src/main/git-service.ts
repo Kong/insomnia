@@ -20,7 +20,7 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import type { GitRemoteProviderType, GitRepository, WorkspaceScope } from '~/insomnia-data';
+import type { GitRemoteProviderType, GitRepository, Workspace, WorkspaceMeta, WorkspaceScope } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
@@ -29,6 +29,7 @@ import {
   type ProviderEmail,
   type ProviderRepository,
 } from '~/sync/git/providers';
+import type { FileIssue, FileIssueKind } from '~/sync/git/repo-file-watcher';
 
 import { INSOMNIA_GITLAB_API_URL } from '../common/constants';
 import { database } from '../common/database';
@@ -120,6 +121,20 @@ export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?
   return { type, action, error };
 }
 
+export interface WorkspaceFileIssue {
+  workspaceId: string;
+  gitRepositoryId: string;
+  relPath: string;
+  kind: FileIssueKind;
+  message: string;
+}
+
+interface GetProjectGitFileIssuesOptions {
+  projectId: string;
+  workspaceId?: string;
+  gitRepositoryId?: string;
+}
+
 /**
  * Converts various Git URL formats to HTTPS URLs
  * Handles SSH URLs, Git URLs, and self-hosted Git servers
@@ -175,6 +190,92 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
+}
+
+function toPosixRelPath(relPath: string) {
+  return relPath.split(path.sep).join(path.posix.sep);
+}
+
+async function getProjectWorkspacesWithMeta(projectId: string) {
+  const workspaces = await services.workspace.findByParentId(projectId);
+  const metas = await Promise.all(
+    workspaces.map(async workspace => ({
+      workspace,
+      meta: await services.workspaceMeta.getByParentId(workspace._id),
+    })),
+  );
+
+  return metas;
+}
+
+export function mapWorkspaceFileIssues({
+  issues,
+  repoId,
+  metas,
+  workspaceId,
+}: {
+  issues: FileIssue[];
+  repoId: string;
+  metas: { workspace: Workspace; meta: WorkspaceMeta | null | undefined }[];
+  workspaceId?: string;
+}) {
+  const relPathToWorkspaceId = new Map<string, string>();
+
+  for (const { workspace, meta } of metas) {
+    if (workspaceId && workspace._id !== workspaceId) {
+      continue;
+    }
+
+    if (!meta?.gitFilePath) {
+      continue;
+    }
+
+    relPathToWorkspaceId.set(toPosixRelPath(meta.gitFilePath), workspace._id);
+  }
+
+  return issues.flatMap<WorkspaceFileIssue>(issue => {
+    const matchedWorkspaceId = relPathToWorkspaceId.get(toPosixRelPath(issue.relPath));
+    if (!matchedWorkspaceId) {
+      return [];
+    }
+
+    return [
+      {
+        workspaceId: matchedWorkspaceId,
+        gitRepositoryId: repoId,
+        relPath: issue.relPath,
+        kind: issue.kind,
+        message: issue.message,
+      },
+    ];
+  });
+}
+
+export async function getProjectGitFileIssues({
+  projectId,
+  workspaceId,
+  gitRepositoryId,
+}: GetProjectGitFileIssuesOptions): Promise<WorkspaceFileIssue[]> {
+  const project = await services.project.getById(projectId);
+  if (
+    !project ||
+    !models.project.isGitProject(project) ||
+    !project.gitRepositoryId ||
+    models.project.isEmptyGitProject(project)
+  ) {
+    return [];
+  }
+
+  if (gitRepositoryId && gitRepositoryId !== project.gitRepositoryId) {
+    return [];
+  }
+
+  return mapWorkspaceFileIssues({
+    issues: repoFileWatcherRegistry.getProblems(project.gitRepositoryId),
+    repoId: project.gitRepositoryId,
+    metas: await getProjectWorkspacesWithMeta(projectId),
+    workspaceId,
+  });
 }
 
 /**
@@ -2707,6 +2808,7 @@ export interface GitServiceAPI {
   fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
   validateGitRepositoryCredentials: typeof validateGitRepositoryCredentials;
   validateGitCredentialById: typeof validateGitCredentialById;
+  getProjectGitFileIssues: typeof getProjectGitFileIssues;
 
   initSignInToGitProvider: typeof initSignInToGitProvider;
   completeSignInToGitProvider: typeof completeSignInToGitProvider;
@@ -2727,12 +2829,13 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle(
     'git.validateGitRepositoryCredentials',
-    (_, options: Parameters<typeof validateGitRepositoryCredentials>[0]) =>
-      validateGitRepositoryCredentials(options),
+    (_, options: Parameters<typeof validateGitRepositoryCredentials>[0]) => validateGitRepositoryCredentials(options),
   );
-  ipcMainHandle(
-    'git.validateGitCredentialById',
-    (_, options: Parameters<typeof validateGitCredentialById>[0]) => validateGitCredentialById(options),
+  ipcMainHandle('git.validateGitCredentialById', (_, options: Parameters<typeof validateGitCredentialById>[0]) =>
+    validateGitCredentialById(options),
+  );
+  ipcMainHandle('git.getProjectGitFileIssues', (_, options: Parameters<typeof getProjectGitFileIssues>[0]) =>
+    getProjectGitFileIssues(options),
   );
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));

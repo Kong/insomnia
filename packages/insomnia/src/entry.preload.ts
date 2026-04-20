@@ -111,6 +111,7 @@ const git: GitServiceAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
   getGitBranches: options => ipcRenderer.invoke('git.getGitBranches', options),
   fetchGitRemoteBranches: options => ipcRenderer.invoke('git.fetchGitRemoteBranches', options),
+  getProjectGitFileIssues: options => ipcRenderer.invoke('git.getProjectGitFileIssues', options),
   validateGitRepositoryCredentials: options => ipcRenderer.invoke('git.validateGitRepositoryCredentials', options),
   validateGitCredentialById: options => ipcRenderer.invoke('git.validateGitCredentialById', options),
   gitFetchAction: options => ipcRenderer.invoke('git.gitFetchAction', options),

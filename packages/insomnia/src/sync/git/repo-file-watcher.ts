@@ -68,6 +68,11 @@ export interface FileIssue {
   message: string;
 }
 
+export interface FileProblemsChangedPayload {
+  repoId: string;
+  problems: FileIssue[];
+}
+
 /** Compute a SHA-256 hex digest of a string. */
 function contentHash(content: string): string {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
@@ -75,10 +80,11 @@ function contentHash(content: string): string {
 
 export interface WatcherNotifier {
   onDbSynced: () => void;
-  onProblemsChanged: (problems: FileIssue[]) => void;
+  onProblemsChanged: (payload: FileProblemsChangedPayload) => void;
 }
 
 class RepoFileWatcher {
+  private readonly repoId: string;
   private readonly repoDir: string;
   private readonly projectId: string;
   private readonly notifier: WatcherNotifier;
@@ -119,14 +125,20 @@ class RepoFileWatcher {
    */
   private problemFiles = new Map<string, FileIssue>();
 
-  private constructor(repoDir: string, projectId: string, notifier: WatcherNotifier) {
+  private constructor(repoId: string, repoDir: string, projectId: string, notifier: WatcherNotifier) {
+    this.repoId = repoId;
     this.repoDir = repoDir;
     this.projectId = projectId;
     this.notifier = notifier;
   }
 
-  static async create(repoDir: string, projectId: string, notifier: WatcherNotifier): Promise<RepoFileWatcher> {
-    const watcher = new RepoFileWatcher(repoDir, projectId, notifier);
+  static async create(
+    repoId: string,
+    repoDir: string,
+    projectId: string,
+    notifier: WatcherNotifier,
+  ): Promise<RepoFileWatcher> {
+    const watcher = new RepoFileWatcher(repoId, repoDir, projectId, notifier);
 
     // 1. Load workspace-to-file mappings from the DB for rename detection.
     await watcher.loadKnownGitFilePaths();
@@ -748,7 +760,10 @@ class RepoFileWatcher {
 
   /** Notify the renderer that the set of file problems changed. */
   private notifyProblemsChanged(): void {
-    this.notifier.onProblemsChanged(this.getProblems());
+    this.notifier.onProblemsChanged({
+      repoId: this.repoId,
+      problems: this.getProblems(),
+    });
   }
 }
 
@@ -783,7 +798,7 @@ export class RepoFileWatcherRegistry {
       return;
     }
 
-    const promise = RepoFileWatcher.create(repoDir, projectId, this.notifier)
+    const promise = RepoFileWatcher.create(repoId, repoDir, projectId, this.notifier)
       .then(watcher => {
         this.watchers.set(repoId, watcher);
       })
@@ -863,9 +878,9 @@ function createElectronNotifier(): WatcherNotifier {
         w.webContents.send('git.db-synced');
       }
     },
-    onProblemsChanged: problems => {
+    onProblemsChanged: payload => {
       for (const w of BrowserWindow.getAllWindows()) {
-        w.webContents.send('git.file-problems-changed', problems);
+        w.webContents.send('git.file-problems-changed', payload);
       }
     },
   };
