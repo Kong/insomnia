@@ -32,9 +32,14 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
   if (authentication.type === 'apikey' && authentication.addTo === HEADER) {
     const { key, value } = authentication;
+
+    if (!key || !value) {
+      return;
+    }
+
     return {
-      name: key!,
-      value: value!,
+      name: key,
+      value,
     };
   }
 
