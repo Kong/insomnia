@@ -70,7 +70,7 @@ function MethodBadge({ doc }: { doc: Request | WebSocketRequest | GrpcRequest | 
 
 interface RequestNodeProps {
   item: CollectionChildFlatItem;
-  onToggleFolder: (requestGroup: RequestGroup) => void;
+  onToggleFolder: (requestGroupIds: string[]) => void;
 }
 
 export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
@@ -94,7 +94,7 @@ export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
       <span className={ACTIVE_BORDER_CLASS} />
       <Button
         aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${doc.name}`}
-        onPress={() => isFolder && onToggleFolder(doc)}
+        onPress={() => isFolder && onToggleFolder([doc._id])}
         className={TOGGLE_BTN_CLASS}
       >
         {isFolder ? <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} /> : null}
