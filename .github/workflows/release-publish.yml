@@ -39,8 +39,9 @@ jobs:
       pull-requests: write # Required to run `gh pr list` command
     steps:
       - name: Calculate Release Branch
+        env:
+          VERSION: ${{ github.event.inputs.version }}
         run: |
-          VERSION="${{ github.event.inputs.version }}"
           MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
 
           # Rewrite the release branch to follow our new flow
