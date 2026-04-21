@@ -17,8 +17,7 @@ import type {
 import { database as db, models, services } from '~/insomnia-data';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
-import type ElectronStorage from '~/main/electron-storage';
-import { initElectronStorage } from '~/main/window-utils';
+import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-storage';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { version } from '../../../../package.json';
@@ -35,11 +34,48 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../../network/network';
-import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } from '../../../network/o-auth-2/constants';
 import { invariant } from '../../../utils/invariant';
 import { setDefaultProtocol } from '../../../utils/url/protocol';
 
 const { isRequestGroup, isRequestGroupId } = models.requestGroup;
+
+export const GRANT_TYPE_AUTHORIZATION_CODE = 'authorization_code';
+export const GRANT_TYPE_IMPLICIT = 'implicit';
+export const GRANT_TYPE_PASSWORD = 'password';
+export const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
+export const GRANT_TYPE_REFRESH = 'refresh_token';
+export const GRANT_TYPE_MCP_AUTH_FLOW = 'mcp_auth_flow';
+export type AuthKeys =
+  | 'access_token'
+  | 'id_token'
+  | 'client_id'
+  | 'client_secret'
+  | 'audience'
+  | 'resource'
+  | 'code_challenge'
+  | 'code_challenge_method'
+  | 'code_verifier'
+  | 'code'
+  | 'nonce'
+  | 'error'
+  | 'error_description'
+  | 'error_uri'
+  | 'expires_in'
+  | 'grant_type'
+  | 'password'
+  | 'redirect_uri'
+  | 'refresh_token'
+  | 'response_type'
+  | 'scope'
+  | 'state'
+  | 'token_type'
+  | 'username'
+  | 'xError'
+  | 'xResponseId';
+export const PKCE_CHALLENGE_S256 = 'S256';
+export const PKCE_CHALLENGE_PLAIN = 'plain';
+
+export type OAuth2AuthorizationStatusType = 'none' | 'getting_code' | 'getting_token';
 
 const showOAuthAuthorizationModal = (authCodeUrlStr: string) => {
   BrowserWindow.getAllWindows().forEach(window => {
@@ -52,13 +88,8 @@ const hideOAuthAuthorizationModal = () => {
     window.webContents.send('hide-oauth-authorization-modal');
   });
 };
-let electronStorage: ElectronStorage | null = null;
-
 const getElectronStorage = () => {
-  if (!electronStorage) {
-    electronStorage = initElectronStorage();
-  }
-  return electronStorage;
+  return getSharedElectronStorage();
 };
 
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
