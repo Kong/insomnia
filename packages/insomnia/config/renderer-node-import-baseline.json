@@ -73,14 +73,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/models/helpers/response-operations.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/models/helpers/response-operations.ts",
-      "builtin": "zlib"
-    },
-    {
       "importer": "src/network/network.ts",
       "builtin": "fs"
     },
@@ -113,6 +105,10 @@
       "builtin": "fs"
     },
     {
+      "importer": "src/plugins/context/response.ts",
+      "builtin": "zlib"
+    },
+    {
       "importer": "src/plugins/create.ts",
       "builtin": "fs"
     },
@@ -126,22 +122,6 @@
     },
     {
       "importer": "src/plugins/index.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/import.scan.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.update.tsx",
       "builtin": "path"
     },
     {
