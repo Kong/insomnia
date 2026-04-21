@@ -21,6 +21,7 @@ import {
   pathParametersChanged,
   resolvePath,
   routeDisplayName,
+  sanitizeRoute,
 } from './transform';
 
 interface SyncCounts {
@@ -369,7 +370,7 @@ async function syncServiceWorkspace(
   }
   await insoservices.cookieJar.getOrCreateForParentId(workspace._id);
 
-  const incomingRoutes = await fetchRoutesForService(pat, controlPlane.id, service.id, region, signal);
+  const incomingRoutes = (await fetchRoutesForService(pat, controlPlane.id, service.id, region, signal)).map(sanitizeRoute);
   const existingData = await loadExistingRequestData(workspace._id);
   const incomingKeys = new Set<string>();
   const incomingRouteIds = new Set<string>();

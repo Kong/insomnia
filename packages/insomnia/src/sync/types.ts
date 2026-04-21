@@ -108,6 +108,11 @@ export interface MergeConflict {
   resolutionSource?: ResolutionSource;
 }
 
+export interface AutoResolvedConflict {
+  filepath: string;
+  action: 'use-theirs' | 'delete';
+}
+
 export type Stage = Record<DocumentKey, StageEntry>;
 
 export interface StatusCandidate {
