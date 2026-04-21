@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { href, Outlet, redirect, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { Button } from '~/basic-components/button';
@@ -393,19 +392,8 @@ const Component = () => {
   };
   const { getWorkspaceIssue } = useGitFileIssues();
   const currentIssue = getWorkspaceIssue(workspaceId);
-  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (!currentIssue) {
-      setIsIssueModalOpen(false);
-      return;
-    }
-
-    setIsIssueModalOpen(true);
-  }, [currentIssue]);
 
   const handleBackToList = () => {
-    setIsIssueModalOpen(false);
     navigate(
       href('/organization/:organizationId/project/:projectId', {
         organizationId,
@@ -415,24 +403,27 @@ const Component = () => {
   };
 
   const modalText = currentIssue ? workspaceFileIssueModalText[currentIssue.kind] : null;
+  const isIssueModalOpen = Boolean(currentIssue && modalText);
 
   return (
     <div className="h-full w-full overflow-hidden" data-testid="workspace-page">
       <Outlet />
       <Modal isOpen={isIssueModalOpen} onClose={handleBackToList} className="w-[min(44rem,calc(100vw-2rem))] max-w-3xl">
-        <div className="flex flex-col items-center gap-6 px-4 pt-4 pb-2 text-center">
-          <Icon icon="lock" className="text-6xl text-(--hl)" />
-          <div className="flex flex-col gap-3">
-            <h2 className="text-2xl font-semibold text-(--color-font)">{modalText?.modalTitle}</h2>
-            <p className="max-w-2xl text-lg text-(--hl)">{modalText?.summary}</p>
+        {modalText ? (
+          <div className="flex flex-col items-center gap-6 px-4 pt-4 pb-2 text-center">
+            <Icon icon="lock" className="text-6xl text-(--hl)" />
+            <div className="flex flex-col gap-3">
+              <h2 className="text-2xl font-semibold text-(--color-font)">{modalText.modalTitle}</h2>
+              <p className="max-w-2xl text-lg text-(--hl)">{modalText.summary}</p>
+            </div>
+            <Button
+              onPress={handleBackToList}
+              className="rounded-xs border border-solid border-(--hl-md) px-4 py-2 text-sm font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+            >
+              Back to Project
+            </Button>
           </div>
-          <Button
-            onPress={handleBackToList}
-            className="rounded-xs border border-solid border-(--hl-md) px-4 py-2 text-sm font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-          >
-            Back to Project
-          </Button>
-        </div>
+        ) : null}
       </Modal>
     </div>
   );

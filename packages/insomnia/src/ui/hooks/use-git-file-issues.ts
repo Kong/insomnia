@@ -11,7 +11,7 @@ const mapIssuesByWorkspaceId = (issues: WorkspaceFileIssue[]) => {
 interface GitFileIssuesValue {
   issuesByWorkspaceId: Record<string, WorkspaceFileIssue>;
   getWorkspaceIssue: (workspaceId: string) => WorkspaceFileIssue | undefined;
-  refresh: () => Promise<void>;
+  reloadIssues: () => Promise<void>;
 }
 
 const emptyGitFileIssuesValue: GitFileIssuesValue = {
@@ -19,7 +19,7 @@ const emptyGitFileIssuesValue: GitFileIssuesValue = {
   getWorkspaceIssue: (_workspaceId: string) => {
     return;
   },
-  refresh: async () => {},
+  reloadIssues: async () => {},
 };
 
 export const useProjectGitFileIssues = ({
@@ -31,7 +31,7 @@ export const useProjectGitFileIssues = ({
 }): GitFileIssuesValue => {
   const [issuesByWorkspaceId, setIssuesByWorkspaceId] = useState<Record<string, WorkspaceFileIssue>>({});
 
-  const refresh = useCallback(async () => {
+  const reloadIssues = useCallback(async () => {
     if (!projectId || !gitRepositoryId) {
       setIssuesByWorkspaceId({});
       return;
@@ -51,8 +51,8 @@ export const useProjectGitFileIssues = ({
   }, [gitRepositoryId, projectId]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    reloadIssues();
+  }, [reloadIssues]);
 
   useEffect(() => {
     if (!gitRepositoryId) {
@@ -64,17 +64,17 @@ export const useProjectGitFileIssues = ({
         return;
       }
 
-      void refresh();
+      setIssuesByWorkspaceId(mapIssuesByWorkspaceId(payload.workspaceIssues));
     });
-  }, [gitRepositoryId, refresh]);
+  }, [gitRepositoryId]);
 
   return useMemo<GitFileIssuesValue>(
     () => ({
       issuesByWorkspaceId,
       getWorkspaceIssue: (workspaceId: string) => issuesByWorkspaceId[workspaceId],
-      refresh,
+      reloadIssues,
     }),
-    [issuesByWorkspaceId, refresh],
+    [issuesByWorkspaceId, reloadIssues],
   );
 };
 

@@ -44,6 +44,7 @@ import path from 'node:path';
 import { BrowserWindow } from 'electron';
 
 import { models, services, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
+import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
@@ -71,6 +72,7 @@ export interface FileIssue {
 export interface FileProblemsChangedPayload {
   repoId: string;
   problems: FileIssue[];
+  workspaceIssues: WorkspaceFileIssue[];
 }
 
 /** Compute a SHA-256 hex digest of a string. */
@@ -749,6 +751,32 @@ class RepoFileWatcher {
     return this.problemFiles.has(normalisedPath);
   }
 
+  /** Return the current problems mapped to workspace-level issues. */
+  getWorkspaceIssues(): WorkspaceFileIssue[] {
+    const absPathToWorkspaceId = new Map<string, string>();
+
+    for (const [workspaceId, absPath] of this.lastKnownGitFilePath.entries()) {
+      absPathToWorkspaceId.set(path.normalize(absPath), workspaceId);
+    }
+
+    return Array.from(this.problemFiles.entries()).flatMap<WorkspaceFileIssue>(([normalisedPath, issue]) => {
+      const workspaceId = absPathToWorkspaceId.get(normalisedPath);
+      if (!workspaceId) {
+        return [];
+      }
+
+      return [
+        {
+          workspaceId,
+          gitRepositoryId: this.repoId,
+          relPath: issue.relPath,
+          kind: issue.kind,
+          message: issue.message,
+        },
+      ];
+    });
+  }
+
   // ---------------------------------------------------------------------------
   // Notifications
   // ---------------------------------------------------------------------------
@@ -763,6 +791,7 @@ class RepoFileWatcher {
     this.notifier.onProblemsChanged({
       repoId: this.repoId,
       problems: this.getProblems(),
+      workspaceIssues: this.getWorkspaceIssues(),
     });
   }
 }
