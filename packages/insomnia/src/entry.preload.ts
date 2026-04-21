@@ -1,8 +1,8 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
-import type { Services } from '~/insomnia-data';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
+import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
@@ -304,29 +304,6 @@ const webUtils: Window['webUtils'] = {
 const database: Window['database'] = {
   invoke: (fnName, ...args) => ipcRenderer.invoke('database.invoke', fnName, ...args),
 };
-
-const servicesProxy = new Proxy({} as Services, {
-  get(_target, serviceName: string) {
-    return new Proxy(
-      {},
-      {
-        get(_target, methodName: string) {
-          return async (...args: unknown[]) => {
-            const result = await ipcRenderer.invoke('services.invoke', serviceName, methodName, ...args);
-            // contextBridge serializes Node.js Buffer as Uint8Array; the main process wraps
-            // Buffer results with { __type: 'Buffer', data } so we can safely reconstruct here
-            // without misidentifying genuine Uint8Array returns.
-            // TODO: remove once service methods stop returning Buffer (tracked for deprecation).
-            if (result && typeof result === 'object' && result.__type === 'Buffer' && Array.isArray(result.data)) {
-              return Buffer.from(result.data);
-            }
-            return result;
-          };
-        },
-      },
-    );
-  },
-});
 
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);

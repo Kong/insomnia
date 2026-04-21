@@ -2,6 +2,8 @@ import * as Sentry from '@sentry/electron/renderer';
 import * as _ from 'es-toolkit/compat';
 import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
 
+import { initServices } from '~/insomnia-data';
+
 import {
   initInsomniaObject,
   InsomniaObject,
@@ -23,6 +25,16 @@ export interface HiddenBrowserWindowBridgeAPI {
 Sentry.init({
   ...SENTRY_OPTIONS,
 });
+
+// Initialize services for hidden renderer process
+if (!window._dataServices) {
+  throw new Error(
+    'window._dataServices is not available. This entrypoint must run in an environment with the preload bridge.',
+  );
+}
+initServices(window._dataServices);
+// Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
+delete window._dataServices;
 
 window.bridge.onmessage(
   async (data: { script: string; context: RequestContext }, callback: ({ error }: { error: string }) => void) => {
