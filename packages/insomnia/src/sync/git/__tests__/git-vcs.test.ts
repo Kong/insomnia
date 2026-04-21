@@ -3,7 +3,7 @@ import path from 'node:path';
 import * as git from 'isomorphic-git';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
+import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, MergeConflictError } from '../git-vcs';
 import { MemClient } from '../mem-client';
 
 describe('Git-VCS', () => {
@@ -520,6 +520,143 @@ First commit!
 
       // Nested file should be restored
       expect((await fsClient.promises.readFile(nestedFile)).toString()).toBe(originalContent + '\n');
+    });
+  });
+
+  describe('buildManualResolutionFromTrees()', () => {
+    it('should collect non-YAML conflicts as autoResolvedConflicts and only return YAML conflicts', async () => {
+      const fsClient = MemClient.createClient();
+      const yamlFile = path.join(GIT_INSOMNIA_DIR, 'Environment', 'env_1.yaml');
+      const gitignoreFile = '.gitignore';
+
+      // Create directories
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, 'Environment'));
+
+      // Create initial files
+      await fsClient.promises.writeFile(yamlFile, 'name: base env\n');
+      await fsClient.promises.writeFile(gitignoreFile, 'node_modules\n');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      // Stage and commit all files
+      const status = await GitVCS.status();
+      await GitVCS.stageChanges(status.unstaged);
+      await GitVCS.commit('Initial commit');
+
+      // Create origin/main branch to simulate remote
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      // Make local changes on main
+      await fsClient.promises.writeFile(yamlFile, 'name: local env\n');
+      await fsClient.promises.writeFile(gitignoreFile, 'node_modules\ndist\n');
+      const status2 = await GitVCS.status();
+      await GitVCS.stageChanges(status2.unstaged);
+      await GitVCS.commit('Local changes');
+
+      // Switch to origin/main and make different changes
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await fsClient.promises.writeFile(yamlFile, 'name: remote env\n');
+      await fsClient.promises.writeFile(gitignoreFile, 'node_modules\nbuild\n');
+      await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: yamlFile });
+      await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: gitignoreFile });
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+
+      // Switch back to main
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      // Call buildManualResolutionFromTrees — it should throw MergeConflictError
+      try {
+        await GitVCS.buildManualResolutionFromTrees();
+        expect.unreachable('Should have thrown MergeConflictError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(MergeConflictError);
+
+        const mergeErr = err as MergeConflictError;
+        // Only YAML conflicts should appear in the conflicts array
+        expect(mergeErr.data.conflicts).toHaveLength(1);
+        expect(mergeErr.data.conflicts[0].key).toBe(yamlFile);
+
+        // Non-YAML files should be in autoResolvedConflicts for deferred staging
+        expect(mergeErr.data.autoResolvedConflicts).toHaveLength(1);
+        expect(mergeErr.data.autoResolvedConflicts[0]).toEqual({
+          filepath: gitignoreFile,
+          action: 'use-theirs',
+        });
+      }
+    });
+
+    it('should auto-complete merge without throwing when all conflicts are non-YAML', async () => {
+      const fsClient = MemClient.createClient();
+      const gitignoreFile = '.gitignore';
+      const readmeFile = 'README.md';
+
+      // Create initial files (no YAML files that conflict)
+      await fsClient.promises.writeFile(gitignoreFile, 'node_modules\n');
+      await fsClient.promises.writeFile(readmeFile, '# Project\n');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      // Stage and commit all files
+      const status = await GitVCS.status();
+      await GitVCS.stageChanges(status.unstaged);
+      await GitVCS.commit('Initial commit');
+
+      // Create origin/main branch to simulate remote
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      // Make local changes on main
+      await fsClient.promises.writeFile(gitignoreFile, 'node_modules\ndist\n');
+      await fsClient.promises.writeFile(readmeFile, '# Project\nLocal changes\n');
+      const status2 = await GitVCS.status();
+      await GitVCS.stageChanges(status2.unstaged);
+      await GitVCS.commit('Local changes');
+
+      // Switch to origin/main and make different changes
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await fsClient.promises.writeFile(gitignoreFile, 'node_modules\nbuild\n');
+      await fsClient.promises.writeFile(readmeFile, '# Project\nRemote changes\n');
+      await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: gitignoreFile });
+      await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: readmeFile });
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+
+      // Switch back to main
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      // buildManualResolutionFromTrees should NOT throw — all conflicts are non-YAML
+      const result = await GitVCS.buildManualResolutionFromTrees();
+      expect(result).toEqual({ autoResolved: true });
+
+      // Non-YAML files should be resolved to the remote (theirs) version
+      const gitignoreContent = (await fsClient.promises.readFile(gitignoreFile)).toString();
+      expect(gitignoreContent).toBe('node_modules\nbuild\n');
+
+      const readmeContent = (await fsClient.promises.readFile(readmeFile)).toString();
+      expect(readmeContent).toBe('# Project\nRemote changes\n');
     });
   });
 });

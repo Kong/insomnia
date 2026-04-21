@@ -4,7 +4,7 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { href, redirect, useLoaderData, useNavigate, useParams } from 'react-router';
 
 import { logout } from '~/account/session';
-import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import { DEFAULT_SIDEBAR_SIZE, isKonnectSyncEnabled } from '~/common/constants';
 import type { GitRepository, Project } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
@@ -22,6 +22,7 @@ import { ProjectListSidebar } from '~/ui/components/project/project-list-sidebar
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
@@ -51,7 +52,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 }
 
 const Component = () => {
-  const { projects, projectsCount } = useLoaderData() as ProjectIndexLoaderData;
+  const { projects } = useLoaderData() as ProjectIndexLoaderData;
 
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -61,6 +62,7 @@ const Component = () => {
   const organizationData = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
+  const { features } = useOrganizationPermissions();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -118,9 +120,9 @@ const Component = () => {
               <ProjectListSidebar
                 organizationId={organizationId}
                 projects={projectsWithPresence}
-                projectsCount={projectsCount}
                 storageRules={storageRules}
                 onCreateProject={() => setIsNewProjectModalOpen(true)}
+                konnectSyncEnabled={isKonnectSyncEnabled() && features.konnectSync.enabled}
               />
             </div>
           </Panel>

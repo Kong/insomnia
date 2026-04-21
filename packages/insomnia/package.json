@@ -43,7 +43,6 @@
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
     "@apidevtools/swagger-parser": "10.1.1",
-    "ajv": "^8.17.1",
     "@bufbuild/protobuf": "^1.10.0",
     "@connectrpc/connect": "^1.6.1",
     "@connectrpc/connect-node": "^1.6.1",
@@ -74,6 +73,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-virtual": "3.13.12",
     "@xmldom/xmldom": "^0.9.8",
+    "ajv": "^8.17.1",
     "apiconnect-wsdl": "2.0.36",
     "aws4": "^1.13.2",
     "blakejs": "^1.2.1",
@@ -96,6 +96,7 @@
     "electron-context-menu": "^3.6.1",
     "electron-updater": "^6.6.2",
     "fastq": "^1.19.1",
+    "fflate": "^0.8.2",
     "fuzzysort": "^1.9.0",
     "graphql": "^16.10.0",
     "graphql-ws": "^5.16.2",

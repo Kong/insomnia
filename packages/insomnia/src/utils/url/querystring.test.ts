@@ -205,6 +205,11 @@ describe('querystring', () => {
   });
 
   describe('smartEncodeUrl()', () => {
+    it('returns empty string for empty url', () => {
+      const url = smartEncodeUrl('');
+      expect(url).toBe('');
+    });
+
     it('does not touch normal url', () => {
       const url = smartEncodeUrl('http://google.com');
       expect(url).toBe('http://google.com/');

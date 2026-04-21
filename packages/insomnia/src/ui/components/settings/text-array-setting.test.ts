@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeFolderPath, validateFolderInput } from '../../../common/misc';
+import { normalizeFolderPath, validateFolderInput } from './folder-path';
 
 const isWindows = process.platform === 'win32';
 

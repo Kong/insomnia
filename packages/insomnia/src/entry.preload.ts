@@ -97,6 +97,7 @@ const grpc: gRPCBridgeAPI = {
   closeAll: () => ipcRenderer.send('grpc.closeAll'),
   loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
+  writeProtoFile: protoFileId => ipcRenderer.invoke('grpc.writeProtoFile', protoFileId),
 };
 
 const secretStorage: secretStorageBridgeAPI = {
@@ -188,6 +189,7 @@ const main: Window['main'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
+  writeResponseBodyToFile: options => ipcRenderer.invoke('writeResponseBodyToFile', options),
   insecureReadFile: options => ipcRenderer.invoke('insecureReadFile', options),
   insecureReadFileWithEncoding: options => ipcRenderer.invoke('insecureReadFileWithEncoding', options),
   secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),

@@ -183,6 +183,9 @@ export function v4Mock() {
   if (!uuid) {
     throw new Error('Not enough mocked v4 UUIDs to go around');
   }
-
   return uuid;
+}
+
+export function resetV4Counter() {
+  v4Counter = 0;
 }
