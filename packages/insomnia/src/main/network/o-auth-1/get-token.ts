@@ -5,11 +5,13 @@ import OAuth1 from 'oauth-1.0a';
 import type { RequestAuthentication, RequestBody } from '~/insomnia-data';
 
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
-export type OAuth1SignatureMethod = 'HMAC-SHA1' | 'RSA-SHA1' | 'HMAC-SHA256' | 'PLAINTEXT';
-export const SIGNATURE_METHOD_HMAC_SHA1: OAuth1SignatureMethod = 'HMAC-SHA1';
-export const SIGNATURE_METHOD_HMAC_SHA256: OAuth1SignatureMethod = 'HMAC-SHA256';
-export const SIGNATURE_METHOD_RSA_SHA1: OAuth1SignatureMethod = 'RSA-SHA1';
-export const SIGNATURE_METHOD_PLAINTEXT: OAuth1SignatureMethod = 'PLAINTEXT';
+import {
+  type OAuth1SignatureMethod,
+  SIGNATURE_METHOD_HMAC_SHA1,
+  SIGNATURE_METHOD_HMAC_SHA256,
+  SIGNATURE_METHOD_PLAINTEXT,
+  SIGNATURE_METHOD_RSA_SHA1,
+} from '../../../network/o-auth-1/constants';
 
 function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {
