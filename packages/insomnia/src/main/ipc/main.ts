@@ -207,7 +207,13 @@ export function registerMainHandlers() {
     if (typeof fn !== 'function') {
       throw new TypeError(`Unknown service method: ${serviceName}.${methodName}`);
     }
-    return (fn as (...args: unknown[]) => unknown).call(service, ...args);
+    const result = await (fn as (...args: unknown[]) => unknown).call(service, ...args);
+    // Tag Buffer results before contextBridge serializes them as plain Uint8Array,
+    // so the preload can distinguish them from intentional Uint8Array returns.
+    if (Buffer.isBuffer(result)) {
+      return { __type: 'Buffer', data: Array.from(result as Buffer) };
+    }
+    return result;
   });
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);
