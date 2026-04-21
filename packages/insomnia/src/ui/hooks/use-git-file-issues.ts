@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router';
 
 import type { WorkspaceFileIssue } from '~/main/git-service';
 import type { FileProblemsChangedPayload } from '~/sync/git/repo-file-watcher';
+import { invariant } from '~/utils/invariant';
 
 const mapIssuesByWorkspaceId = (issues: WorkspaceFileIssue[]) => {
   return Object.fromEntries(issues.map(issue => [issue.workspaceId, issue])) as Record<string, WorkspaceFileIssue>;
@@ -13,14 +14,6 @@ interface GitFileIssuesValue {
   getWorkspaceIssue: (workspaceId: string) => WorkspaceFileIssue | undefined;
   reloadIssues: () => Promise<void>;
 }
-
-const emptyGitFileIssuesValue: GitFileIssuesValue = {
-  issuesByWorkspaceId: {},
-  getWorkspaceIssue: (_workspaceId: string) => {
-    return;
-  },
-  reloadIssues: async () => {},
-};
 
 export const useProjectGitFileIssues = ({
   projectId,
@@ -78,4 +71,10 @@ export const useProjectGitFileIssues = ({
   );
 };
 
-export const useGitFileIssues = () => useOutletContext<GitFileIssuesValue | undefined>() ?? emptyGitFileIssuesValue;
+export const useGitFileIssues = () => {
+  const gitFileIssues = useOutletContext<GitFileIssuesValue | undefined>();
+
+  invariant(gitFileIssues, 'useGitFileIssues must be used within the project route outlet context');
+
+  return gitFileIssues;
+};
