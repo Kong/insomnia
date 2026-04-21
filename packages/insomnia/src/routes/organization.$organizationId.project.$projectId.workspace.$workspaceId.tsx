@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { href, Outlet, redirect, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
+import { Button } from '~/basic-components/button';
 import { Modal } from '~/basic-components/modal';
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
@@ -81,7 +82,7 @@ const workspaceFileIssueModalText = {
   'parse-error': {
     modalTitle: 'Cannot read file: Invalid schema',
     summary:
-      'Some edits were made to the Insomnia file associated with this page that contains invalid schema. Resolve the files using your CLI to unlock this page.',
+      'Recent changes introduced schema errors in the Insomnia file for this page. Resolve the file using the CLI to unlock this page.',
   },
 } as const;
 
@@ -425,20 +426,12 @@ const Component = () => {
             <h2 className="text-2xl font-semibold text-(--color-font)">{modalText?.modalTitle}</h2>
             <p className="max-w-2xl text-lg text-(--hl)">{modalText?.summary}</p>
           </div>
-          {/* <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-            <Button
-              onPress={handleBackToList}
-              className="rounded-xs border border-solid border-(--hl-md) px-4 py-2 text-sm font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-            >
-              Back to list
-            </Button>
-            <Button
-              onPress={handleContinueEditing}
-              className="rounded-xs border border-solid border-(--hl-md) bg-(--color-font) px-4 py-2 text-sm font-semibold text-(--color-bg) ring-1 ring-transparent transition-all hover:bg-(--hl-md)/80 focus:ring-(--hl-md) focus:ring-inset"
-            >
-              Continue editing
-            </Button>
-          </div> */}
+          <Button
+            onPress={handleBackToList}
+            className="rounded-xs border border-solid border-(--hl-md) px-4 py-2 text-sm font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+          >
+            Back to Project
+          </Button>
         </div>
       </Modal>
     </div>

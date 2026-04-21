@@ -487,7 +487,7 @@ const Component = () => {
   const projectFileIssues = Object.values(issuesByWorkspaceId);
   const hasProjectFileIssues = projectFileIssues.length > 0;
   const projectFileIssuesMessage =
-    'One or more files in this project are affected by merge conflicts. Before you can work in these files, complete the merge using your CLI.';
+    'There are issues with one or more Insomnia files in this project. Use the git CLI and your local file system to resolve them and continue.';
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -933,7 +933,7 @@ const Component = () => {
                 {hasProjectFileIssues ? (
                   <div className="p-(--padding-md) pb-0">
                     <div
-                      className={`flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-(--color-warning) p-(--padding-sm) text-(--color-font-warning)`}
+                      className={`flex flex-wrap items-center justify-between gap-2 rounded-sm bg-[#3A2F08] px-4 py-4 text-(--color-font-warning)`}
                     >
                       <p className="text-base">
                         <Icon icon="exclamation-triangle" className="mr-2" />
