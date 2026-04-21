@@ -368,6 +368,12 @@ const Root = () => {
       }
       // Supports params: uri, curl, origin
       if (urlWithoutParams === 'insomnia://app/import') {
+        const userSession = await services.userSession.getOrCreate();
+        if (!userSession.id) {
+          window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
+          window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
+          return navigate(href('/auth/login'));
+        }
         window.main.trackSegmentEvent({
           event: SegmentEvent.importStarted,
           properties: {
@@ -608,6 +614,20 @@ const Root = () => {
     projectId,
     redirectToDefaultBrowserSubmit,
   ]);
+
+  // Replay a deep link that was queued before login (e.g. insomnia://app/import
+  // clicked while signed out).  We wait for organizationId so that the full
+  // redirect chain (org → project) has settled and the import modal can read
+  // route params.  For users with no projects yet the "-- New Project --"
+  // default in the import dialog is the correct behaviour.
+  useEffect(() => {
+    const pendingDeepLink = window.sessionStorage.getItem('pendingDeepLinkAfterAuthorize');
+    if (pendingDeepLink && organizationId && organizationId !== 'org_scratchpad') {
+      window.sessionStorage.removeItem('pendingDeepLinkAfterAuthorize');
+      window.sessionStorage.setItem('suppressWelcomeModals', 'true');
+      window.main.openDeepLink(pendingDeepLink);
+    }
+  }, [organizationId]);
 
   return (
     <>
