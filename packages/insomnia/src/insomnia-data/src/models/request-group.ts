@@ -13,7 +13,7 @@ export const canDuplicate = true;
 
 export const canSync = true;
 // for those keys do not need to add in model init method
-export const optionalKeys = ['kvPairData', 'environmentType'];
+export const optionalKeys = ['kvPairData', 'environmentType', 'konnectRouteId'];
 interface BaseRequestGroup {
   name: string;
   description: string;
@@ -26,6 +26,7 @@ interface BaseRequestGroup {
   afterResponseScript?: string;
   authentication?: RequestAuthentication | {};
   headers?: RequestHeader[];
+  konnectRouteId?: string | null;
 }
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
@@ -55,5 +56,6 @@ export function rewriteReferences(group: RequestGroup, idMapping: Map<string, st
       ['authentication', 'headers', 'preRequestScript', 'afterResponseScript', 'environment', 'kvPairData'],
       idMapping,
     ),
+    konnectRouteId: null,
   };
 }

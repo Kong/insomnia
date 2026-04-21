@@ -31,6 +31,7 @@ import {
   dashboardSortOrderName,
   DEFAULT_SIDEBAR_SIZE,
   getAppWebsiteBaseURL,
+  isKonnectSyncEnabled,
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
@@ -434,7 +435,6 @@ const Component = () => {
     mockServersCount,
     mcpClientsCount,
     documentsCount,
-    projectsCount,
     learningFeaturePromise,
     remoteFilesPromise,
     projectsSyncStatusPromise,
@@ -473,7 +473,7 @@ const Component = () => {
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
-  const { billing } = useOrganizationPermissions();
+  const { billing, features } = useOrganizationPermissions();
 
   useEffect(() => {
     if (!models.organization.isScratchpadOrganizationId(organizationId)) {
@@ -790,9 +790,9 @@ const Component = () => {
                 organizationId={organizationId}
                 activeProjectId={activeProject?._id}
                 projects={projectsWithPresence}
-                projectsCount={projectsCount}
                 storageRules={storageRules}
                 onCreateProject={() => setIsNewProjectModalOpen(true)}
+                konnectSyncEnabled={isKonnectSyncEnabled() && features.konnectSync.enabled}
               />
               {activeProject && (
                 <>

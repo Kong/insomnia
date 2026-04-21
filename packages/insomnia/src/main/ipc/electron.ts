@@ -78,6 +78,7 @@ export type HandleChannels =
   | 'git.getGitProviderEmails'
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
+  | 'grpc.writeProtoFile'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'
@@ -135,7 +136,8 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
-  | 'writeFile';
+  | 'writeFile'
+  | 'writeResponseBodyToFile';
 
 export const ipcMainHandle = (
   channel: HandleChannels,

@@ -411,6 +411,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               .continueMerge({
                 projectId,
                 handledMergeConflicts: conflicts,
+                autoResolvedConflicts: pullResult.autoResolvedConflicts,
                 commitMessage: pullResult.commitMessage,
                 commitParent: pullResult.commitParent,
               })

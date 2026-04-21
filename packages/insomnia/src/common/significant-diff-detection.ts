@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { isMap, isScalar, isSeq, LineCounter, parse, type ParsedNode, parseDocument } from 'yaml';
 
 import { normalizeScripts } from '~/common/insomnia-schema-migrations/v5.1';
@@ -158,7 +156,7 @@ export function hasSignificantChanges(
   config: Partial<IntelligentDiffConfig> = {},
 ): boolean {
   // Non-YAML files → raw string comparison
-  if (path.extname(filePath) !== '.yaml') {
+  if (!filePath.toLowerCase().endsWith('.yaml')) {
     return originalContent !== modifiedContent;
   }
 

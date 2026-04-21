@@ -1,6 +1,3 @@
-import { createWriteStream } from 'node:fs';
-import path from 'node:path';
-
 import contentDisposition from 'content-disposition';
 import { extension as mimeExtension } from 'mime-types';
 import { href, redirect } from 'react-router';
@@ -75,27 +72,25 @@ const writeToDownloadPath = async (
 ) => {
   invariant(downloadPathAndName, 'filename should be set by now');
 
-  const to = createWriteStream(downloadPathAndName);
-  const readStream = await services.helpers.getResponseBodyStream(responsePatch);
-  if (!readStream || typeof readStream === 'string') {
-    return null;
-  }
-  readStream.pipe(to);
-
-  return new Promise(resolve => {
-    readStream.on('end', async () => {
+  try {
+    if (!responsePatch.bodyPath) {
+      responsePatch.error = `Failed to save to ${downloadPathAndName}: unable to read response body`;
+    } else {
+      await window.main.writeResponseBodyToFile({
+        sourcePath: responsePatch.bodyPath,
+        destinationPath: downloadPathAndName,
+        bodyCompression: responsePatch.bodyCompression,
+      });
       responsePatch.error = `Saved to ${downloadPathAndName}`;
-      const response = await services.response.create(responsePatch, maxHistoryResponses);
-      await services.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      resolve(null);
-    });
-    readStream.on('error', async err => {
-      console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-      const response = await services.response.create(responsePatch, maxHistoryResponses);
-      await services.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      resolve(null);
-    });
-  });
+    }
+  } catch (err) {
+    responsePatch.error = `Failed to save to ${downloadPathAndName}`;
+    console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+  }
+
+  const response = await services.response.create(responsePatch, maxHistoryResponses);
+  await services.requestMeta.update(requestMeta, { activeResponseId: response._id });
+  return null;
 };
 
 // Can fail with errors from:
@@ -315,8 +310,8 @@ export const sendActionImplementation = async (options: {
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
       : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
-    void writeToDownloadPath(
-      path.join(requestMeta.downloadPath, name),
+    await writeToDownloadPath(
+      window.path.join(requestMeta.downloadPath, name),
       responsePatch,
       requestMeta,
       requestData.settings.maxHistoryResponses,
@@ -334,7 +329,7 @@ export const sendActionImplementation = async (options: {
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
   window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-  void writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  await writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
   return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
 };
 
