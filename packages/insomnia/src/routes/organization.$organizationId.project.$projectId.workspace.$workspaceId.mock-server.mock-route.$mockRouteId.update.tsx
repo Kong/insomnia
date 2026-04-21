@@ -21,27 +21,19 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       invariant(typeof patch.name === 'string', 'Name is required');
       invariant(patch.name.startsWith('/'), 'Path must begin with a /');
 
-      const mockServer = await services.mockServer.getById(mockRoute.parentId);
       const existingRoutes = await services.mockRoute.findByParentId(mockRoute.parentId);
 
-      if (mockServer?.useInsomniaCloud) {
-        const hasRouteInServer = existingRoutes.filter(m => m._id !== mockRouteId).find(m => m.name === patch.name);
-        if (hasRouteInServer) {
-          invariant(false, `Path "${patch.name}" already exists. Please enter a different path.`);
-        }
-      } else {
-        const hasRouteInServer = existingRoutes
-          .filter(m => m._id !== mockRouteId)
-          .find(
-            m => m.name === patch.name && m.method.toUpperCase() === (patch.method || mockRoute.method).toUpperCase(),
-          );
+      const hasRouteInServer = existingRoutes
+        .filter(m => m._id !== mockRouteId)
+        .find(
+          m => m.name === patch.name && m.method.toUpperCase() === (patch.method || mockRoute.method).toUpperCase(),
+        );
 
-        if (hasRouteInServer) {
-          invariant(
-            false,
-            `Path "${patch.name}" with ${patch.method || mockRoute.method} method already exists. Please enter a different path or method.`,
-          );
-        }
+      if (hasRouteInServer) {
+        invariant(
+          false,
+          `Path "${patch.name}" with ${patch.method || mockRoute.method} method already exists. Please enter a different path or method.`,
+        );
       }
     }
 
