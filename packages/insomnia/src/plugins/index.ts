@@ -409,7 +409,7 @@ export function getPluginCommonContext({
         },
         response: {
           getLatestForRequestId: services.response.getLatestForRequestId,
-          getBodyBuffer: services.helpers.getBodyBuffer,
+          getBodyBuffer: services.helpers.getResponseBodyBuffer,
         },
         settings: {
           get: services.settings.get,

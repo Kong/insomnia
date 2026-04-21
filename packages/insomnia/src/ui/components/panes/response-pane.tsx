@@ -217,7 +217,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={async () => {
-                const bodyBuffer = activeResponse ? await services.helpers.getBodyBuffer(activeResponse) : null;
+                const bodyBuffer = activeResponse ? await services.helpers.getResponseBodyBuffer(activeResponse) : null;
                 if (bodyBuffer) {
                   window.clipboard.writeText(bodyBuffer.toString('utf8'));
                 }
@@ -236,7 +236,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             filter={filter}
             filterHistory={filterHistory}
             bodyBuffer={activeResponse.bodyBuffer}
-            getBody={() => services.helpers.getBodyBuffer(activeResponse)}
+            getBody={() => services.helpers.getResponseBodyBuffer(activeResponse)}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}

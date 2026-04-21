@@ -316,7 +316,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
 
   const statusCode = response.statusCode || 0;
-  const bodyBuffer = await services.helpers.getBodyBuffer(response);
+  const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
 
   if (statusCode === 401) {
     // If the refresh token was rejected due an unauthorized request, we will
@@ -364,7 +364,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
 }
 
 export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {
-  const bodyBuffer = await services.helpers.getBodyBuffer(response);
+  const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
   if (!bodyBuffer) {
     return {
       xResponseId: response._id,

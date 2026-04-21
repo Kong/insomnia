@@ -386,7 +386,7 @@ function mapCookie(cookie: ToughCookie) {
 }
 
 async function getResponseContent(response: Response) {
-  let body = await services.helpers.getBodyBuffer(response);
+  let body = await services.helpers.getResponseBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);

@@ -130,7 +130,7 @@ export const MockResponsePane = () => {
               filter={''}
               filterHistory={[]}
               bodyBuffer={activeResponse.bodyBuffer}
-              getBody={() => services.helpers.getBodyBuffer(activeResponse)}
+              getBody={() => services.helpers.getResponseBodyBuffer(activeResponse)}
               previewMode={previewMode}
               responseId={activeResponse._id}
               updateFilter={activeResponse.error ? undefined : () => {}}
@@ -299,7 +299,7 @@ const PreviewModeDropdown = ({
             icon="copy"
             label="Copy raw response"
             onClick={async () => {
-              const bodyBuffer = await services.helpers.getBodyBuffer(activeResponse);
+              const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
               bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
             }}
           />
@@ -331,7 +331,7 @@ const PreviewModeDropdown = ({
               icon="save"
               label="Export prettified response"
               onClick={async () => {
-                const bodyBuffer = await services.helpers.getBodyBuffer(activeResponse);
+                const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
                 const { canceled, filePath } = await window.dialog.showSaveDialog({
                   title: 'Save Full Response',
                   buttonLabel: 'Save',

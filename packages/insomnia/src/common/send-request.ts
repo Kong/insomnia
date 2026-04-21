@@ -138,7 +138,7 @@ export async function getSendRequestCallbackMemDb(
       (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
       {},
     );
-    const bodyBuffer = (await services.helpers.getBodyBuffer(res)) as Buffer;
+    const bodyBuffer = (await services.helpers.getResponseBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
     const testResults = [

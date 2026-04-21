@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
 import type { Compression, McpResponse, Response, SocketIOResponse, WebSocketResponse } from '~/insomnia-data';
@@ -72,7 +71,7 @@ export function removeResponse(response: Response | WebSocketResponse | SocketIO
 
 export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
-  const bodyBufferOrErrMsg = await getBodyBuffer(options, readFailureMsg);
+  const bodyBufferOrErrMsg = await getResponseBodyBuffer(options, readFailureMsg);
   // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
 
   if (!bodyBufferOrErrMsg) {
@@ -116,7 +115,7 @@ export async function getResponseTimeline(response: Response, showBody?: boolean
   }
 }
 
-export const getBodyBuffer = async (
+export const getResponseBodyBuffer = async (
   response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: string,
 ): Promise<Buffer | string> => {

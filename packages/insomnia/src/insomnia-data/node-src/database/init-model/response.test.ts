@@ -16,7 +16,7 @@ describe('migrate()', () => {
     const response = await initModel(models.response.type, {
       bodyPath,
     });
-    const body = (await services.helpers.getBodyBuffer(response)).toString();
+    const body = (await services.helpers.getResponseBodyBuffer(response)).toString();
     expect(response.bodyCompression).toBe('zip');
     expect(body).toBe('Hello World!');
   });

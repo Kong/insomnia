@@ -184,7 +184,7 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       };
     }
-    const bodyBuffer = await services.helpers.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     if (bodyBuffer) {
       const { data, errors } = JSON.parse(bodyBuffer.toString());
       if (errors?.length) {

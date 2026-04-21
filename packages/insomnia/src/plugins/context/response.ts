@@ -50,7 +50,7 @@ export function init(response?: MaybeResponse) {
       },
 
       getBody() {
-        return services.helpers.getBodyBuffer(response);
+        return services.helpers.getResponseBodyBuffer(response);
       },
 
       getBodyStream() {

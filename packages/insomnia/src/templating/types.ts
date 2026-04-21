@@ -295,7 +295,7 @@ export interface PluginTemplateTagContext {
       };
       response: {
         getLatestForRequestId: Services['response']['getLatestForRequestId'];
-        getBodyBuffer: Services['helpers']['getBodyBuffer'];
+        getBodyBuffer: Services['helpers']['getResponseBodyBuffer'];
       };
       settings: {
         get: Services['settings']['get'];
