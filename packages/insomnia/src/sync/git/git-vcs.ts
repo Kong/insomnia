@@ -243,11 +243,31 @@ export class GitVCS {
   async getCurrentBranch() {
     const branch = await git.currentBranch({ ...this._baseOpts });
 
-    if (typeof branch !== 'string') {
-      throw new TypeError('No active branch');
+    if (typeof branch === 'string') {
+      return branch;
     }
 
-    return branch;
+    // During a rebase, HEAD can be detached and currentBranch() returns undefined.
+    // In that case, Git stores the original branch ref in rebase metadata.
+    const gitDir = this._baseOpts.gitdir || path.join(this._baseOpts.dir, gitInternalDirName);
+    const rebaseHeadNamePaths = [
+      path.join(gitDir, 'rebase-merge', 'head-name'),
+      path.join(gitDir, 'rebase-apply', 'head-name'),
+    ];
+
+    for (const headNamePath of rebaseHeadNamePaths) {
+      try {
+        assertIsPromiseFsClient(this._baseOpts.fs);
+        const headName = (await this._baseOpts.fs.promises.readFile(headNamePath, 'utf8')).trim();
+        if (headName.startsWith('refs/heads/')) {
+          return headName.replace('refs/heads/', '');
+        }
+      } catch {
+        // Ignore and try the next known rebase metadata path.
+      }
+    }
+
+    throw new TypeError('No active branch');
   }
 
   async listBranches() {
