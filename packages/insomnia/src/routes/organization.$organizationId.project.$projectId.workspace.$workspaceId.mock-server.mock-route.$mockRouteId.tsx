@@ -102,15 +102,7 @@ export const mockRouteToHar = ({
   headersArray: RequestHeader[];
   body: string;
 }): Har.Response => {
-  const validHeaders = headersArray
-    .filter(({ name }) => !!name)
-    .map(h => ({
-      id: h.id || '',
-      name: h.name,
-      value: h.value,
-      description: h.description || '',
-      disabled: h.disabled ?? false,
-    }));
+  const validHeaders = headersArray.filter(({ name }) => !!name);
   return {
     status: +statusCode,
     statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
