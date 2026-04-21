@@ -2,6 +2,7 @@ import React, { type FC, useEffect, useState } from 'react';
 import {
   Button,
   Checkbox,
+  FieldError,
   FileTrigger,
   GridList,
   GridListItem,
@@ -27,6 +28,24 @@ import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
 import { CreatePluginModal } from './create-plugin-modal';
 
+const getNpmRegistryUrlValidationError = (url: string): string | null => {
+  if (!url) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return 'Enter a valid HTTP or HTTPS URL.';
+    }
+
+    return null;
+  } catch {
+    return 'Enter a valid HTTP or HTTPS URL.';
+  }
+};
+
 interface State {
   plugins: Plugin[];
   npmPluginValue: string;
@@ -35,6 +54,8 @@ interface State {
   isInstallingFromNpm: boolean;
   isRefreshingPlugins: boolean;
   pluginNodeExtraCerts: string;
+  npmRegistryUrl: string;
+  npmRegistryUrlError: string | null;
 }
 
 export const Plugins: FC = () => {
@@ -50,6 +71,8 @@ export const Plugins: FC = () => {
       isRefreshingPlugins,
       npmPluginValue,
       pluginNodeExtraCerts,
+      npmRegistryUrl,
+      npmRegistryUrlError,
     },
     setState,
   ] = useState<State>({
@@ -60,6 +83,8 @@ export const Plugins: FC = () => {
     isInstallingFromNpm: false,
     isRefreshingPlugins: false,
     pluginNodeExtraCerts: settings.pluginNodeExtraCerts,
+    npmRegistryUrl: settings.npmRegistryUrl,
+    npmRegistryUrlError: null,
   });
 
   // If all plugins are enabled, we show the checked state
@@ -71,6 +96,10 @@ export const Plugins: FC = () => {
   useEffect(() => {
     setState(state => ({ ...state, pluginNodeExtraCerts: settings.pluginNodeExtraCerts }));
   }, [settings.pluginNodeExtraCerts]);
+
+  useEffect(() => {
+    setState(state => ({ ...state, npmRegistryUrl: settings.npmRegistryUrl, npmRegistryUrlError: null }));
+  }, [settings.npmRegistryUrl]);
 
   useEffect(() => {
     handleReloadPlugins();
@@ -313,6 +342,78 @@ export const Plugins: FC = () => {
               </div>
             </div>
           )}
+        </div>
+        <div className="flex w-full flex-col">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <Label className="text-lg font-bold" slot="label">
+                npm Registry
+              </Label>
+
+              <Tooltip
+                className="cursor-pointer pt-2"
+                message="Set a custom npm registry URL (mirror) for plugin installation. Useful in corporate environments where direct npm access is restricted."
+              >
+                <i className="fa fa-info-circle" />
+              </Tooltip>
+            </div>
+            <Label className="p-0 text-sm font-semibold" slot="description">
+              <span className="text-(--hl)">Custom npm registry URL for plugin installation</span>
+            </Label>
+          </div>
+          <div className="mt-2 flex flex-col gap-2">
+            <div className="flex w-full gap-2">
+              <TextField
+                aria-label="npm Registry URL"
+                className="group relative flex max-w-full shrink-0 grow flex-col gap-2 overflow-hidden"
+                isInvalid={!!npmRegistryUrlError}
+                value={npmRegistryUrl}
+                onChange={value => {
+                  setState(state => ({ ...state, npmRegistryUrl: value, npmRegistryUrlError: null }));
+                }}
+              >
+                <Input
+                  placeholder="https://registry.npmjs.org/"
+                  className={({ isInvalid }) =>
+                    `flex h-(--line-height-xs) w-full items-center rounded-md border border-solid bg-(--hl-xxs) p-(--padding-sm) text-(--color-font) focus:border-(--hl-lg) focus:bg-transparent ${isInvalid ? 'border-(--color-danger)' : 'border-(--hl-md)'}`
+                  }
+                  onBlur={() => {
+                    const trimmedRegistryUrl = npmRegistryUrl.trim();
+                    const validationError = getNpmRegistryUrlValidationError(trimmedRegistryUrl);
+
+                    if (validationError) {
+                      setState(state => ({ ...state, npmRegistryUrlError: validationError }));
+                      return;
+                    }
+
+                    setState(state => ({
+                      ...state,
+                      npmRegistryUrl: trimmedRegistryUrl,
+                      npmRegistryUrlError: null,
+                    }));
+                    patchSettings({ npmRegistryUrl: trimmedRegistryUrl });
+                  }}
+                />
+                <FieldError className="text-xs text-(--color-danger)">
+                  {npmRegistryUrlError}
+                </FieldError>
+              </TextField>
+              {npmRegistryUrl && (
+                <Button
+                  className="flex h-(--line-height-xs) items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-md) text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  onPress={() => {
+                    setState(state => ({ ...state, npmRegistryUrl: '', npmRegistryUrlError: null }));
+                    patchSettings({ npmRegistryUrl: '' });
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+            <Label slot="description" className="p-0 text-sm text-(--hl)">
+              Leave empty to use the default npm registry (https://registry.npmjs.org/)
+            </Label>
+          </div>
         </div>
         <Separator className="my-4" />
         <div className="flex w-full flex-col">
