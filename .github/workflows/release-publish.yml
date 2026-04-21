@@ -18,6 +18,8 @@ env:
   INSO_DOCKER_IMAGE: &INSO_DOCKER_IMAGE 'kong/inso' # By default, registry is docker.io
   NOTARY_REPOSITORY: &NOTARY_REPOSITORY 'kong/notary' # All signatures will be pushed to public notary repository
 
+permissions: {}
+
 jobs:
   publish:
     timeout-minutes: 30
@@ -36,14 +38,14 @@ jobs:
       packages: write
     steps:
       - name: Checkout branch # Check out the release branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'

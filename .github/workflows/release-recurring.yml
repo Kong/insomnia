@@ -15,6 +15,9 @@ concurrency:
   cancel-in-progress: true
 env:
   PR_NUMBER: ${{ github.event.number }}
+
+permissions: {}
+
 jobs:
   build-and-upload-artifacts:
     timeout-minutes: 45
@@ -23,6 +26,7 @@ jobs:
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     runs-on: ${{ matrix.os }}
     permissions:
+      contents: read
       packages: read
     strategy:
       fail-fast: false
@@ -38,10 +42,10 @@ jobs:
             build-targets: tar.gz
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -83,7 +87,7 @@ jobs:
           INSOMNIA_UPDATES_URL: http://localhost:4010
 
       - name: Upload smoke test traces
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           if-no-files-found: ignore
@@ -91,7 +95,7 @@ jobs:
           path: packages/insomnia-smoke-test/traces
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts-${{ github.run_number }}

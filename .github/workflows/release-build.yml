@@ -6,6 +6,8 @@ on:
       - 'release/**'
   workflow_dispatch:
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -15,11 +17,10 @@ jobs:
   generate-sbom-and-upload-assets:
     runs-on: ubuntu-24.04
     permissions:
-      packages: write
-      contents: write # publish sbom to GH releases/tag assets
+      contents: read # Required for actions/checkout
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
       # Perform SCA / SBOM analysis for the entire monorepo code repository
       # Produces SCA(SBOM and CVE) report
@@ -35,6 +36,9 @@ jobs:
   build-and-upload-release-artifacts:
     timeout-minutes: 45
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: read
     env:
       INSO_PACKAGE_NAME: insomnia-inso
       INSO_DOCKER_TAR: inso-docker-image.tar
@@ -58,10 +62,10 @@ jobs:
           #   csc_key_password_secret: ''
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -124,7 +128,7 @@ jobs:
       # smctl will be used in the next step for signing
       - name: Setup Software Trust Manager
         if: runner.os == 'Windows'
-        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1
+        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1.0.0
         with:
           simple-signing-mode: true
         env:
@@ -164,7 +168,7 @@ jobs:
       # this installs smctl as well
       - name: Code-sign unpacked .exe (Windows only)
         if: runner.os == 'Windows'
-        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1
+        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1.0.0
         with:
           simple-signing-mode: true
           # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
@@ -242,7 +246,7 @@ jobs:
 
       - name: Code-sign inso exe (Windows only)
         if: runner.os == 'Windows'
-        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1
+        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1.0.0
         with:
           simple-signing-mode: true
           # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
@@ -273,7 +277,7 @@ jobs:
 
       - name: Notarize Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
-        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2
+        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2.0.2
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
           primary-bundle-id: com.insomnia.inso
@@ -290,7 +294,7 @@ jobs:
 
       - name: Notarize Inso CLI binary (macOS only)
         if: runner.os == 'macOS'
-        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2
+        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2.0.2
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso
           primary-bundle-id: com.insomnia.inso-binary
@@ -329,7 +333,7 @@ jobs:
           SYFT_SOURCE_NAME: ${{ env.INSO_DOCKER_TAR }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           if-no-files-found: ignore
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
@@ -347,7 +351,7 @@ jobs:
             packages/insomnia-inso/artifacts/*
 
       - name: Upload source assets for Sentry
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ runner.os }}-${{ runner.arch }}-sentry
           path: |
@@ -359,6 +363,8 @@ jobs:
     timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
     runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: write
     steps:
       - name: Get release version
         id: release_version

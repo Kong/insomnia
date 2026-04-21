@@ -7,12 +7,15 @@ on:
 
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   update_homebrew:
     timeout-minutes: 5
     name: Update Insomnia Formula
     # must be macos, linux-brew doesn't have casks
     runs-on: macos-latest
+    permissions: {}
     steps:
       - name: Set up Homebrew
         id: set-up-homebrew
@@ -22,7 +25,7 @@ jobs:
 
       - name: Cache Homebrew Bundler RubyGems
         id: cache
-        uses: actions/cache@v3
+        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c # v3.5.0
         with:
           path: ${{ steps.set-up-homebrew.outputs.gems-path }}
           key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
