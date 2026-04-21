@@ -6,7 +6,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { fuzzyMatchAll } from '~/common/misc';
-import type { RequestGroup, Workspace } from '~/insomnia-data';
+import type { Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
@@ -32,6 +32,7 @@ import {
 import { ProjectNode } from './project-node';
 import { RequestNode } from './request-node';
 import type { FlatItem } from './types';
+import { useProjectNavigationSidebarNavigation } from './use-project-navigation-sidebar-navigation';
 import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
 
@@ -367,52 +368,80 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
   );
 
-  const toggleRequestGroup = useCallback(
-    async (requestGroup: RequestGroup) => {
-      // Do not update toggle state if there is an active filter
-      if (!projectNavigationSidebarFilter) {
-        const requestGroupId = requestGroup._id;
-        const requestGroupMeta = await services.requestGroupMeta.getByParentId(requestGroupId);
-        const newCollapsed = requestGroupMeta ? !requestGroupMeta.collapsed : false;
-        await services.requestGroupMeta.updateOrCreateForParentId(requestGroupId!, { collapsed: newCollapsed });
-        const toggleItemChildrenIds: string[] = [];
-        setFlatItems(prev => {
-          return prev.map(item => {
-            if (item.kind === 'collectionChild') {
-              const { children, doc } = item;
-              if (doc._id === requestGroupId) {
-                // Update the toggle item first and get its children ids
-                toggleItemChildrenIds.push(...(children?.map(c => c.doc._id) ?? []));
-                return {
-                  ...item,
-                  collapsed: newCollapsed,
-                  hidden: false,
-                };
-                // recursively hide all children of the toggle item
-              } else if (toggleItemChildrenIds.includes(doc._id)) {
-                toggleItemChildrenIds.push(...(children?.map(c => c.doc._id) ?? []));
-                return {
-                  ...item,
-                  hidden: newCollapsed,
-                };
-              }
+  const toggleRequestGroups = useCallback(
+    async (requestGroupIds: string[], collapsed?: boolean) => {
+      if (requestGroupIds.length === 0) {
+        return;
+      }
+
+      if (projectNavigationSidebarFilter && collapsed === undefined) {
+        return;
+      }
+
+      const requestGroupMetas = await Promise.all(
+        requestGroupIds.map(requestGroupId => services.requestGroupMeta.getByParentId(requestGroupId)),
+      );
+
+      const nextStates = requestGroupIds.map((requestGroupId, index) => {
+        const requestGroupMeta = requestGroupMetas[index];
+        return {
+          requestGroupId,
+          collapsed: collapsed ?? (requestGroupMeta ? !requestGroupMeta.collapsed : false),
+        };
+      });
+
+      await Promise.all(
+        nextStates.map(({ requestGroupId, collapsed }) =>
+          services.requestGroupMeta.updateOrCreateForParentId(requestGroupId, { collapsed }),
+        ),
+      );
+
+      cachedCollectionChildrenAndMetaRef.current.forEach(workspaceData => {
+        workspaceData.requestGroupMetas.forEach(requestGroupMeta => {
+          const nextState = nextStates.find(({ requestGroupId }) => requestGroupId === requestGroupMeta.parentId);
+          if (nextState) {
+            requestGroupMeta.collapsed = nextState.collapsed;
+          }
+        });
+      });
+
+      setFlatItems(previousFlatItems =>
+        nextStates.reduce((nextFlatItems, { requestGroupId, collapsed }) => {
+          const toggledChildrenIds: string[] = [];
+
+          return nextFlatItems.map(item => {
+            if (item.kind !== 'collectionChild') {
+              return item;
             }
+
+            const { children, doc } = item;
+
+            if (doc._id === requestGroupId) {
+              toggledChildrenIds.push(...(children?.map(child => child.doc._id) ?? []));
+
+              return {
+                ...item,
+                collapsed,
+                hidden: false,
+              };
+            }
+
+            if (toggledChildrenIds.includes(doc._id)) {
+              toggledChildrenIds.push(...(children?.map(child => child.doc._id) ?? []));
+
+              return {
+                ...item,
+                hidden: collapsed,
+              };
+            }
+
             return item;
           });
-        });
-      }
+        }, previousFlatItems),
+      );
     },
     [projectNavigationSidebarFilter],
   );
-
-  // Derive selected key from current route
-  const selectedKeys = useMemo(() => {
-    if (activeRequestGroupId) return [activeRequestGroupId];
-    if (activeRequestId) return [activeRequestId];
-    if (activeWorkspaceId) return [activeWorkspaceId];
-    if (activeProjectId) return [activeProjectId];
-    return [];
-  }, [activeRequestGroupId, activeRequestId, activeWorkspaceId, activeProjectId]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const visibleFlatItems = useMemo(() => flatItems.filter(i => !i.hidden), [flatItems]);
@@ -428,6 +457,16 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     organizationId,
     virtualizer,
   });
+  const { selectedItemId, routeInfo } = useProjectNavigationSidebarNavigation({
+    setExpandedProjectAndWorkspaceIds,
+    toggleRequestGroups,
+    visibleFlatItems,
+    virtualizer,
+  });
+  const selectedKeys =
+    selectedItemId && visibleFlatItems.findIndex(item => item.doc._id === selectedItemId) !== -1
+      ? [selectedItemId]
+      : [];
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -537,32 +576,43 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                   const { doc } = item;
                   const docId = doc._id;
                   if (item.kind === 'project') {
-                    toggleProjectOrWorkspace(docId);
-                    !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
-                  } else if (item.kind === 'workspace') {
-                    toggleProjectOrWorkspace(docId);
-                    tabNavigate(
-                      {
-                        organization: organizationId,
-                        project: item.project,
-                        workspace: item.doc,
-                        item: item.doc,
-                      },
-                      { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
-                    );
-                  } else if (item.kind === 'collectionChild') {
-                    if (models.requestGroup.isRequestGroup(doc)) {
-                      toggleRequestGroup(doc);
+                    if (routeInfo?.resourceId === docId) {
+                      toggleProjectOrWorkspace(docId);
+                    } else {
+                      !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
                     }
-                    tabNavigate(
-                      {
-                        organization: organizationId,
-                        project: item.project,
-                        workspace: item.workspace,
-                        item: item.doc,
-                      },
-                      { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
-                    );
+                  } else if (item.kind === 'workspace') {
+                    if (routeInfo?.resourceId === docId && routeInfo?.routeId !== 'runner') {
+                      toggleProjectOrWorkspace(docId);
+                    } else {
+                      tabNavigate(
+                        {
+                          organization: organizationId,
+                          project: item.project,
+                          workspace: item.doc,
+                          item: item.doc,
+                        },
+                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                      );
+                    }
+                  } else if (item.kind === 'collectionChild') {
+                    if (
+                      routeInfo?.resourceId === docId &&
+                      models.requestGroup.isRequestGroupId(docId) &&
+                      routeInfo?.routeId !== 'runner'
+                    ) {
+                      toggleRequestGroups([docId]);
+                    } else {
+                      tabNavigate(
+                        {
+                          organization: organizationId,
+                          project: item.project,
+                          workspace: item.workspace,
+                          item: item.doc,
+                        },
+                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                      );
+                    }
                   }
                 }}
                 className="group outline-hidden select-none"
@@ -581,7 +631,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
 
                 {item.kind === 'workspace' && <WorkspaceNode item={item} onToggle={toggleProjectOrWorkspace} />}
 
-                {item.kind === 'collectionChild' && <RequestNode item={item} onToggleFolder={toggleRequestGroup} />}
+                {item.kind === 'collectionChild' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
               </GridListItem>
             );
           }}
