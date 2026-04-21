@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 
+import * as ts from 'typescript';
 import type { Plugin } from 'vite';
+import { type ResolvedConfig } from 'vite';
 
 const NODE_BUILTIN_REPORT_ENV = 'INSOMNIA_NODE_IMPORT_REPORT';
 const NODE_BUILTIN_REPORT_FILE = path.resolve(__dirname, '.reports', 'renderer-node-imports.json');

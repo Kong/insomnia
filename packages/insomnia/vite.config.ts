@@ -3,8 +3,7 @@ import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
-import * as ts from 'typescript';
-import { defineConfig, type ResolvedConfig } from 'vite';
+import { defineConfig } from 'vite';
 
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
