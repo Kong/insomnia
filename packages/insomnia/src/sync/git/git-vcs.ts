@@ -1058,7 +1058,7 @@ export class GitVCS {
   }
 
   async getBranchTrackingRemote(branch?: string): Promise<string | null> {
-    const currentBranch = branch || await this.getCurrentBranch();
+    const currentBranch = branch || (await this.getCurrentBranch());
     try {
       const remote = await git.getConfig({
         ...this._baseOpts,

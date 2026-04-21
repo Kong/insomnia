@@ -494,6 +494,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         branches: await GitVCS.listBranches(),
         gitRepository: gitRepository,
         legacyInsomniaWorkspace,
+        branchRemoteInfo: {
+          ...(await GitVCS.getBranchRemoteInfo()),
+          remotes: await GitVCS.listRemotes(),
+        },
       };
     }
 
@@ -551,6 +555,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       branches: await GitVCS.listBranches(),
       gitRepository,
       legacyInsomniaWorkspace,
+      branchRemoteInfo: {
+        ...(await GitVCS.getBranchRemoteInfo()),
+        remotes: await GitVCS.listRemotes(),
+      },
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while fetching git repository.';
@@ -1851,6 +1859,7 @@ export const createNewGitBranchAction = async ({
 export interface CheckoutGitBranchResult {
   errors?: string[];
   success?: boolean;
+  warnings?: string[];
 }
 
 export const checkoutGitBranchAction = async ({
@@ -1895,6 +1904,18 @@ export const checkoutGitBranchAction = async ({
     });
 
     await database.flushChanges(bufferId);
+
+    const branchRemoteInfo = await GitVCS.getBranchRemoteInfo(branch);
+    if (!branchRemoteInfo.isOrigin) {
+      return {
+        success: true,
+        warnings: [
+          `Branch "${branch}" tracks remote "${branchRemoteInfo.trackingRemote}". ` +
+            `Push, pull, and fetch will not work from Insomnia. Use the git CLI to sync this branch.`,
+        ],
+      };
+    }
+
     return {
       success: true,
     };
