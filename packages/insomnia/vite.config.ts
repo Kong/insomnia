@@ -57,7 +57,6 @@ export default defineConfig(({ mode }) => {
       // This is necessary because we use nodeIntegration: true in the renderer process and allow importing modules from node.
       electronNodeRequire({
         modules: [
-          'electron',
           ...externalDependencies,
           ...builtinModules.filter(m => m !== 'buffer'),
           ...builtinModules.map(m => `node:${m}`),
@@ -66,6 +65,20 @@ export default defineConfig(({ mode }) => {
       reactRouter(),
       tailwindcss(),
       DetectNodeBuiltinImports(),
+      {
+        name: 'no-main-process-imports',
+        resolveId(source, importer) {
+          if (source.includes('/src/main/') || source.includes('~/main/')) {
+            console.warn(
+              `[warn] Renderer is importing main-process file!\n` +
+                `  file:     ${source}\n` +
+                `  importer: ${importer}\n`,
+            );
+            throw new Error(`Renderer importing main-process module: ${source}`);
+          }
+          return null; // let normal resolution continue
+        },
+      },
     ],
     worker: {
       format: 'es',
