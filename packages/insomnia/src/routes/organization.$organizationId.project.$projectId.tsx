@@ -1,6 +1,6 @@
 import { href, redirect, useRouteLoaderData } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
@@ -9,7 +9,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
 
   if (!project) {
     return redirect(href('/organization/:organizationId', { organizationId }));

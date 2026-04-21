@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import type { RequestGroup } from '~/models/request-group';
+import type { RequestGroup } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -10,12 +10,12 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ActionArgs) {
   const { requestGroupId } = params;
 
-  const reqGroup = await models.requestGroup.getById(requestGroupId);
+  const reqGroup = await services.requestGroup.getById(requestGroupId);
   invariant(reqGroup, 'Request Group not found');
 
   const patch = (await request.json()) as Partial<RequestGroup>;
 
-  await models.requestGroup.update(reqGroup, patch);
+  await services.requestGroup.update(reqGroup, patch);
 
   return null;
 }

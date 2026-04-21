@@ -3,20 +3,23 @@ import querystring from 'node:querystring';
 
 import { v4 as uuidv4 } from 'uuid';
 
-import type { OAuth2Token } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type {
+  AuthTypeOAuth2,
+  OAuth2ResponseType,
+  OAuth2Token,
+  Request,
+  RequestGroup,
+  RequestHeader,
+  RequestParameter,
+  Response,
+} from '~/insomnia-data';
+import { database as db, models, services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
 import { version } from '../../../package.json';
 import { getOauthRedirectUrl } from '../../common/constants';
-import { database as db } from '../../common/database';
 import { escapeRegex } from '../../common/misc';
-import * as models from '../../models';
-import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
-import type { Request } from '../../models/request';
-import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../models/request-group';
-import type { Response } from '../../models/response';
 import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/event-bus';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -33,6 +36,7 @@ import {
 } from '../network';
 import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } from './constants';
 
+const { isRequestGroup, isRequestGroupId } = models.requestGroup;
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 
 export function initNewOAuthSession() {
@@ -267,7 +271,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   let closestAuthId = requestId;
 
   if (!models.mcpRequest.isMcpRequestId(requestId)) {
-    const activeRequest = await models.request.getById(requestId);
+    const activeRequest = await services.request.getById(requestId);
     const requestGroups = (
       await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
     ).filter(isRequestGroup) as RequestGroup[];
@@ -430,27 +434,26 @@ const sendAccessTokenRequest = async (
   if (!settings.disableAppVersionUserAgent) {
     defaultHeaders.push(defaultUserAgentHeader);
   }
-  const newRequest: Request = await models.initModel(
-    models.request.type,
-    {
-      // Do not inherit authentication from parent request or group since this is a special request
-      authentication: {
-        type: 'none',
-        disabled: false,
-      },
-      headers: [...defaultHeaders, ...headers],
-      url: setDefaultProtocol(authentication.accessTokenUrl),
-      method: 'POST',
-      body: {
-        mimeType: 'application/x-www-form-urlencoded',
-        params,
-      },
+  const newRequest: Request = {
+    ...models.request.init(),
+    // Do not inherit authentication from parent request or group since this is a special request
+    authentication: {
+      type: 'none',
+      disabled: false,
     },
-    {
-      _id: requestOrGroupId + '.other',
-      parentId: requestOrGroupId,
+    headers: [...defaultHeaders, ...headers],
+    url: setDefaultProtocol(authentication.accessTokenUrl),
+    method: 'POST',
+    body: {
+      mimeType: 'application/x-www-form-urlencoded',
+      params,
     },
-  );
+    _id: requestOrGroupId + '.other',
+    parentId: requestOrGroupId,
+    type: models.request.type,
+    modified: Date.now(),
+    created: Date.now(),
+  };
 
   const renderResult = await tryToInterpolateRequest({ request: newRequest, environment: environment._id });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
@@ -465,7 +468,7 @@ const sendAccessTokenRequest = async (
   );
   const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 
-  return await models.response.create(responsePatch);
+  return await services.response.create(responsePatch);
 };
 export const encodePKCE = (buffer: Buffer) => {
   return (

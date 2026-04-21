@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import type { Environment } from '~/models/environment';
+import type { Environment } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -13,15 +13,15 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { environmentId, patch } = (await request.json()) as { environmentId: string; patch: Partial<Environment> };
   invariant(typeof environmentId === 'string', 'Environment ID is required');
 
-  const environment = await models.environment.getById(environmentId);
+  const environment = await services.environment.getById(environmentId);
 
   invariant(environment, 'Environment not found');
 
-  const baseEnvironment = await models.environment.getByParentId(workspaceId);
+  const baseEnvironment = await services.environment.getByParentId(workspaceId);
 
   invariant(baseEnvironment, 'Base environment not found');
 
-  const updatedEnvironment = await models.environment.update(environment, patch);
+  const updatedEnvironment = await services.environment.update(environment, patch);
 
   return updatedEnvironment;
 }

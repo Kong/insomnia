@@ -1,4 +1,5 @@
-import { type ApiSpec, database as db, models } from '~/insomnia-data';
+import type { ApiSpec } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 
 const { type } = models.apiSpec;
 

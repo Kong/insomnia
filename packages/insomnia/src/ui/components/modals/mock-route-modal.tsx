@@ -13,11 +13,11 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { ResponseHeader } from '~/insomnia-data';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
 import { useMockRouteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
 
 import { HTTP_METHODS } from '../../../common/constants';
-import type { ResponseHeader } from '../../../models/response';
 import { Icon } from '../icon';
 
 export interface MockRouteModalProps {

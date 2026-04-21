@@ -1,8 +1,8 @@
 import { href } from 'react-router';
 
 import type { McpRequest } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import * as projectModel from '~/models/project';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -20,10 +20,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     return;
   }
 
-  const project = await projectModel.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found for request');
   if (accessLevel === 'project') {
-    await projectModel.update(project, { mcpStdioAccess: true });
+    await services.project.update(project, { mcpStdioAccess: true });
   }
 }
 

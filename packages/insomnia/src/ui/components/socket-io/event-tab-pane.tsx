@@ -2,8 +2,9 @@ import classNames from 'classnames';
 import React, { useMemo } from 'react';
 import { Button, GridList, GridListItem, Input, Switch } from 'react-aria-components';
 
+import type { SocketIOEventListener, SocketIORequest } from '~/insomnia-data';
+
 import { generateId } from '../../../common/misc';
-import type { SocketIOEventListener, SocketIORequest } from '../../../models/socket-io-request';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';

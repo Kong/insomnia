@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 
+import { models } from '~/insomnia-data';
 import type { BaseModel } from '~/models';
 
 import { fuzzyMatchAll } from '../../common/misc';
-import { isRequestGroup } from '../../models/request-group';
 
 interface SearchableFields {
   name: string;
@@ -15,7 +15,7 @@ interface SearchableFields {
 
 function isMatched(filter: string, doc: SearchableFields): boolean {
   return Boolean(
-    fuzzyMatchAll(filter, [doc.name, doc.description, ...(isRequestGroup(doc) ? [] : [doc.url!])], {
+    fuzzyMatchAll(filter, [doc.name, doc.description, ...(models.requestGroup.isRequestGroup(doc) ? [] : [doc.url!])], {
       splitSpace: false,
       loose: true,
     })?.indexes,

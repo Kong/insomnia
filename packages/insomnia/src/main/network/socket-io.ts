@@ -9,16 +9,17 @@ import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOpti
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import type {
+  BaseSocketIORequest,
+  CookieJar,
+  RequestAuthentication,
+  RequestHeader,
+  SocketIOResponse,
+} from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
-import * as models from '../../models';
-import { socketIORequest } from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
-import { type RequestAuthentication, type RequestHeader } from '../../models/request';
-import type { BaseSocketIORequest } from '../../models/socket-io-request';
-import type { SocketIOResponse } from '../../models/socket-io-response.ts';
 import { filterClientCertificates } from '../../network/certificate';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -226,8 +227,8 @@ const createErrorResponse = async (
     statusMessage: 'Error',
     error: message,
   };
-  const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const openSocketIOConnection = async (
@@ -242,7 +243,7 @@ const openSocketIOConnection = async (
     return;
   }
 
-  const request = await socketIORequest.getById(options.requestId);
+  const request = await services.socketIORequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
@@ -256,10 +257,10 @@ const openSocketIOConnection = async (
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
   // fallback to base environment
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(options.workspaceId));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
@@ -361,8 +362,8 @@ const openSocketIOConnection = async (
         url: url,
       };
 
-      const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
     });
 
     const engine = socket.io.engine;
@@ -575,7 +576,7 @@ const removeSocketIOListener = (options: { eventName: string; requestId: string 
 };
 
 const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[]> => {
-  const response = await models.socketIOResponse.getById(options.responseId);
+  const response = await services.socketIOResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }

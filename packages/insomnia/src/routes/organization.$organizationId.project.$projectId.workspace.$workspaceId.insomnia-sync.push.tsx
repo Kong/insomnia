@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { remoteCompareCache, vcsSegmentEventProperties } from '~/ui/sync-utils';
@@ -12,7 +12,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { projectId, workspaceId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.remoteId, 'Project is not remote');
 

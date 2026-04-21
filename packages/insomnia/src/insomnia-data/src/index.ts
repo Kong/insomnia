@@ -5,7 +5,7 @@ export * from './database';
 export * from './models/types';
 
 // models
-export { models } from './models';
+export * as models from './models';
 
 // services
 export { services, initServices, type Services } from './services';

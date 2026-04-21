@@ -2,9 +2,9 @@ import React, { type FC, type ReactNode } from 'react';
 import { Toolbar } from 'react-aria-components';
 
 import type { AuthTypes } from '~/common/constants';
+import type { RequestAuthentication } from '~/insomnia-data';
 import { SingleTokenAuth } from '~/ui/components/editors/auth/single-token-auth';
 
-import type { RequestAuthentication } from '../../../../models/request';
 import { getAuthObjectOrNull } from '../../../../network/authentication';
 import { AuthDropdown } from '../../dropdowns/auth-dropdown';
 import { ApiKeyAuth } from './api-key-auth';

@@ -115,6 +115,8 @@ export enum SegmentEvent {
   mcpRequestHeadersDescriptionToggled = 'mcp-request-headers-description-toggled',
   mcpRequestRootsNotifyClicked = 'mcp-request-roots-notify-clicked',
   mcpResponseHeadersCopyAllClicked = 'mcp-response-headers-copy-all-clicked',
+  kongKonnectPatValidated = 'kong-konnect-pat-validated',
+  kongKonnectSyncCompleted = 'kong-konnect-sync-completed',
 }
 
 type PushPull = 'push' | 'pull';

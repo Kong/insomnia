@@ -21,7 +21,6 @@ import {
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -29,7 +28,10 @@ import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
-import { useGitProviderCompleteSignInFetcher } from '~/routes/git-credentials.complete-sign-in';
+import {
+  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  useGitProviderCompleteSignInFetcher,
+} from '~/routes/git-credentials.complete-sign-in';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -155,7 +157,7 @@ export const useRootLoaderData = () => {
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
-  const workspaceCount = await models.workspace.count();
+  const workspaceCount = await services.workspace.count();
   const userSession = await services.userSession.getOrCreate();
   const cloudCredentials = await services.cloudCredential.all();
 
@@ -314,7 +316,9 @@ const Root = () => {
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
-  const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher();
+  const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
+    key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -363,6 +367,7 @@ const Root = () => {
             endpoint: params.endpoint,
             operationId: params.operationId,
             autoScan: true,
+            startedAt: Date.now(),
           });
         }
         if (params.mcp) {
@@ -371,6 +376,7 @@ const Root = () => {
             defaultValue: params.mcp,
             origin: sanitizeUrlAndExtractOrigin(params.origin),
             autoScan: true,
+            startedAt: Date.now(),
           });
         }
         if (params.curl) {
@@ -382,6 +388,7 @@ const Root = () => {
             endpoint: params.endpoint,
             operationId: params.operationId,
             autoScan: isValid,
+            startedAt: Date.now(),
           });
         }
       }
@@ -562,10 +569,10 @@ const Root = () => {
                 <div className="flex flex-col gap-1 text-left">
                   {errorDetailKeys.length > 0
                     ? errorDetailKeys.map(k => (
-                        <span key={k} className="whitespace-normal">
-                          {k}: {restParams[k]}
-                        </span>
-                      ))
+                      <span key={k} className="whitespace-normal">
+                        {k}: {restParams[k]}
+                      </span>
+                    ))
                     : 'Unknown error'}
                 </div>
               ),
@@ -597,6 +604,7 @@ const Root = () => {
       {/* triggered by insomnia://app/import */}
       {importObject.defaultValue && (
         <ImportModal
+          key={importObject.startedAt}
           onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
           defaultProjectId={projectId}
           organizationId={organizationId}

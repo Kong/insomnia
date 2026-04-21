@@ -21,13 +21,11 @@ import { isValid } from 'date-fns';
 import electron from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { ClientCertificate } from '~/insomnia-data';
+import type { ClientCertificate, RequestHeader, ResponseHeader } from '~/insomnia-data';
 
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
-import type { RequestHeader } from '../../models/request';
-import type { ResponseHeader } from '../../models/response';
 import { insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';

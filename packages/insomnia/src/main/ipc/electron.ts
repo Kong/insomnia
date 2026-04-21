@@ -51,6 +51,8 @@ export type HandleChannels =
   | 'git.diffFileLoader'
   | 'git.discardChanges'
   | 'git.fetchGitRemoteBranches'
+  | 'git.validateGitRepositoryCredentials'
+  | 'git.validateGitCredentialById'
   | 'git.getGitBranches'
   | 'git.getRepositoryDirectoryTree'
   | 'git.gitChangesLoader'
@@ -72,11 +74,11 @@ export type HandleChannels =
   | 'git.listGitProviders'
   | 'git.initSignInToGitProvider'
   | 'git.completeSignInToGitProvider'
-  | 'git.updateSignInToGitProvider'
   | 'git.getGitProviderRepositories'
   | 'git.getGitProviderEmails'
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
+  | 'grpc.writeProtoFile'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'
@@ -134,7 +136,8 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
-  | 'writeFile';
+  | 'writeFile'
+  | 'writeResponseBodyToFile';
 
 export const ipcMainHandle = (
   channel: HandleChannels,

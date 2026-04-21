@@ -1,4 +1,5 @@
-import { services, type Settings } from '~/insomnia-data';
+import type { Settings } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/utils/router';
 

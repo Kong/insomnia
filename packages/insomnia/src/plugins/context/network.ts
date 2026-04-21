@@ -1,12 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import type { Request, ResponseHeader } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { readCurlResponse } from '~/models/helpers/response-operations';
 
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
-import * as models from '../../models';
-import type { Request } from '../../models/request';
-import { type ResponseHeader } from '../../models/response';
 import {
   fetchRequestData,
   responseTransform,
@@ -71,7 +69,7 @@ export function init(): {
           renderedRequest,
           renderResult.context,
         );
-        return models.response.create(responsePatch, settings.maxHistoryResponses);
+        return services.response.create(responsePatch, settings.maxHistoryResponses);
       },
       // using node-curl to send a request directly, without context render and database write for request and response
       async sendRequestWithoutSideEffects(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType> {

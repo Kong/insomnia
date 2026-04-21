@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteBackendProjectsCache, remoteBranchesCache, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
@@ -11,7 +11,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { projectId, workspaceId } = params;
   try {
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
     const vcs = VCSInstance();
@@ -45,7 +45,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
         hasUncommittedChanges = true;
       }
       // update workspace meta with sync data, use for show unpushed changes on collection card
-      await models.workspaceMeta.updateByParentId(workspaceId, {
+      await services.workspaceMeta.updateByParentId(workspaceId, {
         hasUncommittedChanges,
         hasUnpushedChanges: compare?.ahead > 0,
       });
@@ -70,7 +70,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { projectId, workspaceId } = params;
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.remoteId, 'Project is not remote');
 

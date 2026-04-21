@@ -1,8 +1,7 @@
+import { type RemoteProject, type Workspace } from '~/insomnia-data';
+import { database, models } from '~/insomnia-data';
+
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
-import { database } from '../../common/database';
-import * as models from '../../models';
-import type { RemoteProject } from '../../models/project';
-import { isWorkspace, type Workspace } from '../../models/workspace';
 import type { BackendProjectWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';
 import type { VCS } from './vcs';
@@ -28,14 +27,17 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
   // @TODO Revisit the UX for this. What should happen if there are other branches?
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
-    const workspace = await models.initModel<Workspace>(models.workspace.type, {
+    const workspace = await database.update<Workspace>({
+      ...models.workspace.init(),
       _id: backendProject.rootDocumentId,
       name: backendProject.name,
       parentId: remoteProject._id,
       scope: 'collection',
+      modified: Date.now(),
+      created: Date.now(),
+      isPrivate: false,
+      type: models.workspace.type,
     });
-
-    await database.update(workspace);
 
     return { project: remoteProject, workspaceId: workspace._id };
   }
@@ -53,7 +55,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
   for (const doc of (await vcs.allDocuments()) || []) {
     // When we pull a BackendProject we need to update the parent ID of the workspace so that it appears inside.
     // There can't be more than one workspace.
-    if (isWorkspace(doc)) {
+    if (models.workspace.isWorkspace(doc)) {
       doc.parentId = remoteProject._id;
       workspaceId = doc._id;
     }

@@ -2,27 +2,28 @@ import classNames from 'classnames';
 import { type FC, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
 
+import type {
+  Request,
+  RequestAuthentication,
+  RequestGroup,
+  RequestParameter,
+  SocketIORequest,
+  WebSocketRequest,
+} from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import { SECURITY_SETTINGS_PATH_LABEL } from '../../common/misc';
 import * as models from '../../models';
-import {
-  PATH_PARAMETER_REGEX,
-  type Request,
-  type RequestAuthentication,
-  type RequestParameter,
-} from '../../models/request';
-import { isRequestGroup, type RequestGroup } from '../../models/request-group';
-import type { SocketIORequest } from '../../models/socket-io-request';
-import type { WebSocketRequest } from '../../models/websocket-request';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
 import { RenderError } from '../../templating/render-error';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../utils/url/querystring';
 import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 import { CopyButton } from './base/copy-button';
+
+const { isRequestGroup } = models.requestGroup;
 
 interface Props {
   request: Request | WebSocketRequest | SocketIORequest;
@@ -89,7 +90,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         if (pathParameters) {
           // Replace path parameters in URL with their rendered values
           // Path parameters are path segments that start with a colon, e.g. :id
-          url = url.replace(PATH_PARAMETER_REGEX, match => {
+          url = url.replace(models.request.PATH_PARAMETER_REGEX, match => {
             const pathParam = match.replace('/:', '');
             const param = pathParameters?.find(p => p.name === pathParam);
 

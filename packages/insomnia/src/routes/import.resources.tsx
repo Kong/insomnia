@@ -7,11 +7,10 @@ import {
   importResourcesToProject,
   importResourcesToWorkspace,
 } from '~/common/import';
+import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isRemoteProject } from '~/models/project';
-import type { Workspace } from '~/models/workspace';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -44,7 +43,7 @@ export const importScannedResources = async ({
   invariant(organizationId && typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(projectId && typeof projectId === 'string', 'ProjectId is required.');
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found.');
 
   return await (typeof workspaceId === 'string' && workspaceId
@@ -71,7 +70,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(typeof projectId === 'string', 'ProjectId is required.');
 
     if (!workspaceId && data.skipImportIfDuplicate) {
-      const existing = await findExistingImportedSpec(projectId);
+      const existing = await findExistingImportedSpec(projectId, organizationId);
       if (existing) {
         const matchedRequest = await findRequestInExistingWorkspace(
           existing.workspace,
@@ -83,6 +82,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
           done: true,
           singleImportedWorkspace: existing.workspace,
           singleImportedRequest: matchedRequest,
+          singleImportedProjectId: existing.workspace.parentId,
         };
       }
     }
@@ -133,19 +133,19 @@ export const useImportResourcesFetcher = createFetcherSubmitHook(
 // If we put this function in import.ts which is depended by Inso CLI, Inso CLI will fail to build because it doesn't have access to the browser environment.
 // So we put this function here and pass it to importResourcesToProject func to avoid the dependency issue.
 export async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
-  const project = await models.project.getById(newWorkspace.parentId);
+  const project = await services.project.getById(newWorkspace.parentId);
   invariant(project, 'Project not found');
   const userSession = await services.userSession.getOrCreate();
 
-  if (userSession.id && isRemoteProject(project)) {
+  if (userSession.id && models.project.isRemoteProject(project)) {
     const storageRules = await fetchAndCacheOrganizationStorageRule(project.parentId);
     invariant(storageRules, 'Storage rules not found');
 
     if (storageRules.enableCloudSync) {
       // Create default env, cookie jar, and meta
-      await models.environment.getOrCreateForParentId(newWorkspace._id);
-      await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-      await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+      await services.environment.getOrCreateForParentId(newWorkspace._id);
+      await services.cookieJar.getOrCreateForParentId(newWorkspace._id);
+      await services.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
       try {
         const vcs = VCSInstance().newInstance();
         await initializeLocalBackendProjectAndMarkForSync({

@@ -1,13 +1,10 @@
 import { logout as logoutAPI, whoami } from 'insomnia-api';
 
-import type { GitRepository } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { GitRepository, Project, WorkspaceMeta } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
-import { project, workspaceMeta } from '../models';
-import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
-import type { WorkspaceMeta } from '../models/workspace-meta';
 import * as crypt from './crypt';
 
 export interface SessionData {
@@ -220,14 +217,14 @@ async function _removeAllCredentials() {
  *
  */
 async function _removeGitRepository(repo: GitRepository) {
-  const projects = await database.find<Project>(project.type, { gitRepositoryId: repo._id });
+  const projects = await database.find<Project>(models.project.type, { gitRepositoryId: repo._id });
   for (const p of projects) {
-    await project.update(p, { gitRepositoryId: EMPTY_GIT_PROJECT_ID });
+    await services.project.update(p, { gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
   }
 
-  const workspaceMetas = await database.find<WorkspaceMeta>(workspaceMeta.type, { gitRepositoryId: repo._id });
+  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, { gitRepositoryId: repo._id });
   for (const wsMeta of workspaceMetas) {
-    await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
+    await services.workspaceMeta.update(wsMeta, { gitRepositoryId: null });
   }
   await services.gitRepository.remove(repo);
 }

@@ -1,5 +1,3 @@
-import { format as urlFormat, parse as urlParse } from 'node:url';
-
 import { setDefaultProtocol } from './protocol';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
@@ -203,11 +201,15 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
   const { strictNullHandling = false } = options || {};
   const urlWithProto = setDefaultProtocol(url);
 
+  if (!urlWithProto) {
+    return '';
+  }
+
   if (!encode) {
     return urlWithProto;
   }
   // Parse the URL into components
-  const parsedUrl = urlParse(urlWithProto);
+  const parsedUrl = new URL(urlWithProto);
 
   // ~~~~~~~~~~~ //
   // 1. Pathname //
@@ -222,8 +224,9 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
   // 2. Querystring //
   // ~~~~~~~~~~~~~~ //
 
-  if (parsedUrl.query) {
-    const qsParams = deconstructQueryStringToParams(parsedUrl.query, true, { strictNullHandling });
+  const rawQuery = parsedUrl.search.startsWith('?') ? parsedUrl.search.slice(1) : parsedUrl.search;
+  if (rawQuery) {
+    const qsParams = deconstructQueryStringToParams(rawQuery, true, { strictNullHandling });
     const encodedQsParams = [];
     for (const { name, value } of qsParams) {
       encodedQsParams.push({
@@ -232,11 +235,11 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
       });
     }
 
-    parsedUrl.query = buildQueryStringFromParams(encodedQsParams, true, { strictNullHandling });
-    parsedUrl.search = `?${parsedUrl.query}`;
+    const query = buildQueryStringFromParams(encodedQsParams, true, { strictNullHandling });
+    parsedUrl.search = query ? `?${query}` : '';
   }
 
-  return urlFormat(parsedUrl);
+  return parsedUrl.toString();
 };
 
 /**

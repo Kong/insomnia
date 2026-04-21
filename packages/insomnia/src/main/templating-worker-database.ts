@@ -7,18 +7,14 @@ import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
-import type { CloudProviderCredential } from '~/insomnia-data';
+import type { CloudProviderCredential, Request as DBRequest, RequestGroup, Response, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { getBodyBuffer, readCurlResponse } from '~/models/helpers/response-operations';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
-import * as models from '../models';
-import type { Request as DBRequest } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import type { Workspace } from '../models/workspace';
+import type * as models from '../models';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
@@ -91,27 +87,27 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return crypto.createHash('md5').update(body.input).digest(body.encoding);
   },
   'request.getById': async (body: { id: string }) => {
-    return await models.request.getById(body.id);
+    return await services.request.getById(body.id);
   },
   'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: models.AllTypes[] }) => {
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
   },
   'workspace.getById': async (body: { id: string }) => {
-    return await models.workspace.getById(body.id);
+    return await services.workspace.getById(body.id);
   },
   'oAuth2Token.getByRequestId': async (body: { parentId: string }) => {
     return await services.oAuth2Token.getByParentId(body.parentId);
   },
   'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
-    return await models.cookieJar.getOrCreateForParentId(body.parentId);
+    return await services.cookieJar.getOrCreateForParentId(body.parentId);
   },
   'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
-    const cookies = await models.cookieJar.getOrCreateForParentId(body.parentId);
+    const cookies = await services.cookieJar.getOrCreateForParentId(body.parentId);
     const jar = jarFromCookies(cookies.cookies);
     return jar.getCookiesSync(body.url);
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
-    return await models.response.getLatestForRequestId(body.requestId, body.environmentId);
+    return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
     return await getBodyBuffer(body.response, body.readFailureValue);
@@ -177,7 +173,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       timelinePath,
       responseId,
     );
-    return await models.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
+    return await services.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
   },
   // use libcurl to send request without side effects(do not write to database about request and response)
   'network.sendRequestWithoutSideEffects': async (body: {
@@ -289,5 +285,25 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       }
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
+  },
+  // execute the plugin exported main action with the given parameters
+  'plugin.executeBundlePluginMainAction': async (body: {
+    pluginName: string;
+    actionName: string;
+    context?: Record<string, any>;
+    params?: Record<string, any>;
+  }) => {
+    const { pluginName, actionName, context, params } = body;
+    const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
+    if (appBundlePluginNames.includes(pluginName)) {
+      const module = getBundlePluginModule(pluginName);
+      const pluginActions = module?.unsafePluginMainActions || [];
+      const targetAction = pluginActions.find(action => action.name === actionName);
+      if (targetAction) {
+        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
+        return targetAction.action({ ...commonContext, ...context }, params);
+      }
+    }
+    throw new Error(`Unsupported action named ${actionName} for plugin ${pluginName}`);
   },
 };

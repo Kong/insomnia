@@ -1,13 +1,16 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 import { Banner } from '~/basic-components/banner';
 import { Icon } from '~/basic-components/icon';
 import type { GitCredentials, GitRepository } from '~/insomnia-data';
+import {
+  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  useGitProviderCompleteSignInFetcher,
+} from '~/routes/git-credentials.complete-sign-in';
 import { useInitSignInToGitProviderFetcher } from '~/routes/git-credentials.init-sign-in';
-import { useGitProviderUpdateSignInFetcher } from '~/routes/git-credentials.update-sign-in';
 
 import { isOAuthAccessTokenExpired, shouldShowHttp40OAuthReauthHint } from './git-oauth-auth-utils';
 
@@ -35,17 +38,26 @@ export const GitOauthAuthBanner: FC<{
   const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
   const [error, setError] = useState('');
   const initSignInFetcher = useInitSignInToGitProviderFetcher();
-  const updateSignInFetcher = useGitProviderUpdateSignInFetcher();
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
 
   const initSignInError = getErrorResult(initSignInFetcher.data);
-  const updateSignInError = getErrorResult(updateSignInFetcher.data);
+  const completeSignInError = getErrorResult(completeSignInFetcher.data);
 
+  const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
-    if (updateSignInFetcher.data && !updateSignInError) {
+    const prevState = prevCompleteSignInStateRef.current;
+    prevCompleteSignInStateRef.current = completeSignInFetcher.state;
+
+    if (
+      (prevState === 'submitting' || prevState === 'loading') &&
+      completeSignInFetcher.state === 'idle' &&
+      completeSignInFetcher.data &&
+      !completeSignInError
+    ) {
       setIsReauthModalOpen(false);
       setError('');
     }
-  }, [updateSignInFetcher.data, updateSignInError]);
+  }, [completeSignInFetcher.state, completeSignInFetcher.data, completeSignInError]);
 
   const expiredByExpiresAt = isOAuthAccessTokenExpired(selectedCredential);
   const http40Fallback =
@@ -64,20 +76,20 @@ export const GitOauthAuthBanner: FC<{
     <div className="flex flex-col gap-2">
       <Banner
         type="warning"
-        className="bg-[rgba(var(--color-danger-rgb),0.5)] p-2 text-(--color-font-danger)"
+        className="gap-2 bg-[rgba(var(--color-danger-rgb),0.5)] p-2 text-(--color-font-danger)"
         message={
           <span>
             This connection has expired.{' '}
             <Button
               type="button"
-              className="inline cursor-pointer border-0 bg-transparent p-0 text-(--color-surprise) underline"
+              className="inline cursor-pointer border-0 bg-transparent p-0 underline"
               onPress={() => {
                 setIsReauthModalOpen(true);
                 setError('');
                 initSignInFetcher.submit({ provider: provider.type });
               }}
             >
-              Reauthenticate with {provider.displayName}
+              Re-authenticate with {provider.displayName}
             </Button>{' '}
             to continue.
           </span>
@@ -99,7 +111,7 @@ export const GitOauthAuthBanner: FC<{
             {({ close }) => (
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-2">
-                  <Heading className="text-2xl">Reauthenticate {provider.displayName} Credential</Heading>
+                  <Heading className="text-2xl">Re-authenticate {provider.displayName} Credential</Heading>
                   <Button
                     className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={close}
@@ -130,7 +142,7 @@ export const GitOauthAuthBanner: FC<{
                         return;
                       }
 
-                      updateSignInFetcher.submit({ provider: provider.type, code, state });
+                      completeSignInFetcher.submit({ provider: provider.type, code, state });
                     }
                   }}
                 >
@@ -155,10 +167,10 @@ export const GitOauthAuthBanner: FC<{
                       {error}
                     </p>
                   )}
-                  {(initSignInError || updateSignInError) && (
+                  {(initSignInError || completeSignInError) && (
                     <p className="margin-bottom-sm flex items-start gap-2 rounded-xs border border-solid border-(--color-danger) bg-(--color-danger-bg) p-2 text-(--color-danger)">
                       <Icon icon="exclamation-triangle" className="mt-1 size-4" />
-                      <span>{initSignInError || updateSignInError}</span>
+                      <span>{initSignInError || completeSignInError}</span>
                     </p>
                   )}
                 </form>

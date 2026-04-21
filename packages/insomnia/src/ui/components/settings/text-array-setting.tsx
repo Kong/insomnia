@@ -4,11 +4,11 @@ import { ListBox, ListBoxItem } from 'react-aria-components';
 import { useRootLoaderData } from '~/root';
 import { invariant } from '~/utils/invariant';
 
-import { validateFolderInput } from '../../../common/misc';
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
+import { validateFolderInput } from './folder-path';
 
 export const TextArraySetting: FC<{
   disabled?: InputHTMLAttributes<HTMLInputElement>['disabled'];

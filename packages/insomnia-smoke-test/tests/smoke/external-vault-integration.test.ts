@@ -46,6 +46,23 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByRole('textbox', { name: 'Secret Id:' }).fill('secret-id');
   await page.getByRole('dialog').getByRole('button', { name: 'Create', exact: true }).click();
   await expect.soft(page.getByRole('cell', { name: hashicorpCredentialName })).toBeVisible();
+  // test azure credential should open new browser window with correct url
+  // Replace shell.openExternal
+  await app.evaluate(({ shell }) => {
+    shell.openExternal = async url => {
+      // @ts-expect-error -- add url to globalThis to verify the url in test
+      globalThis.__lastOpenedExternalUrl = url;
+      return;
+    };
+  });
+  await page.getByRole('button', { name: 'Create Cloud Credential' }).click();
+  await page.getByRole('menuitemradio', { name: 'Azure' }).click();
+  await page.getByText('Authenticate With Azure').first().click();
+  // @ts-expect-error -- add url to globalThis to verify the url in test
+  const azureAuthUrl = await app.evaluate(() => globalThis.__lastOpenedExternalUrl);
+  expect.soft(azureAuthUrl).toContain('https://login.microsoftonline.com/');
+  await page.locator('#close-add-cloud-credential-modal').click();
+
   // close the settings
   await page.locator('.app').press('Escape');
 

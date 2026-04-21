@@ -3,7 +3,7 @@ import { parse as urlParse } from 'node:url';
 import aws4 from 'aws4';
 import clone from 'clone';
 
-import type { RequestAuthentication } from '~/models/request';
+import type { RequestAuthentication } from '~/insomnia-data';
 
 import { CONTENT_TYPE_FORM_DATA } from '../../common/constants';
 import {

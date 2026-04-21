@@ -3,6 +3,8 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import type { MockRoute, MockServer, Response } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
@@ -18,10 +20,6 @@ import {
 } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import * as models from '../../../models';
-import type { MockRoute } from '../../../models/mock-route';
-import type { MockServer } from '../../../models/mock-server';
-import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
@@ -384,7 +382,7 @@ const PreviewModeDropdown = ({
             icon="save"
             label="Export as HAR"
             onClick={async () => {
-              const activeRequest = await models.request.getById(activeResponse.parentId);
+              const activeRequest = await services.request.getById(activeResponse.parentId);
               const { canceled, filePath } = await window.dialog.showSaveDialog({
                 title: 'Save Full Response',
                 buttonLabel: 'Save',

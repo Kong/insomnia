@@ -17,9 +17,10 @@ import { useParams } from 'react-router';
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
-import { type GitCredentials, type GitRepository, models, type ProviderEmail } from '~/insomnia-data';
+import type { GitCredentials, GitRepository, Project, ProviderEmail } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import { useGitProjectRepoFetcher } from '~/routes/git.repo';
+import { useGitValidateCredentialsFetcher } from '~/routes/git.validate-credentials';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
@@ -32,30 +33,22 @@ import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
-import {
-  EMPTY_GIT_PROJECT_ID,
-  getDefaultProjectStorageType,
-  isGitProject,
-  isRemoteProject,
-  type Project,
-} from '../../../models/project';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
-
 
 const FORMID = 'git-repo-form';
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
+  if (storageType === 'git' && !models.project.isGitProject(project)) {
     return true;
   }
 
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
+  if (storageType === 'local' && (models.project.isRemoteProject(project) || models.project.isGitProject(project))) {
     return true;
   }
 
-  if (storageType === 'remote' && !isRemoteProject(project)) {
+  if (storageType === 'remote' && !models.project.isRemoteProject(project)) {
     return true;
   }
 
@@ -90,7 +83,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   const isLightTheme = useIsLightTheme();
 
   const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(
-    getDefaultProjectStorageType(storageRules, project),
+    models.project.getDefaultProjectStorageType(storageRules, project),
   );
 
   const { activeView, setActiveView } = useActiveView();
@@ -100,6 +93,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   }, [project, storageType]);
 
   const [error, setError] = useState<string | null>(null);
+  const [isGitCredentialInvalid, setIsGitCredentialInvalid] = useState(false);
 
   const [projectData, setProjectData] = useState<{
     name: string;
@@ -117,7 +111,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
-  const gitRepoDataFetcher = useGitProjectRepoFetcher();
+  const validateCredentialsFetcher = useGitValidateCredentialsFetcher();
   const updateProjectFetcher = useProjectUpdateActionFetcher();
 
   const insomniaFiles =
@@ -158,14 +152,15 @@ export const ProjectSettingsForm: FC<Props> = ({
   const showGitConnectionInfo =
     storageType === 'git' &&
     !isSwitchingStorageType(project!, storageType) &&
-    project?.gitRepositoryId !== EMPTY_GIT_PROJECT_ID &&
+    project?.gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID &&
     gitRepository?.credentialsId &&
     selectedProvider;
 
   const showGitRepoForm =
     storageType === 'git' &&
     ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
-      (!isSwitchingStorageType(project!, storageType) && project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID));
+      (!isSwitchingStorageType(project!, storageType) &&
+        project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID));
 
   const emailsFetcher = useGitProviderEmailsLoaderFetcher();
   const isLoadingEmails = emailsFetcher.state !== 'idle';
@@ -196,22 +191,26 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [canFetchEmails, selectedCredential, emailsFetcher]);
 
-  // Load git repo metadata (and surface auth errors) for HTTP 4xx fallback when expiresAt is unknown.
-  useEffect(() => {
-    if (
-      showGitConnectionInfo &&
-      gitRepository?.uri &&
-      gitRepository?._id &&
-      project?._id &&
-      gitRepoDataFetcher.state === 'idle' &&
-      !gitRepoDataFetcher.data
-    ) {
-      gitRepoDataFetcher.load({ projectId: project._id });
-    }
-  }, [showGitConnectionInfo, gitRepository?.uri, gitRepository?._id, project?._id, gitRepoDataFetcher]);
+  const validateCredentialsFetcherLoad = validateCredentialsFetcher.load;
 
-  const gitRepoLoadErrors =
-    gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? gitRepoDataFetcher.data.errors : undefined;
+  // Load credentials data (and surface auth errors) for HTTP 4xx fallback when expiresAt is unknown.
+  // No data guard here so that a project ID change always re-fetches fresh data.
+  useEffect(() => {
+    if (showGitConnectionInfo && gitRepository?.uri && gitRepository?._id && project?._id) {
+      validateCredentialsFetcherLoad({ projectId: project._id });
+    }
+  }, [
+    showGitConnectionInfo,
+    gitRepository?.uri,
+    gitRepository?._id,
+    project?._id,
+    validateCredentialsFetcherLoad,
+  ]);
+
+  const credentialsValidationErrors =
+    validateCredentialsFetcher.data && 'errors' in validateCredentialsFetcher.data
+      ? validateCredentialsFetcher.data.errors
+      : undefined;
 
   return (
     <>
@@ -256,16 +255,20 @@ export const ProjectSettingsForm: FC<Props> = ({
             <Banner
               type="info"
               className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
-              title={isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Cloud Sync project'}
+              title={
+                models.project.isGitProject(project!)
+                  ? 'Removing Git Sync connection'
+                  : 'Converting to Cloud Sync project'
+              }
               message={
-                isGitProject(project!)
+                models.project.isGitProject(project!)
                   ? 'Changing this project to a Cloud Sync project will remove the connection to your repo. This does not delete the project files on the remote repo.'
                   : 'Anything added in the project will be securely synced to the Insomnia cloud and enables you to collaborate on projects with others. '
               }
               footer={
                 <LearnMoreLink
                   href={`https://developer.konghq.com/insomnia/storage/${
-                    isGitProject(project!)
+                    models.project.isGitProject(project!)
                       ? '#what-happens-if-i-change-a-git-sync-project-into-a-cloud-sync-project'
                       : '#can-i-change-a-local-vault-project-into-a-cloud-sync-project'
                   }`}
@@ -279,16 +282,20 @@ export const ProjectSettingsForm: FC<Props> = ({
             <Banner
               type="info"
               className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
-              title={isGitProject(project!) ? 'Removing Git Sync connection' : 'Converting to Local Vault project'}
+              title={
+                models.project.isGitProject(project!)
+                  ? 'Removing Git Sync connection'
+                  : 'Converting to Local Vault project'
+              }
               message={
-                isGitProject(project!)
+                models.project.isGitProject(project!)
                   ? 'Changing this project to a Local Vault project will remove the connection to your repo. This does not delete the project files on the remote repo.'
                   : 'Your files will now be stored on your local machine. You will no longer be able to collaborate with others on this project.'
               }
               footer={
                 <LearnMoreLink
                   href={`https://developer.konghq.com/insomnia/storage/${
-                    isGitProject(project!)
+                    models.project.isGitProject(project!)
                       ? '#can-i-change-a-git-sync-project-into-a-local-vault-project'
                       : '#can-i-change-a-cloud-sync-project-into-a-local-vault-project'
                   }`}
@@ -311,10 +318,10 @@ export const ProjectSettingsForm: FC<Props> = ({
               <GitOauthAuthBanner
                 selectedCredential={selectedCredential}
                 gitRepository={gitRepository}
-                repoLoadErrors={gitRepoLoadErrors}
+                repoLoadErrors={credentialsValidationErrors}
                 provider={selectedProvider}
               />
-              {showEmailSelector ? (
+              {showEmailSelector && !credentialsValidationErrors?.length ? (
                 <div className="flex flex-col gap-2">
                   {isLoadingEmails ? (
                     <div className="flex items-center gap-2 text-sm">
@@ -392,7 +399,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                     </div>
                   )}
                 </div>
-              ) : selectedCredential?.author.email ? (
+              ) : selectedCredential?.author.email && !credentialsValidationErrors?.length ? (
                 <div className="text-[12px]">
                   <div className="flex">
                     <div className="w-[110px] font-semibold">Author Email</div>
@@ -412,6 +419,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               credentials={credentials}
               providers={providers}
               formId={FORMID}
+              onCredentialValidationChange={setIsGitCredentialInvalid}
             />
           )}
         </div>
@@ -441,10 +449,12 @@ export const ProjectSettingsForm: FC<Props> = ({
             {storageType === 'git' &&
             !projectData.connectRepositoryLater &&
             (isSwitchingStorageType(project!, storageType) ||
-              project?.gitRepositoryId === EMPTY_GIT_PROJECT_ID ||
+              project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID ||
               !gitRepository?.credentialsId) ? (
               <Button
-                isDisabled={!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)}
+                isDisabled={
+                  (!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) || isGitCredentialInvalid
+                }
                 form={FORMID}
                 type="submit"
                 className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"

@@ -1,38 +1,23 @@
 // models - export models that define the structure of the data and any related functions such as init, type guards
-import * as apiSpec from './api-spec';
-import * as caCertificate from './ca-certificate';
-import * as clientCertificate from './client-certificate';
-import * as cloudCredential from './cloud-credential';
-import * as gitCredentials from './git-credentials';
-import * as gitRepository from './git-repository';
-import * as mcpPayload from './mcp-payload';
-import * as mcpRequest from './mcp-request';
-import * as mcpResponse from './mcp-response';
-import * as oAuth2Token from './o-auth-2-token';
-import * as pluginData from './plugin-data';
-import * as protoDirectory from './proto-directory';
-import * as protoFile from './proto-file';
-import * as runnerTestResult from './runner-test-result';
-import * as settings from './settings';
-import * as stats from './stats';
-import * as userSession from './user-session';
+import * as dbModels from './db-models';
 
-export const models = {
-  apiSpec,
-  caCertificate,
-  clientCertificate,
-  cloudCredential,
-  gitCredentials,
-  gitRepository,
-  mcpPayload,
-  mcpRequest,
-  mcpResponse,
-  oAuth2Token,
-  pluginData,
-  protoDirectory,
-  protoFile,
-  runnerTestResult,
-  settings,
-  stats,
-  userSession,
-} as const;
+export * from './db-models';
+
+// Type assertion to ensure dbModels has the expected structure
+dbModels satisfies Record<
+  string,
+  {
+    type: string;
+    name: string;
+    prefix: string;
+    optionalKeys?: string[];
+    canDuplicate: boolean;
+    canSync?: boolean;
+    init: () => unknown;
+    rewriteReferences?: (doc: any, idMapping: Map<string, string>) => any;
+  }
+>;
+
+export const all = () => Object.values(dbModels);
+
+export const types = () => all().map(model => model.type);

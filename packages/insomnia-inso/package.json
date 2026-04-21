@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-inso",
-  "version": "12.5.0-beta.0",
+  "version": "12.5.1-alpha.0",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
@@ -45,7 +45,7 @@
     "artifacts": "esr src/scripts/artifacts.ts"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "esbuild": "^0.25.10",
     "esbuild-runner": "^2.2.2",
     "shellwords": "^1.0.1"

@@ -1,71 +1,44 @@
 import { models } from '~/insomnia-data';
 import type { AllTypes, BaseModel } from '~/models/types';
 
-import { generateId } from '../common/misc';
-import { typedKeys } from '../utils';
-import * as _cookieJar from './cookie-jar';
-import * as _environment from './environment';
-import * as _grpcRequest from './grpc-request';
-import * as _grpcRequestMeta from './grpc-request-meta';
-import * as _mockRoute from './mock-route';
-import * as _mockServer from './mock-server';
-import * as _project from './project';
-import * as _request from './request';
-import * as _requestGroup from './request-group';
-import * as _requestGroupMeta from './request-group-meta';
-import * as _requestMeta from './request-meta';
-import * as _requestVersion from './request-version';
-import * as _response from './response';
-import * as _socketIOPayload from './socket-io-payload';
-import * as _socketIORequest from './socket-io-request';
-import * as _socketIoResponse from './socket-io-response';
-import * as _unitTest from './unit-test';
-import * as _unitTestResult from './unit-test-result';
-import * as _unitTestSuite from './unit-test-suite';
-import * as _webSocketPayload from './websocket-payload';
-import * as _webSocketRequest from './websocket-request';
-import * as _webSocketResponse from './websocket-response';
-import * as _workspace from './workspace';
-import * as _workspaceMeta from './workspace-meta';
-
 export type { AllTypes, BaseModel };
 // Reference to each model
 export const apiSpec = models.apiSpec;
 export const clientCertificate = models.clientCertificate;
 export const caCertificate = models.caCertificate;
-export const cookieJar = _cookieJar;
-export const environment = _environment;
+export const cookieJar = models.cookieJar;
+export const environment = models.environment;
 export const gitCredentials = models.gitCredentials;
 export const gitRepository = models.gitRepository;
-export const mockServer = _mockServer;
-export const mockRoute = _mockRoute;
 export const oAuth2Token = models.oAuth2Token;
 export const pluginData = models.pluginData;
-export const request = _request;
-export const requestGroup = _requestGroup;
-export const requestGroupMeta = _requestGroupMeta;
-export const requestMeta = _requestMeta;
-export const requestVersion = _requestVersion;
+export const mockServer = models.mockServer;
+export const mockRoute = models.mockRoute;
+export const request = models.request;
+export const requestGroup = models.requestGroup;
+export const requestGroupMeta = models.requestGroupMeta;
+export const requestMeta = models.requestMeta;
+export const requestVersion = models.requestVersion;
 export const runnerTestResult = models.runnerTestResult;
-export const response = _response;
+export const response = models.response;
 export const settings = models.settings;
-export const project = _project;
+export const project = models.project;
 export const stats = models.stats;
-export const unitTest = _unitTest;
-export const unitTestSuite = _unitTestSuite;
-export const unitTestResult = _unitTestResult;
+export const unitTest = models.unitTest;
+export const unitTestSuite = models.unitTestSuite;
+export const unitTestResult = models.unitTestResult;
 export const protoFile = models.protoFile;
 export const protoDirectory = models.protoDirectory;
-export const grpcRequest = _grpcRequest;
-export const grpcRequestMeta = _grpcRequestMeta;
-export const webSocketPayload = _webSocketPayload;
-export const webSocketRequest = _webSocketRequest;
-export const socketIORequest = _socketIORequest;
-export const socketIOPayload = _socketIOPayload;
-export const socketIOResponse = _socketIoResponse;
-export const webSocketResponse = _webSocketResponse;
-export const workspace = _workspace;
-export const workspaceMeta = _workspaceMeta;
+export const grpcRequest = models.grpcRequest;
+export const grpcRequestMeta = models.grpcRequestMeta;
+export const workspace = models.workspace;
+export const workspaceMeta = models.workspaceMeta;
+export const webSocketPayload = models.webSocketPayload;
+export const webSocketRequest = models.webSocketRequest;
+export const webSocketResponse = models.webSocketResponse;
+export const socketIORequest = models.socketIORequest;
+export const socketIOPayload = models.socketIOPayload;
+export const socketIOResponse = models.socketIOResponse;
 export * as organization from './organization';
 export const userSession = models.userSession;
 export const cloudCredential = models.cloudCredential;
@@ -73,57 +46,8 @@ export const mcpRequest = models.mcpRequest;
 export const mcpPayload = models.mcpPayload;
 export const mcpResponse = models.mcpResponse;
 
-export function all() {
-  // NOTE: This list should be from most to least specific (ie. parents above children)
-  // For example, stats, settings, project and workspace are global models, with project and workspace being the top-most parents,
-  // so they must be at the top
-  return [
-    stats,
-    settings,
-    project,
-    workspace,
-    workspaceMeta,
-    environment,
-    gitCredentials,
-    gitRepository,
-    cookieJar,
-    apiSpec,
-    requestGroup,
-    requestGroupMeta,
-    request,
-    requestVersion,
-    requestMeta,
-    response,
-    mockServer,
-    mockRoute,
-    oAuth2Token,
-    caCertificate,
-    clientCertificate,
-    pluginData,
-    unitTestSuite,
-    unitTestResult,
-    unitTest,
-    protoFile,
-    protoDirectory,
-    grpcRequest,
-    grpcRequestMeta,
-    runnerTestResult,
-    webSocketPayload,
-    webSocketRequest,
-    webSocketResponse,
-    userSession,
-    socketIORequest,
-    socketIOPayload,
-    socketIOResponse,
-    cloudCredential,
-    mcpRequest,
-    mcpResponse,
-    mcpPayload,
-  ] as const;
-}
-export function types() {
-  return all().map(model => model.type);
-}
+export const all = models.all;
+export const types = models.types;
 export const isValidType = (type: string): type is AllTypes => {
   return types().includes(type as AllTypes);
 };
@@ -166,51 +90,6 @@ export function rewriteReferences<T extends BaseModel>(doc: T, idMapping: Map<st
   return 'rewriteReferences' in model
     ? (model.rewriteReferences as unknown as (doc: T, idMapping: Map<string, string>) => T)(doc, idMapping)
     : doc;
-}
-
-export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
-  const model = getModel(type);
-
-  if (!model) {
-    const choices = all()
-      .map(m => m.type)
-      .join(', ');
-    throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
-  }
-
-  // Define global default fields
-  const objectDefaults = Object.assign(
-    {},
-    {
-      _id: null,
-      type: type,
-      parentId: null,
-      modified: Date.now(),
-      created: Date.now(),
-    },
-    model.init(),
-  );
-  const fullObject = Object.assign({}, objectDefaults, ...sources);
-
-  // Generate an _id if there isn't one yet
-  if (!fullObject._id) {
-    fullObject._id = generateId(model.prefix);
-  }
-
-  // Migrate the model
-  // NOTE: Do migration before pruning because we might need to look at those fields
-  const migratedDoc = ('migrate' in model ? model.migrate : (doc: T) => doc)(fullObject);
-  // optional keys do not generated in init method but should allow update.
-  // If we put those keys in init method, all related models will show as modified in git sync.
-  const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
-  // Prune extra keys from doc
-  for (const key of typedKeys(migratedDoc)) {
-    if (!(key in objectDefaults) && !modelOptionalKeys.includes(key)) {
-      delete migratedDoc[key];
-    }
-  }
-
-  return migratedDoc as T;
 }
 
 // Use function instead of object to avoid issues with circular dependencies

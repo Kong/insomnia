@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, { type FC, type PropsWithChildren } from 'react';
 
-import type { RequestAccordionKeys } from '~/models/request-meta';
+import type { RequestAccordionKeys } from '~/insomnia-data';
 import {
   type RequestLoaderData,
   useRequestLoaderData,

@@ -17,6 +17,18 @@ interface CommitGitRepoData {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = (await request.json()) as CommitGitRepoData;
 
+  if (data.push) {
+    // Validate credentials before committing to prevent orphaned local commits
+    // when the subsequent push would fail due to authentication issues.
+    const validationResult = await window.main.git.validateGitRepositoryCredentials({
+      projectId: data.projectId,
+      workspaceId: data.workspaceId,
+    });
+    if (validationResult.errors && validationResult.errors.length > 0) {
+      return validationResult;
+    }
+  }
+
   await window.main.git.multipleCommitToGitRepo({
     projectId: data.projectId,
     workspaceId: data.workspaceId,

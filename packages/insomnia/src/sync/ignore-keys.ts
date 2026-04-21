@@ -1,5 +1,7 @@
+import type { Workspace } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
+
 import type { BaseModel } from '../models';
-import { isWorkspace, type Workspace } from '../models/workspace';
 
 // Key for VCS to delete before computing changes
 const DELETE_KEY: keyof BaseModel = 'modified';
@@ -21,7 +23,7 @@ export const shouldIgnoreKey = <T extends BaseModel>(key: keyof T, doc: T) => {
     return true;
   }
 
-  if (isWorkspace(doc)) {
+  if (models.workspace.isWorkspace(doc)) {
     return key in RESET_WORKSPACE_KEYS;
   }
 
@@ -34,7 +36,7 @@ export const deleteKeys = <T extends BaseModel>(doc: T) => {
 };
 
 export const resetKeys = <T extends BaseModel>(doc: T) => {
-  if (isWorkspace(doc)) {
+  if (models.workspace.isWorkspace(doc)) {
     (Object.keys(RESET_WORKSPACE_KEYS) as (keyof typeof RESET_WORKSPACE_KEYS)[]).forEach(key => {
       // @ts-expect-error -- mapping unsoundness
       doc[key] = RESET_WORKSPACE_KEYS[key];

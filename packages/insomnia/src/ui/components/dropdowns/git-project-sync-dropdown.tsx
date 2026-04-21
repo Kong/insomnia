@@ -15,9 +15,8 @@ import {
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { GitRepository } from '~/insomnia-data';
+import type { GitProject, GitRepository } from '~/insomnia-data';
 import { isScratchpadOrganizationId } from '~/models/organization';
-import type { GitProject } from '~/models/project';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
@@ -27,6 +26,7 @@ import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizatio
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { SegmentEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
@@ -44,7 +44,7 @@ import {
 } from '../modals/git-project-staging-modal';
 import { GitPullRequiredModal } from '../modals/git-pull-required-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
-import { showToast } from '../toast-notification';
+import { queue, showToast } from '../toast-notification';
 interface Props {
   gitRepository?: GitRepository;
   activeProject: GitProject;
@@ -166,6 +166,33 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
       prevHadPullError.current = false;
 
+      if (errors.includes(GitVCSOperationErrors.AuthenticationRequiredError)) {
+        let toastKey = '';
+        toastKey = showToast(
+          {
+            icon,
+            title: 'Push failed',
+            description: (
+              <span>
+                Connection has expired.{' '}
+                <button
+                  className="underline hover:opacity-70"
+                  onClick={() => {
+                    queue.close(toastKey);
+                    showSettingsModal({ tab: 'credentials' });
+                  }}
+                >
+                  Re-authenticate
+                </button>
+              </span>
+            ),
+            status: 'error',
+          },
+          { timeout: null },
+        );
+        return;
+      }
+
       // Other errors
       showToast({
         icon,
@@ -216,6 +243,32 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   useEffect(() => {
     const errors = [...(gitFetchFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
+      if (errors.includes(GitVCSOperationErrors.AuthenticationRequiredError)) {
+        let toastKey = '';
+        toastKey = showToast(
+          {
+            icon,
+            title: 'Fetch failed',
+            description: (
+              <span>
+                Connection has expired.{' '}
+                <button
+                  className="underline hover:opacity-70"
+                  onClick={() => {
+                    queue.close(toastKey);
+                    showSettingsModal({ tab: 'credentials' });
+                  }}
+                >
+                  Re-authenticate
+                </button>
+              </span>
+            ),
+            status: 'error',
+          },
+          { timeout: null },
+        );
+        return;
+      }
       setOperationError(errors.join('\n'));
       showToast({
         icon,
@@ -304,12 +357,38 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           callbackRef: gitProjectStagingModalCallbackPropsRef,
         });
       } else if ('errors' in pullResult && pullResult.errors) {
-        showToast({
-          icon,
-          title: `Pull failed`,
-          status: 'error',
-        });
-        setOperationError(pullResult.errors.join('\n'));
+        if (pullResult.errors.includes(GitVCSOperationErrors.AuthenticationRequiredError)) {
+          let toastKey = '';
+          toastKey = showToast(
+            {
+              icon,
+              title: 'Pull failed',
+              description: (
+                <span>
+                  Connection has expired.{' '}
+                  <button
+                    className="underline hover:opacity-70"
+                    onClick={() => {
+                      queue.close(toastKey);
+                      showSettingsModal({ tab: 'credentials' });
+                    }}
+                  >
+                    Re-authenticate
+                  </button>
+                </span>
+              ),
+              status: 'error',
+            },
+            { timeout: null },
+          );
+        } else {
+          showToast({
+            icon,
+            title: `Pull failed`,
+            status: 'error',
+          });
+          setOperationError(pullResult.errors.join('\n'));
+        }
         setIsPulling(false);
 
         return {
@@ -332,6 +411,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               .continueMerge({
                 projectId,
                 handledMergeConflicts: conflicts,
+                autoResolvedConflicts: pullResult.autoResolvedConflicts,
                 commitMessage: pullResult.commitMessage,
                 commitParent: pullResult.commitParent,
               })

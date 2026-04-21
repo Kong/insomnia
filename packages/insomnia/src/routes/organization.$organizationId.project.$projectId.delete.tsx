@@ -4,7 +4,6 @@ import { href, redirect } from 'react-router';
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
@@ -15,7 +14,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   const user = await services.userSession.getOrCreate();
@@ -39,7 +38,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     }
 
     await services.stats.incrementDeletedRequestsForDescendents(project);
-    await models.project.remove(project);
+    await services.project.remove(project);
 
     await database.flushChanges(bufferId);
 

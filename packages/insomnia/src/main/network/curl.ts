@@ -7,15 +7,12 @@ import electron, { BrowserWindow } from 'electron';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import type { CookieJar, RequestAuthentication, RequestHeader, Response } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
 import { readCurlResponse } from '~/models/helpers/response-operations';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
-import * as models from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
-import type { RequestAuthentication, RequestHeader } from '../../models/request';
-import type { Response } from '../../models/response';
 import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { invariant } from '../../utils/invariant';
@@ -129,7 +126,7 @@ const openCurlConnection = async (
     console.warn('Connection still open to ' + existingConnection.getInfo(Curl.info.EFFECTIVE_URL));
     return;
   }
-  const request = await models.request.getById(options.requestId);
+  const request = await services.request.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     console.warn('Could not find request for ' + options.requestId);
@@ -144,9 +141,9 @@ const openCurlConnection = async (
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
-  const environment = await models.environment.getById(environmentId || 'n/a');
+  const environment = await services.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await services.caCertificate.getByParentId(options.workspaceId);
@@ -196,7 +193,7 @@ const openCurlConnection = async (
         window.webContents.send(readyStateChannel, false);
       }
       if (errorCode) {
-        const res = await models.response.getById(responseId);
+        const res = await services.response.getById(responseId);
         if (!res) {
           createErrorResponse(
             responseId,
@@ -265,8 +262,8 @@ const openCurlConnection = async (
           bodyCompression: null,
         };
         const settings = await services.settings.get();
-        const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
-        models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+        const res = await services.response.create(responsePatch, settings.maxHistoryResponses);
+        services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
         if (request.settingStoreCookies) {
           const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
@@ -283,7 +280,7 @@ const openCurlConnection = async (
             );
             const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
             if (hasCookiesToPersist) {
-              await models.cookieJar.update(options.cookieJar, { cookies });
+              await services.cookieJar.update(options.cookieJar, { cookies });
               timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
             }
           }
@@ -352,8 +349,8 @@ const createErrorResponse = async (
     statusMessage: 'Error',
     error: message,
   };
-  const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  const res = await services.response.create(responsePatch, settings.maxHistoryResponses);
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
@@ -404,7 +401,7 @@ const closeCurlConnection = (_event: Electron.IpcMainInvokeEvent, options: { req
 const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.isOpen && curl.close());
 
 const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> => {
-  const response = await models.response.getById(options.responseId);
+  const response = await services.response.getById(options.responseId);
   if (!response || !response.bodyPath) {
     return [];
   }

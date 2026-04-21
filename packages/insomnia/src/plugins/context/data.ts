@@ -1,8 +1,10 @@
+import type { Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+
 import { exportWorkspacesHAR } from '../../common/har';
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
-import * as models from '../../models';
-import type { Workspace } from '../../models/workspace';
+
 
 interface InsomniaExport {
   workspace?: Workspace;
@@ -13,12 +15,12 @@ type HarExport = Omit<InsomniaExport, 'format'>;
 
 const getWorkspaces = (activeProjectId?: string) => {
   if (activeProjectId) {
-    return models.workspace.findByParentId(activeProjectId);
+    return services.workspace.findByParentId(activeProjectId);
   }
   // This code path was kept in case there was ever a time when the app wouldn't have an active project.
   // In over 5 months of monitoring in production, we never saw this happen.
   // Keeping it for defensive purposes, but it's not clear if it's necessary.
-  return models.workspace.all();
+  return services.workspace.all();
 };
 
 // Only in the case of running unit tests from Inso can activeProjectId be undefined. This is because the concept of a project doesn't exist in git/insomnia sync or an export file

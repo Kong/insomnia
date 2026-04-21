@@ -3,10 +3,10 @@ import type { StorageRules } from 'insomnia-api';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
 
-import type { GitRepository } from '~/insomnia-data';
+import type { GitRepository, Project } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 
-import { getProjectStorageTypeLabel, isGitProject, isRemoteProject, type Project } from '../../../models/project';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -30,10 +30,10 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
   const deleteProjectFetcher = useProjectDeleteActionFetcher();
 
-  const isRemoteProjectInconsistent = isRemoteProject(project) && !storageRules.enableCloudSync;
+  const isRemoteProjectInconsistent = models.project.isRemoteProject(project) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent =
-    !isRemoteProject(project) && !isGitProject(project) && !storageRules.enableLocalVault;
-  const isGitProjectInconsistent = isGitProject(project) && !storageRules.enableGitSync;
+    !models.project.isRemoteProject(project) && !models.project.isGitProject(project) && !storageRules.enableLocalVault;
+  const isGitProjectInconsistent = models.project.isGitProject(project) && !storageRules.enableGitSync;
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitProjectInconsistent;
 
   const projectActionList: ProjectActionItem[] = [
@@ -50,7 +50,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
       action: (projectId: string, projectName: string) => {
         let message = `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`;
 
-        if (isGitProject(project)) {
+        if (models.project.isGitProject(project)) {
           message = `You are deleting the Git project "${projectName}". Deleting this project will not delete the remote repository but all your local changes will be lost. Do you really want to continue?`;
         }
 
@@ -97,7 +97,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
             offset={4}
             className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
           >
-            {`This project type is not allowed by the organization owner. You can manually convert it to use ${getProjectStorageTypeLabel(storageRules)}.`}
+            {`This project type is not allowed by the organization owner. You can manually convert it to use ${models.project.getProjectStorageTypeLabel(storageRules)}.`}
           </Tooltip>
         </TooltipTrigger>
       )}

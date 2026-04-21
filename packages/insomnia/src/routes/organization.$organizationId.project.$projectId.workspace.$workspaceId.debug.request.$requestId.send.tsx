@@ -1,19 +1,20 @@
-import { createWriteStream } from 'node:fs';
-import path from 'node:path';
-
 import contentDisposition from 'content-disposition';
 import { extension as mimeExtension } from 'mime-types';
 import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getContentDispositionHeader } from '~/common/misc';
-import { type ResponseInfo, type RunnerResultPerRequestPerIteration, services } from '~/insomnia-data';
+import type {
+  Environment,
+  RequestMeta,
+  ResponseInfo,
+  RunnerResultPerRequestPerIteration,
+  UserUploadEnvironment,
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
-import type { Environment, UserUploadEnvironment } from '~/models/environment';
-import { getBodyStream } from '~/models/helpers/response-operations';
-import type { RequestMeta } from '~/models/request-meta';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -64,7 +65,7 @@ export interface RunnerContextForRequest {
   responseId: string;
 }
 
-const writeToDownloadPath = (
+const writeToDownloadPath = async (
   downloadPathAndName: string,
   responsePatch: ResponsePatch,
   requestMeta: RequestMeta,
@@ -72,27 +73,25 @@ const writeToDownloadPath = (
 ) => {
   invariant(downloadPathAndName, 'filename should be set by now');
 
-  const to = createWriteStream(downloadPathAndName);
-  const readStream = getBodyStream(responsePatch);
-  if (!readStream || typeof readStream === 'string') {
-    return null;
-  }
-  readStream.pipe(to);
-
-  return new Promise(resolve => {
-    readStream.on('end', async () => {
+  try {
+    if (!responsePatch.bodyPath) {
+      responsePatch.error = `Failed to save to ${downloadPathAndName}: unable to read response body`;
+    } else {
+      await window.main.writeResponseBodyToFile({
+        sourcePath: responsePatch.bodyPath,
+        destinationPath: downloadPathAndName,
+        bodyCompression: responsePatch.bodyCompression,
+      });
       responsePatch.error = `Saved to ${downloadPathAndName}`;
-      const response = await models.response.create(responsePatch, maxHistoryResponses);
-      await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      resolve(null);
-    });
-    readStream.on('error', async err => {
-      console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-      const response = await models.response.create(responsePatch, maxHistoryResponses);
-      await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      resolve(null);
-    });
-  });
+    }
+  } catch (err) {
+    responsePatch.error = `Failed to save to ${downloadPathAndName}`;
+    console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+  }
+
+  const response = await services.response.create(responsePatch, maxHistoryResponses);
+  await services.requestMeta.update(requestMeta, { activeResponseId: response._id });
+  return null;
 };
 
 // Can fail with errors from:
@@ -125,7 +124,7 @@ export const sendActionImplementation = async (options: {
 
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
-  const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
+  const requestMeta = await services.requestMeta.getOrCreateByParentId(requestId);
   const transientVariables = nullableTransientVariables || {
     ...models.environment.init(),
     _id: uuidv4(),
@@ -148,7 +147,7 @@ export const sendActionImplementation = async (options: {
   );
 
   if ('error' in mutatedContext) {
-    const createdResponse = await models.response.create(
+    const createdResponse = await services.response.create(
       {
         _id: requestData.responseId,
         parentId: requestId,
@@ -159,7 +158,7 @@ export const sendActionImplementation = async (options: {
       },
       requestData.settings.maxHistoryResponses,
     );
-    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
+    await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
     return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
@@ -168,7 +167,7 @@ export const sendActionImplementation = async (options: {
     // cancel request running if skipRequest in pre-request script
 
     // create and update response to activeResponse
-    const createdResponse = await models.response.create(
+    const createdResponse = await services.response.create(
       {
         _id: requestData.responseId,
         parentId: requestId,
@@ -179,7 +178,7 @@ export const sendActionImplementation = async (options: {
       },
       requestData.settings.maxHistoryResponses,
     );
-    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
+    await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
     return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
@@ -223,7 +222,7 @@ export const sendActionImplementation = async (options: {
   window.main.completeExecutionStep({ requestId });
 
   if ('error' in response) {
-    const createdResponse = await models.response.create(
+    const createdResponse = await services.response.create(
       {
         _id: requestData.responseId,
         parentId: requestId,
@@ -234,7 +233,7 @@ export const sendActionImplementation = async (options: {
       },
       requestData.settings.maxHistoryResponses,
     );
-    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
+    await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
     return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
@@ -265,7 +264,7 @@ export const sendActionImplementation = async (options: {
   });
 
   if ('error' in postMutatedContext) {
-    const createdResponse = await models.response.create(
+    const createdResponse = await services.response.create(
       {
         _id: requestData.responseId,
         parentId: requestId,
@@ -276,7 +275,7 @@ export const sendActionImplementation = async (options: {
       },
       requestData.settings.maxHistoryResponses,
     );
-    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
+    await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
@@ -302,8 +301,8 @@ export const sendActionImplementation = async (options: {
     : baseResponsePatch;
 
   if (!shouldWriteToFile) {
-    const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
-    await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
+    const response = await services.response.create(responsePatch, requestData.settings.maxHistoryResponses);
+    await services.requestMeta.update(requestMeta, { activeResponseId: response._id });
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
 
@@ -312,8 +311,8 @@ export const sendActionImplementation = async (options: {
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
       : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
-    writeToDownloadPath(
-      path.join(requestMeta.downloadPath, name),
+    await writeToDownloadPath(
+      window.path.join(requestMeta.downloadPath, name),
       responsePatch,
       requestMeta,
       requestData.settings.maxHistoryResponses,
@@ -331,7 +330,7 @@ export const sendActionImplementation = async (options: {
     return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
   window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-  writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  await writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
   return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
 };
 
@@ -346,13 +345,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       ignoreUndefinedEnvVariable,
     });
 
-    const requestMeta = await models.requestMeta.getByParentId(requestId);
+    const requestMeta = await services.requestMeta.getByParentId(requestId);
 
     if (requestMeta?.activeResponseId) {
-      const response = await models.response.getById(requestMeta.activeResponseId);
+      const response = await services.response.getById(requestMeta.activeResponseId);
       if (response) {
         const settings = await services.settings.getOrCreate();
-        const activeRequest = await models.request.getById(requestId);
+        const activeRequest = await services.request.getById(requestId);
 
         if (activeRequest) {
           window.main.trackSegmentEvent({

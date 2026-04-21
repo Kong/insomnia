@@ -75,6 +75,9 @@ let organizationFeatures = {
     bulkImport: {
       enabled: true,
     },
+    konnectSync: {
+      enabled: true,
+    },
   },
 };
 

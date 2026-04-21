@@ -102,7 +102,7 @@ export const createStdioTransport = async (
       };
       const settings = await services.settings.get();
       const res = await services.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+      services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
     }
 
     return originalSend(message);
