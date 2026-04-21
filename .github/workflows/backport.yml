@@ -1,0 +1,175 @@
+name: Backport
+run-name: Backport for ${{ github.event.inputs.version}} by @${{ github.actor }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Optional: Pull request number (e.g. 1488) to backport'
+        required: false
+        type: string
+      version:
+        required: true
+        description: force version of the release (e.g. 9.0.0) if previous release was successful, this should auto increment
+
+jobs:
+  setup-release-branch:
+    timeout-minutes: 5
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: develop
+          fetch-depth: 0
+
+      - name: Get version
+        shell: bash
+        run: |
+          # 1. Capture version in a local variable
+          VERSION=$(node -p "require('./packages/insomnia/package.json').version")
+
+          # 2. Extract major.minor (e.g., 12.5.1 or 12.5.0-beta -> 12.5)
+          MAJOR_MINOR=$(echo $VERSION | cut -d. -f1,2)
+
+          # 3. Export both to the environment for future steps
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH=release/$MAJOR_MINOR" >> $GITHUB_ENV
+
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+          persist-credentials: false
+
+      - name: Configure Git user
+        id: configure_git_user
+        uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
+        with:
+          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
+
+      - name: Trim and Validate Input
+        id: trim_pr_number
+        run: |
+          # 1. Grab the input/variable
+          RAW_PR_NUM="${{ github.event.inputs.pr_number }}"
+
+          # 2. Trim spaces using xargs (removes leading/trailing and collapses inner)
+          TRIMMED_PR_NUM=$(echo "$RAW_PR_NUM" | xargs)
+
+          # 3. Export to GITHUB_ENV for the next step
+          echo "TRIMMED_PR_NUM=$TRIMMED_PR_NUM" >> $GITHUB_ENV
+
+      - name: Backport by labels (Direct Push + Conflict PR)
+        if: env.TRIMMED_PR_NUM == ''
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+          TARGET_BRANCH: ${{ env.RELEASE_BRANCH }}
+          LABEL_NAME: ${{ env.RELEASE_VERSION }}
+        run: |
+          # 1. Setup
+          # git fetch origin develop $TARGET_BRANCH
+          # git checkout $TARGET_BRANCH
+
+          # 2. Get Merged PRs
+          PR_DATA=$(gh pr list --base develop --label "$LABEL_NAME" --state merged --json number,title,mergeCommit --jq '.[] | @base64')
+
+          for row in $PR_DATA; do
+            _jq() { echo ${row} | base64 --decode | jq -r ${1}; }
+
+            PR_NUM=$(_jq '.number')
+            PR_TITLE=$(_jq '.title')
+            SHA=$(_jq '.mergeCommit.oid')
+
+            echo "Checking PR #$PR_NUM ($SHA)..."
+
+            # 3. Idempotency Check
+            if git log origin/$TARGET_BRANCH -n 50 --format=%B | grep -Fq "$SHA" > /dev/null; then
+              echo ">> Already on $TARGET_BRANCH. Skipping."
+              continue
+            fi
+
+            # 4. Attempt Direct Cherry-Pick
+            if git cherry-pick -x $SHA; then
+              echo ">> Clean pick! Pushing directly to $TARGET_BRANCH..."
+              git push origin $TARGET_BRANCH
+            else
+              echo ">> CONFLICT detected for PR #$PR_NUM. Creating resolution PR..."
+
+              # 5. Conflict Resolution PR Logic
+              git cherry-pick --abort
+              CONFLICT_BRANCH="conflict/backport-pr-$PR_NUM-to-$TARGET_BRANCH"
+
+              # Start a fresh branch from the target
+              git checkout -b "$CONFLICT_BRANCH" "origin/$TARGET_BRANCH"
+
+              # Re-apply the pick to generate conflict markers
+              git cherry-pick -x $SHA || true
+
+              # Stage the conflicted files (with markers) and commit
+              git add .
+              git commit -m "chore: manual resolution required for backport of #$PR_NUM"
+              git push origin "$CONFLICT_BRANCH" --force
+
+              # Create the PR
+              gh pr create \
+                --base "$TARGET_BRANCH" \
+                --head "$CONFLICT_BRANCH" \
+                --title "Backport #$PR_NUM to $TARGET_BRANCH" \
+                --body "Manual resolution needed for $SHA (#$PR_NUM)."
+
+              # Return to target branch for next loop iteration
+              git checkout $TARGET_BRANCH
+            fi
+          done
+
+      - name: Backport by PR number (Direct Push + Conflict PR)
+        if: env.TRIMMED_PR_NUM != ''
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+          TARGET_BRANCH: ${{ env.RELEASE_BRANCH }}
+        run: |
+          PR_NUM=$(env.TRIMMED_PR_NUM)
+          SHA=$(gh pr view $PR_NUM --json mergeCommit --jq '.mergeCommit.oid')
+
+          echo "Checking PR #$PR_NUM ($SHA)..."
+
+          # 3. Idempotency Check
+          if git log origin/$TARGET_BRANCH -n 50 --format=%B | grep -Fq "$SHA" > /dev/null; then
+            echo ">> Already on $TARGET_BRANCH. Skipping."
+            return
+          fi
+
+          # 4. Attempt Direct Cherry-Pick
+          if git cherry-pick -x $SHA; then
+            echo ">> Clean pick! Pushing directly to $TARGET_BRANCH..."
+            git push origin $TARGET_BRANCH
+          else
+            echo ">> CONFLICT detected for PR #$PR_NUM. Creating resolution PR..."
+
+            # 5. Conflict Resolution PR Logic
+            git cherry-pick --abort
+            CONFLICT_BRANCH="conflict/backport-pr-$PR_NUM-to-$TARGET_BRANCH"
+
+            # Start a fresh branch from the target
+            git checkout -b "$CONFLICT_BRANCH" "origin/$TARGET_BRANCH"
+
+            # Re-apply the pick to generate conflict markers
+            git cherry-pick -x $SHA || true
+
+            # Stage the conflicted files (with markers) and commit
+            git add .
+            git commit -m "chore: manual resolution required for backport of #$PR_NUM"
+            git push origin "$CONFLICT_BRANCH" --force
+
+            # Create the PR
+            gh pr create \
+              --base "$TARGET_BRANCH" \
+              --head "$CONFLICT_BRANCH" \
+              --title "🚨 Conflict: Backport #$PR_NUM to $TARGET_BRANCH" \
+              --body "Manual resolution needed for $SHA."
+
+            # Return to target branch for next loop iteration
+            git checkout $TARGET_BRANCH
+          fi

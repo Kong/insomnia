@@ -62,8 +62,15 @@ jobs:
       - name: Get version
         shell: bash
         run: |
-          echo "RELEASE_VERSION=$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
-          echo "RELEASE_BRANCH=release/$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
+          # 1. Capture version in a local variable
+          VERSION=$(node -p "require('./packages/insomnia/package.json').version")
+
+          # 2. Extract major.minor (e.g., 12.5.1 or 12.5.0-beta -> 12.5)
+          MAJOR_MINOR=$(echo $VERSION | cut -d. -f1,2)
+
+          # 3. Export both to the environment for future steps
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH=release/$MAJOR_MINOR" >> $GITHUB_ENV
 
       - name: Create Branch # Create a branch if it doesn't exist
         uses: peterjgrainger/action-create-branch@c2800a3a9edbba2218da6861fa46496cf8f3195a # v2.2.0
@@ -117,10 +124,88 @@ jobs:
 
       - name: Create Pull Request
         run: |
-          gh pr create \
-            --base develop \
-            --head ${{ env.RELEASE_BRANCH }} \
-            --title ":rocket: ${{ env.RELEASE_VERSION}}" \
-            --body "**Automated pull request**"
+          # 1. Define the branch targets
+          HEAD="${{ env.RELEASE_BRANCH }}"
+          BASE="develop"
+
+          # 2. Check for an existing open PR
+          # We look for open PRs matching the head and base, returning the PR number if found
+          PR_EXISTS=$(gh pr list --head "$HEAD" --base "$BASE" --state open --json number --jq '.[0].number')
+
+          # 3. Conditional Creation
+          if [ -z "$PR_EXISTS" ]; then
+            echo "No PR found. Creating..."
+            gh pr create --head "$HEAD" --base "$BASE" \
+              --title ":rocket: ${{ env.RELEASE_VERSION}}" \
+              --body "Automated PR. DO NOT MERGE!!" --draft
+          else
+            echo "PR #$PR_EXISTS already exists. Skipping."
+          fi
         env:
           GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+
+      # - name: Configure Git user
+      #   uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
+      #   with:
+      #     username: 'insomnia-infra'
+
+      # - name: Smart Cherry-Pick (Direct Push + Conflict PR)
+      #   env:
+      #     GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+      #     TARGET_BRANCH: ${{ env.RELEASE_BRANCH }}
+      #     LABEL_NAME: ${{ env.RELEASE_VERSION }}
+      #   run: |
+      #     # 1. Setup
+      #     git fetch origin develop $TARGET_BRANCH
+      #     git checkout $TARGET_BRANCH
+
+      #     # 2. Get Merged PRs
+      #     PR_DATA=$(gh pr list --base develop --label "$LABEL_NAME" --state merged --json number,title,mergeCommit --jq '.[] | @base64')
+
+      #     for row in $PR_DATA; do
+      #       _jq() { echo ${row} | base64 --decode | jq -r ${1}; }
+            
+      #       PR_NUM=$(_jq '.number')
+      #       PR_TITLE=$(_jq '.title')
+      #       SHA=$(_jq '.mergeCommit.oid')
+
+      #       echo "Checking PR #$PR_NUM ($SHA)..."
+
+      #       # 3. Idempotency Check
+      #       if git log origin/$TARGET_BRANCH --grep="cherry picked from commit $SHA" > /dev/null; then
+      #         echo ">> Already on $TARGET_BRANCH. Skipping."
+      #         continue
+      #       fi
+
+      #       # 4. Attempt Direct Cherry-Pick
+      #       if git cherry-pick -x $SHA; then
+      #         echo ">> Clean pick! Pushing directly to $TARGET_BRANCH..."
+      #         git push origin $TARGET_BRANCH
+      #       else
+      #         echo ">> CONFLICT detected for PR #$PR_NUM. Creating resolution PR..."
+
+      #       # 5. Conflict Resolution PR Logic
+      #       git cherry-pick --abort
+      #       CONFLICT_BRANCH="conflict/backport-pr-$PR_NUM-to-$TARGET_BRANCH"
+            
+      #       # Start a fresh branch from the target
+      #       git checkout -b "$CONFLICT_BRANCH" "origin/$TARGET_BRANCH"
+            
+      #       # Re-apply the pick to generate conflict markers
+      #       git cherry-pick -x $SHA || true 
+            
+      #       # Stage the conflicted files (with markers) and commit
+      #       git add .
+      #       git commit -m "chore: manual resolution required for backport of #$PR_NUM"
+      #       git push origin "$CONFLICT_BRANCH" --force
+
+      #       # Create the PR
+      #       gh pr create \
+      #         --base "$TARGET_BRANCH" \
+      #         --head "$CONFLICT_BRANCH" \
+      #         --title "🚨 Conflict: Backport #$PR_NUM to $TARGET_BRANCH" \
+      #         --body "The bot encountered conflicts while cherry-picking PR #$PR_NUM. 
+
+      #       # Return to target branch for next loop iteration
+      #       git checkout $TARGET_BRANCH
+      #     done

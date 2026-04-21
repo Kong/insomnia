@@ -34,6 +34,17 @@ jobs:
       contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       packages: write
     steps:
+      - name: Calculate Release Branch
+        run: |
+          # Grab version from input
+          VERSION="${{ github.event.inputs.version }}"
+
+          # Use cut to grab everything before the second dot (e.g., 12.5.1 -> 12.5)
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
+
+          # Rewrite the release branch to follow our new flow
+          echo "RELEASE_BRANCH=release/$MAJOR_MINOR" >> $GITHUB_ENV
+
       - name: Checkout branch # Check out the release branch
         uses: actions/checkout@v4
         with:
@@ -112,51 +123,51 @@ jobs:
           draft: false
           overwrite: true
 
-      # TODO: also take care of aarch64 image
-      - name: Load the Inso CLI Docker Archive
-        run: |
-          docker load -i ./artifacts/Linux-X64-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
-          docker image ls
+      # # TODO: also take care of aarch64 image
+      # - name: Load the Inso CLI Docker Archive
+      #   run: |
+      #     docker load -i ./artifacts/Linux-X64-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
+      #     docker image ls
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.1.0
-        with:
-          username: ${{ secrets.DOCKER_REGISTRY_USER }}
-          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.1.0
+      #   with:
+      #     username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      #     password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
-      - name: Docker meta for Inso CLI Docker Image
-        id: inso_docker_meta
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
-        with:
-          images: ${{ env.INSO_DOCKER_IMAGE }}
-          tags: |
-            type=raw,value=${{ env.INSO_VERSION }},priority=1000
-            type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
-            type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
-            type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
-          sep-tags: ","
+      # - name: Docker meta for Inso CLI Docker Image
+      #   id: inso_docker_meta
+      #   uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
+      #   with:
+      #     images: ${{ env.INSO_DOCKER_IMAGE }}
+      #     tags: |
+      #       type=raw,value=${{ env.INSO_VERSION }},priority=1000
+      #       type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
+      #       type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
+      #       type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
+      #     sep-tags: ","
 
-      - name: Push Inso CLI docker image tags to Docker Hub
-        run: |
-          for tag in ${IMAGE_TAGS//,/ }; do \
-            docker tag insomnia-inso:temp $tag
-            docker push $tag; \
-          done
-        env:
-          IMAGE_TAGS: ${{ steps.inso_docker_meta.outputs.tags }}
+      # - name: Push Inso CLI docker image tags to Docker Hub
+      #   run: |
+      #     for tag in ${IMAGE_TAGS//,/ }; do \
+      #       docker tag insomnia-inso:temp $tag
+      #       docker push $tag; \
+      #     done
+      #   env:
+      #     IMAGE_TAGS: ${{ steps.inso_docker_meta.outputs.tags }}
 
-      - name: Upload sourcemaps to Sentry
-        env:
-          SENTRY_AUTH_TOKEN: "${{ secrets.SENTRY_AUTH_TOKEN }}"
-          SENTRY_ORG: "${{ secrets.SENTRY_ORG }}"
-          SENTRY_PROJECT: "${{ secrets.SENTRY_PROJECT }}"
-        run: |
-          curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
+      # - name: Upload sourcemaps to Sentry
+      #   env:
+      #     SENTRY_AUTH_TOKEN: "${{ secrets.SENTRY_AUTH_TOKEN }}"
+      #     SENTRY_ORG: "${{ secrets.SENTRY_ORG }}"
+      #     SENTRY_PROJECT: "${{ secrets.SENTRY_PROJECT }}"
+      #   run: |
+      #     curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
 
-          sentry-cli releases new ${{ env.RELEASE_VERSION }}
-          sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
+      #     sentry-cli releases new ${{ env.RELEASE_VERSION }}
+      #     sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
 
-          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
+      #     sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
 
       # Setup regctl to parse platform specific image digest from image manifest
       - name: Install regctl
@@ -185,20 +196,22 @@ jobs:
           signature_registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
           signature_registry: ${{ env.NOTARY_REPOSITORY }}
 
-      - name: Configure Git user
-        uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
-        with:
-          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
-
-      - name: Merge git branch into develop
+      - name: Close Release PR (No Merge Policy)
         run: |
-          remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git checkout develop
-          git merge --no-ff ${{ env.RELEASE_BRANCH }}
-          git status
-          git push "${remote_repo}"
+          # 1. Find the PR number for the release branch
+          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --state open --json number --jq '.[0].number')
+
+          # 2. If a PR exists, close it with a comment
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Closing PR #$PR_NUMBER for $BRANCH_NAME..."
+            gh pr close "$PR_NUMBER" \
+              --comment "As per our release flow, $BRANCH_NAME is never merged back to develop."
+          else
+            echo "No open PR found for $BRANCH_NAME. Moving on."
+          fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ env.RELEASE_BRANCH }} 
 
   artifact-provenance:
     needs: [publish]
