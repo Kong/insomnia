@@ -70,25 +70,6 @@ export function removeResponse(response: Response | WebSocketResponse | SocketIO
   return db.remove(response);
 }
 
-export const getResponseBodyStream = async (
-  response?: { bodyPath?: string; bodyCompression?: Compression },
-  readFailureValue?: string,
-): Promise<Readable | string | null> => {
-  if (!response?.bodyPath) {
-    return null;
-  }
-  try {
-    await fs.promises.stat(response?.bodyPath);
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return readFailureValue === undefined ? null : readFailureValue;
-  }
-  if (response?.bodyCompression === 'zip') {
-    return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
-  }
-  return fs.createReadStream(response?.bodyPath);
-};
-
 export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
   const bodyBufferOrErrMsg = await getBodyBuffer(options, readFailureMsg);

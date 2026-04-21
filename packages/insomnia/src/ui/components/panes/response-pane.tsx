@@ -80,7 +80,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
       return;
     }
 
-    void services.helpers.getResponseTimeline(activeResponse).then(responseTimeline => {
+    services.helpers.getResponseTimeline(activeResponse).then(responseTimeline => {
       if (!isCancelled) {
         setTimeline(responseTimeline);
       }

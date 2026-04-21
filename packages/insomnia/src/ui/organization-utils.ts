@@ -134,6 +134,7 @@ async function updateLocalProjectToRemote({
           'Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.',
           error,
         );
+        // TODO: here we should show the try again dialog
       }
     }
   } catch (error: unknown) {
