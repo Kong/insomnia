@@ -182,7 +182,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
             {activeProject && models.project.isRemoteProject(activeProject) && <CloudSyncProjectBar />}
           </div>
         </Panel>
-        <PanelResizeHandle className="h-full w-px bg-(--hl-md)" hitAreaMargins={{ coarse: 15, fine: 5 }} />
+        <PanelResizeHandle className="relative z-10 h-full w-px bg-(--hl-md)" hitAreaMargins={{ coarse: 20, fine: 20 }} />
         <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
           <Outlet />
         </Panel>
