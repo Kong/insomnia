@@ -36,7 +36,16 @@ jobs:
       actions: read # For getting workflow run info for keyless signing of docker image
       contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       packages: write
+      pull-requests: write # Required to run `gh pr list` command
     steps:
+      - name: Calculate Release Branch
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
+
+          # Rewrite the release branch to follow our new flow
+          echo "RELEASE_BRANCH=release/$MAJOR_MINOR" >> $GITHUB_ENV
+
       - name: Checkout branch # Check out the release branch
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -261,20 +270,22 @@ jobs:
             --package-type insomnia
             ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
 
-      - name: Configure Git user
-        uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
-        with:
-          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
-
-      - name: Merge git branch into develop
+      - name: Close Release PR (No Merge Policy)
         run: |
-          remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git checkout develop
-          git merge --no-ff ${{ env.RELEASE_BRANCH }}
-          git status
-          git push "${remote_repo}"
+          # 1. Find the PR number for the release branch
+          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --state open --json number --jq '.[0].number')
+
+          # 2. If a PR exists, close it with a comment
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Closing PR #$PR_NUMBER for $BRANCH_NAME..."
+            gh pr close "$PR_NUMBER" \
+              --comment "As per our release flow, $BRANCH_NAME is never merged back to develop."
+          else
+            echo "No open PR found for $BRANCH_NAME. Moving on."
+          fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ env.RELEASE_BRANCH }} 
 
   artifact-provenance:
     needs: [publish]
