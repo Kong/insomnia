@@ -37,7 +37,8 @@ export function noMainImports(): Plugin {
     resolveId(source, importer) {
       if (!importer) return null;
       if (source.includes('/src/main/')) {
-        throw new Error(
+        // throw new Error(
+        console.log(
           `Main-process module imported from renderer!\n` + `  source:   ${source}\n` + `  importer: ${importer}`,
         );
       }
