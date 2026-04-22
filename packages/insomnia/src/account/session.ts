@@ -1,4 +1,4 @@
-import { logout as logoutAPI, whoami } from 'insomnia-api';
+import { getEncryptionKeys, getUserProfile, logout as logoutAPI } from 'insomnia-api';
 
 import type { GitRepository, Project, WorkspaceMeta } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
@@ -21,9 +21,17 @@ export interface SessionData {
 /** Creates a session from a sessionId and derived symmetric key. */
 export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
-  const { publicKey, encPrivateKey, encSymmetricKey, email, accountId, firstName, lastName } = await whoami({
-    sessionId: sessionId || (await getCurrentSessionId()),
-  });
+  const sessionIdResolved = sessionId || (await getCurrentSessionId());
+  const [profile, keys] = await Promise.all([
+    getUserProfile({ sessionId: sessionIdResolved }),
+    getEncryptionKeys({ sessionId: sessionIdResolved }),
+  ]);
+  const {
+    public_key: publicKey,
+    enc_private_key: encPrivateKey,
+    enc_symmetric_key: encSymmetricKey,
+  } = keys;
+  const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
 
   // Store the information for later

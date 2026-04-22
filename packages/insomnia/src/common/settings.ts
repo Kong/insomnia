@@ -163,4 +163,6 @@ export interface Settings {
   saveVaultKeyToOSSecretManager: boolean;
   vaultSecretCacheDuration: number;
   dataFolders: string[];
+  /** Custom npm registry URL for plugin installation (e.g., corporate mirror). Empty string uses the default https://registry.npmjs.org/. */
+  npmRegistryUrl: string;
 }

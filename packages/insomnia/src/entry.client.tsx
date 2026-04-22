@@ -11,7 +11,12 @@ import { initDatabase, initServices, services } from '~/insomnia-data';
 import { database as clientDatabase } from '~/ui/database.client';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
-import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
+import {
+  getInsomniaSession,
+  getInsomniaVaultKey,
+  getInsomniaVaultSalt,
+  getSkipOnboarding,
+} from './common/constants';
 import { initNewOAuthSession } from './network/o-auth-2/get-token';
 import { init as initPlugins } from './plugins';
 import { applyColorScheme } from './plugins/misc';

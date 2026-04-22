@@ -1,4 +1,4 @@
-import { type Billing, type CurrentPlan, type FeatureList, type Organization, type UserProfile } from 'insomnia-api';
+import { type Billing, type CurrentPlan, type FeatureList, type Organization, type User } from 'insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -49,7 +49,7 @@ import type { Route } from './+types/organization';
 
 export interface OrganizationLoaderData {
   organizations: Organization[];
-  user?: UserProfile;
+  user?: User;
   currentPlan?: CurrentPlan;
 }
 
@@ -57,7 +57,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const { id, accountId } = await services.userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfile;
+    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as User;
     const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
     return {
       organizations: sortOrganizations(accountId, organizations),

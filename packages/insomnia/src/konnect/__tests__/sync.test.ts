@@ -6,7 +6,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { initDatabase, models, services as insoservices } from '~/insomnia-data';
+import { initDatabase, models, type Request,services as insoservices } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
 import { mainDatabase } from '../../main/database.main';
@@ -130,10 +130,10 @@ describe('Feature: HTTP Route Sync', () => {
     // 2 methods × 2 protocols = 4 requests
     expect(requests).toHaveLength(4);
 
-    const httpGet = requests.find((r: any) => r.method === 'GET' && r.konnectRouteKey.endsWith(':http'));
-    const httpsGet = requests.find((r: any) => r.method === 'GET' && r.konnectRouteKey.endsWith(':https'));
-    const httpPost = requests.find((r: any) => r.method === 'POST' && r.konnectRouteKey.endsWith(':http'));
-    const httpsPost = requests.find((r: any) => r.method === 'POST' && r.konnectRouteKey.endsWith(':https'));
+    const httpGet = requests.find(r => r.method === 'GET' && r.konnectRouteKey?.endsWith(':http'));
+    const httpsGet = requests.find(r => r.method === 'GET' && r.konnectRouteKey?.endsWith(':https'));
+    const httpPost = requests.find(r => r.method === 'POST' && r.konnectRouteKey?.endsWith(':http'));
+    const httpsPost = requests.find(r => r.method === 'POST' && r.konnectRouteKey?.endsWith(':https'));
 
     expect(httpGet).toMatchObject({ method: 'GET', url: 'http://{{ _.proxy_host }}/explicit-methods', name: '/explicit-methods', konnectRouteKey: 'route-uuid-1:GET:/explicit-methods:http' });
     expect(httpsGet).toMatchObject({ method: 'GET', url: 'https://{{ _.proxy_host }}/explicit-methods', name: '/explicit-methods', konnectRouteKey: 'route-uuid-1:GET:/explicit-methods:https' });
@@ -195,11 +195,11 @@ describe('Feature: HTTP Route Sync', () => {
     const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     // 5 methods × 2 protocols = 10
     expect(requests).toHaveLength(10);
-    const httpRequests = requests.filter((r: any) => r.konnectRouteKey.endsWith(':http'));
-    const httpsRequests = requests.filter((r: any) => r.konnectRouteKey.endsWith(':https'));
+    const httpRequests = requests.filter(r => r.konnectRouteKey?.endsWith(':http'));
+    const httpsRequests = requests.filter(r => r.konnectRouteKey?.endsWith(':https'));
     expect(httpRequests).toHaveLength(5);
     expect(httpsRequests).toHaveLength(5);
-    const methods = httpRequests.map((r: any) => r.method).sort();
+    const methods = httpRequests.map(r => r.method).sort();
     expect(methods).toEqual(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
     for (const req of requests) {
       expect(req.name).toBe('/methods-null');
@@ -234,8 +234,8 @@ describe('Feature: HTTP Route Sync', () => {
     const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     // 1 method × 2 protocols = 2
     expect(requests).toHaveLength(2);
-    const httpReq = requests.find((r: any) => r.url.startsWith('http://'));
-    const httpsReq = requests.find((r: any) => r.url.startsWith('https://'));
+    const httpReq = requests.find(r => r.url.startsWith('http://'));
+    const httpsReq = requests.find(r => r.url.startsWith('https://'));
     expect(httpReq).toMatchObject({ url: 'http://{{ _.proxy_host }}', name: 'Route route-1' });
     expect(httpsReq).toMatchObject({ url: 'https://{{ _.proxy_host }}', name: 'Route route-1' });
     for (const req of requests) {
@@ -723,7 +723,7 @@ describe('Feature: Idempotent Sync (Route Keying)', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
-    const keys = requests.map((r: any) => r.konnectRouteKey);
+    const keys = requests.map(r => r.konnectRouteKey);
     expect(keys).toContain('route-uuid-1:GET:/api/v1/users:http');
     expect(keys).toContain('route-uuid-1:POST:/api/v1/users:http');
   });
@@ -738,7 +738,7 @@ describe('Feature: Idempotent Sync (Route Keying)', () => {
 
     const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(requests).toHaveLength(5);
-    const keys = requests.map((r: any) => r.konnectRouteKey).sort();
+    const keys = requests.map(r => r.konnectRouteKey).sort();
     expect(keys).toEqual([
       'route-uuid-2:DELETE:/api:http',
       'route-uuid-2:GET:/api:http',
@@ -823,11 +823,11 @@ describe('Feature: gRPC Route Sync', () => {
 
     const grpcRequests = konnectRequests(await db.find(models.grpcRequest.type, { konnectRouteKey: { $ne: null } }));
     expect(grpcRequests).toHaveLength(2);
-    const keys = grpcRequests.map((r: any) => r.konnectRouteKey).sort();
+    const keys = grpcRequests.map(r => r.konnectRouteKey).sort();
     expect(keys).toContain('route-uuid-3:grpc:/addsvc.Add/Sum:grpc');
     expect(keys).toContain('route-uuid-3:grpc:/addsvc.Add/Sum:grpcs');
-    const grpcReq = grpcRequests.find((r: any) => r.konnectRouteKey.endsWith(':grpc'));
-    const grpcsReq = grpcRequests.find((r: any) => r.konnectRouteKey.endsWith(':grpcs'));
+    const grpcReq = grpcRequests.find(r => r.konnectRouteKey?.endsWith(':grpc'));
+    const grpcsReq = grpcRequests.find(r => r.konnectRouteKey?.endsWith(':grpcs'));
     expect(grpcReq!.url).toBe('grpc://{{ _.grpc_proxy_host }}');
     expect(grpcsReq!.url).toBe('grpcs://{{ _.grpcs_proxy_host }}');
   });
@@ -869,7 +869,7 @@ describe('Feature: gRPC Route Sync', () => {
 
     const grpcRequests = konnectRequests(await db.find(models.grpcRequest.type, { konnectRouteKey: { $ne: null } }));
     expect(grpcRequests).toHaveLength(2);
-    const names = grpcRequests.map((r: any) => r.name).sort();
+    const names = grpcRequests.map(r => r.name).sort();
     expect(names).toEqual(['/hello.HelloService/LotsOfGreetings', '/hello.HelloService/LotsOfReplies']);
   });
 
@@ -960,11 +960,11 @@ describe('Feature: WebSocket Route Sync', () => {
 
     const wsRequests = konnectRequests(await db.find(models.webSocketRequest.type, { konnectRouteKey: { $ne: null } }));
     expect(wsRequests).toHaveLength(2);
-    const keys = wsRequests.map((r: any) => r.konnectRouteKey).sort();
+    const keys = wsRequests.map(r => r.konnectRouteKey).sort();
     expect(keys).toContain('route-uuid-4:ws:/ws/mixed:ws');
     expect(keys).toContain('route-uuid-4:ws:/ws/mixed:wss');
-    const wsReq = wsRequests.find((r: any) => r.konnectRouteKey.endsWith(':ws'));
-    const wssReq = wsRequests.find((r: any) => r.konnectRouteKey.endsWith(':wss'));
+    const wsReq = wsRequests.find(r => r.konnectRouteKey?.endsWith(':ws'));
+    const wssReq = wsRequests.find(r => r.konnectRouteKey?.endsWith(':wss'));
     expect(wsReq!.url).toBe('ws://{{ _.proxy_host }}/ws/mixed');
     expect(wssReq!.url).toBe('wss://{{ _.proxy_host }}/ws/mixed');
   });
@@ -1006,7 +1006,7 @@ describe('Feature: WebSocket Route Sync', () => {
 
     const wsRequests = konnectRequests(await db.find(models.webSocketRequest.type, { konnectRouteKey: { $ne: null } }));
     expect(wsRequests).toHaveLength(2);
-    const urls = wsRequests.map((r: any) => r.url).sort();
+    const urls = wsRequests.map(r => r.url).sort();
     expect(urls).toEqual(['ws://{{ _.proxy_host }}/ws/multi-v1', 'ws://{{ _.proxy_host }}/ws/multi-v2']);
   });
 
@@ -1376,12 +1376,12 @@ describe('Feature: Wildcard and Edge-Case Hosts', () => {
 // ─── Feature: Expression-Based Routes ──────────────────────────────────────
 
 describe('Feature: Expression-Based Routes', () => {
-  it('Scenario: Expression route — falls through as methods null', async () => {
+  it('Scenario: Simple method+path expression — creates 1 targeted request', async () => {
     vi.stubGlobal('fetch', mockFetch(
       [makeCp()], [makeService()],
       [makeRoute({
         protocols: ['http'],
-        expression: 'http.path == "/foo" && http.method == "GET"',
+        expression: 'http.method == "GET" && http.path == "/foo"',
         paths: null,
         methods: null,
         name: 'Foo Route',
@@ -1391,18 +1391,207 @@ describe('Feature: Expression-Based Routes', () => {
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({ method: 'GET', name: '/foo' });
+    expect(requests[0].url).toContain('/foo');
+    expect(requests[0].name).toBe('/foo');
+  });
+
+  it('Scenario: Path-only expression — defaults to all 5 methods', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http'],
+        expression: 'http.path == "/api/users"',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
     expect(requests).toHaveLength(5);
     for (const req of requests) {
-      expect(req.name).toBe('Foo Route');
+      expect(req.url).toContain('/api/users');
     }
   });
 
-  it('Scenario: Expression route with stream protocol — skipped', async () => {
+  it('Scenario: Multiple methods via OR expression', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http'],
+        expression: 'http.method == "GET" || http.method == "POST"',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests).toHaveLength(2);
+    const methods = requests.map(r => r.method).sort();
+    expect(methods).toEqual(['GET', 'POST']);
+  });
+
+  it('Scenario: Host expression — sets Host header on request', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http'],
+        expression: 'http.host == "api.example.com" && http.method == "GET"',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests).toHaveLength(1);
+    expect(requests[0].headers).toEqual(expect.arrayContaining([{ name: 'host', value: 'api.example.com' }]));
+  });
+
+  it('Scenario: Header expression — sets extracted header on request', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http'],
+        expression: 'http.headers.x_tenant == "acme" && http.method == "GET" && http.path == "/api"',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests).toHaveLength(1);
+    expect(requests[0].headers).toEqual(expect.arrayContaining([{ name: 'x-tenant', value: 'acme' }]));
+  });
+
+  it('Scenario: Unparseable expression — skipped (no requests created)', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http'],
+        expression: 'net.src.ip in 10.0.0.0/8',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    expect(konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }))).toHaveLength(0);
+    expect(result.routes.skipped).toBe(1);
+  });
+
+  it('Scenario: Partial expression (method extractable, rest unparseable) — creates request', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http'],
+        expression: 'http.method == "GET" && net.src.ip in 10.0.0.0/8',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests).toHaveLength(1);
+    expect(requests[0].method).toBe('GET');
+  });
+
+  it('Scenario: Both protocols — creates requests for each', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http', 'https'],
+        expression: 'http.method == "GET" && http.path == "/foo"',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests).toHaveLength(2);
+    const protocols = requests.map(r => r.konnectRouteKey?.split(':').pop()).sort();
+    expect(protocols).toEqual(['http', 'https']);
+  });
+
+  it('Scenario: Stream protocol — skipped', async () => {
     vi.stubGlobal('fetch', mockFetch(
       [makeCp()], [makeService()],
       [makeRoute({
         protocols: ['tcp'],
         expression: 'net.dst.port == 5432',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    expect(konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }))).toHaveLength(0);
+    expect(result.routes.skipped).toBe(1);
+  });
+
+  it('Scenario: Prefix path expression — creates requests at that path', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http'],
+        expression: 'http.path ^= "/api/v1"',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests).toHaveLength(5);
+    for (const req of requests) {
+      expect(req.url).toContain('/api/v1');
+    }
+  });
+
+  it('Scenario: Repeated predicates in OR expansion — deduplicates methods/paths/hosts', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['http'],
+        // Each branch repeats the same method and path — a common pattern when
+        // parenthesised OR expansions duplicate shared predicates.
+        expression:
+          '(http.method == "GET" && http.path == "/api" && http.host == "a.example.com") || ' +
+          '(http.method == "GET" && http.path == "/api" && http.host == "a.example.com")',
+        paths: null,
+        methods: null,
+      })],
+    ));
+
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    // After dedup: 1 method × 1 path × 1 protocol = 1 request (not 4)
+    const requests = konnectRequests(await db.find(models.request.type, { konnectRouteKey: { $ne: null } }));
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({ method: 'GET', url: 'http://{{ _.proxy_host }}/api' });
+  });
+
+  it('Scenario: tls.sni expression — skipped', async () => {
+    vi.stubGlobal('fetch', mockFetch(
+      [makeCp()], [makeService()],
+      [makeRoute({
+        protocols: ['https'],
+        expression: 'tls.sni == "secure.example.com" && http.method == "GET"',
         paths: null,
         methods: null,
       })],

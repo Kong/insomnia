@@ -10,6 +10,7 @@ import {
   type KonnectRoute,
   type KonnectService,
 } from './api';
+import { applyExpressionFields } from './expression-parser';
 import {
   buildRequestName,
   deriveProxyVarDefaults,
@@ -378,35 +379,46 @@ async function syncServiceWorkspace(
   for (const route of incomingRoutes) {
     signal?.throwIfAborted();
     incomingRouteIds.add(route.id);
-    const isL4 = route.protocols.every(p => L4_PROTOCOLS.has(p));
-    const isGrpc = route.protocols.some(p => p === 'grpc' || p === 'grpcs');
-    const isWs = route.protocols.some(p => p === 'ws' || p === 'wss');
 
-    const routeName = routeDisplayName(route);
+    const expressionResult = applyExpressionFields(route);
+    if (!expressionResult.syncable) {
+      counts.routes.skipped++;
+      skippedRoutes.push({ routeName: expressionResult.routeName, reason: expressionResult.reason, serviceName });
+      continue;
+    }
+    const effectiveRoute = expressionResult.route;
+
+    const isL4 = effectiveRoute.protocols.every(p => L4_PROTOCOLS.has(p));
+    const isGrpc = effectiveRoute.protocols.some(p => p === 'grpc' || p === 'grpcs');
+    const isWs = effectiveRoute.protocols.some(p => p === 'ws' || p === 'wss');
+
+    const routeName = routeDisplayName(effectiveRoute);
 
     if (isL4) {
       counts.routes.skipped++;
-      skippedRoutes.push({ routeName, reason: `Unsupported protocol: ${route.protocols.join(', ')}`, serviceName });
+      skippedRoutes.push({ routeName, reason: `Unsupported protocol: ${effectiveRoute.protocols.join(', ')}`, serviceName });
       continue;
     }
 
     // Routes matched by SNI cannot be represented — Insomnia derives SNI implicitly
     // from the URL hostname and has no SNI override.
-    if ((route.snis?.length ?? 0) > 0) {
+    // Note: expression-router tls.sni is caught earlier in applyExpressionFields;
+    // this check covers the traditional router's snis field.
+    if ((effectiveRoute.snis?.length ?? 0) > 0) {
       counts.routes.skipped++;
       skippedRoutes.push({ routeName, reason: 'Route uses SNI matching — unsupported in Insomnia', serviceName });
       continue;
     }
 
     if (isGrpc) {
-      await syncGrpcRoute(route, workspace._id, existingData.maps.grpc, counts.routes, incomingKeys);
+      await syncGrpcRoute(effectiveRoute, workspace._id, existingData.maps.grpc, counts.routes, incomingKeys);
     } else {
       // Host header only applies to HTTP/WS — gRPC uses :authority which Insomnia derives from the URL
       const headers = [
-        ...(route.hosts?.[0] ? [{ name: 'host', value: route.hosts[0] }] : []),
-        ...Object.entries(route.headers ?? {}).map(([name, values]) => ({ name: name.toLowerCase(), value: values[0] })),
+        ...(effectiveRoute.hosts?.[0] ? [{ name: 'host', value: effectiveRoute.hosts[0] }] : []),
+        ...Object.entries(effectiveRoute.headers ?? {}).map(([name, values]) => ({ name: name.toLowerCase(), value: values[0] })),
       ];
-      await (isWs ? syncWsRoute(route, workspace._id, headers, existingData.maps.ws, counts.routes, incomingKeys) : syncHttpRoute(route, workspace._id, headers, existingData.maps.http, counts.routes, incomingKeys));
+      await (isWs ? syncWsRoute(effectiveRoute, workspace._id, headers, existingData.maps.ws, counts.routes, incomingKeys) : syncHttpRoute(effectiveRoute, workspace._id, headers, existingData.maps.http, counts.routes, incomingKeys));
     }
   }
 
