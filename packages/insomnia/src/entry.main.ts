@@ -49,8 +49,8 @@ const dataPath =
   process.env.INSOMNIA_DATA_PATH ||
   path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
 
-initElectronStorage(dataPath);
 app.setPath('userData', dataPath);
+initElectronStorage(dataPath);
 
 initializeLogging();
 

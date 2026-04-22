@@ -3,12 +3,19 @@ import path from 'node:path';
 
 import { invariant } from '~/utils/invariant';
 
+// Intentional singleton: initialized once per process via initElectronStorage and shared across the app.
 let electronStorage: ElectronStorage | null = null;
 export function initElectronStorage(dataPath: string) {
   const electronStoragePath = path.join(dataPath, 'localStorage');
-  if (!electronStorage) {
-    electronStorage = new ElectronStorage(electronStoragePath);
+  if (electronStorage) {
+    // In dev, loud failure > silent no-op
+    invariant(
+      process.env.NODE_ENV !== 'development',
+      `ElectronStorage already initialized. Attempted re-init with: ${electronStoragePath}`,
+    );
+    return;
   }
+  electronStorage = new ElectronStorage(electronStoragePath);
 }
 export function getElectronStorage() {
   invariant(electronStorage, 'ElectronStorage has not been initialized.');
