@@ -28,7 +28,6 @@ const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-const electronStorage = getElectronStorage();
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
 let hiddenWindowIsBusy = false;
 interface Bounds {
@@ -715,6 +714,7 @@ function saveBounds() {
   }
 
   const fullscreen = browserWindow?.isFullScreen();
+  const electronStorage = getElectronStorage();
 
   // Only save the size if we're not in fullscreen
   if (!fullscreen) {
@@ -732,6 +732,7 @@ function getBounds() {
   let maximize = false;
 
   try {
+    const electronStorage = getElectronStorage();
     bounds = electronStorage?.getItem('bounds', {});
     fullscreen = electronStorage?.getItem('fullscreen', false);
     maximize = electronStorage?.getItem('maximize', false);
@@ -753,6 +754,7 @@ const ZOOM_MIN = 0.05;
 
 const getZoomFactor = () => {
   try {
+    const electronStorage = getElectronStorage();
     return electronStorage?.getItem('zoomFactor', ZOOM_DEFAULT);
   } catch (error) {
     // This should never happen, but if it does...!

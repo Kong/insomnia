@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { invariant } from '~/utils/invariant';
+
 let electronStorage: ElectronStorage | null = null;
 export function initElectronStorage(dataPath: string) {
   const electronStoragePath = path.join(dataPath, 'localStorage');
@@ -9,6 +11,7 @@ export function initElectronStorage(dataPath: string) {
   }
 }
 export function getElectronStorage() {
+  invariant(electronStorage, 'ElectronStorage has not been initialized.');
   return electronStorage;
 }
 
