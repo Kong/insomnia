@@ -1,25 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { app } from 'electron';
-
-import { isDevelopment } from '~/common/constants';
-
-import { userDataFolder } from '../../config/config.json';
-
-// resilience against userData folder being changed while the app is running
-// if it changes we just make a new ElectronStorage instance with the new path
-const electronStorageByPath = new Map<string, ElectronStorage>();
-export function getElectronStorage() {
-  const dataPath =
-    process.env.INSOMNIA_DATA_PATH ||
-    path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+let electronStorage: ElectronStorage | null = null;
+export function initElectronStorage(dataPath: string) {
   const electronStoragePath = path.join(dataPath, 'localStorage');
-  let electronStorage = electronStorageByPath.get(electronStoragePath);
   if (!electronStorage) {
     electronStorage = new ElectronStorage(electronStoragePath);
-    electronStorageByPath.set(electronStoragePath, electronStorage);
   }
+}
+export function getElectronStorage() {
   return electronStorage;
 }
 

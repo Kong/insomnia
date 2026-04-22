@@ -28,10 +28,9 @@ const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-
+const electronStorage = getElectronStorage();
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
 let hiddenWindowIsBusy = false;
-const electronStorage = getElectronStorage();
 interface Bounds {
   height?: number;
   width?: number;

@@ -14,6 +14,7 @@ import type { Project, RemoteProject, Stats } from '~/insomnia-data';
 import { database, initDatabase, initServices, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
+import { initElectronStorage } from '~/main/electron-storage';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { runGitCredentialsMigration } from '~/sync/git/migrations';
@@ -47,6 +48,8 @@ import * as models from './models/index';
 const dataPath =
   process.env.INSOMNIA_DATA_PATH ||
   path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+
+initElectronStorage(dataPath);
 app.setPath('userData', dataPath);
 
 initializeLogging();
