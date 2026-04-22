@@ -240,7 +240,7 @@ export class GitVCS {
     return this._baseOpts.repoId === id;
   }
 
-  async getCurrentBranch() {
+  async getCurrentBranch(): Promise<string> {
     const branch = await git.currentBranch({ ...this._baseOpts });
 
     if (typeof branch === 'string') {
