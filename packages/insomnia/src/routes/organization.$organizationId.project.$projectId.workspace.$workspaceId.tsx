@@ -1,5 +1,7 @@
-import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
+import { href, Outlet, redirect, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
+import { Button } from '~/basic-components/button';
+import { Modal } from '~/basic-components/modal';
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
@@ -30,7 +32,9 @@ import * as models from '~/models';
 import { sortProjects } from '~/models/helpers/project';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -70,6 +74,18 @@ export interface Child {
   level: number;
   ancestors?: string[];
 }
+
+const workspaceFileIssueModalText = {
+  'conflict': {
+    modalTitle: 'Cannot read file: Merge in progress',
+    summary: 'Complete the merge in your CLI tool to unlock this page.',
+  },
+  'parse-error': {
+    modalTitle: 'Cannot read file: Invalid schema',
+    summary:
+      'Recent changes introduced schema errors in the Insomnia file for this page. Resolve the file using the CLI to unlock this page.',
+  },
+} as const;
 
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
@@ -381,9 +397,47 @@ export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: Req
 };
 
 const Component = () => {
+  const navigate = useNavigate();
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
+  const { issuesByWorkspaceId } = useGitFileIssues();
+  const currentIssue = issuesByWorkspaceId[workspaceId];
+
+  const handleBackToList = () => {
+    navigate(
+      href('/organization/:organizationId/project/:projectId', {
+        organizationId,
+        projectId,
+      }),
+    );
+  };
+
+  const modalText = currentIssue ? workspaceFileIssueModalText[currentIssue.kind] : null;
+  const isIssueModalOpen = Boolean(currentIssue && modalText);
+
   return (
     <div className="h-full w-full overflow-hidden" data-testid="workspace-page">
       <Outlet />
+      <Modal isOpen={isIssueModalOpen} onClose={handleBackToList} className="w-[min(44rem,calc(100vw-2rem))] max-w-3xl">
+        {modalText ? (
+          <div className="flex flex-col items-center gap-6 px-4 pt-4 pb-2 text-center">
+            <Icon icon="lock" className="text-6xl text-(--hl)" />
+            <div className="flex flex-col gap-3">
+              <h2 className="text-2xl font-semibold text-(--color-font)">{modalText.modalTitle}</h2>
+              <p className="max-w-2xl text-lg text-(--hl)">{modalText.summary}</p>
+            </div>
+            <Button
+              onPress={handleBackToList}
+              className="rounded-xs border border-solid border-(--hl-md) px-4 py-2 text-sm font-medium text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+            >
+              Back to Project
+            </Button>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 };
