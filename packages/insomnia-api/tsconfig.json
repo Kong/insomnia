@@ -9,7 +9,6 @@
     "isolatedModules": true,
     "module": "ESNext",
     "sourceMap": true,
-    "baseUrl": ".",
     "rootDirs": ["."],
     "lib": ["ES2023", "DOM"],
     "types": [],
