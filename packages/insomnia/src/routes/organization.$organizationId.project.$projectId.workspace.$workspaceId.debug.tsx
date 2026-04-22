@@ -1177,21 +1177,22 @@ const Debug = () => {
                     {workspaceId ? (
                       <ErrorBoundary showAlert>
                         {isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
-                        {models.grpcRequest.isGrpcRequestId(requestId) && grpcState && (
-                          <GrpcRequestPane
-                            key={grpcState.requestId}
-                            grpcState={grpcState}
-                            setGrpcState={setGrpcState}
-                            reloadRequests={reloadRequests}
-                          />
-                        )}
-                        {models.webSocketRequest.isWebSocketRequestId(requestId) && (
-                          <WebSocketRequestPane environment={activeEnvironment} />
-                        )}
-                        {models.socketIORequest.isSocketIORequestId(requestId) && (
+                        {models.grpcRequest.isGrpcRequestId(requestId) &&
+                          grpcState &&
+                          activeRequest?._id === requestId && (
+                            <GrpcRequestPane
+                              key={grpcState.requestId}
+                              grpcState={grpcState}
+                              setGrpcState={setGrpcState}
+                              reloadRequests={reloadRequests}
+                            />
+                          )}
+                        {models.webSocketRequest.isWebSocketRequestId(requestId) &&
+                          activeRequest?._id === requestId && <WebSocketRequestPane environment={activeEnvironment} />}
+                        {models.socketIORequest.isSocketIORequestId(requestId) && activeRequest?._id === requestId && (
                           <SocketIORequestPane environment={activeEnvironment} />
                         )}
-                        {isRequestId(requestId) && (
+                        {isRequestId(requestId) && activeRequest?._id === requestId && (
                           <RequestPane
                             environmentId={activeEnvironment ? activeEnvironment._id : ''}
                             settings={settings}
