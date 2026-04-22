@@ -3,11 +3,22 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
-let electronStorage: ElectronStorage | null = null;
+import { isDevelopment } from '~/common/constants';
+
+import { userDataFolder } from '../../config/config.json';
+
+// resilience against userData folder being changed while the app is running
+// if it changes we just make a new ElectronStorage instance with the new path
+const electronStorageByPath = new Map<string, ElectronStorage>();
 export function getElectronStorage() {
-  const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
+  const dataPath =
+    process.env.INSOMNIA_DATA_PATH ||
+    path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+  const electronStoragePath = path.join(dataPath, 'localStorage');
+  let electronStorage = electronStorageByPath.get(electronStoragePath);
   if (!electronStorage) {
     electronStorage = new ElectronStorage(electronStoragePath);
+    electronStorageByPath.set(electronStoragePath, electronStorage);
   }
   return electronStorage;
 }

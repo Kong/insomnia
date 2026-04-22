@@ -129,7 +129,7 @@ if (insomniaSession) {
 const appSettings = await services.settings.getOrCreate();
 
 if (appSettings.clearOAuth2SessionOnRestart) {
-  clearOAuthWindowSessionId();
+  await clearOAuthWindowSessionId();
 }
 
 applyColorScheme(appSettings);
