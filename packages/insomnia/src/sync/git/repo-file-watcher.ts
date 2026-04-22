@@ -272,7 +272,8 @@ class RepoFileWatcher {
   /**
    * Re-export every workspace in the project to its on-disk YAML file.
    * Skips writes when the exported content is identical to what was last
-   * written (content-hash dedup).
+   * written (content-hash dedup), or when the target file currently has a
+   * blocking import problem that the user must resolve first.
    */
   private async flushProjectWorkspacesToDisk(): Promise<void> {
     const entries = await this.getWorkspacesWithMeta();
@@ -284,6 +285,10 @@ class RepoFileWatcher {
 
       const gitFilePath: string = meta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
       const absPath = path.normalize(path.join(this.repoDir, gitFilePath));
+
+      if (this.hasProblem(absPath)) {
+        continue;
+      }
 
       // Detect gitFilePath rename: if the path changed, we'll delete the old
       // file *after* the new one is successfully written to avoid data loss.
@@ -725,6 +730,11 @@ class RepoFileWatcher {
   /** Return a snapshot of all current file problems. */
   getProblems(): FileIssue[] {
     return Array.from(this.problemFiles.values());
+  }
+
+  /** Return true when a normalized file path currently has a blocking import problem. */
+  private hasProblem(normalisedPath: string): boolean {
+    return this.problemFiles.has(normalisedPath);
   }
 
   // ---------------------------------------------------------------------------
