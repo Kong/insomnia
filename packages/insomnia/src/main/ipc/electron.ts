@@ -51,6 +51,7 @@ export type HandleChannels =
   | 'git.diffFileLoader'
   | 'git.discardChanges'
   | 'git.fetchGitRemoteBranches'
+  | 'git.getProjectGitFileIssues'
   | 'git.validateGitRepositoryCredentials'
   | 'git.validateGitCredentialById'
   | 'git.getGitBranches'
@@ -212,7 +213,8 @@ export type RendererOnChannels =
   | 'show-oauth-authorization-modal'
   | 'hide-oauth-authorization-modal'
   | 'mcp-auth-confirmation'
-  | 'git.db-synced';
+  | 'git.db-synced'
+  | 'git.file-problems-changed';
 
 export const ipcMainOn = (
   channel: MainOnChannels,
