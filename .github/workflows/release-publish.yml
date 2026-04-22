@@ -68,6 +68,16 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
+      - name: Compare input version with package.json version
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          PKG_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "Input version $VERSION does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
+
       - name: Download all artifacts from release-build.yml
         uses: dawidd6/action-download-artifact@8305c0f1062bb0d184d09ef4493ecb9288447732 # v20
         with:
