@@ -18,7 +18,7 @@ import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
 import { version } from '../../../package.json';
-import { getOauthRedirectUrl } from '../../common/constants';
+import { getOauthRedirectUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../common/constants';
 import { escapeRegex } from '../../common/misc';
 import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/event-bus';
 import { invariant } from '../../utils/invariant';
@@ -39,13 +39,12 @@ import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } fro
 const { isRequestGroup, isRequestGroupId } = models.requestGroup;
 
 async function getOAuthWindowHandleSession(): Promise<string> {
-  const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
-  const token = await window.main.electronStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  const token = await window.main.electronStorage.getItem(OAUTH_WINDOW_SESSION_ID_KEY);
   if (token) {
     return token;
   }
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
-  await window.main.electronStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  await window.main.electronStorage.setItem(OAUTH_WINDOW_SESSION_ID_KEY, authWindowSessionId);
   return authWindowSessionId;
 }
 
