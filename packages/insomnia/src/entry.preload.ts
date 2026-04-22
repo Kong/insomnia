@@ -5,6 +5,7 @@ import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-conf
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 
 import type { GitServiceAPI } from './main/git-service';
+import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { AIFeatureNames } from './main/llm-config-service';
@@ -108,6 +109,11 @@ const secretStorage: secretStorageBridgeAPI = {
   decryptString: cipherText => ipcRenderer.invoke('secretStorage.decryptString', cipherText),
 };
 
+const electronStorage: electronStorageBridgeAPI = {
+  getItem: key => ipcRenderer.invoke('electronStorage.getItem', key),
+  setItem: (key, value) => ipcRenderer.invoke('electronStorage.setItem', key, value),
+};
+
 const git: GitServiceAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
   getGitBranches: options => ipcRenderer.invoke('git.getGitBranches', options),
@@ -209,6 +215,7 @@ const main: Window['main'] = {
   grpc,
   curl,
   secretStorage,
+  electronStorage,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),

@@ -120,6 +120,8 @@ export type HandleChannels =
   | 'readDir'
   | 'readOrCreateDataDir'
   | 'restoreBackup'
+  | 'electronStorage.getItem'
+  | 'electronStorage.setItem'
   | 'secretStorage.decryptString'
   | 'secretStorage.deleteSecret'
   | 'secretStorage.encryptString'

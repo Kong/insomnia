@@ -59,6 +59,7 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
+import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
@@ -160,6 +161,7 @@ export interface RendererToMainBridgeAPI {
   git: GitServiceAPI;
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
+  electronStorage: electronStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
