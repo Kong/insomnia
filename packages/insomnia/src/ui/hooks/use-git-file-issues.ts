@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useOutletContext } from 'react-router';
+import React, {
+  createContext,
+  type FC,
+  type PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import type { WorkspaceFileIssue } from '~/main/git-service';
 import type { FileProblemsChangedPayload } from '~/sync/git/repo-file-watcher';
@@ -9,11 +17,23 @@ const mapIssuesByWorkspaceId = (issues: WorkspaceFileIssue[]) => {
   return Object.fromEntries(issues.map(issue => [issue.workspaceId, issue])) as Record<string, WorkspaceFileIssue>;
 };
 
-interface GitFileIssuesValue {
+export interface GitFileIssuesValue {
   issuesByWorkspaceId: Record<string, WorkspaceFileIssue>;
-  getWorkspaceIssue: (workspaceId: string) => WorkspaceFileIssue | undefined;
-  reloadIssues: () => Promise<void>;
 }
+
+const GitFileIssuesContext = createContext<GitFileIssuesValue | undefined>(undefined);
+
+export const GitFileIssuesProvider: FC<PropsWithChildren<{ value: GitFileIssuesValue }>> = ({ value, children }) => {
+  return React.createElement(GitFileIssuesContext.Provider, { value }, children);
+};
+
+export const useGitFileIssues = () => {
+  const gitFileIssues = useContext(GitFileIssuesContext);
+
+  invariant(gitFileIssues, 'useGitFileIssues must be used within the git file issues provider');
+
+  return gitFileIssues;
+};
 
 export const useProjectGitFileIssues = ({
   projectId,
@@ -24,7 +44,7 @@ export const useProjectGitFileIssues = ({
 }): GitFileIssuesValue => {
   const [issuesByWorkspaceId, setIssuesByWorkspaceId] = useState<Record<string, WorkspaceFileIssue>>({});
 
-  const reloadIssues = useCallback(async () => {
+  const loadIssues = useCallback(async () => {
     if (!projectId || !gitRepositoryId) {
       setIssuesByWorkspaceId({});
       return;
@@ -44,8 +64,8 @@ export const useProjectGitFileIssues = ({
   }, [gitRepositoryId, projectId]);
 
   useEffect(() => {
-    reloadIssues();
-  }, [reloadIssues]);
+    loadIssues();
+  }, [loadIssues]);
 
   useEffect(() => {
     if (!gitRepositoryId) {
@@ -64,17 +84,7 @@ export const useProjectGitFileIssues = ({
   return useMemo<GitFileIssuesValue>(
     () => ({
       issuesByWorkspaceId,
-      getWorkspaceIssue: (workspaceId: string) => issuesByWorkspaceId[workspaceId],
-      reloadIssues,
     }),
-    [issuesByWorkspaceId, reloadIssues],
+    [issuesByWorkspaceId],
   );
-};
-
-export const useGitFileIssues = () => {
-  const gitFileIssues = useOutletContext<GitFileIssuesValue | undefined>();
-
-  invariant(gitFileIssues, 'useGitFileIssues must be used within the project route outlet context');
-
-  return gitFileIssues;
 };

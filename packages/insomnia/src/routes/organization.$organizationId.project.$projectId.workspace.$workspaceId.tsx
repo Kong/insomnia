@@ -390,8 +390,8 @@ const Component = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { getWorkspaceIssue } = useGitFileIssues();
-  const currentIssue = getWorkspaceIssue(workspaceId);
+  const { issuesByWorkspaceId } = useGitFileIssues();
+  const currentIssue = issuesByWorkspaceId[workspaceId];
 
   const handleBackToList = () => {
     navigate(

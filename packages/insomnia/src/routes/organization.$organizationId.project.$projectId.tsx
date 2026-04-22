@@ -2,7 +2,7 @@ import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
+import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
@@ -37,7 +37,11 @@ const Component = () => {
     gitRepositoryId,
   });
 
-  return <Outlet context={gitFileIssues} />;
+  return (
+    <GitFileIssuesProvider value={gitFileIssues}>
+      <Outlet />
+    </GitFileIssuesProvider>
+  );
 };
 
 export default Component;
