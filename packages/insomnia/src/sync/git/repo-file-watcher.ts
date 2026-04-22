@@ -78,7 +78,7 @@ export interface WatcherNotifier {
   onProblemsChanged: (problems: FileIssue[]) => void;
 }
 
-export class RepoFileWatcher {
+class RepoFileWatcher {
   private readonly repoDir: string;
   private readonly projectId: string;
   private readonly notifier: WatcherNotifier;
@@ -287,7 +287,6 @@ export class RepoFileWatcher {
       const absPath = path.normalize(path.join(this.repoDir, gitFilePath));
 
       if (this.hasProblem(absPath)) {
-        console.warn('[repo-file-watcher] Skipping flush for problem file:', gitFilePath);
         continue;
       }
 
