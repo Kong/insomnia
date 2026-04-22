@@ -1,6 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { app } from 'electron';
+
+let electronStorage: ElectronStorage | null = null;
+export function getElectronStorage() {
+  const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
+  if (!electronStorage) {
+    electronStorage = new ElectronStorage(electronStoragePath);
+  }
+  return electronStorage;
+}
+
 class ElectronStorage {
   _buffer: Record<string, string> = {};
   _timeouts: Record<string, NodeJS.Timeout> = {};

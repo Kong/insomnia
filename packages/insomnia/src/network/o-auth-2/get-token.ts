@@ -14,6 +14,7 @@ import type {
   Response,
 } from '~/insomnia-data';
 import { database as db, models, services } from '~/insomnia-data';
+import { getElectronStorage } from '~/main/electron-storage';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
@@ -38,17 +39,18 @@ import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } fro
 
 const { isRequestGroup, isRequestGroupId } = models.requestGroup;
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+const electronStorage = getElectronStorage();
 
 export function initNewOAuthSession() {
   // the value of this variable needs to start with 'persist:'
   // otherwise sessions won't be persisted over application-restarts
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
-  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  electronStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
 }
 
 export function getOAuthSession(): string {
-  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  const token = electronStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
   return token || initNewOAuthSession();
 }
 

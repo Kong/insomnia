@@ -121,7 +121,6 @@ app.on('ready', async () => {
   await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
   watchProxySettings();
-  windowUtils.init();
 
   await runGitCredentialsMigration();
 

@@ -20,7 +20,7 @@ import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC
 import { docsBase } from '../common/documentation';
 import { isLinux, isMac } from '../common/platform';
 import { invariant } from '../utils/invariant';
-import ElectronStorage from './electron-storage';
+import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 
@@ -30,9 +30,8 @@ const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
-let electronStorage: ElectronStorage | null = null;
 let hiddenWindowIsBusy = false;
-
+const electronStorage = getElectronStorage();
 interface Bounds {
   height?: number;
   width?: number;
@@ -40,9 +39,6 @@ interface Bounds {
   y?: number;
 }
 
-export function init() {
-  initElectronStorage();
-}
 const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => {
   return await new Promise<void>(resolve => {
     // overwrite the closed handler
@@ -779,16 +775,9 @@ export const setZoom = (transformer: (current: number) => number) => () => {
   const actual = Math.min(Math.max(ZOOM_MIN, desired), ZOOM_MAX);
 
   browserWindow.webContents.setZoomLevel(actual);
+  const electronStorage = getElectronStorage();
   electronStorage?.setItem('zoomFactor', actual);
 };
-
-export function initElectronStorage() {
-  const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
-  if (!electronStorage) {
-    electronStorage = new ElectronStorage(electronStoragePath);
-  }
-  return electronStorage;
-}
 
 export function createWindowsAndReturnMain() {
   const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
