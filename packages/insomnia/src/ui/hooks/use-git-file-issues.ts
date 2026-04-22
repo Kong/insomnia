@@ -55,7 +55,6 @@ export const useProjectGitFileIssues = ({
         projectId,
         gitRepositoryId,
       });
-      console.log('[git-file-issues] Loaded workspace file problems', issues);
 
       setIssuesByWorkspaceId(mapIssuesByWorkspaceId(issues));
     } catch (error) {
