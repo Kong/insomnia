@@ -14,7 +14,6 @@ import type {
   Response,
 } from '~/insomnia-data';
 import { database as db, models, services } from '~/insomnia-data';
-import { getElectronStorage } from '~/main/electron-storage';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
@@ -39,15 +38,14 @@ import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } fro
 
 const { isRequestGroup, isRequestGroupId } = models.requestGroup;
 
-function getOAuthWindowHandleSession(): string {
-  const electronStorage = getElectronStorage();
+async function getOAuthWindowHandleSession(): Promise<string> {
   const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
-  const token = electronStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  const token = await window.main.electronStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
   if (token) {
     return token;
   }
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
-  electronStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  await window.main.electronStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
 }
 
@@ -102,7 +100,7 @@ export const getOAuth2Token = async (
         url: implicitUrl.toString(),
         urlSuccessRegex: /(access_token=|id_token=)/,
         urlFailureRegex: /(error=)/,
-        sessionId: getOAuthWindowHandleSession(),
+        sessionId: await getOAuthWindowHandleSession(),
       });
       console.log('[oauth2] Detected redirect ' + redirectedTo);
 
@@ -182,7 +180,7 @@ export const getOAuth2Token = async (
           urlFailureRegex: authentication.redirectUrl
             ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i')
             : /([?&]error=)/i,
-          sessionId: getOAuthWindowHandleSession(),
+          sessionId: await getOAuthWindowHandleSession(),
         });
       }
 
