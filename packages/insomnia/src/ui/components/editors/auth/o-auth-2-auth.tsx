@@ -2,6 +2,7 @@ import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, u
 
 import type { AuthTypeOAuth2, OAuth2ResponseType, OAuth2Token, RequestAuthentication } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
+import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import { getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
@@ -17,7 +18,6 @@ import {
   PKCE_CHALLENGE_S256,
 } from '../../../../network/o-auth-2/constants';
 import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
-import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -427,7 +427,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
                 <div className="pad-top text-right">
                   <button
                     className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
-                    onClick={initNewOAuthSession}
+                    onClick={clearOAuthWindowSessionId}
                   >
                     Clear OAuth 2 session
                   </button>

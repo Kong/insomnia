@@ -38,20 +38,17 @@ import {
 import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } from './constants';
 
 const { isRequestGroup, isRequestGroupId } = models.requestGroup;
-const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
-const electronStorage = getElectronStorage();
 
-export function initNewOAuthSession() {
-  // the value of this variable needs to start with 'persist:'
-  // otherwise sessions won't be persisted over application-restarts
+function getOAuthWindowHandleSession(): string {
+  const electronStorage = getElectronStorage();
+  const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+  const token = electronStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  if (token) {
+    return token;
+  }
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
   electronStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
-}
-
-export function getOAuthSession(): string {
-  const token = electronStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
-  return token || initNewOAuthSession();
 }
 
 // NOTE
@@ -105,7 +102,7 @@ export const getOAuth2Token = async (
         url: implicitUrl.toString(),
         urlSuccessRegex: /(access_token=|id_token=)/,
         urlFailureRegex: /(error=)/,
-        sessionId: getOAuthSession(),
+        sessionId: getOAuthWindowHandleSession(),
       });
       console.log('[oauth2] Detected redirect ' + redirectedTo);
 
@@ -185,7 +182,7 @@ export const getOAuth2Token = async (
           urlFailureRegex: authentication.redirectUrl
             ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i')
             : /([?&]error=)/i,
-          sessionId: getOAuthSession(),
+          sessionId: getOAuthWindowHandleSession(),
         });
       }
 
