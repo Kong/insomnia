@@ -68,8 +68,11 @@ jobs:
       - name: Get version
         shell: bash
         run: |
-          echo "RELEASE_VERSION=$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
-          echo "RELEASE_BRANCH=release/$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
+          VERSION=$(node -p "require('./packages/insomnia/package.json').version")
+          MAJOR_MINOR=$(echo $VERSION | cut -d. -f1,2)
+
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH=release/$MAJOR_MINOR" >> $GITHUB_ENV
 
       - name: Create Branch # Create a branch if it doesn't exist
         uses: peterjgrainger/action-create-branch@c2800a3a9edbba2218da6861fa46496cf8f3195a # v2.2.0

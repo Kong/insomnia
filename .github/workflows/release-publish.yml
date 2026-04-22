@@ -36,7 +36,6 @@ jobs:
       actions: read # For getting workflow run info for keyless signing of docker image
       contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       packages: write
-      pull-requests: write # Required to run `gh pr list` command
     steps:
       - name: Calculate Release Branch
         env:
@@ -270,23 +269,6 @@ jobs:
             --dist-version focal
             --package-type insomnia
             ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
-
-      - name: Close Release PR (No Merge Policy)
-        run: |
-          # 1. Find the PR number for the release branch
-          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --state open --json number --jq '.[0].number')
-
-          # 2. If a PR exists, close it with a comment
-          if [ -n "$PR_NUMBER" ]; then
-            echo "Closing PR #$PR_NUMBER for $BRANCH_NAME..."
-            gh pr close "$PR_NUMBER" \
-              --comment "As per our release flow, $BRANCH_NAME is never merged back to develop."
-          else
-            echo "No open PR found for $BRANCH_NAME. Moving on."
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH_NAME: ${{ env.RELEASE_BRANCH }} 
 
   artifact-provenance:
     needs: [publish]
