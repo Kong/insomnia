@@ -20,7 +20,7 @@ jobs:
       contents: read # Required for actions/checkout
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       # Perform SCA / SBOM analysis for the entire monorepo code repository
       # Produces SCA(SBOM and CVE) report
@@ -307,7 +307,7 @@ jobs:
 
       - name: Login to Docker Hub
         if: runner.os == 'Linux' && runner.arch == 'X64'
-        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ secrets.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}

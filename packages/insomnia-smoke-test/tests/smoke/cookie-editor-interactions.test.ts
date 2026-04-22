@@ -87,7 +87,7 @@ test.describe('Cookie editor', () => {
 
   test('cookie list should update when cookie is updated', async ({ page }) => {
     // Open cookie editor
-    await page.click('button:has-text("Cookies")');
+    await page.getByRole('button', { name: 'Cookies' }).click();
 
     // Set domain to empty
     await page.getByTestId('cookie-test-iteration-0').getByRole('button', { name: 'Edit' }).click();
