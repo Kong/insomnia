@@ -145,7 +145,7 @@
     "tinykeys": "^3.0.0",
     "tough-cookie": "^4.1.4",
     "tweetnacl": "^1.0.3",
-    "undici": "^7.16.0",
+    "undici": "^7.25.0",
     "uuid": "^9.0.1",
     "vkbeautify": "^0.99.3",
     "ws": "^8.18.1",
