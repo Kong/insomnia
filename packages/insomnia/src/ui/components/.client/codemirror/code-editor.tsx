@@ -106,9 +106,7 @@ function setEditorValueWithTruncation(
     const el = document.createElement('span');
     el.className = 'line-collapse-widget';
     el.style.cssText =
-      'display:inline-block;padding:0 6px;margin:0 2px;background:var(--hl-md);color:var(--color-font);' +
-      'border-radius:3px;font-size:0.85em;cursor:pointer;vertical-align:baseline;';
-
+      'display:inline-block; padding:0 6px ;margin:0 2px; background:var(--hl-md); color:var(--color-font); border-radius:3px; font-size:0.85em; cursor:pointer; vertical-align:baseline;';
     el.textContent = '\u2026 Show full value \u2026';
     el.title = 'Expanding long values can affect performance';
     el.setAttribute('aria-label', 'Show full value');
