@@ -124,6 +124,7 @@ interface GeneratedCommitsFormProps {
   gitRepository?: GitRepository | null;
   selectedCredential?: GitCredentials | null;
   selectedProvider?: GitProviderOption | null;
+  isNonOriginBranch?: boolean;
 }
 
 interface FileItem {
@@ -288,6 +289,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   gitRepository,
   selectedCredential,
   selectedProvider,
+  isNonOriginBranch,
 }) => {
   const commitsFetcher = useGitProjectCommitsActionFetcher();
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
@@ -523,7 +525,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
 
           <Button
             type="submit"
-            isDisabled={committingActionRef.current === 'commit-push' && isCommitting}
+            isDisabled={isNonOriginBranch || (committingActionRef.current === 'commit-push' && isCommitting)}
             name="push"
             value="true"
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -584,6 +586,7 @@ interface ManualCommitFormProps {
   gitRepository?: GitRepository | null;
   selectedCredential?: GitCredentials | null;
   selectedProvider?: GitProviderOption | null;
+  isNonOriginBranch?: boolean;
 }
 
 const ManualCommitForm: FC<ManualCommitFormProps> = ({
@@ -600,6 +603,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   gitRepository,
   selectedCredential,
   selectedProvider,
+  isNonOriginBranch,
 }) => {
   const commitFetcher = useGitProjectCommitActionFetcher();
 
@@ -745,19 +749,38 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               Commit
             </Button>
 
-            <Button
-              type="submit"
-              isDisabled={(committingActionRef.current === 'commit-push' && isCommitting) || stagedCount === 0}
-              name="push"
-              value="true"
-              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon
-                icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
-                className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
-              />{' '}
-              Commit and push
-            </Button>
+            {isNonOriginBranch ? (
+              <TooltipTrigger>
+                <Button
+                  name="push"
+                  value="true"
+                  onPress={() => {}}
+                  className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) opacity-50 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="cloud-arrow-up" className="w-5" /> Commit and push
+                </Button>
+                <Tooltip
+                  offset={8}
+                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                >
+                  Push action is not allowed for branches on non-origin remotes
+                </Tooltip>
+              </TooltipTrigger>
+            ) : (
+              <Button
+                type="submit"
+                isDisabled={committingActionRef.current === 'commit-push' && isCommitting}
+                name="push"
+                value="true"
+                className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+              >
+                <Icon
+                  icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
+                  className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
+                />{' '}
+                Commit and push
+              </Button>
+            )}
           </div>
         )}
         {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
@@ -1034,6 +1057,7 @@ export interface GitProjectStagingModalCallbackProps {
 
 export interface GitProjectStagingModalOptions {
   mode?: StagingModalMode;
+  isNonOriginBranch?: boolean;
   /* Why is callbackRef a ref object?
    * The callbacks passed to the modal (onClose, onPullAfterCommit, onPushAfterPull) may change after the show function is called.
    * If we were to pass the callbacks directly, the modal would capture the initial callbacks and not reflect any updates to them.
@@ -1057,8 +1081,8 @@ export const GitProjectStagingModal = forwardRef<GitProjectStagingModalHandle>((
   }, []);
 
   useImperativeHandle(ref, () => ({
-    show: ({ mode: newMode = StagingModalModes.default, callbackRef }) => {
-      setModalOptions({ mode: newMode, callbackRef });
+    show: ({ mode: newMode = StagingModalModes.default, callbackRef, isNonOriginBranch }) => {
+      setModalOptions({ mode: newMode, callbackRef, isNonOriginBranch });
       setIsOpen(true);
     },
     hide,
@@ -1082,6 +1106,7 @@ export const GitProjectStagingModal = forwardRef<GitProjectStagingModalHandle>((
     isOpen && (
       <OriginalGitProjectStagingModal
         mode={modalOptions?.mode}
+        isNonOriginBranch={modalOptions?.isNonOriginBranch}
         onClose={onClose}
         onPullAfterCommit={onPullAfterCommit}
         onPushAfterPull={onPushAfterPull}
@@ -1094,8 +1119,9 @@ GitProjectStagingModal.displayName = 'GitProjectStagingModal';
 const OriginalGitProjectStagingModal: FC<
   {
     mode?: StagingModalMode;
+    isNonOriginBranch?: boolean;
   } & GitProjectStagingModalCallbackProps
-> = ({ mode = StagingModalModes.default, onClose, onPullAfterCommit, onPushAfterPull }) => {
+> = ({ mode = StagingModalModes.default, isNonOriginBranch, onClose, onPullAfterCommit, onPushAfterPull }) => {
   const { projectId } = useParams() as { projectId: string };
 
   const [commitGenerationKey, setCommitGenerationKey] = useState(0);
@@ -1373,6 +1399,7 @@ const OriginalGitProjectStagingModal: FC<
                         gitRepository={gitRepository}
                         selectedCredential={selectedCredential}
                         selectedProvider={selectedProvider}
+                        isNonOriginBranch={isNonOriginBranch}
                       />
                     )}
 
@@ -1391,6 +1418,7 @@ const OriginalGitProjectStagingModal: FC<
                         gitRepository={gitRepository}
                         selectedCredential={selectedCredential}
                         selectedProvider={selectedProvider}
+                        isNonOriginBranch={isNonOriginBranch}
                       />
                     )}
                   </div>

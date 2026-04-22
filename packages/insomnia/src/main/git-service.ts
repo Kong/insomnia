@@ -278,6 +278,39 @@ export async function getProjectGitFileIssues({
   });
 }
 
+export interface BranchRemoteInfo {
+  trackingRemote: string | null;
+  isOrigin: boolean;
+  remoteUrl: string | null;
+  remotes: { remote: string; url: string }[];
+}
+
+export const getBranchRemoteInfo = async ({
+  projectId,
+  workspaceId,
+}: {
+  projectId: string;
+  workspaceId?: string;
+}): Promise<BranchRemoteInfo> => {
+  await getGitRepository({ projectId, workspaceId });
+  const branchInfo = await GitVCS.getBranchRemoteInfo();
+  const remotes = await GitVCS.listRemotes();
+  return { ...branchInfo, remotes };
+};
+
+async function assertBranchOnOrigin(context: string): Promise<void> {
+  const { trackingRemote, isOrigin, remoteUrl } = await GitVCS.getBranchRemoteInfo();
+  if (!isOrigin) {
+    const branch = await GitVCS.getCurrentBranch();
+    throw new Error(
+      `Cannot ${context}: branch "${branch}" tracks remote "${trackingRemote}" (${remoteUrl}), ` +
+        `but Insomnia only manages the "origin" remote. ` +
+        `Use the git CLI to ${context} this branch, or run: ` +
+        `git branch --set-upstream-to=origin/${branch}`,
+    );
+  }
+}
+
 /**
  * Creates a file system client for Git operations
  * Returns different clients based on whether we're working with a workspace or project
@@ -461,6 +494,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         branches: await GitVCS.listBranches(),
         gitRepository: gitRepository,
         legacyInsomniaWorkspace,
+        branchRemoteInfo: {
+          ...(await GitVCS.getBranchRemoteInfo()),
+          remotes: await GitVCS.listRemotes(),
+        },
       };
     }
 
@@ -518,6 +555,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       branches: await GitVCS.listBranches(),
       gitRepository,
       legacyInsomniaWorkspace,
+      branchRemoteInfo: {
+        ...(await GitVCS.getBranchRemoteInfo()),
+        remotes: await GitVCS.listRemotes(),
+      },
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while fetching git repository.';
@@ -562,6 +603,7 @@ export const getGitBranches = async ({
 
 export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
   try {
+    await assertBranchOnOrigin('fetch');
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     await GitVCS.fetch({
       singleBranch: true,
@@ -676,6 +718,10 @@ export const canPushLoader = async ({
   workspaceId?: string;
 }): Promise<GitCanPushLoaderData> => {
   try {
+    const { isOrigin } = await GitVCS.getBranchRemoteInfo();
+    if (!isOrigin) {
+      return { canPush: false };
+    }
     let hasUnpushedChanges = false;
     const gitRepository = await getGitRepository({ workspaceId, projectId });
     hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
@@ -1633,6 +1679,7 @@ export const commitAndPushToGitRepoAction = async ({
   workspaceId?: string;
   message: string;
 }): Promise<CommitToGitRepoResult> => {
+  await assertBranchOnOrigin('push');
   const repo = await getGitRepository({ workspaceId, projectId });
 
   // Validate credentials before committing to prevent orphaned local commits
@@ -1812,6 +1859,7 @@ export const createNewGitBranchAction = async ({
 export interface CheckoutGitBranchResult {
   errors?: string[];
   success?: boolean;
+  warnings?: string[];
 }
 
 export const checkoutGitBranchAction = async ({
@@ -1856,6 +1904,18 @@ export const checkoutGitBranchAction = async ({
     });
 
     await database.flushChanges(bufferId);
+
+    const branchRemoteInfo = await GitVCS.getBranchRemoteInfo(branch);
+    if (!branchRemoteInfo.isOrigin) {
+      return {
+        success: true,
+        warnings: [
+          `Branch "${branch}" tracks remote "${branchRemoteInfo.trackingRemote}". ` +
+            `Push, pull, and fetch will not work from Insomnia. Use the git CLI to sync this branch.`,
+        ],
+      };
+    }
+
     return {
       success: true,
     };
@@ -2024,6 +2084,7 @@ export const pushToGitRemoteAction = async ({
   workspaceId?: string;
   force?: boolean;
 }): Promise<PushToGitRemoteResult> => {
+  await assertBranchOnOrigin('push');
   const gitRepository = await getGitRepository({ projectId, workspaceId });
 
   // Flush DB changes to disk before pushing
@@ -2170,6 +2231,7 @@ export async function fetchGitRemoteBranches({
 
 export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   try {
+    await assertBranchOnOrigin('pull');
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     invariant(gitRepository.credentialsId, 'Git Credentials ID is required');
     const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
@@ -2820,6 +2882,7 @@ export interface GitServiceAPI {
   getGitProviderRepositories: typeof getGitProviderRepositories;
   getGitProviderEmails: typeof getGitProviderEmails;
   listGitProviders: typeof listGitProviders;
+  getBranchRemoteInfo: typeof getBranchRemoteInfo;
 }
 
 export const registerGitServiceAPI = () => {
@@ -2922,5 +2985,8 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle(
     'git.getCurrentBranchByRepositoryId',
     (_, options: Parameters<typeof getCurrentBranchByRepositoryId>[0]) => getCurrentBranchByRepositoryId(options),
+  );
+  ipcMainHandle('git.getBranchRemoteInfo', (_, options: Parameters<typeof getBranchRemoteInfo>[0]) =>
+    getBranchRemoteInfo(options),
   );
 };

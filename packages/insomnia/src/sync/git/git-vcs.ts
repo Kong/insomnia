@@ -1057,6 +1057,42 @@ export class GitVCS {
     return git.listRemotes({ ...this._baseOpts });
   }
 
+  async getBranchTrackingRemote(branch?: string): Promise<string | null> {
+    const currentBranch = branch || (await this.getCurrentBranch());
+    try {
+      const remote = await git.getConfig({
+        ...this._baseOpts,
+        path: `branch.${currentBranch}.remote`,
+      });
+      return remote || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async getRemoteUrl(remoteName: string): Promise<string | null> {
+    try {
+      const url = await git.getConfig({
+        ...this._baseOpts,
+        path: `remote.${remoteName}.url`,
+      });
+      return url || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async getBranchRemoteInfo(branch?: string): Promise<{
+    trackingRemote: string | null;
+    isOrigin: boolean;
+    remoteUrl: string | null;
+  }> {
+    const trackingRemote = await this.getBranchTrackingRemote(branch);
+    const isOrigin = trackingRemote === null || trackingRemote === 'origin';
+    const remoteUrl = trackingRemote ? await this.getRemoteUrl(trackingRemote) : null;
+    return { trackingRemote, isOrigin, remoteUrl };
+  }
+
   async setAuthor(author?: GitAuthor) {
     let name = '';
     let email = '';
