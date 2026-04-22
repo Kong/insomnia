@@ -434,7 +434,7 @@ class RepoFileWatcher {
     }
 
     await this.deleteOrphans(docs);
-    await this.upsertDocs(absPath, normalised, docs);
+    await this.upsertDocs(absPath, normalised, result.mtimeMs, docs);
 
     this.notifyRenderer();
   }
@@ -546,6 +546,7 @@ class RepoFileWatcher {
   private async upsertDocs(
     absPath: string,
     normalised: string,
+    syncTime: number,
     docs: NonNullable<ReturnType<typeof tryImportV5Data>['data']>,
   ): Promise<void> {
     const bufferId = await db.bufferChanges();
@@ -556,6 +557,7 @@ class RepoFileWatcher {
           const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(doc._id);
           await services.workspaceMeta.update(workspaceMeta, {
             gitFilePath: this.toPosixRelPath(absPath),
+            gitFileLastSyncTime: syncTime,
           });
           this.lastKnownGitFilePath.set(doc._id, normalised);
         }
@@ -668,7 +670,6 @@ class RepoFileWatcher {
   private async removeOrphanedWorkspaces(currentDiskFiles: string[]): Promise<void> {
     const diskFileSet = new Set(currentDiskFiles.map(f => path.normalize(f)));
     const entries = await this.getWorkspacesWithMeta();
-
     for (const { workspace, meta } of entries) {
       if (!meta?.gitFilePath) {
         continue;
