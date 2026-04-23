@@ -10,8 +10,8 @@ import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
-import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 import { KonnectSettings } from '~/ui/components/settings/konnect-settings';
+import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
