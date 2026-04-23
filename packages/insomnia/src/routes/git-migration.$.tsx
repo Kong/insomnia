@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Button } from '~/basic-components/button';
@@ -24,6 +24,7 @@ const MigrationView = () => {
         setMigrationLogs(result.logs);
         setFailedProjects(result.failedProjects);
         setStatus(result.failedProjects.length > 0 ? 'partiallyCompleted' : 'completed');
+        localStorage.setItem('gitMigrationScreenShown', String(CURRENT_MIGRATION_VERSION));
       })
       .catch((err: unknown) => {
         const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred.';
@@ -161,10 +162,6 @@ const MigrationView = () => {
 
 const Component = () => {
   const [showMigrationView, setShowMigrationView] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem('gitMigrationScreenShown', String(CURRENT_MIGRATION_VERSION));
-  }, []);
 
   return (
     <div className="relative flex h-full w-full bg-(--color-bg) text-left">
