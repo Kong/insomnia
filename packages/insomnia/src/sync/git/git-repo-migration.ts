@@ -26,6 +26,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+export type MigrationLogger = (level: 'info' | 'warn' | 'error', message: string) => void;
+
 import type { GitRepository, Workspace, WorkspaceMeta } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
@@ -52,27 +54,25 @@ const inProgressMigrations = new Set<string>();
  * Returns true if the migration has already run at the current version AND
  * the on-disk layout looks correct. The disk check takes precedence so that a
  * downgrade that recreates the old directories is always caught.
+ *
+ * Accepts a pre-fetched `gitRepo` so the caller avoids an extra DB round-trip.
  */
-async function hasMigrated(baseDir: string, gitRepositoryId: string): Promise<boolean> {
+async function hasMigrated(baseDir: string, gitRepo: GitRepository | null | undefined): Promise<boolean> {
   // Disk override: old layout directories mean migration is definitely needed.
-  if (await dirExists(path.join(baseDir, 'git'))) return false;
-  if (await dirExists(path.join(baseDir, 'other'))) return false;
+  // Both checks run in parallel — they're independent stat calls.
+  const [hasOldGit, hasOldOther] = await Promise.all([
+    dirExists(path.join(baseDir, 'git')),
+    dirExists(path.join(baseDir, 'other')),
+  ]);
+  if (hasOldGit || hasOldOther) return false;
 
-  const gitRepo = await db.findOne<GitRepository>(models.gitRepository.type, {
-    _id: gitRepositoryId,
-  });
   return (gitRepo?.repoMigrationVersion ?? 0) >= CURRENT_MIGRATION_VERSION;
 }
 
-async function markMigrated(gitRepositoryId: string): Promise<void> {
-  const gitRepo = await db.findOne<GitRepository>(models.gitRepository.type, {
-    _id: gitRepositoryId,
+async function markMigrated(gitRepo: GitRepository): Promise<void> {
+  await db.docUpdate<GitRepository>(gitRepo, {
+    repoMigrationVersion: CURRENT_MIGRATION_VERSION,
   });
-  if (gitRepo) {
-    await db.docUpdate<GitRepository>(gitRepo, {
-      repoMigrationVersion: CURRENT_MIGRATION_VERSION,
-    });
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -82,8 +82,9 @@ async function markMigrated(gitRepositoryId: string): Promise<void> {
 /**
  * Recursively move everything inside `srcDir` into `destDir`, then remove
  * `srcDir`. Files that already exist at the destination are overwritten.
+ * All entries at each level are processed in parallel.
  */
-async function moveDirectoryContents(srcDir: string, destDir: string): Promise<void> {
+async function moveDirectoryContents(srcDir: string, destDir: string, logger?: MigrationLogger): Promise<void> {
   let entries: fs.Dirent[];
   try {
     entries = await fs.promises.readdir(srcDir, { withFileTypes: true });
@@ -91,40 +92,46 @@ async function moveDirectoryContents(srcDir: string, destDir: string): Promise<v
     return; // srcDir doesn't exist or isn't readable
   }
 
-  for (const entry of entries) {
-    const srcPath = path.join(srcDir, entry.name);
-    const destPath = path.join(destDir, entry.name);
+  await Promise.all(
+    entries.map(async entry => {
+      const srcPath = path.join(srcDir, entry.name);
+      const destPath = path.join(destDir, entry.name);
 
-    if (entry.isDirectory()) {
-      await fs.promises.mkdir(destPath, { recursive: true });
-      await moveDirectoryContents(srcPath, destPath);
-      try {
-        await fs.promises.rm(srcPath, { recursive: false });
-      } catch {
-        // Ignore if dir not empty (shouldn't happen after recursive move)
-      }
-    } else if (entry.isSymbolicLink()) {
-      // Preserve symlinks — copyFile would dereference them, losing the link.
-      const linkTarget = await fs.promises.readlink(srcPath);
-      await fs.promises.symlink(linkTarget, destPath).catch(() => {
-        // Destination symlink may already exist; ignore.
-      });
-      await fs.promises.unlink(srcPath);
-    } else {
-      const destExists = await fs.promises
-        .access(destPath)
-        .then(() => true)
-        .catch(() => false);
-      if (destExists) {
-        console.warn('[git-migration] Overwriting existing file during move:', destPath);
-      }
-      await fs.promises.rename(srcPath, destPath).catch(async () => {
-        // Cross-device rename falls back to copy + delete
-        await fs.promises.copyFile(srcPath, destPath);
+      if (entry.isDirectory()) {
+        await fs.promises.mkdir(destPath, { recursive: true });
+        await moveDirectoryContents(srcPath, destPath, logger);
+        try {
+          await fs.promises.rm(srcPath, { recursive: false });
+        } catch {
+          // Ignore if dir not empty (shouldn't happen after recursive move)
+        }
+      } else if (entry.isSymbolicLink()) {
+        // Preserve symlinks — copyFile would dereference them, losing the link.
+        const linkTarget = await fs.promises.readlink(srcPath);
+        try {
+          await fs.promises.symlink(linkTarget, destPath);
+        } catch (err: unknown) {
+          // Only ignore EEXIST — any other failure (e.g. permissions) is real.
+          if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+        }
         await fs.promises.unlink(srcPath);
-      });
-    }
-  }
+      } else {
+        const destExists = await fs.promises
+          .access(destPath)
+          .then(() => true)
+          .catch(() => false);
+        if (destExists) {
+          console.warn('[git-migration] Overwriting existing file during move:', destPath);
+          logger?.('warn', `Overwriting existing file during move: ${destPath}`);
+        }
+        await fs.promises.rename(srcPath, destPath).catch(async () => {
+          // Cross-device rename falls back to copy + delete
+          await fs.promises.copyFile(srcPath, destPath);
+          await fs.promises.unlink(srcPath);
+        });
+      }
+    }),
+  );
 
   try {
     await fs.promises.rm(srcDir, { recursive: false });
@@ -153,7 +160,7 @@ async function dirExists(dirPath: string): Promise<boolean> {
  * (parent of `.git/`), so any stale entry must be stripped to prevent native
  * git commands from resolving to the wrong path.
  */
-async function sanitizeGitConfig(gitDir: string): Promise<void> {
+async function sanitizeGitConfig(gitDir: string, logger?: MigrationLogger): Promise<void> {
   const configPath = path.join(gitDir, 'config');
   try {
     const original = await fs.promises.readFile(configPath, 'utf8');
@@ -164,6 +171,7 @@ async function sanitizeGitConfig(gitDir: string): Promise<void> {
     if (sanitized !== original) {
       await fs.promises.writeFile(configPath, sanitized, 'utf8');
       console.log('[git-migration] Removed stale core.worktree from .git/config');
+      logger?.('info', 'Removed stale core.worktree from .git/config');
     }
   } catch {
     // Config may not exist yet or is unreadable — not fatal
@@ -187,19 +195,27 @@ export async function migrateRepoStructureIfNeeded(
   baseDir: string,
   projectId: string,
   gitRepositoryId: string,
+  logger?: MigrationLogger,
 ): Promise<void> {
   // Fast synchronous guard first — avoids the async DB lookup for concurrent calls.
   if (inProgressMigrations.has(gitRepositoryId)) {
     return;
   }
 
-  if (await hasMigrated(baseDir, gitRepositoryId)) {
+  // Fetch the repo record once and reuse it for both the migration check and
+  // the version stamp update — avoids two round-trips to NeDB.
+  const gitRepo = await db.findOne<GitRepository>(models.gitRepository.type, {
+    _id: gitRepositoryId,
+  });
+
+  if (await hasMigrated(baseDir, gitRepo)) {
     return;
   }
 
   inProgressMigrations.add(gitRepositoryId);
 
   console.log(`[git-migration] Starting structure migration for repo ${gitRepositoryId}`);
+  logger?.('info', `Starting structure migration for repo ${gitRepositoryId}`);
 
   try {
     // Step 1: Rename git/ → .git/
@@ -210,35 +226,42 @@ export async function migrateRepoStructureIfNeeded(
 
     if (await dirExists(oldGitDir)) {
       console.log('[git-migration] Renaming git/ → .git/');
+      logger?.('info', 'Renaming git/ → .git/');
       // .git already exists — resume copying any remaining files from git/
       await (!(await dirExists(newGitDir))
         ? fs.promises.rename(oldGitDir, newGitDir).catch(async () => {
             // Fallback for cross-device issues (unlikely since same volume, but safe)
             await fs.promises.mkdir(newGitDir, { recursive: true });
-            await moveDirectoryContents(oldGitDir, newGitDir);
+            await moveDirectoryContents(oldGitDir, newGitDir, logger);
           })
-        : moveDirectoryContents(oldGitDir, newGitDir));
+        : moveDirectoryContents(oldGitDir, newGitDir, logger));
 
       // Strip stale core.worktree entries — the new layout uses the default.
-      await sanitizeGitConfig(newGitDir);
+      await sanitizeGitConfig(newGitDir, logger);
     }
 
     // Step 2: Collapse other/ → repo root
     const otherDir = path.join(baseDir, 'other');
     if (await dirExists(otherDir)) {
       console.log('[git-migration] Moving other/ contents to repo root');
-      await moveDirectoryContents(otherDir, baseDir);
+      logger?.('info', 'Moving other/ contents to repo root');
+      await moveDirectoryContents(otherDir, baseDir, logger);
     }
 
     // Step 3: Flush all Insomnia YAML workspaces to disk so they become real files.
     // This is a best-effort bootstrap; the routable FS client will keep disk in sync
     // for all subsequent Git operations.
-    await flushWorkspacesToDisk(baseDir, projectId);
+    await flushWorkspacesToDisk(baseDir, projectId, logger);
 
-    await markMigrated(gitRepositoryId);
+    if (gitRepo) {
+      await markMigrated(gitRepo);
+    }
     console.log(`[git-migration] Migration complete for repo ${gitRepositoryId}`);
+    logger?.('info', `Migration complete for repo ${gitRepositoryId}`);
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error('[git-migration] Migration failed (non-fatal):', err);
+    logger?.('error', `Migration failed: ${message}`);
   } finally {
     inProgressMigrations.delete(gitRepositoryId);
   }
@@ -247,8 +270,9 @@ export async function migrateRepoStructureIfNeeded(
 /**
  * Write any workspace in `projectId` that doesn't yet have an on-disk YAML
  * file to `baseDir`. This bootstraps the dual-sync state for existing repos.
+ * All workspaces are processed in parallel.
  */
-async function flushWorkspacesToDisk(baseDir: string, projectId: string): Promise<void> {
+async function flushWorkspacesToDisk(baseDir: string, projectId: string, logger?: MigrationLogger): Promise<void> {
   const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: projectId });
 
   // Batch-fetch all workspace metadata to avoid N+1 queries.
@@ -258,72 +282,81 @@ async function flushWorkspacesToDisk(baseDir: string, projectId: string): Promis
   });
   const metaByWorkspaceId = Object.fromEntries(allWorkspaceMeta.map(m => [m.parentId, m]));
 
-  for (const workspace of workspaces) {
-    const workspaceMeta = metaByWorkspaceId[workspace._id] as WorkspaceMeta | undefined;
+  await Promise.all(
+    workspaces.map(async workspace => {
+      const workspaceMeta = metaByWorkspaceId[workspace._id] as WorkspaceMeta | undefined;
 
-    // Determine the target file name
-    const gitFilePath: string = workspaceMeta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
+      // Determine the target file name
+      const gitFilePath: string = workspaceMeta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
 
-    // Guard against absolute paths or traversal sequences in stored gitFilePath.
-    const absPath = path.resolve(baseDir, gitFilePath);
-    if (!absPath.startsWith(baseDir + path.sep)) {
-      console.warn('[git-migration] Skipping unsafe gitFilePath:', gitFilePath);
-      continue;
-    }
-
-    // Don't overwrite an existing file — trust disk as the primary store.
-    // Use an atomic write (tmp → rename) so a mid-write crash never leaves a
-    // truncated file that blocks future retries.
-    const fileAlreadyExists = await fs.promises
-      .access(absPath)
-      .then(() => true)
-      .catch(() => false);
-
-    if (!fileAlreadyExists) {
-      try {
-        const yamlContent = await getInsomniaV5DataExport({
-          workspaceId: workspace._id,
-          includePrivateEnvironments: false,
-        });
-
-        if (!yamlContent?.trim()) {
-          console.warn('[git-migration] Empty export for workspace', workspace._id, '— skipping');
-          continue;
-        }
-
-        const tmpPath = `${absPath}.migration.tmp`;
-        await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-        await fs.promises.writeFile(tmpPath, yamlContent, 'utf8');
-        await fs.promises.rename(tmpPath, absPath).catch(async err => {
-          await fs.promises.unlink(tmpPath).catch(() => {});
-          throw err;
-        });
-        console.log('[git-migration] Flushed workspace to disk:', absPath);
-      } catch (err) {
-        console.warn('[git-migration] Could not flush workspace', workspace._id, err);
-        continue; // Skip DB reconciliation if the file was not written
+      // Guard against absolute paths or traversal sequences in stored gitFilePath.
+      const absPath = path.resolve(baseDir, gitFilePath);
+      if (!absPath.startsWith(baseDir + path.sep)) {
+        console.warn('[git-migration] Skipping unsafe gitFilePath:', gitFilePath);
+        logger?.('warn', `Skipping unsafe gitFilePath: ${gitFilePath}`);
+        return;
       }
-    }
 
-    // Always reconcile the DB — runs whether we just wrote the file or it already
-    // existed. This ensures gitFilePath is persisted even if a previous run wrote
-    // the file but crashed before updating the DB.
-    try {
-      if (workspaceMeta && !workspaceMeta.gitFilePath) {
-        await db.docUpdate<WorkspaceMeta>(workspaceMeta, { gitFilePath });
-      } else if (!workspaceMeta) {
-        let meta = await db.findOne<WorkspaceMeta>(models.workspaceMeta.type, {
-          parentId: workspace._id,
-        });
-        if (!meta) {
-          meta = await db.docCreate<WorkspaceMeta>(models.workspaceMeta.type, {
+      // Don't overwrite an existing file — trust disk as the primary store.
+      // Use an atomic write (tmp → rename) so a mid-write crash never leaves a
+      // truncated file that blocks future retries.
+      const fileAlreadyExists = await fs.promises
+        .access(absPath)
+        .then(() => true)
+        .catch(() => false);
+
+      if (!fileAlreadyExists) {
+        try {
+          const yamlContent = await getInsomniaV5DataExport({
+            workspaceId: workspace._id,
+            includePrivateEnvironments: false,
+          });
+
+          if (!yamlContent?.trim()) {
+            console.warn('[git-migration] Empty export for workspace', workspace._id, '— skipping');
+            logger?.('warn', `Empty export for workspace ${workspace._id} — skipping`);
+            return;
+          }
+
+          const tmpPath = `${absPath}.migration.tmp`;
+          await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
+          await fs.promises.writeFile(tmpPath, yamlContent, 'utf8');
+          await fs.promises.rename(tmpPath, absPath).catch(async err => {
+            await fs.promises.unlink(tmpPath).catch(() => {});
+            throw err;
+          });
+          console.log('[git-migration] Flushed workspace to disk:', absPath);
+          logger?.('info', `Flushed workspace to disk: ${absPath}`);
+        } catch (err) {
+          const flushMsg = err instanceof Error ? err.message : String(err);
+          console.warn('[git-migration] Could not flush workspace', workspace._id, err);
+          logger?.('warn', `Could not flush workspace ${workspace._id}: ${flushMsg}`);
+          return; // Skip DB reconciliation if the file was not written
+        }
+      }
+
+      // Always reconcile the DB — runs whether we just wrote the file or it already
+      // existed. This ensures gitFilePath is persisted even if a previous run wrote
+      // the file but crashed before updating the DB.
+      try {
+        if (workspaceMeta && !workspaceMeta.gitFilePath) {
+          await db.docUpdate<WorkspaceMeta>(workspaceMeta, { gitFilePath });
+        } else if (!workspaceMeta) {
+          let meta = await db.findOne<WorkspaceMeta>(models.workspaceMeta.type, {
             parentId: workspace._id,
           });
+          if (!meta) {
+            meta = await db.docCreate<WorkspaceMeta>(models.workspaceMeta.type, {
+              parentId: workspace._id,
+            });
+          }
+          await db.docUpdate<WorkspaceMeta>(meta, { gitFilePath });
         }
-        await db.docUpdate<WorkspaceMeta>(meta, { gitFilePath });
+      } catch (err) {
+        const metaMsg = err instanceof Error ? err.message : String(err);
+        console.warn('[git-migration] Could not update workspace metadata for', workspace._id, err);
+        logger?.('warn', `Could not update workspace metadata for ${workspace._id}: ${metaMsg}`);
       }
-    } catch (err) {
-      console.warn('[git-migration] Could not update workspace metadata for', workspace._id, err);
-    }
-  }
+    }),
+  );
 }

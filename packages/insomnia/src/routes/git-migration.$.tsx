@@ -11,24 +11,21 @@ type MigrationStatus = 'default' | 'running' | 'completed' | 'completedWithError
 
 const MigrationView = () => {
   const [status, setStatus] = useState<MigrationStatus>('default');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [migrationLogs, setMigrationLogs] = useState<string[]>([]);
 
   const handleMigration = () => {
     setStatus('running');
     window.main.git
       .runAllGitRepoMigrations()
-      .then(() => {
+      .then((logs: string[]) => {
+        setMigrationLogs(logs);
         setStatus('completed');
       })
       .catch((err: unknown) => {
-        setErrorMessage(err instanceof Error ? err.message : 'An unexpected error occurred.');
+        const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred.';
+        setMigrationLogs(prev => [...prev, `[ERROR] ${errorMsg}`]);
         setStatus('error');
       });
-  };
-
-  const handleCopyErrorLogs = () => {
-    // TODO: we should ideally have a more robust way of sharing error logs with the support team, but for now we'll just copy the error message to the clipboard
-    // window.main.git.copyGitMigrationErrorLogs();
   };
 
   const isUpdateRunning = status === 'running';
@@ -111,8 +108,7 @@ const MigrationView = () => {
               <div className="flex h-[32px] w-full items-center justify-between gap-3">
                 <CopyButton
                   className="flex h-[32px] w-[150px] items-center gap-2 rounded-xs p-2 text-sm"
-                  onClick={handleCopyErrorLogs}
-                  content={errorMessage || 'No error message available.'}
+                  content={migrationLogs.length > 0 ? migrationLogs.join('\n') : 'No logs available.'}
                   title="Copy error logs to clipboard"
                 >
                   <i className="fa fa-copy" />
@@ -129,8 +125,7 @@ const MigrationView = () => {
               <div className="flex h-[32px] w-full items-center justify-between gap-3">
                 <CopyButton
                   className="flex h-[32px] w-[150px] items-center gap-2 rounded-xs p-2 text-sm"
-                  onClick={handleCopyErrorLogs}
-                  content={errorMessage || 'No error message available.'}
+                  content={migrationLogs.length > 0 ? migrationLogs.join('\n') : 'No logs available.'}
                   title="Copy error logs to clipboard"
                 >
                   <i className="fa fa-copy" />

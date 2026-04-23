@@ -2834,7 +2834,9 @@ async function getCurrentBranchByRepositoryId({
   });
 }
 
-export async function runAllGitRepoMigrations(): Promise<void> {
+export async function runAllGitRepoMigrations(): Promise<string[]> {
+  const logs: string[] = [];
+
   const allProjects = await services.project.all();
   for (const project of allProjects) {
     if (!models.project.isGitProject(project) || models.project.isEmptyGitProject(project)) {
@@ -2843,12 +2845,20 @@ export async function runAllGitRepoMigrations(): Promise<void> {
     const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
     if (!gitRepository) continue;
 
+    const repoId = gitRepository._id;
+    const logger = (level: 'info' | 'warn' | 'error', message: string) => {
+      const ts = new Date().toISOString();
+      logs.push(`${ts} [${level.toUpperCase()}] [${repoId}] ${message}`);
+    };
+
     const baseDir = path.join(
       process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-      `version-control/git/${gitRepository._id}`,
+      `version-control/git/${repoId}`,
     );
-    await migrateRepoStructureIfNeeded(baseDir, project._id, gitRepository._id);
+    await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
   }
+
+  return logs;
 }
 
 export interface GitServiceAPI {
