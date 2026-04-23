@@ -50,19 +50,17 @@ describe('migrateRepoStructureIfNeeded', () => {
     expect(logs).toHaveLength(0);
   });
 
-  it('does not re-run migration for a stamped repo that has a user-created other/ directory', async () => {
+  it('re-runs migration when old git/ directory exists even if version stamp is current', async () => {
     await services.gitRepository.create({ _id: 'git_repo_b', repoMigrationVersion: CURRENT_MIGRATION_VERSION });
-    await mkDir(path.join(baseDir, 'other'));
-    await fs.promises.writeFile(path.join(baseDir, 'other', 'my-notes.txt'), 'important notes');
-    const { logs, logger } = makeLogger();
+    await mkDir(path.join(baseDir, 'git'));
+    await fs.promises.writeFile(path.join(baseDir, 'git', 'config'), '[core]\n\trepositoryformatversion = 0');
+    const { logger } = makeLogger();
 
     const result = await migrateRepoStructureIfNeeded(baseDir, 'proj_b', 'git_repo_b', logger);
 
     expect(result).toBe(true);
-    expect(logs).toHaveLength(0);
-    // The user's other/ directory must be untouched
-    expect(await dirExists(path.join(baseDir, 'other'))).toBe(true);
-    expect(await fileExists(path.join(baseDir, 'other', 'my-notes.txt'))).toBe(true);
+    expect(await dirExists(path.join(baseDir, '.git'))).toBe(true);
+    expect(await dirExists(path.join(baseDir, 'git'))).toBe(false);
   });
 
   it('renames git/ to .git/ and preserves contents', async () => {
