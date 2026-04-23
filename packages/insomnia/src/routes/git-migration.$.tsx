@@ -9,7 +9,7 @@ import git_for_all from '~/ui/images/onboarding/git_for_all.png';
 
 import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
 
-type MigrationStatus = 'default' | 'running' | 'completed' | 'completedWithErrors' | 'error';
+type MigrationStatus = 'default' | 'running' | 'completed' | 'partiallyCompleted' | 'error';
 
 const MigrationView = () => {
   const [status, setStatus] = useState<MigrationStatus>('default');
@@ -23,7 +23,7 @@ const MigrationView = () => {
       .then((result: { logs: string[]; failedProjects: { id: string; name: string }[] }) => {
         setMigrationLogs(result.logs);
         setFailedProjects(result.failedProjects);
-        setStatus(result.failedProjects.length > 0 ? 'completedWithErrors' : 'completed');
+        setStatus(result.failedProjects.length > 0 ? 'partiallyCompleted' : 'completed');
       })
       .catch((err: unknown) => {
         const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred.';
@@ -35,7 +35,7 @@ const MigrationView = () => {
   const isUpdateRunning = status === 'running';
   const isUpdateCompletedSuccessfully = status === 'completed';
   const isUpdateErrored = status === 'error';
-  const isUpdateCompletedWithErrors = status === 'completedWithErrors';
+  const isUpdateCompletedWithErrors = status === 'partiallyCompleted';
 
   return (
     <div className="flex h-full min-h-[500px] w-[600px] flex-col items-center justify-center">
