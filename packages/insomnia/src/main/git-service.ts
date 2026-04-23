@@ -20,7 +20,14 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import type { GitRemoteProviderType, GitRepository, Workspace, WorkspaceMeta, WorkspaceScope } from '~/insomnia-data';
+import type {
+  GitProject,
+  GitRemoteProviderType,
+  GitRepository,
+  Workspace,
+  WorkspaceMeta,
+  WorkspaceScope,
+} from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
@@ -2844,28 +2851,40 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   const failedProjects: { id: string; name: string }[] = [];
 
   const allProjects = await services.project.all();
-  for (const project of allProjects) {
-    if (!models.project.isGitProject(project) || models.project.isEmptyGitProject(project)) {
-      continue;
-    }
-    const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
-    if (!gitRepository) continue;
+  const gitProjects = allProjects.filter(
+    (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
+  );
 
-    const repoId = gitRepository._id;
-    const logger = (level: 'info' | 'warn' | 'error', message: string) => {
-      const ts = new Date().toISOString();
-      logs.push(`${ts} [${level.toUpperCase()}] [${repoId}] ${message}`);
-    };
+  if (gitProjects.length === 0) return { logs, failedProjects };
 
-    const baseDir = path.join(
-      process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-      `version-control/git/${repoId}`,
-    );
-    const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
-    if (!success) {
-      failedProjects.push({ id: project._id, name: project.name });
-    }
-  }
+  // Batch-fetch all git repositories in one query instead of N individual lookups.
+  const repoIds = gitProjects.map(p => p.gitRepositoryId);
+  const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
+    _id: { $in: repoIds },
+  });
+  const repoById = new Map(gitRepositories.map(r => [r._id, r]));
+
+  // Hoist — same value for every repo.
+  const baseDataPath = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
+
+  await Promise.all(
+    gitProjects.map(async project => {
+      const gitRepository = repoById.get(project.gitRepositoryId);
+      if (!gitRepository) return;
+
+      const repoId = gitRepository._id;
+      const logger = (level: 'info' | 'warn' | 'error', message: string) => {
+        const ts = new Date().toISOString();
+        logs.push(`${ts} [${level.toUpperCase()}] [${repoId}] ${message}`);
+      };
+
+      const baseDir = path.join(baseDataPath, `version-control/git/${repoId}`);
+      const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
+      if (!success) {
+        failedProjects.push({ id: project._id, name: project.name });
+      }
+    }),
+  );
 
   return { logs, failedProjects };
 }
