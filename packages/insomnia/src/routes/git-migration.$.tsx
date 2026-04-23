@@ -11,7 +11,7 @@ type MigrationStatus = 'default' | 'running' | 'completed' | 'completedWithError
 
 const MigrationView = () => {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<MigrationStatus>('completedWithErrors');
+  const [status, setStatus] = useState<MigrationStatus>('default');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleMigration = () => {
