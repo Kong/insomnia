@@ -15,6 +15,7 @@ import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoa
 import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
+import { createOrgActionHandler } from '~/domains/organization';
 import type { Settings } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
@@ -71,6 +72,12 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     currentPlan: undefined,
   };
 }
+
+const handleAction = createOrgActionHandler('/organization');
+
+export const clientAction = async ({ request }: Route.ClientActionArgs) => {
+  return handleAction(request);
+};
 
 export interface OrganizationFeatureLoaderData {
   featuresPromise: Promise<FeatureList>;

@@ -1,17 +1,15 @@
-import { deleteTeamProject, isApiError } from 'insomnia-api';
-import { href, redirect } from 'react-router';
+import { deleteTeamProject, isApiError, updateGitProjectCount } from 'insomnia-api';
+import { redirect } from 'react-router';
 
-import { database } from '~/common/database';
+import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
-import { services } from '~/insomnia-data';
-import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
+import { database, models, type Project, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
+import { getInitialRouteForOrganization } from '~/utils/router';
 
-import type { Route } from './+types/organization.$organizationId.project.$projectId.delete';
+import { createDomain } from './base';
 
-export async function clientAction({ params }: Route.ClientActionArgs) {
-  const { organizationId, projectId } = params;
+async function remove({ organizationId, projectId }: { organizationId: string; projectId: string }) {
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
   const project = await services.project.getById(projectId);
@@ -68,21 +66,50 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   }
 }
 
-export const useProjectDeleteActionFetcher = createFetcherSubmitHook(
-  submit =>
-    ({ organizationId, projectId }: { organizationId: string; projectId: string }) => {
-      const url = href('/organization/:organizationId/project/:projectId/delete', {
-        organizationId,
-        projectId,
-      });
+async function move({ organizationId, projectId }: { organizationId: string; projectId: string }) {
+  invariant(typeof organizationId === 'string', 'Organization ID is required');
 
-      return submit(
-        {},
-        {
-          action: url,
-          method: 'POST',
-        },
-      );
-    },
-  clientAction,
-);
+  const project = await services.project.getById(projectId);
+  invariant(project, 'Project not found');
+
+  await services.project.update(project, {
+    parentId: organizationId,
+    // We move a project to another organization as local no matter what it was before
+    remoteId: null,
+  });
+
+  return null;
+}
+
+export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
+  const projects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  });
+  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
+  const gitProjectsCount = gitRepositoryIds.length;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await updateGitProjectCount({
+        organizationId,
+        sessionId,
+        gitProjectsCount,
+      });
+      return;
+    } catch {
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+      }
+    }
+  }
+
+  console.warn('Report git project count failed');
+};
+
+const actions = {
+  remove,
+  move,
+};
+
+const [createProjectActionHandler, useProjectAction] = createDomain(actions);
+
+export { createProjectActionHandler, useProjectAction };

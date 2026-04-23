@@ -22,11 +22,11 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
+import { useProjectAction } from '~/domains/project';
 import type { Environment, Project, Workspace } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
-import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';
 import { useProjectMoveWorkspaceActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move-workspace';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
@@ -452,7 +452,7 @@ const UntrackedProject = ({
   organizationId: string;
   organizations: Organization[];
 }) => {
-  const moveProjectFetcher = useProjectMoveActionFetcher();
+  const moveProjectFetcher = useProjectAction('move');
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<string | null>(null);
 
   return (
@@ -467,12 +467,16 @@ const UntrackedProject = ({
         </p>
       </div>
       <moveProjectFetcher.Form
-        action={href(`/organization/:organizationId/project/:projectId/move`, {
-          organizationId,
-          projectId: project._id,
-        })}
         method="POST"
         className="group flex items-center gap-2"
+        onSubmit={e => {
+          e.preventDefault();
+          const payload = {
+            organizationId: selectedOrganizationId!,
+            projectId: project._id,
+          };
+          moveProjectFetcher.submit(payload);
+        }}
       >
         <Select
           aria-label="Select an organization"

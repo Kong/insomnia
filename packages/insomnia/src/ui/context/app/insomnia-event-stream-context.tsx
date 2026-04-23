@@ -4,6 +4,7 @@ import { useFetchers, useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { CDN_INVALIDATION_TTL } from '~/common/constants';
+import { useOrgAction } from '~/domains/organization';
 import { useRootLoaderData } from '~/root';
 import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
 import { useProjectIndexLoaderData } from '~/routes/organization.$organizationId.project.$projectId._index';
@@ -11,7 +12,6 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
 import { useStorageRulesActionFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
-import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
 
@@ -98,7 +98,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
-  const { submit: syncOrganizationsSubmit } = useOrganizationSyncActionFetcher();
+  const { submit: syncOrganizationsSubmit } = useOrgAction('sync');
   const { submit: syncStorageRulesSubmit } = useStorageRulesActionFetcher();
   const { submit: syncProjectsSubmit } = useOrganizationSyncProjectsActionFetcher();
   const { submit: syncDataSubmit } = useInsomniaSyncDataActionFetcher();

@@ -3,9 +3,9 @@ import type { StorageRules } from 'insomnia-api';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
 
+import { useProjectAction } from '~/domains/project';
 import type { GitRepository, Project } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
-import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -28,7 +28,7 @@ interface ProjectActionItem {
 
 export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
-  const deleteProjectFetcher = useProjectDeleteActionFetcher();
+  const deleteProjectFetcher = useProjectAction('remove');
 
   const isRemoteProjectInconsistent = models.project.isRemoteProject(project) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent =
