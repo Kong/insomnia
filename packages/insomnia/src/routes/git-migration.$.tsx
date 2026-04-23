@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -10,18 +10,15 @@ import git_for_all from '~/ui/images/onboarding/git_for_all.png';
 type MigrationStatus = 'default' | 'running' | 'completed' | 'completedWithErrors' | 'error';
 
 const MigrationView = () => {
-  const navigate = useNavigate();
   const [status, setStatus] = useState<MigrationStatus>('default');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleMigration = () => {
     setStatus('running');
-
     window.main.git
       .runAllGitRepoMigrations()
       .then(() => {
         setStatus('completed');
-        navigate('/organization', { replace: true });
       })
       .catch((err: unknown) => {
         setErrorMessage(err instanceof Error ? err.message : 'An unexpected error occurred.');
@@ -52,6 +49,7 @@ const MigrationView = () => {
                   ? 'Update successful with some warnings'
                   : 'Required file system update'}
           </h1>
+
           {isUpdateCompletedSuccessfully ? (
             <p className="text-sm">
               Your file system has been successfully updated. Now you can explore all of your Insomnia files on your
@@ -93,14 +91,11 @@ const MigrationView = () => {
                 In order to continue with this update, we need to adjust your local file system. This is required to
                 enable managing Insomnia changes using git on the CLI.
               </p>
-              {isUpdateRunning ? (
-                <p className="text-sm">Note: Your data is safe and the update only takes seconds.</p>
-              ) : (
-                <p className="text-sm">
-                  Note: This update does NOT change your data and only affects how your local Insomnia files are stored.
-                  The update takes less than a minute.
-                </p>
-              )}
+              <p className="text-sm">
+                {isUpdateRunning
+                  ? 'Note: Your data is safe and the update only takes seconds.'
+                  : 'Note: This update does NOT change your data and only affects how your local Insomnia files are stored. The update takes less than a minute.'}
+              </p>
             </>
           )}
 
@@ -166,12 +161,14 @@ const MigrationView = () => {
 };
 
 const Component = () => {
-  const [showMigrationView, setShowMigrationView] = useState(true);
+  const [showMigrationView, setShowMigrationView] = useState(false);
 
   return (
     <div className="relative flex h-full w-full bg-(--color-bg) text-left">
       <TrailLinesContainer>
-        {!showMigrationView ? (
+        {showMigrationView ? (
+          <MigrationView />
+        ) : (
           <div className="flex h-full min-h-[500px] w-[600px] flex-col items-center justify-center">
             <div className="relative flex w-full flex-col items-center justify-center gap-(--padding-sm) rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-(--padding-lg) pt-12">
               <InsomniaLogo className="absolute top-0 left-1/2 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
@@ -183,32 +180,26 @@ const Component = () => {
                   </h1>
                   <div className="flex flex-1 flex-col items-center gap-3 overflow-y-auto">
                     <p className="text-sm text-[#828282]">
-                      <span>
-                        Now you can use traditional git actions on your CLI to manage changes to your Git Sync projects.
-                      </span>
+                      Now you can use traditional git actions on your CLI to manage changes to your Git Sync projects.
                     </p>
                     <div className="h-48 flex-1">
                       <img className="aspect-auto max-h-48" src={git_for_all} />
                     </div>
                   </div>
                 </div>
-
                 <div className="flex w-full justify-end">
-                  <Link
-                    className="rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
-                    to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
+                  <Button
+                    className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90"
                     onClick={() => {
                       setShowMigrationView(true);
                     }}
                   >
                     Continue
-                  </Link>
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
-        ) : (
-          <MigrationView />
         )}
       </TrailLinesContainer>
     </div>
