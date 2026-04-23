@@ -2886,6 +2886,21 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
     }),
   );
 
+  // In case we have any failed projects, convert them to local projects.
+  await Promise.all(
+    failedProjects.map(async ({ id, name }) => {
+      const project = await services.project.getById(id);
+      if (!project || !project.gitRepositoryId) return;
+
+      const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+      if (gitRepository) {
+        await services.gitRepository.remove(gitRepository);
+      }
+
+      await services.project.update(project, { name, gitRepositoryId: null });
+    }),
+  );
+
   return { logs, failedProjects };
 }
 
