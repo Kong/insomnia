@@ -467,7 +467,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   );
 
   const toggleRequestGroups = useCallback(
-    async (requestGroupIds: string[], collapsed?: boolean) => {
+    async (requestGroupIds: string[], workspace: Workspace, collapsed?: boolean) => {
       if (requestGroupIds.length === 0) {
         return;
       }
@@ -505,7 +505,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
 
       setFlatItems(previousFlatItems =>
         nextStates.reduce((nextFlatItems, { requestGroupId, collapsed }) => {
-          const toggledChildrenIds: string[] = [];
+          const toggledChildren: { id: string; parentIsCollapsed: boolean }[] = [];
 
           return nextFlatItems.map(item => {
             if (item.kind !== 'collectionChild') {
@@ -513,9 +513,12 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
             }
 
             const { children, doc } = item;
-
+            // Find toggled request group and update collapsed state
             if (doc._id === requestGroupId) {
-              toggledChildrenIds.push(...(children?.map(child => child.doc._id) ?? []));
+              // Add all children of the toggled request group to the array to update their hidden state
+              toggledChildren.push(
+                ...(children?.map(child => ({ id: child.doc._id, parentIsCollapsed: collapsed })) ?? []),
+              );
 
               return {
                 ...item,
@@ -524,12 +527,28 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
               };
             }
 
-            if (toggledChildrenIds.includes(doc._id)) {
-              toggledChildrenIds.push(...(children?.map(child => child.doc._id) ?? []));
+            const matchedToggledChild = toggledChildren.find(tc => tc.id === item.doc._id);
+            if (matchedToggledChild) {
+              const { parentIsCollapsed } = matchedToggledChild;
+              if (models.requestGroup.isRequestGroupId(doc._id)) {
+                // Add children of the toggled child request group to the array to update their hidden state
+                const isToggledRequestGroupCollapsed =
+                  parentIsCollapsed ||
+                  cachedCollectionChildrenAndMetaRef.current
+                    .get(workspace._id)
+                    ?.requestGroupMetas.find(rgm => rgm.parentId === doc._id)?.collapsed ||
+                  false;
+                toggledChildren.push(
+                  ...(item.children?.map(child => ({
+                    id: child.doc._id,
+                    parentIsCollapsed: isToggledRequestGroupCollapsed,
+                  })) ?? []),
+                );
+              }
 
               return {
                 ...item,
-                hidden: collapsed,
+                hidden: parentIsCollapsed,
               };
             }
 
@@ -573,11 +592,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
         {['projects', 'konnect'].map(tabName => (
           <button
             key={tabName}
-            className={
-              activeTab === tabName
-                ? 'border-b-2 border-solid border-b-(--color-surprise) px-3 py-1 text-xs text-(--color-font) uppercase'
-                : 'border-b-2 border-solid border-b-transparent px-3 py-1 text-xs text-(--hl) uppercase hover:bg-(--hl-xs)'
-            }
+            className={`border-b-2 border-solid px-4 py-2 text-xs uppercase ${activeTab === tabName ? 'border-(--color-surprise) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
             onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
           >
             {tabName === 'projects' ? `Projects (${nonKonnectProjects.length})` : `Konnect (${konnectProjects.length})`}
@@ -699,7 +714,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                       models.requestGroup.isRequestGroupId(docId) &&
                       routeInfo?.routeId !== 'runner'
                     ) {
-                      toggleRequestGroups([docId]);
+                      toggleRequestGroups([docId], item.workspace);
                     } else {
                       tabNavigate(
                         {

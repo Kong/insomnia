@@ -2,7 +2,7 @@ import type { Virtualizer } from '@tanstack/react-virtual';
 import type { Dispatch, SetStateAction } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import { database, models } from '~/insomnia-data';
+import { database, models, type Workspace } from '~/insomnia-data';
 import type { NavigationResources } from '~/ui/hooks/use-insomnia-navigation';
 import { useInsomniaNavigation } from '~/ui/hooks/use-insomnia-navigation';
 
@@ -32,7 +32,7 @@ export const useProjectNavigationSidebarNavigation = ({
   virtualizer,
 }: {
   setActiveTab: Dispatch<SetStateAction<'projects' | 'konnect' | undefined>>;
-  toggleRequestGroups: (requestGroupIds: string[], collapsed?: boolean) => Promise<void>;
+  toggleRequestGroups: (requestGroupIds: string[], workspace: Workspace, collapsed?: boolean) => Promise<void>;
   expandProjectOrWorkspaces: (ids: string[]) => void;
   visibleFlatItems: FlatItem[];
   virtualizer: Virtualizer<HTMLDivElement, Element>;
@@ -97,7 +97,7 @@ export const useProjectNavigationSidebarNavigation = ({
         idsToExpand.push(...requestGroupIds);
 
         if (requestGroupIds.length > 0) {
-          await toggleRequestGroups(requestGroupIds, false);
+          await toggleRequestGroups(requestGroupIds, resources.workspace, false);
         }
       }
 
