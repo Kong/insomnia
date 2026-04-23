@@ -6,7 +6,7 @@ import { projectSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import type { BackendProject } from '../../types';
 import { describeChanges } from '../util';
-import { VCS } from '../vcs';
+import { chunkArray, VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);
@@ -985,5 +985,33 @@ describe('VCS', () => {
     expect(VCS.validateBranchName('feature/A.lock/B')).toEqual(
       'No slash-separated component in branch name can end with the sequence .lock',
     );
+  });
+});
+
+describe('chunkArray()', () => {
+  it('works with exact divisor', () => {
+    const chunks = chunkArray([1, 2, 3, 4, 5, 6], 3);
+    expect(chunks).toEqual([
+      [1, 2, 3],
+      [4, 5, 6],
+    ]);
+  });
+
+  it('works with weird divisor', () => {
+    const chunks = chunkArray([1, 2, 3, 4, 5, 6], 4);
+    expect(chunks).toEqual([
+      [1, 2, 3, 4],
+      [5, 6],
+    ]);
+  });
+
+  it('works with empty', () => {
+    const chunks = chunkArray([], 4);
+    expect(chunks).toEqual([]);
+  });
+
+  it('works with less than one chunk', () => {
+    const chunks = chunkArray([1, 2], 4);
+    expect(chunks).toEqual([[1, 2]]);
   });
 });
