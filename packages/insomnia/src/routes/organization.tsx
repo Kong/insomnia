@@ -236,7 +236,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         navigate(`/organization/${id}`);
                       }}
                       currentPlan={currentPlan}
-                      isScratchpadWorkspace={isScratchPad}
+                      isScratchpadWorkspace={!!isScratchpadWorkspace}
                     />
                   )}
 
