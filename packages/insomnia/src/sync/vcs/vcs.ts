@@ -19,6 +19,7 @@ import type { BaseDriver } from '../store/drivers/base';
 import compress from '../store/hooks/compress';
 import type {
   BackendProject,
+  BackendProjectWithTeams,
   Branch,
   DocumentKey,
   Head,
@@ -29,7 +30,6 @@ import type {
   StageEntry,
   StatusCandidate,
 } from '../types';
-import type { BackendProjectWithTeams } from './normalize-backend-project-team';
 import {
   compareBranches,
   generateCandidateMap,
