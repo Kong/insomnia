@@ -20,7 +20,14 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import type { GitRemoteProviderType, GitRepository, Workspace, WorkspaceMeta, WorkspaceScope } from '~/insomnia-data';
+import type {
+  GitProject,
+  GitRemoteProviderType,
+  GitRepository,
+  Workspace,
+  WorkspaceMeta,
+  WorkspaceScope,
+} from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
@@ -38,7 +45,7 @@ import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
 import { fsClient } from '../sync/git/fs-client';
-import { migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
+import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
   fetchRemoteBranches,
   GIT_CLONE_DIR,
@@ -471,12 +478,6 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
       `version-control/git/${gitRepository._id}`,
     );
-
-    // Migrate old directory structure (git/ → .git/, other/ → root) if needed.
-    // Only runs for the modern project-scoped flow (no workspaceId).
-    if (!workspaceId) {
-      await migrateRepoStructureIfNeeded(baseDir, projectId, gitRepository._id);
-    }
 
     const bufferId = await database.bufferChanges();
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
@@ -2840,6 +2841,90 @@ async function getCurrentBranchByRepositoryId({
   });
 }
 
+export interface MigrationSummary {
+  logs: string[];
+  failedProjects: { id: string; name: string }[];
+}
+
+export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
+  const logs: string[] = [];
+  const failedProjects: { id: string; name: string }[] = [];
+
+  const allProjects = await services.project.all();
+  const gitProjects = allProjects.filter(
+    (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
+  );
+
+  if (gitProjects.length === 0) return { logs, failedProjects };
+
+  // Batch-fetch all git repositories in one query instead of N individual lookups.
+  const repoIds = gitProjects.map(p => p.gitRepositoryId);
+  const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
+    _id: { $in: repoIds },
+  });
+  const repoById = new Map(gitRepositories.map(r => [r._id, r]));
+
+  // Hoist — same value for every repo.
+  const baseDataPath = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
+
+  const ts = () => new Date().toISOString();
+  const projectList = gitProjects.map(p => `"${p.name}"`).join(', ');
+  logs.push(`${ts()} [INFO] Starting migration v${CURRENT_MIGRATION_VERSION} for ${gitProjects.length} repo(s): ${projectList}`);
+
+  await Promise.all(
+    gitProjects.map(async project => {
+      const gitRepository = repoById.get(project.gitRepositoryId);
+      if (!gitRepository) return;
+
+      const repoId = gitRepository._id;
+      const logger = (level: 'info' | 'warn' | 'error', message: string) => {
+        logs.push(`${ts()} [${level.toUpperCase()}] ["${project.name}"] ${message}`);
+      };
+
+      const allowedBase = path.resolve(baseDataPath);
+      const baseDir = path.resolve(allowedBase, 'version-control', 'git', repoId);
+      if (!baseDir.startsWith(allowedBase + path.sep)) {
+        logger('warn', `Skipping repo with unsafe path — repoId may contain path traversal: ${repoId}`);
+        return;
+      }
+
+      const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
+      if (!success) {
+        failedProjects.push({ id: project._id, name: project.name });
+      }
+    }),
+  );
+
+  // In case we have any failed projects, convert them to local projects.
+  await Promise.all(
+    failedProjects.map(async ({ id, name }) => {
+      logs.push(`${ts()} [INFO] ["${name}"] Converting to local project`);
+      try {
+        const project = await services.project.getById(id);
+        if (!project || !project.gitRepositoryId) {
+          logs.push(`${ts()} [WARN] ["${name}"] Project not found or already local — skipping`);
+          return;
+        }
+
+        const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+        if (gitRepository) {
+          await services.gitRepository.remove(gitRepository);
+          logs.push(`${ts()} [INFO] ["${name}"] Removed git repository ${project.gitRepositoryId}`);
+        }
+
+        await services.project.update(project, { name, gitRepositoryId: null });
+        logs.push(`${ts()} [INFO] ["${name}"] Successfully converted to local`);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const stack = err instanceof Error && err.stack ? `\n${err.stack}` : '';
+        logs.push(`${ts()} [ERROR] ["${name}"] Failed to convert to local: ${message}${stack}`);
+      }
+    }),
+  );
+
+  return { logs, failedProjects };
+}
+
 export interface GitServiceAPI {
   loadGitRepository: typeof loadGitRepository;
   getGitBranches: typeof getGitBranches;
@@ -2883,6 +2968,7 @@ export interface GitServiceAPI {
   getGitProviderEmails: typeof getGitProviderEmails;
   listGitProviders: typeof listGitProviders;
   getBranchRemoteInfo: typeof getBranchRemoteInfo;
+  runAllGitRepoMigrations: typeof runAllGitRepoMigrations;
 }
 
 export const registerGitServiceAPI = () => {
@@ -2989,4 +3075,5 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.getBranchRemoteInfo', (_, options: Parameters<typeof getBranchRemoteInfo>[0]) =>
     getBranchRemoteInfo(options),
   );
+  ipcMainHandle('git.runAllGitRepoMigrations', () => runAllGitRepoMigrations());
 };

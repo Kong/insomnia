@@ -157,6 +157,7 @@ const git: GitServiceAPI = {
   getGitProviderEmails: options => ipcRenderer.invoke('git.getGitProviderEmails', options),
   getCurrentBranchByRepositoryId: options => ipcRenderer.invoke('git.getCurrentBranchByRepositoryId', options),
   getBranchRemoteInfo: options => ipcRenderer.invoke('git.getBranchRemoteInfo', options),
+  runAllGitRepoMigrations: () => ipcRenderer.invoke('git.runAllGitRepoMigrations'),
 };
 
 const llm: LLMConfigServiceAPI = {
