@@ -4,13 +4,17 @@ import { OverlayContainer } from 'react-aria';
 import { strings } from '../../../common/strings';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { interceptAccessError } from '../../../sync/vcs/util';
-import type { VCS } from '../../../sync/vcs/vcs';
 import { Button } from '../../components/themed-button';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
+
+interface SyncArchiveVCSLike {
+  archiveProject: () => Promise<void>;
+}
+
 type Props = ModalProps & {
-  vcs: VCS;
+  vcs: SyncArchiveVCSLike;
 };
 
 interface State {

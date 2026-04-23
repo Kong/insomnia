@@ -1,8 +1,18 @@
 import type { IpcRendererEvent } from 'electron';
 
-import type { MergeConflict } from '~/sync/types';
-import type { VCS } from '~/sync/vcs/vcs';
+import type {
+  BackendProject,
+  BackendProjectWithTeam,
+  Compare,
+  MergeConflict,
+  Snapshot,
+  Stage,
+  StageEntry,
+  Status,
+  StatusCandidate,
+} from '~/sync/types';
 
+import type { Operation } from '../../common/database';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import {
   cancelPendingSyncConflict,
@@ -12,38 +22,42 @@ import {
   resolvePendingSyncConflict,
 } from './vcs';
 
-type SyncBridgeMethods = Pick<
-  VCS,
-  | 'archiveProject'
-  | 'checkout'
-  | 'compareRemoteBranch'
-  | 'fork'
-  | 'getBranchNames'
-  | 'getCurrentBranchName'
-  | 'getHistory'
-  | 'getHistoryCount'
-  | 'getRemoteBranchNames'
-  | 'getVersion'
-  | 'localBackendProjects'
-  | 'merge'
-  | 'pull'
-  | 'push'
-  | 'remoteBackendProjects'
-  | 'removeBackendProjectsForRoot'
-  | 'removeBranch'
-  | 'removeRemoteBranch'
-  | 'rollback'
-  | 'rollbackToLatest'
-  | 'stage'
-  | 'status'
-  | 'switchAndCreateBackendProjectIfNotExist'
-  | 'takeSnapshot'
-  | 'unstage'
->;
+export interface SyncBridgeMethods {
+  archiveProject: () => Promise<void>;
+  checkout: (candidates: StatusCandidate[], branchName: string) => Promise<Operation>;
+  compareRemoteBranch: () => Promise<Compare>;
+  fork: (newBranchName: string) => Promise<void>;
+  getBranchNames: () => Promise<string[]>;
+  getCurrentBranchName: () => Promise<string>;
+  getHistory: (count?: number) => Promise<Snapshot[]>;
+  getHistoryCount: () => Promise<number>;
+  getRemoteBranchNames: () => Promise<string[]>;
+  getVersion: () => Promise<string>;
+  localBackendProjects: () => Promise<BackendProject[]>;
+  merge: (candidates: StatusCandidate[], otherBranchName: string, snapshotMessage?: string) => Promise<Operation>;
+  pull: (options: {
+    candidates: StatusCandidate[];
+    teamId: string;
+    teamProjectId: string;
+    projectId: string;
+  }) => Promise<Operation>;
+  push: (options: { teamId: string; teamProjectId: string }) => Promise<void>;
+  remoteBackendProjects: (options: { teamId: string; teamProjectId: string }) => Promise<BackendProjectWithTeam[]>;
+  removeBackendProjectsForRoot: (rootDocumentId: string) => Promise<void>;
+  removeBranch: (branchName: string) => Promise<void>;
+  removeRemoteBranch: (branchName: string) => Promise<void>;
+  rollback: (snapshotId: string, candidates: StatusCandidate[]) => Promise<Operation>;
+  rollbackToLatest: (candidates: StatusCandidate[]) => Promise<Operation>;
+  stage: (stageEntries: StageEntry[]) => Promise<Stage>;
+  status: (candidates: StatusCandidate[]) => Promise<Status>;
+  switchAndCreateBackendProjectIfNotExist: (rootDocumentId: string, name: string) => Promise<void>;
+  takeSnapshot: (name: string) => Promise<void>;
+  unstage: (stageEntries: StageEntry[]) => Promise<Stage>;
+}
 
 export interface SyncBridgeAPI extends SyncBridgeMethods {
-  getActiveBackendProject: () => Promise<ReturnType<VCS['getActiveBackendProject']>>;
-  hasBackendProject: () => Promise<ReturnType<VCS['hasBackendProject']>>;
+  getActiveBackendProject: () => Promise<BackendProject | null>;
+  hasBackendProject: () => Promise<boolean>;
   pullRemoteBackendProject: (options: PullRemoteBackendProjectOptions) => Promise<{
     projectId: string;
     workspaceId: string;

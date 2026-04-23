@@ -3,15 +3,16 @@ import { services } from '~/insomnia-data';
 
 import { database } from '../../common/database';
 import { type BaseModel, canSync } from '../../models';
-import type { StatusCandidate } from '../types';
-import type { VCS } from './vcs';
+import type { Stage, StageEntry, Status, StatusCandidate } from '../types';
 
-export type SyncVCSLike = Pick<
-  VCS,
-  'push' | 'stage' | 'status' | 'switchAndCreateBackendProjectIfNotExist' | 'takeSnapshot'
-> & {
-  hasBackendProject: () => ReturnType<VCS['hasBackendProject']> | Promise<ReturnType<VCS['hasBackendProject']>>;
-};
+export interface SyncVCSLike {
+  hasBackendProject: () => boolean | Promise<boolean>;
+  push: (options: { teamId: string; teamProjectId: string }) => Promise<void>;
+  stage: (stageEntries: StageEntry[]) => Promise<Stage>;
+  status: (candidates: StatusCandidate[]) => Promise<Status>;
+  switchAndCreateBackendProjectIfNotExist: (rootDocumentId: string, name: string) => Promise<void>;
+  takeSnapshot: (name: string) => Promise<void>;
+}
 
 export const initializeLocalBackendProjectAndMarkForSync = async ({
   vcs,
