@@ -90,11 +90,20 @@ async function moveDirectoryContents(srcDir: string, destDir: string, logger?: M
 
   await Promise.all(
     entries.map(async entry => {
-      const srcPath = path.resolve(srcDir, entry.name);
-      const destPath = path.resolve(destDir, entry.name);
+      const resolvedSrcDir = path.resolve(srcDir);
+      const resolvedDestDir = path.resolve(destDir);
+      const srcPath = path.resolve(resolvedSrcDir, entry.name);
+      const destPath = path.resolve(resolvedDestDir, entry.name);
 
       // Guard against crafted entry names containing traversal sequences.
-      if (!srcPath.startsWith(srcDir + path.sep) || !destPath.startsWith(destDir + path.sep)) {
+      const relSrc = path.relative(resolvedSrcDir, srcPath);
+      const relDest = path.relative(resolvedDestDir, destPath);
+      if (
+        relSrc.startsWith('..') ||
+        path.isAbsolute(relSrc) ||
+        relDest.startsWith('..') ||
+        path.isAbsolute(relDest)
+      ) {
         logger?.('warn', `Skipping entry with unsafe name: ${entry.name}`);
         return;
       }
