@@ -95,7 +95,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
   }
 
   if (authentication.type === 'hawk') {
-    let headerOptions = {
+    const headerOptions = {
       credentials: {
         id: authentication.id,
         key: authentication.key,
@@ -104,21 +104,19 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       ext: authentication.ext,
     };
 
-    if (authentication.validatePayload) {
-      headerOptions = Object.assign(
-        {},
-        {
-          payload: renderedRequest.body.text,
-          contentType: renderedRequest.body.mimeType,
-        },
-        headerOptions,
-      );
+    if (!authentication.validatePayload) {
+      return {
+        name: 'Authorization',
+        value: Hawk.client.header(url, method, headerOptions).header,
+      };
     }
-
-    const { header } = Hawk.client.header(url, method, headerOptions);
     return {
       name: 'Authorization',
-      value: header,
+      value: Hawk.client.header(url, method, {
+        ...headerOptions,
+        payload: renderedRequest.body.text,
+        contentType: renderedRequest.body.mimeType || undefined,
+      }).header,
     };
   }
 
