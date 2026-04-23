@@ -7,14 +7,8 @@ import { invariant } from '~/utils/invariant';
 let electronStorage: ElectronStorage | null = null;
 export function initElectronStorage(dataPath: string) {
   const electronStoragePath = path.join(dataPath, 'localStorage');
-  if (electronStorage) {
-    // In dev, loud failure > silent no-op
-    invariant(
-      process.env.NODE_ENV !== 'development',
-      `ElectronStorage already initialized. Attempted re-init with: ${electronStoragePath}`,
-    );
-    return;
-  }
+  // Ensure that electronStorage is not yet initialized before creating a new instance. This prevents accidental re-initialization with a different path, which could lead to data loss.
+  invariant(!electronStorage, `ElectronStorage already initialized. Attempted re-init with: ${electronStoragePath}`);
   electronStorage = new ElectronStorage(electronStoragePath);
 }
 export function getElectronStorage() {
@@ -36,24 +30,26 @@ class ElectronStorage {
   }
 
   setItem<T>(key: string, obj?: T) {
-    clearTimeout(this._timeouts[key]);
-    this._buffer[key] = JSON.stringify(obj);
-    this._timeouts[key] = setTimeout(this._flush.bind(this), 100);
+    const storageKey = this._validateKey(key);
+    clearTimeout(this._timeouts[storageKey]);
+    this._buffer[storageKey] = JSON.stringify(obj);
+    this._timeouts[storageKey] = setTimeout(this._flush.bind(this), 100);
   }
 
   getItem<T>(key: string, defaultObj?: T) {
+    const storageKey = this._validateKey(key);
     // Make sure things are flushed before we read
     this._flush();
 
     let contents = JSON.stringify(defaultObj);
 
-    const path = this._getKeyPath(key);
+    const path = this._getKeyPath(storageKey);
 
     try {
       contents = String(fs.readFileSync(path));
     } catch (error) {
       if (error.code === 'ENOENT') {
-        this.setItem(key, defaultObj);
+        this.setItem(storageKey, defaultObj);
       }
     }
 
@@ -66,10 +62,11 @@ class ElectronStorage {
   }
 
   deleteItem(key: string) {
-    clearTimeout(this._timeouts[key]);
-    delete this._buffer[key];
+    const storageKey = this._validateKey(key);
+    clearTimeout(this._timeouts[storageKey]);
+    delete this._buffer[storageKey];
 
-    const path = this._getKeyPath(key);
+    const path = this._getKeyPath(storageKey);
 
     try {
       fs.unlinkSync(path);
@@ -78,6 +75,14 @@ class ElectronStorage {
         console.error(`[localstorage] Failed to delete item from LocalStorage: ${error}`);
       }
     }
+  }
+
+  _validateKey(key: string) {
+    if (!key || key === '.' || key === '..' || key.includes('/') || key.includes('\\') || key.includes('\0')) {
+      throw new Error('Invalid electron storage key');
+    }
+
+    return key;
   }
 
   _flush() {

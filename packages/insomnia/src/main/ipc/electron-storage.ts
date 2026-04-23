@@ -6,25 +6,15 @@ export interface electronStorageBridgeAPI {
   setItem: (key: string, value: string) => Promise<void>;
 }
 
-function validateElectronStorageKey(key: string): string {
-  if (!key || key === '.' || key === '..' || key.includes('/') || key.includes('\\') || key.includes('\0')) {
-    throw new Error('Invalid electron storage key');
-  }
-
-  return key;
-}
-
 export function registerElectronStorageHandlers() {
   ipcMainHandle('electronStorage.getItem', (_, key: string) => {
-    const storageKey = validateElectronStorageKey(key);
     const storage = getElectronStorage();
-    const value = storage.getItem<string>(storageKey);
+    const value = storage.getItem<string>(key);
     return value ?? null;
   });
 
   ipcMainHandle('electronStorage.setItem', (_, key: string, value: string) => {
-    const storageKey = validateElectronStorageKey(key);
     const storage = getElectronStorage();
-    storage.setItem(storageKey, value);
+    storage.setItem(key, value);
   });
 }
