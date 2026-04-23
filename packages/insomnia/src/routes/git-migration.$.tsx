@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 
 import { Button } from '~/basic-components/button';
@@ -6,6 +6,8 @@ import { CopyButton } from '~/ui/components/base/copy-button';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 import git_for_all from '~/ui/images/onboarding/git_for_all.png';
+
+import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
 
 type MigrationStatus = 'default' | 'running' | 'completed' | 'completedWithErrors' | 'error';
 
@@ -93,7 +95,7 @@ const MigrationView = () => {
               <p className="text-sm">
                 {isUpdateRunning
                   ? 'Note: Your data is safe and the update only takes seconds.'
-                  : 'Note: This update does NOT change your data and only affects how your local Insomnia files are stored. The update takes less than a minute.'}
+                  : 'Note: This update does NOT change your data and only affects how your local Insomnia files are stored.'}
               </p>
             </>
           )}
@@ -159,6 +161,10 @@ const MigrationView = () => {
 
 const Component = () => {
   const [showMigrationView, setShowMigrationView] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('gitMigrationScreenShown', String(CURRENT_MIGRATION_VERSION));
+  }, []);
 
   return (
     <div className="relative flex h-full w-full bg-(--color-bg) text-left">
