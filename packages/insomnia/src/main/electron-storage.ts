@@ -7,9 +7,13 @@ import { invariant } from '~/utils/invariant';
 let electronStorage: ElectronStorage | null = null;
 export function initElectronStorage(dataPath: string) {
   const electronStoragePath = path.join(dataPath, 'localStorage');
+  const resolvedDataPath = path.resolve(dataPath);
+  const resolvedElectronStoragePath = path.resolve(electronStoragePath);
+  const relativePath = path.relative(resolvedDataPath, resolvedElectronStoragePath);
+  invariant(!relativePath.startsWith('..') && !path.isAbsolute(relativePath), `Invalid path`);
   // Ensure that electronStorage is not yet initialized before creating a new instance. This prevents accidental re-initialization with a different path, which could lead to data loss.
-  invariant(!electronStorage, `ElectronStorage already initialized. Attempted re-init with: ${electronStoragePath}`);
-  electronStorage = new ElectronStorage(electronStoragePath);
+  invariant(!electronStorage, `ElectronStorage already initialized. Attempted re-init with: ${resolvedElectronStoragePath}`);
+  electronStorage = new ElectronStorage(resolvedElectronStoragePath);
 }
 export function getElectronStorage() {
   invariant(electronStorage, 'ElectronStorage has not been initialized.');
