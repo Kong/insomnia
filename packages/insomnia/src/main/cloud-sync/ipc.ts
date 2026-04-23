@@ -42,8 +42,8 @@ type SyncBridgeMethods = Pick<
 >;
 
 export interface SyncBridgeAPI extends SyncBridgeMethods {
-  getActiveBackendProject: VCS['getActiveBackendProject'];
-  hasBackendProject: VCS['hasBackendProject'];
+  getActiveBackendProject: () => Promise<ReturnType<VCS['getActiveBackendProject']>>;
+  hasBackendProject: () => Promise<ReturnType<VCS['hasBackendProject']>>;
   pullRemoteBackendProject: (options: PullRemoteBackendProjectOptions) => Promise<{
     projectId: string;
     workspaceId: string;

@@ -116,12 +116,6 @@ const electronStorage: electronStorageBridgeAPI = {
   getItem: key => ipcRenderer.invoke('electronStorage.getItem', key),
   setItem: (key, value) => ipcRenderer.invoke('electronStorage.setItem', key, value),
 };
-let activeBackendProject: BackendProject | null = null;
-
-const refreshActiveBackendProject = async () => {
-  activeBackendProject = await ipcRenderer.invoke('sync.invoke', 'getActiveBackendProject');
-  return activeBackendProject;
-};
 
 const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
   try {
@@ -137,32 +131,26 @@ const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
   }
 };
 
-const invokeSyncMethodAndRefresh = async <T>(methodName: string, ...args: unknown[]) => {
-  const result = await invokeSyncMethod<T>(methodName, ...args);
-  await refreshActiveBackendProject();
-  return result;
-};
-
 const sync: SyncBridgeAPI = {
-  archiveProject: () => invokeSyncMethodAndRefresh('archiveProject'),
+  archiveProject: () => invokeSyncMethod('archiveProject'),
   checkout: (...args) => invokeSyncMethod('checkout', ...args),
   compareRemoteBranch: () => invokeSyncMethod('compareRemoteBranch'),
   fork: (...args) => invokeSyncMethod('fork', ...args),
-  getActiveBackendProject: () => activeBackendProject,
+  getActiveBackendProject: () => invokeSyncMethod('getActiveBackendProject'),
   getBranchNames: () => invokeSyncMethod('getBranchNames'),
   getCurrentBranchName: () => invokeSyncMethod('getCurrentBranchName'),
   getHistory: (...args) => invokeSyncMethod('getHistory', ...args),
   getHistoryCount: () => invokeSyncMethod('getHistoryCount'),
   getRemoteBranchNames: () => invokeSyncMethod('getRemoteBranchNames'),
   getVersion: () => invokeSyncMethod('getVersion'),
-  hasBackendProject: () => activeBackendProject !== null,
+  hasBackendProject: () => invokeSyncMethod('hasBackendProject'),
   localBackendProjects: () => invokeSyncMethod('localBackendProjects'),
   merge: (...args) => invokeSyncMethod('merge', ...args),
   pull: (...args) => invokeSyncMethod('pull', ...args),
   pullRemoteBackendProject: options => ipcRenderer.invoke('sync.pullRemoteBackendProject', options),
   push: (...args) => invokeSyncMethod('push', ...args),
   remoteBackendProjects: (...args) => invokeSyncMethod('remoteBackendProjects', ...args),
-  removeBackendProjectsForRoot: (...args) => invokeSyncMethodAndRefresh('removeBackendProjectsForRoot', ...args),
+  removeBackendProjectsForRoot: (...args) => invokeSyncMethod('removeBackendProjectsForRoot', ...args),
   removeBranch: (...args) => invokeSyncMethod('removeBranch', ...args),
   removeRemoteBranch: (...args) => invokeSyncMethod('removeRemoteBranch', ...args),
   rollback: (...args) => invokeSyncMethod('rollback', ...args),
@@ -172,7 +160,7 @@ const sync: SyncBridgeAPI = {
   stage: (...args) => invokeSyncMethod('stage', ...args),
   status: (...args) => invokeSyncMethod('status', ...args),
   switchAndCreateBackendProjectIfNotExist: (...args) =>
-    invokeSyncMethodAndRefresh('switchAndCreateBackendProjectIfNotExist', ...args),
+    invokeSyncMethod('switchAndCreateBackendProjectIfNotExist', ...args),
   takeSnapshot: (...args) => invokeSyncMethod('takeSnapshot', ...args),
   unstage: (...args) => invokeSyncMethod('unstage', ...args),
   on: (channel, listener) => {
@@ -180,8 +168,6 @@ const sync: SyncBridgeAPI = {
     return () => ipcRenderer.removeListener(channel, listener);
   },
 };
-
-void refreshActiveBackendProject();
 
 const git: GitServiceAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
