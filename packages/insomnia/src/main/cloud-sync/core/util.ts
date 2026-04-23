@@ -2,9 +2,9 @@ import crypto from 'node:crypto';
 
 import clone from 'clone';
 
-import type { BaseModel } from '../../models';
-import { deleteKeys, resetKeys } from '../ignore-keys';
-import { deterministicStringify } from '../lib/deterministic-stringify';
+import type { BaseModel } from '../../../models';
+import { deleteKeys, resetKeys } from '../../../sync/ignore-keys';
+import { deterministicStringify } from '../../../sync/lib/deterministic-stringify';
 import type {
   Branch,
   Compare,
@@ -17,7 +17,7 @@ import type {
   StageEntry,
   StatusCandidate,
   StatusCandidateMap,
-} from '../types';
+} from '../../../sync/types';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {

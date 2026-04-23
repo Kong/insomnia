@@ -9,11 +9,11 @@ import { runVcsGraphQL } from 'insomnia-api';
 
 import { PLAYWRIGHT } from '~/common/constants';
 
-import * as crypt from '../../account/crypt';
-import * as session from '../../account/session';
-import type { Operation } from '../../common/database';
-import { generateId } from '../../common/misc';
-import type { BaseModel } from '../../models';
+import * as crypt from '../../../account/crypt';
+import * as session from '../../../account/session';
+import type { Operation } from '../../../common/database';
+import { generateId } from '../../../common/misc';
+import type { BaseModel } from '../../../models';
 import type {
   BackendProject,
   BackendProjectWithTeams,
@@ -26,7 +26,7 @@ import type {
   Stage,
   StageEntry,
   StatusCandidate,
-} from '../types';
+} from '../../../sync/types';
 import Store from './store';
 import type { BaseDriver } from './store/drivers/base';
 import compress from './store/hooks/compress';
@@ -114,12 +114,6 @@ export class VCS {
     this._backendProject = null;
   }
 
-  newInstance(): VCS {
-    const newVCS: VCS = Object.assign({}, this) as any;
-    Object.setPrototypeOf(newVCS, VCS.prototype);
-    return newVCS;
-  }
-
   async setBackendProject(backendProject: BackendProject) {
     this._backendProject = backendProject;
     console.debug(`[sync] Activated project ${backendProject.id}`);
@@ -164,16 +158,6 @@ export class VCS {
 
   clearBackendProject() {
     this._backendProject = null;
-  }
-
-  async switchProject(rootDocumentId: string) {
-    const backendProject = await this._getBackendProjectByRootDocument(rootDocumentId);
-
-    if (backendProject !== null) {
-      await this.setBackendProject(backendProject);
-    } else {
-      this._backendProject = null;
-    }
   }
 
   async switchAndCreateBackendProjectIfNotExist(rootDocumentId: string, name: string) {
