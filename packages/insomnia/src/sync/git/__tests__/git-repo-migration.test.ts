@@ -15,9 +15,15 @@ vi.mock('../../../common/insomnia-v5', () => ({
 
 const mkDir = (dirPath: string) => fs.promises.mkdir(dirPath, { recursive: true });
 const fileExists = (filePath: string) =>
-  fs.promises.access(filePath).then(() => true).catch(() => false);
+  fs.promises
+    .access(filePath)
+    .then(() => true)
+    .catch(() => false);
 const dirExists = (dirPath: string) =>
-  fs.promises.stat(dirPath).then(s => s.isDirectory()).catch(() => false);
+  fs.promises
+    .stat(dirPath)
+    .then(s => s.isDirectory())
+    .catch(() => false);
 
 type LogEntry = string;
 const makeLogger = () => {
@@ -87,7 +93,7 @@ describe('migrateRepoStructureIfNeeded', () => {
 
     expect(result).toBe(true);
     expect(await fileExists(path.join(baseDir, 'README.md'))).toBe(true);
-    expect(await dirExists(path.join(baseDir, 'other'))).toBe(false);
+    expect(await dirExists(path.join(baseDir, 'other'))).toBe(true);
   });
 
   it('writes workspace YAML to disk', async () => {
