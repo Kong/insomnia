@@ -129,24 +129,20 @@
       "builtin": "path"
     },
     {
-      "importer": "src/routes/import.scan.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.update.tsx",
-      "builtin": "path"
-    },
-    {
       "importer": "src/script-executor.ts",
       "builtin": "fs/promises"
+    },
+    {
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "buffer"
+    },
+    {
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "timers"
+    },
+    {
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "util"
     },
     {
       "importer": "src/sync/store/drivers/file-system-driver.ts",

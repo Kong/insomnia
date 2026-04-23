@@ -107,7 +107,7 @@ export function checkSandboxViolations(
 
   walk.simple(tree, {
     // const/let/var g = globalThis  OR  const s = this
-    VariableDeclarator(node) {
+    VariableDeclarator(node: acorn.VariableDeclarator) {
       if (node.id.type !== 'Identifier') return;
       const id = node.id as acorn.Identifier;
       if (node.init?.type === 'Identifier') {
@@ -124,7 +124,7 @@ export function checkSandboxViolations(
       }
     },
     // g = globalThis (bare assignment)  OR  s = this
-    AssignmentExpression(node) {
+    AssignmentExpression(node: acorn.AssignmentExpression) {
       if (node.left.type !== 'Identifier') return;
       const id = node.left as acorn.Identifier;
       if (node.right.type === 'Identifier') {
@@ -142,7 +142,7 @@ export function checkSandboxViolations(
 
   // check for violations using the fully expanded blocked map.
   walk.simple(tree, {
-    MemberExpression(node) {
+    MemberExpression(node: acorn.MemberExpression) {
       if (node.object.type === 'ThisExpression' && blockedRoots.has('this')) {
         throw new Error(
           `The script was blocked because it used 'this'.\n` +
@@ -180,7 +180,7 @@ export function checkSandboxViolations(
         );
       }
     },
-    VariableDeclarator(node) {
+    VariableDeclarator(node: acorn.VariableDeclarator) {
       if (node.id.type !== 'ObjectPattern') return;
       // Destructuring declaration: const { require } = globalThis
       if (
@@ -201,7 +201,7 @@ export function checkSandboxViolations(
         );
       }
     },
-    AssignmentExpression(node) {
+    AssignmentExpression(node: acorn.AssignmentExpression) {
       // Destructuring assignment: ({ require } = globalThis)
       if (
         node.left.type === 'ObjectPattern' &&
@@ -223,22 +223,22 @@ export function checkSandboxViolations(
       }
     },
     // Static import declaration: import fs from 'fs'
-    ImportDeclaration(_node) {
+    ImportDeclaration(_node: acorn.ImportDeclaration) {
       throw new Error(
         `The script was blocked because it used a static import declaration.\n` +
-        `If this is intended, disable 'eval-intercept' via Settings → Scripting → Interceptor rules.`,
+        `If this is intended, disable 'eval-intercept' via Settings → Scripting → Enable script sandbox.`,
       );
     },
     // Dynamic import(): import('node:child_process')
-    ImportExpression(_node) {
+    ImportExpression(_node: acorn.Node) {
       throw new Error(
         `The script was blocked because it used a dynamic import().\n` +
-        `If this is intended, disable 'eval-intercept' via Settings → Scripting → Interceptor rules.`,
+        `If this is intended, disable 'eval-intercept' via Settings → Scripting → Enable script sandbox.`,
       );
     },
     // Direct call of a blocked identifier: constructor('return process')()
     // Not caught by MemberExpression since there is no property access involved.
-    CallExpression(node) {
+    CallExpression(node: acorn.CallExpression) {
       if (
         node.callee.type === 'Identifier' &&
         blocked.has((node.callee as acorn.Identifier).name)
