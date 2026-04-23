@@ -26,6 +26,7 @@
 
 import { database } from '~/common/database';
 import { type GitCredentials, type GitRepository, services } from '~/insomnia-data';
+import { getElectronStorage } from '~/main/electron-storage';
 
 import * as models from '../../models';
 
@@ -34,11 +35,13 @@ const { isGitCredentialsV1 } = models.gitCredentials;
 
 const MIGRATION_KEY = 'GIT_CREDENTIALS_MIGRATION';
 
-const hasRunMigration = async () => {
-  return window.main.electronStorage.getItem(MIGRATION_KEY);
+const hasRunMigration = () => {
+  const migrationStorage = getElectronStorage();
+  return migrationStorage.getItem(MIGRATION_KEY);
 };
-const markMigrationComplete = async () => {
-  await window.main.electronStorage.setItem(MIGRATION_KEY, '1');
+const markMigrationComplete = () => {
+  const migrationStorage = getElectronStorage();
+  migrationStorage.setItem(MIGRATION_KEY, 1);
 };
 
 async function migrateGitHubConnectedRepositories(repositories: GitRepository[]) {
@@ -207,7 +210,7 @@ async function migrateCustomCredentialsRepositories(repositories: GitRepository[
  */
 export async function runGitCredentialsMigration(): Promise<void> {
   try {
-    if (await hasRunMigration()) {
+    if (hasRunMigration()) {
       console.log(`[git-credentials-migration] Already migrated credentials, skipping migration`);
       return;
     }
@@ -247,7 +250,7 @@ export async function runGitCredentialsMigration(): Promise<void> {
     );
 
     // Mark migration as complete
-    await markMigrationComplete();
+    markMigrationComplete();
     console.log(`[git-credentials-migration] Migration completed`);
   } catch (error) {
     console.error('[git-credentials-migration] Migration failed:', error);

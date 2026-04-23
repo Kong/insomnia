@@ -21,7 +21,7 @@ import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { version } from '../../../../package.json';
-import { getOauthRedirectUrl, getOauthRelayUrl } from '../../../common/constants';
+import { getOauthRedirectUrl, getOauthRelayUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../../common/constants';
 import { type DefaultBrowserRedirectParam, escapeRegex } from '../../../common/misc';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../../network/authentication';
 import { getBasicAuthHeader } from '../../../network/basic-auth/get-header';
@@ -92,17 +92,16 @@ const getElectronStorage = () => {
   return getSharedElectronStorage();
 };
 
-const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 export function initNewOAuthSession() {
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
   const storage = getElectronStorage();
-  storage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  storage.setItem(OAUTH_WINDOW_SESSION_ID_KEY, authWindowSessionId);
   return authWindowSessionId;
 }
 
 export function getOAuthSession(): string {
   const storage = getElectronStorage();
-  const token = storage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  const token = storage.getItem(OAUTH_WINDOW_SESSION_ID_KEY);
   return token || initNewOAuthSession();
 }
 
