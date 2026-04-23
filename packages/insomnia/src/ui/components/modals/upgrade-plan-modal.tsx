@@ -66,7 +66,8 @@ export const UpgradePlanModal = () => {
       // Don't show when a deep-link import is about to open (e.g. user just
       // logged in to handle an insomnia://app/import link).
       // Check both keys to cover the full timing window: pendingDeepLinkAfterAuthorize
-      // is present before the org loader drains it, suppressWelcomeModals is set after.
+      // is present before the replay effect in root.tsx removes it,
+      // suppressWelcomeModals is set by that same effect just before replay.
       if (
         window.sessionStorage.getItem('pendingDeepLinkAfterAuthorize') ||
         window.sessionStorage.getItem('suppressWelcomeModals')

@@ -24,6 +24,7 @@ import { useLatest } from 'react-use';
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
+import { SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -368,6 +369,9 @@ const Root = () => {
       }
       // Supports params: uri, curl, origin
       if (urlWithoutParams === 'insomnia://app/import') {
+        // Clean up the flag set during deep-link replay so it never leaks
+        // into later modal evaluations within the same session.
+        window.sessionStorage.removeItem('suppressWelcomeModals');
         const userSession = await services.userSession.getOrCreate();
         if (!userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
@@ -622,7 +626,7 @@ const Root = () => {
   // default in the import dialog is the correct behaviour.
   useEffect(() => {
     const pendingDeepLink = window.sessionStorage.getItem('pendingDeepLinkAfterAuthorize');
-    if (pendingDeepLink && organizationId && organizationId !== 'org_scratchpad') {
+    if (pendingDeepLink && organizationId && organizationId !== SCRATCHPAD_ORGANIZATION_ID) {
       window.sessionStorage.removeItem('pendingDeepLinkAfterAuthorize');
       window.sessionStorage.setItem('suppressWelcomeModals', 'true');
       window.main.openDeepLink(pendingDeepLink);
