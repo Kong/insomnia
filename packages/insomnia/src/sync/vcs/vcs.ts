@@ -14,9 +14,6 @@ import * as session from '../../account/session';
 import type { Operation } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { BaseModel } from '../../models';
-import Store from '../store';
-import type { BaseDriver } from '../store/drivers/base';
-import compress from '../store/hooks/compress';
 import type {
   BackendProject,
   BackendProjectWithTeams,
@@ -30,6 +27,9 @@ import type {
   StageEntry,
   StatusCandidate,
 } from '../types';
+import Store from './store';
+import type { BaseDriver } from './store/drivers/base';
+import compress from './store/hooks/compress';
 import {
   compareBranches,
   generateCandidateMap,

@@ -3,9 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { projectSchema } from '../../__schemas__/type-schemas';
-import MemoryDriver from '../../store/drivers/memory-driver';
+import { shouldIgnoreKey } from '../../ignore-keys';
+import { deterministicStringify } from '../../lib/deterministic-stringify';
 import type { BackendProject } from '../../types';
-import { describeChanges } from '../util';
+import MemoryDriver from '../store/drivers/memory-driver';
 import { chunkArray, VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
@@ -21,6 +22,45 @@ async function vcs(branch) {
   await v.switchAndCreateBackendProjectIfNotExist('workspace_1', 'Test Workspace');
   await v.checkout([], branch);
   return v;
+}
+
+function describeChanges(a, b): string[] {
+  const aT = Object.prototype.toString.call(a);
+  const bT = Object.prototype.toString.call(b);
+
+  if (aT !== '[object Object]' || bT !== '[object Object]') {
+    return [];
+  }
+
+  const changes: string[] = [];
+  const allKeys = Object.keys({ ...a, ...b });
+
+  for (const key of allKeys) {
+    if (shouldIgnoreKey(key, a)) {
+      continue;
+    }
+
+    const aValue = a[key];
+    const bValue = b[key];
+    const aStr = deterministicStringify(aValue);
+    const bStr = deterministicStringify(bValue);
+
+    if (aValue === undefined && bValue !== undefined) {
+      changes.push(`+${String(key)}`);
+      continue;
+    }
+
+    if (aValue !== undefined && bValue === undefined) {
+      changes.push(`-${String(key)}`);
+      continue;
+    }
+
+    if (aStr !== bStr) {
+      changes.push(key);
+    }
+  }
+
+  return changes;
 }
 
 describe('VCS', () => {

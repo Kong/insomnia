@@ -1,5 +1,5 @@
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import type { MergeConflict } from '../../sync/types';
+import FileSystemDriver from '../../sync/vcs/store/drivers/file-system-driver';
 import { VCS } from '../../sync/vcs/vcs';
 
 export type ConflictHandler = (
