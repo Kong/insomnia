@@ -57,8 +57,8 @@ async function hasMigrated(baseDir: string, gitRepo: GitRepository | null | unde
   // Disk override: old layout directories mean migration is definitely needed.
   // Both checks run in parallel — they're independent stat calls.
   const [hasOldGit, hasOldOther] = await Promise.all([
-    dirExists(path.join(baseDir, 'git')),
-    dirExists(path.join(baseDir, 'other')),
+    dirExists(path.resolve(baseDir, 'git')),
+    dirExists(path.resolve(baseDir, 'other')),
   ]);
   if (hasOldGit || hasOldOther) return false;
 
@@ -90,8 +90,14 @@ async function moveDirectoryContents(srcDir: string, destDir: string, logger?: M
 
   await Promise.all(
     entries.map(async entry => {
-      const srcPath = path.join(srcDir, entry.name);
-      const destPath = path.join(destDir, entry.name);
+      const srcPath = path.resolve(srcDir, entry.name);
+      const destPath = path.resolve(destDir, entry.name);
+
+      // Guard against crafted entry names containing traversal sequences.
+      if (!srcPath.startsWith(srcDir + path.sep) || !destPath.startsWith(destDir + path.sep)) {
+        logger?.('warn', `Skipping entry with unsafe name: ${entry.name}`);
+        return;
+      }
 
       if (entry.isDirectory()) {
         await fs.promises.mkdir(destPath, { recursive: true });
@@ -157,7 +163,7 @@ async function dirExists(dirPath: string): Promise<boolean> {
  * git commands from resolving to the wrong path.
  */
 async function sanitizeGitConfig(gitDir: string, logger?: MigrationLogger): Promise<void> {
-  const configPath = path.join(gitDir, 'config');
+  const configPath = path.resolve(gitDir, 'config');
   try {
     const original = await fs.promises.readFile(configPath, 'utf8');
     const sanitized = original
@@ -193,6 +199,13 @@ export async function migrateRepoStructureIfNeeded(
   gitRepositoryId: string,
   logger?: MigrationLogger,
 ): Promise<boolean> {
+  // Reject non-absolute paths — a relative baseDir could be used to escape the
+  // intended data directory via traversal sequences.
+  if (!path.isAbsolute(baseDir)) {
+    logger?.('error', `Refusing migration for non-absolute baseDir: ${baseDir}`);
+    return false;
+  }
+
   // Fast synchronous guard first — avoids the async DB lookup for concurrent calls.
   if (inProgressMigrations.has(gitRepositoryId)) {
     return true;
