@@ -300,6 +300,7 @@ const openSocketIOConnection = async (
       query: options.query,
       ca: caCertificate,
       passphrase,
+      reconnection: false,
       // @ts-expect-error: Type mismatch for agent field
       agent: settings.proxyEnabled ? getProxyAgent(url, settings.httpProxy, settings.httpsProxy) : false,
     };
