@@ -612,6 +612,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   const [message, setMessage] = useState('');
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const repoPath = gitRepository?._id
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository._id)
+    : '';
   const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
   const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
@@ -1044,6 +1049,45 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             </GridList>
           </div>
         </div>
+      </div>
+
+      <div className="mt-auto rounded-md border border-solid border-(--hl-sm) p-4 text-sm text-(--color-font)">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="rounded-xs border border-solid border-[#a78bfa] px-1.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
+            PREVIEW
+          </span>
+          <span className="font-semibold">Manage changes on the Git CLI</span>
+        </div>
+        <p className="mb-3 text-sm text-(--color-font)">
+          You can now browse Git Sync project files on your local file system and manage changes using your normal Git
+          workflows.{' '}
+          <a href="https://insomnia.rest" className="underline">
+            Learn more ↗
+          </a>
+        </p>
+        <p className="mb-1 font-semibold">Path to this project:</p>
+        <div className="mb-3 flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+          <span className="min-w-0 flex-1 truncate" title={repoPath}>
+            {repoPath}
+          </span>
+          <Button
+            onPress={() => {
+              window.clipboard.writeText(repoPath);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="mb-1 flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+            aria-label="Copy path"
+          >
+            <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
+          </Button>
+        </div>
+        <Button
+          onPress={() => window.shell.showItemInFolder(repoPath)}
+          className="cursor-pointer text-(--hl) underline"
+        >
+          Open in file system
+        </Button>
       </div>
     </>
   );
