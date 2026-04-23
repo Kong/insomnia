@@ -6,6 +6,7 @@ import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import * as ts from 'typescript';
 import { defineConfig, type ResolvedConfig } from 'vite';
+import viteTsconfigPaths from 'vite-tsconfig-paths';
 
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
@@ -52,6 +53,9 @@ export default defineConfig(({ mode }) => {
       },
     },
     plugins: [
+      viteTsconfigPaths({
+        root: __dirname,
+      }),
       // Allows us to import modules that will be resolved by Node's require() function.
       // e.g. import fs from 'fs'; will get transformed to const fs = require('fs'); so that it works in the renderer process.
       // This is necessary because we use nodeIntegration: true in the renderer process and allow importing modules from node.

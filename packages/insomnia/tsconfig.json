@@ -13,7 +13,6 @@
     "module": "ESNext",
     "sourceMap": true,
     /* import resolution */
-    "baseUrl": ".",
     "rootDirs": [".", "./.react-router/types"],
     "paths": {
       "~/*": ["./src/*"]
