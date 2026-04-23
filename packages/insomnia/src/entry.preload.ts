@@ -3,7 +3,6 @@ import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 import type { Services } from '~/insomnia-data';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
-import type { BackendProject } from '~/sync/types';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
