@@ -2881,7 +2881,13 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
         logs.push(`${ts()} [${level.toUpperCase()}] ["${project.name}"] ${message}`);
       };
 
-      const baseDir = path.join(baseDataPath, `version-control/git/${repoId}`);
+      const allowedBase = path.resolve(baseDataPath);
+      const baseDir = path.resolve(allowedBase, 'version-control', 'git', repoId);
+      if (!baseDir.startsWith(allowedBase + path.sep)) {
+        logger('warn', `Skipping repo with unsafe path — repoId may contain path traversal: ${repoId}`);
+        return;
+      }
+
       const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
       if (!success) {
         failedProjects.push({ id: project._id, name: project.name });
