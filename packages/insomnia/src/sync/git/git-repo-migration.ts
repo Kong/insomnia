@@ -196,10 +196,10 @@ export async function migrateRepoStructureIfNeeded(
   projectId: string,
   gitRepositoryId: string,
   logger?: MigrationLogger,
-): Promise<void> {
+): Promise<boolean> {
   // Fast synchronous guard first — avoids the async DB lookup for concurrent calls.
   if (inProgressMigrations.has(gitRepositoryId)) {
-    return;
+    return true;
   }
 
   // Fetch the repo record once and reuse it for both the migration check and
@@ -209,7 +209,7 @@ export async function migrateRepoStructureIfNeeded(
   });
 
   if (await hasMigrated(baseDir, gitRepo)) {
-    return;
+    return true;
   }
 
   inProgressMigrations.add(gitRepositoryId);
@@ -217,6 +217,7 @@ export async function migrateRepoStructureIfNeeded(
   console.log(`[git-migration] Starting structure migration for repo ${gitRepositoryId}`);
   logger?.('info', `Starting structure migration for repo ${gitRepositoryId}`);
 
+  let success = false;
   try {
     // Step 1: Rename git/ → .git/
     // If the process was interrupted mid-copy on a previous run, both dirs may
@@ -258,6 +259,7 @@ export async function migrateRepoStructureIfNeeded(
     }
     console.log(`[git-migration] Migration complete for repo ${gitRepositoryId}`);
     logger?.('info', `Migration complete for repo ${gitRepositoryId}`);
+    success = true;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[git-migration] Migration failed (non-fatal):', err);
@@ -265,6 +267,7 @@ export async function migrateRepoStructureIfNeeded(
   } finally {
     inProgressMigrations.delete(gitRepositoryId);
   }
+  return success;
 }
 
 /**

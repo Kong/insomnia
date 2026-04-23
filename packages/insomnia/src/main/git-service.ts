@@ -2834,8 +2834,14 @@ async function getCurrentBranchByRepositoryId({
   });
 }
 
-export async function runAllGitRepoMigrations(): Promise<string[]> {
+export interface MigrationSummary {
+  logs: string[];
+  failedProjects: { id: string; name: string }[];
+}
+
+export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   const logs: string[] = [];
+  const failedProjects: { id: string; name: string }[] = [];
 
   const allProjects = await services.project.all();
   for (const project of allProjects) {
@@ -2855,10 +2861,13 @@ export async function runAllGitRepoMigrations(): Promise<string[]> {
       process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
       `version-control/git/${repoId}`,
     );
-    await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
+    const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
+    if (!success) {
+      failedProjects.push({ id: project._id, name: project.name });
+    }
   }
 
-  return logs;
+  return { logs, failedProjects };
 }
 
 export interface GitServiceAPI {

@@ -12,14 +12,16 @@ type MigrationStatus = 'default' | 'running' | 'completed' | 'completedWithError
 const MigrationView = () => {
   const [status, setStatus] = useState<MigrationStatus>('default');
   const [migrationLogs, setMigrationLogs] = useState<string[]>([]);
+  const [failedProjects, setFailedProjects] = useState<{ id: string; name: string }[]>([]);
 
   const handleMigration = () => {
     setStatus('running');
     window.main.git
       .runAllGitRepoMigrations()
-      .then((logs: string[]) => {
-        setMigrationLogs(logs);
-        setStatus('completed');
+      .then((result: { logs: string[]; failedProjects: { id: string; name: string }[] }) => {
+        setMigrationLogs(result.logs);
+        setFailedProjects(result.failedProjects);
+        setStatus(result.failedProjects.length > 0 ? 'completedWithErrors' : 'completed');
       })
       .catch((err: unknown) => {
         const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred.';
@@ -58,9 +60,9 @@ const MigrationView = () => {
                 The following Git Sync projects were disconnected from remote as a result of the file system update:
               </p>
               <ol className="ml-3 list-disc text-sm">
-                <li>Project 1</li>
-                <li>Project 2</li>
-                <li>Project 3</li>
+                {failedProjects.map(p => (
+                  <li key={p.id}>{p.name}</li>
+                ))}
               </ol>
               <p className="text-sm">
                 These projects will need to be reconnected to the git remote server to continue with push, pull, and
