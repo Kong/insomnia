@@ -4,12 +4,11 @@ import { randomUUID } from 'node:crypto';
 import { app, type WebContents } from 'electron';
 
 import type { RemoteProject } from '~/insomnia-data';
+import type { BackendProjectWithTeam, MergeConflict } from '~/sync/types';
 import { services } from '~/insomnia-data';
-import type { MergeConflict } from '~/sync/types';
-import { createVCS } from '~/sync/vcs/create-vcs';
+import { createVCS } from '~/main/cloud-sync/create-vcs';
 import { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
-import type { BackendProjectWithTeam } from '~/sync/vcs/normalize-backend-project-team';
-import { pullBackendProject } from '~/sync/vcs/pull-backend-project';
+import { pullBackendProject } from '~/main/cloud-sync/pull-backend-project';
 import type { VCS } from '~/sync/vcs/vcs';
 import { invariant } from '~/utils/invariant';
 
