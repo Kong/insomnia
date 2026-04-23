@@ -258,8 +258,9 @@ export async function migrateRepoStructureIfNeeded(
     success = true;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error && err.stack ? `\n${err.stack}` : '';
     console.error('[git-migration] Migration failed (non-fatal):', err);
-    logger?.('error', `Migration failed: ${message}`);
+    logger?.('error', `Migration failed: ${message}${stack}`);
   } finally {
     inProgressMigrations.delete(gitRepositoryId);
   }

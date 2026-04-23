@@ -45,7 +45,7 @@ import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
 import { fsClient } from '../sync/git/fs-client';
-import { migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
+import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
   fetchRemoteBranches,
   GIT_CLONE_DIR,
@@ -2867,6 +2867,9 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   // Hoist — same value for every repo.
   const baseDataPath = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
 
+  const ts = () => new Date().toISOString();
+  logs.push(`${ts()} [INFO] Starting migration v${CURRENT_MIGRATION_VERSION} for ${gitProjects.length} repo(s)`);
+
   await Promise.all(
     gitProjects.map(async project => {
       const gitRepository = repoById.get(project.gitRepositoryId);
@@ -2874,8 +2877,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
 
       const repoId = gitRepository._id;
       const logger = (level: 'info' | 'warn' | 'error', message: string) => {
-        const ts = new Date().toISOString();
-        logs.push(`${ts} [${level.toUpperCase()}] [${repoId}] ${message}`);
+        logs.push(`${ts()} [${level.toUpperCase()}] [repo:${repoId}] [project:${project._id} "${project.name}"] ${message}`);
       };
 
       const baseDir = path.join(baseDataPath, `version-control/git/${repoId}`);
@@ -2889,15 +2891,27 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   // In case we have any failed projects, convert them to local projects.
   await Promise.all(
     failedProjects.map(async ({ id, name }) => {
-      const project = await services.project.getById(id);
-      if (!project || !project.gitRepositoryId) return;
+      logs.push(`${ts()} [INFO] Converting failed project "${name}" (${id}) to local project`);
+      try {
+        const project = await services.project.getById(id);
+        if (!project || !project.gitRepositoryId) {
+          logs.push(`${ts()} [WARN] Project ${id} not found or already local — skipping conversion`);
+          return;
+        }
 
-      const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
-      if (gitRepository) {
-        await services.gitRepository.remove(gitRepository);
+        const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+        if (gitRepository) {
+          await services.gitRepository.remove(gitRepository);
+          logs.push(`${ts()} [INFO] Removed git repository ${project.gitRepositoryId} for project "${name}"`);
+        }
+
+        await services.project.update(project, { name, gitRepositoryId: null });
+        logs.push(`${ts()} [INFO] Project "${name}" (${id}) successfully converted to local`);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const stack = err instanceof Error && err.stack ? `\n${err.stack}` : '';
+        logs.push(`${ts()} [ERROR] Failed to convert project "${name}" (${id}) to local: ${message}${stack}`);
       }
-
-      await services.project.update(project, { name, gitRepositoryId: null });
     }),
   );
 
