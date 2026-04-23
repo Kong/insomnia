@@ -211,7 +211,7 @@ export async function migrateRepoStructureIfNeeded(
   inProgressMigrations.add(gitRepositoryId);
 
   console.log(`[git-migration] Starting structure migration for repo ${gitRepositoryId}`);
-  logger?.('info', `Starting structure migration for repo ${gitRepositoryId}`);
+  logger?.('info', 'Starting structure migration');
 
   let success = false;
   try {
@@ -254,7 +254,7 @@ export async function migrateRepoStructureIfNeeded(
       await markMigrated(gitRepo);
     }
     console.log(`[git-migration] Migration complete for repo ${gitRepositoryId}`);
-    logger?.('info', `Migration complete for repo ${gitRepositoryId}`);
+    logger?.('info', 'Migration complete');
     success = true;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
