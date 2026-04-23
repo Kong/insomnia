@@ -168,16 +168,27 @@ const extractBody = (
     ...((pairsByName.form as string[] | undefined) || []),
     ...((pairsByName.F as string[] | undefined) || []),
   ].map(str => {
-    const [name, value] = str.split('=');
+    const equalsIndex = str.indexOf('=');
+    if (equalsIndex === -1) {
+      return { name: str, value: '', type: 'text' } as Parameter;
+    }
+    const name = str.slice(0, equalsIndex);
+    const rawValue = str.slice(equalsIndex + 1);
+    // curl --form values support trailing modifiers separated by `;`, e.g.
+    // `@file;type=application/json`, `@file;filename=other.csv`. Only the
+    // portion before the first `;` is the content (a filename when prefixed
+    // with `@`, a literal value otherwise). See `curl --manual`.
+    const semiIndex = rawValue.indexOf(';');
+    const content = semiIndex === -1 ? rawValue : rawValue.slice(0, semiIndex);
     const item: Parameter = {
       name,
     };
 
-    if (value.indexOf('@') === 0) {
-      item.fileName = value.slice(1);
+    if (content.indexOf('@') === 0) {
+      item.fileName = content.slice(1);
       item.type = 'file';
     } else {
-      item.value = value;
+      item.value = content;
       item.type = 'text';
     }
 
