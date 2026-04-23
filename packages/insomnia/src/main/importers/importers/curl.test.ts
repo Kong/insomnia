@@ -256,6 +256,26 @@ describe('curl', () => {
       },
     },
     {
+      name: 'should preserve semicolons in quoted --form text value',
+      curl: `curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'colors="red; green; blue";type=text/x-myapp'`,
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'colors', value: 'red; green; blue', type: 'text' }],
+        },
+      },
+    },
+    {
+      name: 'should preserve semicolons in quoted --form filename',
+      curl: `curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'file=@"local;file";filename="name;in;post"'`,
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'file', fileName: 'local;file', type: 'file' }],
+        },
+      },
+    },
+    {
       name: 'should handle -F alias the same as --form',
       curl: "curl -X POST https://example.com -H 'Content-Type: multipart/form-data' -F 'data=@/tmp/a.json;type=application/json'",
       expected: {

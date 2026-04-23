@@ -155,6 +155,30 @@ const extractCookieHeaderValue = (pairsByName: PairsByName) => {
     })
     .join('; ');
 };
+const getUnquotedSemicolonIndex = (value: string) => {
+  let isQuoted = false;
+  for (let i = 0; i < value.length; i++) {
+    const char = value[i];
+    if (char === '\\' && isQuoted) {
+      i++;
+      continue;
+    }
+    if (char === '"') {
+      isQuoted = !isQuoted;
+      continue;
+    }
+    if (char === ';' && !isQuoted) {
+      return i;
+    }
+  }
+  return -1;
+};
+const unquoteFormValue = (value: string) => {
+  if (value.startsWith('"') && value.endsWith('"')) {
+    return value.slice(1, -1).replace(/\\(["\\])/g, '$1');
+  }
+  return value;
+};
 const extractBody = (
   dataParameters: Parameter[],
   pairsByName: PairsByName,
@@ -174,21 +198,20 @@ const extractBody = (
     }
     const name = str.slice(0, equalsIndex);
     const rawValue = str.slice(equalsIndex + 1);
-    // curl --form values support trailing modifiers separated by `;`, e.g.
-    // `@file;type=application/json`, `@file;filename=other.csv`. Only the
-    // portion before the first `;` is the content (a filename when prefixed
-    // with `@`, a literal value otherwise). See `curl --manual`.
-    const semiIndex = rawValue.indexOf(';');
+    // curl --form values support trailing modifiers separated by unquoted `;`,
+    // e.g. `@file;type=application/json`, while quoted form content may also
+    // contain semicolons. See `curl --manual`.
+    const semiIndex = getUnquotedSemicolonIndex(rawValue);
     const content = semiIndex === -1 ? rawValue : rawValue.slice(0, semiIndex);
     const item: Parameter = {
       name,
     };
 
     if (content.indexOf('@') === 0) {
-      item.fileName = content.slice(1);
+      item.fileName = unquoteFormValue(content.slice(1));
       item.type = 'file';
     } else {
-      item.value = content;
+      item.value = unquoteFormValue(content);
       item.type = 'text';
     }
 
