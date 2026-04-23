@@ -54,15 +54,18 @@ const inProgressMigrations = new Set<string>();
  * Accepts a pre-fetched `gitRepo` so the caller avoids an extra DB round-trip.
  */
 async function hasMigrated(baseDir: string, gitRepo: GitRepository | null | undefined): Promise<boolean> {
-  // Disk override: old layout directories mean migration is definitely needed.
-  // Both checks run in parallel — they're independent stat calls.
+  // Version stamp takes priority. Checking other/ against a stamped repo is unsafe:
+  // users can legitimately create an "other" directory after migration, which would
+  // cause step 2 to destructively collapse it into the repo root.
+  if ((gitRepo?.repoMigrationVersion ?? 0) >= CURRENT_MIGRATION_VERSION) return true;
+
+  // No stamp (e.g. cleared by a version rollback that pruned unknown fields): fall
+  // back to disk layout. git/ present = step 1 not done; other/ present = step 2 not done.
   const [hasOldGit, hasOldOther] = await Promise.all([
     dirExists(path.join(baseDir, 'git')),
     dirExists(path.join(baseDir, 'other')),
   ]);
-  if (hasOldGit || hasOldOther) return false;
-
-  return (gitRepo?.repoMigrationVersion ?? 0) >= CURRENT_MIGRATION_VERSION;
+  return !hasOldGit && !hasOldOther;
 }
 
 async function markMigrated(gitRepo: GitRepository): Promise<void> {
