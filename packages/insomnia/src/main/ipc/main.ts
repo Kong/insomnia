@@ -20,13 +20,12 @@ import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
+import type { RequestHeader, Services } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
-import { getOAuth2Token, initNewOAuthSession } from '~/main/network/o-auth-2/get-token';
 import type {
   GenerateCommitsFromDiffFunction,
   GenerateMcpSamplingResponseFunction,
@@ -144,12 +143,6 @@ export interface RendererToMainBridgeAPI {
     bodyCompression?: 'zip' | null;
   }) => Promise<string>;
   getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<RequestHeader | undefined>;
-  initNewOAuthSession: () => Promise<string>;
-  getOAuth2Token: (options: {
-    requestId: string;
-    auth: AuthTypeOAuth2;
-    forceRefresh: boolean;
-  }) => Promise<OAuth2Token | undefined>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -302,16 +295,6 @@ export function registerMainHandlers() {
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);
   });
-  ipcMainHandle('initNewOAuthSession', async () => {
-    return initNewOAuthSession();
-  });
-  ipcMainHandle(
-    'getOAuth2Token',
-    async (_, options: { requestId: string; auth: AuthTypeOAuth2; forceRefresh: boolean }) => {
-      const { requestId, auth, forceRefresh } = options;
-      return getOAuth2Token(requestId, auth, forceRefresh);
-    },
-  );
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
     return new Promise((resolve, reject) => {

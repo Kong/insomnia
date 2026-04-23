@@ -1,6 +1,8 @@
 import React, { type FC, Fragment } from 'react';
 
 import { useRootLoaderData } from '~/root';
+import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
+
 import {
   EditorKeyMap,
   MAX_EDITOR_FONT_SIZE,
@@ -224,7 +226,7 @@ export const General: FC = () => {
         />
         <button
           className="pointer h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-sm) hover:bg-(--hl-xs)"
-          onClick={window.main.initNewOAuthSession}
+          onClick={clearOAuthWindowSessionId}
         >
           Clear OAuth 2 session
         </button>
