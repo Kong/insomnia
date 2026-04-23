@@ -14,6 +14,7 @@ import type { Project, RemoteProject, Stats } from '~/insomnia-data';
 import { database, initDatabase, initServices, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
+import { initElectronStorage } from '~/main/electron-storage';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { runGitCredentialsMigration } from '~/sync/git/migrations';
@@ -26,6 +27,7 @@ import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerGitServiceAPI } from './main/git-service';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
+import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
@@ -46,7 +48,9 @@ import * as models from './models/index';
 const dataPath =
   process.env.INSOMNIA_DATA_PATH ||
   path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+
 app.setPath('userData', dataPath);
+initElectronStorage(dataPath);
 
 initializeLogging();
 
@@ -89,6 +93,7 @@ app.on('ready', async () => {
   registerCurlHandlers();
   registerMcpHandlers();
   registerSecretStorageHandlers();
+  registerElectronStorageHandlers();
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
@@ -121,7 +126,6 @@ app.on('ready', async () => {
   await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
   watchProxySettings();
-  windowUtils.init();
 
   await runGitCredentialsMigration();
 

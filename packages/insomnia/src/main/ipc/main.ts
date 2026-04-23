@@ -19,11 +19,12 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
+import { cannotAccessPathError } from '~/common/misc';
 import { type Services, services } from '~/insomnia-data';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
-import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
+import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
 import type {
   GenerateCommitsFromDiffFunction,
   GenerateMcpSamplingResponseFunction,
@@ -58,6 +59,7 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
+import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
@@ -159,6 +161,7 @@ export interface RendererToMainBridgeAPI {
   git: GitServiceAPI;
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
+  electronStorage: electronStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
@@ -448,6 +451,15 @@ export function registerMainHandlers() {
       useDynamicMockResponses: boolean,
       mockServerAdditionalFiles: string[],
     ) => {
+      const settings = await services.settings.getOrCreate();
+
+      for (const filePath of mockServerAdditionalFiles) {
+        const { isAllowed, securedPath } = isPathAllowed(filePath, settings.dataFolders);
+        if (!isAllowed) {
+          return { error: cannotAccessPathError(securedPath), routes: [] };
+        }
+      }
+
       return new Promise((resolve, reject) => {
         const process = utilityProcess.fork(path.join(__dirname, 'main/mock-generation-process.mjs'));
 

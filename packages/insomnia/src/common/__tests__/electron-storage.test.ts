@@ -108,4 +108,13 @@ describe('Test electron storage()', () => {
     expect(fs.readFileSync(path.join(basePath, 'foo'), 'utf8')).toEqual('"bar3"');
     expect(fs.readFileSync(path.join(basePath, 'another'), 'utf8')).toEqual('10');
   });
+
+  it.each(['', '.', '..', 'foo/bar', 'foo\\bar', 'foo\0bar'])('rejects invalid key %j', key => {
+    const basePath = `/tmp/insomnia-electronstorage-${Math.random()}`;
+    const electronStorage = new ElectronStorage(basePath);
+
+    expect(() => electronStorage.getItem(key)).toThrowError('Invalid electron storage key');
+    expect(() => electronStorage.setItem(key, 'value')).toThrowError('Invalid electron storage key');
+    expect(() => electronStorage.deleteItem(key)).toThrowError('Invalid electron storage key');
+  });
 });

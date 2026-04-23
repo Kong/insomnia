@@ -8,20 +8,18 @@ on:
       - release/*
   workflow_dispatch: {}
 
+permissions: {}
+
 jobs:
   semgrep:
     timeout-minutes: 5
     name: Semgrep SAST
     runs-on: ubuntu-24.04
     permissions:
-      # required for all workflows
       security-events: write
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
 
     if: (github.actor != 'dependabot[bot]')
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: Kong/public-shared-actions/security-actions/semgrep@a18abf762d6e2444bcbfd20de70451ea1e3bc1b1 # 4.0.1
