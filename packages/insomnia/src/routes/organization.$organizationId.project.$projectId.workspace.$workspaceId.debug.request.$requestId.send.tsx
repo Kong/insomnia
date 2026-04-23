@@ -40,6 +40,8 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 
 export interface SendActionParams {
   requestId: string;
+  workspaceId: string;
+  projectId: string;
   shouldPromptForPathAfterResponse?: boolean;
   ignoreUndefinedEnvVariable?: boolean;
 }
@@ -342,7 +344,8 @@ export const sendActionImplementation = async (options: {
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { requestId } = params;
-  const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = (await request.json()) as SendActionParams;
+  const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable, workspaceId, projectId } =
+    (await request.json()) as SendActionParams;
 
   try {
     await sendActionImplementation({
@@ -363,6 +366,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           window.main.trackSegmentEvent({
             event: SegmentEvent.requestExecuted,
             properties: {
+              project_id: projectId,
+              collection_id: workspaceId,
+              request_key_id: requestId,
               preferredHttpVersion: settings.preferredHttpVersion,
               // @ts-expect-error -- who cares
               authenticationType: activeRequest.authentication?.type,

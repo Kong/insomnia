@@ -224,7 +224,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         }
 
         try {
-          send({ requestId, shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable });
+          send({
+            requestId,
+            workspaceId: activeWorkspace._id,
+            projectId,
+            shouldPromptForPathAfterResponse,
+            ignoreUndefinedEnvVariable,
+          });
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : String(err);
           showModal(AlertModal, {
@@ -240,7 +246,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           });
         }
       },
-      [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, updateTabById],
+      [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, updateTabById, projectId],
     );
 
     useEffect(() => {

@@ -25,6 +25,11 @@ export function ResourceIcon({ resource }: { resource: any }) {
         'mcp': ['fac', 'mcp'],
       }[resource.scope] as IconProp) || null;
   }
+
+  if (models.requestGroup.isRequestGroup(resource)) {
+    icon = 'folder';
+  }
+
   if (icon) {
     return <Icon icon={icon} className="w-3 shrink-0" />;
   }

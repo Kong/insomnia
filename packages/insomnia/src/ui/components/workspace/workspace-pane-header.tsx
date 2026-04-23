@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { isNotNullOrUndefined } from '~/common/misc';
@@ -19,6 +19,22 @@ import { useWorkspaceBreadcrumbs } from '~/ui/components/workspace/use-workspace
 export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: boolean }) {
   const { activeCookieJar, caCertificate, clientCertificates, activeWorkspace } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
+
+  const breadcrumbs = useWorkspaceBreadcrumbs();
+  const realBreadcrumbs = useMemo(() => {
+    if (breadcrumbs.length > 4) {
+      return [
+        breadcrumbs[0],
+        breadcrumbs[1],
+        {
+          id: '_ellipsis',
+          label: '...', // not interactive currently
+        },
+        breadcrumbs[breadcrumbs.length - 1],
+      ];
+    }
+    return breadcrumbs;
+  }, [breadcrumbs]);
 
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
@@ -44,7 +60,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
 
   return (
     <PaneHeader
-      breadcrumbs={breadcrumbs}
+      breadcrumbs={realBreadcrumbs}
       rightSlot={
         hasSettings ? (
           <>

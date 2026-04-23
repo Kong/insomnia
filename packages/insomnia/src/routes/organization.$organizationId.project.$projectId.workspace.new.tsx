@@ -220,7 +220,15 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })
       )._id;
 
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestCreated, properties: { requestType: 'HTTP' } });
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.requestCreated,
+        properties: {
+          requestType: 'HTTP',
+          project_id: projectId,
+          collection_id: workspace._id,
+          request_key_id: activeRequestId,
+        },
+      });
 
       return redirect(
         href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
