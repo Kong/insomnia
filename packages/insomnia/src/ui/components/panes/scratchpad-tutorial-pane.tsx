@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Button, GridList, GridListItem } from 'react-aria-components';
 import { href, useNavigate, useParams } from 'react-router';
-import { useLocalStorage } from 'react-use';
+import * as reactUse from 'react-use';
 
 import { scratchPadTutorialList } from '~/routes/organization.$organizationId.project.$projectId.tutorial.$panel';
 import { Icon } from '~/ui/components/icon';
 
 export const ScratchPadTutorialPanel = () => {
-  const [signUpTipDismissedState, setSignUpTipDismissedState] = useLocalStorage<{
+  const [signUpTipDismissedState, setSignUpTipDismissedState] = reactUse.useLocalStorage<{
     dismissed: boolean;
     dismissedAt: number;
   }>('scratchpad-sign-up-tip-dismissed', { dismissed: false, dismissedAt: 0 });
@@ -21,7 +21,6 @@ export const ScratchPadTutorialPanel = () => {
   const {
     organizationId,
     projectId,
-    workspaceId,
     panel = 'all',
   } = useParams() as {
     organizationId: string;

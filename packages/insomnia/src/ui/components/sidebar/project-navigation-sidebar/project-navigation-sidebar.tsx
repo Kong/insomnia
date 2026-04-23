@@ -6,6 +6,11 @@ import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { fuzzyMatchAll } from '~/common/misc';
+import {
+  getAllRemoteBackendProjectsByProjectId,
+  getUnsyncedRemoteWorkspaces,
+  type InsomniaFile,
+} from '~/common/project';
 import type { Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import type { SyncResult } from '~/konnect/sync';
@@ -15,7 +20,9 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
+import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
@@ -74,13 +81,7 @@ function showSkippedRoutesModal(result: SyncResult | null) {
 
 export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: ProjectNavigationSidebarProps) => {
   const navigate = useNavigate();
-  const {
-    organizationId,
-    projectId: activeProjectId,
-    workspaceId: activeWorkspaceId,
-    requestId: activeRequestId,
-    requestGroupId: activeRequestGroupId,
-  } = useParams() as {
+  const { organizationId, projectId: activeProjectId } = useParams() as {
     organizationId: string;
     projectId?: string;
     workspaceId?: string;
@@ -99,6 +100,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   const tabNavigate = useTabNavigate();
 
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
   const [projectNavigationSidebarFilter, setProjectNavigationSidebarFilter] = reactUse.useLocalStorage(
     `${organizationId}:project-navigation-sidebar-filter`,
     '',
@@ -130,6 +132,8 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   const cachedWorkspacesRef = useRef<Map<string, Workspace[]>>(new Map());
   // ref to cache queried collection children (request & requestGroups) data and meta by workspace id
   const cachedCollectionChildrenAndMetaRef = useRef<Map<string, AllRequestsAndMetaInWorkspace>>(new Map());
+  // ref to track whether we are currently fetching unsynced files for cloud sync projects to avoid duplicate requests
+  const isFetchingUnsyncedFilesRef = useRef(false);
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
@@ -159,6 +163,57 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
         }),
     [projects, isProjectTabActive, presence, checkAllProjectSyncStatus, userSession.accountId],
   );
+
+  const cloudSyncProjects = useMemo(() => projects.filter(p => models.project.isRemoteProject(p)), [projects]);
+  // Generate a stable string key to trigger getOrFetchUnsyncedFiles when the list of cloud sync projects changes.
+  const cloudSyncProjectIdsKey = useMemo(
+    () =>
+      cloudSyncProjects
+        .map(p => p._id)
+        .sort()
+        .join(','),
+    [cloudSyncProjects],
+  );
+
+  const getAllRemoteFilesByProjectId = useCallback(async () => {
+    if (!cloudSyncProjectIdsKey) return new Map();
+    // Avoid duplicate fetch
+    if (isFetchingUnsyncedFilesRef.current) {
+      return;
+    }
+    const cloudSyncProjectIds = cloudSyncProjectIdsKey.split(',');
+    const result = new Map<string, InsomniaFile[]>();
+    isFetchingUnsyncedFilesRef.current = true;
+    for (const projectId of cloudSyncProjectIds) {
+      try {
+        const targetProject = await services.project.getById(projectId);
+        if (targetProject && 'remoteId' in targetProject && targetProject.remoteId) {
+          const files = await getAllRemoteBackendProjectsByProjectId({
+            teamProjectId: targetProject.remoteId,
+            organizationId,
+          });
+          result.set(
+            projectId,
+            files.map(f => ({
+              id: f.rootDocumentId,
+              name: f.name,
+              scope: 'unsynced',
+              label: 'Unsynced',
+              remoteId: f.id,
+              created: 0,
+              lastModifiedTimestamp: 0,
+            })),
+          );
+        }
+      } catch (error) {
+        console.error(`Failed to fetch unsynced files for project ${projectId}`, error);
+        result.set(projectId, []);
+      } finally {
+        isFetchingUnsyncedFilesRef.current = false;
+      }
+    }
+    return setUnsyncedFilesByProjectId(result);
+  }, [organizationId, cloudSyncProjectIdsKey]);
 
   const handleSync = async () => {
     if (!konnectSyncEnabled) {
@@ -204,6 +259,16 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       await runAndNotify();
     }
   };
+
+  useEffect(() => {
+    getAllRemoteFilesByProjectId();
+    const updateUnsyncedFiles = () => {
+      getAllRemoteFilesByProjectId();
+    };
+    // Subscribe to changes in unsynced workspace files to keep the sidebar up to date.
+    // The subscribe is triggered in insomnia-event-stream-context when cloud sync files is changed remotely
+    return uiEventBus.on(CLOUD_SYNC_FILE_CHANGE, updateUnsyncedFiles);
+  }, [getAllRemoteFilesByProjectId, organizationId]);
 
   useEffect(() => {
     // clear caches on any router data change to avoid showing stale data
@@ -267,62 +332,82 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
         const workspaces = workspacesByProject.get(projectId) || [];
         // TODO workspace sort
         const sortedWorkspaces = [...workspaces].sort((a, b) => a.name.localeCompare(b.name));
+        const unsyncedWorkspaces = models.project.isRemoteProject(project)
+          ? getUnsyncedRemoteWorkspaces(unsyncedFilesByProjectId.get(projectId) || [], sortedWorkspaces)
+          : [];
 
-        for (const workspace of sortedWorkspaces) {
-          const { scope, _id: workspaceId } = workspace;
-          const isCollection = scope === 'collection';
-          // Only collection workspace has nested children
-          const isWorkspaceCollapsed = !(isCollection && (expandedProjectAndWorkspaceIds ?? []).includes(workspaceId));
-
-          items.push({
-            kind: 'workspace',
-            organizationId,
-            project: project,
-            doc: workspace,
-            collapsed: isWorkspaceCollapsed,
-            hidden: isProjectCollapsed,
-          });
-
-          const allRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceId.get(workspaceId);
-          // build collection children if it's a collection workspace and parent workspace and project are not collapsed or there is an active filter
-          const shouldHideCollectionChildren = isWorkspaceCollapsed || isProjectCollapsed;
-          let collectionChildren =
-            (!shouldHideCollectionChildren || !!projectNavigationSidebarFilter) && allRequestsAndMetaInWorkspace
-              ? flattenCollectionChildren(workspaceId, shouldHideCollectionChildren, allRequestsAndMetaInWorkspace)
-              : [];
-
-          if (projectNavigationSidebarFilter) {
-            // apply filter to collection children first
-            collectionChildren = filterCollection(collectionChildren, projectNavigationSidebarFilter);
-            const collectionChildMatchesFilter = collectionChildren.some(child => !child.hidden);
-            const workspaceMatchesFilter = Boolean(
-              fuzzyMatchAll(
-                projectNavigationSidebarFilter.toLowerCase(),
-                // Todo: support remote files (cloud sync) in filter
-                [workspace.name?.toLowerCase() || ''],
-                { splitSpace: true, loose: true },
-              )?.indexes,
-            );
-            const shouldHide = !collectionChildMatchesFilter && !workspaceMatchesFilter;
-            // If workspace or any of its collection child matches the filter, show the workspace; otherwise hide
-            items.find(i => i.kind === 'workspace' && i.doc._id === workspaceId)!.hidden = shouldHide;
-          }
-
-          collectionChildren.forEach(child => {
+        for (const workspace of [...sortedWorkspaces, ...unsyncedWorkspaces]) {
+          if (workspace.scope === 'unsynced') {
             items.push({
-              kind: 'collectionChild',
+              kind: 'unsyncedWorkspace',
               organizationId,
               project: project,
-              workspace: workspace,
-              children: child.children,
-              ancestors: child.ancestors,
-              doc: child.doc,
-              collapsed: child.collapsed,
-              hidden: child.hidden,
-              level: child.level,
-              pinned: child.pinned,
+              doc: {
+                // ensure _id is present in doc for unsynced workspace flat item
+                _id: workspace.id,
+                ...workspace,
+              },
+              collapsed: false,
+              hidden: isProjectCollapsed,
             });
-          });
+          } else {
+            const { scope, _id: workspaceId } = workspace as Workspace;
+            const isCollection = scope === 'collection';
+            // Only collection workspace has nested children
+            const isWorkspaceCollapsed = !(
+              isCollection && (expandedProjectAndWorkspaceIds ?? []).includes(workspaceId)
+            );
+
+            items.push({
+              kind: 'workspace',
+              organizationId,
+              project: project,
+              doc: workspace as Workspace,
+              collapsed: isWorkspaceCollapsed,
+              hidden: isProjectCollapsed,
+            });
+
+            const allRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceId.get(workspaceId);
+            // build collection children if it's a collection workspace and parent workspace and project are not collapsed or there is an active filter
+            const shouldHideCollectionChildren = isWorkspaceCollapsed || isProjectCollapsed;
+            let collectionChildren =
+              (!shouldHideCollectionChildren || !!projectNavigationSidebarFilter) && allRequestsAndMetaInWorkspace
+                ? flattenCollectionChildren(workspaceId, shouldHideCollectionChildren, allRequestsAndMetaInWorkspace)
+                : [];
+
+            if (projectNavigationSidebarFilter) {
+              // apply filter to collection children first
+              collectionChildren = filterCollection(collectionChildren, projectNavigationSidebarFilter);
+              const collectionChildMatchesFilter = collectionChildren.some(child => !child.hidden);
+              const workspaceMatchesFilter = Boolean(
+                fuzzyMatchAll(
+                  projectNavigationSidebarFilter.toLowerCase(),
+                  // Todo: support remote files (cloud sync) in filter
+                  [workspace.name?.toLowerCase() || ''],
+                  { splitSpace: true, loose: true },
+                )?.indexes,
+              );
+              const shouldHide = !collectionChildMatchesFilter && !workspaceMatchesFilter;
+              // If workspace or any of its collection child matches the filter, show the workspace; otherwise hide
+              items.find(i => i.kind === 'workspace' && i.doc._id === workspaceId)!.hidden = shouldHide;
+            }
+
+            collectionChildren.forEach(child => {
+              items.push({
+                kind: 'collectionChild',
+                organizationId,
+                project: project,
+                workspace: workspace as Workspace,
+                children: child.children,
+                ancestors: child.ancestors,
+                doc: child.doc,
+                collapsed: child.collapsed,
+                hidden: child.hidden,
+                level: child.level,
+                pinned: child.pinned,
+              });
+            });
+          }
         }
 
         // If project or any of its descendant workspace/collection child matches the filter, show the project; otherwise hide
@@ -352,6 +437,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     organizationId,
     projectNavigationSidebarFilter,
     projectsWithPresence,
+    unsyncedFilesByProjectId,
   ]);
 
   const toggleProjectOrWorkspace = useCallback(
@@ -368,8 +454,20 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
   );
 
+  const expandProjectOrWorkspaces = useCallback(
+    (projectOrWorkspaceIds: string[]) => {
+      // Do not update toggle state if there is an active filter
+      if (!projectNavigationSidebarFilter) {
+        const expandedIds = expandedProjectAndWorkspaceIds || [];
+        const newExpandedIds = Array.from(new Set([...expandedIds, ...projectOrWorkspaceIds]));
+        setExpandedProjectAndWorkspaceIds(newExpandedIds);
+      }
+    },
+    [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
+  );
+
   const toggleRequestGroups = useCallback(
-    async (requestGroupIds: string[], collapsed?: boolean) => {
+    async (requestGroupIds: string[], workspace: Workspace, collapsed?: boolean) => {
       if (requestGroupIds.length === 0) {
         return;
       }
@@ -407,7 +505,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
 
       setFlatItems(previousFlatItems =>
         nextStates.reduce((nextFlatItems, { requestGroupId, collapsed }) => {
-          const toggledChildrenIds: string[] = [];
+          const toggledChildren: { id: string; parentIsCollapsed: boolean }[] = [];
 
           return nextFlatItems.map(item => {
             if (item.kind !== 'collectionChild') {
@@ -415,9 +513,12 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
             }
 
             const { children, doc } = item;
-
+            // Find toggled request group and update collapsed state
             if (doc._id === requestGroupId) {
-              toggledChildrenIds.push(...(children?.map(child => child.doc._id) ?? []));
+              // Add all children of the toggled request group to the array to update their hidden state
+              toggledChildren.push(
+                ...(children?.map(child => ({ id: child.doc._id, parentIsCollapsed: collapsed })) ?? []),
+              );
 
               return {
                 ...item,
@@ -426,12 +527,28 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
               };
             }
 
-            if (toggledChildrenIds.includes(doc._id)) {
-              toggledChildrenIds.push(...(children?.map(child => child.doc._id) ?? []));
+            const matchedToggledChild = toggledChildren.find(tc => tc.id === item.doc._id);
+            if (matchedToggledChild) {
+              const { parentIsCollapsed } = matchedToggledChild;
+              if (models.requestGroup.isRequestGroupId(doc._id)) {
+                // Add children of the toggled child request group to the array to update their hidden state
+                const isToggledRequestGroupCollapsed =
+                  parentIsCollapsed ||
+                  cachedCollectionChildrenAndMetaRef.current
+                    .get(workspace._id)
+                    ?.requestGroupMetas.find(rgm => rgm.parentId === doc._id)?.collapsed ||
+                  false;
+                toggledChildren.push(
+                  ...(item.children?.map(child => ({
+                    id: child.doc._id,
+                    parentIsCollapsed: isToggledRequestGroupCollapsed,
+                  })) ?? []),
+                );
+              }
 
               return {
                 ...item,
-                hidden: collapsed,
+                hidden: parentIsCollapsed,
               };
             }
 
@@ -458,8 +575,9 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     virtualizer,
   });
   const { selectedItemId, routeInfo } = useProjectNavigationSidebarNavigation({
-    setExpandedProjectAndWorkspaceIds,
+    setActiveTab,
     toggleRequestGroups,
+    expandProjectOrWorkspaces,
     visibleFlatItems,
     virtualizer,
   });
@@ -474,11 +592,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
         {['projects', 'konnect'].map(tabName => (
           <button
             key={tabName}
-            className={
-              activeTab === tabName
-                ? 'border-b-2 border-solid border-b-(--color-surprise) px-3 py-1 text-xs text-(--color-font) uppercase'
-                : 'border-b-2 border-solid border-b-transparent px-3 py-1 text-xs text-(--hl) uppercase hover:bg-(--hl-xs)'
-            }
+            className={`border-b-2 border-solid px-4 py-2 text-xs uppercase ${activeTab === tabName ? 'border-(--color-surprise) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
             onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
           >
             {tabName === 'projects' ? `Projects (${nonKonnectProjects.length})` : `Konnect (${konnectProjects.length})`}
@@ -518,7 +632,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
         ) : syncing ? (
           <Button
             aria-label="Cancel sync"
-            onPress={() => cancelSync()}
+            onPress={cancelSync}
             className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             Cancel
@@ -572,9 +686,8 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                     );
                   }
                 }}
-                onPress={e => {
-                  const { doc } = item;
-                  const docId = doc._id;
+                onPress={async e => {
+                  const docId = item.doc._id;
                   if (item.kind === 'project') {
                     if (routeInfo?.resourceId === docId) {
                       toggleProjectOrWorkspace(docId);
@@ -601,7 +714,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                       models.requestGroup.isRequestGroupId(docId) &&
                       routeInfo?.routeId !== 'runner'
                     ) {
-                      toggleRequestGroups([docId]);
+                      toggleRequestGroups([docId], item.workspace);
                     } else {
                       tabNavigate(
                         {
@@ -632,6 +745,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                 {item.kind === 'workspace' && <WorkspaceNode item={item} onToggle={toggleProjectOrWorkspace} />}
 
                 {item.kind === 'collectionChild' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
+                {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
               </GridListItem>
             );
           }}

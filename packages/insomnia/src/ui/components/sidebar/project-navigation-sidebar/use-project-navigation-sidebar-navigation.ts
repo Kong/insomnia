@@ -2,7 +2,7 @@ import type { Virtualizer } from '@tanstack/react-virtual';
 import type { Dispatch, SetStateAction } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import { database, models } from '~/insomnia-data';
+import { database, models, type Workspace } from '~/insomnia-data';
 import type { NavigationResources } from '~/ui/hooks/use-insomnia-navigation';
 import { useInsomniaNavigation } from '~/ui/hooks/use-insomnia-navigation';
 
@@ -25,13 +25,15 @@ const getSelectedItemId = (resources?: NavigationResources) => {
 };
 
 export const useProjectNavigationSidebarNavigation = ({
-  setExpandedProjectAndWorkspaceIds,
+  setActiveTab,
   toggleRequestGroups,
+  expandProjectOrWorkspaces,
   visibleFlatItems,
   virtualizer,
 }: {
-  setExpandedProjectAndWorkspaceIds: Dispatch<SetStateAction<string[] | undefined>>;
-  toggleRequestGroups: (requestGroupIds: string[], collapsed?: boolean) => Promise<void>;
+  setActiveTab: Dispatch<SetStateAction<'projects' | 'konnect' | undefined>>;
+  toggleRequestGroups: (requestGroupIds: string[], workspace: Workspace, collapsed?: boolean) => Promise<void>;
+  expandProjectOrWorkspaces: (ids: string[]) => void;
   visibleFlatItems: FlatItem[];
   virtualizer: Virtualizer<HTMLDivElement, Element>;
 }) => {
@@ -69,6 +71,9 @@ export const useProjectNavigationSidebarNavigation = ({
         return;
       }
 
+      // update active tab
+      setActiveTab(resources.project.konnectControlPlaneId != null ? 'konnect' : 'projects');
+
       const idsToExpand = [resources.project._id];
       if (resources.workspace && models.workspace.isCollection(resources.workspace)) {
         idsToExpand.push(resources.workspace._id);
@@ -92,22 +97,17 @@ export const useProjectNavigationSidebarNavigation = ({
         idsToExpand.push(...requestGroupIds);
 
         if (requestGroupIds.length > 0) {
-          await toggleRequestGroups(requestGroupIds, false);
+          await toggleRequestGroups(requestGroupIds, resources.workspace, false);
         }
       }
 
-      setExpandedProjectAndWorkspaceIds(previousExpandedIds => {
-        const expandedIds = previousExpandedIds || [];
-        const missingIds = idsToExpand.filter(id => !expandedIds.includes(id));
-
-        return missingIds.length > 0 ? [...expandedIds, ...missingIds] : expandedIds;
-      });
+      expandProjectOrWorkspaces([...idsToExpand]);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [getNavigationResources, navigationKey, routeInfo, setExpandedProjectAndWorkspaceIds, toggleRequestGroups]);
+  }, [expandProjectOrWorkspaces, getNavigationResources, navigationKey, routeInfo, setActiveTab, toggleRequestGroups]);
 
   useEffect(() => {
     if (!selectedItemId) {

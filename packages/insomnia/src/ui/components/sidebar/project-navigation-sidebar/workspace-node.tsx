@@ -21,6 +21,7 @@ interface WorkspaceNodeProps {
 export const WorkspaceNode = ({ item, onToggle }: WorkspaceNodeProps) => {
   const { doc, collapsed, project, organizationId } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
+  const isCollection = workspaceScope === 'collection';
 
   return (
     <div className={`${ROW_CLASS} group`} style={{ paddingLeft: '2em' }}>
@@ -28,12 +29,10 @@ export const WorkspaceNode = ({ item, onToggle }: WorkspaceNodeProps) => {
       <span className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`} style={{ left: '1.5em' }} />
       <Button
         aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${workspaceName}`}
-        onPress={() => onToggle(workspaceId)}
+        onPress={() => isCollection && onToggle(workspaceId)}
         className={TOGGLE_BTN_CLASS}
       >
-        {workspaceScope === 'collection' ? (
-          <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} />
-        ) : null}
+        {isCollection ? <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} /> : null}
       </Button>
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left transition-colors">
         <Icon icon={scopeToIconMap[workspaceScope]} className={ICON_CLASS} />

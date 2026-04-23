@@ -196,7 +196,9 @@ export function flattenCollectionChildren(
     const hidden = parentIsCollapsed;
     const pinned = (!isRequestGroup(doc) && allRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
     const collapsed =
-      (isRequestGroup(doc) && (requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed ?? false)) || false;
+      parentIsCollapsed ||
+      (isRequestGroup(doc) && (requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed ?? false)) ||
+      false;
 
     collection.push({ doc, pinned, collapsed, hidden, level, ancestors, children: [] });
 
@@ -255,7 +257,7 @@ export function filterCollection(collection: Child[], filter: string): Child[] {
 
 // Common tailwind classes
 export const ROW_CLASS =
-  'relative flex h-(--line-height-xs) w-full items-center gap-1 overflow-hidden text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font) pr-1';
+  'relative flex h-(--line-height-xs) w-full items-center gap-1 overflow-hidden text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font) pr-4';
 
 export const ACTIVE_BORDER_CLASS =
   'absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)';
