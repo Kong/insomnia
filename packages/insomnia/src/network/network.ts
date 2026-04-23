@@ -53,6 +53,7 @@ import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
+import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
@@ -879,7 +880,7 @@ export async function sendCurlAndWriteTimeline(
   }
   const getRenderedRequestAuthHeader =
     process.type === 'renderer'
-      ? (r: RenderedRequest, u: string) => window.main.getAuthHeader({ renderedRequest: r, url: u })
+      ? (r: RenderedRequest, u: string) => window.main.getAuthHeader(r, u)
       : (await import('../main/network/get-auth-header')).getAuthHeader;
   const authHeader = await getRenderedRequestAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {

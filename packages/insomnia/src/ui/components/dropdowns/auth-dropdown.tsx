@@ -22,9 +22,9 @@ import type {
 } from '~/insomnia-data';
 
 import { type AuthTypes, HAWK_ALGORITHM_SHA256 } from '../../../common/constants';
+import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../main/network/o-auth-2/get-token';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
-import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 

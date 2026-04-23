@@ -15,7 +15,7 @@ import {
   GRANT_TYPE_PASSWORD,
   PKCE_CHALLENGE_PLAIN,
   PKCE_CHALLENGE_S256,
-} from '../../../../network/o-auth-2/constants';
+} from '../../../../main/network/o-auth-2/get-token';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
