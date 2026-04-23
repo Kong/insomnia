@@ -97,6 +97,7 @@ const grpc: gRPCBridgeAPI = {
   closeAll: () => ipcRenderer.send('grpc.closeAll'),
   loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
+  writeProtoFile: protoFileId => ipcRenderer.invoke('grpc.writeProtoFile', protoFileId),
 };
 
 const secretStorage: secretStorageBridgeAPI = {
@@ -111,6 +112,8 @@ const git: GitServiceAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
   getGitBranches: options => ipcRenderer.invoke('git.getGitBranches', options),
   fetchGitRemoteBranches: options => ipcRenderer.invoke('git.fetchGitRemoteBranches', options),
+  validateGitRepositoryCredentials: options => ipcRenderer.invoke('git.validateGitRepositoryCredentials', options),
+  validateGitCredentialById: options => ipcRenderer.invoke('git.validateGitCredentialById', options),
   gitFetchAction: options => ipcRenderer.invoke('git.gitFetchAction', options),
   gitLogLoader: options => ipcRenderer.invoke('git.gitLogLoader', options),
   gitChangesLoader: options => ipcRenderer.invoke('git.gitChangesLoader', options),
@@ -186,6 +189,7 @@ const main: Window['main'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
+  writeResponseBodyToFile: options => ipcRenderer.invoke('writeResponseBodyToFile', options),
   insecureReadFile: options => ipcRenderer.invoke('insecureReadFile', options),
   insecureReadFileWithEncoding: options => ipcRenderer.invoke('insecureReadFileWithEncoding', options),
   secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),

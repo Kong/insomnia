@@ -27,6 +27,8 @@ export interface BaseWebSocketRequest {
   settingSendCookies: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
   settingUseProxy?: boolean;
+  konnectRouteKey?: string | null;
+  konnectManagedHeaderNames?: string[] | null;
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -36,7 +38,7 @@ export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is Web
 export const isWebSocketRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
 // for those keys do not need to add in model init method but can update
-export const optionalKeys = ['settingUseProxy'];
+export const optionalKeys = ['settingUseProxy', 'konnectRouteKey', 'konnectManagedHeaderNames'];
 
 export const init = (): BaseWebSocketRequest => ({
   name: 'New WebSocket Request',
@@ -57,5 +59,6 @@ export function rewriteReferences(request: WebSocketRequest, idMapping: Map<stri
   return {
     ...request,
     ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping),
+    konnectRouteKey: null,
   };
 }

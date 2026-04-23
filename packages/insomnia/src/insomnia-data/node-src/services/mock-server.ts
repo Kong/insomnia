@@ -1,6 +1,6 @@
-import { database as db } from '../../src/database';
-import { models } from '../../src/models';
-import { type MockServer } from '../../src/models/types';
+import type { MockServer } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
+
 import * as workspace from './workspace';
 
 const { type } = models.mockServer;

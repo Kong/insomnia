@@ -1,10 +1,5 @@
-import {
-  type BaseGitCredentialsV2,
-  database as db,
-  type GitCredentials,
-  type GitCredentialsV2,
-  models,
-} from '~/insomnia-data';
+import type { BaseGitCredentialsV2, GitCredentials, GitCredentialsV2 } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 
 const { type } = models.gitCredentials;
 

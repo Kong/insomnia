@@ -13,15 +13,13 @@ import type {
   RequestParameter,
   Response,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { database as db, models, services } from '~/insomnia-data';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
 import { version } from '../../../package.json';
 import { getOauthRedirectUrl } from '../../common/constants';
-import { database as db } from '../../common/database';
 import { escapeRegex } from '../../common/misc';
-import * as models from '../../models';
 import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/event-bus';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -436,27 +434,26 @@ const sendAccessTokenRequest = async (
   if (!settings.disableAppVersionUserAgent) {
     defaultHeaders.push(defaultUserAgentHeader);
   }
-  const newRequest: Request = await models.initModel(
-    models.request.type,
-    {
-      // Do not inherit authentication from parent request or group since this is a special request
-      authentication: {
-        type: 'none',
-        disabled: false,
-      },
-      headers: [...defaultHeaders, ...headers],
-      url: setDefaultProtocol(authentication.accessTokenUrl),
-      method: 'POST',
-      body: {
-        mimeType: 'application/x-www-form-urlencoded',
-        params,
-      },
+  const newRequest: Request = {
+    ...models.request.init(),
+    // Do not inherit authentication from parent request or group since this is a special request
+    authentication: {
+      type: 'none',
+      disabled: false,
     },
-    {
-      _id: requestOrGroupId + '.other',
-      parentId: requestOrGroupId,
+    headers: [...defaultHeaders, ...headers],
+    url: setDefaultProtocol(authentication.accessTokenUrl),
+    method: 'POST',
+    body: {
+      mimeType: 'application/x-www-form-urlencoded',
+      params,
     },
-  );
+    _id: requestOrGroupId + '.other',
+    parentId: requestOrGroupId,
+    type: models.request.type,
+    modified: Date.now(),
+    created: Date.now(),
+  };
 
   const renderResult = await tryToInterpolateRequest({ request: newRequest, environment: environment._id });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);

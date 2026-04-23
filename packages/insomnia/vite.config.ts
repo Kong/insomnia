@@ -1,9 +1,11 @@
+import fs from 'node:fs';
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import * as ts from 'typescript';
+import { defineConfig, type ResolvedConfig } from 'vite';
 
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
@@ -70,26 +72,256 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
-let totalWarnings = 0;
+
+const NODE_BUILTIN_REPORT_ENV = 'INSOMNIA_NODE_IMPORT_REPORT';
+const NODE_BUILTIN_REPORT_FILE = path.resolve(__dirname, '.reports', 'renderer-node-imports.json');
+const VIRTUAL_NODE_PREFIX = 'virtual:external:node:';
+
+export const normalizeModuleIdForFs = (id: string) => {
+  const suffixIndex = id.search(/[?#]/);
+  return suffixIndex === -1 ? id : id.slice(0, suffixIndex);
+};
+
+type ImportKind = 'dynamic-import' | 'export' | 'import' | 'require';
+
+interface ImportLocation {
+  column: number;
+  kind: ImportKind;
+  line: number;
+  statement: string;
+}
+
+interface NodeBuiltinImportRecord {
+  builtin: string;
+  importer: string;
+  locations: ImportLocation[];
+  rawSpecifiers: string[];
+}
+
 function DetectNodeBuiltinImports() {
   const builtins = new Set(builtinModules);
+  let isSsrBuild = false;
+  const records = new Map<string, NodeBuiltinImportRecord>();
+  const reportEnabled = process.env[NODE_BUILTIN_REPORT_ENV] === '1';
+  const seenTransforms = new Set<string>();
+
+  const normalizeSpecifier = (source: string) => {
+    const strippedSource = source.startsWith(VIRTUAL_NODE_PREFIX) ? source.slice(VIRTUAL_NODE_PREFIX.length) : source;
+    return strippedSource.startsWith('node:') ? strippedSource.slice(5) : strippedSource;
+  };
+
+  const mergeLocations = (existing: ImportLocation[], incoming: ImportLocation[]) => {
+    const seen = new Set(
+      existing.map(location => `${location.kind}:${location.line}:${location.column}:${location.statement}`),
+    );
+
+    for (const location of incoming) {
+      const key = `${location.kind}:${location.line}:${location.column}:${location.statement}`;
+      if (!seen.has(key)) {
+        existing.push(location);
+        seen.add(key);
+      }
+    }
+  };
+
+  const getScriptKind = (filePath: string) => {
+    if (filePath.endsWith('.tsx')) {
+      return ts.ScriptKind.TSX;
+    }
+
+    if (filePath.endsWith('.ts')) {
+      return ts.ScriptKind.TS;
+    }
+
+    if (filePath.endsWith('.jsx')) {
+      return ts.ScriptKind.JSX;
+    }
+
+    return ts.ScriptKind.JS;
+  };
+
+  const getStatementText = (sourceFile: ts.SourceFile, node: ts.Node) => {
+    return node
+      .getText(sourceFile)
+      .split('\n')
+      .map(line => line.trim())
+      .join(' ');
+  };
+
+  const addLocation = (
+    locationsByBuiltin: Map<string, { locations: ImportLocation[]; rawSpecifiers: Set<string> }>,
+    specifier: string,
+    sourceFile: ts.SourceFile,
+    node: ts.Node,
+    kind: ImportKind,
+  ) => {
+    const normalizedSpecifier = normalizeSpecifier(specifier);
+    if (!builtins.has(normalizedSpecifier)) {
+      return;
+    }
+
+    const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+    const location: ImportLocation = {
+      line: line + 1,
+      column: character + 1,
+      kind,
+      statement: getStatementText(sourceFile, node),
+    };
+
+    const entry = locationsByBuiltin.get(normalizedSpecifier) ?? { locations: [], rawSpecifiers: new Set<string>() };
+    entry.locations.push(location);
+    entry.rawSpecifiers.add(specifier);
+    locationsByBuiltin.set(normalizedSpecifier, entry);
+  };
+
+  const collectNodeBuiltinImports = (importer: string, sourceText: string) => {
+    const locationsByBuiltin = new Map<string, { locations: ImportLocation[]; rawSpecifiers: Set<string> }>();
+    const sourceFile = ts.createSourceFile(importer, sourceText, ts.ScriptTarget.Latest, true, getScriptKind(importer));
+
+    const visit = (node: ts.Node) => {
+      if (ts.isImportDeclaration(node) && !node.importClause?.isTypeOnly && ts.isStringLiteral(node.moduleSpecifier)) {
+        addLocation(locationsByBuiltin, node.moduleSpecifier.text, sourceFile, node, 'import');
+      }
+
+      if (
+        ts.isExportDeclaration(node) &&
+        !node.isTypeOnly &&
+        node.moduleSpecifier &&
+        ts.isStringLiteral(node.moduleSpecifier)
+      ) {
+        addLocation(locationsByBuiltin, node.moduleSpecifier.text, sourceFile, node, 'export');
+      }
+
+      if (
+        ts.isCallExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === 'require' &&
+        node.arguments.length > 0 &&
+        ts.isStringLiteral(node.arguments[0])
+      ) {
+        addLocation(locationsByBuiltin, node.arguments[0].text, sourceFile, node, 'require');
+      }
+
+      if (
+        ts.isCallExpression(node) &&
+        node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+        node.arguments.length > 0 &&
+        ts.isStringLiteral(node.arguments[0])
+      ) {
+        addLocation(locationsByBuiltin, node.arguments[0].text, sourceFile, node, 'dynamic-import');
+      }
+
+      ts.forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+    return locationsByBuiltin;
+  };
+
+  const recordNodeBuiltinImports = (importer: string, sourceText: string) => {
+    const relativeImporter = path.relative(process.cwd(), importer);
+    const importsByBuiltin = collectNodeBuiltinImports(importer, sourceText);
+
+    for (const [builtin, entry] of importsByBuiltin) {
+      const recordKey = `${relativeImporter}::${builtin}`;
+      const existingRecord = records.get(recordKey);
+
+      if (existingRecord) {
+        mergeLocations(existingRecord.locations, entry.locations);
+        for (const rawSpecifier of entry.rawSpecifiers) {
+          if (!existingRecord.rawSpecifiers.includes(rawSpecifier)) {
+            existingRecord.rawSpecifiers.push(rawSpecifier);
+          }
+        }
+      } else {
+        records.set(recordKey, {
+          builtin,
+          importer: relativeImporter,
+          locations: [...entry.locations],
+          rawSpecifiers: [...entry.rawSpecifiers],
+        });
+      }
+    }
+
+    if (importsByBuiltin.size === 0) {
+      return;
+    }
+  };
+
+  const writeReport = () => {
+    const report = [...records.values()]
+      .sort((left, right) => left.importer.localeCompare(right.importer) || left.builtin.localeCompare(right.builtin))
+      .map(record => ({
+        builtin: record.builtin,
+        importer: record.importer,
+        locations: record.locations.sort((left, right) => left.line - right.line || left.column - right.column),
+        rawSpecifiers: [...record.rawSpecifiers].sort(),
+      }));
+
+    fs.mkdirSync(path.dirname(NODE_BUILTIN_REPORT_FILE), { recursive: true });
+    fs.writeFileSync(
+      NODE_BUILTIN_REPORT_FILE,
+      JSON.stringify(
+        {
+          generatedAt: new Date().toISOString(),
+          recordCount: report.length,
+          records: report,
+        },
+        null,
+        2,
+      ),
+    );
+
+    if (report.length === 0) {
+      console.warn(
+        `No renderer Node builtin imports found. Report written to ${path.relative(process.cwd(), NODE_BUILTIN_REPORT_FILE)}`,
+      );
+      return;
+    }
+
+    console.warn('Renderer Node builtin import report:');
+    for (const record of report) {
+      const locationSummary = record.locations
+        .map(location => `${location.line}:${location.column} ${location.kind}`)
+        .join(', ');
+      console.warn(`- ${record.importer}`);
+      console.warn(`  ${record.builtin} via ${record.rawSpecifiers.join(', ')} at ${locationSummary}`);
+    }
+    console.warn(`Report written to ${path.relative(process.cwd(), NODE_BUILTIN_REPORT_FILE)}`);
+  };
 
   return {
     name: 'detect-node-builtin-imports',
+    enforce: 'pre' as const,
 
-    resolveId(source: string, importer: string | undefined) {
-      // Ignore node_modules and virtual imports
-      if (!importer) return null;
-      if (importer.includes('node_modules')) return null;
+    configResolved(config: ResolvedConfig) {
+      isSsrBuild = Boolean(config.build.ssr);
+    },
 
-      // If the import target is a Node builtin module
-      if (builtins.has(source) || builtins.has(source.replace('virtual:external:node:', ''))) {
-        const file = path.relative(process.cwd(), importer);
-        totalWarnings += 1;
-        console.warn(`⚠️  ${totalWarnings} File "${file}" imports Node builtin module "${source}"`);
+    transform(code: string, id: string, options?: { ssr?: boolean }) {
+      if (!reportEnabled) return null;
+      if (isSsrBuild) return null;
+      if (options?.ssr) return null;
+      if (id.includes('node_modules')) return null;
+      const normalizedId = normalizeModuleIdForFs(id);
+      if (!path.isAbsolute(normalizedId) || !fs.existsSync(normalizedId)) return null;
+      if (seenTransforms.has(normalizedId)) return null;
+
+      seenTransforms.add(normalizedId);
+      recordNodeBuiltinImports(normalizedId, code);
+      return null;
+    },
+
+    closeBundle() {
+      if (isSsrBuild) {
+        return;
       }
 
-      return null; // Let Vite handle the actual resolution
+      if (!reportEnabled) {
+        return;
+      }
+
+      writeReport();
     },
   };
 }

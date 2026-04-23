@@ -20,6 +20,9 @@ test.describe('Git Sync', () => {
             gitSync: {
               enabled: false,
             },
+            konnectSync: {
+              enabled: true,
+            },
           },
         },
       });
@@ -31,6 +34,9 @@ test.describe('Git Sync', () => {
         data: {
           features: {
             gitSync: {
+              enabled: true,
+            },
+            konnectSync: {
               enabled: true,
             },
           },

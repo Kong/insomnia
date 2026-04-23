@@ -130,6 +130,7 @@ export interface Settings {
   fontSize: number;
   fontVariantLigatures: boolean;
   forceVerticalLayout: boolean;
+  hasKonnectPat: boolean;
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;
@@ -172,4 +173,6 @@ export interface Settings {
   disabledBlockedProperties: string[];
   // AST blocked-root names that have been individually disabled.
   disabledBlockedRoots: string[];
+  /** Custom npm registry URL for plugin installation (e.g., corporate mirror). Empty string uses the default https://registry.npmjs.org/. */
+  npmRegistryUrl: string;
 }

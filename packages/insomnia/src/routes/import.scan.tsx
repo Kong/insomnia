@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { type ActionFunctionArgs, href } from 'react-router';
 
 import type { ImportSourceType, ScanResult } from '~/common/import';
@@ -24,6 +22,7 @@ export const scanImportResources = async (data: {
   postmanArchiveFile?: string | null;
 }): Promise<ScanResult[]> => {
   const { source, postmanArchiveFile } = data;
+  const isZipFilePath = (filePath: string) => filePath.toLowerCase().endsWith('.zip');
 
   invariant(typeof source === 'string', 'Source is required.');
   invariant(IMPORT_SOURCE_TYPES.includes(source), 'Unsupported import type');
@@ -74,17 +73,18 @@ export const scanImportResources = async (data: {
       throw new Error('File is required');
     }
 
-    const zipFilePaths = filePaths.filter(filePath => path.extname(filePath) === '.zip');
-    const nonZipFilePaths = filePaths.filter(filePath => path.extname(filePath) !== '.zip');
+    const zipFilePaths = filePaths.filter(isZipFilePath);
+    const nonZipFilePaths = filePaths.filter(filePath => !isZipFilePath(filePath));
 
     // zip file is for postman data dump
     for (const zipFilePath of zipFilePaths) {
       const postmanDataDumpRawData = await getFilesFromPostmanExportedDataDump(zipFilePath);
+      const zipBaseName = window.path.basename(zipFilePath);
 
       function trans({ contentStr, oriFileName }: ImportEntry): ImportEntry {
         return {
           contentStr,
-          oriFileName: `${oriFileName} in ${path.basename(zipFilePath)}`,
+          oriFileName: `${oriFileName} in ${zipBaseName}`,
         };
       }
 
@@ -131,7 +131,7 @@ export const scanImportResources = async (data: {
 
       contentList.push({
         contentStr,
-        oriFileName: path.basename(filePath),
+        oriFileName: window.path.basename(filePath),
         oriFilePath: filePath,
       });
     }

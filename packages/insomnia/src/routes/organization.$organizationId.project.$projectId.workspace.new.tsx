@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 import { upsertMockbin } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
@@ -110,7 +107,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const safeToUseFileNameWithExtension = safeToUseInsomniaFileNameWithExt(fileName);
 
       await services.workspaceMeta.update(workspaceMeta, {
-        gitFilePath: path.join(workspaceData.folderPath || '', safeToUseFileNameWithExtension),
+        gitFilePath: window.path.join(workspaceData.folderPath || '', safeToUseFileNameWithExtension),
       });
     }
 
@@ -310,7 +307,16 @@ async function createMockServer(
       if (workspaceData.apiSpecContents) {
         openapiSpec = workspaceData.apiSpecContents;
       } else if (workspaceData.mockServerSpecSource === 'file') {
-        openapiSpec = fs.readFileSync(workspaceData.mockServerOASFilePath!, 'utf8');
+        const { content, error } = await window.main.insecureReadFileWithEncoding({
+          path: workspaceData.mockServerOASFilePath!,
+          encoding: 'utf8',
+        });
+
+        if (error) {
+          throw new Error(String(error));
+        }
+
+        openapiSpec = content;
       } else if (workspaceData.mockServerSpecSource === 'url') {
         specUrl = workspaceData.mockServerSpecURL!;
       } else if (workspaceData.mockServerSpecSource === 'text') {

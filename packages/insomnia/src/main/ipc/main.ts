@@ -1,6 +1,8 @@
 import fs, { mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { pipeline } from 'node:stream/promises';
+import zlib from 'node:zlib';
 
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
@@ -17,11 +19,12 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
+import { cannotAccessPathError } from '~/common/misc';
 import { type Services, services } from '~/insomnia-data';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
-import { insecureReadFile, insecureReadFileWithEncoding, secureReadFile } from '~/main/secure-read-file';
+import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
 import type {
   GenerateCommitsFromDiffFunction,
   GenerateMcpSamplingResponseFunction,
@@ -87,6 +90,32 @@ const readDir = async (_: unknown, options: { path: string }) => {
   }
 };
 
+const writeResponseBodyToFile = async (
+  _: unknown,
+  options: { sourcePath: string; destinationPath: string; bodyCompression?: 'zip' | null },
+) => {
+  try {
+    const dir = path.dirname(options.destinationPath);
+    await fs.promises.mkdir(dir, { recursive: true });
+
+    await (options.bodyCompression === 'zip'
+      ? pipeline(
+          fs.createReadStream(options.sourcePath),
+          zlib.createGunzip(),
+          fs.createWriteStream(options.destinationPath),
+        )
+      : fs.promises.copyFile(options.sourcePath, options.destinationPath));
+
+    return options.destinationPath;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+
+    throw new Error(String(err));
+  }
+};
+
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -105,6 +134,11 @@ export interface RendererToMainBridgeAPI {
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
+  writeResponseBodyToFile: (options: {
+    sourcePath: string;
+    destinationPath: string;
+    bodyCompression?: 'zip' | null;
+  }) => Promise<string>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -252,6 +286,7 @@ export function registerMainHandlers() {
       throw new Error(err);
     }
   });
+  ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
 
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
@@ -414,6 +449,15 @@ export function registerMainHandlers() {
       useDynamicMockResponses: boolean,
       mockServerAdditionalFiles: string[],
     ) => {
+      const settings = await services.settings.getOrCreate();
+
+      for (const filePath of mockServerAdditionalFiles) {
+        const { isAllowed, securedPath } = isPathAllowed(filePath, settings.dataFolders);
+        if (!isAllowed) {
+          return { error: cannotAccessPathError(securedPath), routes: [] };
+        }
+      }
+
       return new Promise((resolve, reject) => {
         const process = utilityProcess.fork(path.join(__dirname, 'main/mock-generation-process.mjs'));
 

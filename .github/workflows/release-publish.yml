@@ -18,6 +18,8 @@ env:
   INSO_DOCKER_IMAGE: &INSO_DOCKER_IMAGE 'kong/inso' # By default, registry is docker.io
   NOTARY_REPOSITORY: &NOTARY_REPOSITORY 'kong/notary' # All signatures will be pushed to public notary repository
 
+permissions: {}
+
 jobs:
   publish:
     timeout-minutes: 30
@@ -36,14 +38,14 @@ jobs:
       packages: write
     steps:
       - name: Checkout branch # Check out the release branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -58,7 +60,7 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Download all artifacts from release-build.yml
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
+        uses: dawidd6/action-download-artifact@8305c0f1062bb0d184d09ef4493ecb9288447732 # v20
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: release-build.yml
@@ -82,13 +84,13 @@ jobs:
           ELECTRON_ARTIFACT_BASE64_FILE: ${{runner.temp}}/electron_digests_file.text
 
       - name: Calculate CLI Binary base64 file handle
-        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
+        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.1.0
         id: cli_binary_hashes
         with:
           path: ${{ env.CLI_ARTIFACT_BASE64_FILE }}
 
       - name: Calculate Electron Binary base64 file handle
-        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
+        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.1.0
         id: electron_binary_hashes
         with:
           path: ${{ env.ELECTRON_ARTIFACT_BASE64_FILE }}
@@ -137,7 +139,7 @@ jobs:
           docker image ls
 
       - name: Login to Docker Hub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.1.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ secrets.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
@@ -290,7 +292,7 @@ jobs:
           - product: inso
             binary_artifacts_subject_as_file: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}
     # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
     with:
       base64-subjects-as-file: '${{ matrix.binary_artifacts_subject_as_file }}'
       upload-assets: true
@@ -306,7 +308,7 @@ jobs:
       packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     with:
       image: *INSO_DOCKER_IMAGE
       digest: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST }}

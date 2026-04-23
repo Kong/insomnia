@@ -8,9 +8,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { services } from '~/insomnia-data';
-
-import * as models from '../index';
 import type {
   AuthTypeAPIKey,
   AuthTypeAsap,
@@ -27,7 +24,8 @@ import type {
   RequestBody,
   RequestHeader,
   RequestParameter,
-} from '../request';
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 // @vitest-environment jsdom
 describe('Request Model - Comprehensive Tests', () => {
