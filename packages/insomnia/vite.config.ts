@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
       '__DEV__': JSON.stringify(__DEV__),
       'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.INSOMNIA_ENV': JSON.stringify(mode),
+      'process.type': JSON.stringify('renderer'),
     },
     server: {
       port: pkg.dev['dev-server-port'],
