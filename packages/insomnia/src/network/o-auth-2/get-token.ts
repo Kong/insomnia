@@ -18,7 +18,7 @@ import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
 import { version } from '../../../package.json';
-import { getOauthRedirectUrl } from '../../common/constants';
+import { getOauthRedirectUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../common/constants';
 import { escapeRegex } from '../../common/misc';
 import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/event-bus';
 import { invariant } from '../../utils/invariant';
@@ -37,19 +37,15 @@ import {
 import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } from './constants';
 
 const { isRequestGroup, isRequestGroupId } = models.requestGroup;
-const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 
-export function initNewOAuthSession() {
-  // the value of this variable needs to start with 'persist:'
-  // otherwise sessions won't be persisted over application-restarts
+async function getOAuthWindowHandleSession(): Promise<string> {
+  const token = await window.main.electronStorage.getItem(OAUTH_WINDOW_SESSION_ID_KEY);
+  if (token) {
+    return token;
+  }
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
-  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  await window.main.electronStorage.setItem(OAUTH_WINDOW_SESSION_ID_KEY, authWindowSessionId);
   return authWindowSessionId;
-}
-
-export function getOAuthSession(): string {
-  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
-  return token || initNewOAuthSession();
 }
 
 // NOTE
@@ -103,7 +99,7 @@ export const getOAuth2Token = async (
         url: implicitUrl.toString(),
         urlSuccessRegex: /(access_token=|id_token=)/,
         urlFailureRegex: /(error=)/,
-        sessionId: getOAuthSession(),
+        sessionId: await getOAuthWindowHandleSession(),
       });
       console.log('[oauth2] Detected redirect ' + redirectedTo);
 
@@ -183,7 +179,7 @@ export const getOAuth2Token = async (
           urlFailureRegex: authentication.redirectUrl
             ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i')
             : /([?&]error=)/i,
-          sessionId: getOAuthSession(),
+          sessionId: await getOAuthWindowHandleSession(),
         });
       }
 

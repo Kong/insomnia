@@ -37,6 +37,15 @@ jobs:
       contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       packages: write
     steps:
+      - name: Calculate Release Branch
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
+
+          # Rewrite the release branch to follow our new flow
+          echo "RELEASE_BRANCH=release/$MAJOR_MINOR" >> $GITHUB_ENV
+
       - name: Checkout branch # Check out the release branch
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -58,6 +67,16 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+      - name: Compare input version with package.json version
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          PKG_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "Input version $VERSION does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
 
       - name: Download all artifacts from release-build.yml
         uses: dawidd6/action-download-artifact@8305c0f1062bb0d184d09ef4493ecb9288447732 # v20
@@ -260,21 +279,6 @@ jobs:
             --dist-version focal
             --package-type insomnia
             ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
-
-      - name: Configure Git user
-        uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
-        with:
-          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
-
-      - name: Merge git branch into develop
-        run: |
-          remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git checkout develop
-          git merge --no-ff ${{ env.RELEASE_BRANCH }}
-          git status
-          git push "${remote_repo}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   artifact-provenance:
     needs: [publish]
