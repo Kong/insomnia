@@ -33,13 +33,9 @@ import type { GitRepository, Workspace, WorkspaceMeta } from '~/insomnia-data';
 import { database as db } from '../../common/database';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 import * as models from '../../models';
+import { CURRENT_MIGRATION_VERSION } from './git-migration-version';
 
-// cspell:ignore worktree
-/**
- * Increment this constant whenever a new migration step is added.
- * Existing repos will re-run the migration on the next app start.
- */
-const CURRENT_MIGRATION_VERSION = 1;
+export { CURRENT_MIGRATION_VERSION };
 
 // In-memory guard against concurrent migrations for the same repo within a
 // single process. The DB version stamp handles cross-process / cross-session

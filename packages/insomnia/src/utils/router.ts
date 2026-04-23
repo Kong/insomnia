@@ -8,6 +8,7 @@ import { services } from '~/insomnia-data';
 import { database } from '../common/database';
 import * as models from '../models';
 import { findPersonalOrganization, SCRATCHPAD_ORGANIZATION_ID } from '../models/organization';
+import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
 
 export const enum AsyncTask {
   SyncOrganization,
@@ -103,7 +104,7 @@ export const getInitialEntry = async () => {
       const gitRepos = await database.find<GitRepository>(models.gitRepository.type, {
         _id: { $in: gitRepoIds },
       });
-      if (gitRepos.some(repo => (repo.repoMigrationVersion ?? 0) < 2)) {
+      if (gitRepos.some(repo => (repo.repoMigrationVersion ?? 0) < CURRENT_MIGRATION_VERSION)) {
         console.log('Redirecting to git migration');
         return href('/git-migration/*', { '*': '' });
       }
