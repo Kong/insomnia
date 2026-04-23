@@ -68,11 +68,11 @@ interface UserPresenceEvent extends UserPresence {
   type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged' | 'StorageRuleChanged';
 }
 
-const isSameWorkspaceWithRemote = (workspaceId: string | undefined, remoteWorkspaceId: string | undefined) => {
+const isSameWorkspaceWithRemote = async (workspaceId: string | undefined, remoteWorkspaceId: string | undefined) => {
   if (!workspaceId || !remoteWorkspaceId) {
     return false;
   }
-  const currentBackendProject = window.main.sync.getActiveBackendProject();
+  const currentBackendProject = await window.main.sync.getActiveBackendProject();
   if (
     currentBackendProject &&
     currentBackendProject?.id === remoteWorkspaceId &&
@@ -143,7 +143,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       try {
         const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams`);
 
-        source.addEventListener('message', e => {
+        source.addEventListener('message', async e => {
           try {
             const event = JSON.parse(e.data) as
               | UserPresenceEvent
@@ -214,7 +214,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               event.project === latestRemoteId.current
             ) {
               // If the file changed is the current workspace, we need to sync it
-              if (isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
+              if (await isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
                 syncDataSubmit({
                   organizationId: organizationId,
                   projectId: latestProjectId.current,

@@ -8,8 +8,10 @@ import type { VCS } from './vcs';
 
 export type SyncVCSLike = Pick<
   VCS,
-  'hasBackendProject' | 'push' | 'stage' | 'status' | 'switchAndCreateBackendProjectIfNotExist' | 'takeSnapshot'
->;
+  'push' | 'stage' | 'status' | 'switchAndCreateBackendProjectIfNotExist' | 'takeSnapshot'
+> & {
+  hasBackendProject: () => ReturnType<VCS['hasBackendProject']> | Promise<ReturnType<VCS['hasBackendProject']>>;
+};
 
 export const initializeLocalBackendProjectAndMarkForSync = async ({
   vcs,
@@ -56,7 +58,7 @@ export const pushSnapshotOnInitialize = async ({
   // One code path is that a React Key updates, forcing all children to unmount and remount (https://github.com/Kong/insomnia/blob/9a943879060927d6ab1c21d3e12daba39ad05eea/packages/insomnia-app/app/ui/containers/app.tsx#L1514-L1514)
   // At the same time, we set VCS to null, then set it to the correct value, in state in App.tsx, forcing downstream updates (https://github.com/Kong/insomnia/blob/9a943879060927d6ab1c21d3e12daba39ad05eea/packages/insomnia-app/app/ui/containers/app.tsx#L1149-L1149)
   // This race condition causes us to hit this codepath twice while activating a workspace but the first time it has no project so we shouldn't do anything
-  const hasProject = vcs.hasBackendProject();
+  const hasProject = await vcs.hasBackendProject();
 
   if (projectIsForWorkspace && projectRemoteId && hasProject) {
     await services.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
