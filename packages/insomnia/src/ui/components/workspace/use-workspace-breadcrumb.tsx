@@ -6,9 +6,9 @@ import { useRequestLoaderData } from '~/routes/organization.$organizationId.proj
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import type { PaneBreadcrumb } from '~/ui/components/pane-header';
 import { ResourceIcon } from '~/ui/components/workspace/resource-icon';
-import { buildResourceUrl } from '~/ui/hooks/use-insomnia-tab';
+import { buildResourceUrl } from '~/ui/hooks/use-insomnia-navigation';
 
-export function useWorkspaceBreadcrumbs() {
+export function useWorkspaceBreadcrumbs({ isMcp }: { isMcp: boolean }) {
   const { activeWorkspace, activeProject, collection } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
@@ -75,7 +75,7 @@ export function useWorkspaceBreadcrumbs() {
       );
     }
 
-    if (activeRequest) {
+    if (activeRequest && !isMcp) {
       crumbs.push({
         id: activeRequest._id,
         label: activeRequest.name || 'Untitled request',

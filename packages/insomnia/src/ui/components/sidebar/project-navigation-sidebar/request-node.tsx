@@ -1,3 +1,4 @@
+import { set } from 'date-fns';
 import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
@@ -8,12 +9,17 @@ import type {
   RequestGroup,
   SocketIORequest,
   WebSocketRequest,
+  Workspace,
 } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '~/ui/components/dropdowns/request-group-actions-dropdown';
+import { EditableInput } from '~/ui/components/editable-input';
+import { showModal } from '~/ui/components/modals';
+import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import type { CollectionChildFlatItem } from '~/ui/components/sidebar/project-navigation-sidebar/types';
 import { getMethodShortHand, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
+import { useRequestGroupPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
 import { Icon } from '../../icon';
 import {
@@ -68,19 +74,30 @@ function MethodBadge({ doc }: { doc: Request | WebSocketRequest | GrpcRequest | 
   return null;
 }
 
+const getRequestNameOrFallback = (
+  doc: Request | RequestGroup | GrpcRequest | WebSocketRequest | SocketIORequest,
+): string => {
+  return !models.requestGroup.isRequestGroup(doc)
+    ? doc.name || doc.url || 'Untitled request'
+    : doc.name || 'Untitled folder';
+};
+
 interface RequestNodeProps {
   item: CollectionChildFlatItem;
-  onToggleFolder: (requestGroup: RequestGroup) => void;
+  onToggleFolder: (requestGroupIds: string[], workspace: Workspace) => void;
 }
 
 export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
   const { doc, level, workspace, project, collapsed } = item;
 
+  const patchRequest = useRequestPatcher();
+  const patchGroup = useRequestGroupPatcher();
   const isFolder = models.requestGroup.isRequestGroup(doc);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [isEditable, setIsEditable] = useState(false);
 
   return (
-    <div className={ROW_CLASS} style={{ paddingLeft: `${level + 3}rem`, paddingRight: '8px' }}>
+    <div className={ROW_CLASS} style={{ paddingLeft: `${level + 3}rem` }}>
       {Array.from({ length: level + 2 }, (_, i) => {
         const isActive = i === level + 1;
         return (
@@ -94,7 +111,7 @@ export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
       <span className={ACTIVE_BORDER_CLASS} />
       <Button
         aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${doc.name}`}
-        onPress={() => isFolder && onToggleFolder(doc)}
+        onPress={() => isFolder && onToggleFolder([doc._id], workspace)}
         className={TOGGLE_BTN_CLASS}
       >
         {isFolder ? <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} /> : null}
@@ -107,24 +124,52 @@ export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
           <MethodBadge doc={doc} />
         </>
       )}
-      <span className="flex-1 truncate text-sm">
-        {doc.name || (models.request.isRequest(doc) ? doc.url : '') || 'Untitled'}
-      </span>
-      {models.requestGroup.isRequestGroup(doc) ? (
+      <EditableInput
+        value={getRequestNameOrFallback(doc)}
+        name="request name"
+        ariaLabel="request name"
+        className="flex-1 px-1 text-sm"
+        onEditableChange={editable => setIsEditable(editable)}
+        onSubmit={newName => {
+          if (models.requestGroup.isRequestGroup(doc)) {
+            patchGroup(doc._id, { name: newName });
+          } else {
+            patchRequest(doc._id, { name: newName });
+          }
+        }}
+      />
+      {models.requestGroup.isRequestGroup(doc) && !isEditable && (
         <RequestGroupActionsDropdown
           requestGroup={doc}
-          // TODO support rename for request group
-          onRename={() => {}}
+          onRename={() =>
+            showModal(PromptModal, {
+              title: `Rename ${getRequestNameOrFallback(doc)}`,
+              defaultValue: getRequestNameOrFallback(doc),
+              submitName: 'Rename',
+              selectText: true,
+              label: 'Name',
+              onComplete: newName => patchGroup(doc._id, { name: newName }),
+            })
+          }
           activeProject={project}
           activeWorkspace={workspace}
           isOpen={isContextMenuOpen}
           onOpenChange={setIsContextMenuOpen}
         />
-      ) : (
+      )}
+      {!models.requestGroup.isRequestGroup(doc) && !isEditable && (
         <RequestActionsDropdown
           request={doc}
-          // TODO support rename for request actions
-          onRename={() => {}}
+          onRename={() =>
+            showModal(PromptModal, {
+              title: `Rename ${getRequestNameOrFallback(doc)}`,
+              defaultValue: getRequestNameOrFallback(doc),
+              submitName: 'Rename',
+              selectText: true,
+              label: 'Name',
+              onComplete: newName => patchRequest(doc._id, { name: newName }),
+            })
+          }
           activeProject={project}
           activeWorkspace={workspace}
           isPinned={item.pinned}

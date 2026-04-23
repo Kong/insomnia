@@ -4,12 +4,18 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, Outlet, redirect, useParams, useRouteLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { logout } from '~/account/session';
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { database } from '~/common/database';
-import { models, type Project, services, type WorkspaceMeta } from '~/insomnia-data';
+import {
+  CheckAllProjectSyncStatus,
+  getAllLocalFiles,
+  getAllRemoteFiles,
+  getProjectsWithGitRepositories,
+  type InsomniaFile,
+} from '~/common/project';
+import { models, services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
-import { getProjectsWithGitRepositories } from '~/routes/organization.$organizationId.project.$projectId._index';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
@@ -30,26 +36,6 @@ interface LearningFeature {
   cta: string;
   url: string;
 }
-
-const checkSingleProjectSyncStatus = async (projectId: string) => {
-  const projectWorkspaces = await services.workspace.findByParentId(projectId);
-  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
-    parentId: {
-      $in: projectWorkspaces.map(w => w._id),
-    },
-  });
-  return workspaceMetas.some(item => item.hasUncommittedChanges || item.hasUnpushedChanges);
-};
-
-const CheckAllProjectSyncStatus = async (projects: Project[]) => {
-  const taskList = projects.map(project => checkSingleProjectSyncStatus(project._id));
-  const res = await Promise.all(taskList);
-  const obj: Record<string, boolean> = {};
-  projects.forEach((project, index) => {
-    obj[project._id] = res[index];
-  });
-  return obj;
-};
 
 const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
@@ -73,8 +59,23 @@ const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeatu
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
+  invariant(organizationId, 'Organization ID is required');
+
+  if (!models.project.isScratchpadProject({ _id: projectId })) {
+    const { id: sessionId } = await services.userSession.getOrCreate();
+
+    if (!sessionId) {
+      await logout();
+      throw redirect(href('/auth/login'));
+    }
+  }
 
   const project = await services.project.getById(projectId);
+
+  if (!project) {
+    return redirect(href('/organization/:organizationId', { organizationId }));
+  }
+
   const fallbackLearningFeature = {
     active: false,
     title: '',
@@ -82,14 +83,18 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     cta: '',
     url: '',
   };
+  console.log('[project loader] Loading project:', project?.name, projectId);
 
-  if (!project) {
-    return redirect(href('/organization/:organizationId', { organizationId }));
-  }
-  const organizationProjects = await getProjectsWithGitRepositories({ organizationId });
+  const [localFiles, organizationProjects = []] = await Promise.all([
+    getAllLocalFiles({ projectId }),
+    getProjectsWithGitRepositories({ organizationId }),
+  ]);
   const projects = sortProjects(organizationProjects);
-  const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
+
+  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
+
+  const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
     project && models.project.isGitProject(project)
@@ -97,9 +102,18 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       : undefined;
 
   return {
-    activeProject: project,
+    localFiles,
+    remoteFilesPromise,
     projects,
+    projectsCount: organizationProjects.length,
+    activeProject: project,
     activeProjectGitRepository,
+    allFilesCount: localFiles.length,
+    environmentsCount: localFiles.filter(file => file.scope === 'environment').length,
+    documentsCount: localFiles.filter(file => file.scope === 'design').length,
+    collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
+    mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
+    mcpClientsCount: localFiles.filter(file => file.scope === 'mcp').length,
     projectsSyncStatusPromise,
     learningFeaturePromise,
   };
@@ -110,11 +124,11 @@ export function useProjectLoaderData() {
 }
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { organizationId } = useParams() as {
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
-  const { activeProject, activeProjectGitRepository, learningFeaturePromise } = loaderData;
+  const { activeProject, activeProjectGitRepository, learningFeaturePromise, remoteFilesPromise } = loaderData;
 
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = reactUse.useLocalStorage(
@@ -124,6 +138,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const { storagePromise } = storageRuleFetcher.data || {};
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
+  const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
+
   const { features } = useOrganizationPermissions();
 
   const isScratchPad = models.project.isScratchpadProject(activeProject);
@@ -182,7 +198,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
             {activeProject && models.project.isRemoteProject(activeProject) && <CloudSyncProjectBar />}
           </div>
         </Panel>
-        <PanelResizeHandle className="h-full w-px bg-(--hl-md)" hitAreaMargins={{ coarse: 15, fine: 5 }} />
+        <PanelResizeHandle
+          className="relative z-10 h-full w-px bg-(--hl-md)"
+          hitAreaMargins={{ coarse: 15, fine: 15 }}
+        />
         <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
           <Outlet />
         </Panel>

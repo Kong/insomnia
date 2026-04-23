@@ -16,41 +16,28 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import type { LoaderFunctionArgs } from 'react-router';
-import { href, redirect, useFetchers, useLoaderData, useParams, useRouteLoaderData } from 'react-router';
+import { useFetchers, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { logout } from '~/account/session';
-import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
 import {
   DASHBOARD_SORT_ORDERS,
   type DashboardSortOrder,
   dashboardSortOrderName,
   getAppWebsiteBaseURL,
 } from '~/common/constants';
-import { database } from '~/common/database';
-import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
-import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
-import type {
-  ApiSpec,
-  GitRepository,
-  MockServer,
-  Project,
-  Workspace,
-  WorkspaceMeta,
-  WorkspaceScope,
-} from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
+import { fuzzyMatchAll } from '~/common/misc';
+import type { InsomniaFile } from '~/common/project';
+import { sortMethodMap } from '~/common/sorting';
+import type { GitRepository, Project, WorkspaceScope } from '~/insomnia-data';
 import * as models from '~/models';
-import { sortProjects } from '~/models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
+import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
@@ -71,27 +58,6 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { invariant } from '~/utils/invariant';
-
-export interface InsomniaFile {
-  id: string;
-  name: string;
-  remoteId?: string;
-  scope: WorkspaceScope | 'unsynced';
-  label: 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment' | 'MCP Client';
-  created: number;
-  lastModifiedTimestamp: number;
-  branch?: string;
-  lastCommit?: string;
-  version?: string;
-  oasFormat?: string;
-  mockServer?: MockServer;
-  workspace?: Workspace;
-  apiSpec?: ApiSpec;
-  hasUncommittedChanges?: boolean;
-  hasUnpushedChanges?: boolean;
-  gitFilePath?: string | null;
-}
 
 export interface ProjectLoaderData {
   localFiles: InsomniaFile[];
@@ -109,281 +75,9 @@ export interface ProjectLoaderData {
   projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
 }
 
-/**
- * Get all projects for an organization with their associated git repositories
- */
-export async function getProjectsWithGitRepositories({
-  organizationId,
-}: {
-  organizationId: string;
-}): Promise<(Project & { gitRepository?: GitRepository })[]> {
-  const projects = await database.find<Project>('Project', {
-    parentId: organizationId,
-  });
-
-  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
-
-  const gitRepositories = await database.find<GitRepository>('GitRepository', {
-    _id: {
-      $in: gitRepositoryIds,
-    },
-  });
-
-  return projects.map(project => {
-    const gitRepository = gitRepositories.find(gr => gr._id === project.gitRepositoryId);
-    return {
-      ...project,
-      gitRepository,
-    };
-  });
-}
-
-async function getAllLocalFiles({ projectId }: { projectId: string }) {
-  const projectWorkspaces = await services.workspace.findByParentId(projectId);
-  const [workspaceMetas, apiSpecs, mockServers] = await Promise.all([
-    database.find<WorkspaceMeta>(models.workspaceMeta.type, {
-      parentId: {
-        $in: projectWorkspaces.map(w => w._id),
-      },
-    }),
-    database.find<ApiSpec>(models.apiSpec.type, {
-      parentId: {
-        $in: projectWorkspaces.map(w => w._id),
-      },
-    }),
-    database.find<MockServer>(models.mockServer.type, {
-      parentId: {
-        $in: projectWorkspaces.map(w => w._id),
-      },
-    }),
-  ]);
-
-  const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
-    parentId: {
-      $in: workspaceMetas.map(wm => wm.gitRepositoryId).filter(isNotNullOrUndefined),
-    },
-  });
-
-  const files: InsomniaFile[] = projectWorkspaces.map(workspace => {
-    const apiSpec = apiSpecs.find(spec => spec.parentId === workspace._id);
-    const mockServer = mockServers.find(mock => mock.parentId === workspace._id);
-    let spec: ParsedApiSpec['contents'] = null;
-    let specFormat: ParsedApiSpec['format'] = null;
-    let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
-    if (apiSpec) {
-      try {
-        const result = parseApiSpec(apiSpec.contents);
-        spec = result.contents;
-        specFormat = result.format;
-        specFormatVersion = result.formatVersion;
-      } catch {
-        // Assume there is no spec
-        // TODO: Check for parse errors if it's an invalid spec
-      }
-    }
-    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === workspace._id);
-    const gitRepository = gitRepositories.find(gr => gr._id === workspaceMeta?.gitRepositoryId);
-
-    const lastActiveBranch = gitRepository?.cachedGitRepositoryBranch;
-
-    const lastCommitAuthor = gitRepository?.cachedGitLastAuthor;
-
-    // WorkspaceMeta is a good proxy for last modified time
-    const workspaceModified = workspaceMeta?.modified || workspace.modified;
-
-    const modifiedLocally = models.workspace.isDesign(workspace) ? apiSpec?.modified || 0 : workspaceModified;
-
-    // Span spec, workspace and sync related timestamps for card last modified label and sort order
-    const lastModifiedFrom = [
-      workspace?.modified,
-      workspaceMeta?.modified,
-      modifiedLocally,
-      gitRepository?.cachedGitLastCommitTime,
-    ];
-
-    const lastModifiedTimestamp = lastModifiedFrom.filter(isNotNullOrUndefined).sort(descendingNumberSort)[0];
-
-    const hasUnsavedChanges = Boolean(
-      models.workspace.isDesign(workspace) &&
-        gitRepository?.cachedGitLastCommitTime &&
-        modifiedLocally > gitRepository?.cachedGitLastCommitTime,
-    );
-
-    const specVersion = spec?.info?.version ? String(spec?.info?.version) : '';
-
-    return {
-      id: workspace._id,
-      name: workspace.name,
-      scope: workspace.scope,
-      label: scopeToLabelMap[workspace.scope],
-      created: workspace.created,
-      lastModifiedTimestamp:
-        (hasUnsavedChanges && modifiedLocally) || gitRepository?.cachedGitLastCommitTime || lastModifiedTimestamp,
-      branch: lastActiveBranch || '',
-      lastCommit:
-        hasUnsavedChanges && gitRepository?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
-      version: specVersion ? `${specVersion?.startsWith('v') ? '' : 'v'}${specVersion}` : '',
-      oasFormat: specFormat ? `${specFormat === 'openapi' ? 'OpenAPI' : 'Swagger'} ${specFormatVersion || ''}` : '',
-      mockServer,
-      apiSpec,
-      workspace,
-      hasUncommittedChanges: workspaceMeta?.hasUncommittedChanges,
-      hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
-      gitFilePath: workspaceMeta?.gitFilePath,
-    };
-  });
-  return files;
-}
-
-async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
-  try {
-    const project = await services.project.getById(projectId);
-
-    const remoteId = project?.remoteId;
-    if (!remoteId) {
-      return [];
-    }
-
-    console.log(
-      '[getAllRemoteFiles] start fetching remote backend workspaces for project',
-      projectId,
-      `remoteId: ${remoteId}`,
-    );
-
-    const vcs = VCSInstance();
-
-    const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
-      vcs.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
-      // Remote backend projects are fetched from the backend since they are not stored locally
-      vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
-    ]);
-    console.log(
-      `[getAllRemoteFiles] found allPulledBackendProjectsForRemoteId: ${allPulledBackendProjectsForRemoteId.length} and allFetchedRemoteBackendProjectsForRemoteId: ${allFetchedRemoteBackendProjectsForRemoteId.length} for remoteId: ${remoteId}`,
-    );
-    // Get all workspaces that are connected to backend projects and under the current project
-    const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
-      _id: {
-        $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(
-          p => p.rootDocumentId,
-        ),
-      },
-      parentId: project._id,
-    });
-    console.log(`[getAllRemoteFiles] found workspacesWithBackendProjects: ${workspacesWithBackendProjects.length}`);
-    // Get the list of remote backend projects that we need to pull
-    const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId.filter(
-      p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId),
-    );
-    console.log(`[getAllRemoteFiles] get ${backendProjectsToPull.length} unsynced files`);
-    return backendProjectsToPull.map(backendProject => {
-      const file: InsomniaFile = {
-        id: backendProject.rootDocumentId,
-        name: backendProject.name,
-        scope: 'unsynced',
-        label: 'Unsynced',
-        remoteId: backendProject.id,
-        created: 0,
-        lastModifiedTimestamp: 0,
-      };
-
-      return file;
-    });
-  } catch (e) {
-    console.warn('Failed to load backend projects', e);
-  }
-
-  return [];
-}
-
-const checkSingleProjectSyncStatus = async (projectId: string) => {
-  const projectWorkspaces = await services.workspace.findByParentId(projectId);
-  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
-    parentId: {
-      $in: projectWorkspaces.map(w => w._id),
-    },
-  });
-  return workspaceMetas.some(item => item.hasUncommittedChanges || item.hasUnpushedChanges);
-};
-
-const CheckAllProjectSyncStatus = async (projects: Project[]) => {
-  const taskList = projects.map(project => checkSingleProjectSyncStatus(project._id));
-  const res = await Promise.all(taskList);
-  const obj: Record<string, boolean> = {};
-  projects.forEach((project, index) => {
-    obj[project._id] = res[index];
-  });
-  return obj;
-};
-
-export async function clientLoader({ params }: LoaderFunctionArgs) {
-  const { organizationId, projectId } = params;
-  invariant(organizationId, 'Organization ID is required');
-  const { id: sessionId } = await services.userSession.getOrCreate();
-
-  if (!projectId) {
-    return {
-      localFiles: [],
-      allFilesCount: 0,
-      documentsCount: 0,
-      environmentsCount: 0,
-      collectionsCount: 0,
-      mockServersCount: 0,
-      mcpClientsCount: 0,
-      projectsCount: 0,
-      activeProject: undefined,
-      projects: [],
-    };
-  }
-
-  if (!sessionId) {
-    await logout();
-    throw redirect(href('/auth/login'));
-  }
-
-  invariant(projectId, 'projectId parameter is required');
-
-  const project = await services.project.getById(projectId);
-  console.log('[project loader] Loading project:', project?.name, projectId);
-  const [localFiles, organizationProjects = []] = await Promise.all([
-    getAllLocalFiles({ projectId }),
-    getProjectsWithGitRepositories({ organizationId }),
-  ]);
-
-  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
-
-  const projects = sortProjects(organizationProjects);
-
-  const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
-
-  const activeProjectGitRepository =
-    project && models.project.isGitProject(project)
-      ? await services.gitRepository.getById(project.gitRepositoryId || '')
-      : null;
-
-  return {
-    localFiles,
-    remoteFilesPromise,
-    projects,
-    projectsCount: organizationProjects.length,
-    activeProject: project,
-    activeProjectGitRepository,
-    allFilesCount: localFiles.length,
-    environmentsCount: localFiles.filter(file => file.scope === 'environment').length,
-    documentsCount: localFiles.filter(file => file.scope === 'design').length,
-    collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
-    mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
-    mcpClientsCount: localFiles.filter(file => file.scope === 'mcp').length,
-    projectsSyncStatusPromise,
-  };
-}
-
-export function useProjectIndexLoaderData() {
-  return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId._index');
-}
-
 const Component = () => {
   const { localFiles, activeProject, activeProjectGitRepository, projects, remoteFilesPromise } =
-    useLoaderData() as ProjectLoaderData;
+    useProjectLoaderData()!;
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
