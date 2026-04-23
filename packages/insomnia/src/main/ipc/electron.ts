@@ -68,6 +68,7 @@ export type HandleChannels =
   | 'git.pullFromGitRemote'
   | 'git.pushToGitRemote'
   | 'git.resetGitRepo'
+  | 'git.runAllGitRepoMigrations'
   | 'git.getCurrentBranchByRepositoryId'
   | 'git.getBranchRemoteInfo'
   | 'git.stageChanges'

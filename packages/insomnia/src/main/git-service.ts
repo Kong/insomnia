@@ -2842,6 +2842,23 @@ async function getCurrentBranchByRepositoryId({
   });
 }
 
+export async function runAllGitRepoMigrations(): Promise<void> {
+  const allProjects = await services.project.all();
+  for (const project of allProjects) {
+    if (!models.project.isGitProject(project) || models.project.isEmptyGitProject(project)) {
+      continue;
+    }
+    const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+    if (!gitRepository) continue;
+
+    const baseDir = path.join(
+      process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+      `version-control/git/${gitRepository._id}`,
+    );
+    await migrateRepoStructureIfNeeded(baseDir, project._id, gitRepository._id);
+  }
+}
+
 export interface GitServiceAPI {
   loadGitRepository: typeof loadGitRepository;
   getGitBranches: typeof getGitBranches;
@@ -2885,6 +2902,7 @@ export interface GitServiceAPI {
   getGitProviderEmails: typeof getGitProviderEmails;
   listGitProviders: typeof listGitProviders;
   getBranchRemoteInfo: typeof getBranchRemoteInfo;
+  runAllGitRepoMigrations: typeof runAllGitRepoMigrations;
 }
 
 export const registerGitServiceAPI = () => {
@@ -2991,4 +3009,5 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.getBranchRemoteInfo', (_, options: Parameters<typeof getBranchRemoteInfo>[0]) =>
     getBranchRemoteInfo(options),
   );
+  ipcMainHandle('git.runAllGitRepoMigrations', () => runAllGitRepoMigrations());
 };
