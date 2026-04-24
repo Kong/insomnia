@@ -931,7 +931,6 @@ const Component = ({ params }: Route.ComponentProps) => {
               </div>
             )}
           </div>
-          <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
           {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}

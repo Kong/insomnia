@@ -425,7 +425,6 @@ const Component = () => {
               }}
             </GridList>
           </div>
-          <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
           {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}

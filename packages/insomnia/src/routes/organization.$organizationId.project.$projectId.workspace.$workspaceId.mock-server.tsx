@@ -375,8 +375,6 @@ const Component = () => {
               );
             }}
           </GridList>
-
-          <WorkspaceSyncDropdown />
         </div>
       </Panel>
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
