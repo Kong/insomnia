@@ -4,7 +4,7 @@ import { database as db, models } from '~/insomnia-data';
 const { type } = models.socketIORequestMeta;
 const { isSocketIORequestId } = models.socketIORequest;
 
-export function expectParentToBeSocketIORequest(parentId: string | null) {
+function expectParentToBeSocketIORequest(parentId: string | null) {
   if (!isSocketIORequestId(parentId)) {
     throw new Error('Expected the parent of SocketIORequestMeta to be a SocketIORequest');
   }
