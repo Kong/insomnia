@@ -5,7 +5,7 @@ import { Button } from '~/basic-components/button';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
-import git_for_all from '~/ui/images/onboarding/git_for_all.png';
+import git_migration from '~/ui/images/git-migration/git.png';
 
 type MigrationStatus = 'default' | 'running' | 'completed' | 'partiallyCompleted' | 'error';
 
@@ -180,7 +180,7 @@ const Component = () => {
                       Now you can use traditional git actions on your CLI to manage changes to your Git Sync projects.
                     </p>
                     <div className="h-48 flex-1">
-                      <img className="aspect-auto max-h-48" src={git_for_all} />
+                      <img className="aspect-auto max-h-48" src={git_migration} />
                     </div>
                   </div>
                 </div>
