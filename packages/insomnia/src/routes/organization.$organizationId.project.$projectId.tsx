@@ -1,6 +1,7 @@
 import { getLearningFeature } from 'insomnia-api';
+import { useEffect, useRef } from 'react';
 import { Button, Heading } from 'react-aria-components';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, Outlet, redirect, useParams, useRouteLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -19,6 +20,7 @@ import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizatio
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import { ProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';
+import uiEventBus, { TOGGLE_PROJECT_SIDEBAR } from '~/ui/event-bus';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
@@ -135,6 +137,17 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const { storagePromise } = storageRuleFetcher.data || {};
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+
+  useEffect(() => {
+    return uiEventBus.on(TOGGLE_PROJECT_SIDEBAR, (collapsed: boolean) => {
+      if (collapsed) {
+        sidebarPanelRef.current?.collapse();
+      } else {
+        sidebarPanelRef.current?.expand();
+      }
+    });
+  }, []);
 
   const { features } = useOrganizationPermissions();
 
@@ -149,6 +162,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         direction="horizontal"
       >
         <Panel
+          ref={sidebarPanelRef}
           id="insomnia-global-navigation-sidebar"
           className="sidebar theme--sidebar"
           defaultSize={DEFAULT_SIDEBAR_SIZE}

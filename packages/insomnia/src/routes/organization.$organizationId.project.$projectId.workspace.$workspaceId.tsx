@@ -19,7 +19,9 @@ import type {
   RequestGroupMeta,
   RequestMeta,
   SocketIORequest,
+  SocketIORequestMeta,
   WebSocketRequest,
+  WebSocketRequestMeta,
   Workspace,
   WorkspaceMeta,
 } from '~/insomnia-data';
@@ -178,7 +180,18 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const grpcRequestMetas = await database.find(models.grpcRequestMeta.type, {
     parentId: { $in: grpcReqs.map(r => r._id) },
   });
-  const grpcAndRequestMetas = [...requestMetas, ...grpcRequestMetas] as (RequestMeta | GrpcRequestMeta)[];
+  const webSocketRequestMetas = await database.find(models.webSocketRequestMeta.type, {
+    parentId: { $in: wsReqs.map(r => r._id) },
+  });
+  const socketIORequestMetas = await database.find(models.socketIORequestMeta.type, {
+    parentId: { $in: socketIORequests.map(r => r._id) },
+  });
+  const allRequestMetas = [...requestMetas, ...grpcRequestMetas, ...webSocketRequestMetas, ...socketIORequestMetas] as (
+    | RequestMeta
+    | GrpcRequestMeta
+    | WebSocketRequestMeta
+    | SocketIORequestMeta
+  )[];
   const requestGroupMetas = (await database.find(models.requestGroupMeta.type, {
     parentId: { $in: listOfParentIds },
   })) as RequestGroupMeta[];
@@ -202,7 +215,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
       levelReqs.sort(sortFunction).map(async (doc): Promise<Child> => {
         const hidden = parentIsCollapsed;
 
-        const pinned = (!isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
+        const pinned = (!isRequestGroup(doc) && allRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
         const collapsed =
           parentIsCollapsed ||
           (isRequestGroup(doc) && requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
