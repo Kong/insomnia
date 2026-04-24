@@ -17,11 +17,9 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { insecureReadFile } from '~/main/secure-read-file';
 
 import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
-import { pathWithParamsAsPathParameters } from '../main/importers/importers/openapi-3';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import * as models from '../models/index';
 import { type AllTypes, type BaseModel, getModel } from '../models/index';
@@ -31,6 +29,7 @@ import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
+import { pathWithParamsAsPathParameters } from './path-with-params';
 
 const { isRequest } = models.request;
 const { isApiSpec } = models.apiSpec;
@@ -79,6 +78,20 @@ const isSubEnvironmentResource = (environment: Environment) => {
 
 export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) => id === 'insomnia-4';
 
+// These helpers load main-process modules lazily via a runtime string so that Vite
+// does not statically analyse or bundle them into the renderer. The path string is
+// kept out of the import() call itself to prevent bundler rewriting; the
+// /* @vite-ignore */ comment suppresses the remaining Vite warning.
+const importMainConvertModule = async () => {
+  const modulePath = '../main/importers/convert';
+  return import(/* @vite-ignore */ modulePath);
+};
+
+const importSecureReadFileModule = async () => {
+  const modulePath = '../main/secure-read-file';
+  return import(/* @vite-ignore */ modulePath);
+};
+
 export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   const url = new URL(uri);
 
@@ -93,7 +106,11 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    // allow reading the file as it is chosen by user
+    if (process.type === 'renderer') {
+      return window.main.insecureReadFile({ path });
+    }
+
+    const { insecureReadFile } = await importSecureReadFileModule();
     return insecureReadFile(path);
   }
   // Treat everything else as raw text
@@ -205,7 +222,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           };
         } else {
           const processFork =
-            process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
+            process.type === 'renderer' ? window.main.parseImport : (await importMainConvertModule()).convert;
           result = (await processFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {

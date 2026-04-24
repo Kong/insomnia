@@ -25,6 +25,30 @@
       "builtin": "url"
     },
     {
+      "importer": "src/main/network/libcurl-promise.ts",
+      "builtin": "fs"
+    },
+    {
+      "importer": "src/main/network/libcurl-promise.ts",
+      "builtin": "path"
+    },
+    {
+      "importer": "src/main/network/libcurl-promise.ts",
+      "builtin": "url"
+    },
+    {
+      "importer": "src/main/network/multipart.ts",
+      "builtin": "fs"
+    },
+    {
+      "importer": "src/main/network/multipart.ts",
+      "builtin": "os"
+    },
+    {
+      "importer": "src/main/network/multipart.ts",
+      "builtin": "path"
+    },
+    {
       "importer": "src/main/secure-read-file.ts",
       "builtin": "fs"
     },
