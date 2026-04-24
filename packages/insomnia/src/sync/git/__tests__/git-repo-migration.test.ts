@@ -93,7 +93,7 @@ describe('migrateRepoStructureIfNeeded', () => {
 
     expect(result).toBe(true);
     expect(await fileExists(path.join(baseDir, 'README.md'))).toBe(true);
-    expect(await dirExists(path.join(baseDir, 'other'))).toBe(true);
+    expect(await dirExists(path.join(baseDir, 'other'))).toBe(false);
   });
 
   it('writes workspace YAML to disk', async () => {

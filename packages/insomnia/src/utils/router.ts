@@ -101,12 +101,12 @@ export const getInitialEntry = async () => {
     ).map(p => p.gitRepositoryId);
 
     if (gitRepoIds.length > 0) {
-      const seenMigrationVersion = Number.parseInt(localStorage.getItem('gitMigrationScreenShown') ?? '0', 10);
       const gitRepos = await database.find<GitRepository>(models.gitRepository.type, {
         _id: { $in: gitRepoIds },
       });
+
       const hasPendingMigrations = gitRepos.some(repo => (repo.repoMigrationVersion ?? 0) < CURRENT_MIGRATION_VERSION);
-      if (seenMigrationVersion < CURRENT_MIGRATION_VERSION && hasPendingMigrations) {
+      if (hasPendingMigrations) {
         console.log('Redirecting to git migration');
         return href('/git-migration/*', { '*': '' });
       }

@@ -7,8 +7,6 @@ import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 import git_for_all from '~/ui/images/onboarding/git_for_all.png';
 
-import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
-
 type MigrationStatus = 'default' | 'running' | 'completed' | 'partiallyCompleted' | 'error';
 
 const MigrationView = () => {
@@ -24,7 +22,6 @@ const MigrationView = () => {
         setMigrationLogs(result.logs);
         setFailedProjects(result.failedProjects);
         setStatus(result.failedProjects.length > 0 ? 'partiallyCompleted' : 'completed');
-        localStorage.setItem('gitMigrationScreenShown', String(CURRENT_MIGRATION_VERSION));
       })
       .catch((err: unknown) => {
         const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred.';
