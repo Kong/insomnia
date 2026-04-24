@@ -37,6 +37,7 @@ export type HandleChannels =
   | 'generateCommitsFromDiff'
   | 'generateMockRouteDataFromSpec'
   | 'getAuthHeader'
+  | 'getOAuth2Token'
   | 'getExecution'
   | 'getLocalStorageDataFromFileOrigin'
   | 'git.abortMerge'

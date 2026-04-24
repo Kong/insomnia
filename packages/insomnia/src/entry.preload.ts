@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
-import type { RequestHeader, Services } from '~/insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 
@@ -199,6 +199,11 @@ const main: Window['main'] = {
   writeResponseBodyToFile: options => ipcRenderer.invoke('writeResponseBodyToFile', options),
   getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<RequestHeader | undefined> =>
     ipcRenderer.invoke('getAuthHeader', renderedRequest, url),
+  getOAuth2Token: (
+    requestId: string,
+    authentication: AuthTypeOAuth2,
+    forceRefresh?: boolean,
+  ): Promise<OAuth2Token | undefined> => ipcRenderer.invoke('getOAuth2Token', requestId, authentication, forceRefresh),
   insecureReadFile: options => ipcRenderer.invoke('insecureReadFile', options),
   insecureReadFileWithEncoding: options => ipcRenderer.invoke('insecureReadFileWithEncoding', options),
   secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),
