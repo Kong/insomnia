@@ -4,14 +4,14 @@ import OAuth1 from 'oauth-1.0a';
 
 import type { RequestAuthentication, RequestBody } from '~/insomnia-data';
 
-import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
 import {
+  CONTENT_TYPE_FORM_URLENCODED,
   type OAuth1SignatureMethod,
   SIGNATURE_METHOD_HMAC_SHA1,
   SIGNATURE_METHOD_HMAC_SHA256,
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
-} from './constants';
+} from '../../../common/constants';
 
 function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {
