@@ -1,9 +1,7 @@
 import aws4 from 'aws4';
 import clone from 'clone';
 
-import type { RequestAuthentication } from '~/insomnia-data';
-
-import { CONTENT_TYPE_FORM_DATA } from '../common/constants';
+import { CONTENT_TYPE_FORM_DATA } from '~/common/constants';
 import {
   getContentTypeHeader,
   getHostHeader,
@@ -11,14 +9,16 @@ import {
   hasAcceptHeader,
   hasAuthHeader,
   hasContentTypeHeader,
-} from '../common/misc';
+} from '~/common/misc';
+import type { RequestAuthentication } from '~/insomnia-data';
+
 import { DEFAULT_BOUNDARY } from './multipart-constants';
 
+// Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
-
 interface Input {
   req: Req;
-  finalUrl?: string;
+  finalUrl: string;
   requestBody?: string;
   requestBodyPath?: string;
   authHeader?: { name: string; value: string };
@@ -26,35 +26,33 @@ interface Input {
 
 interface Req {
   headers: any;
-  method?: string;
+  method: string;
   body: { mimeType?: string | null };
   authentication: {} | RequestAuthentication;
 }
-
 export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath, authHeader }: Input) => {
   const headers = clone(req.headers);
 
-  if (requestBody !== undefined || requestBodyPath) {
+  // Disable Expect and Transfer-Encoding headers when we have POST body/file
+  const hasRequestBodyOrFilePath = requestBody !== undefined || requestBodyPath;
+  if (hasRequestBodyOrFilePath) {
     headers.push(
       { name: 'Expect', value: DISABLE_HEADER_VALUE },
       { name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE },
     );
   }
 
-  const { authentication, method = 'GET' } = req;
+  const { authentication, method } = req;
   if (authentication && 'type' in authentication) {
     const isDigest = authentication.type === 'digest';
     const isNTLM = authentication.type === 'ntlm';
     const isAWSIAM = authentication.type === 'iam';
     const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest =
       !hasAuthHeader(headers) && !authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
-
     if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest && authHeader) {
       headers.push(authHeader);
     }
-
-    // Guard on finalUrl: new URL() would throw on undefined, and AWS signing is meaningless without a target URL.
-    if (isAWSIAM && finalUrl) {
+    if (isAWSIAM) {
       const hostHeader = getHostHeader(headers)?.value;
       const contentTypeHeader = getContentTypeHeader(headers)?.value;
       _getAwsAuthHeaders({
@@ -67,8 +65,8 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
       }).forEach(header => headers.push(header));
     }
   }
-
-  if (req.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath) {
+  const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
+  if (isMultipartForm && requestBodyPath) {
     const contentTypeHeader = getContentTypeHeader(headers);
     if (contentTypeHeader) {
       contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
@@ -76,23 +74,29 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
       headers.push({ name: 'Content-Type', value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}` });
     }
   }
-
+  // Send a default Accept headers of anything
   if (!hasAcceptHeader(headers)) {
-    headers.push({ name: 'Accept', value: '*/*' });
+    headers.push({ name: 'Accept', value: '*/*' }); // Default to anything
   }
 
+  // Don't auto-send Accept-Encoding header
   if (!hasAcceptEncodingHeader(headers)) {
     headers.push({ name: 'Accept-Encoding', value: DISABLE_HEADER_VALUE });
   }
 
+  // Prevent curl from adding default content-type header
   if (!hasContentTypeHeader(headers)) {
     headers.push({ name: 'content-type', value: DISABLE_HEADER_VALUE });
   }
 
   return headers
-    .filter((header: any) => header.name)
+    .filter((h: any) => h.name)
     .map(({ name, value }: any) =>
-      value === '' ? `${name};` : value === DISABLE_HEADER_VALUE ? `${name}:` : `${name}: ${value}`,
+      value === ''
+        ? `${name};` // Curl needs a semicolon suffix to send empty header values
+        : value === DISABLE_HEADER_VALUE
+          ? `${name}:` // Tell Curl NOT to send the header if value is null
+          : `${name}: ${value}`,
     );
 };
 
@@ -130,6 +134,7 @@ export function _getAwsAuthHeaders({
       method,
       headers: onlyContentTypeHeader,
       path: `${parsedUrl.pathname}${parsedUrl.search}` || undefined,
+      // AWS uses host header for signing so prioritize that if the user set it manually
       host: hostHeader || parsedUrl.host || undefined,
     },
     { accessKeyId, secretAccessKey, sessionToken },
@@ -140,6 +145,6 @@ export function _getAwsAuthHeaders({
   }
 
   return Object.entries(signature.headers)
-    .filter(([name]) => name !== 'content-type')
+    .filter(([name]) => name !== 'content-type') // Don't add this because we already have it
     .map(([name, value]) => ({ name, value }));
 }
