@@ -1,22 +1,4 @@
-import type { RequestAuthentication, RequestParameter } from '~/insomnia-data';
-
-import { QUERY_PARAMS } from './api-key/constants';
-
-export function getAuthQueryParams(authentication: RequestAuthentication) {
-  if (authentication.disabled) {
-    return;
-  }
-
-  if (authentication.type === 'apikey' && authentication.addTo === QUERY_PARAMS) {
-    const { key, value } = authentication;
-    return {
-      name: key,
-      value: value,
-    } as RequestParameter;
-  }
-
-  return;
-}
+import type { RequestAuthentication } from '~/insomnia-data';
 
 export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
   if (!accessToken) {

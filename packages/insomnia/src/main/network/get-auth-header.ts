@@ -67,6 +67,10 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
   if (authentication.type === 'oauth2') {
     try {
+      // HACK: GraphQL requests use a child request to fetch the schema with an
+      // ID of "{{request_id}}.graphql". Here we are removing the .graphql suffix and
+      // pretending we are fetching a token for the original request. This makes sure
+      // the same tokens are used for schema fetching. See issue #835 on GitHub.
       const tokenId = requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
       const oAuth2Token = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2);
 
