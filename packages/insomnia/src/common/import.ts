@@ -78,20 +78,6 @@ const isSubEnvironmentResource = (environment: Environment) => {
 
 export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) => id === 'insomnia-4';
 
-// These helpers load main-process modules lazily via a runtime string so that Vite
-// does not statically analyse or bundle them into the renderer. The path string is
-// kept out of the import() call itself to prevent bundler rewriting; the
-// /* @vite-ignore */ comment suppresses the remaining Vite warning.
-const importMainConvertModule = async () => {
-  const modulePath = '../main/importers/convert';
-  return import(/* @vite-ignore */ modulePath);
-};
-
-const importSecureReadFileModule = async () => {
-  const modulePath = '../main/secure-read-file';
-  return import(/* @vite-ignore */ modulePath);
-};
-
 export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   const url = new URL(uri);
 
@@ -106,12 +92,12 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    if (process.type === 'renderer') {
-      return window.main.insecureReadFile({ path });
-    }
+    const readFileProcessFork = async (path: string) =>
+      process.type === 'renderer'
+        ? window.main.insecureReadFile({ path })
+        : (await import('../main/secure-read-file')).insecureReadFile(path);
 
-    const { insecureReadFile } = await importSecureReadFileModule();
-    return insecureReadFile(path);
+    return readFileProcessFork(path);
   }
   // Treat everything else as raw text
   const content = decodeURIComponent(uri);
@@ -221,9 +207,9 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          const processFork =
-            process.type === 'renderer' ? window.main.parseImport : (await importMainConvertModule()).convert;
-          result = (await processFork(importEntry)) as unknown as ConvertResult;
+          const convertProcessFork =
+            process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
+          result = (await convertProcessFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
         if (v5Error) {
