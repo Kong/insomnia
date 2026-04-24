@@ -112,9 +112,9 @@ async function moveDirectoryContents(srcDir: string, destDir: string, logger?: M
         await fs.promises.mkdir(destPath, { recursive: true });
         await moveDirectoryContents(srcPath, destPath, logger);
         try {
-          await fs.promises.rm(srcPath, { recursive: false });
+          await fs.promises.rm(srcPath, { recursive: true });
         } catch {
-          // Ignore if dir not empty (shouldn't happen after recursive move)
+          // Ignore if already gone
         }
       } else if (entry.isSymbolicLink()) {
         // Preserve symlinks — copyFile would dereference them, losing the link.
@@ -145,9 +145,9 @@ async function moveDirectoryContents(srcDir: string, destDir: string, logger?: M
   );
 
   try {
-    await fs.promises.rm(srcDir, { recursive: false });
+    await fs.promises.rm(srcDir, { recursive: true });
   } catch {
-    // Not empty or already gone — ignore
+    // Ignore if already gone
   }
 }
 
