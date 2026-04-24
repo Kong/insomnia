@@ -100,7 +100,6 @@ export const test = baseTest.extend<{
     };
     const { ELECTRON_RUN_AS_NODE: _ignored, ...launchEnv } = process.env;
 
-    const { ELECTRON_RUN_AS_NODE: _ignored, ...launchEnv } = process.env;
     const electronApp = await playwright._electron.launch({
       cwd,
       executablePath,
