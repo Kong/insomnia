@@ -16,6 +16,14 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     await services.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     return null;
   }
+  if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
+    await services.webSocketRequestMeta.updateOrCreateByParentId(requestId, patch);
+    return null;
+  }
+  if (models.socketIORequest.isSocketIORequestId(requestId)) {
+    await services.socketIORequestMeta.updateOrCreateByParentId(requestId, patch);
+    return null;
+  }
   await services.requestMeta.updateOrCreateByParentId(requestId, patch);
   return null;
 }
