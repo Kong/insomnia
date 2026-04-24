@@ -118,6 +118,10 @@ export const pullRemoteBackendProjectWithSingleton = async (
   { organizationId, backendProjectId, remoteId }: PullRemoteBackendProjectOptions,
 ) => {
   return runWithSyncRenderer(sender, async () => {
+    // Use the singleton only for the remote listing (read-only network call).
+    // The actual pull uses an isolated VCS instance so the singleton's active
+    // backend project is never mutated, preventing cross-workspace interference
+    // with concurrent sync.invoke calls.
     const vcs = getMainVCS();
     const remoteBackendProjects = await vcs.remoteBackendProjects({
       teamId: organizationId,
@@ -132,27 +136,22 @@ export const pullRemoteBackendProjectWithSingleton = async (
     const project = await services.project.getByRemoteId(remoteId);
     invariant(project?.remoteId, 'Project is not a remote project');
 
-    const activeBackendProject = vcs.getActiveBackendProject();
+    const pullVCS = createVCS({
+      dataPath: process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+      conflictHandler: requestConflictResolution,
+    });
 
-    try {
-      await vcs.removeBackendProjectsForRoot(backendProject.rootDocumentId);
-      const { workspaceId } = await pullBackendProject({
-        vcs,
-        backendProject,
-        remoteProject: project as RemoteProject,
-      });
-      invariant(typeof workspaceId === 'string', 'Workspace not found after pulling backend project');
+    await pullVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
+    const { workspaceId } = await pullBackendProject({
+      vcs: pullVCS,
+      backendProject,
+      remoteProject: project as RemoteProject,
+    });
+    invariant(typeof workspaceId === 'string', 'Workspace not found after pulling backend project');
 
-      return {
-        projectId: project._id,
-        workspaceId,
-      };
-    } finally {
-      if (activeBackendProject) {
-        await vcs.setBackendProject(activeBackendProject);
-      } else {
-        vcs.clearBackendProject();
-      }
-    }
+    return {
+      projectId: project._id,
+      workspaceId,
+    };
   });
 };
