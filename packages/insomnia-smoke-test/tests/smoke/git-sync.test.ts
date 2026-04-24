@@ -33,6 +33,8 @@ test('Pull, commit and push', async ({ page }) => {
     await projectModalCloseButton.click();
   }
   await page.getByRole('button', { name: 'Personal workspace' }).click();
+  await page.getByRole('option', { name: /Magic/ }).locator('span').click();
+  await page.getByRole('button', { name: /Magic/ }).click();
   await page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
   await page.getByText('My Project').waitFor({ state: 'visible', timeout: 10_000 });
   await page.getByText('My Project').click();
