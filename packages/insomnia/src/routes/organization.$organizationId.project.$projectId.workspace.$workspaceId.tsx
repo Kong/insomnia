@@ -186,7 +186,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   const socketIORequestMetas = await database.find(models.socketIORequestMeta.type, {
     parentId: { $in: socketIORequests.map(r => r._id) },
   });
-  const AllRequestMetas = [...requestMetas, ...grpcRequestMetas, ...webSocketRequestMetas, ...socketIORequestMetas] as (
+  const allRequestMetas = [...requestMetas, ...grpcRequestMetas, ...webSocketRequestMetas, ...socketIORequestMetas] as (
     | RequestMeta
     | GrpcRequestMeta
     | WebSocketRequestMeta
@@ -215,7 +215,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
       levelReqs.sort(sortFunction).map(async (doc): Promise<Child> => {
         const hidden = parentIsCollapsed;
 
-        const pinned = (!isRequestGroup(doc) && AllRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
+        const pinned = (!isRequestGroup(doc) && allRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
         const collapsed =
           parentIsCollapsed ||
           (isRequestGroup(doc) && requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
