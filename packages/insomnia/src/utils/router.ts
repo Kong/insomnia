@@ -2,12 +2,13 @@ import type { Organization } from 'insomnia-api';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
-import type { Project } from '~/insomnia-data';
+import type { GitProject, GitRepository, Project } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
 import { database } from '../common/database';
 import * as models from '../models';
 import { findPersonalOrganization, SCRATCHPAD_ORGANIZATION_ID } from '../models/organization';
+import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
 
 export const enum AsyncTask {
   SyncOrganization,
@@ -92,6 +93,25 @@ export const getInitialEntry = async () => {
   // Otherwise if the user is not logged in and has not logged in before, then show the login
   // Otherwise if the user is logged in, then show the organization
   try {
+    const allProjects = await database.find<Project>(models.project.type, {});
+    const gitRepoIds = (
+      allProjects.filter(
+        (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
+      ) as GitProject[]
+    ).map(p => p.gitRepositoryId);
+
+    if (gitRepoIds.length > 0) {
+      const gitRepos = await database.find<GitRepository>(models.gitRepository.type, {
+        _id: { $in: gitRepoIds },
+      });
+
+      const hasPendingMigrations = gitRepos.some(repo => (repo.repoMigrationVersion ?? 0) < CURRENT_MIGRATION_VERSION);
+      if (hasPendingMigrations) {
+        console.log('Redirecting to git migration');
+        return href('/git-migration/*', { '*': '' });
+      }
+    }
+
     const hasSeenOnboardingV12 = Boolean(window.localStorage.getItem('hasSeenOnboardingV12'));
 
     if (!hasSeenOnboardingV12) {

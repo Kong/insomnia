@@ -13,10 +13,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useFetchers,
   useNavigate,
   useParams,
+  useRevalidator,
   useRouteLoaderData,
 } from 'react-router';
+import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
@@ -321,6 +324,19 @@ const Root = () => {
   });
   const navigate = useNavigate();
 
+  const { revalidate } = useRevalidator();
+  const inflightFetchers = useFetchers();
+  const ifInSubmission = inflightFetchers.some(f => f.formMethod === 'POST');
+  const latestInSubmission = useLatest(ifInSubmission);
+
+  useEffect(() => {
+    return window.main.on('git.db-synced', () => {
+      if (!latestInSubmission.current) {
+        revalidate();
+      }
+    });
+  }, [latestInSubmission, revalidate]);
+
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
       // Get the url without params
@@ -569,10 +585,10 @@ const Root = () => {
                 <div className="flex flex-col gap-1 text-left">
                   {errorDetailKeys.length > 0
                     ? errorDetailKeys.map(k => (
-                      <span key={k} className="whitespace-normal">
-                        {k}: {restParams[k]}
-                      </span>
-                    ))
+                        <span key={k} className="whitespace-normal">
+                          {k}: {restParams[k]}
+                        </span>
+                      ))
                     : 'Unknown error'}
                 </div>
               ),

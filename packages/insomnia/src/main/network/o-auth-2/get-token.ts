@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import querystring from 'node:querystring';
 
+import { BrowserWindow } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
 import type {
@@ -14,17 +15,16 @@ import type {
   Response,
 } from '~/insomnia-data';
 import { database as db, models, services } from '~/insomnia-data';
+import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
+import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
+import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-storage';
 import { getBodyBuffer } from '~/models/helpers/response-operations';
-import { encryptOAuthUrl } from '~/network/o-auth-2/utils';
 
-import { version } from '../../../package.json';
-import { getOauthRedirectUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../common/constants';
-import { escapeRegex } from '../../common/misc';
-import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../ui/event-bus';
-import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
-import { getAuthObjectOrNull, isAuthEnabled } from '../authentication';
-import { getBasicAuthHeader } from '../basic-auth/get-header';
+import { version } from '../../../../package.json';
+import { getOauthRedirectUrl, getOauthRelayUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../../common/constants';
+import { type DefaultBrowserRedirectParam, escapeRegex } from '../../../common/misc';
+import { getAuthObjectOrNull, isAuthEnabled } from '../../../network/authentication';
+import { getBasicAuthHeader } from '../../../network/basic-auth/get-header';
 import {
   fetchMcpRequestData,
   fetchRequestData,
@@ -33,32 +33,126 @@ import {
   sendCurlAndWriteTimeline,
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
-} from '../network';
-import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } from './constants';
+} from '../../../network/network';
+import { invariant } from '../../../utils/invariant';
+import { setDefaultProtocol } from '../../../utils/url/protocol';
 
 const { isRequestGroup, isRequestGroupId } = models.requestGroup;
 
-async function getOAuthWindowHandleSession(): Promise<string> {
-  const token = await window.main.electronStorage.getItem(OAUTH_WINDOW_SESSION_ID_KEY);
-  if (token) {
-    return token;
-  }
+export const GRANT_TYPE_AUTHORIZATION_CODE = 'authorization_code';
+export const GRANT_TYPE_IMPLICIT = 'implicit';
+export const GRANT_TYPE_PASSWORD = 'password';
+export const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
+export const GRANT_TYPE_REFRESH = 'refresh_token';
+export const GRANT_TYPE_MCP_AUTH_FLOW = 'mcp_auth_flow';
+export type AuthKeys =
+  | 'access_token'
+  | 'id_token'
+  | 'client_id'
+  | 'client_secret'
+  | 'audience'
+  | 'resource'
+  | 'code_challenge'
+  | 'code_challenge_method'
+  | 'code_verifier'
+  | 'code'
+  | 'nonce'
+  | 'error'
+  | 'error_description'
+  | 'error_uri'
+  | 'expires_in'
+  | 'grant_type'
+  | 'password'
+  | 'redirect_uri'
+  | 'refresh_token'
+  | 'response_type'
+  | 'scope'
+  | 'state'
+  | 'token_type'
+  | 'username'
+  | 'xError'
+  | 'xResponseId';
+export const PKCE_CHALLENGE_S256 = 'S256';
+export const PKCE_CHALLENGE_PLAIN = 'plain';
+
+export type OAuth2AuthorizationStatusType = 'none' | 'getting_code' | 'getting_token';
+
+const showOAuthAuthorizationModal = (authCodeUrlStr: string) => {
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('show-oauth-authorization-modal', authCodeUrlStr);
+  });
+};
+
+const hideOAuthAuthorizationModal = () => {
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('hide-oauth-authorization-modal');
+  });
+};
+const getElectronStorage = () => {
+  return getSharedElectronStorage();
+};
+
+export function initNewOAuthSession() {
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
-  await window.main.electronStorage.setItem(OAUTH_WINDOW_SESSION_ID_KEY, authWindowSessionId);
+  const storage = getElectronStorage();
+  storage.setItem(OAUTH_WINDOW_SESSION_ID_KEY, authWindowSessionId);
   return authWindowSessionId;
 }
 
-// NOTE
-// 1. return valid access token from insomnia db
-// 2. send refresh token in order to save and return valid access token
-// 3. run a given grant type and save and return valid access token
+export function getOAuthSession(): string {
+  const storage = getElectronStorage();
+  const token = storage.getItem(OAUTH_WINDOW_SESSION_ID_KEY);
+  return token || initNewOAuthSession();
+}
+
+export const encryptOAuthUrl = (authCodeUrlStr: string) => {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 3072,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+
+  const relayUrl = `${getOauthRelayUrl()}?authCodeUrl=${encodeURIComponent(authCodeUrlStr)}&publicKey=${encodeURIComponent(publicKey)}`;
+
+  const decryptOAuthResult = (result: DefaultBrowserRedirectParam): string => {
+    if ('redirectUrl' in result) {
+      return result.redirectUrl;
+    }
+
+    const { encryptedRedirectUrl, encryptedKey, iv } = result;
+    const aesKey = crypto.privateDecrypt(
+      {
+        key: privateKey,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: 'sha256',
+      },
+      Buffer.from(encryptedKey, 'base64'),
+    );
+    const encryptedBuf = Buffer.from(encryptedRedirectUrl, 'base64');
+    const authTag = encryptedBuf.slice(-16);
+    const ciphertext = encryptedBuf.slice(0, -16);
+    // nosemgrep: javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length
+    const decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, Buffer.from(iv, 'base64'), {
+      authTagLength: 16,
+    });
+    decipher.setAuthTag(authTag);
+
+    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+    return decrypted;
+  };
+
+  return {
+    relayUrl,
+    decryptOAuthResult,
+  };
+};
+
 export const getOAuth2Token = async (
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh = false,
 ): Promise<OAuth2Token | undefined> => {
   try {
-    // If it's MCP Auth Flow, should leave it to be handled by the MCP auth provider
     if (authentication.grantType === 'mcp_auth_flow') {
       return undefined;
     }
@@ -95,11 +189,11 @@ export const getOAuth2Token = async (
             ]
           : []),
       ].forEach(p => p.value && implicitUrl.searchParams.append(p.name, p.value));
-      const redirectedTo = await window.main.authorizeUserInWindow({
+      const redirectedTo = await authorizeUserInWindow({
         url: implicitUrl.toString(),
         urlSuccessRegex: /(access_token=|id_token=)/,
         urlFailureRegex: /(error=)/,
-        sessionId: await getOAuthWindowHandleSession(),
+        sessionId: getOAuthSession(),
       });
       console.log('[oauth2] Detected redirect ' + redirectedTo);
 
@@ -126,7 +220,6 @@ export const getOAuth2Token = async (
     if (authentication.grantType === 'authorization_code') {
       invariant(authentication.authorizationUrl, 'Invalid authorization URL');
 
-      // default to S256 if usePkce is true and pkceMethod is not defined
       const pkceMethod =
         authentication.usePkce && !authentication.pkceMethod ? PKCE_CHALLENGE_S256 : authentication.pkceMethod;
       const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
@@ -158,20 +251,15 @@ export const getOAuth2Token = async (
         const authCodeUrlStr = authCodeUrl.toString();
         const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authCodeUrlStr);
 
-        uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
-          status: 'getting_code',
-          authCodeUrlStr: relayUrl,
-        });
-        // If the user has selected to use the default browser, we will open the
-        // authorization URL in the default browser and wait for the user to
-        // authorize the application.
-        const result = await window.main.authorizeUserInDefaultBrowser({
+        showOAuthAuthorizationModal(relayUrl);
+        const result = await authorizeUserInDefaultBrowser({
           url: relayUrl,
         });
+        hideOAuthAuthorizationModal();
 
         redirectedTo = decryptOAuthResult(result);
       } else {
-        redirectedTo = await window.main.authorizeUserInWindow({
+        redirectedTo = await authorizeUserInWindow({
           url: authCodeUrl.toString(),
           urlSuccessRegex: authentication.redirectUrl
             ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]code=)`, 'i')
@@ -179,7 +267,7 @@ export const getOAuth2Token = async (
           urlFailureRegex: authentication.redirectUrl
             ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i')
             : /([?&]error=)/i,
-          sessionId: await getOAuthWindowHandleSession(),
+          sessionId: getOAuthSession(),
         });
       }
 
@@ -227,20 +315,8 @@ export const getOAuth2Token = async (
       headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
     }
 
-    if (authentication.useDefaultBrowser) {
-      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
-        status: 'getting_token',
-      });
-    }
-
     const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
     const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
-
-    if (authentication.useDefaultBrowser) {
-      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
-        status: 'none',
-      });
-    }
 
     return services.oAuth2Token.update(
       old,
@@ -248,16 +324,11 @@ export const getOAuth2Token = async (
     );
   } catch (err) {
     if (authentication.useDefaultBrowser) {
-      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
-        status: 'none',
-      });
+      hideOAuthAuthorizationModal();
     }
     throw err;
   }
 };
-// 1. get token from db and return if valid
-// 2. if expired, and no refresh token return null
-// 3. run refresh token query and return new token or null if it fails
 
 async function getExistingAccessTokenAndRefreshIfExpired(
   requestId: string,
@@ -289,8 +360,6 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     return { oAuth2Token: token, closestAuthId };
   }
 
-  // token is expired
-
   if (!token.refreshToken) {
     return { oAuth2Token: undefined, closestAuthId };
   }
@@ -316,9 +385,6 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const bodyBuffer = await getBodyBuffer(response);
 
   if (statusCode === 401) {
-    // If the refresh token was rejected due an unauthorized request, we will
-    // return a null access_token to trigger an authentication request to fetch
-    // brand new refresh and access tokens.
     const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
     services.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
     return { oAuth2Token: undefined, closestAuthId };
@@ -328,9 +394,6 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   if (!isSuccessful) {
     if (hasBodyAndIsError) {
       const body = tryToParse(bodyBuffer.toString());
-      // If the refresh token was rejected due an oauth2 invalid_grant error, we will
-      // return a null access_token to trigger an authentication request to fetch
-      // brand new refresh and access tokens.
       if (body?.error === 'invalid_grant') {
         console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
         const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
@@ -387,7 +450,6 @@ const transformNewAccessTokenToOauthModel = (
 ): Partial<OAuth2Token> => {
   const expiry = accessToken.expires_in ? +accessToken.expires_in : 0;
   return {
-    // Calculate expiry date
     expiresAt: accessToken.expires_in ? Date.now() + expiry * 1000 : null,
     refreshToken: accessToken.refresh_token || undefined,
     accessToken: accessToken.access_token || undefined,
@@ -395,14 +457,11 @@ const transformNewAccessTokenToOauthModel = (
     error: accessToken.error || undefined,
     errorDescription: accessToken.error_description || undefined,
     errorUri: accessToken.error_uri || undefined,
-    // Special Case for response timeline viewing
     xResponseId: accessToken.xResponseId || null,
-    // Special Case for empty body or http error code custom messages
     xError: accessToken.xError || null,
   };
 };
 
-// This can be sent from a folder
 const sendAccessTokenRequest = async (
   requestOrGroupId: string,
   authentication: AuthTypeOAuth2,
@@ -411,7 +470,6 @@ const sendAccessTokenRequest = async (
 ) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   console.log(`[network] Sending with settings req=${requestOrGroupId}`);
-  // @TODO unpack oauth into regular timeline and remove oauth timeline dialog
   const initializedData = isRequestGroupId(requestOrGroupId)
     ? await fetchRequestGroupData(requestOrGroupId)
     : models.mcpRequest.isMcpRequestId(requestOrGroupId)
@@ -432,7 +490,6 @@ const sendAccessTokenRequest = async (
   }
   const newRequest: Request = {
     ...models.request.init(),
-    // Do not inherit authentication from parent request or group since this is a special request
     authentication: {
       type: 'none',
       disabled: false,
@@ -466,26 +523,17 @@ const sendAccessTokenRequest = async (
 
   return await services.response.create(responsePatch);
 };
+
 export const encodePKCE = (buffer: Buffer) => {
-  return (
-    buffer
-      .toString('base64')
-      // The characters + / = are reserved for PKCE as per the RFC,
-      // so we replace them with unreserved characters
-      // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '')
-  );
+  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 };
+
 const tryToParse = (body: string): Record<string, any> | null => {
   try {
     return JSON.parse(body);
   } catch {}
 
   try {
-    // NOTE: parse does not return a JS Object, so
-    //   we cannot use hasOwnProperty on it
     return querystring.parse(body);
   } catch {}
   return null;

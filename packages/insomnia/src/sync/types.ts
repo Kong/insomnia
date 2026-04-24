@@ -11,6 +11,14 @@ export interface BackendProject {
   rootDocumentId: string;
 }
 
+export interface BackendProjectWithTeams extends BackendProject {
+  teams: Team[];
+}
+
+export interface BackendProjectWithTeam extends BackendProject {
+  team: Team;
+}
+
 export type DocumentKey = string;
 
 export type BlobId = string;

@@ -436,8 +436,7 @@ export const validateCurl = async (value: string): Promise<{ isValid: boolean; m
       : { isValid: false, message: 'Invalid cURL request' };
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : String(error);
-    const cleanedMessage = rawMessage.replace("Error invoking remote method 'parseImport': Error: ", '');
-    const finalMessage = rawMessage.includes('No importers found for file') ? 'Invalid cURL request' : cleanedMessage;
+    const finalMessage = rawMessage.includes('No importers found for file') ? 'Invalid cURL request' : rawMessage;
     console.log('[importer] error', finalMessage);
     return finalMessage.includes('No importers found for file')
       ? { isValid: false, message: 'Invalid cURL request' }

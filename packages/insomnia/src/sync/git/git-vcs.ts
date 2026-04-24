@@ -98,7 +98,7 @@ interface FileStatus {
  * We should set this explicitly (even if set to an empty string), because we have other code (such as fs clients and unit tests) that depend on the clone directory.
  */
 export const GIT_CLONE_DIR = '.';
-const gitInternalDirName = 'git';
+const gitInternalDirName = '.git';
 export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
 export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName); // .git
 export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME); // .insomnia
@@ -240,14 +240,34 @@ export class GitVCS {
     return this._baseOpts.repoId === id;
   }
 
-  async getCurrentBranch() {
+  async getCurrentBranch(): Promise<string> {
     const branch = await git.currentBranch({ ...this._baseOpts });
 
-    if (typeof branch !== 'string') {
-      throw new TypeError('No active branch');
+    if (typeof branch === 'string') {
+      return branch;
     }
 
-    return branch;
+    // During a rebase, HEAD can be detached and currentBranch() returns undefined.
+    // In that case, Git stores the original branch ref in rebase metadata.
+    const gitDir = this._baseOpts.gitdir || path.join(this._baseOpts.dir, gitInternalDirName);
+    const rebaseHeadNamePaths = [
+      path.join(gitDir, 'rebase-merge', 'head-name'),
+      path.join(gitDir, 'rebase-apply', 'head-name'),
+    ];
+
+    for (const headNamePath of rebaseHeadNamePaths) {
+      try {
+        assertIsPromiseFsClient(this._baseOpts.fs);
+        const headName = (await this._baseOpts.fs.promises.readFile(headNamePath, 'utf8')).trim();
+        if (headName.startsWith('refs/heads/')) {
+          return headName.replace('refs/heads/', '');
+        }
+      } catch {
+        // Ignore and try the next known rebase metadata path.
+      }
+    }
+
+    throw new TypeError('No active branch');
   }
 
   async listBranches() {
@@ -1035,6 +1055,42 @@ export class GitVCS {
 
   async listRemotes(): Promise<GitRemoteConfig[]> {
     return git.listRemotes({ ...this._baseOpts });
+  }
+
+  async getBranchTrackingRemote(branch?: string): Promise<string | null> {
+    const currentBranch = branch || (await this.getCurrentBranch());
+    try {
+      const remote = await git.getConfig({
+        ...this._baseOpts,
+        path: `branch.${currentBranch}.remote`,
+      });
+      return remote || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async getRemoteUrl(remoteName: string): Promise<string | null> {
+    try {
+      const url = await git.getConfig({
+        ...this._baseOpts,
+        path: `remote.${remoteName}.url`,
+      });
+      return url || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async getBranchRemoteInfo(branch?: string): Promise<{
+    trackingRemote: string | null;
+    isOrigin: boolean;
+    remoteUrl: string | null;
+  }> {
+    const trackingRemote = await this.getBranchTrackingRemote(branch);
+    const isOrigin = trackingRemote === null || trackingRemote === 'origin';
+    const remoteUrl = trackingRemote ? await this.getRemoteUrl(trackingRemote) : null;
+    return { trackingRemote, isOrigin, remoteUrl };
   }
 
   async setAuthor(author?: GitAuthor) {

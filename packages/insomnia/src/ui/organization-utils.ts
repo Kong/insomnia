@@ -1,10 +1,8 @@
 import {
   getCurrentPlan,
   getOrganizations,
-  getOrganizationStorageRule,
   getUserProfile,
   type Organization,
-  type StorageRules,
 } from 'insomnia-api';
 import { fetchTeamProjects } from 'insomnia-api';
 
@@ -16,15 +14,13 @@ import { database } from '../common/database';
 import { project } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
-import { VCSInstance } from '../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../utils/invariant';
 
-// Create an in-memory storage to store the storage rules
-const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
+export { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 
 export function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(
@@ -109,58 +105,11 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
           project,
           organizationId: personalOrganizationId,
           sessionId,
-          vcs: VCSInstance(),
+          vcs: window.main.sync,
         });
       }
     }
   }
-}
-
-export const DEFAULT_STORAGE_RULES = {
-  enableCloudSync: true,
-  enableLocalVault: true,
-  enableGitSync: true,
-  isOverridden: false,
-};
-
-export async function fetchAndCacheOrganizationStorageRule(
-  organizationId: string | undefined,
-  forceFetch = false,
-): Promise<StorageRules> {
-  invariant(organizationId, 'Organization ID is required');
-
-  if (isScratchpadOrganizationId(organizationId)) {
-    return {
-      enableCloudSync: false,
-      enableLocalVault: true,
-      enableGitSync: false,
-      isOverridden: false,
-    };
-  }
-  if (!forceFetch) {
-    const storageRules = inMemoryStorageRuleCache.get(organizationId);
-    if (storageRules) {
-      return storageRules;
-    }
-  }
-  const { id: sessionId } = await services.userSession.getOrCreate();
-
-  // Otherwise fetch from the API
-  return await getOrganizationStorageRule({
-    organizationId,
-    sessionId,
-  }).then(
-    res => {
-      if (res) {
-        inMemoryStorageRuleCache.set(organizationId, res);
-      }
-      return res || DEFAULT_STORAGE_RULES;
-    },
-    err => {
-      console.log('[storageRule] Failed to load storage rules', err.message);
-      return DEFAULT_STORAGE_RULES;
-    },
-  );
 }
 
 interface TeamProject {

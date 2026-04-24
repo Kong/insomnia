@@ -9,14 +9,7 @@ import {
 } from '~/common/import';
 import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import * as models from '~/models';
 import * as requestOperations from '~/models/helpers/request-operations';
-import {
-  initializeLocalBackendProjectAndMarkForSync,
-  pushSnapshotOnInitialize,
-} from '~/sync/vcs/initialize-backend-project';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { fetchAndCacheOrganizationStorageRule } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -129,40 +122,6 @@ export const useImportResourcesFetcher = createFetcherSubmitHook(
   clientAction,
 );
 
-// The reason why we put this function here is because this function indirectly depends on some modules that can only run in a browser environment.
-// If we put this function in import.ts which is depended by Inso CLI, Inso CLI will fail to build because it doesn't have access to the browser environment.
-// So we put this function here and pass it to importResourcesToProject func to avoid the dependency issue.
 export async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
-  const project = await services.project.getById(newWorkspace.parentId);
-  invariant(project, 'Project not found');
-  const userSession = await services.userSession.getOrCreate();
-
-  if (userSession.id && models.project.isRemoteProject(project)) {
-    const storageRules = await fetchAndCacheOrganizationStorageRule(project.parentId);
-    invariant(storageRules, 'Storage rules not found');
-
-    if (storageRules.enableCloudSync) {
-      // Create default env, cookie jar, and meta
-      await services.environment.getOrCreateForParentId(newWorkspace._id);
-      await services.cookieJar.getOrCreateForParentId(newWorkspace._id);
-      await services.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
-      try {
-        const vcs = VCSInstance().newInstance();
-        await initializeLocalBackendProjectAndMarkForSync({
-          vcs,
-          workspace: newWorkspace,
-        });
-        await pushSnapshotOnInitialize({
-          vcs,
-          workspace: newWorkspace,
-          project,
-        });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.warn(
-          `Failed to initialize sync to insomnia cloud for workspace ${newWorkspace._id}. This will be retried when the workspace is opened on the app. ${errorMessage}`,
-        );
-      }
-    }
-  }
+  return window.main.syncNewWorkspaceIfNeeded({ workspaceId: newWorkspace._id });
 }

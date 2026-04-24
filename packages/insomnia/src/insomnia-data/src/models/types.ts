@@ -92,6 +92,8 @@ export type { UnitTestSuite } from './unit-test-suite';
 export type { SocketIOPayload } from './socket-io-payload';
 export type { BaseSocketIORequest, SocketIOEventListener, SocketIORequest } from './socket-io-request';
 export type { SocketIOResponse } from './socket-io-response';
+export type { SocketIORequestMeta } from './socket-io-request-meta';
 export type { WebSocketPayload } from './websocket-payload';
 export type { BaseWebSocketRequest, WebSocketRequest } from './websocket-request';
 export type { WebSocketResponse } from './websocket-response';
+export type { WebSocketRequestMeta } from './websocket-request-meta';

@@ -9,16 +9,14 @@ import { runVcsGraphQL } from 'insomnia-api';
 
 import { PLAYWRIGHT } from '~/common/constants';
 
-import * as crypt from '../../account/crypt';
-import * as session from '../../account/session';
-import type { Operation } from '../../common/database';
-import { generateId } from '../../common/misc';
-import type { BaseModel } from '../../models';
-import Store from '../store';
-import type { BaseDriver } from '../store/drivers/base';
-import compress from '../store/hooks/compress';
+import * as crypt from '../../../account/crypt';
+import * as session from '../../../account/session';
+import type { Operation } from '../../../common/database';
+import { generateId } from '../../../common/misc';
+import type { BaseModel } from '../../../models';
 import type {
   BackendProject,
+  BackendProjectWithTeams,
   Branch,
   DocumentKey,
   Head,
@@ -28,8 +26,10 @@ import type {
   Stage,
   StageEntry,
   StatusCandidate,
-} from '../types';
-import type { BackendProjectWithTeams } from './normalize-backend-project-team';
+} from '../../../sync/types';
+import Store from './store';
+import type { BaseDriver } from './store/drivers/base';
+import compress from './store/hooks/compress';
 import {
   compareBranches,
   generateCandidateMap,
@@ -59,6 +59,31 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
   return chunks;
 }
 
+const generateAES256KeyInNode = async (): Promise<JsonWebKey> => {
+  const subtle = crypto.webcrypto?.subtle;
+
+  if (subtle) {
+    console.log('[crypt] Using Node WebCrypto AES Key Generation');
+    const key = await subtle.generateKey(
+      {
+        name: 'AES-GCM',
+        length: 256,
+      },
+      true,
+      ['encrypt', 'decrypt'],
+    );
+    return subtle.exportKey('jwk', key);
+  }
+
+  return {
+    kty: 'oct',
+    alg: 'A256GCM',
+    ext: true,
+    key_ops: ['encrypt', 'decrypt'],
+    k: crypto.randomBytes(32).toString('base64url'),
+  };
+};
+
 // Stage/Unstage
 // Staged items are about to be committed
 // Unstaged items have changed compared to staged or not and can be staged
@@ -87,12 +112,6 @@ export class VCS {
     this._driver = driver;
     // To be set later
     this._backendProject = null;
-  }
-
-  newInstance(): VCS {
-    const newVCS: VCS = Object.assign({}, this) as any;
-    Object.setPrototypeOf(newVCS, VCS.prototype);
-    return newVCS;
   }
 
   async setBackendProject(backendProject: BackendProject) {
@@ -139,16 +158,6 @@ export class VCS {
 
   clearBackendProject() {
     this._backendProject = null;
-  }
-
-  async switchProject(rootDocumentId: string) {
-    const backendProject = await this._getBackendProjectByRootDocument(rootDocumentId);
-
-    if (backendProject !== null) {
-      await this.setBackendProject(backendProject);
-    } else {
-      this._backendProject = null;
-    }
   }
 
   async switchAndCreateBackendProjectIfNotExist(rootDocumentId: string, name: string) {
@@ -1234,7 +1243,7 @@ export class VCS {
     }[],
   ) {
     // Generate symmetric key for ResourceGroup
-    const symmetricKey = await crypt.generateAES256Key();
+    const symmetricKey = await generateAES256KeyInNode();
     const symmetricKeyStr = JSON.stringify(symmetricKey);
 
     const teamKeys: { accountId: string; encSymmetricKey: string; autoLinked: boolean }[] = [];

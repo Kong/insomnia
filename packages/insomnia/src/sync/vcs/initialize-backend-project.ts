@@ -3,14 +3,22 @@ import { services } from '~/insomnia-data';
 
 import { database } from '../../common/database';
 import { type BaseModel, canSync } from '../../models';
-import type { StatusCandidate } from '../types';
-import type { VCS } from './vcs';
+import type { Stage, StageEntry, Status, StatusCandidate } from '../types';
+
+export interface SyncVCSLike {
+  hasBackendProject: () => boolean | Promise<boolean>;
+  push: (options: { teamId: string; teamProjectId: string }) => Promise<void>;
+  stage: (stageEntries: StageEntry[]) => Promise<Stage>;
+  status: (candidates: StatusCandidate[]) => Promise<Status>;
+  switchAndCreateBackendProjectIfNotExist: (rootDocumentId: string, name: string) => Promise<void>;
+  takeSnapshot: (name: string) => Promise<void>;
+}
 
 export const initializeLocalBackendProjectAndMarkForSync = async ({
   vcs,
   workspace,
 }: {
-  vcs: VCS;
+  vcs: SyncVCSLike;
   workspace: Workspace;
 }) => {
   // Create local project
@@ -41,7 +49,7 @@ export const pushSnapshotOnInitialize = async ({
   workspace,
   project: { _id: projectId, remoteId: projectRemoteId, parentId },
 }: {
-  vcs: VCS;
+  vcs: SyncVCSLike;
   workspace: Workspace;
   project: Project;
 }) => {
@@ -51,7 +59,7 @@ export const pushSnapshotOnInitialize = async ({
   // One code path is that a React Key updates, forcing all children to unmount and remount (https://github.com/Kong/insomnia/blob/9a943879060927d6ab1c21d3e12daba39ad05eea/packages/insomnia-app/app/ui/containers/app.tsx#L1514-L1514)
   // At the same time, we set VCS to null, then set it to the correct value, in state in App.tsx, forcing downstream updates (https://github.com/Kong/insomnia/blob/9a943879060927d6ab1c21d3e12daba39ad05eea/packages/insomnia-app/app/ui/containers/app.tsx#L1149-L1149)
   // This race condition causes us to hit this codepath twice while activating a workspace but the first time it has no project so we shouldn't do anything
-  const hasProject = vcs.hasBackendProject();
+  const hasProject = await vcs.hasBackendProject();
 
   if (projectIsForWorkspace && projectRemoteId && hasProject) {
     await services.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });

@@ -5,7 +5,6 @@ import type { ChangeBufferEvent } from '~/common/database';
 import type { CookieJar, McpTransportType, RequestAuthentication, RequestHeader } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { getAuthHeader } from '~/network/authentication';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -70,7 +69,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (isEventStreamRequest(req)) {
     const renderedRequest = { ...req, ...rendered } as RenderedRequest;
-    const authHeader = await getAuthHeader(renderedRequest, rendered.url);
+    const authHeader = await window.main.getAuthHeader(renderedRequest, rendered.url);
     window.main.curl.open({
       requestId,
       workspaceId,

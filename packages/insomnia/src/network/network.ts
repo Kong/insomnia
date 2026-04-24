@@ -53,7 +53,8 @@ import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
-import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
+import { QUERY_PARAMS } from './api-key/constants';
+import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
@@ -877,7 +878,11 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const authHeader = await getAuthHeader(renderedRequest, finalUrl);
+  const getRenderedRequestAuthHeader =
+    process.type === 'renderer'
+      ? (r: RenderedRequest, u: string) => window.main.getAuthHeader(r, u)
+      : (await import('../main/network/get-auth-header')).getAuthHeader;
+  const authHeader = await getRenderedRequestAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
     requestId,
     req: renderedRequest,
@@ -976,6 +981,21 @@ export const responseTransform = async (
   console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`);
   return await _applyResponsePluginHooks(response, renderedRequest, context);
 };
+export function getAuthQueryParams(authentication: RequestAuthentication) {
+  if (authentication.disabled) {
+    return;
+  }
+
+  if (authentication.type === 'apikey' && authentication.addTo === QUERY_PARAMS) {
+    const { key, value } = authentication;
+    return {
+      name: key,
+      value: value,
+    } as RequestParameter;
+  }
+
+  return;
+}
 export const transformUrl = (
   url: string,
   params: RequestParameter[],

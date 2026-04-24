@@ -19,6 +19,10 @@ export default defineConfig(({ mode }) => {
       '__DEV__': JSON.stringify(__DEV__),
       'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.INSOMNIA_ENV': JSON.stringify(mode),
+      // Only apply in production builds: Rollup does text substitution (safe).
+      // In dev mode Vite uses runtime assignment via env.mjs, which throws
+      // TypeError because process.type is read-only in Electron's renderer process.
+      ...(!__DEV__ ? { 'process.type': JSON.stringify('renderer') } : {}),
     },
     server: {
       port: pkg.dev['dev-server-port'],

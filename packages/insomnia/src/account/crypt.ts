@@ -232,7 +232,7 @@ export async function generateAES256Key() {
 
 function _hexToB64Url(h: string) {
   const bytes = forge.util.hexToBytes(h);
-  return window.btoa(bytes).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  return btoa(bytes).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
 function _b64UrlToBigInt(s: string) {
@@ -243,5 +243,5 @@ function _b64UrlToBigInt(s: string) {
 
 function _b64UrlToHex(s: string) {
   const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
-  return forge.util.bytesToHex(window.atob(b64));
+  return forge.util.bytesToHex(atob(b64));
 }

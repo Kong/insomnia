@@ -1,0 +1,95 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Auth tests
+meta:
+  id: wrk_ca4cb9634c1045479b67b94f61725442
+  created: 1776427934242
+  modified: 1776427995078
+  description: ""
+collection:
+  - url: http://127.0.0.1:4010/auth/basic
+    name: sends request with basic authentication
+    meta:
+      id: req_c29164bea31840a5a68eb67858759705
+      created: 1636141100570
+      modified: 1636142586648
+      isPrivate: false
+      description: ""
+      sortKey: 0
+    method: GET
+    headers:
+      - name: Authorization
+        value: Basic dXNlcjpwYXNz
+        disabled: true
+    authentication:
+      type: basic
+      useISO88591: false
+      username: user
+      password: pass
+      disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/auth/oauth1
+    name: sends request with oauth1
+    meta:
+      id: req_e713e4eeac1942a089e6c687b66c38ac
+      created: 1776427942368
+      modified: 1776427981837
+      isPrivate: false
+      description: ""
+      sortKey: -1776427942368
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/12.5.1-alpha.0
+        description: ""
+        disabled: false
+    authentication:
+      type: oauth1
+      disabled: false
+      signatureMethod: HMAC-SHA1
+      consumerKey: key
+      tokenKey: key
+      tokenSecret: secret
+      privateKey: ""
+      version: "1.0"
+      nonce: ""
+      timestamp: ""
+      callback: ""
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_0ada3b0255e747a383ddf8848f88f4b2
+    created: 1636140994434
+    modified: 1637279629638
+  cookies:
+    - id: "429589439757017"
+      key: foo
+      value: bar
+      domain: domain.com
+      path: /
+      secure: false
+      httpOnly: false
+environments:
+  name: Base Environment
+  meta:
+    id: env_482f5a98dfe64a948fff489dbd761e42
+    created: 1636140994432
+    modified: 1636140994432
+    isPrivate: false
+  data:
+    customValue: fromEnvManager

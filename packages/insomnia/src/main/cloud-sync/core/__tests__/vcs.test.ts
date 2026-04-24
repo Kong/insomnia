@@ -1,12 +1,13 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
-import { projectSchema } from '../../__schemas__/type-schemas';
-import MemoryDriver from '../../store/drivers/memory-driver';
-import type { BackendProject } from '../../types';
-import { describeChanges } from '../util';
-import { VCS } from '../vcs';
+import { baseModelSchema, workspaceModelSchema } from '../../../../models/__schemas__/model-schemas';
+import { projectSchema } from '../../../../sync/__schemas__/type-schemas';
+import { shouldIgnoreKey } from '../../../../sync/ignore-keys';
+import { deterministicStringify } from '../../../../sync/lib/deterministic-stringify';
+import type { BackendProject } from '../../../../sync/types';
+import MemoryDriver from '../store/drivers/memory-driver';
+import { chunkArray, VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);
@@ -21,6 +22,45 @@ async function vcs(branch) {
   await v.switchAndCreateBackendProjectIfNotExist('workspace_1', 'Test Workspace');
   await v.checkout([], branch);
   return v;
+}
+
+function describeChanges(a, b): string[] {
+  const aT = Object.prototype.toString.call(a);
+  const bT = Object.prototype.toString.call(b);
+
+  if (aT !== '[object Object]' || bT !== '[object Object]') {
+    return [];
+  }
+
+  const changes: string[] = [];
+  const allKeys = Object.keys({ ...a, ...b });
+
+  for (const key of allKeys) {
+    if (shouldIgnoreKey(key, a)) {
+      continue;
+    }
+
+    const aValue = a[key];
+    const bValue = b[key];
+    const aStr = deterministicStringify(aValue);
+    const bStr = deterministicStringify(bValue);
+
+    if (aValue === undefined && bValue !== undefined) {
+      changes.push(`+${String(key)}`);
+      continue;
+    }
+
+    if (aValue !== undefined && bValue === undefined) {
+      changes.push(`-${String(key)}`);
+      continue;
+    }
+
+    if (aStr !== bStr) {
+      changes.push(key);
+    }
+  }
+
+  return changes;
 }
 
 describe('VCS', () => {
@@ -985,5 +1025,33 @@ describe('VCS', () => {
     expect(VCS.validateBranchName('feature/A.lock/B')).toEqual(
       'No slash-separated component in branch name can end with the sequence .lock',
     );
+  });
+});
+
+describe('chunkArray()', () => {
+  it('works with exact divisor', () => {
+    const chunks = chunkArray([1, 2, 3, 4, 5, 6], 3);
+    expect(chunks).toEqual([
+      [1, 2, 3],
+      [4, 5, 6],
+    ]);
+  });
+
+  it('works with weird divisor', () => {
+    const chunks = chunkArray([1, 2, 3, 4, 5, 6], 4);
+    expect(chunks).toEqual([
+      [1, 2, 3, 4],
+      [5, 6],
+    ]);
+  });
+
+  it('works with empty', () => {
+    const chunks = chunkArray([], 4);
+    expect(chunks).toEqual([]);
+  });
+
+  it('works with less than one chunk', () => {
+    const chunks = chunkArray([1, 2], 4);
+    expect(chunks).toEqual([[1, 2]]);
   });
 });

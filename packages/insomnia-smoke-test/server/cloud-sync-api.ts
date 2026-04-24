@@ -291,6 +291,17 @@ let deletedProjectIds: string[] = [];
 let cloudSyncApiEnabled = false;
 let remoteHasNewCommit = false;
 
+const resetCloudSyncTestState = () => {
+  Object.keys(newSnapshots).forEach(projectId => {
+    delete newSnapshots[projectId];
+  });
+  Object.keys(newBlobs).forEach(blobId => {
+    delete newBlobs[blobId];
+  });
+  deletedProjectIds = [];
+  remoteHasNewCommit = false;
+};
+
 const getSnapshotsForProject = (projectId: string) => {
   const originalSnapshots = projectSnapshots[projectId] || [];
   const addedSnapshots = newSnapshots[projectId] || [];
@@ -308,10 +319,13 @@ export default function setup(app: Application) {
     }
     cloudSyncApiEnabled = enabled;
     if (!enabled) {
-      // clear the test data when cloud sync is disabled to avoid affecting other tests
-      deletedProjectIds = [];
-      remoteHasNewCommit = false;
+      resetCloudSyncTestState();
     }
+    return res.status(200).send();
+  });
+
+  app.post('/__test-config/cloud-sync/reset', json(), (_req, res) => {
+    resetCloudSyncTestState();
     return res.status(200).send();
   });
 

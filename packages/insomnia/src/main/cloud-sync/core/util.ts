@@ -2,10 +2,9 @@ import crypto from 'node:crypto';
 
 import clone from 'clone';
 
-import { strings } from '../../common/strings';
-import type { BaseModel } from '../../models';
-import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
-import { deterministicStringify } from '../lib/deterministic-stringify';
+import type { BaseModel } from '../../../models';
+import { deleteKeys, resetKeys } from '../../../sync/ignore-keys';
+import { deterministicStringify } from '../../../sync/lib/deterministic-stringify';
 import type {
   Branch,
   Compare,
@@ -18,7 +17,7 @@ import type {
   StageEntry,
   StatusCandidate,
   StatusCandidateMap,
-} from '../types';
+} from '../../../sync/types';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {
@@ -275,7 +274,7 @@ export function compareBranches(a: Branch | null, b: Branch | null): Compare {
   return result;
 }
 
-export interface StateDelta {
+interface StateDelta {
   add: SnapshotStateEntry[];
   update: SnapshotStateEntry[];
   remove: SnapshotStateEntry[];
@@ -495,66 +494,3 @@ export function updateStateWithConflictResolutions(state: SnapshotState, conflic
 
   return Object.keys(newStateMap).map(k => newStateMap[k]);
 }
-
-export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
-  const aT = Object.prototype.toString.call(a);
-  const bT = Object.prototype.toString.call(b);
-
-  if (aT !== '[object Object]' || bT !== '[object Object]') {
-    return [];
-  }
-
-  const changes: string[] = [];
-  const allKeys = Object.keys({ ...a, ...b }) as (keyof T)[];
-
-  for (const key of allKeys) {
-    if (shouldIgnoreKey(key as keyof T, a)) {
-      continue;
-    }
-
-    const aValue = a[key];
-    const bValue = b[key];
-    const aStr = deterministicStringify(aValue);
-    const bStr = deterministicStringify(bValue);
-
-    if (aValue === undefined && bValue !== undefined) {
-      changes.push(`+${String(key)}`);
-      continue;
-    }
-
-    if (aValue !== undefined && bValue === undefined) {
-      changes.push(`-${String(key)}`);
-      continue;
-    }
-
-    if (aStr !== bStr) {
-      // @ts-expect-error -- type unsoundness
-      changes.push(key);
-    }
-  }
-
-  return changes;
-}
-
-export const interceptAccessError = async <T>({
-  callback,
-  action,
-  resourceName,
-  resourceType = strings.collection.singular.toLowerCase(),
-}: {
-  callback: () => T | Promise<T>;
-  action: string;
-  resourceName: string;
-  resourceType?: string;
-}) => {
-  try {
-    return await callback();
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('invalid access')) {
-      throw new Error(
-        `You no longer have permission to ${action} the "${resourceName}" ${resourceType}.  Contact your team administrator if you think this is an error.`,
-      );
-    }
-    throw error;
-  }
-};
