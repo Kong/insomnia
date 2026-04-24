@@ -1,14 +1,14 @@
 import React, { type FC } from 'react';
 
-import type { AuthTypeOAuth1 } from '~/insomnia-data';
-
 import {
   type OAuth1SignatureMethod,
   SIGNATURE_METHOD_HMAC_SHA1,
   SIGNATURE_METHOD_HMAC_SHA256,
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
-} from '../../../../network/o-auth-1/constants';
+} from '~/common/constants';
+import type { AuthTypeOAuth1 } from '~/insomnia-data';
+
 import {
   type RequestLoaderData,
   useRequestLoaderData,

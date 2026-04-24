@@ -4,11 +4,8 @@ import type { AuthTypeOAuth2, OAuth2ResponseType, OAuth2Token, RequestAuthentica
 import { services } from '~/insomnia-data';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
-import { getOauthRedirectUrl } from '../../../../common/constants';
-import { toKebabCase } from '../../../../common/misc';
-import accessTokenUrls from '../../../../datasets/access-token-urls';
-import authorizationUrls from '../../../../datasets/authorization-urls';
 import {
+  getOauthRedirectUrl,
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
@@ -16,8 +13,10 @@ import {
   GRANT_TYPE_PASSWORD,
   PKCE_CHALLENGE_PLAIN,
   PKCE_CHALLENGE_S256,
-} from '../../../../network/o-auth-2/constants';
-import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
+} from '../../../../common/constants';
+import { toKebabCase } from '../../../../common/misc';
+import accessTokenUrls from '../../../../datasets/access-token-urls';
+import authorizationUrls from '../../../../datasets/authorization-urls';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -626,7 +625,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
               try {
                 const activeAuth = getActiveOAuth2AuthFields(authentication as AuthTypeOAuth2);
                 const renderedAuthentication = (await handleRender(activeAuth)) as AuthTypeOAuth2;
-                const t = await getOAuth2Token(_id, renderedAuthentication, true);
+                const t = await window.main.getOAuth2Token(_id, renderedAuthentication, true);
                 setToken(t);
                 setLoading(false);
               } catch (err) {
