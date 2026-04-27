@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { getMainVCS } from '~/main/cloud-sync/vcs';
-import * as models from '~/models';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -36,11 +35,10 @@ vi.mock('~/insomnia-data', () => ({
       getOrCreateForParentId: vi.fn(),
     },
   },
-}));
-
-vi.mock('~/models', () => ({
-  project: {
-    isRemoteProject: vi.fn(),
+  models: {
+    project: {
+      isRemoteProject: vi.fn(),
+    },
   },
 }));
 
