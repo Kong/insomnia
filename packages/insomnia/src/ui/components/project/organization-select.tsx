@@ -82,7 +82,7 @@ export const OrganizationSelect = ({
               setIsOpen(false);
               // If user is in the scratchpad workspace redirect them to the login page
               if (isScratchpadWorkspace) {
-                window.main.openInBrowser(getLoginUrl());
+                return window.main.openInBrowser(getLoginUrl());
               }
 
               if (!currentPlan) {
