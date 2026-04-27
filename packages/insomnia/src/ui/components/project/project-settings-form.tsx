@@ -156,6 +156,16 @@ export const ProjectSettingsForm: FC<Props> = ({
     gitRepository?.credentialsId &&
     selectedProvider;
 
+  const showRepoPath =
+    storageType === 'git' &&
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID &&
+    Boolean(gitRepository?._id);
+
+  const repoPath = showRepoPath
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository!._id)
+    : '';
+
   const showGitRepoForm =
     storageType === 'git' &&
     ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
@@ -184,6 +194,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const showEmailSelector = showGitConnectionInfo && canFetchEmails;
   const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (canFetchEmails && selectedCredential && emailsFetcher.state === 'idle' && !emailsFetcher.data) {
@@ -199,13 +210,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     if (showGitConnectionInfo && gitRepository?.uri && gitRepository?._id && project?._id) {
       validateCredentialsFetcherLoad({ projectId: project._id });
     }
-  }, [
-    showGitConnectionInfo,
-    gitRepository?.uri,
-    gitRepository?._id,
-    project?._id,
-    validateCredentialsFetcherLoad,
-  ]);
+  }, [showGitConnectionInfo, gitRepository?.uri, gitRepository?._id, project?._id, validateCredentialsFetcherLoad]);
 
   const credentialsValidationErrors =
     validateCredentialsFetcher.data && 'errors' in validateCredentialsFetcher.data
@@ -304,6 +309,52 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </LearnMoreLink>
               }
             />
+          )}
+
+          {showRepoPath && (
+            <>
+              <div className="flex flex-col gap-1">
+                <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
+                  Path to local files
+                </Label>
+                <div className="text-xs text-(--hl-xl)">
+                  Can be used to manage file changes with git.{' '}
+                  <a href="https://insomnia.rest" className="underline">
+                    Learn more ↗
+                  </a>
+                </div>
+                <div className="flex items-stretch justify-between gap-2">
+                  <span
+                    title={repoPath}
+                    className="min-w-0 flex-1 truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 font-mono text-base leading-8 text-(--hl-xl)"
+                  >
+                    {repoPath}
+                  </span>
+                  <Button
+                    onPress={() => {
+                      window.clipboard.writeText(repoPath);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex shrink-0 items-center gap-1.5 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
+                    aria-label="Copy repository path"
+                  >
+                    <Icon icon={copied ? 'check' : 'copy'} />
+                    <span>{copied ? 'Copied!' : 'Copy'}</span>
+                  </Button>
+                  <Button
+                    onPress={() => {
+                      window.shell.showItemInFolder(repoPath);
+                    }}
+                    className="flex shrink-0 items-center gap-1.5 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
+                    aria-label="Open repository folder"
+                  >
+                    <Icon icon={'folder'} />
+                    <span>Open</span>
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
 
           {showGitConnectionInfo && (

@@ -23,14 +23,24 @@ export interface RAToastContent {
   time?: string;
 }
 
+const logTransitionError = (error: unknown) => {
+  console.warn('Transition error:', error);
+};
+
 // Create a global ToastQueue.
 export const queue = new ToastQueue<RAToastContent>({
   // Wrap state updates in a CSS view transition.
   wrapUpdate(fn) {
-    if ('startViewTransition' in document) {
-      document.startViewTransition(() => {
-        flushSync(fn);
-      });
+    if ('startViewTransition' in document && document.visibilityState === 'visible') {
+      try {
+        const transition = document.startViewTransition(() => {
+          flushSync(fn);
+        });
+        transition.ready.catch(logTransitionError);
+      } catch (error) {
+        logTransitionError(error);
+        fn();
+      }
     } else {
       fn();
     }

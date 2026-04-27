@@ -326,6 +326,10 @@ export const createNedbDatabase = <O = initOptions>(
           ...defaultConfig,
           filename: fsPath.join(dbPath, 'insomnia.SocketIORequest.db'),
         }),
+        SocketIORequestMeta: new NeDB({
+          ...defaultConfig,
+          filename: fsPath.join(dbPath, 'insomnia.SocketIORequestMeta.db'),
+        }),
         SocketIOResponse: new NeDB({
           ...defaultConfig,
           filename: fsPath.join(dbPath, 'insomnia.SocketIOResponse.db'),
@@ -357,6 +361,10 @@ export const createNedbDatabase = <O = initOptions>(
         WebSocketRequest: new NeDB({
           ...defaultConfig,
           filename: fsPath.join(dbPath, 'insomnia.WebSocketRequest.db'),
+        }),
+        WebSocketRequestMeta: new NeDB({
+          ...defaultConfig,
+          filename: fsPath.join(dbPath, 'insomnia.WebSocketRequestMeta.db'),
         }),
         WebSocketResponse: new NeDB({
           ...defaultConfig,

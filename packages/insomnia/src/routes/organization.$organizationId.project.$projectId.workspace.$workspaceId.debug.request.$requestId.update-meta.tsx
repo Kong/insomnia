@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import type { GrpcRequestMeta, RequestMeta } from '~/insomnia-data';
+import type { GrpcRequestMeta, RequestMeta, SocketIORequestMeta, WebSocketRequestMeta } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -10,9 +10,19 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
-  const patch = (await request.json()) as Partial<RequestMeta | GrpcRequestMeta>;
+  const patch = (await request.json()) as Partial<
+    RequestMeta | GrpcRequestMeta | WebSocketRequestMeta | SocketIORequestMeta
+  >;
   if (models.grpcRequest.isGrpcRequestId(requestId)) {
     await services.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
+    return null;
+  }
+  if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
+    await services.webSocketRequestMeta.updateOrCreateByParentId(requestId, patch);
+    return null;
+  }
+  if (models.socketIORequest.isSocketIORequestId(requestId)) {
+    await services.socketIORequestMeta.updateOrCreateByParentId(requestId, patch);
     return null;
   }
   await services.requestMeta.updateOrCreateByParentId(requestId, patch);
@@ -32,7 +42,7 @@ export const useRequestUpdateMetaActionFetcher = createFetcherSubmitHook(
       projectId: string;
       workspaceId: string;
       requestId: string;
-      patch: Partial<RequestMeta | GrpcRequestMeta>;
+      patch: Partial<RequestMeta | GrpcRequestMeta | WebSocketRequestMeta | SocketIORequestMeta>;
     }) => {
       const url = href(
         '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/update-meta',

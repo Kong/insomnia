@@ -18,7 +18,7 @@ export function useUserService() {
     isEssential,
     isEnterpriseLike,
     canUpgrade: !isEnterpriseLike,
-    displayName: user?.name || user?.email,
+    displayName: [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email,
     isTrailing,
     trialDaysLeft,
   };

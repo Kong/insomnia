@@ -9,12 +9,13 @@ import { HydratedRouter } from 'react-router/dom';
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import { initDatabase, initServices, services } from '~/insomnia-data';
 import { database as clientDatabase } from '~/ui/database.client';
+import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { initNewOAuthSession } from './network/o-auth-2/get-token';
 import { init as initPlugins } from './plugins';
 import { applyColorScheme } from './plugins/misc';
+import { registerSyncMergeConflictListener } from './sync/vcs/insomnia-sync';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
@@ -42,6 +43,7 @@ configureFetch(options => insomniaFetch({ ...options }));
 await initPlugins();
 
 await migrateFromLocalStorage();
+registerSyncMergeConflictListener();
 
 try {
   window.showAlert = options => showModal(AlertModal, options);
@@ -129,7 +131,7 @@ if (insomniaSession) {
 const appSettings = await services.settings.getOrCreate();
 
 if (appSettings.clearOAuth2SessionOnRestart) {
-  initNewOAuthSession();
+  await clearOAuthWindowSessionId();
 }
 
 applyColorScheme(appSettings);

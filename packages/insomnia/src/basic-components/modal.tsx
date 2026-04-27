@@ -9,6 +9,7 @@ interface Props {
   onClose?: () => void;
   title?: React.ReactNode;
   closable?: boolean;
+  isDismissable?: boolean;
   className?: string;
 }
 
@@ -18,6 +19,7 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
   className,
   title,
   closable,
+  isDismissable,
   children,
 }) => {
   return (
@@ -26,7 +28,7 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
       onOpenChange={isOpen => {
         !isOpen && onClose?.();
       }}
-      isDismissable
+      isDismissable={isDismissable}
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <RAModal

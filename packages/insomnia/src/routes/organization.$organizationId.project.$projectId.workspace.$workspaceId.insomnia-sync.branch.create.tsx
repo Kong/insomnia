@@ -2,7 +2,6 @@ import { href } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -20,10 +19,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { syncItems } = await getSyncItems({ workspaceId });
 
   try {
-    const vcs = VCSInstance();
-    await vcs.fork(branchName);
+    await window.main.sync.fork(branchName);
     // Checkout new branch
-    const delta = await vcs.checkout(syncItems, branchName);
+    const delta = await window.main.sync.checkout(syncItems, branchName);
     // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta as Operation);
     delete remoteCompareCache[workspaceId];

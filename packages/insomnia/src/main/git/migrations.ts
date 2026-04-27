@@ -24,25 +24,14 @@
  * @see providers/ for provider implementations
  */
 
-import { database } from '~/common/database';
 import type { GitCredentials, GitRepository } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import type ElectronStorage from '~/main/electron-storage';
-import { initElectronStorage } from '~/main/window-utils';
+import { database, models, services } from '~/insomnia-data';
+import { getElectronStorage } from '~/main/electron-storage';
 
 const { isGitCredentialsOAuth } = models.gitRepository;
 const { isGitCredentialsV1 } = models.gitCredentials;
 
 const MIGRATION_KEY = 'GIT_CREDENTIALS_MIGRATION';
-
-let electronStorage: ElectronStorage | null = null;
-
-const getElectronStorage = () => {
-  if (!electronStorage) {
-    electronStorage = initElectronStorage();
-  }
-  return electronStorage;
-};
 
 const hasRunMigration = () => {
   const migrationStorage = getElectronStorage();

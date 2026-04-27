@@ -38,18 +38,19 @@ argument-hint: 'Provide the failing test-e2e.yml logs, a link to the failing wor
    ```
 
 4. If CI-parity passes but you still need a faster loop for investigation, switch to dev runtime:
-   ```bash
-   npm run watch:app
-   ```
-   ```bash
-   npm run test:dev -w packages/insomnia-smoke-test -- --project=Smoke
-   ```
-   Keep `watch:app` running while iterating.
+    ```bash
+    npm run watch:app
+    ```
+    ```bash
+    npm run test:dev -w packages/insomnia-smoke-test -- --project=Smoke
+    ```
+    `watch:app` is a long-running dev server. Start it in a separate terminal or detached background session, wait for it to be ready, then run `test:dev` as a second command. Do not chain `watch:app && npm run test:dev ...` because the server does not exit on success.
 
 ## Notes
 
 - CI currently runs `npm run app-build` + `npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke`.
 - Dev runtime (`watch:app` + `test:dev`) is useful for quick local triage, but not a strict CI match.
+- When using tool-driven terminals, treat `watch:app` as a persistent server process: launch it separately, keep it alive during repro, and stop it during teardown.
 - Playwright debugging options:
   - Inspector: `PWDEBUG=1 npm run test:smoke:dev`
   - API logs: `DEBUG=pw:api npm run test:smoke:dev`

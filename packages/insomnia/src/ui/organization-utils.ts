@@ -3,31 +3,26 @@ import {
   fetchTeamProjects,
   getCurrentPlan,
   getOrganizations,
-  getOrganizationStorageRule,
   getUserProfile,
   isApiError,
   type Organization,
-  type StorageRules,
 } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
 import type { Project, Workspace } from '~/insomnia-data';
-import { database, database as db, models, services } from '~/insomnia-data';
+import { database, models, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
+  type SyncVCSLike,
 } from '../sync/vcs/initialize-backend-project';
-import { VCSInstance } from '../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
-import type { VCS } from '../sync/vcs/vcs';
-
-// Create an in-memory storage to store the storage rules
-const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
+export { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 
 export function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(
@@ -93,14 +88,14 @@ export async function syncOrganizations(sessionId: string, accountId: string) {
   }
 }
 
-async function updateLocalProjectToRemote({
+export async function updateLocalProjectToRemote({
   project,
   vcs,
   sessionId,
   organizationId,
 }: {
   project: Project;
-  vcs: VCS;
+  vcs: SyncVCSLike;
   sessionId: string;
   organizationId: string;
 }) {
@@ -115,13 +110,15 @@ async function updateLocalProjectToRemote({
       remoteId: newCloudProject.id,
     });
 
-    const projectWorkspaces = await db.find<Workspace>(models.workspace.type, {
+    // For each workspace in the local project
+    const projectWorkspaces = await database.find<Workspace>('Workspace', {
       parentId: updatedProject._id,
     });
 
     for (const workspace of projectWorkspaces) {
       const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
+      // Initialize Sync on the workspace if it's not using Git sync
       try {
         if (!workspaceMeta.gitRepositoryId) {
           invariant(vcs, 'VCS must be initialized');
@@ -129,10 +126,10 @@ async function updateLocalProjectToRemote({
           await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
           await pushSnapshotOnInitialize({ vcs, workspace, project: updatedProject });
         }
-      } catch (error) {
+      } catch (e) {
         console.warn(
           'Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.',
-          error,
+          e,
         );
         // TODO: here we should show the try again dialog
       }
@@ -140,16 +137,13 @@ async function updateLocalProjectToRemote({
   } catch (error: unknown) {
     if (isApiError(error)) {
       let errorMessage = 'An unexpected error occurred while connecting the project. Please try again.';
-
       if (error.name === 'FORBIDDEN' || error.name === 'NEEDS_TO_UPGRADE') {
         errorMessage = error.message;
       }
-
       return {
         error: errorMessage,
       };
     }
-
     return {
       error: error instanceof Error ? error.message : String(error),
     };
@@ -179,58 +173,11 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
           project,
           organizationId: personalOrganizationId,
           sessionId,
-          vcs: VCSInstance(),
+          vcs: window.main.sync,
         });
       }
     }
   }
-}
-
-export const DEFAULT_STORAGE_RULES = {
-  enableCloudSync: true,
-  enableLocalVault: true,
-  enableGitSync: true,
-  isOverridden: false,
-};
-
-export async function fetchAndCacheOrganizationStorageRule(
-  organizationId: string | undefined,
-  forceFetch = false,
-): Promise<StorageRules> {
-  invariant(organizationId, 'Organization ID is required');
-
-  if (models.organization.isScratchpadOrganizationId(organizationId)) {
-    return {
-      enableCloudSync: false,
-      enableLocalVault: true,
-      enableGitSync: false,
-      isOverridden: false,
-    };
-  }
-  if (!forceFetch) {
-    const storageRules = inMemoryStorageRuleCache.get(organizationId);
-    if (storageRules) {
-      return storageRules;
-    }
-  }
-  const { id: sessionId } = await services.userSession.getOrCreate();
-
-  // Otherwise fetch from the API
-  return await getOrganizationStorageRule({
-    organizationId,
-    sessionId,
-  }).then(
-    res => {
-      if (res) {
-        inMemoryStorageRuleCache.set(organizationId, res);
-      }
-      return res || DEFAULT_STORAGE_RULES;
-    },
-    err => {
-      console.log('[storageRule] Failed to load storage rules', err.message);
-      return DEFAULT_STORAGE_RULES;
-    },
-  );
 }
 
 interface TeamProject {

@@ -459,7 +459,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                         {getWorkspaceLabel(activeWorkspace).singular}
                       </p>
                       {models.project.isRemoteProject(activeProject) && (
-                        <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
+                        <RadioGroup name="localOnly" defaultValue="true" className="mb-2 flex flex-col gap-2">
                           <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
                           <div className="flex gap-2">
                             <Radio

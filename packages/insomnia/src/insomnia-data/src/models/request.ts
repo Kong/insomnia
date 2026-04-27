@@ -15,8 +15,8 @@
 
 import { OperationTypeNode } from 'graphql';
 
+import type { OAuth1SignatureMethod } from '~/common/constants';
 import { METHOD_GET } from '~/common/constants';
-import type { OAuth1SignatureMethod } from '~/network/o-auth-1/constants';
 import { getOperationType } from '~/utils/graph-ql';
 
 import type { BaseModel } from './base-types';

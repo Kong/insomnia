@@ -2,12 +2,10 @@ import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, u
 
 import type { AuthTypeOAuth2, OAuth2ResponseType, OAuth2Token, RequestAuthentication } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
+import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
-import { getOauthRedirectUrl } from '../../../../common/constants';
-import { toKebabCase } from '../../../../common/misc';
-import accessTokenUrls from '../../../../datasets/access-token-urls';
-import authorizationUrls from '../../../../datasets/authorization-urls';
 import {
+  getOauthRedirectUrl,
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
@@ -15,9 +13,10 @@ import {
   GRANT_TYPE_PASSWORD,
   PKCE_CHALLENGE_PLAIN,
   PKCE_CHALLENGE_S256,
-} from '../../../../network/o-auth-2/constants';
-import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
-import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
+} from '../../../../common/constants';
+import { toKebabCase } from '../../../../common/misc';
+import accessTokenUrls from '../../../../datasets/access-token-urls';
+import authorizationUrls from '../../../../datasets/authorization-urls';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -427,7 +426,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
                 <div className="pad-top text-right">
                   <button
                     className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
-                    onClick={initNewOAuthSession}
+                    onClick={clearOAuthWindowSessionId}
                   >
                     Clear OAuth 2 session
                   </button>
@@ -626,7 +625,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
               try {
                 const activeAuth = getActiveOAuth2AuthFields(authentication as AuthTypeOAuth2);
                 const renderedAuthentication = (await handleRender(activeAuth)) as AuthTypeOAuth2;
-                const t = await getOAuth2Token(_id, renderedAuthentication, true);
+                const t = await window.main.getOAuth2Token(_id, renderedAuthentication, true);
                 setToken(t);
                 setLoading(false);
               } catch (err) {

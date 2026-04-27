@@ -10,7 +10,6 @@ import type { McpReadyState } from '~/main/mcp/types';
 import { _buildBearerHeader } from '~/network/authentication';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 import { getBearerAuthHeader } from '~/network/bearer-auth/get-header';
-import { getOAuth2Token } from '~/network/o-auth-2/get-token';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   type ConnectActionParams,
@@ -123,7 +122,7 @@ export const McpUrlActionBar = ({
           const { key, value } = authentication;
           headers.push({ name: key, value });
         } else if (authentication.type === 'oauth2') {
-          const oAuth2Token = await getOAuth2Token(request._id, authentication as AuthTypeOAuth2);
+          const oAuth2Token = await window.main.getOAuth2Token(request._id, authentication as AuthTypeOAuth2);
           if (oAuth2Token) {
             const token = oAuth2Token.accessToken;
             const authHeader = _buildBearerHeader(token, authentication.tokenPrefix);

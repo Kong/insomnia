@@ -31,6 +31,7 @@ export function init(): BaseGitRepository {
     hasUncommittedChanges: false,
     hasUnpushedChanges: false,
     uriNeedsMigration: true,
+    repoMigrationVersion: 0,
   };
 }
 
@@ -60,6 +61,14 @@ export interface BaseGitRepository {
   cachedGitLastAuthor: string | null;
   hasUnpushedChanges: boolean;
   uriNeedsMigration: boolean;
+  /**
+   * Tracks which version of the on-disk repo structure migration has run.
+   * When an older app version processes this document via docUpdate it will
+   * prune this field (since its init() doesn't include it), which causes the
+   * migration to re-run on the next upgrade — exactly the desired behaviour
+   * for version-rollback scenarios.
+   */
+  repoMigrationVersion: number;
 }
 
 export const isGitRepository = (model: Pick<BaseModel, 'type'>): model is GitRepository => model.type === type;
