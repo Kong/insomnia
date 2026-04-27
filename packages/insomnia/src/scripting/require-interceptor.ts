@@ -9,7 +9,7 @@ import tv4 from 'tv4';
 import * as uuid from 'uuid';
 import xml2js from 'xml2js';
 
-import { Collection as CollectionModule } from '../../insomnia-scripting-environment/src/objects';
+import { Collection as CollectionModule } from '../../../insomnia-scripting-environment/src/objects';
 
 const externalModules = new Map<string, object>([
   ['ajv', ajv],
@@ -24,20 +24,46 @@ const externalModules = new Map<string, object>([
   ['xml2js', xml2js],
 ]);
 
+// wraps `target` with a Proxy restricting access to dangerious methods within the accepted modules. 
+const blockMethods = (target: object, blocked: string[], label: string): object =>
+  new Proxy(target, {
+    get(t, prop) {
+      if (typeof prop === 'string' && blocked.includes(prop)) {
+        throw new Error(`${label}.${prop} is not available in sandbox scripts`);
+      }
+      const value = (t as any)[prop];
+      return typeof value === 'function' ? value.bind(t) : value;
+    },
+  });
+
 export const requireInterceptor = (moduleName: string): any => {
-  if (
+  if (moduleName === 'timers') {
+    // Block setImmediate 
+    return blockMethods(require('node:timers'), ['setImmediate'], 'timers');
+  } else if (moduleName === 'buffer') {
+    // Block unsafe allocation methods to prevent heap memory disclosure.
+    //  Buffer.allocUnsafe(n) / Buffer.allocUnsafeSlow(n) return a buffer backed by uninitialized memory. 
+    const bufferModule = require('node:buffer');
+    return {
+      ...bufferModule,
+      Buffer: blockMethods(bufferModule.Buffer, ['allocUnsafe', 'allocUnsafeSlow'], 'Buffer'),
+    };
+  } else if (moduleName === 'util') {
+    // Block escape utils like util.inherits and util.debuglog
+    //  util.inherits(ctor, superCtor) — directly manipulates the prototype chain (
+    //  util.debuglog(section) — conditionally writes to stderr based on the NODE_DEBUG environment variable
+    return blockMethods(require('node:util'), ['inherits', 'debuglog'], 'util');
+    
+  } else if (
     [
       // node.js modules
       'path',
       'assert',
-      'buffer',
-      'util',
       'url',
       'punycode',
       'querystring',
       'string_decoder',
       'stream',
-      'timers',
       'events',
       // follows should be npm modules
       // but they are moved to here to avoid introducing additional dependencies

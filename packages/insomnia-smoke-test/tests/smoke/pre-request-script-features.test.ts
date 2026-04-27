@@ -208,6 +208,7 @@ test.describe('pre-request features tests', () => {
         }),
     };
   });
+
   test('run test cases', async ({ page }) => {
     for (const tc of testCases) {
       console.log(`Running test case: ${tc.name}`);
@@ -230,6 +231,7 @@ test.describe('pre-request features tests', () => {
       tc.customVerify(bodyJson);
     }
   });
+
   test('send request with content type', async ({ page }) => {
     await page.getByTestId('settings-button').click();
     await page.getByTestId('dataFolders').click();
@@ -660,14 +662,17 @@ test.describe('unhappy paths', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify
-    await expect.soft(page.getByTestId('response-pane')).toContainText('my custom error');
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .toContainText(`my custom error`);
 
     await page.getByRole('tab', { name: 'Scripts' }).click();
     await page.getByTestId('CodeEditor').getByRole('textbox').press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
     await editor.fill(`insomnia.INVALID_FIELD.set('', '')`);
 
-    await page.getByRole('tab', { name: 'Body' }).click();
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -676,5 +681,176 @@ test.describe('unhappy paths', () => {
     await expect
       .soft(page.getByTestId('response-pane'))
       .toContainText(`Cannot read properties of undefined (reading 'set')`);
+  });
+});
+
+test.describe('sandbox features', () => {
+  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
+  test.beforeEach(async ({ app, page }) => {
+    const text = await loadFixture('pre-request-collection.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  });
+
+  // Blocked Roots / Scopes group: 'this' is blocked. 
+  test('blocked roots / scopes group', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    
+    // enter script that accesses a property on 'this'. 
+    await editor.fill(`insomnia.environment.set('result', String(this?.process));`);
+
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify blocked-root error
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .toContainText("The script was blocked because it used 'this'.");
+
+    // navigate to Settings → Scripting, disable the "Scopes" blocked roots group
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const scopesSwitch = page.locator('div:has(> h4:has-text("Scopes")) label[data-react-aria-pressable]');
+    await scopesSwitch.scrollIntoViewIfNeeded();
+    await scopesSwitch.click();
+
+    await page.locator('.app').press('Escape');
+
+    // re-send — no sandbox error; this === undefined. 
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .not.toContainText("The script was blocked because it used 'this'.");
+    await expect
+      .soft(page.locator('[data-testid="response-status-tag"]:visible'))
+      .toContainText('200 OK');
+  });
+
+  // Blocked Properties / Prototype Mutation group: 'prototype' is blocked. 
+  test('blocked properties / prototype mutation group', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    // enter script that accesses Object.prototype. 
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`insomnia.environment.set('result', typeof Object.prototype.toString);`);
+    
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+    
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify blocked-property error
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .toContainText("The script was blocked because it used the property 'prototype'.");
+
+    // navigate to Settings → Scripting, disable the "Prototype Mutation" blocked properties group
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const protoMutationSwitch = page.locator('div:has(> h4:has-text("Prototype Mutation")) label[data-react-aria-pressable]');
+    await protoMutationSwitch.scrollIntoViewIfNeeded();
+    await protoMutationSwitch.click();
+    await expect.soft(protoMutationSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    // re-send — prototype access now allowed; Object.prototype.toString is a function
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .not.toContainText("The script was blocked because it used the property 'prototype'.");
+    await expect
+      .soft(page.locator('[data-testid="response-status-tag"]:visible'))
+      .toContainText('200 OK');
+  });
+
+  // Mask Rules / Runtime APIs group: 'Function' is masked to undefined at runtime.
+  test('Mask Rules / Runtime APIs group.', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    // enter script that uses the Function constructor, only masked at runtime. 
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`const f = new Function('return 42'); insomnia.environment.set('result', f());`);
+    
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
+    // send — Function masked to undefined → V8 uses the identifier name: "Function is not a constructor"
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .toContainText('Function is not a constructor');
+
+    // navigate to Settings → Scripting, disable the "Runtime APIs" mask group
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const runtimeApisSwitch = page.locator('div:has(> h4:has-text("Runtime APIs")) label[data-react-aria-pressable]');
+    await runtimeApisSwitch.scrollIntoViewIfNeeded();
+    await runtimeApisSwitch.click();
+    await expect.soft(runtimeApisSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    // re-send — Function is now the real constructor; script returns 42
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .not.toContainText('Function is not a constructor');
+    await expect
+      .soft(page.locator('[data-testid="response-status-tag"]:visible'))
+      .toContainText('200 OK');
+  });
+
+  test('Layered security / unblocked properties resolve undefined', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    // enter script that accesses a property on 'process'. 
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`insomnia.environment.set('result', String(process?.version));`);
+    
+    // CodeMirror debounces onChange by DEBOUNCE_MILLIS (100ms).
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+    
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    // verify blocked-root error
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .toContainText("The script was blocked because it used 'process'.");
+
+    // navigate to Settings → Scripting, disable only the "Node.js Internals" BLOCKED ROOTS group.
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const nodeInternalsSwitch = page.locator('xpath=//h4[normalize-space(text())="Node.js Internals"]/following-sibling::div[1]//label[@data-react-aria-pressable]');
+    await nodeInternalsSwitch.scrollIntoViewIfNeeded();
+    await nodeInternalsSwitch.click();
+    await expect.soft(nodeInternalsSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    // process?.version === undefined. 
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .not.toContainText("The script was blocked because it used 'process'.");
+    await expect
+      .soft(page.locator('[data-testid="response-status-tag"]:visible'))
+      .toContainText('200 OK');
   });
 });

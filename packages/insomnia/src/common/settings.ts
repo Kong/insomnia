@@ -163,6 +163,16 @@ export interface Settings {
   saveVaultKeyToOSSecretManager: boolean;
   vaultSecretCacheDuration: number;
   dataFolders: string[];
+  // AST and shadowing check.
+  scriptSandboxEnabled: boolean;
+  // Wraps the user script in 'use strict', preventing accidental globals and making `this` undefined.
+  scriptStrictModeEnabled: boolean;
+  // Names of security rules that have been individually disabled.
+  disabledSecurityRules: string[];
+  // AST blocked-property names that have been individually disabled.
+  disabledBlockedProperties: string[];
+  // AST blocked-root names that have been individually disabled.
+  disabledBlockedRoots: string[];
   /** Custom npm registry URL for plugin installation (e.g., corporate mirror). Empty string uses the default https://registry.npmjs.org/. */
   npmRegistryUrl: string;
 }

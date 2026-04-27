@@ -11,6 +11,7 @@ import { SegmentEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { KonnectSettings } from '~/ui/components/settings/konnect-settings';
+import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -31,7 +32,7 @@ export interface SettingsModalHandle {
   show: (options?: { tab?: SettingsModalTabKey }) => void;
 }
 
-type SettingsModalTabKey = 'data' | 'keyboard' | 'themes' | 'plugins' | 'general' | 'proxy' | 'credentials' | 'ai' | 'konnect';
+type SettingsModalTabKey = 'data' | 'keyboard' | 'themes' | 'plugins' | 'general' | 'proxy' | 'credentials' | 'ai' | 'scripting' | 'konnect';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
@@ -153,6 +154,12 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             >
               Credentials
             </Tab>
+            <Tab
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+              id="scripting"
+            >
+              Scripting
+            </Tab>
             {shouldShowAiSettingsTab && (
               <Tab
                 className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
@@ -223,6 +230,9 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="credentials">
             <CredentialsSettings />
+          </TabPanel>
+          <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="scripting">
+            <ScriptingSettings />
           </TabPanel>
           {shouldShowAiSettingsTab && (
             <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="ai">
