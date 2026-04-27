@@ -36,7 +36,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
-import { SegmentEvent } from '~/ui/analytics';
+import { PENDING_IMPORT_ATTRIBUTION_KEY, SegmentEvent, trackImportEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
@@ -372,18 +372,25 @@ const Root = () => {
         // Clean up the flag set during deep-link replay so it never leaks
         // into later modal evaluations within the same session.
         window.sessionStorage.removeItem('suppressWelcomeModals');
+
+        const importSource = params.source?.trim() || undefined;
+        const importSourceUrl = params.sourceUrl?.trim() || undefined;
+        const hasAttribution = !!(importSource || importSourceUrl);
+        if (hasAttribution) {
+          window.sessionStorage.setItem(
+            PENDING_IMPORT_ATTRIBUTION_KEY,
+            JSON.stringify({ importSource, importSourceUrl }),
+          );
+        }
+
         const userSession = await services.userSession.getOrCreate();
         if (!userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
           window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
+          trackImportEvent(SegmentEvent.importLoginRequired);
           return navigate(href('/auth/login'));
         }
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.importStarted,
-          properties: {
-            source: 'import-url',
-          },
-        });
+        trackImportEvent(SegmentEvent.importStarted, { source: 'import-url' });
 
         if (params.uri) {
           return setImportObject({
@@ -629,6 +636,7 @@ const Root = () => {
     if (pendingDeepLink && organizationId && organizationId !== SCRATCHPAD_ORGANIZATION_ID) {
       window.sessionStorage.removeItem('pendingDeepLinkAfterAuthorize');
       window.sessionStorage.setItem('suppressWelcomeModals', 'true');
+      trackImportEvent(SegmentEvent.importResumedAfterLogin);
       window.main.openDeepLink(pendingDeepLink);
     }
   }, [organizationId]);

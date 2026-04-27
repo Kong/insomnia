@@ -26,7 +26,7 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
-import { SegmentEvent } from '~/ui/analytics';
+import { type ImportAttribution, importAttributionKey, SegmentEvent } from '~/ui/analytics';
 import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -368,6 +368,23 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               count_tests: response.requestTestResults?.length || 0,
             },
           });
+
+          const attributionStorageKey = importAttributionKey(requestId);
+          const jsonImportAttribution = window.localStorage.getItem(attributionStorageKey);
+          if (jsonImportAttribution) {
+            try {
+              const importAttribution = JSON.parse(jsonImportAttribution) as ImportAttribution;
+              window.main.trackSegmentEvent({
+                event: SegmentEvent.importedRequestFirstSend,
+                properties: {
+                  ...importAttribution,
+                  protocol: activeRequest.type,
+                },
+              });
+            } finally {
+              window.localStorage.removeItem(attributionStorageKey);
+            }
+          }
         }
       }
     }
