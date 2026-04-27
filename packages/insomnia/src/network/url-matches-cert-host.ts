@@ -1,5 +1,3 @@
-import { parse as urlParse, URL } from 'node:url';
-
 import { escapeRegex } from '../common/misc';
 import { setDefaultProtocol } from '../utils/url/protocol';
 
@@ -7,16 +5,17 @@ const DEFAULT_PORT = 443;
 
 export function urlMatchesCertHost(certificateHost: string, requestUrl: string, needCheckPort = true) {
   const cHostWithProtocol = setDefaultProtocol(certificateHost, 'https:');
-  const { hostname, port } = urlParse(requestUrl);
-  let certificateHostWithProtocol = new URL('https://example.com');
+  let requestUrlWithProtocol: URL;
+  let certificateHostWithProtocol: URL;
   try {
+    requestUrlWithProtocol = new URL(requestUrl);
     certificateHostWithProtocol = new URL(cHostWithProtocol);
   } catch {
-    // return false early if the certificate host is invalid
+    // Return false early if either URL is invalid.
     return false;
   }
+  const { hostname, port } = requestUrlWithProtocol;
   const { hostname: cHostname, port: cPort } = certificateHostWithProtocol;
-  // @ts-expect-error -- TSCONVERSION `parseInt(null)` returns `NaN`
   const assumedPort = Number.parseInt(port) || DEFAULT_PORT;
   const assumedCPort = Number.parseInt(cPort) || DEFAULT_PORT;
   const cHostnameRegex = escapeRegex(cHostname || '').replace(/\\\*/g, '.*');
