@@ -147,7 +147,11 @@ export interface RendererToMainBridgeAPI {
     bodyCompression?: 'zip' | null;
   }) => Promise<string>;
   getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<RequestHeader | undefined>;
-  getOAuth2Token: (requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => Promise<OAuth2Token | undefined>;
+  getOAuth2Token: (
+    requestId: string,
+    authentication: AuthTypeOAuth2,
+    forceRefresh?: boolean,
+  ) => Promise<OAuth2Token | undefined>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -339,6 +343,8 @@ export function registerMainHandlers() {
       process.on('error', err => {
         console.error('[lint-process] error:', err);
         reject({ error: err.toString() });
+        process?.kill();
+        process = null;
       });
 
       process.postMessage({ documentContent, rulesetPath });
