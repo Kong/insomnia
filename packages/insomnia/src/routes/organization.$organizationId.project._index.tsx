@@ -4,7 +4,7 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { href, redirect, useLoaderData, useNavigate, useParams } from 'react-router';
 
 import { logout } from '~/account/session';
-import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import { DEFAULT_SIDEBAR_SIZE, isKonnectSyncEnabled } from '~/common/constants';
 import type { GitRepository, Project } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
@@ -19,7 +19,6 @@ import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { NoSelectedProjectView } from '~/ui/components/panes/no-selected-project-view';
 import { OrganizationSelect } from '~/ui/components/project/organization-select';
 import { ProjectListSidebar } from '~/ui/components/project/project-list-sidebar';
-import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
@@ -122,13 +121,12 @@ const Component = () => {
                 projects={projectsWithPresence}
                 storageRules={storageRules}
                 onCreateProject={() => setIsNewProjectModalOpen(true)}
-                konnectSyncEnabled={features.konnectSync.enabled}
+                konnectSyncEnabled={isKonnectSyncEnabled() && features.konnectSync.enabled}
               />
             </div>
           </Panel>
           <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
           <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
-            <OrganizationTabList showActiveStatus={false} />
             {projects.length > 0 ? <NoSelectedProjectView /> : <NoProjectView storageRules={storageRules} />}
           </Panel>
         </PanelGroup>

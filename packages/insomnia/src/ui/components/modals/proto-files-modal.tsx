@@ -8,7 +8,6 @@ import * as models from '~/models';
 
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
-import { writeProtoFile } from '../../../network/grpc/write-proto-file';
 import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -245,15 +244,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
 
       for (const protoFile of loadedFiles) {
         try {
-          const { filePath, dirs } = await writeProtoFile(protoFile);
-          protoLoader.load(filePath, {
-            keepCase: true,
-            longs: String,
-            enums: String,
-            defaults: true,
-            oneofs: true,
-            includeDirs: dirs,
-          });
+          await window.main.grpc.writeProtoFile(protoFile._id);
         } catch (error) {
           showError({
             title: 'Invalid Proto File',

@@ -164,8 +164,10 @@ app.use(
 );
 
 startWebSocketServer(
-  app.listen(port, () => {
+  app.listen(port, '::', () => {
     console.log(`Listening at http://localhost:${port}`);
+    console.log(`Listening at http://127.0.0.1:${port}`);
+    console.log(`Listening at http://[::1]:${port}`);
     console.log(`Listening at ws://localhost:${port}`);
   }),
 );
@@ -180,8 +182,10 @@ startWebSocketServer(
       rejectUnauthorized: false,
     },
     app,
-  ).listen(httpsPort, () => {
+  ).listen(httpsPort, '::', () => {
     console.log(`Listening at https://localhost:${httpsPort}`);
+    console.log(`Listening at https://127.0.0.1:${httpsPort}`);
+    console.log(`Listening at https://[::1]:${httpsPort}`);
     console.log(`Listening at wss://localhost:${httpsPort}`);
   }),
 );

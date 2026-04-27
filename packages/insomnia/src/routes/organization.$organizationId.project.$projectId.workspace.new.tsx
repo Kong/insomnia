@@ -8,8 +8,6 @@ import { services } from '~/insomnia-data';
 import * as models from '~/models';
 import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
-import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { invariant } from '~/utils/invariant';
@@ -166,10 +164,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       !models.project.isGitProject(project) &&
       !models.project.isLocalProject(project)
     ) {
-      const vcs = VCSInstance();
-      await initializeLocalBackendProjectAndMarkForSync({
-        vcs,
-        workspace,
+      await window.main.initializeWorkspaceBackendProject({
+        workspaceId: workspace._id,
       });
     }
 
@@ -351,10 +347,8 @@ async function createMockServer(
 
     const { id } = await services.userSession.getOrCreate();
     if (id && !workspaceMeta.gitRepositoryId) {
-      const vcs = VCSInstance();
-      await initializeLocalBackendProjectAndMarkForSync({
-        vcs,
-        workspace,
+      await window.main.initializeWorkspaceBackendProject({
+        workspaceId: workspace._id,
       });
     }
 

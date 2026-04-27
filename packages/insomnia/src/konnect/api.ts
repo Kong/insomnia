@@ -10,6 +10,12 @@ const MAX_RETRY_ATTEMPTS = 5;
 const BASE_DELAY_MS = 1000;
 const MAX_DELAY_MS = 30_000;
 
+export interface KonnectProxyUrl {
+  host: string;
+  port: number;
+  protocol: string;
+}
+
 export interface KonnectControlPlane {
   id: string;
   name: string;
@@ -18,6 +24,7 @@ export interface KonnectControlPlane {
     cluster_type: string;
     control_plane_endpoint: string;
   };
+  proxy_urls?: KonnectProxyUrl[] | null;
 }
 
 export interface KonnectService {
@@ -69,34 +76,6 @@ async function fetchWithRetry(url: string, pat: string, signal?: AbortSignal): P
     attempt++;
   }
 }
-
-export function extractRegionFromEndpoint(endpoint: string): string {
-  // e.g. "https://abc123.us.cp0.konghq.com" → "us"
-  try {
-    const hostname = new URL(endpoint).hostname;
-    const parts = hostname.split('.');
-    // Pattern: <id>.<region>.cp0.konghq.com
-    if (parts.length >= 4 && parts[parts.length - 2] === 'konghq' && parts[parts.length - 1] === 'com') {
-      if (parts[parts.length - 3] === 'cp0') {
-        return parts[parts.length - 4];
-      }
-      console.warn(`[konnect] Unexpected endpoint hostname format, defaulting region to "us": ${hostname}`);
-    }
-  } catch {
-    console.warn(`[konnect] Malformed control_plane_endpoint, defaulting region to "us": ${endpoint}`);
-  }
-  return 'us';
-}
-
-/**
- * Names of the proxy environment variables Konnect sync manages.
- * All are created as empty strings on first sync — the user must fill them in manually.
- *
- * - `proxy_host`: hostname only (no port), used in http/https/ws/wss URLs.
- * - `grpc_proxy_host`: host:port, used in grpc:// URLs.
- * - `grpcs_proxy_host`: host:port, used in grpcs:// URLs.
- */
-export const KONNECT_PROXY_VAR_NAMES = ['proxy_host', 'grpc_proxy_host', 'grpcs_proxy_host'] as const;
 
 export interface PatValidationResult {
   valid: boolean;

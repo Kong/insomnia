@@ -1,10 +1,14 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
-import type { Services } from '~/insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
+import { invokeWithNormalizedError } from '~/main/ipc/electron';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
+import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 
+import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
+import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { AIFeatureNames } from './main/llm-config-service';
@@ -12,80 +16,81 @@ import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
+import type { RenderedRequest } from './templating/types';
 import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 const webSocket: WebSocketBridgeAPI = {
-  open: options => ipcRenderer.invoke('webSocket.open', options),
+  open: options => invokeWithNormalizedError('webSocket.open', options),
   close: options => ipcRenderer.send('webSocket.close', options),
   closeAll: () => ipcRenderer.send('webSocket.closeAll'),
   readyState: {
-    getCurrent: options => ipcRenderer.invoke('webSocket.readyState', options),
+    getCurrent: options => invokeWithNormalizedError('webSocket.readyState', options),
   },
   event: {
-    findMany: options => ipcRenderer.invoke('webSocket.event.findMany', options),
-    send: options => ipcRenderer.invoke('webSocket.event.send', options),
+    findMany: options => invokeWithNormalizedError('webSocket.event.findMany', options),
+    send: options => invokeWithNormalizedError('webSocket.event.send', options),
   },
 };
 const curl: CurlBridgeAPI = {
-  open: options => ipcRenderer.invoke('curl.open', options),
+  open: options => invokeWithNormalizedError('curl.open', options),
   close: options => ipcRenderer.send('curl.close', options),
   closeAll: () => ipcRenderer.send('curl.closeAll'),
   readyState: {
-    getCurrent: options => ipcRenderer.invoke('curl.readyState', options),
+    getCurrent: options => invokeWithNormalizedError('curl.readyState', options),
   },
   event: {
-    findMany: options => ipcRenderer.invoke('curl.event.findMany', options),
+    findMany: options => invokeWithNormalizedError('curl.event.findMany', options),
   },
 };
 
 const socketIO: SocketIOBridgeAPI = {
-  open: options => ipcRenderer.invoke('socketIO.open', options),
+  open: options => invokeWithNormalizedError('socketIO.open', options),
   readyState: {
-    getCurrent: options => ipcRenderer.invoke('socketIO.readyState', options),
+    getCurrent: options => invokeWithNormalizedError('socketIO.readyState', options),
   },
   close: options => ipcRenderer.send('socketIO.close', options),
   closeAll: () => ipcRenderer.send('socketIO.closeAll'),
   event: {
-    findMany: options => ipcRenderer.invoke('socketIO.event.findMany', options),
-    send: options => ipcRenderer.invoke('socketIO.event.send', options),
+    findMany: options => invokeWithNormalizedError('socketIO.event.findMany', options),
+    send: options => invokeWithNormalizedError('socketIO.event.send', options),
     on: options => ipcRenderer.send('socketIO.event.on', options),
     off: options => ipcRenderer.send('socketIO.event.off', options),
   },
 };
 
 const mcp: McpBridgeAPI = {
-  connect: options => ipcRenderer.invoke('mcp.connect', options),
-  close: options => ipcRenderer.invoke('mcp.close', options),
+  connect: options => invokeWithNormalizedError('mcp.connect', options),
+  close: options => invokeWithNormalizedError('mcp.close', options),
   closeAll: () => ipcRenderer.send('mcp.closeAll'),
   authConfirmation: confirmed => ipcRenderer.send('mcp.authConfirmed', confirmed),
   primitive: {
-    listTools: options => ipcRenderer.invoke('mcp.primitive.listTools', options),
-    callTool: options => ipcRenderer.invoke('mcp.primitive.callTool', options),
-    listResources: options => ipcRenderer.invoke('mcp.primitive.listResources', options),
-    listResourceTemplates: options => ipcRenderer.invoke('mcp.primitive.listResourceTemplates', options),
-    readResource: options => ipcRenderer.invoke('mcp.primitive.readResource', options),
-    subscribeResource: options => ipcRenderer.invoke('mcp.primitive.subscribeResource', options),
-    unsubscribeResource: options => ipcRenderer.invoke('mcp.primitive.unsubscribeResource', options),
-    listPrompts: options => ipcRenderer.invoke('mcp.primitive.listPrompts', options),
-    getPrompt: options => ipcRenderer.invoke('mcp.primitive.getPrompt', options),
+    listTools: options => invokeWithNormalizedError('mcp.primitive.listTools', options),
+    callTool: options => invokeWithNormalizedError('mcp.primitive.callTool', options),
+    listResources: options => invokeWithNormalizedError('mcp.primitive.listResources', options),
+    listResourceTemplates: options => invokeWithNormalizedError('mcp.primitive.listResourceTemplates', options),
+    readResource: options => invokeWithNormalizedError('mcp.primitive.readResource', options),
+    subscribeResource: options => invokeWithNormalizedError('mcp.primitive.subscribeResource', options),
+    unsubscribeResource: options => invokeWithNormalizedError('mcp.primitive.unsubscribeResource', options),
+    listPrompts: options => invokeWithNormalizedError('mcp.primitive.listPrompts', options),
+    getPrompt: options => invokeWithNormalizedError('mcp.primitive.getPrompt', options),
   },
   notification: {
-    rootListChange: options => ipcRenderer.invoke('mcp.notification.rootListChange', options),
+    rootListChange: options => invokeWithNormalizedError('mcp.notification.rootListChange', options),
   },
   readyState: {
-    getCurrent: options => ipcRenderer.invoke('mcp.readyState', options),
+    getCurrent: options => invokeWithNormalizedError('mcp.readyState', options),
   },
   client: {
     responseElicitationRequest: options => ipcRenderer.send('mcp.client.responseElicitationRequest', options),
     responseSamplingRequest: options => ipcRenderer.send('mcp.client.responseSamplingRequest', options),
-    hasRequestResponded: options => ipcRenderer.invoke('mcp.client.hasRequestResponded', options),
-    cancelRequest: options => ipcRenderer.invoke('mcp.client.cancelRequest', options),
+    hasRequestResponded: options => invokeWithNormalizedError('mcp.client.hasRequestResponded', options),
+    cancelRequest: options => invokeWithNormalizedError('mcp.client.cancelRequest', options),
   },
   event: {
-    findMany: options => ipcRenderer.invoke('mcp.event.findMany', options),
-    findNotifications: options => ipcRenderer.invoke('mcp.event.findNotifications', options),
-    findPendingEvents: options => ipcRenderer.invoke('mcp.event.findPendingEvents', options),
+    findMany: options => invokeWithNormalizedError('mcp.event.findMany', options),
+    findNotifications: options => invokeWithNormalizedError('mcp.event.findNotifications', options),
+    findPendingEvents: options => invokeWithNormalizedError('mcp.event.findPendingEvents', options),
   },
 };
 
@@ -95,72 +100,135 @@ const grpc: gRPCBridgeAPI = {
   commit: options => ipcRenderer.send('grpc.commit', options),
   cancel: options => ipcRenderer.send('grpc.cancel', options),
   closeAll: () => ipcRenderer.send('grpc.closeAll'),
-  loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
-  loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
+  loadMethods: options => invokeWithNormalizedError('grpc.loadMethods', options),
+  loadMethodsFromReflection: options => invokeWithNormalizedError('grpc.loadMethodsFromReflection', options),
+  writeProtoFile: protoFileId => invokeWithNormalizedError('grpc.writeProtoFile', protoFileId),
 };
 
 const secretStorage: secretStorageBridgeAPI = {
-  setSecret: (key, secret) => ipcRenderer.invoke('secretStorage.setSecret', key, secret),
-  getSecret: key => ipcRenderer.invoke('secretStorage.getSecret', key),
-  deleteSecret: key => ipcRenderer.invoke('secretStorage.deleteSecret', key),
-  encryptString: raw => ipcRenderer.invoke('secretStorage.encryptString', raw),
-  decryptString: cipherText => ipcRenderer.invoke('secretStorage.decryptString', cipherText),
+  setSecret: (key, secret) => invokeWithNormalizedError('secretStorage.setSecret', key, secret),
+  getSecret: key => invokeWithNormalizedError('secretStorage.getSecret', key),
+  deleteSecret: key => invokeWithNormalizedError('secretStorage.deleteSecret', key),
+  encryptString: raw => invokeWithNormalizedError('secretStorage.encryptString', raw),
+  decryptString: cipherText => invokeWithNormalizedError('secretStorage.decryptString', cipherText),
+};
+
+const electronStorage: electronStorageBridgeAPI = {
+  getItem: key => invokeWithNormalizedError('electronStorage.getItem', key),
+  setItem: (key, value) => invokeWithNormalizedError('electronStorage.setItem', key, value),
+};
+
+const invokeSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
+  try {
+    return (await invokeWithNormalizedError('sync.invoke', methodName, ...args)) as T;
+  } catch (error) {
+    if (isUserAbortResolveMergeConflictError(error)) {
+      throw new UserAbortResolveMergeConflictError(
+        'message' in error && typeof error.message === 'string' ? error.message : undefined,
+      );
+    }
+
+    throw error;
+  }
+};
+
+const sync: SyncBridgeAPI = {
+  archiveProject: () => invokeSyncMethod('archiveProject'),
+  checkout: (...args) => invokeSyncMethod('checkout', ...args),
+  compareRemoteBranch: () => invokeSyncMethod('compareRemoteBranch'),
+  fork: (...args) => invokeSyncMethod('fork', ...args),
+  getActiveBackendProject: () => invokeSyncMethod('getActiveBackendProject'),
+  getBranchNames: () => invokeSyncMethod('getBranchNames'),
+  getCurrentBranchName: () => invokeSyncMethod('getCurrentBranchName'),
+  getHistory: (...args) => invokeSyncMethod('getHistory', ...args),
+  getHistoryCount: () => invokeSyncMethod('getHistoryCount'),
+  getRemoteBranchNames: () => invokeSyncMethod('getRemoteBranchNames'),
+  getVersion: () => invokeSyncMethod('getVersion'),
+  hasBackendProject: () => invokeSyncMethod('hasBackendProject'),
+  localBackendProjects: () => invokeSyncMethod('localBackendProjects'),
+  merge: (...args) => invokeSyncMethod('merge', ...args),
+  pull: (...args) => invokeSyncMethod('pull', ...args),
+  pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
+  push: (...args) => invokeSyncMethod('push', ...args),
+  remoteBackendProjects: (...args) => invokeSyncMethod('remoteBackendProjects', ...args),
+  removeBackendProjectsForRoot: (...args) => invokeSyncMethod('removeBackendProjectsForRoot', ...args),
+  removeBranch: (...args) => invokeSyncMethod('removeBranch', ...args),
+  removeRemoteBranch: (...args) => invokeSyncMethod('removeRemoteBranch', ...args),
+  rollback: (...args) => invokeSyncMethod('rollback', ...args),
+  rollbackToLatest: (...args) => invokeSyncMethod('rollbackToLatest', ...args),
+  resolveConflict: options => ipcRenderer.send('sync.resolveConflict', options),
+  cancelConflict: options => ipcRenderer.send('sync.cancelConflict', options),
+  stage: (...args) => invokeSyncMethod('stage', ...args),
+  status: (...args) => invokeSyncMethod('status', ...args),
+  switchAndCreateBackendProjectIfNotExist: (...args) =>
+    invokeSyncMethod('switchAndCreateBackendProjectIfNotExist', ...args),
+  takeSnapshot: (...args) => invokeSyncMethod('takeSnapshot', ...args),
+  unstage: (...args) => invokeSyncMethod('unstage', ...args),
+  on: (channel, listener) => {
+    ipcRenderer.on(channel, listener);
+    return () => ipcRenderer.removeListener(channel, listener);
+  },
 };
 
 const git: GitServiceAPI = {
-  loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
-  getGitBranches: options => ipcRenderer.invoke('git.getGitBranches', options),
-  fetchGitRemoteBranches: options => ipcRenderer.invoke('git.fetchGitRemoteBranches', options),
-  validateGitRepositoryCredentials: options => ipcRenderer.invoke('git.validateGitRepositoryCredentials', options),
-  validateGitCredentialById: options => ipcRenderer.invoke('git.validateGitCredentialById', options),
-  gitFetchAction: options => ipcRenderer.invoke('git.gitFetchAction', options),
-  gitLogLoader: options => ipcRenderer.invoke('git.gitLogLoader', options),
-  gitChangesLoader: options => ipcRenderer.invoke('git.gitChangesLoader', options),
-  canPushLoader: options => ipcRenderer.invoke('git.canPushLoader', options),
-  cloneGitRepo: options => ipcRenderer.invoke('git.cloneGitRepo', options),
-  initGitRepoClone: options => ipcRenderer.invoke('git.initGitRepoClone', options),
-  updateGitRepo: options => ipcRenderer.invoke('git.updateGitRepo', options),
-  resetGitRepo: options => ipcRenderer.invoke('git.resetGitRepo', options),
-  commitToGitRepo: options => ipcRenderer.invoke('git.commitToGitRepo', options),
-  commitAndPushToGitRepo: options => ipcRenderer.invoke('git.commitAndPushToGitRepo', options),
-  createNewGitBranch: options => ipcRenderer.invoke('git.createNewGitBranch', options),
-  checkoutGitBranch: options => ipcRenderer.invoke('git.checkoutGitBranch', options),
-  mergeGitBranch: options => ipcRenderer.invoke('git.mergeGitBranch', options),
-  deleteGitBranch: options => ipcRenderer.invoke('git.deleteGitBranch', options),
-  pushToGitRemote: options => ipcRenderer.invoke('git.pushToGitRemote', options),
-  pullFromGitRemote: options => ipcRenderer.invoke('git.pullFromGitRemote', options),
-  continueMerge: options => ipcRenderer.invoke('git.continueMerge', options),
-  discardChanges: options => ipcRenderer.invoke('git.discardChanges', options),
-  abortMerge: () => ipcRenderer.invoke('git.abortMerge'),
-  gitStatus: options => ipcRenderer.invoke('git.gitStatus', options),
-  diff: () => ipcRenderer.invoke('git.diff'),
-  multipleCommitToGitRepo: options => ipcRenderer.invoke('git.multipleCommitToGitRepo', options),
-  stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
-  unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
-  diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),
-  getRepositoryDirectoryTree: options => ipcRenderer.invoke('git.getRepositoryDirectoryTree', options),
-  migrateLegacyInsomniaFolderToFile: options => ipcRenderer.invoke('git.migrateLegacyInsomniaFolderToFile', options),
+  loadGitRepository: options => invokeWithNormalizedError('git.loadGitRepository', options),
+  getGitBranches: options => invokeWithNormalizedError('git.getGitBranches', options),
+  fetchGitRemoteBranches: options => invokeWithNormalizedError('git.fetchGitRemoteBranches', options),
+  getProjectGitFileIssues: options => invokeWithNormalizedError('git.getProjectGitFileIssues', options),
+  validateGitRepositoryCredentials: options =>
+    invokeWithNormalizedError('git.validateGitRepositoryCredentials', options),
+  validateGitCredentialById: options => invokeWithNormalizedError('git.validateGitCredentialById', options),
+  gitFetchAction: options => invokeWithNormalizedError('git.gitFetchAction', options),
+  gitLogLoader: options => invokeWithNormalizedError('git.gitLogLoader', options),
+  gitChangesLoader: options => invokeWithNormalizedError('git.gitChangesLoader', options),
+  canPushLoader: options => invokeWithNormalizedError('git.canPushLoader', options),
+  cloneGitRepo: options => invokeWithNormalizedError('git.cloneGitRepo', options),
+  initGitRepoClone: options => invokeWithNormalizedError('git.initGitRepoClone', options),
+  updateGitRepo: options => invokeWithNormalizedError('git.updateGitRepo', options),
+  resetGitRepo: options => invokeWithNormalizedError('git.resetGitRepo', options),
+  commitToGitRepo: options => invokeWithNormalizedError('git.commitToGitRepo', options),
+  commitAndPushToGitRepo: options => invokeWithNormalizedError('git.commitAndPushToGitRepo', options),
+  createNewGitBranch: options => invokeWithNormalizedError('git.createNewGitBranch', options),
+  checkoutGitBranch: options => invokeWithNormalizedError('git.checkoutGitBranch', options),
+  mergeGitBranch: options => invokeWithNormalizedError('git.mergeGitBranch', options),
+  deleteGitBranch: options => invokeWithNormalizedError('git.deleteGitBranch', options),
+  pushToGitRemote: options => invokeWithNormalizedError('git.pushToGitRemote', options),
+  pullFromGitRemote: options => invokeWithNormalizedError('git.pullFromGitRemote', options),
+  continueMerge: options => invokeWithNormalizedError('git.continueMerge', options),
+  discardChanges: options => invokeWithNormalizedError('git.discardChanges', options),
+  abortMerge: () => invokeWithNormalizedError('git.abortMerge'),
+  gitStatus: options => invokeWithNormalizedError('git.gitStatus', options),
+  diff: () => invokeWithNormalizedError('git.diff'),
+  multipleCommitToGitRepo: options => invokeWithNormalizedError('git.multipleCommitToGitRepo', options),
+  stageChanges: options => invokeWithNormalizedError('git.stageChanges', options),
+  unstageChanges: options => invokeWithNormalizedError('git.unstageChanges', options),
+  diffFileLoader: options => invokeWithNormalizedError('git.diffFileLoader', options),
+  getRepositoryDirectoryTree: options => invokeWithNormalizedError('git.getRepositoryDirectoryTree', options),
+  migrateLegacyInsomniaFolderToFile: options =>
+    invokeWithNormalizedError('git.migrateLegacyInsomniaFolderToFile', options),
 
-  listGitProviders: () => ipcRenderer.invoke('git.listGitProviders'),
-  initSignInToGitProvider: options => ipcRenderer.invoke('git.initSignInToGitProvider', options),
-  completeSignInToGitProvider: options => ipcRenderer.invoke('git.completeSignInToGitProvider', options),
-  getGitProviderRepositories: options => ipcRenderer.invoke('git.getGitProviderRepositories', options),
-  getGitProviderEmails: options => ipcRenderer.invoke('git.getGitProviderEmails', options),
-  getCurrentBranchByRepositoryId: options => ipcRenderer.invoke('git.getCurrentBranchByRepositoryId', options),
+  listGitProviders: () => invokeWithNormalizedError('git.listGitProviders'),
+  initSignInToGitProvider: options => invokeWithNormalizedError('git.initSignInToGitProvider', options),
+  completeSignInToGitProvider: options => invokeWithNormalizedError('git.completeSignInToGitProvider', options),
+  getGitProviderRepositories: options => invokeWithNormalizedError('git.getGitProviderRepositories', options),
+  getGitProviderEmails: options => invokeWithNormalizedError('git.getGitProviderEmails', options),
+  getCurrentBranchByRepositoryId: options => invokeWithNormalizedError('git.getCurrentBranchByRepositoryId', options),
+  getBranchRemoteInfo: options => invokeWithNormalizedError('git.getBranchRemoteInfo', options),
+  runAllGitRepoMigrations: () => invokeWithNormalizedError('git.runAllGitRepoMigrations'),
 };
 
 const llm: LLMConfigServiceAPI = {
-  getActiveBackend: () => ipcRenderer.invoke('llm.getActiveBackend'),
-  setActiveBackend: (backend: LLMBackend) => ipcRenderer.invoke('llm.setActiveBackend', backend),
-  clearActiveBackend: () => ipcRenderer.invoke('llm.clearActiveBackend'),
-  getBackendConfig: (backend: LLMBackend) => ipcRenderer.invoke('llm.getBackendConfig', backend),
+  getActiveBackend: () => invokeWithNormalizedError('llm.getActiveBackend'),
+  setActiveBackend: (backend: LLMBackend) => invokeWithNormalizedError('llm.setActiveBackend', backend),
+  clearActiveBackend: () => invokeWithNormalizedError('llm.clearActiveBackend'),
+  getBackendConfig: (backend: LLMBackend) => invokeWithNormalizedError('llm.getBackendConfig', backend),
   updateBackendConfig: (backend: LLMBackend, config: Partial<LLMConfig>) =>
-    ipcRenderer.invoke('llm.updateBackendConfig', backend, config),
-  getAllConfigurations: () => ipcRenderer.invoke('llm.getAllConfigurations'),
-  getCurrentConfig: () => ipcRenderer.invoke('llm.getCurrentConfig'),
-  getAIFeatureEnabled: (feature: AIFeatureNames) => ipcRenderer.invoke('llm.getAIFeatureEnabled', feature),
+    invokeWithNormalizedError('llm.updateBackendConfig', backend, config),
+  getAllConfigurations: () => invokeWithNormalizedError('llm.getAllConfigurations'),
+  getCurrentConfig: () => invokeWithNormalizedError('llm.getCurrentConfig'),
+  getAIFeatureEnabled: (feature: AIFeatureNames) => invokeWithNormalizedError('llm.getAIFeatureEnabled', feature),
   setAIFeatureEnabled: (feature: AIFeatureNames, enabled: boolean) =>
-    ipcRenderer.invoke('llm.setAIFeatureEnabled', feature, enabled),
+    invokeWithNormalizedError('llm.setAIFeatureEnabled', feature, enabled),
 };
 
 const main: Window['main'] = {
@@ -168,34 +236,43 @@ const main: Window['main'] = {
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
   completeExecutionStep: options => ipcRenderer.send('completeExecutionStep', options),
   updateLatestStepName: options => ipcRenderer.send('updateLatestStepName', options),
-  getExecution: options => ipcRenderer.invoke('getExecution', options),
+  getExecution: options => invokeWithNormalizedError('getExecution', options),
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),
   openDeepLink: options => ipcRenderer.send('openDeepLink', options),
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
-  backup: () => ipcRenderer.invoke('backup'),
-  restoreBackup: options => ipcRenderer.invoke('restoreBackup', options),
-  authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
-  authorizeUserInDefaultBrowser: options => ipcRenderer.invoke('authorizeUserInDefaultBrowser', options),
-  onDefaultBrowserOAuthRedirect: options => ipcRenderer.invoke('onDefaultBrowserOAuthRedirect', options),
-  cancelAuthorizationInDefaultBrowser: options => ipcRenderer.invoke('cancelAuthorizationInDefaultBrowser', options),
+  backup: () => invokeWithNormalizedError('backup'),
+  restoreBackup: options => invokeWithNormalizedError('restoreBackup', options),
+  authorizeUserInWindow: options => invokeWithNormalizedError('authorizeUserInWindow', options),
+  authorizeUserInDefaultBrowser: options => invokeWithNormalizedError('authorizeUserInDefaultBrowser', options),
+  onDefaultBrowserOAuthRedirect: options => invokeWithNormalizedError('onDefaultBrowserOAuthRedirect', options),
+  cancelAuthorizationInDefaultBrowser: options =>
+    invokeWithNormalizedError('cancelAuthorizationInDefaultBrowser', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
-  multipartBufferToArray: options => ipcRenderer.invoke('multipartBufferToArray', options),
+  multipartBufferToArray: options => invokeWithNormalizedError('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
-    ipcRenderer.invoke('installPlugin', lookupName, allowScopedPackageNames),
-  curlRequest: options => ipcRenderer.invoke('curlRequest', options),
+    invokeWithNormalizedError('installPlugin', lookupName, allowScopedPackageNames),
+  initializeWorkspaceBackendProject: options => invokeWithNormalizedError('initializeWorkspaceBackendProject', options),
+  curlRequest: options => invokeWithNormalizedError('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
-  writeFile: options => ipcRenderer.invoke('writeFile', options),
-  writeResponseBodyToFile: options => ipcRenderer.invoke('writeResponseBodyToFile', options),
-  insecureReadFile: options => ipcRenderer.invoke('insecureReadFile', options),
-  insecureReadFileWithEncoding: options => ipcRenderer.invoke('insecureReadFileWithEncoding', options),
-  secureReadFile: options => ipcRenderer.invoke('secureReadFile', options),
-  parseImport: (...args) => ipcRenderer.invoke('parseImport', ...args),
-  readDir: options => ipcRenderer.invoke('readDir', options),
-  readOrCreateDataDir: options => ipcRenderer.invoke('readOrCreateDataDir', options),
-  lintSpec: options => ipcRenderer.invoke('lintSpec', options),
+  writeFile: options => invokeWithNormalizedError('writeFile', options),
+  writeResponseBodyToFile: options => invokeWithNormalizedError('writeResponseBodyToFile', options),
+  getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<RequestHeader | undefined> =>
+    invokeWithNormalizedError('getAuthHeader', renderedRequest, url),
+  getOAuth2Token: (
+    requestId: string,
+    authentication: AuthTypeOAuth2,
+    forceRefresh?: boolean,
+  ): Promise<OAuth2Token | undefined> => invokeWithNormalizedError('getOAuth2Token', requestId, authentication, forceRefresh),
+  insecureReadFile: options => invokeWithNormalizedError('insecureReadFile', options),
+  insecureReadFileWithEncoding: options => invokeWithNormalizedError('insecureReadFileWithEncoding', options),
+  secureReadFile: options => invokeWithNormalizedError('secureReadFile', options),
+  parseImport: (...args) => invokeWithNormalizedError('parseImport', ...args),
+  readDir: options => invokeWithNormalizedError('readDir', options),
+  readOrCreateDataDir: options => invokeWithNormalizedError('readOrCreateDataDir', options),
+  lintSpec: options => invokeWithNormalizedError('lintSpec', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
@@ -208,6 +285,8 @@ const main: Window['main'] = {
   grpc,
   curl,
   secretStorage,
+  electronStorage,
+  sync,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
@@ -215,14 +294,14 @@ const main: Window['main'] = {
   showContextMenu: options => ipcRenderer.send('showContextMenu', options),
   database: {
     caCertificate: {
-      create: options => ipcRenderer.invoke('database.caCertificate.create', options),
+      create: options => invokeWithNormalizedError('database.caCertificate.create', options),
     },
   },
   hiddenBrowserWindow: {
     runScript: options =>
       new Promise(async (resolve, reject) => {
         const isPortAlive = ports.get('hiddenWindowPort') !== undefined;
-        await ipcRenderer.invoke('open-channel-to-hidden-browser-window', isPortAlive);
+        await invokeWithNormalizedError('open-channel-to-hidden-browser-window', isPortAlive);
 
         const port = ports.get('hiddenWindowPort');
         invariant(port, 'hiddenWindowPort is undefined');
@@ -239,8 +318,9 @@ const main: Window['main'] = {
       }),
   },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
-    ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
-  getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
+    invokeWithNormalizedError('extractJsonFileFromPostmanDataDumpArchive', archivePath),
+  syncNewWorkspaceIfNeeded: options => invokeWithNormalizedError('syncNewWorkspaceIfNeeded', options),
+  getLocalStorageDataFromFileOrigin: () => invokeWithNormalizedError('getLocalStorageDataFromFileOrigin'),
   generateMockRouteDataFromSpec: (
     openApiSpec: string | undefined,
     specUrl: string | undefined,
@@ -249,7 +329,7 @@ const main: Window['main'] = {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) =>
-    ipcRenderer.invoke(
+    invokeWithNormalizedError(
       'generateMockRouteDataFromSpec',
       openApiSpec,
       specUrl,
@@ -259,15 +339,15 @@ const main: Window['main'] = {
       mockServerAdditionalFiles,
     ),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
-    ipcRenderer.invoke('generateCommitsFromDiff', input),
+    invokeWithNormalizedError('generateCommitsFromDiff', input),
   generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
-    ipcRenderer.invoke('generateMcpSamplingResponse', parameters),
+    invokeWithNormalizedError('generateMcpSamplingResponse', parameters),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
   const [port] = event.ports;
   ports.set('hiddenWindowPort', port);
-  ipcRenderer.invoke('main-window-script-port-ready');
+  invokeWithNormalizedError('main-window-script-port-ready');
 });
 const path: Window['path'] = {
   dirname: (p: string) => ipcRenderer.sendSync('path.dirname', p),
@@ -276,8 +356,8 @@ const path: Window['path'] = {
   resolve: (...paths: string[]) => ipcRenderer.sendSync('path.resolve', ...paths),
 };
 const dialog: Window['dialog'] = {
-  showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
-  showSaveDialog: options => ipcRenderer.invoke('showSaveDialog', options),
+  showOpenDialog: options => invokeWithNormalizedError('showOpenDialog', options),
+  showSaveDialog: options => invokeWithNormalizedError('showSaveDialog', options),
 };
 const app: Window['app'] = {
   getPath: options => ipcRenderer.sendSync('getPath', options),
@@ -290,7 +370,7 @@ const app: Window['app'] = {
 };
 const shell: Window['shell'] = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
-  openPath: options => ipcRenderer.invoke('openPath', options),
+  openPath: options => invokeWithNormalizedError('openPath', options),
 };
 const clipboard: Window['clipboard'] = {
   readText: () => ipcRenderer.sendSync('readText'),
@@ -301,7 +381,7 @@ const webUtils: Window['webUtils'] = {
   getPathForFile: (file: File) => webUtilities.getPathForFile(file),
 };
 const database: Window['database'] = {
-  invoke: (fnName, ...args) => ipcRenderer.invoke('database.invoke', fnName, ...args),
+  invoke: (fnName, ...args) => invokeWithNormalizedError('database.invoke', fnName, ...args),
 };
 
 const servicesProxy = new Proxy({} as Services, {
@@ -310,7 +390,7 @@ const servicesProxy = new Proxy({} as Services, {
       {},
       {
         get(_target, methodName: string) {
-          return (...args: unknown[]) => ipcRenderer.invoke('services.invoke', serviceName, methodName, ...args);
+          return (...args: unknown[]) => invokeWithNormalizedError('services.invoke', serviceName, methodName, ...args);
         },
       },
     );

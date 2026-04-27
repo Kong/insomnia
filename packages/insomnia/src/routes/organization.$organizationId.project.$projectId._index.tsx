@@ -31,6 +31,7 @@ import {
   dashboardSortOrderName,
   DEFAULT_SIDEBAR_SIZE,
   getAppWebsiteBaseURL,
+  isKonnectSyncEnabled,
 } from '~/common/constants';
 import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
@@ -54,7 +55,6 @@ import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
@@ -75,6 +75,7 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { TimeFromNow } from '~/ui/components/time-from-now';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
@@ -100,6 +101,10 @@ export interface InsomniaFile {
   hasUncommittedChanges?: boolean;
   hasUnpushedChanges?: boolean;
   gitFilePath?: string | null;
+  fileIssue?: {
+    kind: 'conflict' | 'parse-error';
+    message: string;
+  };
 }
 
 export interface ProjectLoaderData {
@@ -260,12 +265,10 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
       `remoteId: ${remoteId}`,
     );
 
-    const vcs = VCSInstance();
-
     const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
-      vcs.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
+      window.main.sync.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
       // Remote backend projects are fetched from the backend since they are not stored locally
-      vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
+      window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
     ]);
     console.log(
       `[getAllRemoteFiles] found allPulledBackendProjectsForRemoteId: ${allPulledBackendProjectsForRemoteId.length} and allFetchedRemoteBackendProjectsForRemoteId: ${allFetchedRemoteBackendProjectsForRemoteId.length} for remoteId: ${remoteId}`,
@@ -474,9 +477,15 @@ const Component = () => {
 
   const organizationData = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
+  const { issuesByWorkspaceId } = useGitFileIssues();
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const { billing, features } = useOrganizationPermissions();
+
+  const projectFileIssues = Object.values(issuesByWorkspaceId);
+  const hasProjectFileIssues = projectFileIssues.length > 0;
+  const projectFileIssuesMessage =
+    'There are issues with one or more Insomnia files in this project. Use the git CLI and your local file system to resolve them and continue.';
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -540,6 +549,7 @@ const Component = () => {
         });
       return {
         ...file,
+        fileIssue: file.workspace ? issuesByWorkspaceId[file.workspace._id] : undefined,
         loading:
           loadingBackendProjects.includes(file.remoteId) ||
           (pullFileFetcher.formData?.get('backendProjectId') &&
@@ -793,7 +803,7 @@ const Component = () => {
                 projects={projectsWithPresence}
                 storageRules={storageRules}
                 onCreateProject={() => setIsNewProjectModalOpen(true)}
-                konnectSyncEnabled={features.konnectSync.enabled}
+                konnectSyncEnabled={isKonnectSyncEnabled() && features.konnectSync.enabled}
               />
               {activeProject && (
                 <>
@@ -915,6 +925,18 @@ const Component = () => {
                           Contact sales
                         </a>
                       )}
+                    </div>
+                  </div>
+                ) : null}
+                {hasProjectFileIssues ? (
+                  <div className="p-(--padding-md) pb-0">
+                    <div
+                      className={`flex flex-wrap items-center justify-between gap-2 rounded-sm bg-[#3A2F08] px-4 py-4 text-(--color-font-warning)`}
+                    >
+                      <p className="text-base">
+                        <Icon icon="exclamation-triangle" className="mr-2" />
+                        {projectFileIssuesMessage}
+                      </p>
                     </div>
                   </div>
                 ) : null}
@@ -1112,10 +1134,10 @@ const Component = () => {
                           }}
                           className={`flex aspect-square w-full flex-1 flex-col overflow-hidden rounded-md p-(--padding-md) ring-1 ring-(--hl-md) outline-hidden transition-all select-none hover:bg-(--hl-xs) hover:shadow-md hover:ring-(--hl-sm) focus:bg-(--hl-sm) focus:ring-(--hl-lg) ${item.loading ? 'animate-pulse' : ''}`}
                         >
-                          <div className="flex h-[20px] gap-2">
+                          <div className="flex h-5 gap-2">
                             <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
                               <div
-                                className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                                className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-5 w-5 items-center justify-center rounded-s-sm px-2`}
                               >
                                 <Icon
                                   icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]}
@@ -1185,6 +1207,14 @@ const Component = () => {
                             {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
                               <div className="flex items-center gap-2 text-sm text-[rgba(var(--color-warning-rgb),0.8)]">
                                 <span>{item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}</span>
+                              </div>
+                            )}
+                            {item.fileIssue && (
+                              <div className="inline-flex w-fit items-center gap-2 text-sm text-[rgba(var(--color-warning-rgb),0.8)] outline-hidden">
+                                <Icon className="text-(--color-warning)" icon="triangle-exclamation" />
+                                <span>
+                                  {item.fileIssue.kind === 'conflict' ? 'Merge in progress' : 'Invalid schema'}
+                                </span>
                               </div>
                             )}
                           </div>

@@ -11,6 +11,14 @@ export interface BackendProject {
   rootDocumentId: string;
 }
 
+export interface BackendProjectWithTeams extends BackendProject {
+  teams: Team[];
+}
+
+export interface BackendProjectWithTeam extends BackendProject {
+  team: Team;
+}
+
 export type DocumentKey = string;
 
 export type BlobId = string;
@@ -106,6 +114,11 @@ export interface MergeConflict {
    * - "manual": The user manually edited and provided the final content in mergeResult.
    */
   resolutionSource?: ResolutionSource;
+}
+
+export interface AutoResolvedConflict {
+  filepath: string;
+  action: 'use-theirs' | 'delete';
 }
 
 export type Stage = Record<DocumentKey, StageEntry>;

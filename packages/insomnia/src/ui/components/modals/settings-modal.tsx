@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { AI_PLUGIN_NAME } from '~/common/constants';
+import { AI_PLUGIN_NAME, isKonnectSyncEnabled } from '~/common/constants';
 import { isScratchpadOrganizationId } from '~/models/organization';
 import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
@@ -49,7 +49,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
       setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
 
-      if (userSession.id && organizationId && !isScratchpadOrganizationId(organizationId)) {
+      if (isKonnectSyncEnabled() && userSession.id && organizationId && !isScratchpadOrganizationId(organizationId)) {
         try {
           const res = await getOrganizationFeatures({ organizationId, sessionId: userSession.id });
           setShouldShowKonnectTab(res?.features?.konnectSync?.enabled ?? false);

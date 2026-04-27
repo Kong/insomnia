@@ -13,6 +13,7 @@ export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
 export const PLAYWRIGHT = env.PLAYWRIGHT;
+export const OAUTH_WINDOW_SESSION_ID_KEY = 'current-oauth-session-id';
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
@@ -112,6 +113,7 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
 export const getKonnectApiBaseURL = () => env.KONNECT_API_URL || 'https://global.api.konghq.com';
+export const isKonnectSyncEnabled = () => !!env.KONNECT_SYNC_ENABLED;
 
 // App website
 export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
@@ -255,6 +257,55 @@ export type AuthTypes =
 
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
+
+//oauth 1
+export type OAuth1SignatureMethod = 'HMAC-SHA1' | 'RSA-SHA1' | 'HMAC-SHA256' | 'PLAINTEXT';
+
+export const SIGNATURE_METHOD_HMAC_SHA1: OAuth1SignatureMethod = 'HMAC-SHA1';
+export const SIGNATURE_METHOD_HMAC_SHA256: OAuth1SignatureMethod = 'HMAC-SHA256';
+export const SIGNATURE_METHOD_RSA_SHA1: OAuth1SignatureMethod = 'RSA-SHA1';
+export const SIGNATURE_METHOD_PLAINTEXT: OAuth1SignatureMethod = 'PLAINTEXT';
+
+//oauth 2
+export const GRANT_TYPE_AUTHORIZATION_CODE = 'authorization_code';
+export const GRANT_TYPE_IMPLICIT = 'implicit';
+export const GRANT_TYPE_PASSWORD = 'password';
+export const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
+export const GRANT_TYPE_REFRESH = 'refresh_token';
+export const GRANT_TYPE_MCP_AUTH_FLOW = 'mcp_auth_flow';
+
+export type AuthKeys =
+  | 'access_token'
+  | 'id_token'
+  | 'client_id'
+  | 'client_secret'
+  | 'audience'
+  | 'resource'
+  | 'code_challenge'
+  | 'code_challenge_method'
+  | 'code_verifier'
+  | 'code'
+  | 'nonce'
+  | 'error'
+  | 'error_description'
+  | 'error_uri'
+  | 'expires_in'
+  | 'grant_type'
+  | 'password'
+  | 'redirect_uri'
+  | 'refresh_token'
+  | 'response_type'
+  | 'scope'
+  | 'state'
+  | 'token_type'
+  | 'username'
+  | 'xError'
+  | 'xResponseId';
+
+export const PKCE_CHALLENGE_S256 = 'S256';
+export const PKCE_CHALLENGE_PLAIN = 'plain';
+
+export type OAuth2AuthorizationStatusType = 'none' | 'getting_code' | 'getting_token';
 
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';

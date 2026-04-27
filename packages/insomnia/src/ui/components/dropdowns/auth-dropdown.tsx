@@ -21,10 +21,13 @@ import type {
   RequestAuthentication,
 } from '~/insomnia-data';
 
-import { type AuthTypes, HAWK_ALGORITHM_SHA256 } from '../../../common/constants';
+import {
+  type AuthTypes,
+  GRANT_TYPE_AUTHORIZATION_CODE,
+  HAWK_ALGORITHM_SHA256,
+  SIGNATURE_METHOD_HMAC_SHA1,
+} from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
-import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
-import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 

@@ -16,11 +16,26 @@ import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
 import * as models from '../../models';
 import { getBodyBuffer } from '../../models/helpers/response-operations';
 import * as networkUtils from '../network';
-import { getSetCookiesFromResponseHeaders } from '../network';
+import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network';
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
+describe('getAuthQueryParams', () => {
+  it('Creates a query param with key as parameter name and value as parameter value, when addTo is "queryParams"', async () => {
+    const authentication = {
+      type: 'apikey',
+      key: 'x-api-key',
+      value: 'test',
+      addTo: 'queryParams',
+    };
 
+    const header = getAuthQueryParams(authentication);
+    expect(header).toEqual({
+      name: 'x-api-key',
+      value: 'test',
+    });
+  });
+});
 describe('sendCurlAndWriteTimeline()', () => {
   beforeEach(async () => {
     await services.project.all();
