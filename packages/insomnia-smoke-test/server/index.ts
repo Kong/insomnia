@@ -2,7 +2,6 @@ import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:https';
 import nodePath from 'node:path';
-import path from 'node:path';
 
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
@@ -157,7 +156,7 @@ app.get('/v1/oauth/azure/config', (_req, res) => {
 app.use(
   '/git',
   gitMiddleware({
-    root: path.join(__dirname, '../fixtures/git-repo'),
+    root: nodePath.join(__dirname, '../fixtures/git-repo'),
     glob: '*',
     route: '/',
   }),
