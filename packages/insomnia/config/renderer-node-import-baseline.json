@@ -33,6 +33,10 @@
       "builtin": "path"
     },
     {
+      "importer": "src/network/url-matches-cert-host.ts",
+      "builtin": "url"
+    },
+    {
       "importer": "src/plugins/context/response.ts",
       "builtin": "fs"
     },
