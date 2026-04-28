@@ -196,7 +196,7 @@ const git: GitServiceAPI = {
   pullFromGitRemote: options => invokeWithNormalizedError('git.pullFromGitRemote', options),
   continueMerge: options => invokeWithNormalizedError('git.continueMerge', options),
   discardChanges: options => invokeWithNormalizedError('git.discardChanges', options),
-  abortMerge: () => invokeWithNormalizedError('git.abortMerge'),
+  abortMerge: options => invokeWithNormalizedError('git.abortMerge', options),
   gitStatus: options => invokeWithNormalizedError('git.gitStatus', options),
   diff: () => invokeWithNormalizedError('git.diff'),
   multipleCommitToGitRepo: options => invokeWithNormalizedError('git.multipleCommitToGitRepo', options),
@@ -265,7 +265,8 @@ const main: Window['main'] = {
     requestId: string,
     authentication: AuthTypeOAuth2,
     forceRefresh?: boolean,
-  ): Promise<OAuth2Token | undefined> => invokeWithNormalizedError('getOAuth2Token', requestId, authentication, forceRefresh),
+  ): Promise<OAuth2Token | undefined> =>
+    invokeWithNormalizedError('getOAuth2Token', requestId, authentication, forceRefresh),
   insecureReadFile: options => invokeWithNormalizedError('insecureReadFile', options),
   insecureReadFileWithEncoding: options => invokeWithNormalizedError('insecureReadFileWithEncoding', options),
   secureReadFile: options => invokeWithNormalizedError('secureReadFile', options),
