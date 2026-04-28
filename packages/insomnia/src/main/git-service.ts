@@ -1572,6 +1572,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
   await services.gitRepository.remove(repo);
   // Stop the file watcher for this repository (project-scoped flow only).
   repoFileWatcherRegistry.stopWatcher(repo._id);
+  clearConflictSuppression(repo._id);
 
   await database.flushChanges(flushId);
 
