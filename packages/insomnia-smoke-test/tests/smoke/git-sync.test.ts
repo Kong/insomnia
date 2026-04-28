@@ -92,7 +92,5 @@ async function addAccessTokenGitCredential(insomnia: InsomniaApp) {
   await insomnia.preferencesPage.switchToPreferenceTab('Credentials');
   await insomnia.preferencesPage.credentialsTab.addAccessTokenGitCredential();
   await expect.soft(insomnia.page.getByRole('row', { name: 'Custom Git Credential' })).toBeVisible();
-  // await insomnia.page.pause();
-  // await expect.soft(insomnia.page.getByText('Access Token')).toBeVisible();
   await insomnia.preferencesPage.closePreferences();
 }
