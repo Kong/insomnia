@@ -80,6 +80,33 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('button', { name: 'Create', exact: true }).click();
   }
 
+  async createGitSyncProject(name = 'My Git Project'): Promise<void> {
+    await this.page.getByRole('button', { name: 'Create new Project' }).click();
+    await this.page.getByRole('textbox', { name: 'Project name' }).click();
+    await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
+    await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
+    await this.page.getByText('Git Sync').click();
+    await this.page.getByRole('button', { name: 'Access Token author Git' }).click();
+    await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
+    await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
+    await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('git-server.git');
+    await this.page.getByRole('button', { name: 'Show suggestions Branch' }).click();
+    await this.page.getByRole('option', { name: 'master' }).click();
+    await this.page.getByRole('button', { name: 'Scan for files' }).click();
+    await this.page.getByRole('button', { name: 'Create Blank Project' }).click();
+    const projectModalCloseButton = this.page.locator('[data-test-id="project-modal-close-button"]');
+    await projectModalCloseButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    if (await projectModalCloseButton.isVisible()) {
+      await projectModalCloseButton.click();
+    }
+    await this.page.getByRole('button', { name: 'Personal workspace' }).click();
+    await this.page.getByRole('option', { name: /Magic/ }).locator('span').click();
+    await this.page.getByRole('button', { name: /Magic/ }).click();
+    await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
+    await this.page.getByText('Git Project').waitFor({ state: 'visible', timeout: 10_000 });
+    await this.page.getByText('Git Project').click();
+  }
+
   // ===========================================================================
   // Import Operations
   // ===========================================================================
