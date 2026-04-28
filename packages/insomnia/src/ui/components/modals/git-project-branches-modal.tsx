@@ -166,7 +166,7 @@ const LocalBranchItem = ({
                       },
                       onCancelUnresolved: () => {
                         // user aborted merge
-                        window.main.git.abortMerge();
+                        window.main.git.abortMerge({ projectId });
                         // TODO: the abortMerge method provided by isomorphic-git is unreliable
                         // clean up any partial merges here
                         reject(

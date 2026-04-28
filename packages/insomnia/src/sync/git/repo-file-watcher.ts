@@ -73,6 +73,8 @@ export interface FileProblemsChangedPayload {
   repoId: string;
   problems: FileIssue[];
   workspaceIssues: WorkspaceFileIssue[];
+  /** True when the main process is suppressing conflict display (e.g. SyncMergeModal is open). */
+  conflictsSuppressed: boolean;
 }
 
 /** Compute a SHA-256 hex digest of a string. */
@@ -792,6 +794,7 @@ class RepoFileWatcher {
       repoId: this.repoId,
       problems: this.getProblems(),
       workspaceIssues: this.getWorkspaceIssues(),
+      conflictsSuppressed: false,
     });
   }
 }
@@ -900,7 +903,7 @@ export class RepoFileWatcherRegistry {
 }
 
 /** Default notifier that broadcasts to all Electron BrowserWindows. */
-function createElectronNotifier(): WatcherNotifier {
+export function createElectronNotifier(): WatcherNotifier {
   return {
     onDbSynced: () => {
       for (const w of BrowserWindow.getAllWindows()) {
@@ -914,5 +917,3 @@ function createElectronNotifier(): WatcherNotifier {
     },
   };
 }
-
-export const repoFileWatcherRegistry = new RepoFileWatcherRegistry(createElectronNotifier());

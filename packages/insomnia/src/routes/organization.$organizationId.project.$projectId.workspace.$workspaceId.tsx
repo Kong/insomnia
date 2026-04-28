@@ -401,7 +401,7 @@ const Component = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { issuesByWorkspaceId } = useGitFileIssues();
+  const { issuesByWorkspaceId, conflictsSuppressed } = useGitFileIssues();
   const currentIssue = issuesByWorkspaceId[workspaceId];
 
   const handleBackToList = () => {
@@ -414,7 +414,9 @@ const Component = () => {
   };
 
   const modalText = currentIssue ? workspaceFileIssueModalText[currentIssue.kind] : null;
-  const isIssueModalOpen = Boolean(currentIssue && modalText);
+  const isIssueModalOpen = Boolean(
+    currentIssue && modalText && !(currentIssue.kind === 'conflict' && conflictsSuppressed),
+  );
 
   return (
     <div className="h-full w-full overflow-hidden" data-testid="workspace-page">
