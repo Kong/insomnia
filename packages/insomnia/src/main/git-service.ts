@@ -61,7 +61,7 @@ import GitVCS, {
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
-import { repoFileWatcherRegistry } from '../sync/git/repo-file-watcher';
+import { createElectronNotifier, RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
@@ -71,6 +71,35 @@ import { ipcMainHandle } from './ipc/electron';
 
 // Initialize Git Remote Providers on module load
 initializeGitRemoteProviders();
+
+/**
+ * Set of repo IDs for which conflict problems should be suppressed in the
+ * file-problems-changed IPC broadcast.  Active while the user is resolving
+ * conflicts via SyncMergeModal so the generic "CLI conflict" blocking modal
+ * does not appear on top of the interactive resolver.
+ */
+const suppressedConflictRepos = new Set<string>();
+
+const _electronNotifier = createElectronNotifier();
+const conflictFilteringNotifier: WatcherNotifier = {
+  onDbSynced: () => _electronNotifier.onDbSynced(),
+  onProblemsChanged: payload => {
+    _electronNotifier.onProblemsChanged({
+      ...payload,
+      conflictsSuppressed: suppressedConflictRepos.has(payload.repoId),
+    });
+  },
+};
+
+const repoFileWatcherRegistry = new RepoFileWatcherRegistry(conflictFilteringNotifier);
+
+function suppressConflictProblems(repoId: string): void {
+  suppressedConflictRepos.add(repoId);
+}
+
+function clearConflictSuppression(repoId: string): void {
+  suppressedConflictRepos.delete(repoId);
+}
 
 type PushPull = 'push' | 'pull';
 type VCSAction =
@@ -1543,6 +1572,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
   await services.gitRepository.remove(repo);
   // Stop the file watcher for this repository (project-scoped flow only).
   repoFileWatcherRegistry.stopWatcher(repo._id);
+  clearConflictSuppression(repo._id);
 
   await database.flushChanges(flushId);
 
@@ -1982,6 +2012,7 @@ export const mergeGitBranch = async ({
   const bufferId = await database.bufferChanges();
 
   try {
+    suppressConflictProblems(gitRepository._id);
     await GitVCS.merge({
       theirsBranch,
       allowUncommittedChangesBeforeMerge,
@@ -1993,6 +2024,7 @@ export const mergeGitBranch = async ({
     // Import all YAML files from disk into the DB after merge + checkout
     const gitRepoId = gitRepository._id;
     await repoFileWatcherRegistry.importAllFiles(gitRepoId);
+    clearConflictSuppression(gitRepository._id);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'merge_branch'),
@@ -2013,8 +2045,10 @@ export const mergeGitBranch = async ({
     return {};
   } catch (err) {
     if (err instanceof MergeConflictError) {
+      // Keep suppression active — user will resolve via SyncMergeModal.
       return err.data;
     }
+    clearConflictSuppression(gitRepository._id);
     let errorMessage = getErrorMessage(err);
 
     if (err instanceof Errors.HttpError) {
@@ -2231,9 +2265,12 @@ export async function fetchGitRemoteBranches({
 }
 
 export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
+  let repoId: string | null = null;
   try {
     await assertBranchOnOrigin('pull');
     const gitRepository = await getGitRepository({ projectId, workspaceId });
+    repoId = gitRepository._id;
+    suppressConflictProblems(repoId);
     invariant(gitRepository.credentialsId, 'Git Credentials ID is required');
     const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
     invariant(credentials, 'Git Credentials not found');
@@ -2243,6 +2280,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
 
     // Import all YAML files from disk into the DB after pull
     await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    clearConflictSuppression(repoId);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'pull'),
@@ -2266,8 +2304,12 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     };
   } catch (err: unknown) {
     if (err instanceof MergeConflictError) {
+      // Keep suppression active — user will resolve via SyncMergeModal.
+      // clearConflictSuppression is called by continueMerge or abortMergeAction.
       return err.data;
     }
+
+    if (repoId) clearConflictSuppression(repoId);
 
     if (
       err instanceof Errors.UserCanceledError ||
@@ -2334,6 +2376,9 @@ export const continueMerge = async ({
 
     // Import all YAML files from disk into the DB after merge resolution
     await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    // Files are clean now — lift the conflict suppression so any remaining
+    // issues (parse errors etc.) are reported normally.
+    clearConflictSuppression(gitRepository._id);
 
     const log = (await GitVCS.log({ depth: 1 })) || [];
 
@@ -2414,7 +2459,9 @@ export const discardChangesAction = async ({
   }
 };
 
-export const abortMergeAction = async () => {
+export const abortMergeAction = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
+  const gitRepository = await getGitRepository({ projectId, workspaceId });
+  clearConflictSuppression(gitRepository._id);
   return GitVCS.abortMerge();
 };
 
@@ -2869,7 +2916,9 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
 
   const ts = () => new Date().toISOString();
   const projectList = gitProjects.map(p => `"${p.name}"`).join(', ');
-  logs.push(`${ts()} [INFO] Starting migration v${CURRENT_MIGRATION_VERSION} for ${gitProjects.length} repo(s): ${projectList}`);
+  logs.push(
+    `${ts()} [INFO] Starting migration v${CURRENT_MIGRATION_VERSION} for ${gitProjects.length} repo(s): ${projectList}`,
+  );
 
   await Promise.all(
     gitProjects.map(async project => {
@@ -3036,7 +3085,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.discardChanges', (_, options: Parameters<typeof discardChangesAction>[0]) =>
     discardChangesAction(options),
   );
-  ipcMainHandle('git.abortMerge', _ => abortMergeAction());
+  ipcMainHandle('git.abortMerge', (_, options: Parameters<typeof abortMergeAction>[0]) => abortMergeAction(options));
   ipcMainHandle('git.gitStatus', (_, options: Parameters<typeof gitStatusAction>[0]) => gitStatusAction(options));
   ipcMainHandle('git.diff', () => diff());
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) =>

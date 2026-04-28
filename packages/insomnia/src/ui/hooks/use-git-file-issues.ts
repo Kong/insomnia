@@ -19,6 +19,7 @@ const mapIssuesByWorkspaceId = (issues: WorkspaceFileIssue[]) => {
 
 export interface GitFileIssuesValue {
   issuesByWorkspaceId: Record<string, WorkspaceFileIssue>;
+  conflictsSuppressed: boolean;
 }
 
 const GitFileIssuesContext = createContext<GitFileIssuesValue | undefined>(undefined);
@@ -43,6 +44,7 @@ export const useProjectGitFileIssues = ({
   gitRepositoryId?: string | null;
 }): GitFileIssuesValue => {
   const [issuesByWorkspaceId, setIssuesByWorkspaceId] = useState<Record<string, WorkspaceFileIssue>>({});
+  const [conflictsSuppressed, setConflictsSuppressed] = useState(false);
 
   const loadIssues = useCallback(async () => {
     if (!projectId || !gitRepositoryId) {
@@ -76,6 +78,7 @@ export const useProjectGitFileIssues = ({
         return;
       }
 
+      setConflictsSuppressed(payload.conflictsSuppressed);
       setIssuesByWorkspaceId(mapIssuesByWorkspaceId(payload.workspaceIssues));
     });
   }, [gitRepositoryId]);
@@ -83,7 +86,8 @@ export const useProjectGitFileIssues = ({
   return useMemo<GitFileIssuesValue>(
     () => ({
       issuesByWorkspaceId,
+      conflictsSuppressed,
     }),
-    [issuesByWorkspaceId],
+    [issuesByWorkspaceId, conflictsSuppressed],
   );
 };

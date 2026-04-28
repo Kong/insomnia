@@ -459,6 +459,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               });
           },
           onCancelUnresolved: () => {
+            window.main.git.abortMerge({ projectId });
             closeGitProjectStagingModalRef.current?.();
             setIsPulling(false);
             showToast({
