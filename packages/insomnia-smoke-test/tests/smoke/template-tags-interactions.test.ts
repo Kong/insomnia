@@ -75,7 +75,6 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Template Tag Collection').click();
 
   await page.getByTestId('settings-button').click();
   await page.getByTestId('dataFolders').fill(getFixturePath('files/template-file.txt'));
@@ -124,13 +123,19 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
 
   // test response template tags
   // send request first to populate response
-  await page.getByLabel('Request Collection').getByTestId('Base Response').press('Enter');
+  await page
+    .getByLabel('Request Collection')
+    .getByTestId('Base Response')
+    .click({ modifiers: ['ControlOrMeta'] });
   // Wait for tab appear
   await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Base Response', { exact: true })).toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   await expect.soft(statusTag).toContainText('200 OK');
-  await page.getByLabel('Request Collection').getByTestId('Response Tag').press('Enter');
+  await page
+    .getByLabel('Request Collection')
+    .getByTestId('Response Tag')
+    .click({ modifiers: ['ControlOrMeta'] });
   await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Response Tag', { exact: true })).toBeVisible();
   await page.getByText('Body', { exact: true }).click();
   for (const { tagPrefix, expectedResult } of templateTagTestCases.response) {

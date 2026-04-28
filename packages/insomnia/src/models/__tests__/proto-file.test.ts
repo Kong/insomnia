@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import * as models from '../index';
 
 describe('init()', () => {
@@ -14,7 +16,7 @@ describe('init()', () => {
 describe('create()', () => {
   it('creates a valid protofile', async () => {
     Date.now = vi.fn().mockReturnValue(1_478_795_580_200);
-    const request = await models.protoFile.create({
+    const request = await services.protoFile.create({
       name: 'My File',
       parentId: 'fld_124',
       protoText: 'some proto text',
@@ -29,13 +31,13 @@ describe('create()', () => {
       protoText: 'some proto text',
     };
     expect(request).toEqual(expected);
-    expect(await models.protoFile.getById(expected._id)).toEqual(expected);
+    expect(await services.protoFile.getById(expected._id)).toEqual(expected);
   });
 
   it('fails when missing parentId', async () => {
     Date.now = vi.fn().mockReturnValue(1_478_795_580_200);
     expect(() =>
-      models.protoFile.create({
+      services.protoFile.create({
         name: 'no parentId',
       }),
     ).toThrow('New ProtoFile missing `parentId`');

@@ -12,6 +12,8 @@ import {
   JsonSchema,
   KeyLiteralSchema,
   LiteralSchema,
+  McpClientSchema,
+  McpRequestSchema,
   MetaGroupSchema,
   MetaSchema,
   MockRouteSchema,
@@ -128,6 +130,15 @@ const makeMockRoute = (overrides: Record<string, unknown> = {}) => ({
   statusCode: 200,
   headers: [{ name: 'X-Mock', value: '1' }],
   body: '{"ok":true}',
+  ...overrides,
+});
+
+const makeMcpRequest = (overrides: Record<string, unknown> = {}) => ({
+  name: 'MCP Request',
+  url: 'https://example.com/mcp',
+  transportType: 'streamable-http',
+  headers: [{ name: 'X-MCP', value: '1' }],
+  authentication: { type: 'none' },
   ...overrides,
 });
 
@@ -425,6 +436,39 @@ describe('MockRouteSchema', () => {
 });
 
 // -----------------------------
+// Mcp Request
+// -----------------------------
+
+describe('McpRequestSchema', () => {
+  it('parses mcp request schema and applies defaults', () => {
+    const mcpRequestData = makeMcpRequest({
+      env: [
+        {
+          id: 'env-1',
+          name: 'foo',
+          value: 'bar',
+          type: 'str',
+          enabled: true,
+        },
+      ],
+      roots: [
+        {
+          uri: '/data/to/root/file',
+        },
+        {
+          uri: '/more/data',
+        },
+      ],
+    });
+    const r = McpRequestSchema.parse(mcpRequestData);
+    expect(r.transportType).toBe(mcpRequestData.transportType);
+    expect(r.url).toBe(mcpRequestData.url);
+    expect(r.env?.[0].name).toBe('foo');
+    expect(r.roots?.[0].uri).toBe('/data/to/root/file');
+  });
+});
+
+// -----------------------------
 // Top-level documents
 // -----------------------------
 describe('CollectionSchema (top-level)', () => {
@@ -476,6 +520,19 @@ describe('MockServerSchema (top-level)', () => {
   });
 });
 
+describe('McpClientSchema (top-level)', () => {
+  it('parse mcp workspace with mcp request ', () => {
+    const mcpRequestData = makeMcpRequest();
+    const mcpClient = McpClientSchema.parse({
+      type: 'mcpClient.insomnia/5.0',
+      name: 'MCP Client',
+      mcpRequest: mcpRequestData,
+    });
+    expect(mcpClient.mcpRequest?.url).toBe(mcpRequestData.url);
+    expect(mcpClient.mcpRequest?.transportType).toBe(mcpRequestData.transportType);
+  });
+});
+
 describe('InsomniaFileSchema (discriminated union)', () => {
   it('accepts collection variant', () => {
     const f = InsomniaFileSchema.parse({
@@ -503,6 +560,14 @@ describe('InsomniaFileSchema (discriminated union)', () => {
 
   it('rejects future or unsupported type', () => {
     expect(() => InsomniaFileSchema.parse({ type: 'futureCollection.insomnia.rest/5.0' })).toThrow();
+  });
+
+  it('accepts mcp request', () => {
+    const mcpRequest = InsomniaFileSchema.parse({
+      type: 'mcpClient.insomnia/5.0',
+      mcpRequest: makeMcpRequest(),
+    });
+    expect(mcpRequest.type).toBe('mcpClient.insomnia/5.0');
   });
 
   it('rejects unknown type', () => {

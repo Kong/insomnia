@@ -1,11 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import type { Environment, Settings, UserUploadEnvironment } from '~/insomnia-data';
+import { database, initDatabase, services } from '~/insomnia-data';
+import { createNedbDatabase } from '~/insomnia-data/node';
+import { getBodyBuffer } from '~/models/helpers/response-operations';
+
 import type { BaseModel } from '../models';
-import * as models from '../models';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import { getBodyBuffer } from '../models/response';
-import type { Settings } from '../models/settings';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -15,7 +16,6 @@ import {
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
-import { database } from './database';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
@@ -46,26 +46,31 @@ export async function getSendRequestCallbackMemDb(
   iterationCount?: number,
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
-  await database.init(
+  await initDatabase(
+    createNedbDatabase(),
     {
       inMemoryOnly: true,
     },
     true,
   );
+
+  // First, upsert all docs from memDB (which may include Settings from fixtures)
   const docs: BaseModel[] = [];
-
-  const settings = await models.settings.getOrCreate();
-  docs.push({ ...settings, ...settingsOverrides });
-
   for (const type of Object.keys(memDB)) {
     for (const doc of memDB[type]) {
       docs.push(doc);
     }
   }
-  // init database with the provided documents
-  // TODO: this could be done with database.init instead
   await database.batchModifyDocs({
     upsert: docs,
+    remove: [],
+  });
+
+  // Now get settings (may come from fixtures) and merge with overrides
+  const settings = await services.settings.getOrCreate();
+  const mergedSettings = { ...settings, ...settingsOverrides };
+  await database.batchModifyDocs({
+    upsert: [mergedSettings],
     remove: [],
   });
 

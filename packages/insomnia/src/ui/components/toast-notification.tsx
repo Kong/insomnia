@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { format } from 'date-fns';
 import React from 'react';
 import {
+  Button,
   Text,
   UNSTABLE_Toast as Toast,
   UNSTABLE_ToastContent as ToastContent,
@@ -22,31 +23,57 @@ export interface RAToastContent {
   time?: string;
 }
 
+const logTransitionError = (error: unknown) => {
+  console.warn('Transition error:', error);
+};
+
 // Create a global ToastQueue.
 export const queue = new ToastQueue<RAToastContent>({
   // Wrap state updates in a CSS view transition.
   wrapUpdate(fn) {
-    if ('startViewTransition' in document) {
-      document.startViewTransition(() => {
-        flushSync(fn);
-      });
+    if ('startViewTransition' in document && document.visibilityState === 'visible') {
+      try {
+        const transition = document.startViewTransition(() => {
+          flushSync(fn);
+        });
+        transition.ready.catch(logTransitionError);
+      } catch (error) {
+        logTransitionError(error);
+        fn();
+      }
     } else {
       fn();
     }
   },
 });
 
-export const showToast = (content: RAToastContent, options?: { timeout?: number }) => {
+export const showToast = (content: RAToastContent, options?: { timeout?: number | null }) => {
   // Add a new toast to the queue.
   if (!content.time) {
     content.time = format(new Date(), 'HH:mm:ss aa');
   }
 
-  const key = queue.add(content, {
-    timeout: options?.timeout ?? 3000,
-  });
+  // Pass timeout: null to keep the toast persistent (no auto-dismiss).
+  const toastOptions: { timeout?: number } =
+    options?.timeout === null ? {} : { timeout: options?.timeout ?? 3000 };
+
+  const key = queue.add(content, toastOptions);
   // Return the key for further reference if needed.
   return key;
+};
+
+export const showResourceNotFoundToast = (title: string) => {
+  showToast(
+    {
+      icon: 'circle-exclamation',
+      title,
+      description: 'Please confirm that the resource still exists and has not been deleted or moved.',
+      status: 'warning',
+    },
+    {
+      timeout: 5000,
+    },
+  );
 };
 
 const IconBorderStyleMap: Record<Status, string> = {
@@ -100,13 +127,22 @@ export const Toaster = () => (
                 {toast.content.time && <span className="text-xs text-(--hl)">{toast.content.time}</span>}
               </Text>
               {toast.content.description && (
-                <Text slot="description" className="text-xs">
+                <Text slot="description" className="max-w-md text-xs">
                   {toast.content.description}
                 </Text>
               )}
             </div>
           </div>
         </ToastContent>
+        {!toast.timer && (
+          <Button
+            onPress={() => queue.close(toast.key)}
+            aria-label="Dismiss"
+            className="ml-1 flex shrink-0 items-center justify-center rounded text-(--hl) transition-opacity hover:opacity-70 focus:outline-none"
+          >
+            <FontAwesomeIcon icon="xmark" className="size-3" />
+          </Button>
+        )}
       </Toast>
     )}
   </ToastRegion>

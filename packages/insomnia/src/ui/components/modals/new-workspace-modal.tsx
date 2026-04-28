@@ -1,3 +1,4 @@
+import type { StorageRules } from 'insomnia-api';
 import React, { useEffect, useState } from 'react';
 import {
   Button,
@@ -20,33 +21,31 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { StorageRules } from '~/models/organization';
+import type { ApiSpec, Project, WorkspaceScope } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
-import { type ApiSpec } from '../../../models/api-spec';
-import { isGitProject, type Project } from '../../../models/project';
-import { isMcp, type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
-  [WorkspaceScopeKeys.collection]: 'Request Collection',
-  [WorkspaceScopeKeys.environment]: 'Environment',
-  [WorkspaceScopeKeys.mockServer]: 'Mock Server',
-  [WorkspaceScopeKeys.design]: 'Design Document',
-  [WorkspaceScopeKeys.mcp]: 'MCP Client',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'Request Collection',
+  [models.workspace.WorkspaceScopeKeys.environment]: 'Environment',
+  [models.workspace.WorkspaceScopeKeys.mockServer]: 'Mock Server',
+  [models.workspace.WorkspaceScopeKeys.design]: 'Design Document',
+  [models.workspace.WorkspaceScopeKeys.mcp]: 'MCP Client',
 };
 
 const defaultNameByScope: Record<WorkspaceScope, string> = {
-  [WorkspaceScopeKeys.collection]: 'My Collection',
-  [WorkspaceScopeKeys.environment]: 'My Environment',
-  [WorkspaceScopeKeys.mockServer]: 'My Mock Server',
-  [WorkspaceScopeKeys.design]: 'My Design Document',
-  [WorkspaceScopeKeys.mcp]: 'My MCP Client',
+  [models.workspace.WorkspaceScopeKeys.collection]: 'My Collection',
+  [models.workspace.WorkspaceScopeKeys.environment]: 'My Environment',
+  [models.workspace.WorkspaceScopeKeys.mockServer]: 'My Mock Server',
+  [models.workspace.WorkspaceScopeKeys.design]: 'My Design Document',
+  [models.workspace.WorkspaceScopeKeys.mcp]: 'My MCP Client',
 };
 
 export const NewWorkspaceModal = ({
@@ -55,29 +54,19 @@ export const NewWorkspaceModal = ({
   project,
   scope,
   storageRules,
-  currentPlan,
   sourceApiSpec,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   project: Project;
   storageRules: StorageRules;
-  currentPlan?: { type: string };
   scope: WorkspaceScope;
   sourceApiSpec?: ApiSpec;
 }) => {
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
 
-  const isLocalProject = !project.remoteId;
-  const isEnterprise = currentPlan?.type.includes('enterprise');
-  const isSelfHostedDisabled = !storageRules.enableLocalVault;
-  const isCloudProjectDisabled = isLocalProject || !storageRules.enableCloudSync;
-  const isMcpWorkspace = isMcp({ scope });
-  // Mcp workspaces do not support Git sync for now
-  const isGitProjectAndNotMcpWorkspace = isGitProject(project) && !isMcpWorkspace;
-
-  const canOnlyCreateSelfHosted = isLocalProject && isEnterprise;
-  const defaultFileName = safeToUseInsomniaFileName(defaultNameByScope[scope]);
+  const isSelfHostedMockDisabled = !storageRules.enableLocalVault && !storageRules.enableGitSync;
+  const isCloudMockDisabled = !project.remoteId || !storageRules.enableCloudSync;
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
@@ -99,9 +88,8 @@ export const NewWorkspaceModal = ({
     name: defaultNameByScope[scope],
     scope,
     folderPath: '',
-    // Add a unique timestamp for mcp file name to avoid conflicts since we hide the Git file and folder selector for it.
-    fileName: isGitProject(project) && isMcpWorkspace ? `${defaultFileName}_${Date.now()}` : defaultFileName,
-    mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
+    fileName: safeToUseInsomniaFileName(defaultNameByScope[scope]),
+    mockServerType: isCloudMockDisabled ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
     mockServerCreationType: sourceApiSpec?.contents ? 'ai' : 'manual',
     mockServerSpecSource: 'file',
@@ -118,7 +106,7 @@ export const NewWorkspaceModal = ({
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
-    if (createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer) {
+    if (createNewWorkspaceFetcher.state !== 'idle' && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
       setProgressMessage(0);
       const interval = setInterval(() => {
         setProgressMessage(prev => (prev + 1) % progressMessages.length);
@@ -132,7 +120,7 @@ export const NewWorkspaceModal = ({
 
   useEffect(() => {
     if (
-      scope === WorkspaceScopeKeys.mockServer &&
+      scope === models.workspace.WorkspaceScopeKeys.mockServer &&
       createNewWorkspaceFetcher.state === 'idle' &&
       createNewWorkspaceFetcher.data &&
       !createNewWorkspaceFetcher.data.error
@@ -142,13 +130,18 @@ export const NewWorkspaceModal = ({
   }, [createNewWorkspaceFetcher.state, createNewWorkspaceFetcher.data, scope, onOpenChange]);
 
   useEffect(() => {
-    if (isGitProject(project) && isOpen && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
+    if (
+      models.project.isGitProject(project) &&
+      isOpen &&
+      gitRepoTreeFetcher.state === 'idle' &&
+      !gitRepoTreeFetcher.data
+    ) {
       gitRepoTreeFetcher.load({ projectId: project._id });
     }
   }, [gitRepoTreeFetcher, isOpen, project]);
 
   useEffect(() => {
-    if (isOpen && scope === WorkspaceScopeKeys.mockServer) {
+    if (isOpen && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
       window.main.trackSegmentEvent({
         event: SegmentEvent.mockCreateModalOpened,
       });
@@ -178,7 +171,7 @@ export const NewWorkspaceModal = ({
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
-        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${isGitProjectAndNotMcpWorkspace ? 'min-h-[420px]' : 'min-h-[220px]'}`}
+        className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${models.project.isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
       >
         <Dialog
           aria-label="Create or update dialog"
@@ -236,8 +229,7 @@ export const NewWorkspaceModal = ({
                   />
                   <FieldError className="text-xs text-red-500" />
                 </TextField>
-                {/* Mcp workspaces do not support Git sync for now */}
-                {isGitProjectAndNotMcpWorkspace && (
+                {models.project.isGitProject(project) && (
                   <>
                     <TextField
                       name="fileName"
@@ -626,11 +618,7 @@ export const NewWorkspaceModal = ({
 
                     <RadioGroup
                       name="mockServerType"
-                      value={
-                        isCloudProjectDisabled || workspaceData.mockServerCreationType === 'ai'
-                          ? 'self-hosted'
-                          : workspaceData.mockServerType
-                      }
+                      value={workspaceData.mockServerType}
                       onChange={serverType => {
                         setWorkspaceData({ ...workspaceData, mockServerType: serverType as 'self-hosted' | 'cloud' });
                       }}
@@ -640,7 +628,7 @@ export const NewWorkspaceModal = ({
                       <div className="flex gap-2">
                         <Radio
                           value="cloud"
-                          isDisabled={isCloudProjectDisabled || workspaceData.mockServerCreationType === 'ai'}
+                          isDisabled={isCloudMockDisabled || workspaceData.mockServerCreationType === 'ai'}
                           className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
@@ -650,14 +638,14 @@ export const NewWorkspaceModal = ({
                           <p className="pt-2">
                             {workspaceData.mockServerCreationType === 'ai'
                               ? 'Not available when creating with Auto Generate.'
-                              : isCloudProjectDisabled
+                              : isCloudMockDisabled
                                 ? 'Only available for cloud projects'
                                 : 'Runs on Insomnia cloud, ideal for collaboration.'}
                           </p>
                         </Radio>
                         <Radio
                           value="self-hosted"
-                          isDisabled={isSelfHostedDisabled}
+                          isDisabled={isSelfHostedMockDisabled}
                           className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
@@ -679,17 +667,16 @@ export const NewWorkspaceModal = ({
                         </Link>
                       </span>
                     </div>
-                    {!isSelfHostedDisabled && (
+                    {workspaceData.mockServerType === 'self-hosted' && (
                       <TextField
                         name="mockServerUrl"
                         value={workspaceData.mockServerUrl}
                         onChange={url => setWorkspaceData({ ...workspaceData, mockServerUrl: url })}
-                        className={`group relative flex flex-1 flex-col gap-2 ${workspaceData.mockServerType === 'cloud' ? 'disabled' : ''}`}
+                        className="group relative flex flex-1 flex-col gap-2"
                       >
                         <Label className="text-sm text-(--hl)">What is your self-hosted mock server URL?</Label>
                         <Input
-                          disabled={workspaceData.mockServerType === 'cloud'}
-                          placeholder={workspaceData.mockServerType === 'cloud' ? '' : 'https://example.com'}
+                          placeholder="https://example.com"
                           className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                         />
                       </TextField>
@@ -712,7 +699,8 @@ export const NewWorkspaceModal = ({
                 >
                   {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
                   <span>
-                    {createNewWorkspaceFetcher.state !== 'idle' && scope === WorkspaceScopeKeys.mockServer
+                    {createNewWorkspaceFetcher.state !== 'idle' &&
+                    scope === models.workspace.WorkspaceScopeKeys.mockServer
                       ? progressMessages[progressMessage]
                       : 'Create'}
                   </span>

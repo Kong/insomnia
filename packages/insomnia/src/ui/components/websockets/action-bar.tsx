@@ -1,15 +1,14 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 
+import type { SocketIORequest, WebSocketRequest } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
-import * as models from '../../../models';
-import type { SocketIORequest } from '../../../models/socket-io-request';
-import type { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
@@ -62,7 +61,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     const generateConnectParams = useCallback(async () => {
       // Render any nunjucks tags in the url/headers/authentication settings/cookies
 
-      const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+      const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
       // Render any nunjucks tags in the url/headers/authentication settings/cookies
       const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
         request,
@@ -96,6 +95,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
         return {
           url: rendered.url,
           query,
+          path: request.settingPath,
           headers: rendered.headers,
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,

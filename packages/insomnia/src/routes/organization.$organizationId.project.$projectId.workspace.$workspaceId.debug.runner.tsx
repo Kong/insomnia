@@ -22,11 +22,12 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
+import type { RunnerResultPerRequest, RunnerTestResult, UserUploadEnvironment } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import * as models from '~/models';
-import type { UserUploadEnvironment } from '~/models/environment';
-import type { RunnerResultPerRequest, RunnerTestResult } from '~/models/runner-test-result';
+import { getTimeline } from '~/models/helpers/response-operations';
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
@@ -49,7 +50,9 @@ import { ResponseTimer } from '~/ui/components/response-timer';
 import { getTimeAndUnit } from '~/ui/components/tags/time-tag';
 import { Tooltip } from '~/ui/components/tooltip';
 import { ResponseTimelineViewer } from '~/ui/components/viewers/response-timeline-viewer';
+import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
+import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import { moveAfter, moveBefore } from '~/utils';
 import { invariant } from '~/utils/invariant';
@@ -67,10 +70,10 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
   const responsesInfo = testResult.responsesInfo;
 
   for (const respInfo of responsesInfo) {
-    const resp = await models.response.getById(respInfo.responseId);
+    const resp = await services.response.getById(respInfo.responseId);
 
     if (resp) {
-      const timeline = models.response.getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
+      const timeline = getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
       timelines = [
         ...timelines,
         {
@@ -159,7 +162,10 @@ export const Runner: FC = () => {
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
   );
 
+  const { updateTabById } = useInsomniaTabContext();
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
+  const [zeroableIterationCount, setZeroableIterationCount] = useState<string>('1');
+  const [clearableDelay, setClearableDelay] = useState<string>('0');
   const {
     iterationCount = 1,
     delay = 0,
@@ -170,6 +176,14 @@ export const Runner: FC = () => {
     filePath,
   } = runnerStateMap?.[organizationId]?.[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
+
+  useEffect(() => {
+    setZeroableIterationCount(String(iterationCount));
+  }, [iterationCount]);
+
+  useEffect(() => {
+    setClearableDelay(String(delay));
+  }, [delay]);
 
   const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
 
@@ -263,6 +277,7 @@ export const Runner: FC = () => {
       properties: { plan: organizationData?.currentPlan?.type || 'scratchpad', iterations: iterationCount },
     });
 
+    updateTabById?.(buildRunnerTabId(workspaceId, targetFolderId), { temporary: false });
     const requests = selectedKeys === 'all' ? reqList : reqList.filter(item => (selectedKeys as Set<Key>).has(item.id));
 
     // convert uploadData to environment data
@@ -319,7 +334,7 @@ export const Runner: FC = () => {
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
   useEffect(() => {
     const readResults = async () => {
-      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
+      const results = (await services.runnerTestResult.findByParentId(runnerId)) || [];
       setTestHistory(results.reverse());
     };
     readResults();
@@ -335,7 +350,7 @@ export const Runner: FC = () => {
   const [timelines, setTimelines] = useState<ResponseTimelineEntry[]>([]);
   const gotoExecutionResult = useCallback(
     async (executionId: string) => {
-      const result = await models.runnerTestResult.getById(executionId);
+      const result = await services.runnerTestResult.getById(executionId);
       if (result) {
         setExecutionResult(result);
       }
@@ -387,7 +402,7 @@ export const Runner: FC = () => {
         unit: durationUnit,
       });
     } else {
-      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
+      const results = (await services.runnerTestResult.findByParentId(runnerId)) || [];
       // show execution result
       if (results.length > 0) {
         setTestHistory(results.reverse());
@@ -454,7 +469,7 @@ export const Runner: FC = () => {
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
-    models.runnerTestResult.remove(item);
+    services.runnerTestResult.remove(item);
     setDeletedItems([...deletedItems, item._id]);
   };
 
@@ -477,17 +492,30 @@ export const Runner: FC = () => {
                   <div className="h-full min-w-[500px]">
                     <span className="mr-6 text-sm">
                       <input
-                        value={iterationCount}
+                        value={zeroableIterationCount}
                         name="Iterations"
                         disabled={isRunning}
                         onChange={e => {
+                          // Internal state "iterationCount" and the GUI state "zeroableIterationCount" have different
+                          // valid values: zeroableIterationCount = {iterationCount, ''}
                           try {
-                            if (Number.parseInt(e.target.value, 10) > 0) {
+                            const intValue = Number.parseInt(e.target.value, 10);
+
+                            // An empty string is a valid value to render in the GUI—a user can clear the field in order
+                            // to enter a new value—but not valid for the internal state.
+                            if (e.target.value === '' || intValue === iterationCount) {
+                              setZeroableIterationCount(e.target.value);
+                            }
+
+                            if (intValue > 0) {
                               updateRunnerState(organizationId, runnerId, {
-                                iterationCount: Number.parseInt(e.target.value, 10),
+                                iterationCount: intValue,
                               });
                             }
                           } catch {}
+                        }}
+                        onBlur={() => {
+                          setZeroableIterationCount(String(iterationCount));
                         }}
                         type="number"
                         className={iterationInputStyle}
@@ -496,16 +524,28 @@ export const Runner: FC = () => {
                     </span>
                     <span className="mr-6 text-sm">
                       <input
-                        value={delay}
+                        value={clearableDelay}
                         disabled={isRunning}
                         name="Delay"
                         onChange={e => {
+                          // Internal state "delay" and the local state "clearableDelay" have different
+                          // valid values: clearableDelay = {delay, ''}
                           try {
-                            const delay = Number.parseInt(e.target.value, 10);
-                            if (delay >= 0) {
-                              updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
+                            const intValue = Number.parseInt(e.target.value, 10);
+
+                            // An empty string is a valid value to render in the GUI—a user can clear the field in order
+                            // to enter a new value—but not valid for the internal state.
+                            if (e.target.value === '' || intValue === delay) {
+                              setClearableDelay(e.target.value);
+                            }
+
+                            if (intValue >= 0) {
+                              updateRunnerState(organizationId, runnerId, { delay: intValue });
                             }
                           } catch {}
+                        }}
+                        onBlur={() => {
+                          setClearableDelay(String(delay));
                         }}
                         type="number"
                         className={inputStyle}
@@ -991,7 +1031,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
           });
 
-          const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(targetRequest.id, {
+          const activeRequestMeta = await services.requestMeta.updateOrCreateByParentId(targetRequest.id, {
             lastActive: Date.now(),
           });
           invariant(activeRequestMeta, 'Request meta not found');
@@ -1089,7 +1129,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   } finally {
     cancelExecution(runnerId);
 
-    await models.runnerTestResult.create({
+    await services.runnerTestResult.create({
       parentId: runnerId,
       source: testCtx.source,
       iterations: testCtx.iterationCount,

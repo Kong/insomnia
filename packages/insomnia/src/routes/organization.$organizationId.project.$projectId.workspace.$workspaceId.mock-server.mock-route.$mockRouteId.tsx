@@ -1,4 +1,5 @@
 import type * as Har from 'har-format';
+import { isApiError, upsertMockbin } from 'insomnia-api';
 import { useCallback } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router';
@@ -16,11 +17,10 @@ import {
 } from '~/common/constants';
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
+import type { MockRoute, MockServer, Request, RequestHeader, Response } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { MockRoute } from '~/models/mock-route';
-import type { MockServer } from '~/models/mock-server';
-import type { Request, RequestHeader } from '~/models/request';
-import type { Response } from '~/models/response';
+import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
@@ -35,7 +35,6 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
@@ -49,13 +48,13 @@ export interface MockRouteLoaderData {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, mockRouteId } = params;
 
-  const mockServer = await models.mockServer.getByParentId(workspaceId);
+  const mockServer = await services.mockServer.getByParentId(workspaceId);
   invariant(mockServer, 'Mock server is required');
-  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  const mockRoute = await services.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'Mock route is required');
   // get current response via request children of
   // TODO: use the same request for try mock rather than creating lots of child requests
-  const reqIds = (await models.request.findByParentId(mockRouteId)).map(r => r._id);
+  const reqIds = (await services.request.findByParentId(mockRouteId)).map(r => r._id);
 
   const activeResponse = await db.findOne<Response>(
     models.response.type,
@@ -68,7 +67,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
     // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
-      const buffer = await models.response.getBodyBuffer(activeResponse);
+      const buffer = await getBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
     }
   }
@@ -163,23 +162,14 @@ export const MockRouteRoute = () => {
     workspaceId: string;
   };
 
-  const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
+  const upsertBinOnRemoteFromResponse = async (compoundId: string): Promise<string> => {
     try {
-      const res = await insomniaFetch<
-        | string
-        | {
-            error: string;
-            message: string;
-          }
-      >({
-        origin: mockbinUrl,
-        path: `/bin/upsert/${compoundId}`,
-        method: 'PUT',
+      const res = await upsertMockbin({
+        mockbinUrl,
+        compoundId,
         organizationId,
         sessionId: userSession.id,
-        headers: {
-          'insomnia-mock-method': mockRoute.method,
-        },
+        method: mockRoute.method,
         data: mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
@@ -188,17 +178,24 @@ export const MockRouteRoute = () => {
           body: mockRoute.body,
         }),
       });
-      if (typeof res === 'object' && 'message' in res && 'error' in res) {
-        console.error('error response', res);
-        return `Mock API ${res.error}:\n${res.message}`;
-      }
 
       if (typeof res === 'string') {
         return '';
       }
       console.log('[mock] Error: invalid response from remote', { res, mockbinUrl });
+      if (res && typeof res === 'object') {
+        const errorRes = res as { error?: string; message?: string };
+        const parts = [errorRes.error, errorRes.message].filter(Boolean);
+        if (parts.length > 0) {
+          return parts.join('\n');
+        }
+      }
       return 'Unexpected response, see console for details';
     } catch (e) {
+      if (isApiError(e)) {
+        console.error('error response', e);
+        return `Mock API ${e.name}:\n${e.message}`;
+      }
       const errorMessage = e instanceof Error ? e.message : String(e);
       return `Unhandled contacting Mock API at ${mockbinUrl}\n${errorMessage}`;
     }

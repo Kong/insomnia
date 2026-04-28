@@ -9,15 +9,17 @@ import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOpti
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import type {
+  BaseSocketIORequest,
+  CookieJar,
+  RequestAuthentication,
+  RequestHeader,
+  SocketIOResponse,
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
-import * as models from '../../models';
-import { socketIORequest } from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
-import { type RequestAuthentication, type RequestHeader } from '../../models/request';
-import type { BaseSocketIORequest } from '../../models/socket-io-request';
-import type { SocketIOResponse } from '../../models/socket-io-response.ts';
 import { filterClientCertificates } from '../../network/certificate';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -118,9 +120,10 @@ const writeEventLogAndNotify = ({
   });
 };
 
-const buildTimeline = (url: string) => {
+const buildTimeline = (url: string, path?: string) => {
   const timeline = [
-    { value: `Connected to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Connecting to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Handshake path: ${path || '/socket.io'}`, name: 'Text', timestamp: Date.now() },
     { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
   ];
   return timeline;
@@ -134,6 +137,7 @@ interface OpenSocketIORequestOptions {
   headers: RequestHeader[];
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
+  path?: string;
   initialPayload?: string;
 }
 
@@ -147,14 +151,14 @@ const getCertificates = async ({
   requestId: string;
 }) => {
   // attach certificates to the request
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
   const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   // allow to read the file as it is chosen by user
   const caCertificate =
     (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
   const pemCertificates: string[] = [];
   const pemCertificateKeys: string[] = [];
@@ -214,7 +218,7 @@ const createErrorResponse = async (
   timelinePath: string,
   message: string,
 ) => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
@@ -223,8 +227,8 @@ const createErrorResponse = async (
     statusMessage: 'Error',
     error: message,
   };
-  const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const openSocketIOConnection = async (
@@ -239,7 +243,7 @@ const openSocketIOConnection = async (
     return;
   }
 
-  const request = await socketIORequest.getById(options.requestId);
+  const request = await services.socketIORequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
@@ -253,10 +257,10 @@ const openSocketIOConnection = async (
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
   // fallback to base environment
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(options.workspaceId));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
@@ -289,7 +293,7 @@ const openSocketIOConnection = async (
       url: options.url,
       requestId: options.requestId,
     });
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
 
     const socketIOoptions: Partial<ManagerOptions & SocketOptions> = {
       extraHeaders: lowerCasedEnabledHeaders,
@@ -312,6 +316,13 @@ const openSocketIOConnection = async (
         token: options.authentication.token || '',
       };
     }
+
+    if (options.path) {
+      socketIOoptions.path = options.path;
+    }
+
+    const timeline = buildTimeline(url, options.path);
+    timeline.forEach(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
 
     const socket = SocketIOClient(url, socketIOoptions);
     SocketIOConnections.set(options.requestId, socket);
@@ -341,8 +352,6 @@ const openSocketIOConnection = async (
         writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(infoEvent) + '\n' });
       }
 
-      const timeline = buildTimeline(url);
-      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<SocketIOResponse> = {
         _id: responseId,
         parentId: request._id,
@@ -353,8 +362,8 @@ const openSocketIOConnection = async (
         url: url,
       };
 
-      const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
     });
 
     const engine = socket.io.engine;
@@ -567,7 +576,7 @@ const removeSocketIOListener = (options: { eventName: string; requestId: string 
 };
 
 const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[]> => {
-  const response = await models.socketIOResponse.getById(options.responseId);
+  const response = await services.socketIOResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }

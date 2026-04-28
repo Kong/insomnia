@@ -1,8 +1,8 @@
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from 'insomnia/src/common/constants';
-import type { AuthTypeOAuth2 } from 'insomnia/src/models/request';
 import { fakerFunctions } from 'insomnia/src/templating/faker-functions';
 import { forceBracketNotation } from 'insomnia/src/templating/utils';
 
+import type { AuthTypeOAuth2 } from '~/insomnia-data';
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 
 import type { Converter, ImportRequest, Parameter, PathParameters } from '../entities';
@@ -327,9 +327,16 @@ export class ImportPostman {
     };
 
     if (postmanVariable) {
-      collectionFolder.variable = postmanVariable;
+      // Mapping postman collection variables to collection base environment
+      const baseEnvironment: ImportRequest = {
+        parentId: '__WORKSPACE_ID__',
+        _id: '__BASE_ENVIRONMENT_ID__',
+        _type: 'environment',
+        name: 'Variables',
+        data: postmanVariable,
+      };
+      return [collectionFolder, ...this.importItems(item, collectionFolder._id), baseEnvironment];
     }
-
     return [collectionFolder, ...this.importItems(item, collectionFolder._id)];
   };
 

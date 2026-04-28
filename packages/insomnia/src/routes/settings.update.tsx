@@ -1,5 +1,5 @@
-import * as models from '~/models';
-import type { Settings } from '~/models/settings';
+import type { Settings } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -10,7 +10,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   if ('enableAnalytics' in patch && !patch.enableAnalytics) {
     window.main.trackSegmentEvent({ event: SegmentEvent.analyticsDisabled });
   }
-  await models.settings.patch(patch);
+  await services.settings.patch(patch);
   return null;
 }
 

@@ -5,6 +5,29 @@ import clone from 'clone';
 import orderedJSON from 'json-order';
 
 import type {
+  CaCertificate,
+  ClientCertificate,
+  Cookie,
+  CookieJar,
+  Environment,
+  MockRoute,
+  MockServer,
+  Project,
+  Request,
+  RequestAuthentication,
+  RequestGroup,
+  RequestHeader,
+  RequestParameter,
+  Settings,
+  SocketIORequest,
+  UserUploadEnvironment,
+  WebSocketRequest,
+  Workspace,
+} from '~/insomnia-data';
+import { EnvironmentType, services } from '~/insomnia-data';
+import { getKVPairFromData } from '~/utils/environment-utils';
+
+import type {
   ExecutionOption,
   RequestContext,
   RequestTestResult,
@@ -17,32 +40,6 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import type { CaCertificate } from '../models/ca-certificate';
-import type { ClientCertificate } from '../models/client-certificate';
-import type { Cookie, CookieJar } from '../models/cookie-jar';
-import {
-  type Environment,
-  EnvironmentType,
-  getKVPairFromData,
-  type UserUploadEnvironment,
-  vaultEnvironmentPath,
-} from '../models/environment';
-import type { MockRoute } from '../models/mock-route';
-import type { MockServer } from '../models/mock-server';
-import { isProject, type Project } from '../models/project';
-import {
-  type BaseRequest,
-  isRequest,
-  type Request,
-  type RequestAuthentication,
-  type RequestHeader,
-  type RequestParameter,
-} from '../models/request';
-import { isRequestGroup, type RequestGroup } from '../models/request-group';
-import type { Settings } from '../models/settings';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
-import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginData from '../plugins/context/data';
 import * as pluginNetwork from '../plugins/context/network';
@@ -56,11 +53,15 @@ import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
-import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
+import { QUERY_PARAMS } from './api-key/constants';
+import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 export interface SendActionRuntime {
   appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
@@ -94,7 +95,7 @@ export function getOrInheritHeaders({
   request,
   requestGroups,
 }: {
-  request: Pick<BaseRequest, 'headers'>;
+  request: Pick<Request, 'headers'>;
   requestGroups: Pick<RequestGroup, 'headers'>[];
 }): RequestHeader[] {
   const httpHeaders = new Map<string, string>();
@@ -127,7 +128,7 @@ export function getOrInheritHeaders({
 }
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
 export const fetchRequestGroupData = async (requestGroupId: string) => {
-  const requestGroup = await models.requestGroup.getById(requestGroupId);
+  const requestGroup = await services.requestGroup.getById(requestGroupId);
   invariant(requestGroup, 'failed to find requestGroup ' + requestGroupId);
   const ancestors = await db.withAncestors<RequestGroup | Workspace | MockRoute | MockServer>(requestGroup, [
     models.requestGroup.type,
@@ -135,24 +136,24 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
     models.mockRoute.type,
     models.mockServer.type,
   ]);
-  const workspaceDoc = ancestors.find(isWorkspace);
+  const workspaceDoc = ancestors.find(models.workspace.isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
   const workspaceId = workspaceDoc._id;
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
   // NOTE: parent folders wont be checked in here since we only use it for oauth2 requests right now, so they are discarded in that code path
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspace._id));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(workspace._id));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
   const responsesDir = nodePath.join(
     (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
@@ -168,7 +169,7 @@ export const fetchRequestData = async (
   // Override the active environment id to use for the request
   overrideEnvironmentId?: string,
 ) => {
-  const request = await models.request.getById(requestId);
+  const request = await services.request.getById(requestId);
   invariant(request, 'failed to find request ' + requestId);
   const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | Project | MockRoute | MockServer>(
     request,
@@ -182,42 +183,43 @@ export const fetchRequestData = async (
     ],
   );
 
-  const workspaceDoc = ancestors.find(isWorkspace);
+  const workspaceDoc = ancestors.find(models.workspace.isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
   const workspaceId = workspaceDoc._id;
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   const activeEnvironmentId = overrideEnvironmentId ?? workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
 
-  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
   // no active environment in workspaceMeta, fallback to workspace root environment as active environment
   const environment = activeEnvironment || baseEnvironment;
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+  const cookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
   let activeGlobalEnvironment: Environment | undefined;
   let activeGlobalBaseEnvironment: Environment | undefined;
   if (workspaceMeta?.activeGlobalEnvironmentId) {
-    activeGlobalEnvironment = (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
+    activeGlobalEnvironment =
+      (await services.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
     const activeGlobalEnvironmentParentId = activeGlobalEnvironment?.parentId || '';
     if (activeGlobalEnvironmentParentId.startsWith('wrk_')) {
       // activeGlobalEnvironment is a base global environment
       activeGlobalBaseEnvironment = activeGlobalEnvironment;
     } else if (activeGlobalEnvironmentParentId.startsWith('env_')) {
       // activeGlobalEnvironment is a sub global environment
-      activeGlobalBaseEnvironment = (await models.environment.getById(activeGlobalEnvironmentParentId)) || undefined;
+      activeGlobalBaseEnvironment = (await services.environment.getById(activeGlobalEnvironmentParentId)) || undefined;
     }
   }
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
   const responsesDir = nodePath.join(
@@ -246,21 +248,21 @@ export const fetchRequestData = async (
 };
 
 export const fetchMcpRequestData = async (mcpRequestId: string) => {
-  const mcpRequest = await models.mcpRequest.getById(mcpRequestId);
+  const mcpRequest = await services.mcpRequest.getById(mcpRequestId);
   invariant(mcpRequest, 'failed to find MCP request ' + mcpRequestId);
 
-  const workspace = await models.workspace.getById(mcpRequest.parentId);
+  const workspace = await services.workspace.getById(mcpRequest.parentId);
   invariant(workspace, 'failed to find workspace');
   const workspaceId = workspace._id;
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
   // no active environment in workspaceMeta, fallback to workspace root environment as active environment
   const environment = activeEnvironment || baseEnvironment;
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
@@ -434,7 +436,7 @@ export async function savePatchesMadeByScript(patches: {
   // persist updated cookieJar if needed
   if (mutatedContext.cookieJar) {
     // merge cookies from response to the cookiejar, or cookies from response will not be persisted
-    await models.cookieJar.update(mutatedContext.cookieJar, {
+    await services.cookieJar.update(mutatedContext.cookieJar, {
       cookies: [...(responseCookies || []), ...mutatedContext.cookieJar.cookies],
     });
   }
@@ -446,7 +448,7 @@ export async function savePatchesMadeByScript(patches: {
   const updateEnvironment = async (originEnvironment: Environment, mutatedContextEnvironment: Environment) => {
     const { environmentType } = originEnvironment;
     const { data, dataPropertyOrder } = mutatedContextEnvironment;
-    await models.environment.update(originEnvironment, {
+    await services.environment.update(originEnvironment, {
       data,
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
@@ -476,7 +478,7 @@ export async function savePatchesMadeByScript(patches: {
   mutatedContext.parentFolders.forEach(mutatedFolder => {
     const originalFolder = originalRequestGroups.find(originalFolder => originalFolder._id === mutatedFolder.id);
     if (originalFolder) {
-      models.requestGroup.update(originalFolder, {
+      services.requestGroup.update(originalFolder, {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
@@ -514,17 +516,20 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
 
   // location is the complete path of a request, including project, collection and folder(if have).
   const requestLocation = ancestors
-    .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
+    .filter(
+      doc =>
+        isRequest(doc) || isRequestGroup(doc) || models.workspace.isWorkspace(doc) || models.project.isProject(doc),
+    )
     .reverse()
     .map(doc => doc.name);
   let vault;
-  if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
+  if (globals && models.environment.vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
     // decrypt and set vault in insomnia sdk if necessary
-    globals.data[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
-      globals.data[vaultEnvironmentPath],
+    globals.data[models.environment.vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
+      globals.data[models.environment.vaultEnvironmentPath],
       'script',
     );
-    vault = globals.data[vaultEnvironmentPath];
+    vault = globals.data[models.environment.vaultEnvironmentPath];
   }
 
   try {
@@ -873,7 +878,11 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const authHeader = await getAuthHeader(renderedRequest, finalUrl);
+  const getRenderedRequestAuthHeader =
+    process.type === 'renderer'
+      ? (r: RenderedRequest, u: string) => window.main.getAuthHeader(r, u)
+      : (await import('../main/network/get-auth-header')).getAuthHeader;
+  const authHeader = await getRenderedRequestAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
     requestId,
     req: renderedRequest,
@@ -923,7 +932,7 @@ export async function sendCurlAndWriteTimeline(
     timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
   );
   if (totalSetCookies) {
-    await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
+    await services.cookieJar.update(renderedRequest.cookieJar, { cookies });
     timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
   }
   const lastRedirect = headerResults[headerResults.length - 1];
@@ -972,6 +981,21 @@ export const responseTransform = async (
   console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`);
   return await _applyResponsePluginHooks(response, renderedRequest, context);
 };
+export function getAuthQueryParams(authentication: RequestAuthentication) {
+  if (authentication.disabled) {
+    return;
+  }
+
+  if (authentication.type === 'apikey' && authentication.addTo === QUERY_PARAMS) {
+    const { key, value } = authentication;
+    return {
+      name: key,
+      value: value,
+    } as RequestParameter;
+  }
+
+  return;
+}
 export const transformUrl = (
   url: string,
   params: RequestParameter[],

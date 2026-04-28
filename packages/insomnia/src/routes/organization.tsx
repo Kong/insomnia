@@ -1,4 +1,4 @@
-import { type CurrentPlan, type UserProfile } from 'insomnia-api';
+import { type Billing, type CurrentPlan, type FeatureList, type Organization, type User } from 'insomnia-api';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -15,14 +15,14 @@ import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoa
 import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import { userSession } from '~/models';
-import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '~/models/organization';
-import type { Settings } from '~/models/settings';
-import { isScratchpad } from '~/models/workspace';
+import type { Settings } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
+import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
+import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
@@ -49,15 +49,15 @@ import type { Route } from './+types/organization';
 
 export interface OrganizationLoaderData {
   organizations: Organization[];
-  user?: UserProfile;
+  user?: User;
   currentPlan?: CurrentPlan;
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id, accountId } = await userSession.getOrCreate();
+  const { id, accountId } = await services.userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as UserProfile;
+    const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as User;
     const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
     return {
       organizations: sortOrganizations(accountId, organizations),
@@ -70,28 +70,6 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     user: undefined,
     currentPlan: undefined,
   };
-}
-
-export interface FeatureStatus {
-  enabled: boolean;
-  reason?: string;
-}
-
-export interface FeatureList {
-  bulkImport: FeatureStatus;
-  gitSync: FeatureStatus;
-  orgBasicRbac: FeatureStatus;
-  aiMockServers: FeatureStatus;
-  aiCommitMessages: FeatureStatus;
-  aiMcpClient: FeatureStatus;
-}
-
-export interface Billing {
-  // If true, the user has paid for the current period
-  isActive: boolean;
-  expirationWarningMessage: string;
-  expirationErrorMessage: string;
-  accessDenied: boolean;
 }
 
 export interface OrganizationFeatureLoaderData {
@@ -191,7 +169,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const workspaceData = useWorkspaceLoaderData();
 
   const navigate = useNavigate();
-  const isScratchpadWorkspace = workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace);
+  const isScratchpadWorkspace =
+    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData.activeWorkspace);
   const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
@@ -232,6 +211,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       untrackedProjectsFetcher.load();
     }
   }, [organizationId, untrackedProjectsFetcher]);
+
+  useEffect(() => {
+    window.main.setCurrentOrganizationId(organizationId);
+    return () => window.main.setCurrentOrganizationId(undefined);
+  }, [organizationId]);
 
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
@@ -427,12 +411,20 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 <Outlet />
               </RunnerProvider>
             </div>
-            <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]">
+            <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]" data-testid="statusbar">
               <div className="flex h-full w-[50px] shrink-0 items-center justify-center gap-2 border-r border-solid border-r-(--hl-md)">
                 <TooltipTrigger>
                   <ToggleButton
                     className="h-[10px] w-[10px] grow-0 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-                    onChange={setIsOrganizationSidebarOpen}
+                    onChange={value => {
+                      setIsOrganizationSidebarOpen(value);
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.statusbarLeftbarToggled,
+                        properties: {
+                          status: value ? 'open' : 'collapsed',
+                        },
+                      });
+                    }}
                     isSelected={isOrganizationSidebarOpen}
                   >
                     {({ isSelected }) => {
@@ -470,6 +462,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     className="h-[10px] w-[10px] grow-0 rotate-90 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     onChange={flag => {
                       setIsMinimal(!flag);
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.statusbarTopbarToggled,
+                        properties: {
+                          status: !flag ? 'minimal' : 'expanded',
+                        },
+                      });
                     }}
                     isSelected={!isMinimal}
                   >
@@ -527,7 +525,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <div>
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                        onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                        onPress={() => {
+                          window.main.trackSegmentEvent({
+                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          });
+                          showModal(SettingsModal, { tab: 'data' });
+                        }}
                       >
                         <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click
                         here to view them.
@@ -538,7 +541,12 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     <TooltipTrigger delay={500}>
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                        onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                        onPress={() => {
+                          window.main.trackSegmentEvent({
+                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          });
+                          showModal(SettingsModal, { tab: 'data' });
+                        }}
                       >
                         <Icon icon="exclamation-circle" />
                       </Button>

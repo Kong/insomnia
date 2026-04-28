@@ -1,6 +1,4 @@
-import path from 'node:path';
-
-import { parse } from 'yaml';
+import { isMap, isScalar, isSeq, LineCounter, parse, type ParsedNode, parseDocument } from 'yaml';
 
 import { normalizeScripts } from '~/common/insomnia-schema-migrations/v5.1';
 
@@ -158,7 +156,7 @@ export function hasSignificantChanges(
   config: Partial<IntelligentDiffConfig> = {},
 ): boolean {
   // Non-YAML files → raw string comparison
-  if (path.extname(filePath) !== '.yaml') {
+  if (!filePath.toLowerCase().endsWith('.yaml')) {
     return originalContent !== modifiedContent;
   }
 
@@ -180,4 +178,167 @@ export function hasSignificantChanges(
     console.warn('Parse error:', err);
     return originalContent !== modifiedContent;
   }
+}
+
+interface Interval {
+  start: number;
+  end: number;
+}
+
+/**
+ * Find lines that represent "system changes" within line change intervals.
+ * The meta property and its children are considered system changes.
+ */
+export function findSystemChangeLines(
+  modifiedYaml: string,
+  lineChangeIntervals: { modifiedStartLineNumber: number; modifiedEndLineNumber: number }[],
+) {
+  const intersectIntervals: Interval[] = [];
+
+  try {
+    const changeIntervals = lineChangeIntervals.map(({ modifiedStartLineNumber, modifiedEndLineNumber }) => ({
+      start: modifiedStartLineNumber,
+      end: modifiedEndLineNumber,
+    }));
+    const systemLineIntervals = findMetaLineIntervals(modifiedYaml);
+
+    const EVENT_TYPE = {
+      CHANGE_START: 0,
+      SYSTEM_START: 1,
+      SYSTEM_END: 2,
+      CHANGE_END: 3,
+    } as const;
+
+    type EventType = (typeof EVENT_TYPE)[keyof typeof EVENT_TYPE];
+
+    interface Event {
+      eventType: EventType;
+      lineNumber: number;
+    }
+
+    const events: Event[] = [];
+
+    changeIntervals.forEach(interval => {
+      events.push(
+        { eventType: EVENT_TYPE.CHANGE_START, lineNumber: interval.start },
+        { eventType: EVENT_TYPE.CHANGE_END, lineNumber: interval.end },
+      );
+    });
+
+    systemLineIntervals.forEach(interval => {
+      events.push(
+        { eventType: EVENT_TYPE.SYSTEM_START, lineNumber: interval.start },
+        { eventType: EVENT_TYPE.SYSTEM_END, lineNumber: interval.end },
+      );
+    });
+
+    // Line sweep algorithm to find intersecting intervals between change intervals and system line intervals
+    // Sort events by line number, and for same line number, the order of event types is: CHANGE_START -> SYSTEM_START -> SYSTEM_END -> CHANGE_END
+    events.sort((a, b) => {
+      if (a.lineNumber !== b.lineNumber) {
+        return a.lineNumber - b.lineNumber;
+      }
+      return a.eventType - b.eventType;
+    });
+
+    // Sweep through events to find intervals where both a change and a system change are active simultaneously
+    let changeCount = 0;
+    let systemCount = 0;
+    let overlapStart: number | null = null;
+
+    for (const event of events) {
+      const wasOverlapping = changeCount > 0 && systemCount > 0;
+
+      switch (event.eventType) {
+        case EVENT_TYPE.CHANGE_START: {
+          changeCount++;
+          break;
+        }
+        case EVENT_TYPE.SYSTEM_START: {
+          systemCount++;
+          break;
+        }
+        case EVENT_TYPE.SYSTEM_END: {
+          systemCount--;
+          break;
+        }
+        case EVENT_TYPE.CHANGE_END: {
+          changeCount--;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+
+      const isOverlapping = changeCount > 0 && systemCount > 0;
+
+      if (!wasOverlapping && isOverlapping) {
+        overlapStart = event.lineNumber;
+      } else if (wasOverlapping && !isOverlapping) {
+        intersectIntervals.push({ start: overlapStart!, end: event.lineNumber });
+        overlapStart = null;
+      }
+    }
+
+    // Merge consecutive/overlapping intervals
+    for (let i = 1; i < intersectIntervals.length; ) {
+      const prev = intersectIntervals[i - 1];
+      const curr = intersectIntervals[i];
+      if (curr.start <= prev.end + 1) {
+        prev.end = Math.max(prev.end, curr.end);
+        intersectIntervals.splice(i, 1);
+      } else {
+        i++;
+      }
+    }
+  } catch (error) {
+    console.error('Error finding system change lines:', error);
+  }
+
+  return intersectIntervals;
+}
+
+// Get all line numbers (1-based, inclusive) spanned by a YAML AST node
+function getNodeLineInterval(node: ParsedNode | null | undefined, lineCounter: LineCounter) {
+  if (!node?.range) return;
+  const [start, , end] = node.range as [number, number, number];
+  const startLine = lineCounter.linePos(start).line;
+  const endLine = end > start ? lineCounter.linePos(end - 1).line : startLine;
+  if (endLine < startLine) return;
+  return { start: startLine, end: endLine };
+}
+
+// Recursively find all line numbers belonging to 'meta' keys in a YAML string
+function findMetaLineIntervals(yamlString: string) {
+  const lineCounter = new LineCounter();
+  const doc = parseDocument(yamlString, { lineCounter });
+  const retIntervals: Interval[] = [];
+
+  function walk(node: ParsedNode | null | undefined) {
+    if (isMap(node)) {
+      for (const pair of node.items) {
+        if (isScalar(pair.key) && pair.key.value === 'meta') {
+          // Collect the 'meta' key line + all value lines
+          const intervalOfKey = getNodeLineInterval(pair.key, lineCounter);
+          if (intervalOfKey) {
+            retIntervals.push(intervalOfKey);
+          }
+          const intervalOfValue = getNodeLineInterval(pair.value, lineCounter);
+          if (intervalOfValue) {
+            retIntervals.push(intervalOfValue);
+          }
+        } else {
+          walk(pair.value);
+        }
+      }
+    } else if (isSeq(node)) {
+      for (const item of node.items) {
+        walk(item);
+      }
+    }
+  }
+
+  walk(doc.contents);
+  return retIntervals;
 }

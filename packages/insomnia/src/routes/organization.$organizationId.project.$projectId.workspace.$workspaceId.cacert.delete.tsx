@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -9,9 +9,9 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { workspaceId } = params;
 
-  const caCertificate = await models.caCertificate.findByParentId(workspaceId);
+  const caCertificate = await services.caCertificate.getByParentId(workspaceId);
   invariant(caCertificate, 'CA Certificate not found');
-  await models.caCertificate.removeWhere(workspaceId);
+  await services.caCertificate.removeWhere(workspaceId);
   return null;
 }
 

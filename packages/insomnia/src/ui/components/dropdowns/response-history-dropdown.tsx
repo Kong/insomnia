@@ -3,18 +3,21 @@ import React, { useCallback, useRef } from 'react';
 import { Button } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type {
+  McpResponse,
+  Request,
+  RequestVersion,
+  Response,
+  SocketIOResponse,
+  WebSocketRequest,
+  WebSocketResponse,
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { useRequestResponseDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 import { useRequestResponseDeleteAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete-all';
 
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
-import { isMcpResponse, type McpResponse } from '../../../models/mcp-response';
-import { isRequest, type Request } from '../../../models/request';
-import { type RequestVersion } from '../../../models/request-version';
-import type { Response } from '../../../models/response';
-import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
-import type { WebSocketRequest } from '../../../models/websocket-request';
-import { isWebSocketResponse, type WebSocketResponse } from '../../../models/websocket-response';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -24,6 +27,8 @@ import { StatusTag, StringStatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
+
+const { isRequest } = models.request;
 
 type ResponseType = Response | WebSocketResponse | SocketIOResponse | McpResponse;
 
@@ -59,20 +64,20 @@ export const ResponseHistoryDropdown = ({
 
   const handleSetActiveResponse = useCallback(
     async (requestId: string, activeResponse: ResponseType) => {
-      if (isWebSocketResponse(activeResponse)) {
+      if (models.webSocketResponse.isWebSocketResponse(activeResponse)) {
         window.main.webSocket.close({ requestId });
       }
 
-      if (isSocketIOResponse(activeResponse)) {
+      if (models.socketIOResponse.isSocketIOResponse(activeResponse)) {
         window.main.socketIO.close({ requestId });
       }
 
-      if (isMcpResponse(activeResponse)) {
+      if (models.mcpResponse.isMcpResponse(activeResponse)) {
         window.main.mcp.close({ requestId });
       }
 
       if (activeResponse.requestVersionId) {
-        await models.requestVersion.restore(activeResponse.requestVersionId);
+        await services.requestVersion.restore(activeResponse.requestVersionId);
       }
 
       await patchRequestMeta(requestId, { activeResponseId: activeResponse._id });
@@ -82,11 +87,11 @@ export const ResponseHistoryDropdown = ({
 
   const deleteResponsesSubmit = deleteAllReponsesFetcher.submit;
   const handleDeleteResponses = useCallback(async () => {
-    if (isWebSocketResponse(activeResponse)) {
+    if (models.webSocketResponse.isWebSocketResponse(activeResponse)) {
       window.main.webSocket.close({ requestId });
-    } else if (isSocketIOResponse(activeResponse)) {
+    } else if (models.socketIOResponse.isSocketIOResponse(activeResponse)) {
       window.main.socketIO.close({ requestId });
-    } else if (isMcpResponse(activeResponse)) {
+    } else if (models.mcpResponse.isMcpResponse(activeResponse)) {
       window.main.mcp.close({ requestId });
     }
     deleteResponsesSubmit({
@@ -100,11 +105,11 @@ export const ResponseHistoryDropdown = ({
   const deleteResponseSubmit = deleteReponseFetcher.submit;
   const handleDeleteResponse = useCallback(async () => {
     if (activeResponse) {
-      if (isWebSocketResponse(activeResponse)) {
+      if (models.webSocketResponse.isWebSocketResponse(activeResponse)) {
         window.main.webSocket.close({ requestId });
-      } else if (isSocketIOResponse(activeResponse)) {
+      } else if (models.socketIOResponse.isSocketIOResponse(activeResponse)) {
         window.main.socketIO.close({ requestId });
-      } else if (isMcpResponse(activeResponse)) {
+      } else if (models.mcpResponse.isMcpResponse(activeResponse)) {
         window.main.mcp.close({ requestId });
       }
     }
@@ -140,7 +145,9 @@ export const ResponseHistoryDropdown = ({
           onClick={() => handleSetActiveResponse(requestId, response)}
           label={
             <div className="leading-10">
-              {isSocketIOResponse(response) ? null : isMcpResponse(response) && response.transportType === 'stdio' ? (
+              {models.socketIOResponse.isSocketIOResponse(response) ? null : models.mcpResponse.isMcpResponse(
+                  response,
+                ) && response.transportType === 'stdio' ? (
                 <StringStatusTag
                   small
                   status={response.status}
@@ -162,14 +169,16 @@ export const ResponseHistoryDropdown = ({
                 tooltipDelay={1000}
               />
               <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
-              {!isWebSocketResponse(response) && !isSocketIOResponse(response) && !isMcpResponse(response) && (
-                <SizeTag
-                  bytesRead={response.bytesRead}
-                  bytesContent={response.bytesContent}
-                  small
-                  tooltipDelay={1000}
-                />
-              )}
+              {!models.webSocketResponse.isWebSocketResponse(response) &&
+                !models.socketIOResponse.isSocketIOResponse(response) &&
+                !models.mcpResponse.isMcpResponse(response) && (
+                  <SizeTag
+                    bytesRead={response.bytesRead}
+                    bytesContent={response.bytesContent}
+                    small
+                    tooltipDelay={1000}
+                  />
+                )}
               {!response.requestVersionId ? (
                 <i
                   className="icon fa fa-info-circle"

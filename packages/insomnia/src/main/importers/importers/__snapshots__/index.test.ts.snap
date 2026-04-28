@@ -12,6 +12,7 @@ exports[`Fixtures > Import curl > complex-input.sh 1`] = `
       "_type": "request",
       "authentication": {
         "password": "My:Secret:Password",
+        "type": "basic",
         "username": "My User",
       },
       "body": {
@@ -34,6 +35,10 @@ exports[`Fixtures > Import curl > complex-input.sh 1`] = `
         {
           "name": "another-header",
           "value": "foo",
+        },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
         },
       ],
       "method": "POST",
@@ -86,6 +91,10 @@ exports[`Fixtures > Import curl > dollar-sign-input.sh 1`] = `
           "name": "Pragma",
           "value": "no-cache",
         },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
       ],
       "method": "POST",
       "name": "https://test.dk",
@@ -128,7 +137,12 @@ exports[`Fixtures > Import curl > form-input.sh 1`] = `
           },
         ],
       },
-      "headers": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
+      ],
       "method": "POST",
       "name": "https://insomnia.rest/signup",
       "parameters": [],
@@ -223,7 +237,12 @@ exports[`Fixtures > Import curl > get-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
+      ],
       "method": "GET",
       "name": "http://somesite.com/getdata",
       "parameters": [
@@ -255,6 +274,10 @@ exports[`Fixtures > Import curl > header-colon-input.sh 1`] = `
         {
           "name": "X-Something",
           "value": "foo: bar:baz",
+        },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
         },
       ],
       "method": "GET",
@@ -296,6 +319,10 @@ exports[`Fixtures > Import curl > multi-data-input.sh 1`] = `
           "name": "Content-Type",
           "value": "application/x-www-form-urlencoded",
         },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
       ],
       "method": "POST",
       "name": "https://insomnia.rest",
@@ -319,7 +346,12 @@ exports[`Fixtures > Import curl > multi-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
+      ],
       "method": "GET",
       "name": "https://insomnia.rest/1/2/3",
       "parameters": [],
@@ -331,7 +363,12 @@ exports[`Fixtures > Import curl > multi-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
+      ],
       "method": "GET",
       "name": "https://insomnia.rest/foo/bar",
       "parameters": [],
@@ -348,6 +385,10 @@ exports[`Fixtures > Import curl > multi-input.sh 1`] = `
           "name": "Cookie",
           "value": "foo=bar",
         },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
       ],
       "method": "GET",
       "name": "https://insomnia.rest",
@@ -360,7 +401,12 @@ exports[`Fixtures > Import curl > multi-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
+      ],
       "method": "GET",
       "name": "https://insomnia.rest",
       "parameters": [],
@@ -383,7 +429,12 @@ exports[`Fixtures > Import curl > no-url-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
+      ],
       "method": "POST",
       "name": "cURL Import 1",
       "parameters": [],
@@ -409,7 +460,12 @@ exports[`Fixtures > Import curl > question-mark-input.sh 1`] = `
         "mimeType": "",
         "text": "{"query":{"match_all":{}}}",
       },
-      "headers": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
+      ],
       "method": "POST",
       "name": "http://192.168.1.1:9200/executions/_search",
       "parameters": [
@@ -438,7 +494,12 @@ exports[`Fixtures > Import curl > simple-url-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
+      ],
       "method": "GET",
       "name": "https://www.google.com",
       "parameters": [],
@@ -461,7 +522,12 @@ exports[`Fixtures > Import curl > url-only-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
+        },
+      ],
       "method": "GET",
       "name": "https://insomnia.rest/foo/bar",
       "parameters": [],
@@ -500,6 +566,10 @@ exports[`Fixtures > Import curl > urlencoded-input.sh 1`] = `
         {
           "name": "Content-Type",
           "value": "application/x-www-form-urlencoded",
+        },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/TEST",
         },
       ],
       "method": "POST",
@@ -1183,7 +1253,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "Find pet by ID",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__a4608701",
@@ -1211,7 +1281,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "Updates a pet in the store with form data",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__e804bd05",
@@ -1237,7 +1307,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "Deletes a pet",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__8081fb6f",
@@ -1265,7 +1335,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "uploads an image",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}/uploadImage",
+      "url": "{{ _.base_url }}/pet/:petId/uploadImage",
     },
     {
       "_id": "req___WORKSPACE_ID__443ac9e7",
@@ -1309,7 +1379,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "Find purchase order by ID",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}",
+      "url": "{{ _.base_url }}/store/order/:orderId",
     },
     {
       "_id": "req___WORKSPACE_ID__15e47538",
@@ -1322,7 +1392,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "Delete purchase order by ID",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}",
+      "url": "{{ _.base_url }}/store/order/:orderId",
     },
     {
       "_id": "req___WORKSPACE_ID__fe3d55d0",
@@ -1411,7 +1481,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "Get user by user name",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
     {
       "_id": "req___WORKSPACE_ID__6d74493f",
@@ -1424,7 +1494,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "Updated user",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
     {
       "_id": "req___WORKSPACE_ID__38e8e88f",
@@ -1437,7 +1507,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "Delete user",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
   ],
 }
@@ -1664,7 +1734,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "Find pet by ID",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__a4608701",
@@ -1692,7 +1762,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "Updates a pet in the store with form data",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__e804bd05",
@@ -1718,7 +1788,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "Deletes a pet",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__8081fb6f",
@@ -1746,7 +1816,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "uploads an image",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}/uploadImage",
+      "url": "{{ _.base_url }}/pet/:petId/uploadImage",
     },
     {
       "_id": "req___WORKSPACE_ID__443ac9e7",
@@ -1790,7 +1860,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "Find purchase order by ID",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__3a21295d",
-      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}",
+      "url": "{{ _.base_url }}/store/order/:orderId",
     },
     {
       "_id": "req___WORKSPACE_ID__15e47538",
@@ -1803,7 +1873,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "Delete purchase order by ID",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__3a21295d",
-      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}",
+      "url": "{{ _.base_url }}/store/order/:orderId",
     },
     {
       "_id": "req___WORKSPACE_ID__fe3d55d0",
@@ -1892,7 +1962,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "Get user by user name",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
     {
       "_id": "req___WORKSPACE_ID__6d74493f",
@@ -1905,7 +1975,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "Updated user",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
     {
       "_id": "req___WORKSPACE_ID__38e8e88f",
@@ -1918,7 +1988,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "Delete user",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
   ],
 }
@@ -2907,7 +2977,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "Find pet by ID",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__a4608701",
@@ -2935,7 +3005,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "Updates a pet in the store with form data",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__e804bd05",
@@ -2961,7 +3031,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "Deletes a pet",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__8081fb6f",
@@ -2989,7 +3059,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "uploads an image",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}/uploadImage",
+      "url": "{{ _.base_url }}/pet/:petId/uploadImage",
     },
     {
       "_id": "req___WORKSPACE_ID__443ac9e7",
@@ -3033,7 +3103,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "Find purchase order by ID",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}",
+      "url": "{{ _.base_url }}/store/order/:orderId",
     },
     {
       "_id": "req___WORKSPACE_ID__15e47538",
@@ -3046,7 +3116,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "Delete purchase order by ID",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}",
+      "url": "{{ _.base_url }}/store/order/:orderId",
     },
     {
       "_id": "req___WORKSPACE_ID__fe3d55d0",
@@ -3135,7 +3205,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "Get user by user name",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
     {
       "_id": "req___WORKSPACE_ID__6d74493f",
@@ -3148,7 +3218,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "Updated user",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
     {
       "_id": "req___WORKSPACE_ID__38e8e88f",
@@ -3161,7 +3231,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "Delete user",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
   ],
 }
@@ -3256,7 +3326,7 @@ exports[`Fixtures > Import openapi3 > petstore-readonly-input.yml 1`] = `
       "name": "Info for a specific pet",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pets/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pets/:petId",
     },
   ],
 }
@@ -3483,7 +3553,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "Find pet by ID",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__a4608701",
@@ -3511,7 +3581,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "Updates a pet in the store with form data",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__e804bd05",
@@ -3537,7 +3607,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "Deletes a pet",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pet/:petId",
     },
     {
       "_id": "req___WORKSPACE_ID__8081fb6f",
@@ -3565,7 +3635,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "uploads an image",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ _.base_url }}/pet/{{ _.petId }}/uploadImage",
+      "url": "{{ _.base_url }}/pet/:petId/uploadImage",
     },
     {
       "_id": "req___WORKSPACE_ID__443ac9e7",
@@ -3609,7 +3679,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "Find purchase order by ID",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__3a21295d",
-      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}",
+      "url": "{{ _.base_url }}/store/order/:orderId",
     },
     {
       "_id": "req___WORKSPACE_ID__15e47538",
@@ -3622,7 +3692,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "Delete purchase order by ID",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__3a21295d",
-      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}",
+      "url": "{{ _.base_url }}/store/order/:orderId",
     },
     {
       "_id": "req___WORKSPACE_ID__fe3d55d0",
@@ -3711,7 +3781,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "Get user by user name",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
     {
       "_id": "req___WORKSPACE_ID__6d74493f",
@@ -3724,7 +3794,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "Updated user",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
     {
       "_id": "req___WORKSPACE_ID__38e8e88f",
@@ -3737,7 +3807,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "Delete user",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ _.base_url }}/user/{{ _.username }}",
+      "url": "{{ _.base_url }}/user/:username",
     },
   ],
 }
@@ -3820,7 +3890,7 @@ exports[`Fixtures > Import openapi3 > petstore-yml-input.yml 1`] = `
       "name": "Info for a specific pet",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ _.base_url }}/pets/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pets/:petId",
     },
   ],
 }
@@ -3930,7 +4000,7 @@ exports[`Fixtures > Import openapi3 > petstore-yml-with-tags-input.yml 1`] = `
       "name": "Info for a specific pet",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__a8acce24",
-      "url": "{{ _.base_url }}/pets/{{ _.petId }}",
+      "url": "{{ _.base_url }}/pets/:petId",
     },
   ],
 }
@@ -6089,18 +6159,11 @@ exports[`Fixtures > Import postman > scripts-import-v2_1-input.json 1`] = `
       "afterResponseScript": "console.log('after')",
       "authentication": {},
       "description": "",
-      "environment": {
-        "bob": "something",
-        "dssx": "{{_['env-var-in-global']}}",
-      },
+      "environment": {},
       "metaSortKey": -1622117984000,
       "name": "New Collection",
       "parentId": "__WORKSPACE_ID__",
       "preRequestScript": "console.log('pre')",
-      "variable": {
-        "bob": "something",
-        "dssx": "{{_['env-var-in-global']}}",
-      },
     },
     {
       "_id": "__REQ_1__",
@@ -6118,6 +6181,17 @@ exports[`Fixtures > Import postman > scripts-import-v2_1-input.json 1`] = `
       "pathParameters": [],
       "preRequestScript": "console.log('this is pre-request script');",
       "url": "httpbin.org/get",
+    },
+    {
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
+      "data": {
+        "bob": "something",
+        "dssx": "{{_['env-var-in-global']}}",
+      },
+      "metaSortKey": -1622117983998,
+      "name": "Variables",
+      "parentId": "__WORKSPACE_ID__",
     },
   ],
 }

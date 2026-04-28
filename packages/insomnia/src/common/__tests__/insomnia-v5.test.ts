@@ -8,9 +8,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
+import type { Request } from '~/insomnia-data';
+import { EnvironmentKvPairDataType, services } from '~/insomnia-data';
+
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
-import * as models from '../../models';
-import type { Request } from '../../models/request';
 import { database as db } from '../database';
 import {
   getInsomniaV5DataExport,
@@ -26,19 +27,19 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
     await db.init({ inMemoryOnly: true });
 
     // Create a basic project and workspace
-    await models.project.create({
+    await services.project.create({
       _id: 'proj_test',
       name: 'Test Project',
     });
 
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_test',
       name: 'Test Workspace',
       parentId: 'proj_test',
       scope: 'collection',
     });
 
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
   });
 
   describe('insomniaSchemaTypeToScope', () => {
@@ -47,6 +48,7 @@ describe('Insomnia v5 Import/Export - Comprehensive Tests', () => {
       expect(insomniaSchemaTypeToScope('environment.insomnia.rest/5.0')).toBe('environment');
       expect(insomniaSchemaTypeToScope('spec.insomnia.rest/5.0')).toBe('design');
       expect(insomniaSchemaTypeToScope('mock.insomnia.rest/5.0')).toBe('mock-server');
+      expect(insomniaSchemaTypeToScope('mcpClient.insomnia/5.0')).toBe('mcp');
     });
   });
 
@@ -155,7 +157,7 @@ collection: []
 
   describe('getInsomniaV5DataExport', () => {
     it('exports workspace with requests correctly', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_export_test',
         name: 'Export Test Workspace',
         parentId: 'proj_test',
@@ -165,7 +167,7 @@ collection: []
         scope: 'collection',
       });
 
-      await models.request.create({
+      await services.request.create({
         _id: 'req_export_test',
         name: 'Export Test Request',
         parentId: workspace._id,
@@ -177,7 +179,7 @@ collection: []
       });
 
       // Add base environment (required)
-      await models.environment.create({
+      await services.environment.create({
         _id: 'env_export_test',
         name: 'Base Environment',
         parentId: workspace._id,
@@ -201,7 +203,7 @@ collection: []
     });
 
     it('handles empty workspace gracefully', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_empty_test',
         name: 'Empty Workspace',
         parentId: 'proj_test',
@@ -209,7 +211,7 @@ collection: []
       });
 
       // must add a base environment
-      await models.environment.create({
+      await services.environment.create({
         _id: 'env_empty',
         name: 'Base Env',
         parentId: workspace._id,
@@ -227,21 +229,21 @@ collection: []
     });
 
     it('filters requests when requestIds are provided', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_filter_test',
         name: 'Filter Workspace',
         parentId: 'proj_test',
         scope: 'collection',
       });
 
-      await models.environment.create({
+      await services.environment.create({
         _id: 'env_filter',
         name: 'Base Env',
         parentId: workspace._id,
         data: {},
       });
 
-      const req1 = await models.request.create({
+      const req1 = await services.request.create({
         _id: 'req_filter_1',
         name: 'Request 1',
         parentId: workspace._id,
@@ -249,7 +251,7 @@ collection: []
         method: 'GET',
       });
 
-      await models.request.create({
+      await services.request.create({
         _id: 'req_filter_2',
         name: 'Request 2',
         parentId: workspace._id,
@@ -269,21 +271,21 @@ collection: []
     });
 
     it('handles design workspace correctly', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_design_test',
         name: 'Design Workspace',
         parentId: 'proj_test',
         scope: 'design',
       });
 
-      await models.environment.create({
+      await services.environment.create({
         _id: 'env_design',
         name: 'Base Env',
         parentId: workspace._id,
         data: {},
       });
 
-      await models.apiSpec.getOrCreateForParentId(workspace._id, {
+      await services.apiSpec.getOrCreateForParentId(workspace._id, {
         _id: 'spec_design',
         contents: '{"openapi": "3.0.0"}',
         contentType: 'json',
@@ -300,14 +302,14 @@ collection: []
     });
 
     it('handles mock server scope', async () => {
-      const workspace = await models.workspace.create({
+      const workspace = await services.workspace.create({
         _id: 'wrk_mock',
         name: 'Mock Workspace',
         parentId: 'proj_test',
         scope: 'mock-server',
       });
 
-      await models.mockServer.create({
+      await services.mockServer.create({
         _id: 'mock_1',
         name: 'Test Server',
         parentId: workspace._id,
@@ -322,6 +324,76 @@ collection: []
       const parsed = YAML.parse(result);
       expect(parsed.type).toBe('mock.insomnia.rest/5.0');
       expect(parsed.server.url).toBe('http://localhost:3000');
+    });
+
+    it('handles mcp client scope', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_mcp',
+        name: 'MCP Workspace',
+        parentId: 'proj_test',
+        scope: 'mcp',
+      });
+
+      await services.environment.create({
+        _id: 'env_mcp',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      const mcpRequest = await services.mcpRequest.create({
+        _id: 'mcp-request_test',
+        name: 'Test MCP client',
+        parentId: workspace._id,
+        url: 'http://mcp.test.com/mcp',
+        transportType: 'streamable-http',
+      });
+
+      let result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      let parsed = YAML.parse(result);
+      expect(parsed.type).toBe('mcpClient.insomnia/5.0');
+      expect(parsed.mcpRequest.url).toBe('http://mcp.test.com/mcp');
+      expect(parsed.mcpRequest.transportType).toBe('streamable-http');
+
+      await services.mcpRequest.update(mcpRequest, {
+        transportType: 'stdio',
+        url: 'npx mcp-client stdio',
+        env: [
+          {
+            id: 'var1',
+            name: 'foo',
+            value: 'bar',
+            type: EnvironmentKvPairDataType.STRING,
+          },
+          {
+            id: 'var2',
+            name: 'foo1',
+            value: 'bar1',
+            type: EnvironmentKvPairDataType.STRING,
+          },
+        ],
+        roots: [
+          {
+            uri: 'file:///path/to/root',
+          },
+        ],
+      });
+
+      result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      parsed = YAML.parse(result);
+      expect(parsed.type).toBe('mcpClient.insomnia/5.0');
+      expect(parsed.mcpRequest.url).toBe('npx mcp-client stdio');
+      expect(parsed.mcpRequest.transportType).toBe('stdio');
+      expect(parsed.mcpRequest.env).toHaveLength(2);
+      expect(parsed.mcpRequest.roots).toHaveLength(1);
     });
 
     it('returns empty string for unknown workspace', async () => {

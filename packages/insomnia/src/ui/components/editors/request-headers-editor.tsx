@@ -1,11 +1,11 @@
 import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
+import type { RequestHeader } from '~/insomnia-data';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
-import type { RequestHeader } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -15,6 +15,7 @@ interface Props {
   bulk: boolean;
   isDisabled?: boolean;
   requestType: 'Request' | 'RequestGroup' | 'WebSocketRequest' | 'McpRequest';
+  onDescriptionToggle?: () => void;
 }
 export const readOnlyWebsocketPairs = [
   { name: 'Connection', value: 'Upgrade' },
@@ -28,7 +29,7 @@ export const readOnlyHttpPairs = [
   { name: 'Host', value: '<calculated at runtime>' },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
 
-export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, requestType }) => {
+export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, requestType, onDescriptionToggle }) => {
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const patcher = requestType === 'RequestGroup' ? patchRequestGroup : patchRequest;
@@ -101,6 +102,7 @@ export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, req
       onChange={headers => patcher(id, { headers })}
       isDisabled={isDisabled}
       readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
+      onDescriptionToggle={onDescriptionToggle}
     />
   );
 };

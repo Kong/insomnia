@@ -4,19 +4,19 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { RequestParameter, Settings } from '~/insomnia-data';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { getCombinedPathParametersFromUrl, type RequestParameter } from '../../../models/request';
-import type { Settings } from '../../../models/settings';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { SegmentEvent } from '../../../ui/analytics';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -33,6 +33,8 @@ import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar, type RequestUrlBarHandle } from '../request-url-bar';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
+
+const { getCombinedPathParametersFromUrl } = models.request;
 
 interface Props {
   environmentId: string;
@@ -201,7 +203,10 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   <div className="flex items-center gap-2">
                     <Button
                       isDisabled={!urlHasQueryParameters}
-                      onPress={handleImportQueryFromUrl}
+                      onPress={() => {
+                        handleImportQueryFromUrl();
+                        window.main.trackSegmentEvent({ event: SegmentEvent.requestParamsImportFromURLClicked });
+                      }}
                       className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
                     >
                       Import from URL
@@ -211,6 +216,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                         patchSettings({
                           useBulkParametersEditor: isSelected,
                         });
+                        window.main.trackSegmentEvent({ event: SegmentEvent.requestParamsBulkEditToggled });
                       }}
                       isSelected={settings.useBulkParametersEditor}
                       className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
@@ -228,7 +234,13 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   </div>
                 </div>
                 <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
-                  <RequestParametersEditor key={contentType} bulk={settings.useBulkParametersEditor} />
+                  <RequestParametersEditor
+                    key={contentType}
+                    bulk={settings.useBulkParametersEditor}
+                    onDescriptionToggle={() => {
+                      window.main.trackSegmentEvent({ event: SegmentEvent.requestParamsDescriptionToggled });
+                    }}
+                  />
                 </ErrorBoundary>
               </div>
             </Panel>
@@ -293,6 +305,9 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 bulk={settings.useBulkHeaderEditor}
                 headers={activeRequest.headers}
                 requestType="Request"
+                onDescriptionToggle={() => {
+                  window.main.trackSegmentEvent({ event: SegmentEvent.requestHeadersDescriptionToggled });
+                }}
               />
             </div>
           </ErrorBoundary>
@@ -300,11 +315,12 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
           <div className="box-border flex h-(--line-height-sm) flex-row border-t border-solid border-(--hl-md) text-(--font-size-sm)">
             <Button
               className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              onPress={() =>
+              onPress={() => {
                 patchSettings({
                   useBulkHeaderEditor: !settings.useBulkHeaderEditor,
-                })
-              }
+                });
+                window.main.trackSegmentEvent({ event: SegmentEvent.requestHeadersBulkEditToggled });
+              }}
             >
               {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
             </Button>
@@ -352,6 +368,12 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   defaultValue={activeRequest.preRequestScript || ''}
                   onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
                   settings={settings}
+                  onSnippetAdded={snippetName => {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestScriptsPreScriptSnippetAdded,
+                      properties: { snippetName },
+                    });
+                  }}
                 />
               </ErrorBoundary>
             </TabPanel>
@@ -362,6 +384,12 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   defaultValue={activeRequest.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequest(requestId, { afterResponseScript })}
                   settings={settings}
+                  onSnippetAdded={snippetName => {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestScriptsPostScriptSnippetAdded,
+                      properties: { snippetName },
+                    });
+                  }}
                 />
               </ErrorBoundary>
             </TabPanel>

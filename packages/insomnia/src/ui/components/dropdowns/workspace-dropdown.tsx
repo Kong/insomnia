@@ -1,6 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import {
   exportGlobalEnvironmentToFile,
+  exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
 import { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
@@ -10,6 +11,7 @@ import {
   Dialog,
   Header,
   Heading,
+  Label,
   Menu,
   MenuItem,
   MenuSection,
@@ -17,9 +19,12 @@ import {
   Modal,
   ModalOverlay,
   Popover,
+  Radio,
+  RadioGroup,
 } from 'react-aria-components';
 import { href, useNavigate, useParams } from 'react-router';
 
+import type { Workspace } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
@@ -28,10 +33,6 @@ import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import * as models from '../../../models';
-import { isRemoteProject } from '../../../models/project';
-import { isRequest } from '../../../models/request';
-import { isRequestGroup } from '../../../models/request-group';
-import { isMcp, isScratchpad, type Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -53,11 +54,11 @@ import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
 export const WorkspaceDropdown: FC<{}> = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-  }>();
+  };
   invariant(organizationId, 'Expected organizationId');
   const { activeWorkspace, activeWorkspaceMeta, activeProject, activeMockServer } = useWorkspaceLoaderData()!;
 
@@ -95,8 +96,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
         };
 
         const docs = await db.getWithDescendants(workspace, [models.request.type]);
-        const requests = docs.filter(isRequest).filter(doc => !doc.isPrivate);
-        const requestGroups = docs.filter(isRequestGroup);
+        const requests = docs.filter(models.request.isRequest).filter(doc => !doc.isPrivate);
+        const requestGroups = docs.filter(models.requestGroup.isRequestGroup);
         await action(context, {
           requestGroups,
           requests,
@@ -118,7 +119,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
     setActionPlugins(actionPlugins);
   }, []);
 
-  const isScratchpadWorkspace = isScratchpad(activeWorkspace);
+  const isScratchpadWorkspace = models.workspace.isScratchpad(activeWorkspace);
   const scratchpadActionList: {
     name: string;
     id: string;
@@ -189,7 +190,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
       action: () => void;
     }[];
   }[] = [
-    ...(isMcp(activeWorkspace)
+    ...(models.workspace.isMcp(activeWorkspace)
       ? []
       : [
           {
@@ -236,7 +237,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
       id: 'actions',
       icon: 'cog',
       items: [
-        ...(isMcp(activeWorkspace)
+        ...(models.workspace.isMcp(activeWorkspace)
           ? []
           : [
               {
@@ -265,49 +266,49 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 }),
             }),
         },
-        ...(isMcp(activeWorkspace)
-          ? []
-          : [
+        {
+          id: 'export',
+          name: 'Export',
+          icon: <Icon icon="file-export" />,
+          action: () => {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.exportStarted,
+              properties: {
+                source: `${activeWorkspace.scope}-menu`,
+              },
+            });
+
+            if (activeWorkspace.scope === 'mock-server') {
+              return exportMockServerToFile(activeWorkspace);
+            }
+
+            if (activeWorkspace.scope === 'environment') {
+              return exportGlobalEnvironmentToFile(activeWorkspace);
+            }
+
+            if (activeWorkspace.scope === 'mcp') {
+              return exportMcpClientToFile(activeWorkspace);
+            }
+
+            return setIsExportModalOpen(true);
+          },
+        },
+        ...(activeWorkspace.scope === 'mock-server'
+          ? [
               {
-                id: 'export',
-                name: 'Export',
-                icon: <Icon icon="file-export" />,
+                id: 'generate-collection',
+                name: 'Generate Collection',
+                icon: <Icon icon="code" />,
                 action: () => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.exportStarted,
-                    properties: {
-                      source: `${activeWorkspace.scope}-menu`,
-                    },
+                  generateCollectionFetcher.submit({
+                    organizationId,
+                    projectId: activeWorkspace.parentId,
+                    workspaceId: activeWorkspace._id,
                   });
-
-                  if (activeWorkspace.scope === 'mock-server') {
-                    return exportMockServerToFile(activeWorkspace);
-                  }
-
-                  if (activeWorkspace.scope === 'environment') {
-                    return exportGlobalEnvironmentToFile(activeWorkspace);
-                  }
-
-                  return setIsExportModalOpen(true);
                 },
               },
-              ...(activeWorkspace.scope === 'mock-server'
-                ? [
-                    {
-                      id: 'generate-collection',
-                      name: 'Generate Collection',
-                      icon: <Icon icon="code" />,
-                      action: () => {
-                        generateCollectionFetcher.submit({
-                          organizationId,
-                          projectId: activeWorkspace.parentId,
-                          workspaceId: activeWorkspace._id,
-                        });
-                      },
-                    },
-                  ]
-                : []),
-            ]),
+            ]
+          : []),
         {
           id: 'settings',
           name: 'Settings',
@@ -451,11 +452,42 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     className="flex flex-col gap-4"
                   >
                     <input type="hidden" name="workspaceId" value={activeWorkspace._id} />
-                    <p>
-                      This will permanently delete the{' '}
-                      {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
-                      {getWorkspaceLabel(activeWorkspace).singular} {isRemoteProject(activeProject) ? 'remotely' : ''}.
-                    </p>
+                    <div>
+                      <p className="line-clamp-5">
+                        This will permanently delete the{' '}
+                        <strong className="break-all whitespace-pre-wrap">{activeWorkspace?.name}</strong>{' '}
+                        {getWorkspaceLabel(activeWorkspace).singular}
+                      </p>
+                      {models.project.isRemoteProject(activeProject) && (
+                        <RadioGroup name="localOnly" defaultValue="true" className="mb-2 flex flex-col gap-2">
+                          <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
+                          <div className="flex gap-2">
+                            <Radio
+                              value="true"
+                              aria-label="Remove Local Copy"
+                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
+                            >
+                              <div>
+                                <Heading className="text-lg font-bold">Remove Local Copy</Heading>
+                                <p className="pt-2">The project will still exist on the Cloud.</p>
+                              </div>
+                            </Radio>
+                            <Radio
+                              value="false"
+                              aria-label="Delete Permanently"
+                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
+                            >
+                              <div>
+                                <Heading className="text-lg font-bold">Delete Permanently</Heading>
+                                <p className="pt-2">
+                                  The project will be deleted everywhere. You cannot undo this action.
+                                </p>
+                              </div>
+                            </Radio>
+                          </div>
+                        </RadioGroup>
+                      )}
+                    </div>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>
                     )}

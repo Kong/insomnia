@@ -65,7 +65,6 @@ export enum SegmentEvent {
   responseToMockClicked = 'Response To Mock Clicked',
   gitSyncButtonClicked = 'Git Sync Button Clicked',
   preferencesViewed = 'Preferences Viewed',
-  installPlugin = 'Plugin Installed',
   copyAsCurl = 'Copied As cURL',
   themeChanged = 'Theme Changed',
   generateCodeClicked = 'Generate Code Clicked',
@@ -74,6 +73,50 @@ export enum SegmentEvent {
   filterCreatedProjects = 'Filter Created Projects',
   filterCreatedRequests = 'Filter Created Requests',
   filterCreatedResponseBody = 'Filter Created Response Body',
+
+  // INS-2120: Segment events to track common actions
+  homepageFiltered = 'homepage-filtered',
+  quickSearchOpenedByKeyboard = 'quick-search-opened-by-keyboard',
+  quickSearchOpenedByMouse = 'quick-search-opened-by-mouse',
+  statusbarLeftbarToggled = 'statusbar-leftbar-toggled',
+  statusbarTopbarToggled = 'statusbar-topbar-toggled',
+  statusbarOrphanedProjectsClicked = 'statusbar-orphaned-projects-clicked',
+  designerGenerateMockClicked = 'designer-generate-mock-clicked',
+  designerPreviewToggled = 'designer-preview-toggled',
+  requestEnvironmentClicked = 'request-environment-clicked',
+  requestAddCookiesClicked = 'request-add-cookies-clicked',
+  requestAddCertificatesClicked = 'request-add-certificates-clicked',
+  requestListSortClicked = 'request-list-sort-clicked',
+  requestListExpandCollapseClicked = 'request-list-expand-collapse-clicked',
+  requestParamsDescriptionToggled = 'request-params-description-toggled',
+  requestParamsImportFromURLClicked = 'request-params-import-from-URL-clicked',
+  requestParamsBulkEditToggled = 'request-params-bulk-edit-toggled',
+  responsePreviewJSONPathEntered = 'response-preview-jsonpath-entered',
+  requestBodyBeautifyClicked = 'request-body-beautify-clicked',
+  requestHeadersDescriptionToggled = 'request-headers-description-toggled',
+  requestHeadersBulkEditToggled = 'request-headers-bulk-edit-toggled',
+  requestScriptsPreScriptSnippetAdded = 'request-scripts-prescript-snippet-added',
+  requestScriptsPostScriptSnippetAdded = 'request-scripts-postscript-snippet-added',
+  responseHeadersCopyAllClicked = 'response-headers-copy-all-clicked',
+  responseCookiesManageCookiesClicked = 'response-cookies-manage-cookies-clicked',
+  requestOpenInNewTabClicked = 'request-open-in-new-tab-clicked',
+  requestListMenuPinClicked = 'request-list-menu-pin-clicked',
+  requestListMenuDuplicateClicked = 'request-list-menu-duplicate-clicked',
+  requestListMenuRenameClicked = 'request-list-menu-rename-clicked',
+  requestListMenuSettingsClicked = 'request-list-menu-settings-clicked',
+  requestSendMenuGenerateCodeClicked = 'request-send-menu-generate-code-clicked',
+  requestSendMenuSendAfterDelayClicked = 'request-send-menu-send-after-delay-clicked',
+  requestSendMenuRepeatAfterIntervalClicked = 'request-send-menu-repeat-after-interval-clicked',
+  requestSendMenuDownloadAfterSendClicked = 'request-send-menu-download-after-send-clicked',
+  requestSendMenuSendAndDownloadClicked = 'request-send-menu-send-and-download-clicked',
+  mcpListExpandCollapseClicked = 'mcp-list-expand-collapse-clicked',
+  mcpListFiltered = 'mcp-list-filtered',
+  mcpRequestParamsBeautifyClicked = 'mcp-request-params-beautify-clicked',
+  mcpRequestHeadersDescriptionToggled = 'mcp-request-headers-description-toggled',
+  mcpRequestRootsNotifyClicked = 'mcp-request-roots-notify-clicked',
+  mcpResponseHeadersCopyAllClicked = 'mcp-response-headers-copy-all-clicked',
+  kongKonnectPatValidated = 'kong-konnect-pat-validated',
+  kongKonnectSyncCompleted = 'kong-konnect-sync-completed',
 }
 
 type PushPull = 'push' | 'pull';
@@ -96,4 +139,25 @@ type VCSAction =
   | 'clone';
 export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?: string) {
   return { type, action, error };
+}
+
+function getTodayDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+export function hasTrackedToday(key: string): boolean {
+  const lastTracked = localStorage.getItem(key);
+  return lastTracked === getTodayDateString();
+}
+
+export function markTrackedToday(key: string): void {
+  localStorage.setItem(key, getTodayDateString());
+}
+
+export function trackOnceDaily(event: SegmentEvent, properties?: Record<string, unknown>): void {
+  if (hasTrackedToday(event)) {
+    return;
+  }
+  window.main.trackSegmentEvent({ event, properties });
+  markTrackedToday(event);
 }

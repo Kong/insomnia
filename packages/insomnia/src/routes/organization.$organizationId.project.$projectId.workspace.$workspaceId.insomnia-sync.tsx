@@ -1,9 +1,9 @@
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
+import type { Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import type { Workspace } from '~/models/workspace';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -15,7 +15,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(typeof projectId === 'string', 'Project Id is required');
 
   try {
-    const project = await models.project.getById(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;
@@ -24,11 +24,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
         backendProjectsToPull: [],
       };
     }
-    const vcs = VCSInstance();
-
-    const allPulledBackendProjectsForRemoteId = (await vcs.localBackendProjects()).filter(p => p.id === remoteId);
+    const allPulledBackendProjectsForRemoteId = (await window.main.sync.localBackendProjects()).filter(p => p.id === remoteId);
     // Remote backend projects are fetched from the backend since they are not stored locally
-    const allFetchedRemoteBackendProjectsForRemoteId = await vcs.remoteBackendProjects({
+    const allFetchedRemoteBackendProjectsForRemoteId = await window.main.sync.remoteBackendProjects({
       teamId: organizationId,
       teamProjectId: remoteId,
     });

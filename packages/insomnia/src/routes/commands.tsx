@@ -1,23 +1,19 @@
+import type { Organization } from 'insomnia-api';
+
 import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
-import {
-  environment,
-  grpcRequest,
-  project,
-  request,
-  requestGroup,
-  userSession,
-  webSocketRequest,
-  workspace,
-} from '~/models';
-import type { Environment } from '~/models/environment';
-import type { GrpcRequest } from '~/models/grpc-request';
-import { isScratchpadOrganizationId, type Organization } from '~/models/organization';
-import { isRemoteProject, type Project } from '~/models/project';
-import type { Request } from '~/models/request';
-import type { RequestGroup } from '~/models/request-group';
-import type { WebSocketRequest } from '~/models/websocket-request';
-import { scopeToActivity, type Workspace } from '~/models/workspace';
+import type {
+  Environment,
+  GrpcRequest,
+  Project,
+  Request,
+  RequestGroup,
+  WebSocketRequest,
+  Workspace,
+} from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
+import { environment, grpcRequest, project, request, requestGroup, workspace } from '~/models';
+import { isScratchpadOrganizationId } from '~/models/organization';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -43,7 +39,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     );
   };
 
-  const { accountId } = await userSession.getOrCreate();
+  const { accountId } = await services.userSession.getOrCreate();
 
   const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 
@@ -161,7 +157,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     });
   }
 
-  const webSocketRequests = await database.find<WebSocketRequest>(webSocketRequest.type, {
+  const webSocketRequests = await database.find<WebSocketRequest>(models.webSocketRequest.type, {
     parentId: {
       $in: [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)],
     },
@@ -209,37 +205,39 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
       requests: currentRequests
         .filter(requestFilter)
         .slice(0, 100)
-        .map(item => ({
-          id: item._id,
-          url: `/organization/${parentReferences.get(item.parentId)?.organizationId}/project/${parentReferences.get(item.parentId)!.projectId}/workspace/${parentReferences.get(item.parentId)?.workspaceId}/debug/request/${item._id}`,
-          name: item.name,
-          item,
-          organizationName:
-            allOrganizations.find(org => org.id === parentReferences.get(item.parentId)?.organizationId)
-              ?.display_name || '',
-          projectName:
-            allProjects.find(project => project._id === parentReferences.get(item.parentId)?.projectId)?.name || '',
-          workspaceName:
-            allOrganizationWorkspaces.find(
-              workspace => workspace._id === parentReferences.get(item.parentId)?.workspaceId,
-            )?.name || '',
-        })),
+        .map(item => {
+          const organizationId = parentReferences.get(item.parentId)?.organizationId || '';
+          const projectId = parentReferences.get(item.parentId)?.projectId || '';
+          const workspaceId = parentReferences.get(item.parentId)?.workspaceId || '';
+          return {
+            id: item._id,
+            url: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item._id}`,
+            name: item.name,
+            item,
+            organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+            projectName: allProjects.find(project => project._id === projectId)?.name || '',
+            workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
+            organizationId,
+            projectId,
+            workspaceId,
+          };
+        }),
       files: currentFiles.map(workspace => {
+        const organizationId = parentReferences.get(workspace.parentId)?.organizationId || '';
+        const projectId = parentReferences.get(workspace.parentId)?.projectId || '';
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
-          url: `/organization/${parentReferences.get(workspace.parentId)?.organizationId}/project/${parentReferences.get(workspace.parentId)?.projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,
-            teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '',
+            teamProjectId: parentProject && project.isRemoteProject(parentProject) ? parentProject.remoteId : '',
           },
-          organizationName:
-            allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)
-              ?.display_name || '',
-          projectName:
-            allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name ||
-            '',
+          organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+          projectName: allProjects.find(project => project._id === projectId)?.name || '',
+          organizationId,
+          projectId,
         };
       }),
       environments,
@@ -248,37 +246,39 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
       requests: otherRequests
         .filter(requestFilter)
         .slice(0, 100)
-        .map(item => ({
-          id: item._id,
-          url: `/organization/${parentReferences.get(item.parentId)?.organizationId}/project/${parentReferences.get(item.parentId)?.projectId}/workspace/${parentReferences.get(item.parentId)!.workspaceId}/debug/request/${item._id}`,
-          name: item.name,
-          item,
-          organizationName:
-            allOrganizations.find(org => org.id === parentReferences.get(item.parentId)?.organizationId)
-              ?.display_name || '',
-          projectName:
-            allProjects.find(project => project._id === parentReferences.get(item.parentId)?.projectId)?.name || '',
-          workspaceName:
-            allOrganizationWorkspaces.find(
-              workspace => workspace._id === parentReferences.get(item.parentId)?.workspaceId,
-            )?.name || '',
-        })),
+        .map(item => {
+          const organizationId = parentReferences.get(item.parentId)?.organizationId || '';
+          const projectId = parentReferences.get(item.parentId)?.projectId || '';
+          const workspaceId = parentReferences.get(item.parentId)?.workspaceId || '';
+          return {
+            id: item._id,
+            url: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item._id}`,
+            name: item.name,
+            item,
+            organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+            projectName: allProjects.find(project => project._id === projectId)?.name || '',
+            workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === workspaceId)?.name || '',
+            organizationId,
+            projectId,
+            workspaceId,
+          };
+        }),
       files: otherFiles.map(workspace => {
+        const organizationId = parentReferences.get(workspace.parentId)?.organizationId || '';
+        const projectId = parentReferences.get(workspace.parentId)?.projectId || '';
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
         return {
           id: workspace._id,
-          url: `/organization/${parentReferences.get(workspace.parentId)?.organizationId}/project/${parentReferences.get(workspace.parentId)?.projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
+          url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${models.workspace.scopeToActivity(workspace.scope)}`,
           name: workspace.name,
           item: {
             ...workspace,
-            teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '',
+            teamProjectId: parentProject && project.isRemoteProject(parentProject) ? parentProject.remoteId : '',
           },
-          organizationName:
-            allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)
-              ?.display_name || '',
-          projectName:
-            allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name ||
-            '',
+          organizationName: allOrganizations.find(org => org.id === organizationId)?.display_name || '',
+          projectName: allProjects.find(project => project._id === projectId)?.name || '',
+          organizationId,
+          projectId,
         };
       }),
     },

@@ -1,10 +1,10 @@
 import React, { type FC, Fragment } from 'react';
 
 import { useRootLoaderData } from '~/root';
+import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import {
   EditorKeyMap,
-  isMac,
   MAX_EDITOR_FONT_SIZE,
   MAX_INTERFACE_FONT_SIZE,
   MIN_EDITOR_FONT_SIZE,
@@ -12,9 +12,9 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
+import { isMac } from '../../../common/platform';
 import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import { strings } from '../../../common/strings';
-import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { BooleanSetting } from './boolean-setting';
@@ -48,7 +48,7 @@ export const General: FC = () => {
         </div>
         <div>
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
-          {!isMac() && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
+          {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
         </div>
       </div>
@@ -115,7 +115,7 @@ export const General: FC = () => {
           label="Text Editor Key Map"
           setting="editorKeyMap"
           help={
-            isMac() &&
+            isMac &&
             settings.editorKeyMap === EditorKeyMap.vim && (
               <Fragment>
                 To enable key-repeating with Vim on macOS, see{' '}
@@ -226,7 +226,7 @@ export const General: FC = () => {
         />
         <button
           className="pointer h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-sm) hover:bg-(--hl-xs)"
-          onClick={initNewOAuthSession}
+          onClick={clearOAuthWindowSessionId}
         >
           Clear OAuth 2 session
         </button>
@@ -245,7 +245,7 @@ export const General: FC = () => {
           label="What folders can Insomnia access?"
           setting="dataFolders"
           help="This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to."
-          placeholder=""
+          placeholder="e.g., /Users/folder1"
         />
       </div>
 

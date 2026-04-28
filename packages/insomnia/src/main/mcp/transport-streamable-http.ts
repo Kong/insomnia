@@ -9,14 +9,12 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
 import type { Dispatcher } from 'undici';
 
+import type { RequestHeader } from '~/insomnia-data';
+import { type McpResponse, services } from '~/insomnia-data';
 import { type ConnectionContext, getFetchDispatcher, writeEventLogAndNotify, writeTimeline } from '~/main/mcp/common';
 import { MCPAuthError, type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';
 import * as models from '~/models';
-import { TRANSPORT_TYPES } from '~/models/mcp-request';
-import type { McpResponse } from '~/models/mcp-response';
-import type { RequestHeader } from '~/models/request';
-import { invariant } from '~/utils/invariant';
 
 // Extend undici RequestInit to include dispatcher, it's in node.js fetch but not in dom fetch.
 interface NodeRequestInit extends RequestInit {
@@ -83,7 +81,7 @@ const wrappedFetch = async (
   authProvider: McpOAuthClientProvider,
   calledByAuth?: boolean,
 ) => {
-  const { requestId, responseId, environmentId, timelinePath, eventLogPath } = context;
+  const { requestId, responseId, environmentId, timelinePath, eventLogPath, options } = context;
   const { method = 'GET' } = init;
 
   const reqHeader = new Headers(init?.headers || {});
@@ -135,20 +133,19 @@ const wrappedFetch = async (
       elapsedTime: performance.now() - start,
       timelinePath,
       eventLogPath,
-      transportType: TRANSPORT_TYPES.HTTP,
+      transportType: models.mcpRequest.TRANSPORT_TYPES.HTTP,
     };
-    const settings = await models.settings.get();
-    const res = await models.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
-    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+    const settings = await services.settings.get();
+    const res = await services.mcpResponse.updateOrCreate(responsePatch, settings.maxHistoryResponses);
+    services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
   }
 
   // Avoid infinite loop, only call auth flow once per request
   // DELETE method is used to terminate the MCP request, it should not trigger auth flow to keep consistent with the SDK behavior.
   // See: https://github.com/modelcontextprotocol/typescript-sdk/blob/058b87c163996b31d5cda744085ecf3c13c5c56a/src/client/streamableHttp.ts#L529-L537
   if (!calledByAuth && statusCode === 401 && method !== 'DELETE') {
-    const mcpRequest = await models.mcpRequest.getById(requestId);
-    invariant(mcpRequest, 'MCP Request not found');
-    const { authentication } = mcpRequest;
+    const { authentication } = options as OpenMcpHTTPClientConnectionOptions;
+    // use authentication from connection options rather than from db directly to get rendered values
     // By default no authentication is set, authentication is an empty object. Proceed to oauth workflow.
     const isDefaultAuth = !('type' in authentication);
     // Continue to oauth workflow only when the auth type is mcp oauth and enable it.

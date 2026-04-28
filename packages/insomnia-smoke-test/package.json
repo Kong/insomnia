@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "12.2.0",
+  "version": "12.5.1-alpha.0",
   "scripts": {
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
@@ -26,7 +26,7 @@
     "@types/oidc-provider": "^8.8.1",
     "@types/uuid": "^9.0.8",
     "@types/ws": "^8.18.1",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "esbuild-runner": "2.2.2",
     "express": "^4.21.2",
     "express-basic-auth": "^1.2.1",
@@ -39,7 +39,8 @@
     "toidentifier": "^1.0.1",
     "uuid": "^9.0.1",
     "ws": "^8.18.1",
-    "xvfb-maybe": "^0.2.1"
+    "xvfb-maybe": "^0.2.1",
+    "yaml": "^2.7.1"
   },
   "description": "[![Playwright](https://img.shields.io/badge/playwright-blue.svg?style=for-the-badge&logo=playwright)](https://github.com/microsoft/playwright)",
   "homepage": "https://github.com/Kong/insomnia#readme",

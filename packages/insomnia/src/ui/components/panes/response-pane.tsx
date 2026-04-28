@@ -1,14 +1,13 @@
-import { extension as mimeExtension } from 'mime-types';
 import { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
+import { services } from '~/insomnia-data';
+import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
-import { jsonPrettify } from '~/utils/prettify/json';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
-import * as models from '../../../models';
 import { cancelRequestById } from '../../../network/cancellation';
 import {
   type RequestLoaderData,
@@ -32,6 +31,7 @@ import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 import { RequestTestResultPane } from './request-test-result-pane';
+import { downloadResponseBody } from './response-pane-utils';
 
 interface Props {
   activeRequestId: string;
@@ -50,7 +50,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     }
     const requestId = activeResponse.parentId;
     await patchRequestMeta(requestId, { responseFilter });
-    const meta = await models.requestMeta.getByParentId(requestId);
+    const meta = await services.requestMeta.getByParentId(requestId);
     if (!meta) {
       return;
     }
@@ -66,32 +66,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
   const handleDownloadResponseBody = useCallback(
-    async (prettify: boolean) => {
-      if (!activeResponse || !activeRequest) {
-        console.warn('Nothing to download');
-        return;
-      }
-
-      const { contentType } = activeResponse;
-      const extension = mimeExtension(contentType) || 'unknown';
-      const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
-        title: 'Save Response Body',
-        buttonLabel: 'Save',
-        defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
-      });
-
-      if (canceled) {
-        return;
-      }
-      if (prettify && contentType.includes('json')) {
-        await window.main.writeFile({
-          path: outputPath,
-          content: jsonPrettify(activeResponse.bodyBuffer?.toString('utf8')) || '',
-        });
-        return;
-      }
-      await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer?.toString('utf8') || '' });
-    },
+    (prettify: boolean) => downloadResponseBody(activeRequest, activeResponse, prettify),
     [activeRequest, activeResponse],
   );
 
@@ -128,7 +103,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     );
   }
 
-  const timeline = models.response.getTimeline(activeResponse);
+  const timeline = getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
 
   return (
@@ -222,7 +197,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={async () => {
-                const bodyBuffer = activeResponse ? await models.response.getBodyBuffer(activeResponse) : null;
+                const bodyBuffer = activeResponse ? await getBodyBuffer(activeResponse) : null;
                 if (bodyBuffer) {
                   window.clipboard.writeText(bodyBuffer.toString('utf8'));
                 }
@@ -241,7 +216,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             filter={filter}
             filterHistory={filterHistory}
             bodyBuffer={activeResponse.bodyBuffer}
-            getBody={() => models.response.getBodyBuffer(activeResponse)}
+            getBody={() => getBodyBuffer(activeResponse)}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}
@@ -250,7 +225,12 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-            <ResponseHeadersViewer headers={activeResponse.headers} />
+            <ResponseHeadersViewer
+              headers={activeResponse.headers}
+              onCopyAll={() => {
+                window.main.trackSegmentEvent({ event: SegmentEvent.responseHeadersCopyAllClicked });
+              }}
+            />
           </ErrorBoundary>
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">

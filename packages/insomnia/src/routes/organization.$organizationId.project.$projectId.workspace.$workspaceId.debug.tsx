@@ -29,7 +29,6 @@ import {
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   href,
-  type NavigateFunction,
   NavLink,
   redirect,
   Route as RouteComponent,
@@ -45,26 +44,20 @@ import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sort
 import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
+import type {
+  Environment,
+  GrpcRequest,
+  Project,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+  Workspace,
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import * as models from '~/models';
-import type { Environment } from '~/models/environment';
-import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '~/models/grpc-request';
-import { getByParentId as getGrpcRequestMetaByParentId } from '~/models/grpc-request-meta';
 import { isScratchpadOrganizationId } from '~/models/organization';
-import type { Project } from '~/models/project';
-import {
-  isEventStreamRequest,
-  isGraphqlSubscriptionRequest,
-  isRequest,
-  isRequestId,
-  type Request,
-} from '~/models/request';
-import { isRequestGroup, isRequestGroupId, type RequestGroup } from '~/models/request-group';
-import type { RequestGroupMeta } from '~/models/request-group-meta';
-import { getByParentId as getRequestMetaByParentId } from '~/models/request-meta';
-import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '~/models/websocket-request';
-import { isDesign } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -75,7 +68,6 @@ import { useRequestLoaderData } from '~/routes/organization.$organizationId.proj
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import Tutorial, {
@@ -115,12 +107,13 @@ import { ResponsePane } from '~/ui/components/panes/response-pane';
 import { SocketIORequestPane } from '~/ui/components/socket-io/request-pane';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
+import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
 import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
-import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import {
   type CreateRequestType,
@@ -129,11 +122,14 @@ import {
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '~/ui/hooks/use-request';
+import { isPrimaryClickModifier } from '~/ui/utils';
 import { scrollElementIntoView } from '~/utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/grpc';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
+
+const { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequest, isRequestId } = models.request;
+const { isRequestGroup, isRequestGroupId } = models.requestGroup;
 
 export interface GrpcMessage {
   id: string;
@@ -163,14 +159,22 @@ const INITIAL_GRPC_REQUEST_STATE = {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
-    invariant(workspaceId, 'Workspace ID is required');
-    invariant(projectId, 'Project ID is required');
-    const activeWorkspace = await models.workspace.getById(workspaceId);
-    invariant(activeWorkspace, 'Workspace not found');
-    const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-    invariant(activeWorkspaceMeta, 'Workspace meta not found');
+
+    const activeProject = await services.project.getById(projectId);
+    if (!activeProject) {
+      showResourceNotFoundToast(`Project not found: ${projectId}`);
+      throw redirect(href('/organization/:organizationId/project', { organizationId }));
+    }
+
+    const activeWorkspace = await services.workspace.getById(workspaceId);
+    if (!activeWorkspace) {
+      showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
+      throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
+    }
+
+    const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
-    const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
+    const activeRequest = activeRequestId ? await services.request.getById(activeRequestId) : null;
     // TODO(george): we should remove this after enabling the sidebar for the runner
     const startOfQuery = request.url.indexOf('?');
     const urlWithoutQuery = startOfQuery > 0 ? request.url.slice(0, startOfQuery) : request.url;
@@ -232,27 +236,7 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
 };
 
 const DebugEntry = () => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestId?: string;
-    requestGroupId?: string;
-  };
-  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
-  const { activeWorkspace, activeProject } = useWorkspaceLoaderData()!;
-  const requestData = useRequestLoaderData();
-  const { activeRequest } = requestData || {};
-
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-    activeRequest,
-    activeRequestGroup,
-  });
+  const { activeWorkspace } = useWorkspaceLoaderData()!;
 
   if (activeWorkspace.scope === 'mcp') {
     // MCP request under mcp workspace has different layout so we need to render a different component
@@ -316,7 +300,7 @@ const Debug = () => {
     const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
-        if (isGrpcRequest(doc) && event === 'insert') {
+        if (models.grpcRequest.isGrpcRequest(doc) && event === 'insert') {
           setGrpcStates(grpcStates => [...grpcStates, { requestId: doc._id, ...INITIAL_GRPC_REQUEST_STATE }]);
         }
       }
@@ -413,9 +397,9 @@ const Debug = () => {
     sidebar_toggle: toggleSidebar,
     request_togglePin: async () => {
       if (requestId) {
-        const meta = isGrpcRequestId(requestId)
-          ? await getGrpcRequestMetaByParentId(requestId)
-          : await getRequestMetaByParentId(requestId);
+        const meta = models.grpcRequest.isGrpcRequestId(requestId)
+          ? await services.grpcRequestMeta.getByParentId(requestId)
+          : await services.requestMeta.getByParentId(requestId);
         patchRequestMeta(requestId, { pinned: !meta?.pinned });
       }
     },
@@ -499,14 +483,30 @@ const Debug = () => {
         showModal(GenerateCodeModal, { request: activeRequest });
       }
     },
+    request_openInNewTab: () => {
+      if (activeRequest && requestId) {
+        tabNavigate(
+          {
+            organization: organizationId,
+            project: activeProject,
+            workspace: activeWorkspace,
+            item: activeRequest,
+          },
+          {
+            withTab: true,
+            shouldNavigate: true,
+          },
+        );
+      }
+    },
   });
 
   const isRealtimeRequest =
     activeRequest &&
-    (isWebSocketRequest(activeRequest) ||
+    (models.webSocketRequest.isWebSocketRequest(activeRequest) ||
       isEventStreamRequest(activeRequest) ||
       isGraphqlSubscriptionRequest(activeRequest) ||
-      isSocketIORequest(activeRequest));
+      models.socketIORequest.isSocketIORequest(activeRequest));
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -531,10 +531,7 @@ const Debug = () => {
       req,
     });
 
-  const groupMetaPatcher = useRequestGroupMetaPatcher();
   const reorderFetcher = useDebugReorderActionFetcher();
-
-  const navigate = useNavigate();
 
   const collectionDragAndDrop = useDragAndDrop({
     getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
@@ -803,6 +800,8 @@ const Debug = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
+  const tabNavigate = useTabNavigate();
+
   return (
     <PanelGroup
       ref={sidebarPanelRef}
@@ -841,19 +840,31 @@ const Debug = () => {
                 </Breadcrumb>
               </Breadcrumbs>
             </div>
-            {isDesign(activeWorkspace) && (
+            {models.workspace.isDesign(activeWorkspace) && (
               <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
             )}
             <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
               <div className="flex w-full items-center justify-between gap-2">
                 <EnvironmentPicker
                   isOpen={isEnvironmentPickerOpen}
-                  onOpenChange={setIsEnvironmentPickerOpen}
+                  onOpenChange={isOpen => {
+                    setIsEnvironmentPickerOpen(isOpen);
+                    if (isOpen) {
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.requestEnvironmentClicked,
+                      });
+                    }
+                  }}
                   onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
                 />
               </div>
               <Button
-                onPress={() => setIsCookieModalOpen(true)}
+                onPress={() => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.requestAddCookiesClicked,
+                  });
+                  setIsCookieModalOpen(true);
+                }}
                 className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="cookie-bite" className="w-5 shrink-0" />
@@ -863,7 +874,12 @@ const Debug = () => {
                 </span>
               </Button>
               <Button
-                onPress={() => setCertificatesModalOpen(true)}
+                onPress={() => {
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.requestAddCertificatesClicked,
+                  });
+                  setCertificatesModalOpen(true);
+                }}
                 className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
                 <Icon icon="file-contract" className="w-5 shrink-0" />
@@ -907,13 +923,17 @@ const Debug = () => {
                 aria-label="Sort order"
                 className="aspect-square h-full"
                 selectedKey={sortOrder}
-                onSelectionChange={order =>
-                  order &&
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    sortOrder: order.toString(),
-                  })
-                }
+                onSelectionChange={order => {
+                  if (order) {
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestListSortClicked,
+                    });
+                    setSearchParams({
+                      ...Object.fromEntries(searchParams.entries()),
+                      sortOrder: order.toString(),
+                    });
+                  }
+                }}
               >
                 <Button
                   aria-label="Select sort order"
@@ -958,6 +978,9 @@ const Debug = () => {
                   defaultSelected={allExpanded}
                   onChange={() => {
                     setAllExpanded(!allExpanded);
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.requestListExpandCollapseClicked,
+                    });
                     toggleExpandAllFetcher.submit({
                       organizationId,
                       projectId,
@@ -1035,14 +1058,6 @@ const Debug = () => {
               disallowEmptySelection
               selectedKeys={requestId ? [requestId] : []}
               selectionMode="single"
-              onSelectionChange={keys => {
-                if (keys !== 'all') {
-                  const value = keys.values().next().value;
-                  navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`,
-                  );
-                }
-              }}
             >
               {item => {
                 return (
@@ -1052,9 +1067,34 @@ const Debug = () => {
                     className="group outline-hidden select-none"
                     textValue={item.doc.name}
                     data-testid={item.doc.name}
+                    onAuxClick={e => {
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        tabNavigate(
+                          {
+                            organization: organizationId,
+                            project: activeProject,
+                            workspace: activeWorkspace,
+                            item: item.doc,
+                          },
+                          { withTab: true, shouldNavigate: true, searchParams },
+                        );
+                      }
+                    }}
+                    onPress={e => {
+                      tabNavigate(
+                        {
+                          organization: organizationId,
+                          project: activeProject,
+                          workspace: activeWorkspace,
+                          item: item.doc,
+                        },
+                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                      );
+                    }}
                   >
                     <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
-                      <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
+                      <span className="absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                       {isRequest(item.doc) && (
                         <span
                           className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
@@ -1072,17 +1112,17 @@ const Debug = () => {
                           {getMethodShortHand(item.doc)}
                         </span>
                       )}
-                      {isWebSocketRequest(item.doc) && (
+                      {models.webSocketRequest.isWebSocketRequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           WS
                         </span>
                       )}
-                      {isSocketIORequest(item.doc) && (
+                      {models.socketIORequest.isSocketIORequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           IO
                         </span>
                       )}
-                      {isGrpcRequest(item.doc) && (
+                      {models.grpcRequest.isGrpcRequest(item.doc) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
                           gRPC
                         </span>
@@ -1122,31 +1162,15 @@ const Debug = () => {
                 aria-label="Request Collection"
                 key={sortOrder}
                 dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
-                onAction={key => {
-                  const id = key.toString();
-                  if (isRequestGroupId(id)) {
-                    const item = collection.find(i => i.doc._id === id);
-                    if (item) {
-                      groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${id}?${searchParams.toString()}`,
-                      );
-                      return;
-                    }
-                  }
-                  navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${id}?${searchParams.toString()}`,
-                  );
-                }}
               >
                 {virtualItem => {
                   const item = visibleCollection[virtualItem.index];
                   let label = item.doc.name;
                   if (isRequest(item.doc)) {
                     label = `${getMethodShortHand(item.doc)} ${label}`;
-                  } else if (isWebSocketRequest(item.doc)) {
+                  } else if (models.webSocketRequest.isWebSocketRequest(item.doc)) {
                     label = `WS ${label}`;
-                  } else if (isGrpcRequest(item.doc)) {
+                  } else if (models.grpcRequest.isGrpcRequest(item.doc)) {
                     label = `gRPC ${label}`;
                   }
 
@@ -1154,21 +1178,20 @@ const Debug = () => {
                     <CollectionGridListItem
                       {...{
                         label,
+                        item,
                         style: {
                           height: `${virtualItem.size}`,
                           transform: `translateY(${virtualItem.start}px)`,
                         },
-                        item,
-                        navigate,
                         organizationId,
                         projectId,
                         workspaceId,
                         searchParams,
-                        groupMetaPatcher,
                         patchGroup,
                         patchRequest,
                         activeEnvironment,
                         activeProject,
+                        activeWorkspace,
                       }}
                     />
                   );
@@ -1223,7 +1246,7 @@ const Debug = () => {
                     {workspaceId ? (
                       <ErrorBoundary showAlert>
                         {isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
-                        {isGrpcRequestId(requestId) && grpcState && (
+                        {models.grpcRequest.isGrpcRequestId(requestId) && grpcState && (
                           <GrpcRequestPane
                             key={grpcState.requestId}
                             grpcState={grpcState}
@@ -1231,8 +1254,12 @@ const Debug = () => {
                             reloadRequests={reloadRequests}
                           />
                         )}
-                        {isWebSocketRequestId(requestId) && <WebSocketRequestPane environment={activeEnvironment} />}
-                        {isSocketIORequestId(requestId) && <SocketIORequestPane environment={activeEnvironment} />}
+                        {models.webSocketRequest.isWebSocketRequestId(requestId) && (
+                          <WebSocketRequestPane environment={activeEnvironment} />
+                        )}
+                        {models.socketIORequest.isSocketIORequestId(requestId) && (
+                          <SocketIORequestPane environment={activeEnvironment} />
+                        )}
                         {isRequestId(requestId) && (
                           <RequestPane
                             environmentId={activeEnvironment ? activeEnvironment._id : ''}
@@ -1260,7 +1287,7 @@ const Debug = () => {
                       />
                       <Panel id="pane-two" order={2} minSize={10} className="pane-two theme--pane">
                         <ErrorBoundary showAlert>
-                          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+                          {activeRequest && models.grpcRequest.isGrpcRequest(activeRequest) && grpcState && (
                             <GrpcResponsePane grpcState={grpcState} />
                           )}
                           {isRealtimeRequest && <RealtimeResponsePane requestId={activeRequest._id} />}
@@ -1388,34 +1415,38 @@ const ScratchPadTutorialPanel = () => {
 
 const CollectionGridListItem = ({
   label,
-  activeEnvironment,
-  activeProject,
   item,
+  style,
   organizationId,
-  patchGroup,
-  patchRequest,
   projectId,
   workspaceId,
-  style,
+  searchParams,
+  patchGroup,
+  patchRequest,
+  activeEnvironment,
+  activeProject,
+  activeWorkspace,
 }: {
   label: string;
   item: Child;
   style: React.CSSProperties;
-  navigate: NavigateFunction;
   organizationId: string;
   projectId: string;
   workspaceId: string;
   searchParams: URLSearchParams;
-  groupMetaPatcher: (requestGroupId: string, patch: Partial<RequestGroupMeta>) => void;
   patchGroup: (requestGroupId: string, patch: Partial<RequestGroup>) => void;
   patchRequest: (requestId: string, patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest>) => void;
   activeEnvironment: Environment;
   activeProject: Project;
+  activeWorkspace: Workspace;
 }): React.ReactNode => {
   const [isEditable, setIsEditable] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const patchRequestMeta = useRequestMetaPatcher();
+
+  const tabNavigate = useTabNavigate();
+  const groupMetaPatcher = useRequestGroupMetaPatcher();
 
   const action = isRequestGroup(item.doc)
     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${item.doc._id}/update`
@@ -1451,6 +1482,42 @@ const CollectionGridListItem = ({
       textValue={label}
       data-testid={item.doc.name}
       style={style}
+      onAction={() => {}}
+      onAuxClick={e => {
+        if (e.button === 1) {
+          e.preventDefault();
+          tabNavigate(
+            {
+              organization: organizationId,
+              project: activeProject,
+              workspace: activeWorkspace,
+              item: item.doc,
+            },
+            { withTab: true, shouldNavigate: true, searchParams },
+          );
+        }
+      }}
+      onPress={e => {
+        const id = item.doc._id;
+        // Toggle collapse if it's a request group
+        if (isRequestGroupId(id)) {
+          groupMetaPatcher(id, { collapsed: !item.collapsed });
+        }
+
+        tabNavigate(
+          {
+            organization: organizationId,
+            project: activeProject,
+            workspace: activeWorkspace,
+            item: item.doc,
+          },
+          {
+            withTab: isPrimaryClickModifier(e),
+            shouldNavigate: true,
+            searchParams,
+          },
+        );
+      }}
       ref={triggerRef}
     >
       <div
@@ -1468,7 +1535,7 @@ const CollectionGridListItem = ({
       >
         <span
           data-selected={isSelected}
-          className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors data-[selected=true]:bg-(--color-surprise)"
+          className="absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors data-[selected=true]:bg-(--color-surprise)"
         />
         <Button slot="drag" className="hidden" />
         {isRequest(item.doc) && (
@@ -1490,7 +1557,7 @@ const CollectionGridListItem = ({
             {getMethodShortHand(item.doc)}
           </span>
         )}
-        {isWebSocketRequest(item.doc) && (
+        {models.webSocketRequest.isWebSocketRequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1499,7 +1566,7 @@ const CollectionGridListItem = ({
             WS
           </span>
         )}
-        {isSocketIORequest(item.doc) && (
+        {models.socketIORequest.isSocketIORequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1508,7 +1575,7 @@ const CollectionGridListItem = ({
             IO
           </span>
         )}
-        {isGrpcRequest(item.doc) && (
+        {models.grpcRequest.isGrpcRequest(item.doc) && (
           <span
             aria-hidden
             role="presentation"
@@ -1537,8 +1604,8 @@ const CollectionGridListItem = ({
             }
           }}
         />
-        {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-        {isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
+        {models.webSocketRequest.isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+        {models.socketIORequest.isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
         {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
@@ -1560,7 +1627,6 @@ const CollectionGridListItem = ({
         ) : (
           <RequestActionsDropdown
             activeEnvironment={activeEnvironment}
-            activeProject={activeProject}
             request={item.doc}
             onRename={() => setIsEditable(true)}
             isPinned={item.pinned}

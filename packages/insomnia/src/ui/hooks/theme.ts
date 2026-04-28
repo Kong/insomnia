@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as reactUse from 'react-use';
 
+import type { ThemeSettings } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 
-import type { ThemeSettings } from '../../models/settings';
 import { type ColorScheme, getThemes } from '../../plugins';
 import { applyColorScheme, getColorScheme, type PluginTheme } from '../../plugins/misc';
 import { useSettingsPatcher } from './use-request';

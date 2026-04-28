@@ -17,7 +17,7 @@ const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyC
   Object.entries(keyboardKeys).find(([, { keyCode: kc }]) => kc === keyCode)?.[1].code;
 
 export function useKeyboardShortcuts(
-  getTarget: () => HTMLElement,
+  getTarget: () => HTMLElement | Window,
   listeners: Partial<Record<KeyboardShortcut, (event: KeyboardEvent) => any>>,
 ) {
   const { settings } = useRootLoaderData()!;
@@ -46,7 +46,9 @@ export function useKeyboardShortcuts(
         .map(({ tinyKeyString, action }) => [tinyKeyString, action]),
     );
 
-    const unsubscribe = tinykeys(target, keyBindingMap);
+    const unsubscribe = tinykeys(target, keyBindingMap, {
+      capture: true, // use capture phase to ensure hotkeys can be triggered to avoid being blocked by aria-components
+    });
     return unsubscribe;
   }, [hotKeyRegistry, listeners, getTarget]);
 }
@@ -54,7 +56,7 @@ export function useKeyboardShortcuts(
 export function useDocBodyKeyboardShortcuts(
   listeners: Partial<Record<KeyboardShortcut, (event: KeyboardEvent) => any>>,
 ) {
-  useKeyboardShortcuts(() => document.body, listeners);
+  useKeyboardShortcuts(() => window, listeners);
 }
 
 export function createKeybindingsHandler(

@@ -17,14 +17,16 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-ari
 import { useLatest, useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
-import { DEBOUNCE_MILLIS, isMac } from '~/common/constants';
+import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
+import { isMac } from '~/common/platform';
 import type { KeyCombination } from '~/common/settings';
 import { getTemplateTags } from '~/plugins';
 import { useRootLoaderData } from '~/root';
 import { getTagDefinitions } from '~/templating/index';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
 import { extractNunjucksTagFromCoords } from '~/templating/utils';
+import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { FilterHelpModal } from '~/ui/components/modals/filter-help-modal';
@@ -109,6 +111,7 @@ export interface CodeEditorProps {
   onChange?: (value: string, changeObj: EditorChange[]) => void;
   onCursorActivity?: (doc: CodeMirror.Editor) => void;
   onPaste?: (value: string) => string;
+  onPrettify?: () => void;
   onClickLink?: CodeMirrorLinkClickCallback;
   pinToBottom?: boolean;
   placeholder?: string;
@@ -185,6 +188,7 @@ export const CodeEditor = memo(
         onChange,
         onCursorActivity,
         onPaste,
+        onPrettify,
         onClickLink,
         pinToBottom,
         placeholder,
@@ -207,14 +211,14 @@ export const CodeEditor = memo(
       const extraKeys = useMemo(
         () => ({
           'Ctrl-Q': (cm: CodeMirror.Editor) => cm.foldCode(cm.getCursor()),
-          [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
+          [isMac ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
           // Autocomplete
           'Ctrl-Space': 'autocomplete',
           // Change default find command from "find" to "findPersistent" so the
           // search box stays open after pressing Enter
-          [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
-          [isMac() ? 'Shift-Cmd--' : 'Shift-Ctrl--']: 'foldAll',
-          [isMac() ? 'Shift-Cmd-=' : 'Shift-Ctrl-=']: 'unfoldAll',
+          [isMac ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
+          [isMac ? 'Shift-Cmd--' : 'Shift-Ctrl--']: 'foldAll',
+          [isMac ? 'Shift-Cmd-=' : 'Shift-Ctrl-=']: 'unfoldAll',
           'Shift-Tab': 'indentLess',
           // Indent with tabs or spaces
           // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
@@ -788,6 +792,9 @@ export const CodeEditor = memo(
                   title="Filter response body"
                   defaultValue={filter || ''}
                   placeholder={mode?.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
+                  onFocus={() => {
+                    trackOnceDaily(SegmentEvent.responsePreviewJSONPathEntered);
+                  }}
                   onKeyDown={createKeybindingsHandler({
                     Enter: () => {
                       const filter = inputRef.current?.value;
@@ -861,6 +868,7 @@ export const CodeEditor = memo(
                       if (mode?.includes('json') || mode?.includes('xml')) {
                         maybePrettifyAndSetValue(codeMirror.current?.getValue(), true);
                       }
+                      onPrettify?.();
                     }}
                   >
                     Beautify {mode?.includes('json') ? 'JSON' : mode?.includes('xml') ? 'XML' : ''}

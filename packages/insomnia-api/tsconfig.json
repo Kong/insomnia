@@ -10,12 +10,8 @@
     "module": "ESNext",
     "sourceMap": true,
     "baseUrl": ".",
-    "rootDirs": [
-      ".",
-    ],
-    "lib": [
-      "ES2023",
-    ],
+    "rootDirs": ["."],
+    "lib": ["ES2023", "DOM"],
     "types": [],
     "strict": true,
     "noImplicitReturns": true,

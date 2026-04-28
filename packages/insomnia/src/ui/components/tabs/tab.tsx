@@ -3,7 +3,8 @@ import classNames from 'classnames';
 import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
 
-import { isMcpRequestId } from '~/models/mcp-request';
+import { models } from '~/insomnia-data';
+import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { scrollElementIntoView } from '../../../utils';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
@@ -75,7 +76,7 @@ const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
   },
 };
 
-export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
+export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: WorkspaceFileIssue }) => {
   const { closeTabById, currentOrgTabs } = useInsomniaTabContext();
 
   const renderTabIcon = (type: TabType, tabId: string) => {
@@ -89,7 +90,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
       );
     }
 
-    if (isMcpRequestId(tabId)) {
+    if (models.mcpRequest.isMcpRequestId(tabId)) {
       return (
         <div className="flex h-[20px] w-[20px] items-center justify-center rounded-s-sm bg-(--color-danger) px-2 text-(--color-font-danger)">
           <Icon icon={['fac', 'mcp'] as unknown as IconProp} />
@@ -122,14 +123,10 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     return null;
   };
 
-  const handleClose = (id: string) => {
-    closeTabById(id);
-  };
-
   const handleAuxClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, id: string) => {
     // If mouse middle button clicked, close tab
     if (e.button === 1) {
-      handleClose(id);
+      closeTabById(id);
     }
   };
 
@@ -189,13 +186,18 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
                 italic: tab.temporary,
               })}
             >
-              {isMcpRequestId(tab.id) ? tab.workspaceName : tab.name}
+              {models.mcpRequest.isMcpRequestId(tab.id) ? tab.workspaceName : tab.name}
             </span>
+            {fileIssue && (
+              <span className="mr-2 flex shrink-0 items-center text-(--color-warning)">
+                <Icon icon="triangle-exclamation" />
+              </span>
+            )}
             <Button
               aria-label="Close Tab"
               data-testid="tab-close-button"
               className="flex h-[15px] w-[15px] items-center justify-center hover:bg-(--hl-md)"
-              onPress={() => handleClose(tab.id)}
+              onPress={() => closeTabById(tab.id)}
             >
               <Icon icon="close" />
             </Button>

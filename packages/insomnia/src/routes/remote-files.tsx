@@ -1,10 +1,9 @@
-import { getUserFiles, type RemoteFile } from 'insomnia-api';
+import { getUserFiles, type Organization, type RemoteFile } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import { project, userSession } from '~/models';
-import { type Organization } from '~/models/organization';
-import { type Project } from '~/models/project';
+import type { Project } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/remote-files';
@@ -25,7 +24,7 @@ export interface RemoteFilesLoaderResult {
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id: sessionId, accountId } = await userSession.get();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (!sessionId) {
     return {
@@ -43,7 +42,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
 
     const organizations = allOrganizations.filter(org => allRemoteFilesOrganizationIds.includes(org.id));
 
-    const projects = await database.find<Project>(project.type, {
+    const projects = await database.find<Project>(models.project.type, {
       remoteId: {
         $in: allRemoteFilesProjectIds,
       },

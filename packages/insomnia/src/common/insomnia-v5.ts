@@ -17,22 +17,32 @@ import { parse, stringify } from 'yaml';
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
+import type {
+  ApiSpec,
+  CookieJar,
+  Environment,
+  EnvironmentKvPairData,
+  GrpcRequest,
+  McpRequest,
+  MockRoute,
+  MockServer,
+  Request,
+  RequestBody,
+  RequestGroup,
+  RequestHeader,
+  RequestParameter,
+  SocketIORequest,
+  UnitTest,
+  UnitTestSuite,
+  WebSocketRequest,
+  Workspace,
+  WorkspaceScope,
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+import { maskVaultEnvironmentData } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 
 import * as models from '../models';
-import type { ApiSpec } from '../models/api-spec';
-import type { CookieJar } from '../models/cookie-jar';
-import { type Environment, maskVaultEnvironmentData } from '../models/environment';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { MockRoute } from '../models/mock-route';
-import type { MockServer } from '../models/mock-server';
-import type { Request, RequestBody, RequestHeader, RequestParameter } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { UnitTest } from '../models/unit-test';
-import type { UnitTestSuite } from '../models/unit-test-suite';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace, WorkspaceScope } from '../models/workspace';
 import { database } from './database';
 import {
   type Insomnia_GRPCRequest,
@@ -42,6 +52,7 @@ import {
   type Insomnia_WebsocketRequest,
   type InsomniaFile,
   InsomniaFileSchema,
+  McpRequestSchema,
   type Meta,
   SocketIORequestSchema,
   WebsocketRequestSchema,
@@ -279,6 +290,8 @@ export function insomniaSchemaTypeToScope(type: InsomniaFile['type']): Workspace
     return 'environment';
   } else if (type === 'spec.insomnia.rest/5.0') {
     return 'design';
+  } else if (type === 'mcpClient.insomnia/5.0') {
+    return 'mcp';
   }
   return 'mock-server';
 }
@@ -623,6 +636,7 @@ function getCollection(
                 settingEncodeUrl: data.settings.encodeUrl,
                 settingSendCookies: data.settings.cookies.send,
                 settingStoreCookies: data.settings.cookies.store,
+                settingPath: data.settings.path,
                 pathParameters: data.pathParameters || [],
                 eventListeners: data.eventListeners || [],
               };
@@ -640,6 +654,53 @@ function getCollection(
   }
 
   return [];
+}
+
+function getMcpRequest(file: InsomniaFile): WithExportType<McpRequest>[] {
+  const commonProps: WithExportType<McpRequest> = {
+    ...mapMetaToInsomniaMeta({
+      id: '__MCP_CLIENT_ID__',
+    }),
+    parentId: file.meta?.id || '__WORKSPACE_ID__',
+    name: file.name || 'MCP Client',
+    type: 'McpRequest',
+    _type: 'mcp_request',
+    url: '',
+    transportType: 'streamable-http',
+    description: '',
+    authentication: {},
+    headers: [],
+    env: [],
+    connected: false,
+    mcpStdioAccess: false,
+    roots: [],
+    subscribeResources: [],
+    sslValidation: true,
+  };
+
+  if ('mcpRequest' in file && file.mcpRequest) {
+    const mcpRequestParser = McpRequestSchema.safeParse(file.mcpRequest);
+    if (mcpRequestParser.success) {
+      const data = mcpRequestParser.data;
+      return [
+        {
+          ...commonProps,
+          ...mapMetaToInsomniaMeta(
+            data.meta || {
+              id: '__MCP_CLIENT_ID__',
+            },
+          ),
+          url: data.url,
+          transportType: data.transportType,
+          authentication: data.authentication || {},
+          headers: mapHeaders(data.headers),
+          env: (data.env as EnvironmentKvPairData[]) || [],
+        },
+      ];
+    }
+  }
+
+  return [commonProps];
 }
 
 function importData(rawData: string) {
@@ -671,7 +732,10 @@ function importData(rawData: string) {
     if (file.type === 'mock.insomnia.rest/5.0') {
       return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
     }
-    // @ts-expect-error this errors happen when new types are added but not handled here
+    if (file.type === 'mcpClient.insomnia/5.0') {
+      return [getWorkspace(file), ...getEnvironments(file), ...getMcpRequest(file)];
+    }
+    // @ts-expect-error: Exhaustiveness check
     throw new Error(`No import handler found for type ${file.type}`);
   }
   throw new Error(`Failed to parse yaml file to Insomnia schema ${fileSchemaParser.error?.toString()}`);
@@ -710,6 +774,24 @@ export function importInsomniaV5Data(rawData: string) {
   }
 }
 
+export function mcpUrlToInsomniaV5Yaml(mcpUrl: string): string {
+  const url = new URL(mcpUrl.trim());
+  const isHttp = url.protocol === 'http:' || url.protocol === 'https:';
+  invariant(isHttp, 'MCP server URL must use http or https');
+  const mcpClient = {
+    type: 'mcpClient.insomnia/5.0' as const,
+    schema_version: INSOMNIA_SCHEMA_VERSION,
+    name: 'Imported MCP Client',
+    mcpRequest: {
+      name: 'Imported MCP Client',
+      url: mcpUrl.trim(),
+      transportType: 'streamable-http' as const,
+    },
+  };
+  const parsed = InsomniaFileSchema.parse(mcpClient);
+  return stringify(removeEmptyFields(parsed));
+}
+
 /**
  * Exports workspace data to Insomnia v5 format
  * This is the main export function that converts internal models to v5 YAML format
@@ -729,7 +811,7 @@ export async function getInsomniaV5DataExport({
   requestIds?: string[];
 }) {
   try {
-    const workspace = await models.workspace.getById(workspaceId);
+    const workspace = await services.workspace.getById(workspaceId);
 
     if (!workspace) {
       throw new Error('Workspace not found');
@@ -846,6 +928,7 @@ export async function getInsomniaV5DataExport({
                   send: resource.settingSendCookies,
                   store: resource.settingStoreCookies,
                 },
+                path: resource.settingPath,
               },
               authentication: resource.authentication,
               headers: mapHeaders(resource.headers),
@@ -1051,6 +1134,33 @@ export async function getInsomniaV5DataExport({
       }));
     }
 
+    function getMcpRequestFromResources(
+      resource: McpRequest,
+    ): Extract<InsomniaFile, { type: 'mcpClient.insomnia/5.0' }>['mcpRequest'] {
+      return {
+        name: resource.name,
+        url: resource.url,
+        transportType: resource.transportType,
+        headers: resource.headers,
+        authentication: resource.authentication,
+        meta: {
+          id: resource._id,
+          created: resource.created,
+          modified: resource.modified,
+        },
+        env: resource.env.map(envVar => ({
+          id: envVar.id,
+          name: envVar.name,
+          value: envVar.value,
+          type: 'str',
+          enabled: !!envVar.enabled,
+        })),
+        roots: resource.roots.map(root => ({
+          uri: root.uri,
+        })),
+      };
+    }
+
     if (workspace.scope === 'collection') {
       const collection: InsomniaFile = {
         type: 'collection.insomnia.rest/5.0',
@@ -1148,6 +1258,25 @@ export async function getInsomniaV5DataExport({
 
       const parsedMockServer = InsomniaFileSchema.parse(mockServer);
       return stringify(removeEmptyFields(parsedMockServer), {});
+    } else if (workspace.scope === 'mcp') {
+      const mcpRequest = exportableResources.find(models.mcpRequest.isMcpRequest);
+      invariant(mcpRequest, 'No MCP Request found in MCP workspace');
+      const mcpClient: InsomniaFile = {
+        type: 'mcpClient.insomnia/5.0',
+        schema_version: INSOMNIA_SCHEMA_VERSION,
+        name: workspace.name,
+        meta: mapWorkspaceMeta(workspace),
+        // each mcp workspace has exactly one mcpRequest
+        mcpRequest: getMcpRequestFromResources(mcpRequest),
+        environments: getEnvironmentsFromResources(
+          exportableResources.filter(models.environment.isEnvironment),
+          includePrivateEnvironments,
+        ),
+      };
+
+      const parsedMcpClient = InsomniaFileSchema.parse(mcpClient);
+
+      return stringify(removeEmptyFields(parsedMcpClient));
     }
     throw new Error('Unknown workspace scope');
   } catch (err) {

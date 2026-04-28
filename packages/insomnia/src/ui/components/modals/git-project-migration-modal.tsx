@@ -14,15 +14,15 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { WorkspaceScope } from '~/insomnia-data';
 import { useGitProjectMigrateLegacyInsomniaFolderActionFetcher } from '~/routes/git.migrate-legacy-insomnia-folder-to-file';
 
-import type { WorkspaceScope } from '../../../models/workspace';
 import {
   scopeToBgColorMap,
   scopeToIconMap,
   scopeToLabelMap,
   scopeToTextColorMap,
-} from '../../../routes/organization.$organizationId.project.$projectId._index';
+} from '../../../common/get-workspace-label';
 import { Icon } from '../icon';
 
 export const GitProjectMigrationModal: FC<{

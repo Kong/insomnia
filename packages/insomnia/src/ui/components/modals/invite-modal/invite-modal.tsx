@@ -1,4 +1,19 @@
 import { isAfter } from 'date-fns';
+import {
+  type Collaborator,
+  deleteOrganizationMember,
+  type FeatureList,
+  getOrganizationDetail,
+  getOrganizationFeatures,
+  getOrganizationMemberRoles,
+  getOrganizationRoles,
+  getOrgUserPermissions,
+  type Organization,
+  type Permission,
+  revokeInvitation,
+  type Role,
+  unlinkCollaborator,
+} from 'insomnia-api';
 import React, { type FC, type MutableRefObject, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -17,7 +32,7 @@ import { useParams, useSearchParams } from 'react-router';
 import { getAccountId, getCurrentSessionId } from '~/account/session';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { debounce } from '~/common/misc';
-import { type Collaborator, useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
+import { useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
 import { useInviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId';
 import { useReinviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
 import { useCollaboratorsCheckSeatsLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-check-seats';
@@ -27,11 +42,10 @@ import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { showModal } from '~/ui/components/modals/index';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 import { invariant } from '~/utils/invariant';
 
 import { InviteForm } from './invite-form';
-import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
+import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
 
 export function getSearchParamsString(
   searchParams: URLSearchParams,
@@ -57,7 +71,7 @@ const InviteModal: FC<{
   organizationId: string;
   allRoles: Role[];
   currentUserRoleInOrg: Role;
-  orgFeatures: Features;
+  orgFeatures: FeatureList;
   permissionRef: MutableRefObject<Record<Permission, boolean>>;
   isCurrentUserOrganizationOwner: boolean;
   currentUserAccountId: string;
@@ -141,12 +155,12 @@ const InviteModal: FC<{
       isDismissable={false}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-(--color-bg)"
+      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-(--color-bg) pt-[70px]"
     >
-      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
-        <Dialog className="relative outline-hidden">
+      <Modal className="theme--dialog flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-[900px] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
+        <Dialog className="relative flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
-            <>
+            <div className="flex h-full flex-col overflow-hidden">
               <Heading slot="title" className="mb-[24px] text-[22px] leading-[34px]">
                 Invite collaborators
               </Heading>
@@ -193,66 +207,68 @@ const InviteModal: FC<{
                   )}
                 </Group>
               </div>
-              {collaboratorListError && (
-                <div className="flex h-[200px] items-center justify-center">
-                  <p className="text-[12px] text-(--color-danger) first-letter:capitalize">{collaboratorListError}</p>
-                </div>
-              )}
-              {collaborators?.length === 0 && page === 0 ? (
-                !collaboratorListError && (
+              <div className="flex-1 overflow-y-auto">
+                {collaboratorListError && (
                   <div className="flex h-[200px] items-center justify-center">
-                    <p className="text-[14px] text-(--color-font)">
-                      {queryInputString
-                        ? `No member or team found for the search: "${queryInputString}"`
-                        : 'No members or teams'}
-                    </p>
+                    <p className="text-[12px] text-(--color-danger) first-letter:capitalize">{collaboratorListError}</p>
                   </div>
-                )
-              ) : (
-                <>
-                  <ListBox aria-label="Invitation list" className="flex flex-col gap-1">
-                    {collaborators?.map((member: Collaborator) => (
-                      <MemberListItem
-                        key={member.id}
-                        organizationId={organizationId}
-                        member={member}
-                        currentUserAccountId={currentUserAccountId}
-                        currentUserRoleInOrg={currentUserRoleInOrg}
-                        allRoles={allRoles}
-                        isCurrentUserOrganizationOwner={isCurrentUserOrganizationOwner}
-                        orgFeatures={orgFeatures}
-                        permissionRef={permissionRef}
-                        revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
-                        onResetCurrentPage={resetCurrentPage}
-                        onError={setError}
-                        onRemoveMember={() => {
-                          collaboratorsCheckSeatsLoaderLoad({ organizationId });
-                        }}
-                      />
-                    ))}
-                  </ListBox>
-                  <PaginationBar
-                    isPrevDisabled={page === 0}
-                    isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
-                    isHidden={total <= ItemsPerPage && page === 0}
-                    onPrevPress={() => {
-                      collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
-                      setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
-                    }}
-                    onNextPress={() => {
-                      collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
-
-                      setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
-                    }}
-                  />
-                  {error && (
-                    <div className="mt-[16px] flex justify-center">
-                      <p className="text-[12px] text-(--color-danger)">{error}</p>
+                )}
+                {collaborators?.length === 0 && page === 0 ? (
+                  !collaboratorListError && (
+                    <div className="flex h-[200px] items-center justify-center">
+                      <p className="text-[14px] text-(--color-font)">
+                        {queryInputString
+                          ? `No member or team found for the search: "${queryInputString}"`
+                          : 'No members or teams'}
+                      </p>
                     </div>
-                  )}
-                </>
-              )}
-            </>
+                  )
+                ) : (
+                  <>
+                    <ListBox aria-label="Invitation list" className="flex flex-col gap-1">
+                      {collaborators?.map((member: Collaborator) => (
+                        <MemberListItem
+                          key={member.id}
+                          organizationId={organizationId}
+                          member={member}
+                          currentUserAccountId={currentUserAccountId}
+                          currentUserRoleInOrg={currentUserRoleInOrg}
+                          allRoles={allRoles}
+                          isCurrentUserOrganizationOwner={isCurrentUserOrganizationOwner}
+                          orgFeatures={orgFeatures}
+                          permissionRef={permissionRef}
+                          revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
+                          onResetCurrentPage={resetCurrentPage}
+                          onError={setError}
+                          onRemoveMember={() => {
+                            collaboratorsCheckSeatsLoaderLoad({ organizationId });
+                          }}
+                        />
+                      ))}
+                    </ListBox>
+                    {error && (
+                      <div className="mt-[16px] flex justify-center">
+                        <p className="text-[12px] text-(--color-danger)">{error}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              <PaginationBar
+                isPrevDisabled={page === 0}
+                isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
+                isHidden={total <= ItemsPerPage && page === 0}
+                onPrevPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
+                  setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
+                }}
+                onNextPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
+
+                  setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
+                }}
+              />
+            </div>
           )}
         </Dialog>
       </Modal>
@@ -267,7 +283,7 @@ const MemberListItem: FC<{
   currentUserRoleInOrg: Role;
   allRoles: Role[];
   isCurrentUserOrganizationOwner: boolean;
-  orgFeatures: Features;
+  orgFeatures: FeatureList;
   permissionRef: MutableRefObject<Record<Permission, boolean>>;
   revalidateCurrentUserRoleAndPermissionsInOrg: (organizationId: string) => Promise<[void, void]>;
   onResetCurrentPage: () => void;
@@ -412,7 +428,7 @@ const MemberListItem: FC<{
             isDisabled={
               (isAcceptedMember && memberRoleName === 'owner') || invitationRoleUpdating || memberRoleUpdating
             }
-            isRBACEnabled={Boolean(orgFeatures?.features.orgBasicRbac?.enabled)}
+            isRBACEnabled={Boolean(orgFeatures?.orgBasicRbac?.enabled)}
             isUserOrganizationOwner={isCurrentUserOrganizationOwner}
             hasPermissionToChangeRoles={permissionRef.current['update:membership']}
             className="flex h-6 min-w-[88px] items-center gap-2"
@@ -462,7 +478,7 @@ const MemberListItem: FC<{
           className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
           doneMessage={isFailed ? 'Failed' : isAcceptedMember || isGroup ? 'Removed' : 'Revoked'}
           disabled={memberRoleName === 'owner' || isCurrentUser}
-          onClick={() => {
+          onClick={async () => {
             if (isPendingMember && member.metadata.invitationId) {
               if (!permissionRef.current['delete:invitation']) {
                 showModal(AlertModal, {
@@ -483,7 +499,11 @@ const MemberListItem: FC<{
             setIsFailed(false);
 
             if (isAcceptedMember) {
-              deleteMember(organizationId, member.metadata.userId!)
+              deleteOrganizationMember({
+                organizationId,
+                userId: member.metadata.userId!,
+                sessionId: await getCurrentSessionId(),
+              })
                 .then(() => {
                   onResetCurrentPage();
                   onRemoveMember();
@@ -580,29 +600,42 @@ export const InviteModalContainer: FC<{
   const { organizationId } = useParams();
   const [allRoles, setAllRoles] = useState<Role[]>([]);
   const [currentUserRoleInOrg, setCurrentUserRoleInOrg] = useState<Role | null>(null);
-  const [orgFeatures, setOrgFeatures] = useState<Features | null>(null);
+  const [orgFeatures, setOrgFeatures] = useState<FeatureList | null>(null);
   const permissionRef = useRef<Record<Permission, boolean>>();
   const [currentUserAccountId, setCurrentUserAccountId] = useState('');
-  const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationAuth0 | null>(null);
+  const [currentOrgInfo, setCurrentOrgInfo] = useState<Organization | null>(null);
 
   const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
 
-  function getBaseInfo(organizationId: string) {
+  async function getBaseInfo(organizationId: string) {
+    const sessionId = await getCurrentSessionId();
     return Promise.all([
       getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
-      getOrganizationFeatures(organizationId).then(setOrgFeatures),
-      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+      getOrganizationFeatures({
+        organizationId,
+        sessionId,
+      }).then(res => setOrgFeatures(res?.features)),
+      getOrgUserPermissions({
+        organizationId,
+        sessionId,
+      }).then(permissions => {
         permissionRef.current = permissions;
       }),
       getAccountId().then(setCurrentUserAccountId),
-      getOrganization(organizationId).then(setCurrentOrgInfo),
+      getOrganizationDetail({
+        organizationId,
+        sessionId,
+      }).then(setCurrentOrgInfo),
     ]);
   }
 
-  function revalidateCurrentUserRoleAndPermissionsInOrg(organizationId: string) {
+  async function revalidateCurrentUserRoleAndPermissionsInOrg(organizationId: string) {
     return Promise.all([
       getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
-      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+      getOrgUserPermissions({
+        organizationId,
+        sessionId: await getCurrentSessionId(),
+      }).then(permissions => {
         permissionRef.current = permissions;
       }),
     ]);
@@ -613,7 +646,10 @@ export const InviteModalContainer: FC<{
     (async () => {
       if (organizationId) {
         setLoadingOrgInfo(true);
-        await Promise.all([getAllRoles().then(setAllRoles), getBaseInfo(organizationId)]);
+        await Promise.all([
+          getOrganizationRoles({ sessionId: await getCurrentSessionId() }).then(setAllRoles),
+          getBaseInfo(organizationId),
+        ]);
         setLoadingOrgInfo(false);
       }
     })();
@@ -663,78 +699,12 @@ function checkPermissionRefType(
   return Boolean(permissionRef.current);
 }
 
-export type Permission =
-  | 'own:organization'
-  | 'read:organization'
-  | 'delete:organization'
-  | 'update:organization'
-  | 'read:membership'
-  | 'delete:membership'
-  | 'update:membership'
-  | 'read:invitation'
-  | 'create:invitation'
-  | 'delete:invitation'
-  | 'create:enterprise_connection'
-  | 'read:enterprise_connection'
-  | 'delete:enterprise_connection'
-  | 'update:enterprise_connection'
-  | 'leave:organization';
-
-export async function getCurrentUserPermissionsInOrg(organizationId: string): Promise<Record<Permission, boolean>> {
-  return insomniaFetch({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/user-permissions`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  });
-}
-
-export interface FeatureStatus {
-  enabled: boolean;
-  reason?: string;
-}
-
-export interface OrgFeatures {
-  gitSync: FeatureStatus;
-  orgBasicRbac: FeatureStatus;
-  cloudSync: FeatureStatus;
-  localVault: FeatureStatus;
-}
-
-export interface Features {
-  features: OrgFeatures;
-}
-
-async function getOrganizationFeatures(organizationId: string): Promise<Features> {
-  return insomniaFetch<Features>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/features`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch org features');
-  });
-}
-
-/** Get all roles */
-export async function getAllRoles(): Promise<Role[]> {
-  return insomniaFetch<Role[]>({
-    method: 'GET',
-    path: '/v1/organizations/roles',
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch roles');
-  });
-}
-
 /** Get current user's role in an organization */
 export async function getCurrentUserRoleInOrg(organizationId: string): Promise<Role> {
-  return insomniaFetch<Role>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/members/${await getAccountId()}/roles`,
+  return getOrganizationMemberRoles({
+    organizationId,
     sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
+    userId: await getAccountId(),
   }).catch(() => {
     throw new Error('Failed to fetch member roles');
   });
@@ -745,62 +715,26 @@ export interface OrganizationBranding {
   colors: string[];
 }
 
-export type OrganizationType = 'personal' | 'team' | 'enterprise';
-
-export interface Metadata {
-  organizationType: OrganizationType;
-  ownerAccountId?: string;
-  description?: string;
-}
-
-export interface OrganizationAuth0 {
-  id: string;
-  name: string;
-  display_name: string;
-  branding: OrganizationBranding;
-  metadata: Metadata;
-}
-
-async function getOrganization(organizationId: string): Promise<OrganizationAuth0> {
-  return insomniaFetch<OrganizationAuth0>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch organization');
-  });
-}
-
-async function deleteMember(organizationId: string, userId: string) {
-  return insomniaFetch<void>({
-    method: 'DELETE',
-    path: `/v1/organizations/${organizationId}/members/${userId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(error => {
-    throw new Error(error ?? 'Failed to remove member from organization');
-  });
-}
-
 async function unlinkTeam(organizationId: string, collaboratorId: string) {
-  return insomniaFetch<void>({
-    method: 'DELETE',
-    path: `/v1/desktop/organizations/${organizationId}/collaborators/${collaboratorId}/unlink`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(error => {
+  try {
+    return await unlinkCollaborator({
+      organizationId,
+      collaboratorId,
+      sessionId: await getCurrentSessionId(),
+    });
+  } catch (error) {
     throw new Error(error ?? 'Failed to unlink team from organization');
-  });
+  }
 }
 
 async function revokeOrganizationInvite(organizationId: string, invitationId: string) {
-  return insomniaFetch<void>({
-    method: 'DELETE',
-    path: `/v1/organizations/${organizationId}/invites/${invitationId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(error => {
-    throw new Error(error ?? 'Failed to revoke invitation from organization');
-  });
+  try {
+    return revokeInvitation({
+      organizationId,
+      invitationId,
+      sessionId: await getCurrentSessionId(),
+    });
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Failed to revoke invitation from organization');
+  }
 }

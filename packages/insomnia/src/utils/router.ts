@@ -1,12 +1,15 @@
+import type { Organization } from 'insomnia-api';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
+import type { GitProject, GitRepository, Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+
 import { database } from '../common/database';
 import * as models from '../models';
-import type { Organization } from '../models/organization';
 import { findPersonalOrganization, SCRATCHPAD_ORGANIZATION_ID } from '../models/organization';
-import { type Project, SCRATCHPAD_PROJECT_ID } from '../models/project';
-import { scopeToActivity, SCRATCHPAD_WORKSPACE_ID } from '../models/workspace';
+import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
+
 export const enum AsyncTask {
   SyncOrganization,
   MigrateProjects,
@@ -47,19 +50,19 @@ export const getInitialRouteForOrganization = async ({
     const match = getMatchParams(prevOrganizationLocation);
 
     if (match && match.params.organizationId && match.params.projectId) {
-      const existingProject = await models.project.getById(match.params.projectId);
+      const existingProject = await services.project.getById(match.params.projectId);
 
       if (existingProject) {
         console.log('Redirecting to last visited project', existingProject._id);
 
         if (match.params.workspaceId && navigateToWorkspace) {
-          const existingWorkspace = await models.workspace.getById(match.params.workspaceId);
+          const existingWorkspace = await services.workspace.getById(match.params.workspaceId);
           if (existingWorkspace) {
             return `${href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
               organizationId: match.params.organizationId,
               projectId: existingProject._id,
               workspaceId: existingWorkspace._id,
-            })}/${scopeToActivity(existingWorkspace.scope)}`;
+            })}/${models.workspace.scopeToActivity(existingWorkspace.scope)}`;
           }
         }
 
@@ -90,6 +93,25 @@ export const getInitialEntry = async () => {
   // Otherwise if the user is not logged in and has not logged in before, then show the login
   // Otherwise if the user is logged in, then show the organization
   try {
+    const allProjects = await database.find<Project>(models.project.type, {});
+    const gitRepoIds = (
+      allProjects.filter(
+        (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
+      ) as GitProject[]
+    ).map(p => p.gitRepositoryId);
+
+    if (gitRepoIds.length > 0) {
+      const gitRepos = await database.find<GitRepository>(models.gitRepository.type, {
+        _id: { $in: gitRepoIds },
+      });
+
+      const hasPendingMigrations = gitRepos.some(repo => (repo.repoMigrationVersion ?? 0) < CURRENT_MIGRATION_VERSION);
+      if (hasPendingMigrations) {
+        console.log('Redirecting to git migration');
+        return href('/git-migration/*', { '*': '' });
+      }
+    }
+
     const hasSeenOnboardingV12 = Boolean(window.localStorage.getItem('hasSeenOnboardingV12'));
 
     if (!hasSeenOnboardingV12) {
@@ -100,7 +122,7 @@ export const getInitialEntry = async () => {
 
     const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
 
-    const user = await models.userSession.getOrCreate();
+    const user = await services.userSession.getOrCreate();
     if (user.id) {
       const organizations = JSON.parse(
         localStorage.getItem(`${user.accountId}:organizations`) || '[]',
@@ -136,14 +158,14 @@ export const getInitialEntry = async () => {
 
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
       organizationId: SCRATCHPAD_ORGANIZATION_ID,
-      projectId: SCRATCHPAD_PROJECT_ID,
-      workspaceId: SCRATCHPAD_WORKSPACE_ID,
+      projectId: models.project.SCRATCHPAD_PROJECT_ID,
+      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
     });
   } catch {
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
       organizationId: SCRATCHPAD_ORGANIZATION_ID,
-      projectId: SCRATCHPAD_PROJECT_ID,
-      workspaceId: SCRATCHPAD_WORKSPACE_ID,
+      projectId: models.project.SCRATCHPAD_PROJECT_ID,
+      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
     });
   }
 };

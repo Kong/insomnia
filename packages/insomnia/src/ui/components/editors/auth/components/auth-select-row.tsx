@@ -1,7 +1,7 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useCallback } from 'react';
 
 import { toKebabCase } from '~/common/misc';
-import type { RequestAuthentication } from '~/models/request';
+import type { RequestAuthentication } from '~/insomnia-data';
 import { getAuthObjectOrNull } from '~/network/authentication';
 import {
   type RequestLoaderData,

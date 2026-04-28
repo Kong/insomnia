@@ -1,23 +1,26 @@
-import { type CurrentPlan, getCurrentPlan, getUserProfile } from 'insomnia-api';
+import {
+  getCurrentPlan,
+  getOrganizations,
+  getUserProfile,
+  type Organization,
+} from 'insomnia-api';
+import { fetchTeamProjects } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
+import type { Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 import { database } from '../common/database';
-import { project, userSession } from '../models';
+import { project } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
-import type { Organization, OrganizationsResponse, StorageRules } from '../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
-import type { Project } from '../models/project';
-import { VCSInstance } from '../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../utils/invariant';
-import { insomniaFetch } from './insomnia-fetch';
 
-// Create an in-memory storage to store the storage rules
-const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
+export { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 
 export function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(
@@ -51,13 +54,7 @@ export function sortOrganizations(accountId: string, organizations: Organization
 }
 
 export async function syncCurrentPlan(sessionId: string, accountId: string) {
-  const [currentPlanResult] = await Promise.allSettled([
-    insomniaFetch<CurrentPlan | void>({
-      method: 'GET',
-      path: '/v1/billing/current-plan',
-      sessionId,
-    }),
-  ]);
+  const [currentPlanResult] = await Promise.allSettled([getCurrentPlan({ sessionId })]);
   if (currentPlanResult.status === 'fulfilled' && currentPlanResult.value) {
     localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlanResult.value));
   } else {
@@ -68,11 +65,7 @@ export async function syncCurrentPlan(sessionId: string, accountId: string) {
 export async function syncOrganizations(sessionId: string, accountId: string) {
   try {
     const [organizationsResult, user, currentPlan] = await Promise.all([
-      insomniaFetch<OrganizationsResponse | void>({
-        method: 'GET',
-        path: '/v1/organizations',
-        sessionId,
-      }),
+      getOrganizations({ sessionId }),
       getUserProfile({ sessionId }),
       getCurrentPlan({ sessionId }),
     ]);
@@ -112,60 +105,11 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
           project,
           organizationId: personalOrganizationId,
           sessionId,
-          vcs: VCSInstance(),
+          vcs: window.main.sync,
         });
       }
     }
   }
-}
-
-export const DEFAULT_STORAGE_RULES = {
-  enableCloudSync: true,
-  enableLocalVault: true,
-  enableGitSync: true,
-  isOverridden: false,
-};
-
-export async function fetchAndCacheOrganizationStorageRule(
-  organizationId: string | undefined,
-  forceFetch = false,
-): Promise<StorageRules> {
-  invariant(organizationId, 'Organization ID is required');
-
-  if (isScratchpadOrganizationId(organizationId)) {
-    return {
-      enableCloudSync: false,
-      enableLocalVault: true,
-      enableGitSync: false,
-      isOverridden: false,
-    };
-  }
-  if (!forceFetch) {
-    const storageRules = inMemoryStorageRuleCache.get(organizationId);
-    if (storageRules) {
-      return storageRules;
-    }
-  }
-  const { id: sessionId } = await userSession.getOrCreate();
-
-  // Otherwise fetch from the API
-  return await insomniaFetch<StorageRules>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/storage-rule`,
-    sessionId,
-    onlyResolveOnSuccess: true,
-  }).then(
-    res => {
-      if (res) {
-        inMemoryStorageRuleCache.set(organizationId, res);
-      }
-      return res || DEFAULT_STORAGE_RULES;
-    },
-    err => {
-      console.log('[storageRule] Failed to load storage rules', err.message);
-      return DEFAULT_STORAGE_RULES;
-    },
-  );
 }
 
 interface TeamProject {
@@ -174,24 +118,15 @@ interface TeamProject {
 }
 
 async function getAllTeamProjects(organizationId: string) {
-  const { id: sessionId } = await userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.getOrCreate();
   if (!sessionId) {
     return [];
   }
 
   console.log('[project] Fetching', organizationId);
-  const response = await insomniaFetch<{
-    data: {
-      id: string;
-      name: string;
-    }[];
-  }>({
-    path: `/v1/organizations/${organizationId}/team-projects`,
-    method: 'GET',
-    sessionId,
-  });
+  const response = await fetchTeamProjects({ sessionId, organizationId });
 
-  return response.data as TeamProject[];
+  return response.data;
 }
 
 async function syncTeamProjects({
@@ -214,7 +149,7 @@ async function syncTeamProjects({
   // this will create a new project for any remote projects that don't exist in the current organization
   await Promise.all(
     remoteProjectsThatNeedToBeCreated.map(async prj => {
-      await project.create({
+      await services.project.create({
         remoteId: prj.id,
         name: prj.name,
         parentId: organizationId,
@@ -231,7 +166,7 @@ async function syncTeamProjects({
     remoteProjectsThatNeedToBeUpdated.map(async prj => {
       const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
       if (remoteProject && remoteProject.name !== prj.name) {
-        await project.update(prj, {
+        await services.project.update(prj, {
           name: remoteProject.name,
         });
       }
@@ -253,7 +188,7 @@ async function syncTeamProjects({
 
   await Promise.all(
     removedRemoteProjects.map(async prj => {
-      await project.update(prj, {
+      await services.project.update(prj, {
         remoteId: null,
       });
     }),
@@ -261,7 +196,7 @@ async function syncTeamProjects({
 }
 
 export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
-  const user = await userSession.getOrCreate();
+  const user = await services.userSession.getOrCreate();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
   if (Array.isArray(teamProjects) && user.id && !isScratchpadOrganizationId(organizationId)) {

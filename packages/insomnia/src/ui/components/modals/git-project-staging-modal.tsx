@@ -1,4 +1,13 @@
-import React, { type FC, type ReactNode, useEffect, useState } from 'react';
+import React, {
+  type FC,
+  forwardRef,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import {
   Button,
   Dialog,
@@ -18,6 +27,11 @@ import {
 import { useParams } from 'react-router';
 import { type TreeData, useTreeData } from 'react-stately';
 
+import { Banner } from '~/basic-components/banner';
+import { Button as BasicButton } from '~/basic-components/button';
+import { LearnMoreLink } from '~/basic-components/link';
+import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
+import type { GitCredentials, GitRepository } from '~/insomnia-data';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
@@ -26,13 +40,25 @@ import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
+import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
+import {
+  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  useGitProviderCompleteSignInFetcher,
+} from '~/routes/git-credentials.complete-sign-in';
+import type { GitFileType } from '~/sync/git/git-vcs';
+import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
+import type { GitProviderOption } from '~/sync/git/providers/types';
 import { SegmentEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
+import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
+import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
-import { GitFileType, GitVCSOperationErrors } from '../../../sync/git/git-vcs';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
+import { showToast } from '../toast-notification';
 import { GitPullRequiredModal } from './git-pull-required-modal';
 
 export type StagingModalMode = 'default' | 'commit-and-pull';
@@ -47,61 +73,85 @@ interface DiscardData {
   filesCount: number;
 }
 
-function getModificationClassName(type: string) {
-  switch (type) {
-    case GitFileType.Added: {
-      return 'text-[#73c991]';
-    }
-    case GitFileType.Deleted: {
-      return 'text-[#f14c4c]';
-    }
-    case GitFileType.Modified: {
-      return 'text-[#e2c08d]';
-    }
-    case GitFileType.Renamed: {
-      return 'text-[#519aba]';
-    }
-    case GitFileType.Copied: {
-      return 'text-[#4ec9b0]';
-    }
-    case GitFileType.Untracked: {
-      return 'text-[#73c991]';
-    }
-    case GitFileType.Ignored: {
-      return 'text-[#8c8c8c]';
-    }
-    case GitFileType.Conflicted: {
-      return 'text-[#d670d6]';
-    }
-    default: {
-      return '';
-    }
+function getModificationClassName(type: GitFileType) {
+  if (!type) {
+    return '';
   }
+
+  if (type === 'added') {
+    return 'text-[#73c991]';
+  }
+
+  if (type === 'deleted') {
+    return 'text-[#f14c4c]';
+  }
+
+  if (type === 'modified') {
+    return 'text-[#e2c08d]';
+  }
+
+  if (type === 'renamed') {
+    return 'text-[#519aba]';
+  }
+
+  if (type === 'copied') {
+    return 'text-[#4ec9b0]';
+  }
+
+  if (type === 'untracked') {
+    return 'text-[#73c991]';
+  }
+
+  if (type === 'ignored') {
+    return 'text-[#8c8c8c]';
+  }
+
+  if (type === 'conflicted') {
+    return 'text-[#d670d6]';
+  }
+
+  return '';
 }
 
 interface GeneratedCommitsFormProps {
   commits: { id: string; message: string; files: string[] }[];
   projectId: string;
   mode: StagingModalMode;
-  stagedCount: number;
-  unstagedCount: number;
+  changes: { staged: any[]; unstaged: any[] };
   setShowConfirmDiscardAndPullModal: (show: boolean) => void;
-  onCommitSuccess: () => void;
+  onCommitSuccess: (options: { push: boolean }) => void;
   diffChanges: (params: { path: string; staged: boolean }) => void;
+  gitRepository?: GitRepository | null;
+  selectedCredential?: GitCredentials | null;
+  selectedProvider?: GitProviderOption | null;
+  isNonOriginBranch?: boolean;
+}
+
+interface FileItem {
+  id: string;
+  name: string;
+  type: string;
+  symbol: string;
 }
 
 interface CommitItem {
   id: string;
   name: string;
-  files?: { id: string; name: string }[];
+  files?: FileItem[];
 }
+
+type TreeItem = CommitItem | FileItem;
+
+const DO_NOT_COMMIT_ID = 'do-not-commit';
 
 const CommitSection = (props: {
   id: string;
   commitsSections: TreeData<CommitItem>;
-  files: TreeData<CommitItem>['items'];
+  files: TreeData<TreeItem>['items'];
   emptyState?: ReactNode;
+  isDoNotCommitSection?: boolean;
   diffChanges: (params: { path: string; staged: boolean }) => void;
+  onMoveToDoNotCommit?: (fileItem: FileItem) => void;
 }) => {
   const { dragAndDropHooks } = useDragAndDrop({
     // Provide drag data in a custom format as well as plain text.
@@ -162,7 +212,7 @@ const CommitSection = (props: {
           return props.emptyState;
         }
 
-        return <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be omitted.</p>;
+        return <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be ignored.</p>;
       }}
       className="w-full"
       aria-label="Files to commit"
@@ -176,12 +226,51 @@ const CommitSection = (props: {
       }}
     >
       {item => {
+        const fileItem = item.value as FileItem;
+
         return (
-          <GridListItem className="group flex w-full items-center gap-2 overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
+          <GridListItem className="group flex w-full items-center gap-2 overflow-hidden py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
             <Button slot="drag" className="cursor-move">
               <Icon icon="grip-vertical" className="size-4" />
             </Button>
-            <span className={`truncate`}>{item.value.name}</span>
+            <div className="flex w-full items-center justify-between overflow-hidden">
+              <span className={`truncate ${fileItem.type === 'deleted' ? 'line-through' : ''}`}>{fileItem.name}</span>
+              <div className="flex items-center gap-1">
+                {!props.isDoNotCommitSection && (
+                  <TooltipTrigger>
+                    <Button
+                      className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
+                      slot={null}
+                      name="Do not commit"
+                      onPress={() => {
+                        props.onMoveToDoNotCommit?.(fileItem);
+                      }}
+                    >
+                      <Icon icon="minus" aria-hidden pointerEvents="none" />
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                    >
+                      Do not commit
+                    </Tooltip>
+                  </TooltipTrigger>
+                )}
+                <TooltipTrigger>
+                  <Button
+                    className={`cursor-default text-sm ${getModificationClassName(fileItem.type as GitFileType)}`}
+                  >
+                    {fileItem.symbol}
+                  </Button>
+                  <Tooltip
+                    offset={8}
+                    className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) capitalize shadow-lg select-none focus:outline-hidden"
+                  >
+                    {fileItem.type}
+                  </Tooltip>
+                </TooltipTrigger>
+              </div>
+            </div>
           </GridListItem>
         );
       }}
@@ -193,27 +282,74 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   commits,
   projectId,
   mode,
-  stagedCount,
-  unstagedCount,
+  changes,
   setShowConfirmDiscardAndPullModal,
   onCommitSuccess,
   diffChanges,
+  gitRepository,
+  selectedCredential,
+  selectedProvider,
+  isNonOriginBranch,
 }) => {
   const commitsFetcher = useGitProjectCommitsActionFetcher();
-  const [committingAction, setCommittingAction] = useState<'commit' | 'commit-push' | null>(null);
-  const isCommitting = commitsFetcher.state !== 'idle';
-  const canCommitAndPull = stagedCount > 0 && unstagedCount === 0;
-
-  // Handle successful commits
+  const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [operationError, setOperationError] = useState<string | null>(null);
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
+  const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
-    const hasNoCommitErrors =
-      commitsFetcher.data && 'errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0;
-    if (hasNoCommitErrors) {
-      onCommitSuccess();
+    const prevState = prevCompleteSignInStateRef.current;
+    prevCompleteSignInStateRef.current = completeSignInFetcher.state;
+    const hasError =
+      completeSignInFetcher.data &&
+      typeof completeSignInFetcher.data === 'object' &&
+      'errors' in completeSignInFetcher.data &&
+      Array.isArray((completeSignInFetcher.data as { errors: unknown }).errors) &&
+      (completeSignInFetcher.data as { errors: string[] }).errors.length > 0;
+    if (
+      (prevState === 'submitting' || prevState === 'loading') &&
+      completeSignInFetcher.state === 'idle' &&
+      completeSignInFetcher.data &&
+      !hasError
+    ) {
+      setOperationError(null);
     }
-  }, [commitsFetcher.data, onCommitSuccess]);
+  }, [completeSignInFetcher.state, completeSignInFetcher.data]);
+  const isCommitting = commitsFetcher.state !== 'idle';
+  const canCommitAndPull = changes.staged.length > 0 && changes.unstaged.length === 0;
 
-  const DO_NOT_COMMIT_ID = 'do-not-commit';
+  useEffect(() => {
+    if (!commitsFetcher.data || !committingActionRef.current || isCommitting) {
+      return;
+    }
+    const action = committingActionRef.current;
+    committingActionRef.current = null;
+    const hasErrors =
+      'errors' in commitsFetcher.data && commitsFetcher.data.errors && commitsFetcher.data.errors.length > 0;
+    const isSuccess =
+      ('success' in commitsFetcher.data && commitsFetcher.data.success) ||
+      ('errors' in commitsFetcher.data && commitsFetcher.data.errors?.length === 0);
+    if (hasErrors && 'errors' in commitsFetcher.data) {
+      setOperationError((commitsFetcher.data.errors as string[]).join('\n'));
+      return;
+    }
+    if (isSuccess && !hasErrors) {
+      setOperationError(null);
+      onCommitSuccess({ push: action === 'commit-push' });
+    }
+  }, [commitsFetcher.data, onCommitSuccess, isCommitting]);
+
+  const moveFileToDoNotCommit = (fileItem: FileItem) => {
+    try {
+      commitsSections.remove(fileItem.id);
+      commitsSections.append(DO_NOT_COMMIT_ID, fileItem);
+
+      // Force re-render by updating refresh key
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error moving file:', error);
+    }
+  };
 
   const commitsSections = useTreeData<CommitItem>({
     initialItems: commits
@@ -223,6 +359,8 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         files: commit.files.map(file => ({
           id: `${commit.id}:${file}`,
           name: file,
+          type: changes.staged.find(change => change.path === file)?.type || 'modified',
+          symbol: changes.staged.find(change => change.path === file)?.symbol || 'M',
         })),
       }))
       .concat({
@@ -243,7 +381,8 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
 
         const push = Boolean(formData.get('push') === 'true');
 
-        setCommittingAction(push ? 'commit-push' : 'commit');
+        const action = push ? 'commit-push' : 'commit';
+        committingActionRef.current = action;
 
         const commits = commitsSections.items
           .map(commit => ({
@@ -275,20 +414,22 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         {commitsSections.items.map((commit, index) => (
           <div
             key={commit.key}
-            className="relative flex shrink-0 flex-col gap-2 rounded-md border border-solid border-(--hl-sm) p-2"
+            className={`relative flex shrink-0 flex-col gap-2 rounded-md border border-solid border-(--hl-sm) p-3 ${commit.children?.length === 0 ? 'opacity-50' : ''}`}
           >
-            <span className="absolute -top-3 left-2 w-fit bg-(--color-bg) px-2 text-(--hl)">
+            <span className="absolute -top-3 left-2 flex w-fit gap-1 bg-(--color-bg) px-2">
+              <SvgIcon icon="sparkles" style={{ color: `rgb(var(--color-surprise-rgb))` }} />
               {commit.value.id === DO_NOT_COMMIT_ID ? 'Do not commit' : `Commit ${index + 1}`}
             </span>
             {commit.value.id !== DO_NOT_COMMIT_ID && (
               <TextField
                 className="flex flex-col gap-2"
                 defaultValue={commit.value.name}
+                isDisabled={isCommitting || commit.children?.length === 0}
                 onChange={value => {
                   commitsSections.update(commit.key, { ...commit.value, name: value });
                 }}
               >
-                <Label className="font-bold text-(--hl)">Message:</Label>
+                <Label>Message</Label>
                 <TextArea
                   rows={2}
                   name="message"
@@ -297,17 +438,20 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
                 />
               </TextField>
             )}
-            <div className="">
-              <span className="font-bold text-(--hl)">Files:</span>
-              <div className="rounded-xs border border-solid border-(--hl-sm) p-2">
+            <div className="pt-2">
+              <span>Files ({commit.children?.length || 0})</span>
+              <div className="py-1">
                 <CommitSection
+                  key={`${commit.key}-${refreshKey}`}
                   id={commit.key.toString()}
-                  files={commit.children || []}
+                  files={commitsSections.getItem(commit.key)?.children || []}
+                  isDoNotCommitSection={commit.value.id === DO_NOT_COMMIT_ID}
                   commitsSections={commitsSections}
                   diffChanges={diffChanges}
+                  onMoveToDoNotCommit={moveFileToDoNotCommit}
                   emptyState={
                     commit.value.id !== DO_NOT_COMMIT_ID ? (
-                      <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be omitted.</p>
+                      <p className="p-2 text-sm text-(--hl)">No files to commit. This commit will be ignored.</p>
                     ) : (
                       <p className="p-2 text-sm text-(--hl)">These files will not be committed.</p>
                     )
@@ -323,7 +467,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         <div className="flex items-center gap-2">
           <Button
             type="submit"
-            isDisabled={isCommitting || stagedCount === 0}
+            isDisabled={isCommitting || changes.staged.length === 0}
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             {canCommitAndPull ? (
@@ -352,7 +496,14 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
               setShowConfirmDiscardAndPullModal(true);
             }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="size-4"
+              aria-label="Discard and pull"
+              aria-hidden="true"
+            >
               <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
             </svg>
             Discard and pull
@@ -362,31 +513,61 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
         <div className="flex shrink-0 items-center justify-stretch gap-2">
           <Button
             type="submit"
-            isDisabled={committingAction === 'commit' && isCommitting}
+            isDisabled={committingActionRef.current === 'commit' && isCommitting}
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon
-              icon={committingAction === 'commit' && isCommitting ? 'spinner' : 'check'}
-              className={`w-5 ${committingAction === 'commit' && isCommitting ? 'animate-spin' : ''}`}
+              icon={committingActionRef.current === 'commit' && isCommitting ? 'spinner' : 'check'}
+              className={`w-5 ${committingActionRef.current === 'commit' && isCommitting ? 'animate-spin' : ''}`}
             />{' '}
             Commit
           </Button>
 
           <Button
             type="submit"
-            isDisabled={committingAction === 'commit-push' && isCommitting}
+            isDisabled={isNonOriginBranch || (committingActionRef.current === 'commit-push' && isCommitting)}
             name="push"
             value="true"
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon
-              icon={committingAction === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
-              className={`w-5 ${committingAction === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
+              icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
+              className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
             />{' '}
             Commit and push
           </Button>
         </div>
       )}
+      {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+        <GitOauthAuthBanner
+          selectedCredential={selectedCredential}
+          gitRepository={gitRepository}
+          repoLoadErrors={[operationError]}
+          provider={selectedProvider}
+        />
+      ) : operationError && selectedCredential?.provider === 'custom' ? (
+        <Banner
+          type="warning"
+          className="bg-[rgba(var(--color-danger-rgb),0.5)] p-2 text-(--color-font-danger)"
+          message={
+            <span>
+              Remote connection is unavailable. Ensure your{' '}
+              <Button
+                type="button"
+                className="inline cursor-pointer border-0 bg-transparent p-0 text-(--color-surprise) underline"
+                onPress={() => showSettingsModal({ tab: 'credentials' })}
+              >
+                PAT Credential
+              </Button>{' '}
+              is valid, then try again.
+            </span>
+          }
+        />
+      ) : operationError ? (
+        <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
+          <Icon icon="exclamation-triangle" /> {operationError}
+        </p>
+      ) : null}
     </form>
   );
 };
@@ -396,10 +577,16 @@ interface ManualCommitFormProps {
   mode: StagingModalMode;
   changes: { staged: any[]; unstaged: any[] };
   setShowConfirmDiscardAndPullModal: (show: boolean) => void;
-  onCommitSuccess: () => void;
+  onCommitSuccess: (options: { push: boolean }) => void;
   onPullRequired: () => void;
   diffChanges: (params: { path: string; staged: boolean }) => void;
   setDiscardData: (data: { paths: string[]; filesCount: number }) => void;
+  stageChanges: (paths: string[]) => void;
+  unstageChanges: (paths: string[]) => void;
+  gitRepository?: GitRepository | null;
+  selectedCredential?: GitCredentials | null;
+  selectedProvider?: GitProviderOption | null;
+  isNonOriginBranch?: boolean;
 }
 
 const ManualCommitForm: FC<ManualCommitFormProps> = ({
@@ -411,53 +598,68 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   onPullRequired,
   diffChanges,
   setDiscardData,
+  stageChanges,
+  unstageChanges,
+  gitRepository,
+  selectedCredential,
+  selectedProvider,
+  isNonOriginBranch,
 }) => {
   const commitFetcher = useGitProjectCommitActionFetcher();
-  const stageChangesFetcher = useGitProjectStageActionFetcher();
-  const unstageChangesFetcher = useGitProjectUnstageActionFetcher();
 
   const stagedCount = changes.staged.length;
   const unstagedCount = changes.unstaged.length;
   const [message, setMessage] = useState('');
-  const [committingAction, setCommittingAction] = useState<'commit' | 'commit-push' | null>(null);
+  const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const repoPath = gitRepository?._id
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository._id)
+    : '';
+  const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
+  const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
+  useEffect(() => {
+    const prevState = prevCompleteSignInStateRef.current;
+    prevCompleteSignInStateRef.current = completeSignInFetcher.state;
+    const hasError =
+      completeSignInFetcher.data &&
+      typeof completeSignInFetcher.data === 'object' &&
+      'errors' in completeSignInFetcher.data &&
+      Array.isArray((completeSignInFetcher.data as { errors: unknown }).errors) &&
+      (completeSignInFetcher.data as { errors: string[] }).errors.length > 0;
+    if (
+      (prevState === 'submitting' || prevState === 'loading') &&
+      completeSignInFetcher.state === 'idle' &&
+      completeSignInFetcher.data &&
+      !hasError
+    ) {
+      setOperationError(null);
+    }
+  }, [completeSignInFetcher.state, completeSignInFetcher.data]);
 
   const isCommitting = commitFetcher.state !== 'idle';
   const canCommitAndPull = stagedCount > 0 && unstagedCount === 0;
 
-  function stageChanges(paths: string[]) {
-    stageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
-  }
-
-  function unstageChanges(paths: string[]) {
-    unstageChangesFetcher.submit({
-      projectId,
-      paths,
-    });
-  }
-
-  const hasNoCommitErrors =
-    commitFetcher.data && 'errors' in commitFetcher.data && commitFetcher.data.errors?.length === 0;
-
-  // Handle commit results (errors and success)
   useEffect(() => {
-    if (commitFetcher.data) {
-      if (commitFetcher.data.errors && commitFetcher.data.errors.length > 0) {
-        if (commitFetcher.data.errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
-          onPullRequired();
-        } else {
-          setOperationError(commitFetcher.data.errors.join('\n'));
-        }
-      } else if (hasNoCommitErrors) {
-        setMessage('');
-        setOperationError(null);
-        onCommitSuccess();
-      }
+    if (!commitFetcher.data || !committingActionRef.current || isCommitting) {
+      return;
     }
-  }, [commitFetcher.data, hasNoCommitErrors, onCommitSuccess, onPullRequired]);
+    const action = committingActionRef.current;
+    committingActionRef.current = null;
+    const errors = commitFetcher.data.errors;
+    if (errors && errors.length > 0) {
+      if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
+        onPullRequired();
+      } else {
+        setOperationError(errors.join('\n'));
+      }
+      return;
+    }
+    setMessage('');
+    setOperationError(null);
+    onCommitSuccess({ push: action === 'commit-push' });
+  }, [commitFetcher.data, onCommitSuccess, onPullRequired, isCommitting]);
 
   return (
     <>
@@ -469,7 +671,8 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           const message = formData.get('message')?.toString() || '';
           const push = Boolean(formData.get('push') === 'true');
 
-          setCommittingAction(push ? 'commit-push' : 'commit');
+          const action = push ? 'commit-push' : 'commit';
+          committingActionRef.current = action;
 
           commitFetcher.submit({
             projectId,
@@ -484,7 +687,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           <TextArea
             rows={3}
             name="message"
-            className="resize-none rounded-xs border border-solid border-(--hl-sm) p-2 placeholder:text-(--hl-md)"
+            className="text-md resize-none rounded-xs border border-solid border-(--hl-sm) p-2 placeholder:text-(--hl-md)"
             placeholder="This is a helpful message that describes the changes made in this commit."
             required
             value={message}
@@ -524,7 +727,14 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 setShowConfirmDiscardAndPullModal(true);
               }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="size-4"
+                aria-label="Discard and pull"
+                aria-hidden="true"
+              >
                 <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
               </svg>
               Discard and pull
@@ -534,36 +744,73 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           <div className="flex shrink-0 items-center justify-stretch gap-2">
             <Button
               type="submit"
-              isDisabled={(committingAction === 'commit' && isCommitting) || stagedCount === 0}
+              isDisabled={(committingActionRef.current === 'commit' && isCommitting) || stagedCount === 0}
               className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               <Icon
-                icon={committingAction === 'commit' && isCommitting ? 'spinner' : 'check'}
-                className={`w-5 ${committingAction === 'commit' && isCommitting ? 'animate-spin' : ''}`}
+                icon={committingActionRef.current === 'commit' && isCommitting ? 'spinner' : 'check'}
+                className={`w-5 ${committingActionRef.current === 'commit' && isCommitting ? 'animate-spin' : ''}`}
               />{' '}
               Commit
             </Button>
 
-            <Button
-              type="submit"
-              isDisabled={(committingAction === 'commit-push' && isCommitting) || stagedCount === 0}
-              name="push"
-              value="true"
-              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon
-                icon={committingAction === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
-                className={`w-5 ${committingAction === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
-              />{' '}
-              Commit and push
-            </Button>
+            {isNonOriginBranch ? (
+              <TooltipTrigger>
+                <Button
+                  name="push"
+                  value="true"
+                  onPress={() => {}}
+                  className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) opacity-50 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="cloud-arrow-up" className="w-5" /> Commit and push
+                </Button>
+                <Tooltip
+                  offset={8}
+                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                >
+                  Push action is not allowed for branches on non-origin remotes
+                </Tooltip>
+              </TooltipTrigger>
+            ) : (
+              <Button
+                type="submit"
+                isDisabled={committingActionRef.current === 'commit-push' && isCommitting}
+                name="push"
+                value="true"
+                className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+              >
+                <Icon
+                  icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
+                  className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
+                />{' '}
+                Commit and push
+              </Button>
+            )}
           </div>
         )}
-        {operationError && (
+        {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
+          <GitOauthAuthBanner
+            selectedCredential={selectedCredential}
+            gitRepository={gitRepository}
+            repoLoadErrors={[operationError]}
+            provider={selectedProvider}
+          />
+        ) : operationError && selectedCredential?.provider === 'custom' ? (
+          <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
+            <Icon icon="exclamation-triangle" /> Remote connection is unavailable. Ensure your{' '}
+            <Button
+              className="inline cursor-pointer border-0 bg-transparent p-0 text-(--color-font-danger) underline"
+              onPress={() => showSettingsModal({ tab: 'credentials' })}
+            >
+              PAT Credential
+            </Button>{' '}
+            is valid, then try again.
+          </p>
+        ) : operationError ? (
           <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
             <Icon icon="exclamation-triangle" /> {operationError}
           </p>
-        )}
+        ) : null}
       </form>
 
       <div className="grid auto-rows-auto gap-2 overflow-y-auto">
@@ -613,7 +860,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               {item => {
                 return (
                   <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
-                    <span className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}>
+                    <span className={`truncate ${item.entry.type === 'deleted' ? 'line-through' : ''}`}>
                       {item.entry.path}
                     </span>
                     <div className="flex items-center gap-1">
@@ -655,7 +902,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         </div>
         <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
           <Heading className="group flex w-full shrink-0 items-center justify-between py-1 font-semibold">
-            <span>Changes</span>
+            <span>Unstaged changes</span>
             <div className="flex items-center gap-2">
               <TooltipTrigger>
                 <Button
@@ -670,7 +917,14 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                     });
                   }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="size-4"
+                    aria-label="Discard all changes"
+                    aria-hidden="true"
+                  >
                     <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
                   </svg>
                 </Button>
@@ -725,7 +979,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               {item => {
                 return (
                   <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
-                    <span className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}>
+                    <span className={`truncate ${item.entry.type === 'deleted' ? 'line-through' : ''}`}>
                       {item.entry.path}
                     </span>
                     <div className="flex items-center gap-1">
@@ -746,6 +1000,8 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                             viewBox="0 0 24 24"
                             fill="currentColor"
                             className="size-4"
+                            aria-label="Discard change"
+                            aria-hidden="true"
                           >
                             <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
                           </svg>
@@ -794,16 +1050,122 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </div>
         </div>
       </div>
+
+      <div className="mt-auto rounded-md border border-solid border-(--hl-sm) p-4 text-sm text-(--color-font)">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="rounded-xs border border-solid border-[#a78bfa] px-1.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
+            PREVIEW
+          </span>
+          <span className="font-semibold">Manage changes on the Git CLI</span>
+        </div>
+        <p className="mb-3 text-sm text-(--color-font)">
+          You can now browse Git Sync project files on your local file system and manage changes using your normal Git
+          workflows.{' '}
+          <a href="https://insomnia.rest" className="underline">
+            Learn more ↗
+          </a>
+        </p>
+        <p className="mb-1 font-semibold">Path to this project:</p>
+        <div className="mb-3 flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+          <span className="min-w-0 flex-1 truncate" title={repoPath}>
+            {repoPath}
+          </span>
+          <Button
+            onPress={() => {
+              window.clipboard.writeText(repoPath);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="mb-1 flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+            aria-label="Copy path"
+          >
+            <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
+          </Button>
+        </div>
+        <Button
+          onPress={() => window.shell.showItemInFolder(repoPath)}
+          className="cursor-pointer text-(--hl) underline"
+        >
+          Open in file system
+        </Button>
+      </div>
     </>
   );
 };
 
-export const GitProjectStagingModal: FC<{
-  mode?: StagingModalMode;
+export interface GitProjectStagingModalCallbackProps {
   onClose: () => void;
   onPullAfterCommit: () => void;
   onPushAfterPull: () => void;
-}> = ({ mode = StagingModalModes.default, onClose, onPullAfterCommit, onPushAfterPull }) => {
+}
+
+export interface GitProjectStagingModalOptions {
+  mode?: StagingModalMode;
+  isNonOriginBranch?: boolean;
+  /* Why is callbackRef a ref object?
+   * The callbacks passed to the modal (onClose, onPullAfterCommit, onPushAfterPull) may change after the show function is called.
+   * If we were to pass the callbacks directly, the modal would capture the initial callbacks and not reflect any updates to them.
+   * By using a ref object, we can ensure that the modal always has access to the latest version of the callbacks, even if they change after the modal is shown.
+   */
+  callbackRef: React.MutableRefObject<GitProjectStagingModalCallbackProps>;
+}
+
+export interface GitProjectStagingModalHandle {
+  show: (options: GitProjectStagingModalOptions) => void;
+  hide: () => void;
+}
+
+export const GitProjectStagingModal = forwardRef<GitProjectStagingModalHandle>((_, ref) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [modalOptions, setModalOptions] = useState<GitProjectStagingModalOptions | null>(null);
+
+  const hide = useCallback(() => {
+    setIsOpen(false);
+    setModalOptions(null);
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    show: ({ mode: newMode = StagingModalModes.default, callbackRef, isNonOriginBranch }) => {
+      setModalOptions({ mode: newMode, callbackRef, isNonOriginBranch });
+      setIsOpen(true);
+    },
+    hide,
+  }));
+
+  const onClose = useCallback(() => {
+    modalOptions?.callbackRef.current.onClose();
+    hide();
+  }, [hide, modalOptions]);
+
+  const onPullAfterCommit = useCallback(() => {
+    modalOptions?.callbackRef.current.onPullAfterCommit();
+    hide();
+  }, [hide, modalOptions]);
+
+  const onPushAfterPull = useCallback(() => {
+    modalOptions?.callbackRef.current.onPushAfterPull();
+  }, [modalOptions]);
+
+  return (
+    isOpen && (
+      <OriginalGitProjectStagingModal
+        mode={modalOptions?.mode}
+        isNonOriginBranch={modalOptions?.isNonOriginBranch}
+        onClose={onClose}
+        onPullAfterCommit={onPullAfterCommit}
+        onPushAfterPull={onPushAfterPull}
+      />
+    )
+  );
+});
+GitProjectStagingModal.displayName = 'GitProjectStagingModal';
+
+const OriginalGitProjectStagingModal: FC<
+  {
+    mode?: StagingModalMode;
+    isNonOriginBranch?: boolean;
+  } & GitProjectStagingModalCallbackProps
+> = ({ mode = StagingModalModes.default, isNonOriginBranch, onClose, onPullAfterCommit, onPushAfterPull }) => {
   const { projectId } = useParams() as { projectId: string };
 
   const [commitGenerationKey, setCommitGenerationKey] = useState(0);
@@ -813,19 +1175,29 @@ export const GitProjectStagingModal: FC<{
   const [discardData, setDiscardData] = React.useState<DiscardData | null>(null);
 
   const gitChangesFetcher = useGitProjectChangesFetcher();
+  const gitCredentialsFetcher = useGitCredentialsLoaderFetcher();
 
   const undoUnstagedChangesFetcher = useGitProjectDiscardActionFetcher();
   const diffChangesFetcher = useGitProjectDiffLoaderFetcher();
+  const diffChangesFetcherLoad = diffChangesFetcher.load;
 
   const { isGenerateCommitMessagesWithAIEnabled } = useAIFeatureStatus();
 
-  function diffChanges({ path, staged }: { path: string; staged: boolean }) {
-    diffChangesFetcher.load({
-      projectId,
-      filePath: path,
-      staged,
-    });
-  }
+  const [fileToDiff, setFileToDiff] = useState<{ path: string; staged: boolean } | null>(null);
+
+  useEffect(() => {
+    if (fileToDiff?.path) {
+      diffChangesFetcherLoad({
+        projectId,
+        filePath: fileToDiff.path,
+        staged: fileToDiff.staged,
+      });
+    }
+  }, [fileToDiff?.path, fileToDiff?.staged, projectId, diffChangesFetcherLoad]);
+
+  const diffChanges = useCallback(({ path, staged }: { path: string; staged: boolean }) => {
+    setFileToDiff({ path, staged });
+  }, []);
 
   useEffect(() => {
     if (gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data) {
@@ -834,6 +1206,12 @@ export const GitProjectStagingModal: FC<{
       });
     }
   }, [projectId, gitChangesFetcher]);
+
+  useEffect(() => {
+    if (gitCredentialsFetcher.state === 'idle' && !gitCredentialsFetcher.data) {
+      gitCredentialsFetcher.load();
+    }
+  }, [gitCredentialsFetcher]);
 
   const { changes } = gitChangesFetcher.data || {
     changes: {
@@ -844,21 +1222,35 @@ export const GitProjectStagingModal: FC<{
     statusNames: {},
   };
 
+  const gitRepository = gitChangesFetcher.data?.gitRepository ?? null;
+  const credentials = gitCredentialsFetcher.data?.credentials ?? [];
+  const providers = gitCredentialsFetcher.data?.providers ?? [];
+  const selectedCredential = credentials.find(c => c._id === gitRepository?.credentialsId) ?? null;
+  const selectedProvider = providers.find(p => p.type === selectedCredential?.provider) ?? null;
+
   const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data : null;
 
   const allChanges = [...changes.staged, ...changes.unstaged];
   const allChangesLength = allChanges.length;
 
-  // Callback when commit succeeds - check if we should close the modal
-  const handleCommitSuccess = React.useCallback(() => {
-    // Check if there are no more changes left after commit
-    if (allChangesLength === 0) {
-      if (mode === StagingModalModes.commitAndPull) {
-        onPullAfterCommit();
+  const handleCommitSuccess = React.useCallback(
+    ({ push }: { push: boolean }) => {
+      if (push) {
+        showToast({
+          icon: ['fab', 'git-alt'],
+          title: 'Changes committed and pushed',
+          status: 'success',
+        });
       }
-      onClose();
-    }
-  }, [allChangesLength, mode, onPullAfterCommit, onClose]);
+      if (allChangesLength === 0) {
+        if (mode === StagingModalModes.commitAndPull) {
+          onPullAfterCommit();
+        }
+        onClose();
+      }
+    },
+    [allChangesLength, mode, onPullAfterCommit, onClose],
+  );
 
   // Callback when pull is required
   const handlePullRequired = React.useCallback(() => {
@@ -893,6 +1285,53 @@ export const GitProjectStagingModal: FC<{
     });
   }, [commitGenerationKey, generateCommitsFetcher, projectId, commitGenerationCompleted]);
 
+  const stageChangesFetcher = useGitProjectStageActionFetcher();
+  const unstageChangesFetcher = useGitProjectUnstageActionFetcher();
+
+  /* If only one file is staged or unstaged, show its diff
+    If multiple files are staged or unstaged, update the diff view of the file that is currently being diffed.
+  */
+  function afterStageOrUnstage(paths: string[], staged: boolean) {
+    if (paths.length === 1) {
+      diffChanges({
+        path: paths[0],
+        staged,
+      });
+    } else if (paths.length > 1 && fileToDiff?.path) {
+      diffChanges({
+        path: fileToDiff.path,
+        staged,
+      });
+    }
+  }
+
+  async function stageChanges(paths: string[]) {
+    await stageChangesFetcher.submit({
+      projectId,
+      paths,
+    });
+    afterStageOrUnstage(paths, true);
+  }
+
+  async function unstageChanges(paths: string[]) {
+    await unstageChangesFetcher.submit({
+      projectId,
+      paths,
+    });
+    afterStageOrUnstage(paths, false);
+  }
+
+  const showManualCommitForm =
+    !generateCommitsFetcher.data || (generateCommitsFetcher.data && 'error' in generateCommitsFetcher.data);
+
+  const isPreviewDiffItemInChangesList = (() => {
+    if (previewDiffItem?.diff) {
+      const list = previewDiffItem.staged ? changes.staged : changes.unstaged;
+      return list.find(entry => entry.path === previewDiffItem.filepath);
+    }
+    return false;
+  })();
+
   return (
     <>
       <ModalOverlay
@@ -903,12 +1342,7 @@ export const GitProjectStagingModal: FC<{
         isDismissable
         className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
       >
-        <Modal
-          onOpenChange={isOpen => {
-            !isOpen && onClose();
-          }}
-          className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
-        >
+        <Modal className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
           <Dialog
             data-loading={gitChangesFetcher.state === 'loading' ? 'true' : undefined}
             className="flex h-full flex-1 flex-col overflow-hidden outline-hidden data-loading:animate-pulse"
@@ -945,7 +1379,9 @@ export const GitProjectStagingModal: FC<{
                           Smart commits
                         </h3>
                         <div className="text-sm text-gray-300">
-                          Let AI create commits and comments from your staged changes.
+                          {generateCommitsFetcher?.data?.commits
+                            ? `${generateCommitsFetcher?.data?.commits.length} commit${generateCommitsFetcher?.data?.commits.length !== 1 ? 's' : ''} generated`
+                            : 'Let AI create commits and comments from your staged changes.'}
                         </div>
                         <Button
                           isDisabled={isGeneratingCommits}
@@ -966,10 +1402,24 @@ export const GitProjectStagingModal: FC<{
                       </div>
                     )}
                     {!isGenerateCommitMessagesWithAIEnabled && (
-                      <p className="text-xs text-(--hl)">
-                        Enable generating commit messages with AI in Insomnia Preferences → AI Settings to use this
-                        feature.
-                      </p>
+                      <div className="flex flex-col gap-3 rounded-sm border border-solid border-(--hl-md) p-3">
+                        <h3 className="font-semibold">
+                          <Badge icon="sparkles" color="surprise" label="AI" />
+                          Smart commits
+                        </h3>
+                        <div className="text-sm text-gray-300">
+                          Let AI create commits and comments from your staged changes.
+                        </div>
+                        <Button
+                          className="flex h-8 items-center gap-2 self-start rounded-md border border-solid border-(--hl-md) px-3 py-1 text-sm"
+                          onPress={() => {
+                            onClose();
+                            showSettingsModal({ tab: 'ai' });
+                          }}
+                        >
+                          Enable AI to Try
+                        </Button>
+                      </div>
                     )}
                     {isGenerateCommitMessagesWithAIEnabled &&
                       generateCommitsFetcher.state === 'idle' &&
@@ -986,39 +1436,76 @@ export const GitProjectStagingModal: FC<{
                         commits={generateCommitsFetcher.data.commits}
                         projectId={projectId}
                         mode={mode}
-                        stagedCount={changes.staged.length}
-                        unstagedCount={changes.unstaged.length}
+                        changes={changes}
                         setShowConfirmDiscardAndPullModal={setShowConfirmDiscardAndPullModal}
                         onCommitSuccess={handleCommitSuccess}
                         diffChanges={diffChanges}
+                        gitRepository={gitRepository}
+                        selectedCredential={selectedCredential}
+                        selectedProvider={selectedProvider}
+                        isNonOriginBranch={isNonOriginBranch}
                       />
                     )}
 
-                    {(!generateCommitsFetcher.data ||
-                      (generateCommitsFetcher.data && 'error' in generateCommitsFetcher.data)) && (
-                      <>
-                        <ManualCommitForm
-                          projectId={projectId}
-                          mode={mode}
-                          changes={changes}
-                          setShowConfirmDiscardAndPullModal={setShowConfirmDiscardAndPullModal}
-                          onCommitSuccess={handleCommitSuccess}
-                          onPullRequired={handlePullRequired}
-                          diffChanges={diffChanges}
-                          setDiscardData={setDiscardData}
-                        />
-                      </>
+                    {showManualCommitForm && (
+                      <ManualCommitForm
+                        projectId={projectId}
+                        mode={mode}
+                        changes={changes}
+                        setShowConfirmDiscardAndPullModal={setShowConfirmDiscardAndPullModal}
+                        onCommitSuccess={handleCommitSuccess}
+                        onPullRequired={handlePullRequired}
+                        diffChanges={diffChanges}
+                        setDiscardData={setDiscardData}
+                        stageChanges={stageChanges}
+                        unstageChanges={unstageChanges}
+                        gitRepository={gitRepository}
+                        selectedCredential={selectedCredential}
+                        selectedProvider={selectedProvider}
+                        isNonOriginBranch={isNonOriginBranch}
+                      />
                     )}
                   </div>
-                  {previewDiffItem?.diff ? (
+                  {/* Show the diff view only if the file is in the changes list */}
+                  {previewDiffItem?.diff && isPreviewDiffItemInChangesList ? (
                     <div className="flex h-full flex-col gap-2 overflow-y-auto pb-0">
                       <Heading className="flex items-center gap-2 font-bold">
-                        <Icon icon="code-compare" />
-                        {previewDiffItem.name}
+                        <div className="flex h-full shrink-0 items-center gap-2 rounded-xs bg-(--hl-xs) pr-2 text-sm text-(--color-font)">
+                          <div
+                            className={`${scopeToBgColorMap[previewDiffItem.scope]} ${scopeToTextColorMap[previewDiffItem.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                          >
+                            <Icon icon={scopeToIconMap[previewDiffItem.scope]} />
+                          </div>
+                          <span>{previewDiffItem.name}</span>
+                        </div>
+                        <span className="font-light">{previewDiffItem.filepath}</span>
+                        {showManualCommitForm && (
+                          <BasicButton
+                            onPress={() => {
+                              previewDiffItem.staged
+                                ? unstageChanges([previewDiffItem.filepath])
+                                : stageChanges([previewDiffItem.filepath]);
+                            }}
+                          >
+                            {!previewDiffItem.staged ? 'Stage this file' : 'Unstage this file'}
+                          </BasicButton>
+                        )}
                       </Heading>
+                      <p>
+                        <Icon icon="info-circle" className="mr-2" />
+                        This file includes changes to{' '}
+                        <LearnMoreLink href="https://developer.konghq.com/insomnia/git-sync/#metadata-changes">
+                          Insomnia metadata
+                        </LearnMoreLink>
+                        , which is determined by the system and cannot be discarded.
+                      </p>
                       {previewDiffItem && (
                         <div className="flex-1 overflow-hidden rounded-xs bg-(--hl-xs) p-2 text-(--color-font)">
-                          <DiffEditor original={previewDiffItem.diff.before} modified={previewDiffItem.diff.after} />
+                          <DiffEditor
+                            original={previewDiffItem.diff.before}
+                            modified={previewDiffItem.diff.after}
+                            highlightSystemChange
+                          />
                         </div>
                       )}
                     </div>
@@ -1026,9 +1513,12 @@ export const GitProjectStagingModal: FC<{
                     <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
                       <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-(--hl-md)">
                         <Icon icon="code-compare" />
-                        Diff view
+                        View diff
                       </Heading>
-                      <p className="text-(--hl)">Select an item to compare</p>
+                      <p className="text-(--hl)">Select a file to compare changes</p>
+                      <p className="text-sm text-(--hl-md)">
+                        Changes may include modifications you made and automatic updates like timestamps
+                      </p>
                     </div>
                   )}
                 </div>

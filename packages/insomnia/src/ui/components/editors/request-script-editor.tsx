@@ -12,6 +12,7 @@ import {
   Toolbar,
 } from 'react-aria-components';
 
+import type { Settings } from '~/insomnia-data';
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
@@ -28,7 +29,6 @@ import {
   Vault,
 } from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
-import type { Settings } from '../../../models/settings';
 import { Icon } from '../icon';
 
 interface Props {
@@ -37,6 +37,7 @@ interface Props {
   uniquenessKey: string;
   className?: string;
   settings: Settings;
+  onSnippetAdded?: (snippetName: string) => void;
 }
 
 const getEnvVar = 'insomnia.environment.get("variable_name");';
@@ -532,7 +533,14 @@ const snippetsMenus: SnippetMenuItem[] = [
   miscMenu,
 ];
 
-export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChange, uniquenessKey, settings }) => {
+export const RequestScriptEditor: FC<Props> = ({
+  className,
+  defaultValue,
+  onChange,
+  uniquenessKey,
+  settings,
+  onSnippetAdded,
+}) => {
   const editorRef = useRef<CodeEditorHandle>(null);
 
   // Inserts at the line below the cursor and moves to the line beneath
@@ -547,6 +555,7 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
 
     editorRef.current?.focus();
     editorRef.current?.setCursorLine(cursorRow + snippet.split('\n').length);
+    onSnippetAdded?.(snippet);
   };
 
   const req = new ScriptRequest({

@@ -16,18 +16,11 @@ import {
   shell,
 } from 'electron';
 
-import {
-  getAppBuildDate,
-  getAppVersion,
-  getProductName,
-  isDevelopment,
-  isLinux,
-  isMac,
-  MNEMONIC_SYM,
-} from '../common/constants';
+import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
+import { isLinux, isMac } from '../common/platform';
 import { invariant } from '../utils/invariant';
-import ElectronStorage from './electron-storage';
+import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 
@@ -35,11 +28,8 @@ const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
-let electronStorage: ElectronStorage | null = null;
 let hiddenWindowIsBusy = false;
-
 interface Bounds {
   height?: number;
   width?: number;
@@ -47,9 +37,6 @@ interface Bounds {
   y?: number;
 }
 
-export function init() {
-  initElectronStorage();
-}
 const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => {
   return await new Promise<void>(resolve => {
     // overwrite the closed handler
@@ -447,7 +434,7 @@ export function createWindow(): ElectronBrowserWindow {
         role: 'minimize',
       },
       // @ts-expect-error -- TSCONVERSION missing in official electron types
-      ...(isMac()
+      ...(isMac
         ? [
             {
               label: `${MNEMONIC_SYM}Close`,
@@ -465,7 +452,7 @@ export function createWindow(): ElectronBrowserWindow {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Help and Support`,
-        ...(isMac() ? {} : { accelerator: 'F1' }),
+        ...(isMac ? {} : { accelerator: 'F1' }),
         click: () => {
           const { protocol } = new URL(docsBase);
           if (protocol === 'http:' || protocol === 'https:') {
@@ -518,7 +505,7 @@ export function createWindow(): ElectronBrowserWindow {
   const aboutMenuClickHandler = async () => {
     const copy = 'Copy';
     const ok = 'OK';
-    const buttons = isLinux() ? [copy, ok] : [ok, copy];
+    const buttons = isLinux ? [copy, ok] : [ok, copy];
     const detail = [
       `Version: ${getProductName()} ${getAppVersion()}`,
       `Build date: ${getAppBuildDate()}`,
@@ -546,7 +533,7 @@ export function createWindow(): ElectronBrowserWindow {
     }
   };
 
-  if (isMac()) {
+  if (isMac) {
     // @ts-expect-error -- TSCONVERSION type splitting
     applicationMenu.submenu?.unshift(
       {
@@ -610,7 +597,10 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `R${MNEMONIC_SYM}estart`,
-        click: window?.main.restart,
+        click: () => {
+          app.relaunch();
+          app.exit();
+        },
       },
       {
         label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,
@@ -681,7 +671,7 @@ export function createWindow(): ElectronBrowserWindow {
     template.push(developerMenu);
   }
 
-  if (isMac()) {
+  if (isMac) {
     Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   } else {
     // setMenu only works for Windows and Linux
@@ -724,6 +714,7 @@ function saveBounds() {
   }
 
   const fullscreen = browserWindow?.isFullScreen();
+  const electronStorage = getElectronStorage();
 
   // Only save the size if we're not in fullscreen
   if (!fullscreen) {
@@ -741,6 +732,7 @@ function getBounds() {
   let maximize = false;
 
   try {
+    const electronStorage = getElectronStorage();
     bounds = electronStorage?.getItem('bounds', {});
     fullscreen = electronStorage?.getItem('fullscreen', false);
     maximize = electronStorage?.getItem('maximize', false);
@@ -762,6 +754,7 @@ const ZOOM_MIN = 0.05;
 
 const getZoomFactor = () => {
   try {
+    const electronStorage = getElectronStorage();
     return electronStorage?.getItem('zoomFactor', ZOOM_DEFAULT);
   } catch (error) {
     // This should never happen, but if it does...!
@@ -783,16 +776,9 @@ export const setZoom = (transformer: (current: number) => number) => () => {
   const actual = Math.min(Math.max(ZOOM_MIN, desired), ZOOM_MAX);
 
   browserWindow.webContents.setZoomLevel(actual);
+  const electronStorage = getElectronStorage();
   electronStorage?.setItem('zoomFactor', actual);
 };
-
-export function initElectronStorage() {
-  const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
-  if (!electronStorage) {
-    electronStorage = new ElectronStorage(electronStoragePath);
-  }
-  return electronStorage;
-}
 
 export function createWindowsAndReturnMain() {
   const mainWindow = browserWindows.get('Insomnia') ?? createWindow();

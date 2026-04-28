@@ -2,20 +2,17 @@ import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import { href } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
-import type { CookieJar } from '~/models/cookie-jar';
+import type { CookieJar, McpTransportType, RequestAuthentication, RequestHeader } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import * as requestOperations from '~/models/helpers/request-operations';
-import { isMcpRequest, TRANSPORT_TYPES, type TransportType } from '~/models/mcp-request';
-import type { RequestAuthentication, RequestHeader } from '~/models/request';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '~/models/request';
-import { isRequestMeta } from '~/models/request-meta';
-import { isSocketIORequest } from '~/models/socket-io-request';
-import { isWebSocketRequestId } from '~/models/websocket-request';
-import { getAuthHeader } from '~/network/authentication';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
+
+const { isGraphqlSubscriptionRequest, isEventStreamRequest } = models.request;
+const { isRequestMeta } = models.requestMeta;
 
 export interface ConnectActionParams {
   url: string;
@@ -23,8 +20,9 @@ export interface ConnectActionParams {
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
-  transportType?: TransportType;
+  transportType?: McpTransportType;
   query?: Record<string, string>;
+  path?: string;
   env?: Record<string, string>;
 }
 
@@ -36,7 +34,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = (await request.json()) as ConnectActionParams;
 
-  if (isWebSocketRequestId(requestId)) {
+  if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
     window.main.webSocket.open({
       requestId,
       workspaceId,
@@ -71,7 +69,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (isEventStreamRequest(req)) {
     const renderedRequest = { ...req, ...rendered } as RenderedRequest;
-    const authHeader = await getAuthHeader(renderedRequest, rendered.url);
+    const authHeader = await window.main.getAuthHeader(renderedRequest, rendered.url);
     window.main.curl.open({
       requestId,
       workspaceId,
@@ -83,7 +81,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       suppressUserAgent: rendered.suppressUserAgent,
     });
   }
-  if (isSocketIORequest(req)) {
+  if (models.socketIORequest.isSocketIORequest(req)) {
     window.main.socketIO.open({
       requestId,
       workspaceId,
@@ -92,13 +90,14 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       cookieJar: rendered.cookieJar,
       authentication: rendered.authentication,
       query: rendered.query || {},
+      path: rendered.path,
     });
   }
-  if (isMcpRequest(req)) {
+  if (models.mcpRequest.isMcpRequest(req)) {
     return window.main.mcp.connect({
       requestId,
       workspaceId,
-      transportType: rendered.transportType || TRANSPORT_TYPES.HTTP,
+      transportType: rendered.transportType || models.mcpRequest.TRANSPORT_TYPES.HTTP,
       url: rendered.url,
       headers: rendered.headers,
       authentication: rendered.authentication,

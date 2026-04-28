@@ -2,21 +2,16 @@ import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } f
 import { OverlayContainer } from 'react-aria';
 import { href, useParams } from 'react-router';
 
+import type { Project, Workspace } from '~/insomnia-data';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
 
 import { database } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { sortProjects } from '../../../models/helpers/project';
 import * as models from '../../../models/index';
-import type { Project } from '../../../models/project';
-import type { Workspace } from '../../../models/workspace';
-import {
-  scopeToBgColorMap,
-  scopeToIconMap,
-  scopeToTextColorMap,
-} from '../../../routes/organization.$organizationId.project.$projectId._index';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

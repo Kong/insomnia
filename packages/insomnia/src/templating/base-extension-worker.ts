@@ -1,9 +1,6 @@
+import type { CloudProviderCredential, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
+
 import packageJson from '../../package.json';
-import type { CloudProviderCredential } from '../models/cloud-credential';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import type { Workspace } from '../models/workspace';
 import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
@@ -220,6 +217,8 @@ export default class BaseExtension {
           cookieJar: {
             getOrCreateForParentId: async (parentId: string) =>
               fetchFromTemplateWorkerDatabase('cookieJar.getOrCreateForParentId', { parentId }),
+            getCookiesForUrl: async (parentId: string, url: string) =>
+              fetchFromTemplateWorkerDatabase('cookieJar.getCookiesForUrl', { parentId, url }),
           },
           response: {
             getLatestForRequestId: async (requestId: string, environmentId: string | null) =>

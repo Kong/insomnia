@@ -1,23 +1,11 @@
-import { logout as logoutAPI, whoami } from 'insomnia-api';
+import { getEncryptionKeys, getUserProfile, logout as logoutAPI } from 'insomnia-api';
+
+import type { GitRepository, Project, WorkspaceMeta } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
-import {
-  cloudCredential,
-  gitCredentials,
-  gitRepository,
-  pluginData,
-  project,
-  settings,
-  userSession,
-  workspaceMeta,
-} from '../models';
-import { type GitRepository, isGitCredentialsOAuth } from '../models/git-repository';
-import { EMPTY_GIT_PROJECT_ID, type Project } from '../models/project';
-import type { WorkspaceMeta } from '../models/workspace-meta';
 import * as crypt from './crypt';
-
-type LoginCallback = (isLoggedIn: boolean) => void;
 
 export interface SessionData {
   accountId: string;
@@ -29,18 +17,21 @@ export interface SessionData {
   publicKey: JsonWebKey;
   encPrivateKey: crypt.AESMessage;
 }
-export function onLoginLogout(loginCallback: LoginCallback) {
-  window.main.on('loggedIn', async () => {
-    loginCallback(await isLoggedIn());
-  });
-}
 
 /** Creates a session from a sessionId and derived symmetric key. */
 export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
-  const { publicKey, encPrivateKey, encSymmetricKey, email, accountId, firstName, lastName } = await whoami({
-    sessionId: sessionId || (await getCurrentSessionId()),
-  });
+  const sessionIdResolved = sessionId || (await getCurrentSessionId());
+  const [profile, keys] = await Promise.all([
+    getUserProfile({ sessionId: sessionIdResolved }),
+    getEncryptionKeys({ sessionId: sessionIdResolved }),
+  ]);
+  const {
+    public_key: publicKey,
+    enc_private_key: encPrivateKey,
+    enc_symmetric_key: encSymmetricKey,
+  } = keys;
+  const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
 
   // Store the information for later
@@ -56,10 +47,6 @@ export async function absorbKey(sessionId: string, key: string) {
   );
 
   window.main.loginStateChange();
-}
-
-export async function getPublicKey() {
-  return (await getUserSession())?.publicKey;
 }
 
 export async function getPrivateKey() {
@@ -80,7 +67,7 @@ export async function getPrivateKey() {
 }
 
 export async function getCurrentSessionId() {
-  const { id } = await userSession.getOrCreate();
+  const { id } = await services.userSession.getOrCreate();
   return id;
 }
 
@@ -135,16 +122,16 @@ export async function setSessionData(
     lastName,
   };
 
-  const userData = await userSession.getOrCreate();
-  await userSession.update(userData, sessionData);
+  const userData = await services.userSession.getOrCreate();
+  await services.userSession.update(userData, sessionData);
 
   return sessionData;
 }
 
 /** Update the session data with vault salt and vault key */
 export async function setVaultSessionData(vaultSalt: string, vaultKey: string) {
-  const userData = await userSession.getOrCreate();
-  await userSession.update(userData, { vaultSalt, vaultKey });
+  const userData = await services.userSession.getOrCreate();
+  await services.userSession.update(userData, { vaultSalt, vaultKey });
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -152,14 +139,14 @@ export async function setVaultSessionData(vaultSalt: string, vaultKey: string) {
 // ~~~~~~~~~~~~~~~~ //
 
 export async function getUserSession(): Promise<SessionData> {
-  const userData = await userSession.getOrCreate();
+  const userData = await services.userSession.getOrCreate();
 
   return userData;
 }
 
 async function _unsetSessionData() {
-  await userSession.getOrCreate();
-  await userSession.update(await userSession.getOrCreate(), {
+  await services.userSession.getOrCreate();
+  await services.userSession.update(await services.userSession.getOrCreate(), {
     id: '',
     accountId: '',
     email: '',
@@ -188,70 +175,37 @@ async function _unsetSessionData() {
  * If any LLM provider is authenticated, the API key is removed, and deactivated if active.
  */
 async function _removeAllCredentials() {
-  const removals: Promise<unknown>[] = [gitCredentials.removeAll()];
+  const removals: Promise<unknown>[] = [services.gitCredentials.removeAll()];
 
-  const cloudCredentials = await cloudCredential.all();
+  const cloudCredentials = await services.cloudCredential.all();
   for (const cred of cloudCredentials) {
     if ('credentials' in cred) {
-      if ('secretAccessKey' in cred.credentials) {
-        removals.push(
-          cloudCredential.update(cred, {
-            // AWS
-            credentials: { ...cred.credentials, secretAccessKey: '', sessionToken: '' },
-          }),
-        );
-        continue;
-      }
-      // hashicorp
-      if ('access_token' in cred.credentials) {
-        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, access_token: '' } }));
-        continue;
-      }
-      if ('client_secret' in cred.credentials) {
-        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, client_secret: '' } }));
-        continue;
-      }
-      if ('secret_id' in cred.credentials) {
-        removals.push(
-          cloudCredential.update(cred, { credentials: { ...cred.credentials, secret_id: '', role_id: '' } }),
-        );
-        continue;
-      }
-      // azure
-      if ('accessToken' in cred.credentials) {
-        removals.push(cloudCredential.update(cred, { credentials: { ...cred.credentials, accessToken: '' } }));
-      }
+      removals.push(services.cloudCredential.update(cred, { credentials: undefined }));
     }
   }
 
   for (const backend of LLM_BACKENDS) {
-    const apiKey = await pluginData.getByKey(AI_PLUGIN_NAME, `${backend}.apiKey`);
+    const apiKey = await services.pluginData.getByKey(AI_PLUGIN_NAME, `${backend}.apiKey`);
     if (apiKey) {
-      removals.push(pluginData.removeByKey(AI_PLUGIN_NAME, `${backend}.apiKey`));
+      removals.push(services.pluginData.removeByKey(AI_PLUGIN_NAME, `${backend}.apiKey`));
       if (backend === (await window.main.llm.getActiveBackend())) {
         removals.push(window.main.llm.clearActiveBackend());
       }
     }
   }
 
-  const customGitRepos = await gitRepository.all();
+  const customGitRepos = await services.gitRepository.all();
   for (const repo of customGitRepos) {
-    if (!repo.credentials) continue; // unauthenticated git repositories need not be removed
-    if (isGitCredentialsOAuth(repo.credentials)) {
-      if (repo.credentials.token) {
-        removals.push(_removeGitRepository(repo));
-      }
-    } else if (repo.credentials.password) {
-      removals.push(_removeGitRepository(repo));
-    }
+    if (!repo.credentialsId) continue; // unauthenticated git repositories need not be removed
+    removals.push(_removeGitRepository(repo));
   }
 
-  const proxySettings = await settings.get();
+  const proxySettings = await services.settings.get();
   if (proxySettings.httpProxy?.includes('@')) {
-    removals.push(settings.update(proxySettings, { httpProxy: '' }));
+    removals.push(services.settings.update(proxySettings, { httpProxy: '' }));
   }
   if (proxySettings.httpsProxy?.includes('@')) {
-    removals.push(settings.update(proxySettings, { httpsProxy: '' }));
+    removals.push(services.settings.update(proxySettings, { httpsProxy: '' }));
   }
 
   await Promise.all(removals);
@@ -271,16 +225,16 @@ async function _removeAllCredentials() {
  *
  */
 async function _removeGitRepository(repo: GitRepository) {
-  const projects = await database.find<Project>(project.type, { gitRepositoryId: repo._id });
+  const projects = await database.find<Project>(models.project.type, { gitRepositoryId: repo._id });
   for (const p of projects) {
-    await project.update(p, { gitRepositoryId: EMPTY_GIT_PROJECT_ID });
+    await services.project.update(p, { gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
   }
 
-  const workspaceMetas = await database.find<WorkspaceMeta>(workspaceMeta.type, { gitRepositoryId: repo._id });
+  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, { gitRepositoryId: repo._id });
   for (const wsMeta of workspaceMetas) {
-    await workspaceMeta.update(wsMeta, { gitRepositoryId: null });
+    await services.workspaceMeta.update(wsMeta, { gitRepositoryId: null });
   }
-  await gitRepository.remove(repo);
+  await services.gitRepository.remove(repo);
 }
 
 // TODO: v12 remove this function and getLocalStorageDataFromFileOrigin from main
@@ -317,12 +271,12 @@ export async function migrateFromLocalStorage() {
   try {
     const sessionData = JSON.parse(session) as SessionData;
 
-    const currentUserSession = await userSession.getOrCreate();
+    const currentUserSession = await services.userSession.getOrCreate();
 
     if (currentUserSession.id) {
       console.warn('Session already exists, skipping migration');
     } else {
-      await userSession.update(currentUserSession, sessionData);
+      await services.userSession.update(currentUserSession, sessionData);
     }
   } catch (e) {
     console.error('Failed to parse session data', e);

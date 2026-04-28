@@ -3,20 +3,21 @@
 export interface ModelConfig {
   // ModelBackendConfig
   model: string;
-  backend: 'gguf' | 'claude' | 'openai' | 'gemini';
+  backend: 'gguf' | 'claude' | 'openai' | 'gemini' | 'url';
   maxTokens?: number;
 
   apiKey?: string; // gemini, openai, claude
 
-  // openai
+  // openai, url
   baseURL?: string;
+  url?: string;
   organization?: string;
 
-  // openai, gemini, gguf
+  // openai, gemini, url, gguf
   topP?: number;
   temperature?: number;
 
-  // gguf, gemini
+  // gguf, gemini, url
   topK?: number;
 
   // gguf

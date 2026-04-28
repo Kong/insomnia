@@ -3,22 +3,25 @@ import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type {
+  Environment,
+  GrpcRequest,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+} from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { SegmentEvent } from '~/ui/analytics';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { Environment } from '../../../models/environment';
-import type { GrpcRequest } from '../../../models/grpc-request';
-import type { Project } from '../../../models/project';
-import { isRequest, type Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import type { SocketIORequest } from '../../../models/socket-io-request';
-import { incrementDeletedRequests } from '../../../models/stats';
-import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -35,9 +38,10 @@ import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
+const { isRequest } = models.request;
+
 interface Props {
   activeEnvironment: Environment;
-  activeProject: Project;
   isPinned: boolean;
   request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
   requestGroup?: RequestGroup;
@@ -49,7 +53,6 @@ interface Props {
 
 export const RequestActionsDropdown = ({
   activeEnvironment,
-  activeProject,
   isPinned,
   request,
   isOpen,
@@ -58,6 +61,7 @@ export const RequestActionsDropdown = ({
   onRename,
 }: Props) => {
   const { settings } = useRootLoaderData()!;
+  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
@@ -70,6 +74,23 @@ export const RequestActionsDropdown = ({
   };
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const tabNavigate = useTabNavigate();
+
+  const openInNewTab = async () => {
+    window.main.trackSegmentEvent({ event: SegmentEvent.requestOpenInNewTabClicked });
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: activeProject,
+        workspace: activeWorkspace,
+        item: request,
+      },
+      {
+        withTab: true,
+        shouldNavigate: true,
+      },
+    );
+  };
 
   const onOpen = useCallback(async () => {
     const actionPlugins = await getRequestActions();
@@ -80,6 +101,7 @@ export const RequestActionsDropdown = ({
     if (!request) {
       return;
     }
+    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuDuplicateClicked });
 
     showModal(PromptModal, {
       title: 'Duplicate Request',
@@ -130,7 +152,7 @@ export const RequestActionsDropdown = ({
   const copyAsCurl = async () => {
     try {
       const har = await exportHarRequest(request._id, activeEnvironment._id);
-      const HTTPSnippet = (await import('httpsnippet')).default;
+      const { HTTPSnippet } = await import('httpsnippet');
       const snippet = new HTTPSnippet(har);
       const cmd = snippet.convert('shell', 'curl');
 
@@ -150,6 +172,7 @@ export const RequestActionsDropdown = ({
   };
 
   const togglePin = () => {
+    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuPinClicked });
     patchRequestMeta(request._id, { pinned: !isPinned });
   };
 
@@ -162,7 +185,7 @@ export const RequestActionsDropdown = ({
       color: 'danger',
       onDone: async (isYes: boolean) => {
         if (isYes) {
-          incrementDeletedRequests();
+          services.stats.incrementDeletedRequests();
           deleteRequestFetcher.submit({
             organizationId,
             projectId,
@@ -232,6 +255,13 @@ export const RequestActionsDropdown = ({
       icon: 'cog',
       items: [
         {
+          id: 'OpenInNewTab',
+          name: 'Open in New Tab',
+          action: openInNewTab,
+          icon: 'external-link-alt',
+          hint: hotKeyRegistry.request_openInNewTab,
+        },
+        {
           id: 'Pin',
           name: isPinned ? 'Unpin' : 'Pin',
           action: togglePin,
@@ -248,7 +278,10 @@ export const RequestActionsDropdown = ({
         {
           id: 'Rename',
           name: 'Rename',
-          action: onRename,
+          action: () => {
+            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuRenameClicked });
+            onRename();
+          },
           icon: 'edit',
         },
         {
@@ -264,6 +297,7 @@ export const RequestActionsDropdown = ({
           icon: 'gear',
           hint: hotKeyRegistry.request_showSettings,
           action: () => {
+            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuSettingsClicked });
             setIsSettingsModalOpen(true);
           },
         },

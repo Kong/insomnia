@@ -63,9 +63,11 @@ export function electronNodeRequire(options: Options): Plugin {
           return `
             const electron = require('electron');
             export { electron as default };
+            export const BrowserWindow = electron.BrowserWindow;
             export const clipboard = electron.clipboard;
             export const contextBridge = electron.contextBridge;
             export const crashReporter = electron.crashReporter;
+            export const dialog = electron.dialog;
             export const ipcRenderer = electron.ipcRenderer;
             export const nativeImage = electron.nativeImage;
             export const shell = electron.shell;

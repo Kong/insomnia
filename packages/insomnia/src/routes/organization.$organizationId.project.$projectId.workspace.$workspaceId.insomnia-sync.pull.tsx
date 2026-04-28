@@ -1,8 +1,7 @@
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import * as models from '~/models';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { getSyncItems, remoteCompareCache, vcsSegmentEventProperties } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
@@ -13,13 +12,12 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { projectId, workspaceId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
     invariant(project.remoteId, 'Project is not remote');
-    const vcs = VCSInstance();
-    const delta = await vcs.pull({
+    const delta = await window.main.sync.pull({
       candidates: syncItems,
       teamId: project.parentId,
       teamProjectId: project.remoteId,

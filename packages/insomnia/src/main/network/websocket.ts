@@ -12,16 +12,19 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
+import type {
+  BaseWebSocketRequest,
+  CookieJar,
+  Request,
+  RequestAuthentication,
+  RequestHeader,
+  WebSocketResponse,
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
-import { webSocketRequest } from '../../models';
 import * as models from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
-import type { Request } from '../../models/request';
-import { type RequestAuthentication, type RequestHeader } from '../../models/request';
-import { type BaseWebSocketRequest, isWebSocketRequest } from '../../models/websocket-request';
-import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
@@ -148,8 +151,8 @@ const openWebSocketConnection = async (
   }
 
   const request = options.isGraphqlSubscriptionRequest
-    ? await models.request.getById(options.requestId)
-    : await webSocketRequest.getById(options.requestId);
+    ? await services.request.getById(options.requestId)
+    : await services.webSocketRequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
@@ -163,15 +166,15 @@ const openWebSocketConnection = async (
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(options.workspaceId));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
-  const caCert = await models.caCertificate.findByParentId(options.workspaceId);
+  const caCert = await services.caCertificate.getByParentId(options.workspaceId);
   const caCertficatePath = caCert && !caCert.disabled ? caCert.path : null;
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   // allow to read the file as it is chosen by user
@@ -221,10 +224,10 @@ const openWebSocketConnection = async (
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const start = performance.now();
 
-    const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
+    const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'wss:');
     const pemCertificates: string[] = [];
     const pemCertificateKeys: KeyObject[] = [];
@@ -278,7 +281,8 @@ const openWebSocketConnection = async (
         global: settings.followRedirects,
       }[request.settingFollowRedirects] ?? true;
     const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']?.split(',').map(p => p.trim());
-    const shouldUseProxy = settings.proxyEnabled && isWebSocketRequest(request) && request.settingUseProxy;
+    const shouldUseProxy =
+      settings.proxyEnabled && models.webSocketRequest.isWebSocketRequest(request) && request.settingUseProxy;
     const ws = new WebSocket(url, protocols, {
       headers: lowerCasedEnabledHeaders,
       ca: caCertificate,
@@ -319,9 +323,9 @@ const openWebSocketConnection = async (
         settingStoreCookies: request.settingStoreCookies,
       };
 
-      const settings = await models.settings.get();
-      const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      const settings = await services.settings.get();
+      const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
       if (request.settingStoreCookies) {
         const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
@@ -338,7 +342,7 @@ const openWebSocketConnection = async (
           );
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
-            await models.cookieJar.update(options.cookieJar, { cookies });
+            await services.cookieJar.update(options.cookieJar, { cookies });
             timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
           }
         }
@@ -375,9 +379,9 @@ const openWebSocketConnection = async (
         settingSendCookies: request.settingSendCookies,
         settingStoreCookies: request.settingStoreCookies,
       };
-      const settings = await models.settings.get();
-      const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      const settings = await services.settings.get();
+      const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
       deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
     });
 
@@ -511,7 +515,7 @@ const createErrorResponse = async (
   timelinePath: string,
   message: string,
 ) => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
@@ -520,8 +524,8 @@ const createErrorResponse = async (
     statusMessage: 'Error',
     error: message,
   };
-  const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const deleteRequestMaps = async (
@@ -606,7 +610,7 @@ const closeWebSocketConnection = (options: { requestId: string }): void => {
 const closeAllWebSocketConnections = (): void => WebSocketConnections.forEach(ws => ws.close());
 
 const findMany = async (options: { responseId: string }): Promise<WebSocketEvent[]> => {
-  const response = await models.webSocketResponse.getById(options.responseId);
+  const response = await services.webSocketResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }

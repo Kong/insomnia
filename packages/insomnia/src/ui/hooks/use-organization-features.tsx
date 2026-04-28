@@ -87,3 +87,16 @@ export function useAIFeatureStatus(): AIFeatureStatus {
     isMCPWithAIEnabled: mcpClientWithAIAllowedByOrg && mcpIntegrationWithAIEnabledByUser && hasActiveLLM,
   };
 }
+
+export function useIsGitSyncEnabled(organizationId: string) {
+  const permissionsFetcher = useOrganizationPermissionsLoaderFetcher({ key: `permissions:${organizationId}` });
+  const permissionsFetcherLoad = permissionsFetcher.load;
+  useEffect(() => {
+    permissionsFetcherLoad({
+      organizationId,
+    });
+  }, [organizationId, permissionsFetcherLoad]);
+  const { featuresPromise } = permissionsFetcher.data || {};
+  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise, organizationId);
+  return features.gitSync.enabled;
+}

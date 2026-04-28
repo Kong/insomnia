@@ -1,13 +1,11 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { getOauthRedirectUrl } from '../../../../common/constants';
-import { toKebabCase } from '../../../../common/misc';
-import accessTokenUrls from '../../../../datasets/access-token-urls';
-import authorizationUrls from '../../../../datasets/authorization-urls';
-import * as models from '../../../../models';
-import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from '../../../../models/request';
+import type { AuthTypeOAuth2, OAuth2ResponseType, OAuth2Token, RequestAuthentication } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
+
 import {
+  getOauthRedirectUrl,
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
@@ -15,9 +13,10 @@ import {
   GRANT_TYPE_PASSWORD,
   PKCE_CHALLENGE_PLAIN,
   PKCE_CHALLENGE_S256,
-} from '../../../../network/o-auth-2/constants';
-import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
-import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
+} from '../../../../common/constants';
+import { toKebabCase } from '../../../../common/misc';
+import accessTokenUrls from '../../../../datasets/access-token-urls';
+import authorizationUrls from '../../../../datasets/authorization-urls';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -31,7 +30,7 @@ import { Link } from '../../base/link';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { Button } from '../../themed-button';
-import { TimeFromNow } from '../../time-from-now';
+import { convertEpochToMilliseconds, TimeFromNow } from '../../time-from-now';
 import { AuthAccordion } from './components/auth-accordion';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthSelectRow } from './components/auth-select-row';
@@ -236,6 +235,82 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
   };
 };
 
+/**
+ * Returns a copy of an OAuth object with fields only suitable for selected type.
+ * See: https://github.com/Kong/insomnia/issues/5151
+ */
+const getActiveOAuth2AuthFields = (authentication: AuthTypeOAuth2): AuthTypeOAuth2 => {
+  const { grantType } = authentication;
+  const base: Partial<AuthTypeOAuth2> = {
+    type: authentication.type,
+    disabled: authentication.disabled,
+    grantType: authentication.grantType,
+    tokenPrefix: authentication.tokenPrefix,
+  };
+
+  switch (grantType) {
+    case GRANT_TYPE_AUTHORIZATION_CODE: {
+      return {
+        ...base,
+        authorizationUrl: authentication.authorizationUrl,
+        accessTokenUrl: authentication.accessTokenUrl,
+        clientId: authentication.clientId,
+        clientSecret: authentication.clientSecret,
+        usePkce: authentication.usePkce,
+        pkceMethod: authentication.pkceMethod,
+        redirectUrl: authentication.redirectUrl,
+        useDefaultBrowser: authentication.useDefaultBrowser,
+        scope: authentication.scope,
+        state: authentication.state,
+        credentialsInBody: authentication.credentialsInBody,
+        audience: authentication.audience,
+        resource: authentication.resource,
+        origin: authentication.origin,
+      } as AuthTypeOAuth2;
+    }
+    case GRANT_TYPE_CLIENT_CREDENTIALS: {
+      return {
+        ...base,
+        accessTokenUrl: authentication.accessTokenUrl,
+        clientId: authentication.clientId,
+        clientSecret: authentication.clientSecret,
+        scope: authentication.scope,
+        credentialsInBody: authentication.credentialsInBody,
+        audience: authentication.audience,
+        resource: authentication.resource,
+      } as AuthTypeOAuth2;
+    }
+    case GRANT_TYPE_PASSWORD: {
+      return {
+        ...base,
+        accessTokenUrl: authentication.accessTokenUrl,
+        clientId: authentication.clientId,
+        clientSecret: authentication.clientSecret,
+        username: authentication.username,
+        password: authentication.password,
+        scope: authentication.scope,
+        credentialsInBody: authentication.credentialsInBody,
+        audience: authentication.audience,
+      } as AuthTypeOAuth2;
+    }
+    case GRANT_TYPE_IMPLICIT: {
+      return {
+        ...base,
+        authorizationUrl: authentication.authorizationUrl,
+        clientId: authentication.clientId,
+        redirectUrl: authentication.redirectUrl,
+        responseType: authentication.responseType,
+        scope: authentication.scope,
+        state: authentication.state,
+        audience: authentication.audience,
+      } as AuthTypeOAuth2;
+    }
+    default: {
+      return authentication;
+    }
+  }
+};
+
 const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
   const {
     clientId,
@@ -351,7 +426,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
                 <div className="pad-top text-right">
                   <button
                     className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
-                    onClick={initNewOAuthSession}
+                    onClick={clearOAuthWindowSessionId}
                   >
                     Clear OAuth 2 session
                   </button>
@@ -367,15 +442,7 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
     </>
   );
 };
-/**
-  Finds epoch's digit count and converts it to make it exactly 13 digits.
-  Which is the epoch millisecond representation. (trims last 2 digits)
-*/
-export function convertEpochToMilliseconds(epoch: number) {
-  epoch = Math.floor(epoch);
-  const expDigitCount = epoch.toString().length;
-  return Number.parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
-}
+
 const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) => {
   if (!token || !token.identityToken) {
     return;
@@ -435,8 +502,8 @@ const OAuth2TokenInput: FC<{
   const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
     await (token
-      ? models.oAuth2Token.update(token, { [property]: value })
-      : models.oAuth2Token.create({ [property]: value, parentId: _id }));
+      ? services.oAuth2Token.update(token, { [property]: value })
+      : services.oAuth2Token.create({ [property]: value, parentId: _id }));
   };
 
   const expiryLabel = useMemo(() => {
@@ -512,7 +579,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
   const [token, setToken] = useState<OAuth2Token | undefined>();
   useEffect(() => {
     const fn = async () => {
-      const token = await models.oAuth2Token.getByParentId(_id);
+      const token = await services.oAuth2Token.getByParentId(_id);
       setToken(token);
     };
     fn();
@@ -541,7 +608,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
             onClick={() => {
               if (token) {
                 setToken(undefined);
-                models.oAuth2Token.remove(token);
+                services.oAuth2Token.remove(token);
               }
             }}
           >
@@ -556,15 +623,16 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
               setLoading(true);
 
               try {
-                const renderedAuthentication = (await handleRender(authentication)) as AuthTypeOAuth2;
-                const t = await getOAuth2Token(_id, renderedAuthentication, true);
+                const activeAuth = getActiveOAuth2AuthFields(authentication as AuthTypeOAuth2);
+                const renderedAuthentication = (await handleRender(activeAuth)) as AuthTypeOAuth2;
+                const t = await window.main.getOAuth2Token(_id, renderedAuthentication, true);
                 setToken(t);
                 setLoading(false);
               } catch (err) {
                 // Clear existing tokens if there's an error
                 if (token) {
                   setToken(undefined);
-                  models.oAuth2Token.remove(token);
+                  services.oAuth2Token.remove(token);
                 }
                 setError(err.message);
                 setLoading(false);

@@ -1,10 +1,8 @@
 import { href } from 'react-router';
 
+import type { McpPayload, SocketIOPayload } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { isMcpRequestId } from '~/models/mcp-request';
-import type { McpPayload } from '~/models/mcp-request-payload';
-import type { SocketIOPayload } from '~/models/socket-io-payload';
-import { isSocketIORequestId } from '~/models/socket-io-request';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';
@@ -12,13 +10,13 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { requestId } = params;
 
-  if (isMcpRequestId(requestId)) {
+  if (models.mcpRequest.isMcpRequestId(requestId)) {
     const patch = (await request.json()) as Partial<McpPayload>;
-    await models.mcpPayload.updateOrCreateByParentIdAndUrl(requestId, patch);
+    await services.mcpPayload.updateOrCreateByParentIdAndUrl(requestId, patch);
     return null;
-  } else if (isSocketIORequestId(requestId)) {
+  } else if (models.socketIORequest.isSocketIORequestId(requestId)) {
     const patch = (await request.json()) as Partial<SocketIOPayload>;
-    await models.socketIOPayload.updateOrCreateByParentId(requestId, patch);
+    await services.socketIOPayload.updateOrCreateByParentId(requestId, patch);
   }
 
   return null;

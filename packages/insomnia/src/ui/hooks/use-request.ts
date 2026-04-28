@@ -1,6 +1,20 @@
 import { useParams } from 'react-router';
 
-import type { McpPayload } from '~/models/mcp-request-payload';
+import type {
+  GrpcRequest,
+  GrpcRequestMeta,
+  McpPayload,
+  McpRequest,
+  Request,
+  RequestGroup,
+  RequestGroupMeta,
+  RequestMeta,
+  Settings,
+  SocketIOPayload,
+  SocketIORequest,
+  WebSocketRequest,
+  WorkspaceMeta,
+} from '~/insomnia-data';
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 import { useRequestUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-meta';
 import { useRequestUpdatePayloadActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update-payload';
@@ -9,27 +23,12 @@ import { useRequestGroupUpdateMetaActionFetcher } from '~/routes/organization.$o
 import { useWorkspaceUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
 import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
 
-import type { GrpcRequest } from '../../models/grpc-request';
-import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
-import type { McpRequest } from '../../models/mcp-request';
-import type { Request } from '../../models/request';
-import type { RequestGroup } from '../../models/request-group';
-import type { RequestGroupMeta } from '../../models/request-group-meta';
-import type { RequestMeta } from '../../models/request-meta';
-import type { Settings } from '../../models/settings';
-import type { SocketIOPayload } from '../../models/socket-io-payload';
-import type { SocketIORequest } from '../../models/socket-io-request';
-import type { WebSocketRequest } from '../../models/websocket-request';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
-import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
-
 export const useRequestPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestUpdateActionFetcher();
   return (
     requestId: string,
@@ -40,7 +39,6 @@ export const useRequestPatcher = () => {
       | Partial<SocketIORequest>
       | Partial<McpRequest>,
   ) => {
-    updateTabById?.(requestId, { temporary: false });
     fetcher.submit({
       organizationId,
       patch,
@@ -57,10 +55,8 @@ export const useRequestMetaPatcher = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestUpdateMetaActionFetcher();
   return (requestId: string, patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>) => {
-    updateTabById?.(requestId, { temporary: false });
     fetcher.submit({
       organizationId,
       projectId,
@@ -77,10 +73,8 @@ export const useRequestGroupPatcher = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestGroupUpdateActionFetcher();
   return (requestGroupId: string, patch: Partial<RequestGroup>) => {
-    updateTabById?.(requestGroupId, { temporary: false });
     fetcher.submit({
       organizationId,
       projectId,
@@ -97,10 +91,8 @@ export const useRequestGroupMetaPatcher = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestGroupUpdateMetaActionFetcher();
   return (requestGroupId: string, patch: Partial<RequestGroupMeta>) => {
-    updateTabById?.(requestGroupId, { temporary: false });
     fetcher.submit({
       organizationId,
       projectId,

@@ -3,6 +3,8 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
@@ -13,9 +15,7 @@ import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
-import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -44,6 +44,7 @@ import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 import { Pane, PaneBody, PaneHeader } from './pane';
+const { isRequestGroup } = models.requestGroup;
 interface Props {
   grpcState: GrpcRequestState;
   setGrpcState: (states: GrpcRequestState) => void;
@@ -65,6 +66,17 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   const { settings } = useRootLoaderData()!;
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
+  const editorRef = useRef<CodeEditorHandle>(null);
+  const gitVersion = useGitVCSVersion();
+  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
+  const { updateTabById } = useInsomniaTabContext();
+
+  const applyReflectionResult = (loadedMethods: typeof methods) => {
+    const stillValid = loadedMethods.some(m => m.fullPath === activeRequest.protoMethodName);
+    patchRequest(requestId, { protoFileId: '', protoMethodName: stillValid ? activeRequest.protoMethodName : '' });
+  };
+
   reactUse.useMount(async () => {
     if (activeRequest.protoFileId) {
       console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
@@ -84,11 +96,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         },
       });
 
-      const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+      const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
       const clientCertificate = workspaceClientCertificates.find(
         c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
       );
-      const caCertificateProp = await models.caCertificate.findByParentId(workspaceId);
+      const caCertificateProp = await services.caCertificate.getByParentId(workspaceId);
       const caCertificatePath = caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
 
       const clientCert = clientCertificate?.cert
@@ -116,15 +128,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           : {}),
       };
       const methods = await window.main.grpc.loadMethodsFromReflection(renderedWithCertificates);
+      applyReflectionResult(methods);
       setGrpcState({ ...grpcState, methods });
     }
   });
-  const editorRef = useRef<CodeEditorHandle>(null);
-  const gitVersion = useGitVCSVersion();
-  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
-  const patchRequest = useRequestPatcher();
-
-  const { updateTabById } = useInsomniaTabContext();
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
@@ -146,11 +153,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           purpose: 'send',
           skipBody: canClientStream(methodType),
         });
-        const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+        const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
         const clientCertificate = workspaceClientCertificates.find(
           c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false),
         );
-        const caCertificate = await models.caCertificate.findByParentId(workspaceId);
+        const caCertificate = await services.caCertificate.getByParentId(workspaceId);
         const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
 
         updateTabById?.(requestId, { temporary: false });
@@ -285,11 +292,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                         reflectionApi: activeRequest.reflectionApi,
                       },
                     });
-                    const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+                    const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
                     const clientCertificate = workspaceClientCertificates.find(
                       c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
                     );
-                    const caCertificateProp = await models.caCertificate.findByParentId(workspaceId);
+                    const caCertificateProp = await services.caCertificate.getByParentId(workspaceId);
                     const caCertificatePath =
                       caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
                     const clientCert = clientCertificate?.cert
@@ -321,8 +328,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                         : {}),
                     };
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
+                    applyReflectionResult(methods);
                     setGrpcState({ ...grpcState, methods });
-                    patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
                   } catch (error) {
                     showModal(ErrorModal, { error, ...getGrpcConnectionErrorDetails(error) });
                   }

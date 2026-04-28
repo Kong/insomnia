@@ -15,33 +15,37 @@ import {
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { GitProject, GitRepository } from '~/insomnia-data';
 import { isScratchpadOrganizationId } from '~/models/organization';
-import type { GitProject } from '~/models/project';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import { SegmentEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
-import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
-import type { GitRepository } from '../../../models/git-repository';
-import { GitVCSOperationErrors } from '../../../sync/git/git-vcs';
-import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
+import { GitNonOriginBranchBanner } from '../git/git-non-origin-branch-banner';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { GitProjectBranchesModal } from '../modals/git-project-branches-modal';
 import { GitProjectLogModal } from '../modals/git-project-log-modal';
 import { GitProjectMigrationModal } from '../modals/git-project-migration-modal';
-import { GitProjectStagingModal, type StagingModalMode, StagingModalModes } from '../modals/git-project-staging-modal';
+import {
+  GitProjectStagingModal,
+  type GitProjectStagingModalCallbackProps,
+  StagingModalModes,
+} from '../modals/git-project-staging-modal';
 import { GitPullRequiredModal } from '../modals/git-pull-required-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
-import { showToast } from '../toast-notification';
+import { queue, showToast } from '../toast-notification';
 interface Props {
   gitRepository?: GitRepository;
   activeProject: GitProject;
@@ -55,9 +59,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
   const [isGitBranchesModalOpen, setIsGitBranchesModalOpen] = useState(false);
   const [isGitLogModalOpen, setIsGitLogModalOpen] = useState(false);
-  const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
   const [isGitPullRequiredModalOpen, setIsGitPullRequiredModalOpen] = useState(false);
-  const [stagingMode, setStagingMode] = useState<StagingModalMode>(StagingModalModes.default);
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
   const prevHadPullError = useRef(false);
 
@@ -70,9 +72,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   const gitStatusFetcher = useGitProjectStatusActionFetcher();
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
 
-  const { features } = useOrganizationPermissions();
-  const isGitSyncEnabled = features.gitSync.enabled;
-
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -84,11 +83,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   const { storagePromise } = storageRuleFetcher.data || {};
 
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
+  const { credentials } = useGitCredentials();
 
   const [isPulling, setIsPulling] = useState(false);
   const [operationError, setOperationError] = useState<string | null>(null);
 
-  const providerName = getOauth2FormatName(gitRepository?.credentials);
+  const selectedCredential = credentials.find(item => item._id === gitRepository?.credentialsId);
+  const providerName = selectedCredential?.provider;
   const { revalidate } = useRevalidator();
   const icon: IconProp = useMemo(() => {
     if (providerName === 'github') {
@@ -113,6 +114,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
     gitRepoDataFetcher.data.legacyInsomniaWorkspace
       ? gitRepoDataFetcher.data.legacyInsomniaWorkspace
       : null;
+
+  const branchRemoteInfo =
+    gitRepoDataFetcher.data && 'branchRemoteInfo' in gitRepoDataFetcher.data && gitRepoDataFetcher.data.branchRemoteInfo
+      ? gitRepoDataFetcher.data.branchRemoteInfo
+      : null;
+
+  const isNonOriginBranch = branchRemoteInfo ? !branchRemoteInfo.isOrigin : false;
 
   // Only fetch the repo status if we have a repo uri and we don't have the status already
   const shouldFetchGitRepoStatus = Boolean(
@@ -166,6 +174,33 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
       prevHadPullError.current = false;
 
+      if (errors.includes(GitVCSOperationErrors.AuthenticationRequiredError)) {
+        let toastKey = '';
+        toastKey = showToast(
+          {
+            icon,
+            title: 'Push failed',
+            description: (
+              <span>
+                Connection has expired.{' '}
+                <button
+                  className="underline hover:opacity-70"
+                  onClick={() => {
+                    queue.close(toastKey);
+                    showSettingsModal({ tab: 'credentials' });
+                  }}
+                >
+                  Re-authenticate
+                </button>
+              </span>
+            ),
+            status: 'error',
+          },
+          { timeout: null },
+        );
+        return;
+      }
+
       // Other errors
       showToast({
         icon,
@@ -205,17 +240,53 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         status: 'error',
       });
     } else if (gitCheckoutFetcher.data && 'success' in gitCheckoutFetcher.data && gitCheckoutFetcher.data.success) {
-      showToast({
-        icon,
-        title: `Checkout completed`,
-        status: 'success',
-      });
+      const warnings = 'warnings' in gitCheckoutFetcher.data ? (gitCheckoutFetcher.data.warnings as string[]) : [];
+      if (warnings.length > 0) {
+        showToast({
+          icon,
+          title: 'Checkout completed with warnings',
+          description: warnings.join('\n'),
+          status: 'warning',
+        });
+      } else {
+        showToast({
+          icon,
+          title: `Checkout completed`,
+          status: 'success',
+        });
+      }
     }
   }, [gitCheckoutFetcher.data, icon]);
 
   useEffect(() => {
     const errors = [...(gitFetchFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
+      if (errors.includes(GitVCSOperationErrors.AuthenticationRequiredError)) {
+        let toastKey = '';
+        toastKey = showToast(
+          {
+            icon,
+            title: 'Fetch failed',
+            description: (
+              <span>
+                Connection has expired.{' '}
+                <button
+                  className="underline hover:opacity-70"
+                  onClick={() => {
+                    queue.close(toastKey);
+                    showSettingsModal({ tab: 'credentials' });
+                  }}
+                >
+                  Re-authenticate
+                </button>
+              </span>
+            ),
+            status: 'error',
+          },
+          { timeout: null },
+        );
+        return;
+      }
       setOperationError(errors.join('\n'));
       showToast({
         icon,
@@ -259,6 +330,29 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       ? gitRepoDataFetcher.data
       : { branches: [], branch: '' };
 
+  const closeGitProjectStagingModalRef = useRef<(() => void) | null>(null);
+
+  const gitProjectStagingModalCallbackPropsRef = useRef<GitProjectStagingModalCallbackProps>(null!);
+  gitProjectStagingModalCallbackPropsRef.current = {
+    onPullAfterCommit: async () => {
+      await handlePull();
+      fetchStatus();
+    },
+    onPushAfterPull: async () => {
+      setIsGitPullRequiredModalOpen(false);
+      const pullResult = await handlePull();
+      if (pullResult && pullResult.success) {
+        handlePush({ force: false });
+      }
+      prevHadPullError.current = true;
+      fetchStatus();
+    },
+    onClose: () => {
+      prevHadPullError.current = false;
+      fetchStatus();
+    },
+  };
+
   const handlePull = async () => {
     try {
       setIsPulling(true);
@@ -276,15 +370,44 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         pullResult.errors.includes(GitVCSOperationErrors.UncommittedChangesError)
       ) {
         setIsPulling(false);
-        setStagingMode(StagingModalModes.commitAndPull);
-        setIsGitStagingModalOpen(true);
-      } else if ('errors' in pullResult && pullResult.errors) {
-        showToast({
-          icon,
-          title: `Pull failed`,
-          status: 'error',
+        closeGitProjectStagingModalRef.current = showModal(GitProjectStagingModal, {
+          mode: StagingModalModes.commitAndPull,
+          callbackRef: gitProjectStagingModalCallbackPropsRef,
+          isNonOriginBranch,
         });
-        setOperationError(pullResult.errors.join('\n'));
+      } else if ('errors' in pullResult && pullResult.errors) {
+        if (pullResult.errors.includes(GitVCSOperationErrors.AuthenticationRequiredError)) {
+          let toastKey = '';
+          toastKey = showToast(
+            {
+              icon,
+              title: 'Pull failed',
+              description: (
+                <span>
+                  Connection has expired.{' '}
+                  <button
+                    className="underline hover:opacity-70"
+                    onClick={() => {
+                      queue.close(toastKey);
+                      showSettingsModal({ tab: 'credentials' });
+                    }}
+                  >
+                    Re-authenticate
+                  </button>
+                </span>
+              ),
+              status: 'error',
+            },
+            { timeout: null },
+          );
+        } else {
+          showToast({
+            icon,
+            title: `Pull failed`,
+            status: 'error',
+          });
+          setOperationError(pullResult.errors.join('\n'));
+        }
         setIsPulling(false);
 
         return {
@@ -307,6 +430,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               .continueMerge({
                 projectId,
                 handledMergeConflicts: conflicts,
+                autoResolvedConflicts: pullResult.autoResolvedConflicts,
                 commitMessage: pullResult.commitMessage,
                 commitParent: pullResult.commitParent,
               })
@@ -335,7 +459,8 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               });
           },
           onCancelUnresolved: () => {
-            setIsGitStagingModalOpen(false);
+            window.main.git.abortMerge({ projectId });
+            closeGitProjectStagingModalRef.current?.();
             setIsPulling(false);
             showToast({
               icon,
@@ -396,20 +521,26 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           icon: 'check',
           isDisabled: status?.localChanges === 0,
           label: 'Commit',
-          action: () => setIsGitStagingModalOpen(true),
+          action: () => {
+            closeGitProjectStagingModalRef.current = showModal(GitProjectStagingModal, {
+              mode: StagingModalModes.default,
+              callbackRef: gitProjectStagingModalCallbackPropsRef,
+              isNonOriginBranch,
+            });
+          },
         },
         {
           id: 'pull',
           icon: isPulling ? 'refresh' : 'cloud-download',
           label: 'Pull',
-          isDisabled: false,
+          isDisabled: isNonOriginBranch,
           action: async () => handlePull(),
         },
         {
           id: 'push',
           icon: 'cloud-upload',
           label: 'Push',
-          isDisabled: false,
+          isDisabled: isNonOriginBranch,
           action: () => handlePush({ force: false }),
         },
         {
@@ -422,7 +553,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         {
           id: 'fetch',
           icon: 'refresh',
-          isDisabled: false,
+          isDisabled: isNonOriginBranch,
           label: 'Fetch',
           action: () => {
             setOperationError(null);
@@ -495,6 +626,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
   return (
     <>
+      {isNonOriginBranch && branchRemoteInfo?.trackingRemote && currentBranch && (
+        <GitNonOriginBranchBanner
+          trackingRemote={branchRemoteInfo.trackingRemote}
+          remoteUrl={branchRemoteInfo.remoteUrl}
+          currentBranch={currentBranch}
+        />
+      )}
       {operationError && (
         <div className="flex gap-2 bg-[rgba(var(--color-danger-rgb),1)] px-2 py-1 text-xs text-(--color-font-danger)">
           <div className="flex items-center gap-2">
@@ -553,7 +691,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               <div className="relative flex items-center">
                 <Icon icon="code-branch" className="size-4" />
                 {pendingChangesCount > 0 && (
-                  <div className="absolute -right-1 -bottom-2 h-[12px] min-w-[12px] rounded-[20px] bg-(--color-surprise) px-[4px] text-center text-[6px] leading-[12px] font-semibold text-(--color-font-surprise)">
+                  <div className="absolute -right-1 -bottom-2 h-3 min-w-3 rounded-[20px] bg-(--color-surprise) px-1 text-center text-[6px] leading-3 font-semibold text-(--color-font-surprise)">
                     {pendingChangesCount}
                   </div>
                 )}
@@ -650,7 +788,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           project={activeProject}
           gitRepository={gitRepository || undefined}
           storageRules={storageRules}
-          isGitSyncEnabled={isGitSyncEnabled}
         />
       )}
       {isGitBranchesModalOpen && gitRepository && currentBranch && (
@@ -661,36 +798,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         />
       )}
       {isGitLogModalOpen && gitRepository && <GitProjectLogModal onClose={() => setIsGitLogModalOpen(false)} />}
-      {isGitStagingModalOpen && gitRepository && (
-        <GitProjectStagingModal
-          mode={stagingMode}
-          onPullAfterCommit={async () => {
-            setIsGitStagingModalOpen(false);
-            setStagingMode(StagingModalModes.default);
-            await handlePull();
-            fetchStatus();
-          }}
-          onPushAfterPull={async () => {
-            setIsGitPullRequiredModalOpen(false);
 
-            const pullResult = await handlePull();
-
-            if (pullResult && pullResult.success) {
-              handlePush({ force: false });
-            }
-
-            prevHadPullError.current = true;
-            fetchStatus();
-          }}
-          onClose={() => {
-            prevHadPullError.current = false;
-
-            setIsGitStagingModalOpen(false);
-            setStagingMode(StagingModalModes.default);
-            fetchStatus();
-          }}
-        />
-      )}
       {isMigrationModalOpen && gitRepository && legacyInsomniaWorkspace && (
         <GitProjectMigrationModal
           legacyFile={legacyInsomniaWorkspace}

@@ -21,12 +21,12 @@ import { useParams } from 'react-router';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { Cookie, CookieJar } from '~/insomnia-data';
 import { useUpdateCookieJarActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { cookieToString } from '../../../common/cookies';
 import { fuzzyMatch } from '../../../common/misc';
-import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { PromptButton } from '../base/prompt-button';

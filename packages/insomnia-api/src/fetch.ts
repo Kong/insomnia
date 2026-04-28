@@ -23,3 +23,16 @@ export function configureFetch(_fetch: Fetch) {
   fetch = _fetch;
   configured = true;
 }
+
+export class ResponseFailError extends Error {
+  response: Response;
+  constructor(name: string, msg: string, response: Response) {
+    super(msg);
+    this.name = name || 'ResponseFailError';
+    this.response = response;
+  }
+}
+
+export const isApiError = (error: unknown): error is ResponseFailError => {
+  return error instanceof ResponseFailError;
+};

@@ -5,7 +5,6 @@
     "skipLibCheck": true,
     "target": "es2022",
     "allowJs": true,
-    "checkJs": true,
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
@@ -25,7 +24,7 @@
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false
   },
-  "include": [".eslintrc.js", "esbuild.ts", "package.json", "src", "../insomnia/types"],
+  "include": ["esbuild.ts", "package.json", "src", "../insomnia/types"],
   "exclude": [
     "**/*.test.ts",
     "**/__mocks__/*",

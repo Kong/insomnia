@@ -17,12 +17,9 @@ import { useParams, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import { documentationLinks } from '~/common/documentation';
+import type { Request, UnitTest, UnitTestSuite } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import * as models from '~/models';
-import { isGrpcRequest } from '~/models/grpc-request';
-import { isRequest, type Request } from '~/models/request';
-import type { UnitTest } from '~/models/unit-test';
-import type { UnitTestSuite } from '~/models/unit-test-suite';
-import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
 import { useTestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.delete';
 import { useTestRunActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.run';
@@ -38,6 +35,8 @@ import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId';
+
+const { isRequest } = models.request;
 
 export function useUnitTestSuiteLoaderData() {
   return useRouteLoaderData<typeof clientLoader>(
@@ -79,14 +78,6 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
 
   return (
     <div className="shrink-0 overflow-hidden p-(--padding-sm)">
-      <div className="mb-4 w-full items-center gap-4 rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-(--color-bg) px-3 py-2 text-sm text-wrap text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-hidden">
-        Some time in 2026, unit tests will be deprecated in favour of{' '}
-        <Link className="cursor-pointer text-(--color-surprise)" href="https://developer.konghq.com/insomnia/scripts/">
-          pre-request and after-response scripts.
-        </Link>{' '}
-        Exact timelines and how to migrate will be communicated well in advance. For now, we advise switching to scripts
-        where possible.
-      </div>
       <div className="flex w-full items-center gap-2" title={unitTest.name}>
         <Button
           className="flex aspect-square h-8 shrink-0 flex-nowrap items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -161,12 +152,12 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                         {getMethodShortHand(request)}
                       </span>
                     )}
-                    {isWebSocketRequest(request) && (
+                    {models.webSocketRequest.isWebSocketRequest(request) && (
                       <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                         WS
                       </span>
                     )}
-                    {isGrpcRequest(request) && (
+                    {models.grpcRequest.isGrpcRequest(request) && (
                       <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
                         gRPC
                       </span>
@@ -213,12 +204,12 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
                           {getMethodShortHand(request)}
                         </span>
                       )}
-                      {isWebSocketRequest(request) && (
+                      {models.webSocketRequest.isWebSocketRequest(request) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
                           WS
                         </span>
                       )}
-                      {isGrpcRequest(request) && (
+                      {models.grpcRequest.isGrpcRequest(request) && (
                         <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
                           gRPC
                         </span>
@@ -330,7 +321,7 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, testSuiteId } = params;
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
   const workspaceEntities = await database.getWithDescendants(workspace, [models.request.type]);
   const requests: Request[] = workspaceEntities.filter(isRequest);
@@ -339,10 +330,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     _id: testSuiteId,
   });
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
 
   if (workspaceMeta && workspaceMeta?.activeUnitTestSuiteId !== testSuiteId) {
-    await models.workspaceMeta.update(workspaceMeta, {
+    await services.workspaceMeta.update(workspaceMeta, {
       activeUnitTestSuiteId: testSuiteId,
     });
   }
@@ -522,6 +513,14 @@ const Component = () => {
           </div>
         </div>
       )}
+      <div className="mb-4 w-full items-center gap-4 rounded-lg border border-solid border-[rgba(var(--color-warning-rgb),1)] bg-(--color-bg) px-3 py-2 text-sm text-wrap text-[rgba(var(--color-warning-rgb),1)] shadow-lg outline-hidden">
+        Some time in 2026, unit tests will be deprecated in favour of{' '}
+        <Link className="cursor-pointer text-(--color-surprise)" href="https://developer.konghq.com/insomnia/scripts/">
+          pre-request and after-response scripts.
+        </Link>{' '}
+        Exact timelines and how to migrate will be communicated well in advance. For now, we advise switching to scripts
+        where possible.
+      </div>
       {unitTests.length > 0 && (
         <GridList
           aria-label="Unit tests"
@@ -536,6 +535,7 @@ const Component = () => {
           {unitTest => (
             <GridListItem textValue={unitTest.name} className="outline-hidden">
               <Button slot="drag" className="hidden" />
+
               <UnitTestItemView unitTest={unitTest} testsRunning={testsRunning} />
             </GridListItem>
           )}

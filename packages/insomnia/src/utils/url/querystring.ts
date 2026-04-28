@@ -201,18 +201,15 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
   const { strictNullHandling = false } = options || {};
   const urlWithProto = setDefaultProtocol(url);
 
+  if (!urlWithProto) {
+    return '';
+  }
+
   if (!encode) {
     return urlWithProto;
   }
-
-  // Parse the URL into components using standard URL API
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(urlWithProto);
-  } catch {
-    // If URL parsing fails, return the original URL
-    return urlWithProto;
-  }
+  // Parse the URL into components
+  const parsedUrl = new URL(urlWithProto);
 
   // ~~~~~~~~~~~ //
   // 1. Pathname //
@@ -227,9 +224,9 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
   // 2. Querystring //
   // ~~~~~~~~~~~~~~ //
 
-  const queryString = parsedUrl.search.slice(1); // Remove leading '?'
-  if (queryString) {
-    const qsParams = deconstructQueryStringToParams(queryString, true, { strictNullHandling });
+  const rawQuery = parsedUrl.search.startsWith('?') ? parsedUrl.search.slice(1) : parsedUrl.search;
+  if (rawQuery) {
+    const qsParams = deconstructQueryStringToParams(rawQuery, true, { strictNullHandling });
     const encodedQsParams = [];
     for (const { name, value } of qsParams) {
       encodedQsParams.push({
@@ -238,8 +235,8 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
       });
     }
 
-    const encodedQuery = buildQueryStringFromParams(encodedQsParams, true, { strictNullHandling });
-    parsedUrl.search = encodedQuery ? `?${encodedQuery}` : '';
+    const query = buildQueryStringFromParams(encodedQsParams, true, { strictNullHandling });
+    parsedUrl.search = query ? `?${query}` : '';
   }
 
   return parsedUrl.toString();

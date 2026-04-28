@@ -1,13 +1,13 @@
 import { session } from 'electron/main';
 
+import { models, services } from '~/insomnia-data';
+
 import { type ChangeBufferEvent, database as db } from '../common/database';
-import { settings } from '../models';
-import { isSettings } from '../models/settings';
 import { setDefaultProtocol } from '../utils/url/protocol';
 
 // Update the proxy settings before making the request.
 async function updateProxy() {
-  const { proxyEnabled, httpProxy, httpsProxy, noProxy } = await settings.get();
+  const { proxyEnabled, httpProxy, httpsProxy, noProxy } = await services.settings.get();
 
   if (proxyEnabled) {
     // Supported values for proxyUrl are like: http://localhost:8888, https://localhost:8888 or localhost:8888
@@ -42,12 +42,12 @@ async function updateProxy() {
 }
 
 export async function watchProxySettings() {
-  let old = await settings.get();
+  let old = await services.settings.get();
   updateProxy();
   db.onChange(async (changes: ChangeBufferEvent[]) => {
     for (const change of changes) {
       const [event, doc] = change;
-      const isSettingsUpdate = isSettings(doc) && event === 'update';
+      const isSettingsUpdate = models.settings.isSettings(doc) && event === 'update';
       if (isSettingsUpdate) {
         const hasProxyChanged =
           old.proxyEnabled !== doc.proxyEnabled ||

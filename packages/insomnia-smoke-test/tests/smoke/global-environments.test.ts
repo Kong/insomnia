@@ -8,7 +8,7 @@ test.describe('Global Environments', () => {
     await loadFixtureFile('collection-for-global-environments.yaml', app, page);
     await loadFixtureFile('global-environment.yaml', app, page);
 
-    await page.getByRole('link', { name: 'collection-for-global-' }).click();
+    await page.getByRole('gridcell', { name: 'collection-for-global-' }).click();
     await page.getByTestId('New Request').getByLabel('GET New Request', { exact: true }).click();
     // check if it has error message
     await page.getByText('Body', { exact: true }).click();
@@ -52,4 +52,5 @@ async function loadFixtureFile(fixture: string, app, page) {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.getByTestId('project').click();
 }

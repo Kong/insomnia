@@ -20,28 +20,23 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models } from '~/insomnia-data';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
 import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
+import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
+import { getDataFromKVPair } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  EnvironmentType,
-  getDataFromKVPair,
-} from '../../../models/environment';
-import { isRemoteProject } from '../../../models/project';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
-import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { Icon } from '../icon';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';
@@ -66,10 +61,13 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
   const deleteEnvironmentFetcher = useEnvironmentDeleteActionFetcher();
   const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
   const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
+  const { toggleEnvironmentType } = useToggleEnvironmentType();
 
   const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
-  const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingInsomniaCloudSync = Boolean(
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+  );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const selectedEnvironment = [baseEnvironment, ...subEnvironments].find(env => env._id === selectedEnvironmentId);
@@ -489,7 +487,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                             });
                           };
                           const isValidJSON = !!environmentEditorRef.current?.isValid();
-                          handleToggleEnvironmentType(
+                          toggleEnvironmentType(
                             isSelected,
                             selectedEnvironment,
                             isValidJSON,

@@ -1,8 +1,9 @@
 import * as srp from '@getinsomnia/srp-js';
 import { createVault, resetVault, verifyVaultA, verifyVaultM1 } from 'insomnia-api';
 
-import { userSession as sessionModel } from '../models';
-import type { UserSession } from '../models/user-session';
+import type { UserSession } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+
 import { base64encode, saveVaultKeyIfNecessary } from '../utils/vault';
 
 const { Buffer, Client, generateAES256Key, getRandomHex, params, srpGenKey } = srp;
@@ -11,13 +12,13 @@ export const vaultKeyParams = params[2048];
 export const saveVaultKey = async (accountId: string, vaultKey: string) => {
   // save encrypted vault key and vault salt to session
   const encryptedVaultKey = await window.main.secretStorage.encryptString(vaultKey);
-  await sessionModel.patch({ vaultKey: encryptedVaultKey });
+  await services.userSession.patch({ vaultKey: encryptedVaultKey });
 
   await saveVaultKeyIfNecessary(accountId, vaultKey);
 };
 
 export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
-  const userSession = await sessionModel.getOrCreate();
+  const userSession = await services.userSession.getOrCreate();
   const { accountId, id: sessionId } = userSession;
 
   const vaultSalt = await getRandomHex();
@@ -40,7 +41,7 @@ export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
       : resetVault({ sessionId, salt: vaultSalt, verifier }));
 
     // save encrypted vault key and vault salt to session
-    await sessionModel.patch({ vaultSalt: vaultSalt });
+    await services.userSession.patch({ vaultSalt: vaultSalt });
     await saveVaultKey(accountId, base64encodedVaultKey);
     return {
       key: base64encodedVaultKey,

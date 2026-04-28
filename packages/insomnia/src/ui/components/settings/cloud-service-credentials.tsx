@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
+import { type CloudProviderCredential, type CloudProviderName, models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
-import {
-  type AzureOAuthCredential,
-  type CloudProviderCredential,
-  type CloudProviderName,
-  getProviderDisplayName,
-} from '../../../models/cloud-credential';
 import { executePluginMainAction } from '../../../plugins';
 import { getBundlePlugins } from '../../../plugins';
 import { usePlanData } from '../../hooks/use-plan';
@@ -22,6 +17,8 @@ import { SvgIcon } from '../svg-icon';
 import { Tooltip } from '../tooltip';
 import { UpgradeNotice } from '../upgrade-notice';
 import { NumberSetting } from './number-setting';
+
+const { getProviderDisplayName } = models.cloudCredential;
 
 interface createCredentialItemType {
   name: string;
@@ -137,7 +134,7 @@ export const CloudServiceCredentialList = () => {
         <h2 className="z-10 bg-(--color-bg) text-lg font-bold">Service Provider Credential List</h2>
         <MenuTrigger>
           <Button
-            aria-label="Create Credential"
+            aria-label="Create Cloud Credential"
             className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 py-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <Icon icon="plus-circle" /> Add Credential
@@ -179,9 +176,9 @@ export const CloudServiceCredentialList = () => {
           <tbody>
             {cloudCredentials.map(cloudCred => {
               const { _id, name, provider, credentials } = cloudCred;
-              let isAzureTokenExpired = false;
-              if (provider === 'azure') {
-                const tokenExpiresOn = (credentials as AzureOAuthCredential).expiresOn;
+              let isAzureTokenExpired = !credentials;
+              if (credentials && provider === 'azure') {
+                const tokenExpiresOn = 'expiresOn' in credentials ? credentials.expiresOn : null;
                 if (tokenExpiresOn && new Date() >= new Date(tokenExpiresOn)) {
                   isAzureTokenExpired = true;
                 }

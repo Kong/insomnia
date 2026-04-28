@@ -3,17 +3,16 @@ import path from 'node:path';
 
 import electron from 'electron';
 
+import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+import { getBodyBuffer } from '~/models/helpers/response-operations';
+import { fetchFromTemplateWorkerDatabase } from '~/templating/base-extension-worker';
+
 import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
@@ -196,7 +195,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
   }
 
   if (!plugins) {
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
       .split(':')
@@ -380,10 +379,13 @@ export function getPluginCommonContext({
     ...pluginStore.init(plugin),
     ...pluginNetwork.init(),
     util: {
-      openInBrowser: (url: string) => window.main.openInBrowser(url),
+      openInBrowser: async (url: string) =>
+        process.type === 'renderer' || process.type === 'worker'
+          ? window.main.openInBrowser(url)
+          : electron.shell.openExternal(url),
       models: {
         request: {
-          getById: models.request.getById,
+          getById: services.request.getById,
           getAncestors: async (request: any) => {
             const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
               models.requestGroup.type,
@@ -393,34 +395,34 @@ export function getPluginCommonContext({
           },
         },
         cloudCredential: {
-          getById: models.cloudCredential.getById,
-          update: models.cloudCredential.update,
+          getById: services.cloudCredential.getById,
+          update: services.cloudCredential.update,
         },
         workspace: {
-          getById: models.workspace.getById,
+          getById: services.workspace.getById,
         },
         oAuth2Token: {
-          getByRequestId: models.oAuth2Token.getByParentId,
+          getByRequestId: services.oAuth2Token.getByParentId,
         },
         cookieJar: {
           getOrCreateForParentId: (parentId: string) => {
-            return models.cookieJar.getOrCreateForParentId(parentId);
+            return services.cookieJar.getOrCreateForParentId(parentId);
           },
         },
         response: {
-          getLatestForRequestId: models.response.getLatestForRequestId,
-          getBodyBuffer: models.response.getBodyBuffer,
+          getLatestForRequestId: services.response.getLatestForRequestId,
+          getBodyBuffer,
         },
         settings: {
-          get: models.settings.get,
+          get: services.settings.get,
         },
       },
     },
   };
 }
 
-// This is for insomnia UI to reach out to bundled plugin functions and executed under main process(node integration) context
-// It should only be available to bundled plugins, not for public plugins
+// Allows Insomnia UI to invoke bundled plugin actions from either the renderer process or the main process (default).
+// This entry point is only exposed to bundled plugins, not to public/third‑party plugins.
 export async function executePluginMainAction({
   pluginName,
   actionName,
@@ -432,17 +434,29 @@ export async function executePluginMainAction({
   context?: Record<string, any>;
   params?: Record<string, any>;
 }): Promise<any> {
-  const bundlePlugins = await getBundlePlugins();
-  const plugin = bundlePlugins.find(p => p.name === pluginName);
-  if (!plugin) {
-    throw new Error(`Plugin ${pluginName} not found`);
+  const settings = await services.settings.get();
+  // Execute the plugin action directly in renderer process when allow elevated access.
+  if (settings.pluginsAllowElevatedAccess) {
+    const bundlePlugins = await getBundlePlugins();
+    const plugin = bundlePlugins.find(p => p.name === pluginName);
+    if (!plugin) {
+      throw new Error(`Plugin ${pluginName} not found`);
+    }
+    const action = plugin.module.unsafePluginMainActions?.find(p => p.name === actionName);
+    if (!action) {
+      throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
+    }
+    const commonContext = getPluginCommonContext({ plugin });
+    return action.action({ ...commonContext, ...context }, params);
   }
-  const action = plugin.module.unsafePluginMainActions?.find(p => p.name === actionName);
-  if (!action) {
-    throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
-  }
-  const commonContext = getPluginCommonContext({ plugin });
-  return action.action({ ...commonContext, ...context }, params);
+  // Use the template worker database to execute the plugin action in main process
+  const result = await fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginMainAction', {
+    pluginName,
+    actionName,
+    context,
+    params,
+  });
+  return result;
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {

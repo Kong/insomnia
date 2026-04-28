@@ -2,18 +2,16 @@ import { Heading } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
+import type { UnitTestResult } from '~/insomnia-data';
 import * as models from '~/models';
-import type { UnitTestResult } from '~/models/unit-test-result';
 import { Icon } from '~/ui/components/icon';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test-result.$testResultId';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const { testResultId } = params;
-
   const testResult = await database.findOne<UnitTestResult>(models.unitTestResult.type, {
-    _id: testResultId,
+    _id: params.testResultId,
   });
   invariant(testResult, 'Test Result not found');
   return {
@@ -33,24 +31,24 @@ export const TestRunStatus = () => {
   if (!testResult) {
     return null;
   }
-  const { stats, tests } = testResult.results;
 
   return (
     <div key={testResult._id} className="flex h-full w-full flex-1 flex-col divide-y divide-solid divide-(--hl-md)">
       <Heading
         className={`flex h-(--line-height-sm) w-full shrink-0 items-center gap-2 p-(--padding-md) text-lg ${
-          stats.failures > 0 ? 'text-(--color-danger)' : 'text-(--color-success)'
+          testResult.results.stats.failures > 0 ? 'text-(--color-danger)' : 'text-(--color-success)'
         }`}
       >
-        <Icon icon={stats.failures > 0 ? 'exclamation-triangle' : 'check-square'} />
-        <span className="truncate">{stats.failures > 0 ? 'Tests failed' : 'Tests passed'} </span>
-        {stats.failures > 0 ? stats.failures : stats.passes}/{stats.tests}
+        <Icon icon={testResult.results.stats.failures > 0 ? 'exclamation-triangle' : 'check-square'} />
+        <span className="truncate">{testResult.results.stats.failures > 0 ? 'Tests failed' : 'Tests passed'} </span>
+        {testResult.results.stats.failures > 0 ? testResult.results.stats.failures : testResult.results.stats.passes}/
+        {testResult.results.stats.tests}
       </Heading>
       <div
         className="flex w-full flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto"
         aria-label="Test results"
       >
-        {tests.map((test, i) => {
+        {testResult.results.tests.map((test, i) => {
           const errorMessage = 'message' in test.err ? test.err.message : '';
           return (
             <div key={test.id || i} className="flex flex-col">

@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { services } from '~/insomnia-data';
 import { remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -20,16 +19,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   invariant(typeof data.message === 'string', 'Message is required');
 
-  const vcs = VCSInstance();
-
   try {
-    await vcs.takeSnapshot(data.message);
+    await window.main.sync.takeSnapshot(data.message);
     if (data.push) {
-      const project = await models.project.getById(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       invariant(project.remoteId, 'Project is not remote');
 
-      await vcs.push({
+      await window.main.sync.push({
         teamId: project.parentId,
         teamProjectId: project.remoteId,
       });

@@ -1,7 +1,7 @@
 import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
-import type { RequestParameter } from '~/models/request';
+import type { RequestParameter } from '~/insomnia-data';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -14,9 +14,10 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 interface Props {
   bulk: boolean;
   disabled?: boolean;
+  onDescriptionToggle?: () => void;
 }
 
-export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false }) => {
+export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onDescriptionToggle }) => {
   const { requestId } = useParams() as { requestId: string };
   const { activeRequest } = useRequestLoaderData() as RequestLoaderData;
   const patchRequest = useRequestPatcher();
@@ -90,6 +91,7 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false }) =
       pairs={activeRequest.parameters}
       onChange={pairs => onChangeParameter(pairs as RequestParameter[])}
       isDisabled={disabled}
+      onDescriptionToggle={onDescriptionToggle}
     />
   );
 };

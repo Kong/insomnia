@@ -6,22 +6,24 @@ import { Button } from 'react-aria-components';
 import {
   href,
   isRouteErrorResponse,
+  Link as RouterLink,
   Links,
   matchPath,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useFetchers,
   useNavigate,
-  useNavigation,
   useParams,
+  useRevalidator,
   useRouteLoaderData,
 } from 'react-router';
+import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
-import * as models from '~/models';
-import type { Settings } from '~/models/settings';
-import type { UserSession } from '~/models/user-session';
+import type { Settings, UserSession } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -29,8 +31,10 @@ import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
-import { useGithubCompleteSignInFetcher } from '~/routes/git-credentials.github.complete-sign-in';
-import { useGitLabCompleteSignInFetcher } from '~/routes/git-credentials.gitlab.complete-sign-in';
+import {
+  GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  useGitProviderCompleteSignInFetcher,
+} from '~/routes/git-credentials.complete-sign-in';
 import { SegmentEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -39,13 +43,8 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
-import {
-  SettingsModal,
-  TAB_CLOUD_CREDENTIAL,
-  TAB_INDEX_PLUGINS,
-  TAB_INDEX_THEMES,
-} from '~/ui/components/modals/settings-modal';
+import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
+import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
@@ -82,7 +81,14 @@ const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ reque
     console.log('[locationHistoryMiddleware] Failed to store location history entry', err);
   }
 };
-
+const sanitizeUrlAndExtractOrigin = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    return parsed.origin;
+  } catch {
+    return '';
+  }
+};
 export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHistoryMiddleware];
 
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
@@ -100,8 +106,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
     return err?.stack;
   };
 
-  const navigate = useNavigate();
-  const navigation = useNavigation();
   const errorMessage = getErrorMessage(error);
   const logoutFetcher = useLogoutFetcher();
 
@@ -122,13 +126,13 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
         </div>
       )}
       <div className="flex items-center gap-2">
-        <Button
+        <RouterLink
+          reloadDocument
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          onPress={() => navigate('/organization')}
+          to="/organization"
         >
-          Try to reload the app{' '}
-          <span>{navigation.state === 'loading' ? <Icon icon="spinner" className="animate-spin" /> : null}</span>
-        </Button>
+          Try to reload the app
+        </RouterLink>
         <Button
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => logoutFetcher.submit()}
@@ -155,16 +159,14 @@ export const useRootLoaderData = () => {
 };
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const settings = await models.settings.get();
-  const workspaceCount = await models.workspace.count();
-  const mcpWorkspaceCount = await models.workspace.count('mcp');
-  const userSession = await models.userSession.getOrCreate();
-  const cloudCredentials = await models.cloudCredential.all();
+  const settings = await services.settings.get();
+  const workspaceCount = await services.workspace.count();
+  const userSession = await services.userSession.getOrCreate();
+  const cloudCredentials = await services.cloudCredential.all();
 
   return {
     settings,
     workspaceCount,
-    mcpWorkspaceCount,
     userSession,
     cloudCredentials,
   };
@@ -312,14 +314,28 @@ const Root = () => {
     projectId: string;
   };
 
-  const [importUri, setImportUri] = useState('');
+  const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: logoutSubmit } = useLogoutFetcher();
-  const { submit: githubCompleteSignInSubmit } = useGithubCompleteSignInFetcher();
-  const { submit: gitLabCompleteSignInSubmit } = useGitLabCompleteSignInFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
+  const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
+    key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
+  });
   const navigate = useNavigate();
+
+  const { revalidate } = useRevalidator();
+  const inflightFetchers = useFetchers();
+  const ifInSubmission = inflightFetchers.some(f => f.formMethod === 'POST');
+  const latestInSubmission = useLatest(ifInSubmission);
+
+  useEffect(() => {
+    return window.main.on('git.db-synced', () => {
+      if (!latestInSubmission.current) {
+        revalidate();
+      }
+    });
+  }, [latestInSubmission, revalidate]);
 
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
@@ -350,6 +366,7 @@ const Root = () => {
 
         return logoutSubmit();
       }
+      // Supports params: uri, curl, origin
       if (urlWithoutParams === 'insomnia://app/import') {
         window.main.trackSegmentEvent({
           event: SegmentEvent.importStarted,
@@ -358,7 +375,38 @@ const Root = () => {
           },
         });
 
-        return setImportUri(params.uri);
+        if (params.uri) {
+          return setImportObject({
+            type: 'uri',
+            defaultValue: params.uri,
+            origin: sanitizeUrlAndExtractOrigin(params.origin),
+            endpoint: params.endpoint,
+            operationId: params.operationId,
+            autoScan: true,
+            startedAt: Date.now(),
+          });
+        }
+        if (params.mcp) {
+          return setImportObject({
+            type: 'mcp',
+            defaultValue: params.mcp,
+            origin: sanitizeUrlAndExtractOrigin(params.origin),
+            autoScan: true,
+            startedAt: Date.now(),
+          });
+        }
+        if (params.curl) {
+          const { isValid } = await validateCurl(params.curl);
+          return setImportObject({
+            type: 'curl',
+            defaultValue: params.curl,
+            origin: sanitizeUrlAndExtractOrigin(params.origin),
+            endpoint: params.endpoint,
+            operationId: params.operationId,
+            autoScan: isValid,
+            startedAt: Date.now(),
+          });
+        }
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
         if (!params.name || params.name.trim() === '') {
@@ -382,7 +430,7 @@ const Root = () => {
               try {
                 // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
                 await window.main.installPlugin(params.name.trim(), true);
-                showModal(SettingsModal, { tab: TAB_INDEX_PLUGINS });
+                showModal(SettingsModal, { tab: 'plugins' });
               } catch (err) {
                 showError({
                   title: 'Plugin Install',
@@ -409,13 +457,13 @@ const Root = () => {
             if (isYes) {
               const mainJsContent = `module.exports.themes = [${JSON.stringify(parsedTheme, null, 2)}];`;
               await createPlugin(`theme-${parsedTheme.name}`, mainJsContent);
-              const settings = await models.settings.get();
-              await models.settings.update(settings, {
+              const settings = await services.settings.get();
+              await services.settings.update(settings, {
                 theme: parsedTheme.name,
               });
               await reloadPlugins();
               await setTheme(parsedTheme.name);
-              showModal(SettingsModal, { tab: TAB_INDEX_THEMES });
+              showModal(SettingsModal, { tab: 'themes' });
             }
           },
         });
@@ -425,16 +473,18 @@ const Root = () => {
         urlWithoutParams === 'insomnia://oauth/github-app/authenticate'
       ) {
         const { code, state } = params;
-        return githubCompleteSignInSubmit({
+        return gitProviderCompleteSignInSubmit({
           code,
           state,
+          provider: 'github',
         });
       }
       if (urlWithoutParams === 'insomnia://oauth/gitlab/authenticate') {
         const { code, state } = params;
-        return gitLabCompleteSignInSubmit({
+        return gitProviderCompleteSignInSubmit({
           code,
           state,
+          provider: 'gitlab',
         });
       }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
@@ -445,7 +495,7 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://app/open/organization') {
         // if user is logged out, navigate to authorize instead
         // gracefully handle open org in app from browser
-        const userSession = await models.userSession.getOrCreate();
+        const userSession = await services.userSession.getOrCreate();
         if (!userSession.id || userSession.id === '') {
           const url = new URL(getLoginUrl());
           window.main.openInBrowser(url.toString());
@@ -492,7 +542,7 @@ const Root = () => {
               // close the modal to hint user Azure oauth url if exists
               closeModalBtn.click();
             }
-            showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
+            showModal(SettingsModal, { tab: 'credentials' });
           } else {
             showError({
               title: 'Azure Authorization Failed',
@@ -551,10 +601,11 @@ const Root = () => {
   }, [
     authorizeSubmit,
     createCloudCredentials,
-    gitLabCompleteSignInSubmit,
-    githubCompleteSignInSubmit,
+    gitProviderCompleteSignInSubmit,
     logoutSubmit,
     navigate,
+    organizationId,
+    projectId,
     redirectToDefaultBrowserSubmit,
   ]);
 
@@ -567,13 +618,13 @@ const Root = () => {
       <Modals />
       <AppHooks />
       {/* triggered by insomnia://app/import */}
-      {importUri && (
+      {importObject.defaultValue && (
         <ImportModal
-          onHide={() => setImportUri('')}
-          projectName="Insomnia"
+          key={importObject.startedAt}
+          onHide={() => setImportObject({ type: 'clipboard', defaultValue: '' })}
           defaultProjectId={projectId}
           organizationId={organizationId}
-          from={{ type: 'uri', defaultValue: importUri }}
+          from={importObject}
         />
       )}
     </>

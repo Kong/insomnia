@@ -3,9 +3,9 @@ import React from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 
 import type { McpServerData } from '~/common/mcp-utils';
+import type { McpRequest, McpServerPrimitiveTypes } from '~/insomnia-data';
 
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { McpRequest, McpServerPrimitiveTypes } from '../../../models/mcp-request';
 import { Icon } from '../icon';
 import type { PrimitiveTypeItem } from '../mcp/types';
 

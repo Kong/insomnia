@@ -19,11 +19,10 @@ import {
 } from 'react-aria-components';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { SocketIOPayload, SocketIORequest } from '~/insomnia-data';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
-import type { SocketIOPayload } from '../../../models/socket-io-payload';
-import type { SocketIORequest } from '../../../models/socket-io-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useRequestPayloadPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
@@ -97,17 +96,37 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
   };
 
   const handleSend = async () => {
+    const args = requestPayload?.args ?? [];
     const renderedArgs = await tryToInterpolateRequestOrShowRenderErrorModal({
       request,
       environmentId,
-      payload: requestPayload?.args.map(item => item.value),
+      payload: args.map(item => item.value),
+    });
+
+    // Return early if rendering failed (e.g., RenderError was caught and modal shown)
+    if (!renderedArgs) {
+      return;
+    }
+
+    // Parse JSON content type args before sending
+    const parsedArgs = args.map((item, index) => {
+      const renderedValue = renderedArgs[index];
+      if (item.mode === CONTENT_TYPE_JSON && typeof renderedValue === 'string') {
+        try {
+          return JSON.parse(renderedValue);
+        } catch {
+          // If parsing fails, send as string
+          return renderedValue;
+        }
+      }
+      return renderedValue;
     });
 
     window.main.socketIO.event.send({
       requestId: request._id,
       eventName: requestPayload?.eventName || 'message',
       ack: requestPayload?.ack,
-      args: renderedArgs,
+      args: parsedArgs,
     });
   };
 

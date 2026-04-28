@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
 import nodePath from 'node:path';
 
 import * as commander from 'commander';
@@ -9,12 +8,8 @@ import { cosmiconfig } from 'cosmiconfig';
 import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
+import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
-import type { Environment, UserUploadEnvironment } from 'insomnia/src/models/environment';
-import { init } from 'insomnia/src/models/environment';
-import type { Request } from 'insomnia/src/models/request';
-import type { RequestGroup } from 'insomnia/src/models/request-group';
-import { insomniaFetch } from 'insomnia/src/ui/insomnia-fetch';
 import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
 import { configureFetch } from 'insomnia-api';
 import { generate, runTestsCli } from 'insomnia-testing';
@@ -22,14 +17,16 @@ import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { Workspace } from '~/models/workspace';
+import type { Environment, Request, RequestGroup, UserUploadEnvironment, Workspace } from '~/insomnia-data';
+import { initServices, models } from '~/insomnia-data';
+import { servicesNodeImpl } from '~/insomnia-data/node';
 
 import type { RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
 import packageJson from '../package.json';
+import { flushAnalytics, InsoEvent, trackInsoEvent } from './analytics';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
 import { RunCollectionResultReport } from './commands/run-collection/result-report';
-import type { Database } from './db';
 import { isFile, loadDb } from './db';
 import { insomniaExportAdapter } from './db/adapters/insomnia-adapter';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
@@ -38,9 +35,14 @@ import type { BaseModel } from './db/models/types';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
+import type { Database } from './db/types';
+import { InsoError } from './errors';
 import { BasicReporter, logger, LogLevel } from './logger';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
 import { generateDocumentation } from './scripts/docs';
+import { getAppDataDir, getDefaultProductName } from './util';
+
+initServices(servicesNodeImpl);
 
 export interface GlobalOptions {
   ci: boolean;
@@ -55,8 +57,7 @@ if (!isDevelopment()) {
   process.removeAllListeners('warning');
 }
 
-// Force onlyResolveOnSuccess to true, will be removed after all usages are updated
-configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
+configureFetch(options => insomniaFetch({ ...options }));
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
   try {
@@ -87,45 +88,6 @@ export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: 
   }
 
   return {};
-};
-
-export class InsoError extends Error {
-  cause?: Error | null;
-
-  constructor(message: string, cause?: Error) {
-    super(message);
-    this.name = 'InsoError';
-    this.cause = cause;
-  }
-}
-
-/**
- * getAppDataDir returns the data directory for an Electron app,
- * it is equivalent to the app.getPath('userData') API in Electron.
- * https://www.electronjs.org/docs/api/app#appgetpathname
- */
-export function getAppDataDir(app: string): string {
-  switch (process.platform) {
-    case 'darwin': {
-      return nodePath.join(homedir(), 'Library', 'Application Support', app);
-    }
-    case 'win32': {
-      return nodePath.join(process.env.APPDATA || nodePath.join(homedir(), 'AppData', 'Roaming'), app);
-    }
-    case 'linux': {
-      return nodePath.join(process.env.XDG_DATA_HOME || nodePath.join(homedir(), '.config'), app);
-    }
-    default: {
-      throw new Error('Unsupported platform');
-    }
-  }
-}
-export const getDefaultProductName = (): string => {
-  const name = process.env.DEFAULT_APP_NAME;
-  if (!name) {
-    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
-  }
-  return name;
 };
 
 const localAppDir = getAppDataDir(getDefaultProductName());
@@ -454,7 +416,7 @@ export const go = (args?: string[]) => {
         }
 
         const transientVariables: Environment = {
-          ...init(),
+          ...models.environment.init(),
           _id: uuidv4(),
           type: 'Environment',
           parentId: '',
@@ -504,8 +466,15 @@ export const go = (args?: string[]) => {
 
           // TODO: is this necessary?
           const success = options.verbose ? await runTestPromise : await noConsoleLog(() => runTestPromise);
+
+          await trackInsoEvent(InsoEvent.runTest, { success });
+          await flushAnalytics();
+
           return process.exit(success ? 0 : 1);
         } catch (error) {
+          await trackInsoEvent(InsoEvent.runTest, { success: false });
+          await flushAnalytics();
+
           logErrorAndExit(error);
         }
         return process.exit(1);
@@ -781,7 +750,7 @@ export const go = (args?: string[]) => {
 
           const iterationData = await pathToIterationData(options.iterationData, options.envVar);
           const transientVariables: Environment = {
-            ...init(),
+            ...models.environment.init(),
             _id: uuidv4(),
             type: 'Environment',
             parentId: '',
@@ -892,10 +861,17 @@ export const go = (args?: string[]) => {
           logTestResultSummary(testResultsQueue);
 
           await report.saveReport();
+
+          await trackInsoEvent(InsoEvent.runCollection, { success });
+          await flushAnalytics();
+
           return process.exit(success ? 0 : 1);
         } catch (error) {
           report.update({ error: (error instanceof Error ? error.message : String(error)) || 'Unknown error' });
           await report.saveReport();
+
+          await trackInsoEvent(InsoEvent.runCollection, { success: false });
+          await flushAnalytics();
 
           logErrorAndExit(error);
         }
@@ -948,8 +924,15 @@ export const go = (args?: string[]) => {
 
       try {
         const { isValid } = await lintSpecification({ specContent, rulesetFileName });
+
+        await trackInsoEvent(InsoEvent.lintSpec, { success: isValid });
+        await flushAnalytics();
+
         return process.exit(isValid ? 0 : 1);
       } catch (error) {
+        await trackInsoEvent(InsoEvent.lintSpec, { success: false });
+        await flushAnalytics();
+
         logErrorAndExit(error);
       }
       return process.exit(1);
@@ -980,12 +963,23 @@ export const go = (args?: string[]) => {
           options.output && getAbsoluteFilePath({ workingDir: options.workingDir, file: options.output });
         if (!outputPath) {
           logger.log(toExport);
+
+          await trackInsoEvent(InsoEvent.exportSpec, { success: true });
+          await flushAnalytics();
+
           return process.exit(0);
         }
         const filePath = await writeFileWithCliOptions(outputPath, toExport);
         logger.log(`Specification exported to "${filePath}".`);
+
+        await trackInsoEvent(InsoEvent.exportSpec, { success: true });
+        await flushAnalytics();
+
         return process.exit(0);
       } catch (error) {
+        await trackInsoEvent(InsoEvent.exportSpec, { success: false });
+        await flushAnalytics();
+
         logErrorAndExit(error);
       }
       return process.exit(1);
@@ -1019,6 +1013,9 @@ export const go = (args?: string[]) => {
       const scriptArgs: string[] = parseArgsStringToArgv(`self ${scriptTask} ${passThroughArgs.join(' ')}`);
 
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
+
+      // Track script invocation - the underlying command will track its own success/failure
+      await trackInsoEvent(InsoEvent.script);
 
       program.parseAsync(scriptArgs).catch(logErrorAndExit);
     });

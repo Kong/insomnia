@@ -4,6 +4,8 @@ import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { docsMcpAuthentication } from '~/common/documentation';
+import type { McpResponse, RequestVersion, Response, SocketIOResponse, WebSocketResponse } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
 
@@ -13,13 +15,8 @@ import type { CurlEvent } from '../../../main/network/curl';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
-import { TRANSPORT_TYPES } from '../../../models/mcp-request';
-import { isMcpResponse, type McpResponse } from '../../../models/mcp-response';
-import type { RequestVersion } from '../../../models/request-version';
-import type { Response } from '../../../models/response';
-import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
-import { type WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { SegmentEvent } from '../../../ui/analytics';
 import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
@@ -58,7 +55,7 @@ export const RealtimeResponsePane: FC<{ requestId?: string }> = () => {
       response={activeResponse}
       responses={responses}
       requestVersions={requestVersions}
-      autoSelectLatestEvent={isMcpResponse(activeResponse)}
+      autoSelectLatestEvent={models.mcpResponse.isMcpResponse(activeResponse)}
     />
   );
 };
@@ -76,10 +73,10 @@ interface RealtimeActiveResponsePaneProps {
 const RealTimeActiveResponsePaneWrapper: FC<RealtimeActiveResponsePaneProps> = props => {
   const { response } = props;
   const protocol = useMemo(() => {
-    if (isSocketIOResponse(response)) {
+    if (models.socketIOResponse.isSocketIOResponse(response)) {
       return 'socketIO';
     }
-    if (isMcpResponse(response)) {
+    if (models.mcpResponse.isMcpResponse(response)) {
       return 'mcp';
     }
     return response.type === 'WebSocketResponse' ? 'webSocket' : 'curl';
@@ -122,10 +119,10 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
   const isConnected = readyState === 'connected';
 
   const protocol = useMemo(() => {
-    if (isSocketIOResponse(response)) {
+    if (models.socketIOResponse.isSocketIOResponse(response)) {
       return 'socketIO';
     }
-    if (isMcpResponse(response)) {
+    if (models.mcpResponse.isMcpResponse(response)) {
       return 'mcp';
     }
     return response.type === 'WebSocketResponse' ? 'webSocket' : 'curl';
@@ -137,9 +134,9 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
     setSelectedEvent((selected: EventType | null) => (selected?._id === event._id ? null : event));
   };
   const getEventView = (selectedEvent: EventType) => {
-    if (isSocketIOResponse(response)) {
+    if (models.socketIOResponse.isSocketIOResponse(response)) {
       return <SocketIOEventView event={selectedEvent as SocketIOEvent} key={selectedEvent._id} />;
-    } else if (isMcpResponse(response)) {
+    } else if (models.mcpResponse.isMcpResponse(response)) {
       return <McpEventView event={selectedEvent as McpEvent} key={selectedEvent._id} />;
     }
 
@@ -219,15 +216,18 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
     };
   }, [response.timelinePath, events.length]);
 
-  const isLongRunning = isSocketIOResponse(response) || isMcpResponse(response);
-  const hideCookies = isSocketIOResponse(response) || isMcpResponse(response);
+  const isLongRunning =
+    models.socketIOResponse.isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
+  const hideCookies =
+    models.socketIOResponse.isSocketIOResponse(response) || models.mcpResponse.isMcpResponse(response);
   const hideHeaders =
-    isSocketIOResponse(response) || (isMcpResponse(response) && response.transportType === TRANSPORT_TYPES.STDIO);
+    models.socketIOResponse.isSocketIOResponse(response) ||
+    (models.mcpResponse.isMcpResponse(response) && response.transportType === models.mcpRequest.TRANSPORT_TYPES.STDIO);
 
   const cookieHeaders = hideCookies ? [] : getSetCookieHeaders(response.headers);
 
   // When it is an MCP auth error, show the docs link about MCP authentication and keep the events view to be visible for better context.
-  const isMCPAuthError = isMcpResponse(response) && response.error && response.errorType === 'auth';
+  const isMCPAuthError = models.mcpResponse.isMcpResponse(response) && response.error && response.errorType === 'auth';
 
   return (
     <Pane type="response">
@@ -265,7 +265,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           >
             Events
           </Tab>
-          {isMcpResponse(response) && (
+          {models.mcpResponse.isMcpResponse(response) && (
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="notifications"
@@ -314,10 +314,14 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="events">
           <PanelGroup direction="vertical" className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
             {response.error && !isMCPAuthError ? (
-              <ResponseErrorViewer url={response.url} error={response.error} isMcpResponse={isMcpResponse(response)} />
+              <ResponseErrorViewer
+                url={response.url}
+                error={response.error}
+                isMcpResponse={models.mcpResponse.isMcpResponse(response)}
+              />
             ) : (
               <>
-                <Panel minSize={10} defaultSize={50} className="box-border flex w-full flex-1 flex-col overflow-hidden">
+                <Panel minSize={10} defaultSize={36} className="box-border flex w-full flex-1 flex-col overflow-hidden">
                   <div
                     style={{
                       display: 'flex',
@@ -390,7 +394,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                 {selectedEvent && (
                   <>
                     <PanelResizeHandle className={'h-px w-full bg-(--hl-md)'} />
-                    <Panel minSize={10} defaultSize={isMcpResponse(response) ? 85 : 60}>
+                    <Panel minSize={10} defaultSize={models.mcpResponse.isMcpResponse(response) ? 85 : 60}>
                       <div className="h-full flex-1">{getEventView(selectedEvent)}</div>
                     </Panel>
                   </>
@@ -399,16 +403,21 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             )}
           </PanelGroup>
         </TabPanel>
-        {isMcpResponse(response) && (
+        {models.mcpResponse.isMcpResponse(response) && (
           <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="notifications">
             <McpNotificationTab allEvents={allNotifications} />
           </TabPanel>
         )}
-        {!isSocketIOResponse(response) && (
+        {!models.socketIOResponse.isSocketIOResponse(response) && (
           <>
             <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
               <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-                <ResponseHeadersViewer headers={response.headers} />
+                <ResponseHeadersViewer
+                  headers={response.headers}
+                  onCopyAll={() => {
+                    window.main.trackSegmentEvent({ event: SegmentEvent.mcpResponseHeadersCopyAllClicked });
+                  }}
+                />
               </ErrorBoundary>
             </TabPanel>
             <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">

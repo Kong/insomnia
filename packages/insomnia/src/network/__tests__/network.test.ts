@@ -4,6 +4,8 @@ import nodePath from 'node:path';
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { services } from '~/insomnia-data';
+
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
@@ -12,20 +14,36 @@ import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promis
 import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
 import * as models from '../../models';
+import { getBodyBuffer } from '../../models/helpers/response-operations';
 import * as networkUtils from '../network';
-import { getSetCookiesFromResponseHeaders } from '../network';
+import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network';
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
+describe('getAuthQueryParams', () => {
+  it('Creates a query param with key as parameter name and value as parameter value, when addTo is "queryParams"', async () => {
+    const authentication = {
+      type: 'apikey',
+      key: 'x-api-key',
+      value: 'test',
+      addTo: 'queryParams',
+    };
 
+    const header = getAuthQueryParams(authentication);
+    expect(header).toEqual({
+      name: 'x-api-key',
+      value: 'test',
+    });
+  });
+});
 describe('sendCurlAndWriteTimeline()', () => {
   beforeEach(async () => {
-    await models.project.all();
+    await services.project.all();
   });
 
   it('sends a generic request', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -48,8 +66,8 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
     ];
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
-    await models.cookieJar.update(cookieJar, {
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies,
     });
@@ -98,7 +116,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -137,8 +155,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('sends a urlencoded', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -177,7 +195,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -210,8 +228,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('skips sending and storing cookies with setting', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -234,7 +252,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
     ];
-    await models.cookieJar.create({
+    await services.cookieJar.create({
       parentId: workspace._id,
       cookies,
     });
@@ -281,7 +299,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -314,10 +332,10 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('sends a file', async () => {
-    const workspace = await models.workspace.create();
-    let settings = await models.settings.getOrCreate();
-    settings = await models.settings.update(settings, { dataFolders: [nodePath.resolve(__dirname)] });
-    await models.cookieJar.create({
+    const workspace = await services.workspace.create();
+    let settings = await services.settings.getOrCreate();
+    settings = await services.settings.update(settings, { dataFolders: [nodePath.resolve(__dirname)] });
+    await services.cookieJar.create({
       parentId: workspace._id,
     });
     const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
@@ -346,7 +364,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -382,9 +400,9 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('sends multipart form data', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
-    await models.cookieJar.create({
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
+    await services.cookieJar.create({
       parentId: workspace._id,
     });
     const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
@@ -430,7 +448,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -478,8 +496,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('uses unix socket', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -495,7 +513,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -522,8 +540,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('uses works with HEAD', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -539,7 +557,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -565,8 +583,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('uses works with "unix" host', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -582,7 +600,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -608,8 +626,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('uses netrc', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -626,7 +644,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -657,8 +675,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       // skipped this test, due to SSL_VERIFYHOST being disabled for MacOS on libcurl-promise.ts
       return;
     }
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -681,8 +699,8 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
     ];
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
-    await models.cookieJar.update(cookieJar, {
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies,
     });
@@ -731,7 +749,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -772,8 +790,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('sets HTTP version', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -790,7 +808,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    expect(JSON.parse(String(await models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
+    expect(JSON.parse(String(await getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
     expect(getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);

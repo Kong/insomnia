@@ -10,6 +10,7 @@ import { AskModal } from './components/modals/ask-modal';
 import { CodePromptModal } from './components/modals/code-prompt-modal';
 import { ErrorModal } from './components/modals/error-modal';
 import { GenerateCodeModal } from './components/modals/generate-code-modal';
+import { GitProjectStagingModal } from './components/modals/git-project-staging-modal';
 import { LogoutModal } from './components/modals/logout-modal';
 import { NunjucksModal } from './components/modals/nunjucks-modal';
 import { PromptModal } from './components/modals/prompt-modal';
@@ -57,6 +58,8 @@ const Modals = () => {
         <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
 
         <SyncMergeModal ref={instance => registerModal(instance, 'SyncMergeModal')} />
+
+        <GitProjectStagingModal ref={instance => registerModal(instance, 'GitProjectStagingModal')} />
 
         <UpgradeModal ref={instance => registerModal(instance, 'UpgradeModal')} />
 

@@ -8,18 +8,27 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 
+import { getCurrentSessionId } from '~/account/session';
+import { insomniaFetch } from '~/common/insomnia-fetch';
+import type { Project, RemoteProject, Stats } from '~/insomnia-data';
+import { database, initDatabase, initServices, services } from '~/insomnia-data';
+import { servicesNodeImpl } from '~/insomnia-data/node';
+import { mainDatabase } from '~/main/database.main';
+import { initElectronStorage } from '~/main/electron-storage';
+import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
 
 import { userDataFolder } from '../config/config.json';
-import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
+import { getAppVersion, getProductName, isDevelopment } from './common/constants';
+import { isMac } from './common/platform';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
+import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { registerGitServiceAPI } from './main/git-service';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
+import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
@@ -34,15 +43,15 @@ import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
-import type { Project, RemoteProject } from './models/project';
-import type { Stats } from './models/stats';
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
 const dataPath =
   process.env.INSOMNIA_DATA_PATH ||
   path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+
 app.setPath('userData', dataPath);
+initElectronStorage(dataPath);
 
 initializeLogging();
 
@@ -50,8 +59,7 @@ initializeSentry();
 
 registerInsomniaProtocols();
 
-// Force onlyResolveOnSuccess to true, will be removed after all usages are updated
-configureFetch(options => insomniaFetch({ ...options, onlyResolveOnSuccess: true }));
+configureFetch(options => insomniaFetch({ ...options }));
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -86,6 +94,8 @@ app.on('ready', async () => {
   registerCurlHandlers();
   registerMcpHandlers();
   registerSecretStorageHandlers();
+  registerElectronStorageHandlers();
+  registerSyncHandlers();
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
@@ -110,13 +120,17 @@ app.on('ready', async () => {
   }
 
   // Init some important things first
-  await database.init();
+  await initDatabase(mainDatabase);
+  // Initialize services for main process
+  initServices(servicesNodeImpl);
   await _createModelInstances();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
   watchProxySettings();
-  windowUtils.init();
+
+  await runGitCredentialsMigration();
+
   await _launchApp();
 
   // Init the rest
@@ -176,7 +190,7 @@ app.on('quit', () => {
 });
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
-  if (!isMac()) {
+  if (!isMac) {
     app.quit();
   }
 });
@@ -231,7 +245,8 @@ const _launchApp = async () => {
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
-      const openDeepLinkUrl = (url: string) => {
+
+      const openDeepLinkUrl = async (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -242,8 +257,18 @@ const _launchApp = async () => {
         } else {
           window = windowUtils.createWindowsAndReturnMain();
         }
-        window.webContents.send('shell:open', url);
+        // Block imports when not logged in
+        const isImportDeeplink = url.includes('://app/import');
+        const isLoggedIn = (await getCurrentSessionId()) ? true : false;
+        const shouldShowLoginPrompt = isImportDeeplink && !isLoggedIn;
+        if (shouldShowLoginPrompt) {
+          const title = encodeURIComponent('You must be logged in to open this link');
+          const message = encodeURIComponent('Please log in and try again.');
+          return window.webContents.send('shell:open', `insomnia://app/alert?title=${title}&message=${message}`);
+        }
+        return window.webContents.send('shell:open', url);
       };
+
       app.on('open-url', (_event, url) => {
         openDeepLinkUrl(url);
       });
@@ -271,14 +296,14 @@ const _launchApp = async () => {
   To avoid that, create them explicitly prior to any initialization steps
  */
 async function _createModelInstances() {
-  await models.stats.get();
-  await models.settings.getOrCreate();
+  await services.stats.get();
+  await services.settings.getOrCreate();
   try {
-    const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
-    const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
+    const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
-      await models.project.create({
+      await services.project.create({
         _id: models.project.SCRATCHPAD_PROJECT_ID,
         name: getProductName(),
         remoteId: null,
@@ -288,7 +313,7 @@ async function _createModelInstances() {
 
     if (!scratchPad) {
       console.log('[main] Initializing Scratch Pad');
-      await models.workspace.create({
+      await services.workspace.create({
         _id: models.workspace.SCRATCHPAD_WORKSPACE_ID,
         name: 'Scratch Pad',
         parentId: models.project.SCRATCHPAD_PROJECT_ID,
@@ -328,8 +353,8 @@ function getOperatingSystem(): string {
 
 async function _trackStats() {
   // Handle the stats
-  const oldStats = await models.stats.get();
-  const stats: Stats = await models.stats.update({
+  const oldStats = await services.stats.get();
+  const stats: Stats = await services.stats.update({
     currentLaunch: Date.now(),
     lastLaunch: oldStats.currentLaunch,
     currentVersion: getAppVersion(),
@@ -348,7 +373,7 @@ async function _trackStats() {
     parentId: { $ne: null },
   });
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
 
   trackSegmentEvent(SegmentEvent.appStarted, {
     localProjects,

@@ -1,12 +1,12 @@
+import type { StorageRules } from 'insomnia-api';
 import React, { useEffect } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useNavigation } from 'react-router';
 
-import type { StorageRules } from '~/models/organization';
+import type { GitRepository, Project } from '~/insomnia-data';
 import { useActiveView } from '~/ui/components/project/utils';
+import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 
-import type { GitRepository } from '../../../models/git-repository';
-import type { Project } from '../../../models/project';
 import { Icon } from '../icon';
 import { ProjectCreateForm } from '../project/project-create-form';
 import { ProjectSettingsForm } from '../project/project-settings-form';
@@ -15,14 +15,12 @@ export const ProjectModal = ({
   isOpen,
   onOpenChange,
   storageRules,
-  isGitSyncEnabled,
   project,
   gitRepository,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   storageRules: StorageRules;
-  isGitSyncEnabled: boolean;
   project?: Project;
   gitRepository?: GitRepository;
 }) => {
@@ -43,6 +41,8 @@ export const ProjectModal = ({
   } else {
     title = activeViewObj.activeView === 'git-results' ? 'Create Git Sync project' : 'Create project';
   }
+
+  const { credentials, providers } = useGitCredentials();
 
   return (
     <ModalOverlay
@@ -72,18 +72,20 @@ export const ProjectModal = ({
               {project ? (
                 <ProjectSettingsForm
                   storageRules={storageRules}
-                  isGitSyncEnabled={isGitSyncEnabled}
                   project={project}
                   gitRepository={gitRepository}
                   onCancel={close}
                   onSuccessUpdate={close}
+                  credentials={credentials}
+                  providers={providers}
                 />
               ) : (
                 <ProjectCreateForm
                   storageRules={storageRules}
-                  isGitSyncEnabled={isGitSyncEnabled}
                   onCancel={close}
                   activeViewObj={activeViewObj}
+                  credentials={credentials}
+                  providers={providers}
                 />
               )}
             </>

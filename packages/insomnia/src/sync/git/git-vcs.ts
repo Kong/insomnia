@@ -6,19 +6,15 @@ import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
-import type { GitAuthor, GitCredentials, GitRemoteConfig } from '~/models/git-repository';
+import type { GitAuthor, GitRemoteConfig } from '~/insomnia-data';
+import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
 import { hasSignificantChanges } from '../../common/significant-diff-detection';
-import { type MergeConflict, RESOLUTION_SOURCE } from '../types';
+import { type AutoResolvedConflict, type MergeConflict, RESOLUTION_SOURCE } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
-export const GitVCSOperationErrors = {
-  UncommittedChangesError: 'UncommittedChangesError',
-  RequiredPullRemoteChangesError: 'RequiredPullRemoteChangesError',
-};
-
 export type GitHash = string;
 
 export type GitRef = GitHash | string;
@@ -56,7 +52,7 @@ interface InitOptions {
   directory: string;
   fs: git.FsClient;
   gitDirectory?: string;
-  gitCredentials?: GitCredentials | null;
+  credentialsId?: string | null;
   uri?: string;
   repoId: string;
   ref?: string;
@@ -66,7 +62,7 @@ interface InitOptions {
 
 interface InitFromCloneOptions {
   url: string;
-  gitCredentials?: GitCredentials | null;
+  credentialsId?: string | null;
   directory: string;
   fs: git.FsClient;
   gitDirectory: string;
@@ -102,7 +98,7 @@ interface FileStatus {
  * We should set this explicitly (even if set to an empty string), because we have other code (such as fs clients and unit tests) that depend on the clone directory.
  */
 export const GIT_CLONE_DIR = '.';
-const gitInternalDirName = 'git';
+const gitInternalDirName = '.git';
 export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
 export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName); // .git
 export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME); // .insomnia
@@ -151,11 +147,11 @@ export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId, legacyDiff = false, ref }: InitOptions) {
+  async init({ directory, fs, gitDirectory, credentialsId, uri = '', repoId, legacyDiff = false, ref }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentialsId),
       gitdir: gitDirectory,
       fs,
       http: httpClient,
@@ -206,10 +202,10 @@ export class GitVCS {
     }
   }
 
-  async initFromClone({ repoId, url, gitCredentials, directory, fs, gitDirectory, ref }: InitFromCloneOptions) {
+  async initFromClone({ repoId, url, credentialsId, directory, fs, gitDirectory, ref }: InitFromCloneOptions) {
     this._baseOpts = {
       ...this._baseOpts,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentialsId),
       dir: directory,
       gitdir: gitDirectory,
       fs,
@@ -244,14 +240,34 @@ export class GitVCS {
     return this._baseOpts.repoId === id;
   }
 
-  async getCurrentBranch() {
+  async getCurrentBranch(): Promise<string> {
     const branch = await git.currentBranch({ ...this._baseOpts });
 
-    if (typeof branch !== 'string') {
-      throw new TypeError('No active branch');
+    if (typeof branch === 'string') {
+      return branch;
     }
 
-    return branch;
+    // During a rebase, HEAD can be detached and currentBranch() returns undefined.
+    // In that case, Git stores the original branch ref in rebase metadata.
+    const gitDir = this._baseOpts.gitdir || path.join(this._baseOpts.dir, gitInternalDirName);
+    const rebaseHeadNamePaths = [
+      path.join(gitDir, 'rebase-merge', 'head-name'),
+      path.join(gitDir, 'rebase-apply', 'head-name'),
+    ];
+
+    for (const headNamePath of rebaseHeadNamePaths) {
+      try {
+        assertIsPromiseFsClient(this._baseOpts.fs);
+        const headName = (await this._baseOpts.fs.promises.readFile(headNamePath, 'utf8')).trim();
+        if (headName.startsWith('refs/heads/')) {
+          return headName.replace('refs/heads/', '');
+        }
+      } catch {
+        // Ignore and try the next known rebase metadata path.
+      }
+    }
+
+    throw new TypeError('No active branch');
   }
 
   async listBranches() {
@@ -1041,6 +1057,42 @@ export class GitVCS {
     return git.listRemotes({ ...this._baseOpts });
   }
 
+  async getBranchTrackingRemote(branch?: string): Promise<string | null> {
+    const currentBranch = branch || (await this.getCurrentBranch());
+    try {
+      const remote = await git.getConfig({
+        ...this._baseOpts,
+        path: `branch.${currentBranch}.remote`,
+      });
+      return remote || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async getRemoteUrl(remoteName: string): Promise<string | null> {
+    try {
+      const url = await git.getConfig({
+        ...this._baseOpts,
+        path: `remote.${remoteName}.url`,
+      });
+      return url || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async getBranchRemoteInfo(branch?: string): Promise<{
+    trackingRemote: string | null;
+    isOrigin: boolean;
+    remoteUrl: string | null;
+  }> {
+    const trackingRemote = await this.getBranchTrackingRemote(branch);
+    const isOrigin = trackingRemote === null || trackingRemote === 'origin';
+    const remoteUrl = trackingRemote ? await this.getRemoteUrl(trackingRemote) : null;
+    return { trackingRemote, isOrigin, remoteUrl };
+  }
+
   async setAuthor(author?: GitAuthor) {
     let name = '';
     let email = '';
@@ -1077,10 +1129,10 @@ export class GitVCS {
    * when pushing with isomorphic-git, if the HEAD of local is equal the HEAD
    * of remote, it will fail with a non-fast-forward message.
    *
-   * @param gitCredentials
+   * @param credentialsId Optional credentials ID for authentication
    * @returns {Promise<boolean>}
    */
-  async canPush(gitCredentials?: GitCredentials | null): Promise<boolean> {
+  async canPush(credentialsId?: string | null): Promise<boolean> {
     const branch = await this.getCurrentBranch();
     const remote = await this.getRemote('origin');
 
@@ -1090,7 +1142,7 @@ export class GitVCS {
 
     const remoteInfo = await git.getRemoteInfo({
       ...this._baseOpts,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentialsId),
       forPush: true,
       url: remote.url,
     });
@@ -1112,12 +1164,12 @@ export class GitVCS {
     return true;
   }
 
-  async push(gitCredentials?: GitCredentials | null, force = false) {
+  async push(credentialsId?: string | null, force = false) {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
 
     const response = await git.push({
       ...this._baseOpts,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentialsId),
       remote: 'origin',
       force,
     });
@@ -1157,7 +1209,7 @@ export class GitVCS {
     return { oursBranch, theirsBranch };
   }
 
-  async pullWithConflictSupport(gitCredentials?: GitCredentials | null) {
+  async pullWithConflictSupport(credentialsId?: string | null) {
     const hasUncommittedChanges = await this.hasUncommittedChanges();
 
     if (hasUncommittedChanges) {
@@ -1176,7 +1228,7 @@ export class GitVCS {
       // Try to pull changes from the remote repository
       await git.pull({
         ...this._baseOpts,
-        ...gitCallbacks(gitCredentials),
+        ...gitCallbacks(credentialsId),
         remote: 'origin',
         singleBranch: true,
       });
@@ -1199,7 +1251,7 @@ export class GitVCS {
           // Retry the pull operation
           await git.pull({
             ...this._baseOpts,
-            ...gitCallbacks(gitCredentials),
+            ...gitCallbacks(credentialsId),
             remote: 'origin',
             singleBranch: true,
             ref: currentBranch,
@@ -1210,7 +1262,7 @@ export class GitVCS {
         } catch (retryError) {
           console.error('[git] Retry pull failed after resolving checkout conflicts:', retryError);
 
-          const handledError = await this.handleGitPullErrors(err, gitCredentials, writeFileMap);
+          const handledError = await this.handleGitPullErrors(err, credentialsId, writeFileMap);
 
           if (handledError) {
             return handledError;
@@ -1221,7 +1273,7 @@ export class GitVCS {
       }
 
       // Handle other specific git errors (e.g., merge conflicts, merge not supported)
-      const handledError = await this.handleGitPullErrors(err, gitCredentials, writeFileMap);
+      const handledError = await this.handleGitPullErrors(err, credentialsId, writeFileMap);
 
       if (handledError) {
         return handledError;
@@ -1239,11 +1291,12 @@ export class GitVCS {
     }
   }
 
-  async handleGitPullErrors(err: unknown, gitCredentials?: GitCredentials | null, writeFileMap: WriteFileMap = {}) {
+  async handleGitPullErrors(err: unknown, credentialsId?: string | null, writeFileMap: WriteFileMap = {}) {
     const { oursBranch, theirsBranch } = await this.getBranchPair();
 
     // merge conflict from pull
     if (err instanceof git.Errors.MergeConflictError) {
+      console.log('[git] MergeConflictError detected during pull');
       return await this.collectMergeConflicts(err, oursBranch, theirsBranch, writeFileMap);
     }
 
@@ -1254,7 +1307,7 @@ export class GitVCS {
         await this.fetch({
           singleBranch: true,
           depth: 1,
-          credentials: gitCredentials,
+          credentialsId,
         });
 
         await git.merge({
@@ -1268,6 +1321,7 @@ export class GitVCS {
       } catch (mergeErr) {
         // If the merge operation reported conflicts, collect them
         if (mergeErr instanceof git.Errors.MergeConflictError) {
+          console.log('[git] MergeConflictError detected during manual merge after fetch');
           return await this.collectMergeConflicts(mergeErr, oursBranch, theirsBranch, writeFileMap);
         }
 
@@ -1320,11 +1374,14 @@ export class GitVCS {
         commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
       };
     }
+
+    return;
   }
 
   async buildManualResolutionFromTrees() {
     const { oursBranch, theirsBranch } = await this.getBranchPair();
     const mergeConflicts: MergeConflict[] = [];
+    const autoResolvedConflicts: AutoResolvedConflict[] = [];
     const conflictPathsObj = await this.findConflictLikeChanges(oursBranch, theirsBranch);
 
     const conflictTypeList: (keyof ConflictPaths)[] = ['bothModified', 'deleteByUs', 'deleteByTheirs'];
@@ -1370,6 +1427,16 @@ export class GitVCS {
         deleteByTheirs: 'they deleted and you modified',
       }[conflictType];
       for (const conflictPath of conflictPaths) {
+        // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+        // Collect for deferred staging in continueMerge() so cancel has zero side effects.
+        if (!conflictPath.endsWith('.yaml')) {
+          autoResolvedConflicts.push({
+            filepath: conflictPath,
+            action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
+          });
+          continue;
+        }
+
         let mineBlobContent = null;
         let mineBlobId = null;
 
@@ -1412,8 +1479,20 @@ export class GitVCS {
       }
     }
 
+    // If all conflicts were auto-resolved (no YAML conflicts), complete the merge automatically
+    if (mergeConflicts.length === 0 && autoResolvedConflicts.length > 0) {
+      await this.continueMerge({
+        handledMergeConflicts: [],
+        autoResolvedConflicts,
+        commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+        commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+      });
+      return { autoResolved: true };
+    }
+
     throw new MergeConflictError('Need to solve merge conflicts first', {
       conflicts: mergeConflicts,
+      autoResolvedConflicts,
       labels: {
         ours: `${oursBranch} ${oursHeadCommitOid}`,
         theirs: `${theirsBranch} ${theirsHeadCommitOid}`,
@@ -1483,7 +1562,7 @@ export class GitVCS {
 
     async function walkTree(entries: ArrayIterator<git.TreeEntry>, prefix = '') {
       for (const entry of entries) {
-        const filepath = path.join(prefix, entry.path);
+        const filepath = path.posix.join(prefix, entry.path);
         if (entry.type === 'tree') {
           const { tree: subtree } = await git.readTree({ ...baseOpts, oid: entry.oid });
           await walkTree(subtree.values(), filepath);
@@ -1523,6 +1602,7 @@ export class GitVCS {
     const { filepaths, bothModified, deleteByUs, deleteByTheirs } = mergeConflictError.data;
     if (filepaths.length) {
       const mergeConflicts: MergeConflict[] = [];
+      const autoResolvedConflicts: AutoResolvedConflict[] = [];
       const conflictPathsObj = {
         bothModified,
         deleteByUs,
@@ -1571,6 +1651,16 @@ export class GitVCS {
           deleteByTheirs: 'they deleted and you modified',
         }[conflictType];
         for (const conflictPath of conflictPaths) {
+          // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+          // Collect for deferred staging in continueMerge() so cancel has zero side effects.
+          if (!conflictPath.endsWith('.yaml')) {
+            autoResolvedConflicts.push({
+              filepath: conflictPath,
+              action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
+            });
+            continue;
+          }
+
           let mineBlobContent = null;
           let mineBlobId = null;
 
@@ -1633,8 +1723,20 @@ export class GitVCS {
         }
       }
 
+      // If all conflicts were auto-resolved (no YAML conflicts), complete the merge automatically
+      if (mergeConflicts.length === 0 && autoResolvedConflicts.length > 0) {
+        await this.continueMerge({
+          handledMergeConflicts: [],
+          autoResolvedConflicts,
+          commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
+          commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
+        });
+        return { autoResolved: true };
+      }
+
       throw new MergeConflictError('Need to solve merge conflicts first', {
         conflicts: mergeConflicts,
+        autoResolvedConflicts,
         labels: {
           ours: `${oursBranch} ${oursHeadCommitOid}`,
           theirs: `${theirsBranch} ${theirsHeadCommitOid}`,
@@ -1650,15 +1752,32 @@ export class GitVCS {
   // create a commit after resolving merge conflicts
   async continueMerge({
     handledMergeConflicts,
+    autoResolvedConflicts,
     commitMessage,
     commitParent,
   }: {
-    gitCredentials?: GitCredentials | null;
     handledMergeConflicts: MergeConflict[];
+    autoResolvedConflicts?: AutoResolvedConflict[];
     commitMessage: string;
     commitParent: string[];
   }) {
     console.log('[git] continue to merge after resolving merge conflicts', await this.getCurrentBranch());
+
+    // Stage auto-resolved non-YAML files (deferred from conflict collection)
+    for (const autoResolved of autoResolvedConflicts ?? []) {
+      if (autoResolved.action === 'delete') {
+        await git.remove({ ...this._baseOpts, filepath: autoResolved.filepath });
+      } else {
+        await git.checkout({
+          ...this._baseOpts,
+          ref: commitParent[1],
+          filepaths: [autoResolved.filepath],
+          noUpdateHead: true,
+          force: true,
+        });
+        await git.add({ ...this._baseOpts, filepath: autoResolved.filepath });
+      }
+    }
 
     for (const conflict of handledMergeConflicts) {
       assertIsPromiseFsClient(this._baseOpts.fs);
@@ -1761,18 +1880,18 @@ export class GitVCS {
   async fetch({
     singleBranch,
     depth,
-    credentials,
+    credentialsId,
     relative = false,
   }: {
     singleBranch: boolean;
     depth?: number;
-    credentials?: GitCredentials | null;
+    credentialsId?: string | null;
     relative?: boolean;
   }) {
     console.log('[git] Fetch remote=origin');
     return git.fetch({
       ...this._baseOpts,
-      ...gitCallbacks(credentials),
+      ...gitCallbacks(credentialsId),
       singleBranch,
       remote: 'origin',
       relative,
@@ -1980,6 +2099,7 @@ export class MergeConflictError extends Error {
     msg: string,
     data: {
       conflicts: MergeConflict[];
+      autoResolvedConflicts: AutoResolvedConflict[];
       labels: {
         ours: string;
         theirs: string;
@@ -2001,9 +2121,9 @@ function assertIsPromiseFsClient(fs: git.FsClient): asserts fs is git.PromiseFsC
   }
 }
 
-export async function fetchRemoteBranches({ uri, credentials }: { uri: string; credentials?: GitCredentials | null }) {
+export async function fetchRemoteBranches({ uri, credentialsId }: { uri: string; credentialsId?: string | null }) {
   const [mainRef] = await git.listServerRefs({
-    ...gitCallbacks(credentials),
+    ...gitCallbacks(credentialsId),
     http: httpClient,
     url: uri,
     prefix: 'HEAD',
@@ -2011,7 +2131,7 @@ export async function fetchRemoteBranches({ uri, credentials }: { uri: string; c
   });
 
   const remoteRefs = await git.listServerRefs({
-    ...gitCallbacks(credentials),
+    ...gitCallbacks(credentialsId),
     http: httpClient,
     url: uri,
     prefix: 'refs/heads/',

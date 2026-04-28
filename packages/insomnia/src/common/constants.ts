@@ -1,7 +1,8 @@
+import type { MockServer } from '~/insomnia-data';
+
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import type { MockServer } from '../models/mock-server';
-import type { KeyCombination } from './settings';
+import { isLinux, isMac, isWindows, platform } from './platform';
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.
 const ENV = 'env';
@@ -12,6 +13,7 @@ export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
 export const PLAYWRIGHT = env.PLAYWRIGHT;
+export const OAUTH_WINDOW_SESSION_ID_KEY = 'current-oauth-session-id';
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
@@ -28,16 +30,16 @@ export const getAppDefaultLightTheme = () => appConfig.lightTheme;
 export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
-export const getAppPlatform = () => process.platform;
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const isMac = () => getAppPlatform() === 'darwin';
-export const isLinux = () => getAppPlatform() === 'linux';
-export const isWindows = () => getAppPlatform() === 'win32';
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
   appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
+export const getCioWriteKey = () =>
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'].writeKey;
+export const getCioSiteId = () =>
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'].siteId;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () =>
@@ -49,19 +51,19 @@ export const getBrowserUserAgent = () =>
 
 export function updatesSupported() {
   // Updates are not supported on Linux
-  if (isLinux()) {
+  if (isLinux) {
     return false;
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows() && process.env['PORTABLE_EXECUTABLE_DIR']) {
+  if (isWindows && process.env['PORTABLE_EXECUTABLE_DIR']) {
     return false;
   }
 
   return true;
 }
 
-export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
+export const getClientString = () => `${getAppEnvironment()}::${platform}::${getAppVersion()}`;
 
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
@@ -77,7 +79,7 @@ export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;
 
 export const ACCEPTED_NODE_CA_FILE_EXTS = ['.pem', '.crt', '.cer', '.p12'];
 
-export const LLM_BACKENDS = ['gguf', 'claude', 'openai', 'gemini'] as const;
+export const LLM_BACKENDS = ['gguf', 'claude', 'openai', 'gemini', 'url'] as const;
 
 // Available editor key map
 export enum EditorKeyMap {
@@ -89,44 +91,7 @@ export enum EditorKeyMap {
 
 // Hotkey
 // For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
-export const MNEMONIC_SYM = isMac() ? '' : '&';
-
-export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) => {
-  const mac = isMac();
-  switch (key) {
-    case 'ctrl': {
-      return mac ? '⌃' : 'Ctrl';
-    }
-
-    case 'alt': {
-      return mac ? '⌥' : 'Alt';
-    }
-
-    case 'shift': {
-      return mac ? '⇧' : 'Shift';
-    }
-
-    case 'meta': {
-      if (mac) {
-        return '⌘';
-      }
-
-      if (isWindows()) {
-        // Note: Although this unicode character for the Windows doesn't exist, the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
-        // see: https://en.wikipedia.org/wiki/Windows_key
-        return 'Win';
-      }
-
-      // Note: To avoid using a Microsoft trademark, much Linux documentation refers to the key as "Super". This can confuse some users who still consider it a "Windows key". In KDE Plasma documentation it is called the Meta key even though the X11 "Super" shift bit is used.
-      // see: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
-      return 'Super';
-    }
-
-    default: {
-      throw new Error(key + 'unrecognized key');
-    }
-  }
-};
+export const MNEMONIC_SYM = isMac ? '' : '&';
 
 // Oauth redirect URL
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
@@ -147,6 +112,8 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
 };
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
+export const getKonnectApiBaseURL = () => env.KONNECT_API_URL || 'https://global.api.konghq.com';
+export const isKonnectSyncEnabled = () => !!env.KONNECT_SYNC_ENABLED;
 
 // App website
 export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
@@ -290,6 +257,55 @@ export type AuthTypes =
 
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
+
+//oauth 1
+export type OAuth1SignatureMethod = 'HMAC-SHA1' | 'RSA-SHA1' | 'HMAC-SHA256' | 'PLAINTEXT';
+
+export const SIGNATURE_METHOD_HMAC_SHA1: OAuth1SignatureMethod = 'HMAC-SHA1';
+export const SIGNATURE_METHOD_HMAC_SHA256: OAuth1SignatureMethod = 'HMAC-SHA256';
+export const SIGNATURE_METHOD_RSA_SHA1: OAuth1SignatureMethod = 'RSA-SHA1';
+export const SIGNATURE_METHOD_PLAINTEXT: OAuth1SignatureMethod = 'PLAINTEXT';
+
+//oauth 2
+export const GRANT_TYPE_AUTHORIZATION_CODE = 'authorization_code';
+export const GRANT_TYPE_IMPLICIT = 'implicit';
+export const GRANT_TYPE_PASSWORD = 'password';
+export const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
+export const GRANT_TYPE_REFRESH = 'refresh_token';
+export const GRANT_TYPE_MCP_AUTH_FLOW = 'mcp_auth_flow';
+
+export type AuthKeys =
+  | 'access_token'
+  | 'id_token'
+  | 'client_id'
+  | 'client_secret'
+  | 'audience'
+  | 'resource'
+  | 'code_challenge'
+  | 'code_challenge_method'
+  | 'code_verifier'
+  | 'code'
+  | 'nonce'
+  | 'error'
+  | 'error_description'
+  | 'error_uri'
+  | 'expires_in'
+  | 'grant_type'
+  | 'password'
+  | 'redirect_uri'
+  | 'refresh_token'
+  | 'response_type'
+  | 'scope'
+  | 'state'
+  | 'token_type'
+  | 'username'
+  | 'xError'
+  | 'xResponseId';
+
+export const PKCE_CHALLENGE_S256 = 'S256';
+export const PKCE_CHALLENGE_PLAIN = 'plain';
+
+export type OAuth2AuthorizationStatusType = 'none' | 'getting_code' | 'getting_token';
 
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';

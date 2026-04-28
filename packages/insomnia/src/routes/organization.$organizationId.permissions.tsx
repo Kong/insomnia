@@ -1,12 +1,11 @@
+import { type Billing, type FeatureList, getOrganizationFeatures, type Organization } from 'insomnia-api';
 import { href, redirect, type ShouldRevalidateFunctionArgs } from 'react-router';
 
-import { userSession } from '~/models';
-import { isScratchpadOrganizationId, type Organization } from '~/models/organization';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
+import { services } from '~/insomnia-data';
+import { isScratchpadOrganizationId } from '~/models/organization';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.permissions';
-import type { Billing, FeatureList } from './organization';
 
 export const fallbackFeatures = Object.freeze<FeatureList>({
   bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -15,6 +14,7 @@ export const fallbackFeatures = Object.freeze<FeatureList>({
   aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
   aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },
   aiMcpClient: { enabled: false, reason: 'Insomnia API unreachable' },
+  konnectSync: { enabled: false, reason: 'Insomnia API unreachable' },
 });
 
 // If network unreachable assume user has paid for the current period
@@ -27,7 +27,7 @@ export const fallbackBilling = Object.freeze<Billing>({
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId } = params;
-  const { id: sessionId, accountId } = await userSession.getOrCreate();
+  const { id: sessionId, accountId } = await services.userSession.getOrCreate();
 
   if (isScratchpadOrganizationId(organizationId)) {
     return {
@@ -44,11 +44,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 
   try {
-    const featuresResponse = insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
-      method: 'GET',
-      path: `/v1/organizations/${organizationId}/features`,
-      sessionId,
-    });
+    const featuresResponse = getOrganizationFeatures({ organizationId, sessionId });
 
     return {
       featuresPromise: featuresResponse.then(res => res?.features || fallbackFeatures),

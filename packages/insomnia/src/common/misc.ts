@@ -1,9 +1,8 @@
-import zlib from 'node:zlib';
-
 import fuzzysort from 'fuzzysort';
 import { v4 as uuidv4 } from 'uuid';
 
 import { DEBOUNCE_MILLIS } from './constants';
+export { compressObject, decompressObject } from './compression';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -146,20 +145,6 @@ export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]
   return v(...args);
 }
 
-export function compressObject(obj: any) {
-  const compressed = zlib.gzipSync(JSON.stringify(obj));
-  return compressed.toString('base64');
-}
-
-export function decompressObject<ObjectType>(input: string | null): ObjectType | null {
-  if (typeof input !== 'string') {
-    return null;
-  }
-
-  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
-  return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
-}
-
 /**
  * Escape a dynamic string for use inside of a regular expression
  * @param str - string to escape
@@ -265,9 +250,11 @@ export function unescapeForwardSlash(str: string): string {
   });
 }
 
+export const SECURITY_SETTINGS_PATH_LABEL = "Insomnia Preferences → General → Security";
+
 export function cannotAccessPathError(accessingPath: string): string {
   return process.type === 'renderer' || process.type === 'browser'
-    ? `Insomnia cannot access the file "${accessingPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security`
+    ? `Insomnia cannot access the file "${accessingPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`
     : `Insomnia cannot access the file ‘${accessingPath}’. You must specify which directories Insomnia can access with one or more "--dataFolders <directory>".`;
 }
 

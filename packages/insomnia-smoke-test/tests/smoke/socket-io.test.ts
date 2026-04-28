@@ -17,14 +17,13 @@ test('can make socket.io connection', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Socket.io Collection').click();
 
   await page.getByLabel('Request Collection').getByTestId('Socket.IO Request').press('Enter');
   await expect.soft(page.locator('.app')).toContainText('http://localhost:4020');
   await page.click('text=Connect');
   await expect.soft(statusTag).toContainText('Connected', { ignoreCase: true });
   await page.getByRole('tab', { name: 'Console' }).click();
-  await expect.soft(responseBody).toContainText('Connected to http://localhost:4020');
+  await expect.soft(responseBody).toContainText('Connecting to http://localhost:4020');
   await page.click('text=Disconnect');
   await expect.soft(responseBody).toContainText('io client disconnect');
 

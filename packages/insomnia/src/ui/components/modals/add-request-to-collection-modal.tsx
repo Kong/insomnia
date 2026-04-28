@@ -2,13 +2,14 @@ import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } f
 import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
+import type { Project } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
 import { database } from '../../../common/database';
 import { strings } from '../../../common/strings';
 import { sortProjects } from '../../../models/helpers/project';
 import * as models from '../../../models/index';
-import type { Project } from '../../../models/project';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -48,7 +49,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
 
   useEffect(() => {
     (async () => {
-      const workspaces = await models.workspace.findByParentId(selectedProjectId);
+      const workspaces = await services.workspace.findByParentId(selectedProjectId);
       const requestCollections = workspaces.filter(workspace => workspace.scope === 'collection');
       setWorkspaceOptions(requestCollections);
       setSelectedWorkspaceId(requestCollections[0]?._id || '');

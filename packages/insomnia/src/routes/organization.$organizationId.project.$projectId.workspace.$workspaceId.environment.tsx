@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useEffect, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -22,15 +22,8 @@ import { NavLink } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
-import { userSession } from '~/models';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  EnvironmentType,
-  getDataFromKVPair,
-} from '~/models/environment';
-import { isRemoteProject } from '~/models/project';
+import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models, services } from '~/insomnia-data';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
@@ -45,7 +38,6 @@ import {
   type EnvironmentInfo,
 } from '~/ui/components/editors/environment-editor';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
-import { handleToggleEnvironmentType } from '~/ui/components/editors/environment-utils';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
@@ -53,14 +45,15 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
-import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
+import { getDataFromKVPair } from '~/utils/environment-utils';
 import { decryptVaultKeyFromSession } from '~/utils/vault';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment';
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const user = await userSession.get();
+  const user = await services.userSession.get();
 
   const vaultKey = user.vaultKey ? await decryptVaultKeyFromSession(user.vaultKey, false) : '';
 
@@ -81,14 +74,25 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   const deleteEnvironmentFetcher = useEnvironmentDeleteActionFetcher();
   const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
   const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
+  const { toggleEnvironmentType } = useToggleEnvironmentType();
 
-  const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta, activeWorkspace } =
-    routeData;
+  const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
-  const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingInsomniaCloudSync = Boolean(
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+  );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
-  const allEnvironment = [baseEnvironment, ...subEnvironments];
+  const allEnvironment = useMemo(() => {
+    return [baseEnvironment, ...subEnvironments];
+  }, [baseEnvironment, subEnvironments]);
+
+  // Keep selectedEnvironmentId in sync when navigating between different environment workspaces/tabs.
+  useEffect(() => {
+    if (!allEnvironment.find(env => env._id === selectedEnvironmentId)) {
+      setSelectedEnvironmentId(activeEnvironment._id);
+    }
+  }, [selectedEnvironmentId, activeEnvironment._id, allEnvironment]);
   const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
   // Do not allowed to switch to json environment if contains secret item
   const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(
@@ -293,14 +297,6 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
     sidebar_toggle: toggleSidebar,
   });
 
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-  });
-
   return (
     <PanelGroup
       ref={sidebarPanelRef}
@@ -362,7 +358,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                 <div
                   className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden pr-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)`}
                 >
-                  <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
+                  <span className="absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                   <Icon
                     icon={
                       item.isPrivate
@@ -552,12 +548,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                     });
                   };
                   const isValidJSON = !!environmentEditorRef.current?.isValid();
-                  handleToggleEnvironmentType(
-                    isSelected,
-                    selectedEnvironment,
-                    isValidJSON,
-                    toggleSwitchEnvironmentType,
-                  );
+                  toggleEnvironmentType(isSelected, selectedEnvironment, isValidJSON, toggleSwitchEnvironmentType);
                 }}
                 isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
                 className="flex w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"

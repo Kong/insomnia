@@ -2,7 +2,7 @@ import { href, redirect } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { models, services } from '~/insomnia-data';
 import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -17,11 +17,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
 
-  const vcs = VCSInstance();
   const { syncItems } = await getSyncItems({ workspaceId });
 
   try {
-    const delta = await vcs.checkout(syncItems, branch);
+    const delta = await window.main.sync.checkout(syncItems, branch);
     // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta as Operation);
     delete remoteCompareCache[workspaceId];
@@ -33,12 +32,15 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     };
   }
 
+  const workspace = await services.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+
   return redirect(
-    href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
+    `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
       organizationId,
       projectId,
       workspaceId,
-    }),
+    })}/${models.workspace.scopeToActivity(workspace?.scope)}`,
   );
 }
 

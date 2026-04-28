@@ -9,6 +9,7 @@ import express from 'express';
 import { createHandler } from 'graphql-http/lib/use/http';
 
 import { basicAuthRouter } from './basic-auth';
+import cloudSyncApi from './cloud-sync-api';
 import githubApi from './github-api';
 import gitlabApi from './gitlab-api';
 import { schema } from './graphql';
@@ -77,6 +78,7 @@ githubApi(app);
 gitlabApi(app);
 insomniaApi(app);
 simpleCrud(app);
+cloudSyncApi(app);
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
@@ -91,7 +93,7 @@ app.get('/', (_req, res) => {
   res.status(200).send();
 });
 
-app.all('/graphql', createHandler({ schema }));
+app.all('/graphqlTest', createHandler({ schema }));
 
 app.use(express.json()); // Used to parse JSON bodies
 
@@ -142,10 +144,19 @@ app.get('/updates/win', (request, response) => {
     name: '11.6.1',
   });
 });
+// mock endpoint for azure oauth config, used in external vault integration test
+app.get('/v1/oauth/azure/config', (_req, res) => {
+  res.status(200).send({
+    clientID: 'test_client_id',
+    clientRedirectURI: 'https://login.microsoftonline.com',
+  });
+});
 
 startWebSocketServer(
-  app.listen(port, () => {
+  app.listen(port, '::', () => {
     console.log(`Listening at http://localhost:${port}`);
+    console.log(`Listening at http://127.0.0.1:${port}`);
+    console.log(`Listening at http://[::1]:${port}`);
     console.log(`Listening at ws://localhost:${port}`);
   }),
 );
@@ -160,8 +171,10 @@ startWebSocketServer(
       rejectUnauthorized: false,
     },
     app,
-  ).listen(httpsPort, () => {
+  ).listen(httpsPort, '::', () => {
     console.log(`Listening at https://localhost:${httpsPort}`);
+    console.log(`Listening at https://127.0.0.1:${httpsPort}`);
+    console.log(`Listening at https://[::1]:${httpsPort}`);
     console.log(`Listening at wss://localhost:${httpsPort}`);
   }),
 );

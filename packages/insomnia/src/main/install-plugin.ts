@@ -6,21 +6,23 @@ import { promisify } from 'node:util';
 
 import { app, net } from 'electron';
 
-import { SegmentEvent } from '~/ui/analytics';
+import { services } from '~/insomnia-data';
+import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';
-import * as models from '../models';
 import { validatePluginName } from '../utils/plugin';
 
 // Promisified version of execFile to use async/await
 export const execFilePromise = promisify(execFile);
 
-// Allowed tarball hostnames for security
+// Default allowed tarball hostnames for security
 // This is a security measure to prevent downloading from untrusted sources
 // and to ensure that the tarball is from a known source.
 // The list can be expanded as needed, but should be kept minimal for security.
 // Currently, only npmjs.org and GitHub Packages are allowed.
-const allowedTarballHostnames = ['registry.npmjs.org', 'npm.pkg.github.com'];
+const defaultAllowedTarballHostnames = ['registry.npmjs.org', 'npm.pkg.github.com'];
+
+const DEFAULT_NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 interface InsomniaPlugin {
   // Insomnia attribute from package.json
@@ -102,6 +104,7 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
     try {
       // After fetching info, check the info.dist.tarball. This prevents downloading from weird hosts.
       const tarballUrl = new URL(info.dist.tarball);
+      const allowedTarballHostnames = await getAllowedTarballHostnames();
       if (!allowedTarballHostnames.includes(tarballUrl.hostname)) {
         throw new Error(`Tarball must come from an allowed host. Got: ${tarballUrl.hostname}`);
       }
@@ -157,12 +160,9 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
         }),
     );
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.installPlugin,
-      properties: {
-        pluginName: moduleName,
-        pluginVersion: info.version,
-      },
+    trackSegmentEvent(SegmentEvent.installPlugin, {
+      pluginName: moduleName,
+      pluginVersion: info.version,
     });
   } catch (err) {
     // Log and rethrow any installation errors
@@ -214,7 +214,8 @@ export async function getPluginInfo(lookupName: string, allowScopedPackageNames 
 
   console.log('[plugins] Fetching module info from npm');
 
-  const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', 'https://registry.npmjs.org/']);
+  const registryUrl = await getRegistryUrl();
+  const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', registryUrl]);
 
   let yarnOutput;
   try {
@@ -265,6 +266,7 @@ export async function installPluginToTmpDir(lookupName: string, allowScopedPacka
 
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
 
+    const registryUrl = await getRegistryUrl();
     await runYarnCommand(
       [
         'add',
@@ -278,7 +280,7 @@ export async function installPluginToTmpDir(lookupName: string, allowScopedPacka
         '--no-progress',
         '--ignore-workspace-root-check',
         '--registry',
-        'https://registry.npmjs.org/',
+        registryUrl,
       ],
       tmpDir,
     );
@@ -417,7 +419,7 @@ export function safeTrim(value: unknown): string | undefined {
  * Pulls settings from the application models.
  */
 export async function getYarnEnvValues(): Promise<Record<string, string>> {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
 
   const yarnEnv: Record<string, string> = {
     NODE_ENV: 'production',
@@ -433,6 +435,12 @@ export async function getYarnEnvValues(): Promise<Record<string, string>> {
   // Add proxy settings if enabled
   if (settings.proxyEnabled === true) {
     Object.assign(yarnEnv, buildProxyEnv(settings));
+  }
+
+  if (isDevelopment()) {
+    const NODE_AUTH_TOKEN = process.env['NODE_AUTH_TOKEN'];
+    // In development, set a default NODE_AUTH_TOKEN for .npmrc if not exists
+    yarnEnv.NODE_AUTH_TOKEN = NODE_AUTH_TOKEN || 'PLACEHOLDER_TOKEN_VALUE';
   }
 
   return yarnEnv;
@@ -460,6 +468,49 @@ export function buildProxyEnv(settings: any): Record<string, string> {
   }
 
   return proxyEnv;
+}
+
+/**
+ * Returns the npm registry URL from settings, falling back to the default.
+ */
+export async function getRegistryUrl(): Promise<string> {
+  const settings = await services.settings.get();
+  const customRegistry = safeTrim(settings.npmRegistryUrl);
+  if (customRegistry) {
+    // Validate it's a proper URL
+    try {
+      const parsed = new URL(customRegistry);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+        console.warn(`[plugins] npmRegistryUrl must be http/https, got "${parsed.protocol}", using default`);
+        return DEFAULT_NPM_REGISTRY;
+      }
+    } catch {
+      console.warn(`[plugins] Invalid npmRegistryUrl "${customRegistry}", using default`);
+      return DEFAULT_NPM_REGISTRY;
+    }
+    // Ensure trailing slash for consistency
+    return customRegistry.endsWith('/') ? customRegistry : customRegistry + '/';
+  }
+  return DEFAULT_NPM_REGISTRY;
+}
+
+/**
+ * Returns the list of allowed tarball hostnames, including the custom registry hostname if configured.
+ */
+export async function getAllowedTarballHostnames(): Promise<string[]> {
+  const settings = await services.settings.get();
+  const customRegistry = safeTrim(settings.npmRegistryUrl);
+  if (customRegistry) {
+    try {
+      const registryHostname = new URL(customRegistry).hostname;
+      if (!defaultAllowedTarballHostnames.includes(registryHostname)) {
+        return [...defaultAllowedTarballHostnames, registryHostname];
+      }
+    } catch {
+      // Invalid URL, just use defaults
+    }
+  }
+  return defaultAllowedTarballHostnames;
 }
 
 /**

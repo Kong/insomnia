@@ -1,9 +1,10 @@
+import type { Organization } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import { project, userSession } from '~/models';
-import { findPersonalOrganization, type Organization } from '~/models/organization';
-import type { Project } from '~/models/project';
+import type { Project } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
+import { findPersonalOrganization } from '~/models/organization';
 import { migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 import { AsyncTask, createFetcherSubmitHook } from '~/utils/router';
@@ -24,7 +25,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       projectId,
       asyncTaskList = [],
     } = (await request.json()) as SyncOrgsAndProjectsActionRequest;
-    const { id: sessionId, accountId } = await userSession.getOrCreate();
+    const { id: sessionId, accountId } = await services.userSession.getOrCreate();
 
     const taskPromiseList = [];
     if (asyncTaskList.includes(AsyncTask.SyncOrganization)) {
@@ -52,7 +53,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
     // When user switch to a new organization, there is no project in db cache, we need to redirect to the first project after sync project
     if (!projectId && asyncTaskList.includes(AsyncTask.SyncProjects)) {
-      const firstProject = await database.findOne<Project>(project.type, { parentId: organizationId });
+      const firstProject = await database.findOne<Project>(models.project.type, { parentId: organizationId });
       if (firstProject?._id) {
         return redirect(
           href('/organization/:organizationId/project/:projectId', {

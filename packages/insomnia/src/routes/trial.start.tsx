@@ -1,16 +1,13 @@
-import { userSession } from '~/models';
-import { insomniaFetch } from '~/ui/insomnia-fetch';
+import { startTrial } from 'insomnia-api';
+
+import { services } from '~/insomnia-data';
 import { syncCurrentPlan } from '~/ui/organization-utils';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/settings.update';
 
-interface StartResult {
-  success: boolean;
-}
-
 export async function clientAction(_args: Route.ClientActionArgs) {
-  const { id: sessionId, accountId } = await userSession.get();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (!sessionId || !accountId) {
     return {
@@ -19,11 +16,7 @@ export async function clientAction(_args: Route.ClientActionArgs) {
   }
 
   try {
-    const result = await insomniaFetch<StartResult>({
-      method: 'POST',
-      path: '/v1/trials/start',
-      sessionId,
-    });
+    const result = await startTrial({ sessionId });
     if (result.success) {
       await syncCurrentPlan(sessionId, accountId);
     }

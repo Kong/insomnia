@@ -4,13 +4,13 @@ import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-compo
 import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
+import type { AuthTypeOAuth2, McpRequest, Project } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
-import { type Project } from '~/models/project';
-import type { AuthTypeOAuth2 } from '~/models/request';
 import { _buildBearerHeader } from '~/network/authentication';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
 import { getBearerAuthHeader } from '~/network/bearer-auth/get-header';
-import { getOAuth2Token } from '~/network/o-auth-2/get-token';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
@@ -23,9 +23,9 @@ import { ModalHeader } from '~/ui/components/base/modal-header';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { Button } from '~/ui/components/themed-button';
+import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
+import { getDataFromKVPair } from '~/utils/environment-utils';
 
-import { getDataFromKVPair } from '../../../models/environment';
-import { MCP_TRANSPORT_TYPES, type McpRequest, TRANSPORT_TYPES } from '../../../models/mcp-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -42,7 +42,7 @@ interface ActionBarProps {
 }
 
 const getTransportLabel = (transportType: McpRequest['transportType']) =>
-  transportType === TRANSPORT_TYPES.HTTP ? 'HTTP' : 'STDIO';
+  transportType === models.mcpRequest.TRANSPORT_TYPES.HTTP ? 'HTTP' : 'STDIO';
 
 export const McpUrlActionBar = ({
   request,
@@ -63,6 +63,10 @@ export const McpUrlActionBar = ({
   const requestTransportType = request.transportType;
   const requestTransportTypeLabel = getTransportLabel(requestTransportType);
   const modalRef = useRef<MCPStdioAccessModalHandle>(null);
+  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
+  const gitVersion = useGitVCSVersion();
+  // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
+  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
 
   useLayoutEffect(() => {
     oneLineEditorRef.current?.focusEnd();
@@ -118,7 +122,7 @@ export const McpUrlActionBar = ({
           const { key, value } = authentication;
           headers.push({ name: key, value });
         } else if (authentication.type === 'oauth2') {
-          const oAuth2Token = await getOAuth2Token(request._id, authentication as AuthTypeOAuth2);
+          const oAuth2Token = await window.main.getOAuth2Token(request._id, authentication as AuthTypeOAuth2);
           if (oAuth2Token) {
             const token = oAuth2Token.accessToken;
             const authHeader = _buildBearerHeader(token, authentication.tokenPrefix);
@@ -156,7 +160,7 @@ export const McpUrlActionBar = ({
 
     const connectParams = await generateConnectParams();
 
-    if (connectParams.transportType === TRANSPORT_TYPES.STDIO) {
+    if (connectParams.transportType === models.mcpRequest.TRANSPORT_TYPES.STDIO) {
       const stdioAccess = await isAllowedToRunSTDIO(request, project, modalRef);
       if (!stdioAccess) {
         console.log('User denied STDIO access');
@@ -234,7 +238,7 @@ export const McpUrlActionBar = ({
           isDisabled={!isDisconnected}
         >
           <DropdownSection>
-            {MCP_TRANSPORT_TYPES.map(transportType => (
+            {models.mcpRequest.MCP_TRANSPORT_TYPES.map(transportType => (
               <DropdownItem key={transportType}>
                 <ItemContent
                   label={getTransportLabel(transportType)}
@@ -255,7 +259,8 @@ export const McpUrlActionBar = ({
       >
         <div className="box-border h-full w-full px-(--padding-md)">
           <OneLineEditor
-            id="websocket-url-bar"
+            id="mcp-url-bar"
+            key={uniqueKey}
             ref={oneLineEditorRef}
             onKeyDown={createKeybindingsHandler({
               Enter: () => handleSubmitRef.current(),

@@ -15,34 +15,40 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   Test:
     timeout-minutes: 20
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: write
       packages: read
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: package-lock.json
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@kong"
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
 
       - name: Install packages
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Lint
         run: npm run lint
+
+      - name: Check renderer Node import baseline
+        run: npm run check:renderer-node-imports
 
       - name: Type checks
         run: npm run type-check
@@ -50,20 +56,48 @@ jobs:
       - name: Unit Tests
         run: npm test
 
-      - name: Check Circular References
-        uses: actions/github-script@v7
+      - name: Checkout base branch (cycle comparison)
         if: github.event_name == 'pull_request' && always()
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: insomnia-base
+
+      - name: Setup Node (base branch tree)
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: insomnia-base/.nvmrc
+          cache: npm
+          cache-dependency-path: insomnia-base/package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
+
+      - name: Install packages (base branch tree)
+        if: github.event_name == 'pull_request' && always()
+        working-directory: insomnia-base
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+      - name: Check Circular References
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
             const path = require('path');
-            const { execSync } = require('child_process');
 
-            // Function to analyze circular references
-            async function analyzeCircularReferences() {
+            const workspaceRoot = process.env.GITHUB_WORKSPACE;
+            const prPackagesDir = path.join(workspaceRoot, 'packages');
+            const basePackagesDir = path.join(workspaceRoot, 'insomnia-base', 'packages');
+
+            async function analyzeCircularReferences(rootDir) {
               const madge = require('madge');
-              const res = await madge(process.cwd(), {
+              const res = await madge(rootDir, {
                 fileExtensions: ['ts', 'tsx'],
               });
               return res.circular();
@@ -74,10 +108,10 @@ jobs:
               const timestamp = new Date().toISOString();
               const diff = prCount - baseCount;
               const diffPercent = baseCount > 0 ? ((diff / baseCount) * 100).toFixed(2) : '0.00';
-              
+
               let status = '✅ PASSED';
               let statusEmoji = '✅';
-              
+
               if (diff > 0) {
                 status = '⚠️ WARNING';
                 statusEmoji = '⚠️';
@@ -88,17 +122,17 @@ jobs:
                 status = '✨ IMPROVED';
                 statusEmoji = '✨';
               }
-              
+
               // Find new and removed circular references
               const prCycleStrings = new Set(prCircularRefs.map(cycle => cycle.join(' -> ')));
               const baseCycleStrings = new Set(baseCircularRefs.map(cycle => cycle.join(' -> ')));
-              
+
               const newCycles = Array.from(prCycleStrings).filter(cycle => !baseCycleStrings.has(cycle)).sort();
               const removedCycles = Array.from(baseCycleStrings).filter(cycle => !prCycleStrings.has(cycle)).sort();
-              
+
               return `# ${statusEmoji} Circular References Report
 
-            **Generated at:** ${timestamp}  
+            **Generated at:** ${timestamp}
             **Status:** ${status}
 
             ## Summary
@@ -166,67 +200,25 @@ jobs:
             }
 
             try {
-              // Get base branch (the target branch of the PR)
               const baseBranch = context.payload.pull_request.base.ref;
               console.log(`Base branch (PR target): ${baseBranch}`);
-              
-              // Save current state
-              const currentBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
-              const hasUncommittedChanges = execSync('git status --porcelain').toString().trim().length > 0;
-              
-              console.log(`Current branch: ${currentBranch}`);
-              
-              // Stash any uncommitted changes
-              if (hasUncommittedChanges) {
-                console.log('Stashing uncommitted changes...');
-                execSync('git stash push -u -m "Temporary stash for circular reference check"');
-              }
-              
-              // Change to packages directory for analysis
-              process.chdir('packages');
-              
-              // Analyze current PR
-              console.log('Analyzing circular references in PR...');
-              const prCircularRefs = await analyzeCircularReferences();
+              console.log(`PR packages dir: ${prPackagesDir}`);
+              console.log(`Base packages dir: ${basePackagesDir}`);
+
+              console.log('Analyzing circular references in PR (merge) tree...');
+              const prCircularRefs = await analyzeCircularReferences(prPackagesDir);
               const prCount = prCircularRefs.length;
               console.log(`PR: Found ${prCount} circular references`);
-              
-              // Switch to base branch
-              console.log(`Switching to ${baseBranch} branch...`);
-              process.chdir('..');
-              execSync(`git fetch origin ${baseBranch}`);
-              execSync(`git checkout origin/${baseBranch}`);
-              
-              // Reinstall dependencies for base branch (in case package.json changed)
-              console.log('Installing dependencies for base branch...');
-              execSync('npm ci --quiet', { stdio: 'ignore' });
-              
-              // Analyze base branch
-              console.log(`Analyzing circular references in ${baseBranch}...`);
-              process.chdir('packages');
-              const baseCircularRefs = await analyzeCircularReferences();
+
+              console.log(`Analyzing circular references in ${baseBranch} tree...`);
+              const baseCircularRefs = await analyzeCircularReferences(basePackagesDir);
               const baseCount = baseCircularRefs.length;
               console.log(`Base: Found ${baseCount} circular references`);
-              
-              // Switch back to PR branch
-              console.log('Switching back to PR branch...');
-              process.chdir('..');
-              execSync(`git checkout ${currentBranch}`);
-              
-              // Restore stashed changes
-              if (hasUncommittedChanges) {
-                console.log('Restoring uncommitted changes...');
-                execSync('git stash pop');
-              }
-              
-              // Reinstall dependencies for PR branch
-              console.log('Restoring dependencies for PR branch...');
-              execSync('npm ci --quiet', { stdio: 'ignore' });
-              
+
               // Generate report
               const diff = prCount - baseCount;
               const markdownContent = generateMarkdownReport(prCircularRefs, baseCircularRefs, prCount, baseCount, baseBranch);
-              
+
               // Post PR comment
               if (context.eventName === 'pull_request') {
                 try {
@@ -235,13 +227,13 @@ jobs:
                     repo: context.repo.repo,
                     issue_number: context.issue.number,
                   });
-                  
-                  const botComment = comments.find(comment => 
-                    comment.user?.type === 'Bot' && 
+
+                  const botComment = comments.find(comment =>
+                    comment.user?.type === 'Bot' &&
                     comment.body?.includes('# ') &&
                     comment.body?.includes('Circular References Report')
                   );
-                  
+
                   if (botComment) {
                     await github.rest.issues.updateComment({
                       owner: context.repo.owner,
@@ -263,7 +255,7 @@ jobs:
                   console.error('Error posting PR comment:', error);
                 }
               }
-              
+
               // Log results but don't fail the build
               if (diff > 0) {
                 console.log(`⚠️ Warning: This PR introduces ${diff} new circular ${diff === 1 ? 'reference' : 'references'}. Base: ${baseCount}, PR: ${prCount}`);
@@ -272,7 +264,7 @@ jobs:
               } else {
                 console.log(`✅ No change in circular references (${prCount})`);
               }
-              
+
             } catch (error) {
               console.error('Error analyzing circular references:', error);
               core.setFailed('Failed to analyze circular references');

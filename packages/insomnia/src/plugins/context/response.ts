@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 
-import * as models from '../../models/index';
-import type { ResponseHeader } from '../../models/response';
+import type { ResponseHeader } from '~/insomnia-data';
+import { getBodyBuffer, getBodyStream } from '~/models/helpers/response-operations';
+
 
 interface MaybeResponse {
   parentId?: string;
@@ -48,11 +49,11 @@ export function init(response?: MaybeResponse) {
       },
 
       getBody() {
-        return models.response.getBodyBuffer(response);
+        return getBodyBuffer(response);
       },
 
       getBodyStream() {
-        return models.response.getBodyStream(response);
+        return getBodyStream(response);
       },
 
       setBody(body: Buffer) {
