@@ -518,6 +518,13 @@ class RepoFileWatcher {
         this.lastKnownGitFilePath.set(workspace._id, absPath);
         // Use Date.now() — always >= the actual mtime of the file just written, saves a stat() syscall
         this.lastSyncMtime.set(absPath, Date.now());
+
+        // Persist tracking state so the maps can be restored after a restart
+        const workspaceMeta = meta ?? (await services.workspaceMeta.getOrCreateByParentId(workspace._id));
+        await services.workspaceMeta.update(workspaceMeta, {
+          gitFileLastSyncHash: hash,
+          gitFileLastSyncTime: stat.mtimeMs,
+        });
       } catch (err) {
         console.warn('[repo-file-watcher] Could not flush workspace to disk:', workspace._id, err);
       }
@@ -703,7 +710,7 @@ class RepoFileWatcher {
     }
 
     await this.deleteOrphans(docs);
-    await this.upsertDocs(absPath, normalised, result.mtimeMs, docs);
+    await this.upsertDocs(absPath, normalised, result.mtimeMs, result.hash, docs);
 
     this.notifyRenderer();
   }
@@ -823,6 +830,7 @@ class RepoFileWatcher {
     absPath: string,
     normalised: string,
     syncTime: number,
+    hash: string,
     docs: NonNullable<ReturnType<typeof tryImportV5Data>['data']>,
   ): Promise<void> {
     const workspaceDoc = docs.find(models.workspace.isWorkspace) as Workspace | undefined;
@@ -837,6 +845,7 @@ class RepoFileWatcher {
           await services.workspaceMeta.update(workspaceMeta, {
             gitFilePath: this.toPosixRelPath(absPath),
             gitFileLastSyncTime: syncTime,
+            gitFileLastSyncHash: hash,
           });
           this.lastKnownGitFilePath.set(doc._id, normalised);
         }
@@ -1076,14 +1085,17 @@ class RepoFileWatcher {
   }
 
   /**
-   * Load existing workspace → gitFilePath mappings from the DB so rename
-   * detection works from the start.
+   * Load existing workspace → gitFilePath mappings from the DB and restore
+   * persisted tracking state (mtime + hash) so that the initial
+   * {@link importAllFiles} call can skip files that haven't changed since
+   * the last session.
    *
-   * Note: we intentionally do NOT pre-scan file mtimes here. The initial
-   * {@link importAllFiles} call in {@link create} populates both
-   * `lastSyncMtime` and `lastWrittenHash` as a side-effect of importing.
-   * Pre-scanning mtimes would cause `importAllFiles` to skip files it
-   * hasn't actually imported yet.
+   * Note: pre-seeding `lastWrittenHash` here is safe because
+   * `importAllFiles` uses `forceRead=true`, which bypasses the mtime
+   * fast-path but still runs the hash check in {@link readIfChanged}.
+   * Files whose content matches the persisted hash will be skipped,
+   * preventing unnecessary workspace re-imports (and modified-timestamp
+   * changes) on every app restart.
    */
   private async loadKnownGitFilePaths(): Promise<void> {
     const entries = await this.getWorkspacesWithMeta();
@@ -1094,6 +1106,12 @@ class RepoFileWatcher {
           continue;
         }
         this.lastKnownGitFilePath.set(workspace._id, absPath);
+        if (meta.gitFileLastSyncTime != null) {
+          this.lastSyncMtime.set(absPath, meta.gitFileLastSyncTime);
+        }
+        if (meta.gitFileLastSyncHash != null) {
+          this.lastWrittenHash.set(absPath, meta.gitFileLastSyncHash);
+        }
       }
     }
   }
