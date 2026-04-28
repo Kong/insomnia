@@ -73,6 +73,8 @@
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-virtual": "3.13.12",
     "@xmldom/xmldom": "^0.9.8",
+    "acorn": "^8.16.0",
+    "acorn-walk": "^8.3.5",
     "ajv": "^8.17.1",
     "apiconnect-wsdl": "2.0.36",
     "aws4": "^1.13.2",

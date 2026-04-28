@@ -93,6 +93,18 @@
       "builtin": "fs/promises"
     },
     {
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "buffer"
+    },
+    {
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "timers"
+    },
+    {
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "util"
+    },
+    {
       "importer": "src/templating/base-extension.ts",
       "builtin": "crypto"
     },
