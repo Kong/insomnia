@@ -235,6 +235,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         window.main.trackSegmentEvent({ event: SegmentEvent.organizationSwitched });
                         navigate(`/organization/${id}`);
                       }}
+                      currentPlan={currentPlan}
+                      isScratchpadWorkspace={!!isScratchpadWorkspace}
                     />
                   )}
 
