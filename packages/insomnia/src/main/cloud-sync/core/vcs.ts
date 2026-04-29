@@ -7,7 +7,7 @@ import path from 'node:path';
 import clone from 'clone';
 import { runVcsGraphQL } from 'insomnia-api';
 
-import { PLAYWRIGHT } from '~/common/constants';
+import { PLAYWRIGHT_TEST } from '~/common/constants';
 
 import * as crypt from '../../../account/crypt';
 import * as session from '../../../account/session';
@@ -1312,7 +1312,7 @@ export class VCS {
   async _getBackendProjectSymmetricKey() {
     const { privateKey, symmetricKey } = await this._assertSession();
 
-    if (PLAYWRIGHT) {
+    if (PLAYWRIGHT_TEST) {
       // use the session symmetric key in playwright tests
       return symmetricKey;
     }
