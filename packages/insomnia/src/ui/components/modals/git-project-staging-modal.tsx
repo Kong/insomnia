@@ -813,8 +813,8 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         ) : null}
       </form>
 
-      <div className="grid auto-rows-auto gap-2 overflow-y-auto">
-        <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
+      <div>
+        <div>
           <Heading className="group flex w-full shrink-0 items-center justify-between gap-2 py-1 font-semibold">
             <span className="flex-1">Staged changes</span>
             <TooltipTrigger>
@@ -840,7 +840,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               {changes.staged.length}
             </span>
           </Heading>
-          <div className="flex w-full flex-1 overflow-y-auto select-none">
+          <div className="mt-2 flex max-h-60 w-full overflow-y-auto select-none">
             <GridList
               className="w-full"
               aria-label="Staged changes"
@@ -900,7 +900,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             </GridList>
           </div>
         </div>
-        <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
+        <div>
           <Heading className="group flex w-full shrink-0 items-center justify-between py-1 font-semibold">
             <span>Unstaged changes</span>
             <div className="flex items-center gap-2">
@@ -959,7 +959,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               </span>
             </div>
           </Heading>
-          <div className="flex w-full flex-1 overflow-y-auto select-none">
+          <div className="mt-2 flex max-h-60 w-full overflow-y-auto select-none">
             <GridList
               aria-label="Unstaged changes"
               className="w-full"
@@ -1061,7 +1061,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         <p className="mb-3 text-sm text-(--color-font)">
           You can now browse Git Sync project files on your local file system and manage changes using your normal Git
           workflows.{' '}
-          <a href="https://insomnia.rest" className="underline">
+          <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
             Learn more ↗
           </a>
         </p>
@@ -1371,7 +1371,7 @@ const OriginalGitProjectStagingModal: FC<
                   </div>
                 )}
                 <div className="grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden">
-                  <div className="flex flex-1 flex-col gap-4 overflow-hidden p-2">
+                  <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-2">
                     {isGenerateCommitMessagesWithAIEnabled && (
                       <div className="flex flex-col gap-3 rounded-sm border border-solid border-(--hl-md) p-3">
                         <h3 className="font-semibold">
