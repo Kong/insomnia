@@ -96,6 +96,18 @@ describe('urlMatchesCertHost', () => {
       expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
     });
 
+    it('should return true if the request URL host matches a wildcard-prefixed certificate host without a dot separator', () => {
+      const requestUrl = 'https://my.example.org/some/resources?query=1';
+      const certificateHost = '*example.org';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
+
+    it('should return true if the request URL host exactly ends with the wildcard-prefixed certificate host', () => {
+      const requestUrl = 'https://example.org/some/resources?query=1';
+      const certificateHost = '*example.org';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
+
     it('should return false if the request URL host does not match the certificate host', () => {
       const requestUrl = 'https://my.example.com/some/resources?query=1';
       const certificateHost = 'https://*.example.org';
@@ -150,6 +162,78 @@ describe('urlMatchesCertHost', () => {
       const requestUrl = 'https://www.example.org/some/resources?query=1';
       const certificateHost = 'https://example.org?';
       expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(false);
+    });
+
+    it('should return false if the request URL is invalid', () => {
+      expect(urlMatchesCertHost('example.com', 'not-a-valid-url')).toBe(false);
+    });
+  });
+
+  describe('when using HTTP request URLs', () => {
+    it('should return true if the HTTP request URL matches the certificate host by hostname', () => {
+      const requestUrl = 'http://www.example.org/some/resources?query=1';
+      const certificateHost = 'www.example.org';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
+
+    it('should return true if the HTTP request URL with an explicit non-default port matches the certificate host', () => {
+      const requestUrl = 'http://www.example.org:8080/some/resources?query=1';
+      const certificateHost = 'www.example.org:8080';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
+
+    it('should return false if the HTTP request URL and the certificate host have different ports', () => {
+      const requestUrl = 'http://www.example.org:8080/some/resources?query=1';
+      const certificateHost = 'www.example.org:9090';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(false);
+    });
+
+    it('should return true if the HTTP request URL host matches a wildcard certificate host', () => {
+      const requestUrl = 'http://my.example.org/some/resources?query=1';
+      const certificateHost = '*.example.org';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
+
+    it('should return false if the HTTP request URL host does not match the certificate host', () => {
+      const requestUrl = 'http://www.example.org/some/resources?query=1';
+      const certificateHost = 'www.example.com';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(false);
+    });
+  });
+
+  describe('when using IPv4 addresses', () => {
+    it('should return true if the request URL and certificate host use the same IPv4 address', () => {
+      expect(urlMatchesCertHost('192.168.1.1', 'https://192.168.1.1/')).toBe(true);
+    });
+
+    it('should return true if the request URL and certificate host use the same IPv4 address and port', () => {
+      expect(urlMatchesCertHost('192.168.1.1:8443', 'https://192.168.1.1:8443/')).toBe(true);
+    });
+
+    it('should return false if the request URL and certificate host use different IPv4 addresses', () => {
+      expect(urlMatchesCertHost('192.168.1.1', 'https://192.168.1.2/')).toBe(false);
+    });
+
+    it('should return true if the certificate host uses a wildcard with an IPv4-like pattern', () => {
+      expect(urlMatchesCertHost('192.168.1.*', 'https://192.168.1.100/')).toBe(true);
+    });
+
+    it('should return false if the request URL has a different IPv4 subnet than the certificate wildcard', () => {
+      expect(urlMatchesCertHost('192.168.1.*', 'https://192.168.2.100/')).toBe(false);
+    });
+  });
+
+  describe('when using IPv6 addresses', () => {
+    it('should return true if the request URL and certificate host both use the same IPv6 address', () => {
+      expect(urlMatchesCertHost('[::1]', 'https://[::1]/')).toBe(true);
+    });
+
+    it('should return true if the request URL and certificate host both use the same IPv6 address and port', () => {
+      expect(urlMatchesCertHost('[::1]:8443', 'https://[::1]:8443/')).toBe(true);
+    });
+
+    it('should return false if the request URL and certificate host use different IPv6 addresses', () => {
+      expect(urlMatchesCertHost('[::1]', 'https://[::2]/')).toBe(false);
     });
   });
 });
