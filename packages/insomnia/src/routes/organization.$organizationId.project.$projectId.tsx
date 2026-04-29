@@ -12,7 +12,6 @@ import {
   getAllLocalFiles,
   getAllRemoteFiles,
   getProjectsWithGitRepositories,
-  type InsomniaFile,
 } from '~/common/project';
 import { models, services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
@@ -122,11 +121,11 @@ export function useProjectLoaderData() {
 }
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { organizationId, projectId } = useParams() as {
+  const { organizationId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
-  const { activeProject, activeProjectGitRepository, learningFeaturePromise, remoteFilesPromise } = loaderData;
+  const { activeProject, learningFeaturePromise } = loaderData;
 
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = reactUse.useLocalStorage(
@@ -136,7 +135,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const { storagePromise } = storageRuleFetcher.data || {};
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
-  const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
 
   const { features } = useOrganizationPermissions();
 

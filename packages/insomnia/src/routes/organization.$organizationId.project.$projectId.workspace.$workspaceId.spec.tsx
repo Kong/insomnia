@@ -156,12 +156,12 @@ const lintOptions = {
 
 const Component = ({ params }: Route.ComponentProps) => {
   const { organizationId, projectId, workspaceId } = params;
-  const { activeProject, activeCookieJar, caCertificate, clientCertificates, vcsVersion } = useWorkspaceLoaderData()!;
+  const { activeProject, vcsVersion } = useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
-  const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
+  const [_isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
 

@@ -19,8 +19,8 @@ import { useWorkspaceBreadcrumbs } from '~/ui/components/workspace/use-workspace
 export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: boolean }) {
   const { activeCookieJar, caCertificate, clientCertificates, activeWorkspace } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
-
   const breadcrumbs = useWorkspaceBreadcrumbs();
+
   const realBreadcrumbs = useMemo(() => {
     if (breadcrumbs.length > 4) {
       return [

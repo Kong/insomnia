@@ -82,13 +82,12 @@ const Component = () => {
     testSuiteId: string;
   };
 
-  const { activeProject, activeWorkspace, activeCookieJar, caCertificate, clientCertificates } =
-    useWorkspaceLoaderData()!;
+  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const tabNavigate = useTabNavigate();
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
-  const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
+  const [_isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
   const createUnitTestSuiteFetcher = useTestSuiteNewActionFetcher();
@@ -367,7 +366,7 @@ const Component = () => {
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)"
                       title={item.name}
                     >
-                      <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
+                      <span className="absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                       <Button slot="drag" className="hidden" />
                       <EditableInput
                         value={item.name}
