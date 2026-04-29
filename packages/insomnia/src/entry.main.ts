@@ -8,7 +8,6 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 
-import { getCurrentSessionId } from '~/account/session';
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import type { Project, RemoteProject, Stats } from '~/insomnia-data';
 import { database, initDatabase, initServices, services } from '~/insomnia-data';
@@ -43,6 +42,7 @@ import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
+
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
@@ -256,15 +256,6 @@ const _launchApp = async () => {
           window.focus();
         } else {
           window = windowUtils.createWindowsAndReturnMain();
-        }
-        // Block imports when not logged in
-        const isImportDeeplink = url.includes('://app/import');
-        const isLoggedIn = (await getCurrentSessionId()) ? true : false;
-        const shouldShowLoginPrompt = isImportDeeplink && !isLoggedIn;
-        if (shouldShowLoginPrompt) {
-          const title = encodeURIComponent('You must be logged in to open this link');
-          const message = encodeURIComponent('Please log in and try again.');
-          return window.webContents.send('shell:open', `insomnia://app/alert?title=${title}&message=${message}`);
         }
         return window.webContents.send('shell:open', url);
       };
