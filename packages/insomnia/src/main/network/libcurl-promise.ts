@@ -179,7 +179,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       }
 
       // NOTE: temporary workaround for testing mockbin api
-      if (process.env.PLAYWRIGHT) {
+      if (process.env.PLAYWRIGHT_TEST) {
         req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
       }
 

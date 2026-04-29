@@ -223,7 +223,7 @@ const _launchApp = async () => {
     }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
-  if (!process.env.PLAYWRIGHT) {
+  if (!process.env.PLAYWRIGHT_TEST) {
     // Deep linking logic - https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app
     const gotTheLock = app.requestSingleInstanceLock();
     if (!gotTheLock) {
