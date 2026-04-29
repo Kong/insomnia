@@ -11,10 +11,10 @@ import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import { HttpVersions } from '../../common/settings';
 import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
-import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
-import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
 import * as models from '../../models';
 import { getBodyBuffer } from '../../models/helpers/response-operations';
+import { _getAwsAuthHeaders } from '../../network/parse-header-strings';
+import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
 import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network';
 

@@ -41,7 +41,7 @@ describe('insomnia-sync', () => {
     const cancelConflict = vi.fn();
     const on = vi.fn((_channel, listener) => {
       listener(undefined, {
-        requestId: 'req_123',
+        handlerId: 'req_123',
         conflicts: [{ key: 'doc_1' }],
         labels: { ours: 'ours', theirs: 'theirs' },
       });
@@ -75,8 +75,8 @@ describe('insomnia-sync', () => {
     modalOptions.onResolveAll([{ key: 'doc_2' }]);
     modalOptions.onCancelUnresolved();
 
-    expect(resolveConflict).toHaveBeenCalledWith({ requestId: 'req_123', conflicts: [{ key: 'doc_2' }] });
-    expect(cancelConflict).toHaveBeenCalledWith({ requestId: 'req_123' });
+    expect(resolveConflict).toHaveBeenCalledWith({ handlerId: 'req_123', conflicts: [{ key: 'doc_2' }] });
+    expect(cancelConflict).toHaveBeenCalledWith({ handlerId: 'req_123' });
   });
 
   it('exports the renderer abort error class', async () => {

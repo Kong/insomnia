@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CONTENT_TYPE_FORM_DATA } from '../../common/constants';
-import { parseHeaderStrings } from '../../main/network/parse-header-strings';
+import { parseHeaderStrings } from '../parse-header-strings';
 
 describe('parseHeaderStrings', () => {
   it('should default with empty inputs', () => {

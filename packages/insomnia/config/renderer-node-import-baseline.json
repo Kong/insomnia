@@ -17,26 +17,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/main/importers/importers/openapi-3.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/main/importers/importers/openapi-3.ts",
-      "builtin": "url"
-    },
-    {
-      "importer": "src/main/secure-read-file.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/main/secure-read-file.ts",
-      "builtin": "os"
-    },
-    {
-      "importer": "src/main/secure-read-file.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/models/helpers/response-operations.ts",
       "builtin": "fs"
     },
@@ -51,18 +31,6 @@
     {
       "importer": "src/network/network.ts",
       "builtin": "path"
-    },
-    {
-      "importer": "src/network/o-auth-2/get-token.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/network/o-auth-2/get-token.ts",
-      "builtin": "querystring"
-    },
-    {
-      "importer": "src/network/o-auth-2/utils.ts",
-      "builtin": "crypto"
     },
     {
       "importer": "src/network/url-matches-cert-host.ts",

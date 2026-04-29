@@ -28,6 +28,12 @@ describe('urlMatchesCertHost', () => {
       expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
     });
 
+    it('should return true if the request URL uses an IPv4 host with an explicit port', () => {
+      const requestUrl = 'http://127.0.0.1:4010';
+      const certificateHost = 'http://127.0.0.1:4010';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
+
     it('should return false if the request URL and certificate host have different ports', () => {
       const requestUrl = 'https://www.example.org:1234/some/resources?query=1';
       const certificateHost = 'https://www.example.org:123';
@@ -62,6 +68,12 @@ describe('urlMatchesCertHost', () => {
       const requestUrl = 'https://www.example.org/some/resources?query=1';
       const certificateHost = 'https://www.example.org';
       expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
+
+    it('should return false if an IPv4 request URL and certificate host use different ports', () => {
+      const requestUrl = 'http://127.0.0.1:4010';
+      const certificateHost = 'http://127.0.0.1:4011';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(false);
     });
   });
 

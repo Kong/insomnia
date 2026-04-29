@@ -62,14 +62,14 @@ export interface SyncBridgeAPI extends SyncBridgeMethods {
     projectId: string;
     workspaceId: string;
   }>;
-  resolveConflict: (options: { requestId: string; conflicts: MergeConflict[] }) => void;
-  cancelConflict: (options: { requestId: string }) => void;
+  resolveConflict: (options: { handlerId: string; conflicts: MergeConflict[] }) => void;
+  cancelConflict: (options: { handlerId: string }) => void;
   on: (
     channel: 'sync.merge-conflicts',
     listener: (
       event: IpcRendererEvent,
       options: {
-        requestId: string;
+        handlerId: string;
         conflicts: MergeConflict[];
         labels: { ours: string; theirs: string };
       },
@@ -86,17 +86,17 @@ export const registerSyncHandlers = () => {
     return pullRemoteBackendProjectWithSingleton(event.sender, options);
   });
 
-  ipcMainOn('sync.resolveConflict', (event, options: { requestId: string; conflicts: MergeConflict[] }) => {
+  ipcMainOn('sync.resolveConflict', (event, options: { handlerId: string; conflicts: MergeConflict[] }) => {
     resolvePendingSyncConflict({
-      requestId: options.requestId,
+      handlerId: options.handlerId,
       sender: event.sender,
       conflicts: options.conflicts,
     });
   });
 
-  ipcMainOn('sync.cancelConflict', (event, options: { requestId: string }) => {
+  ipcMainOn('sync.cancelConflict', (event, options: { handlerId: string }) => {
     cancelPendingSyncConflict({
-      requestId: options.requestId,
+      handlerId: options.handlerId,
       sender: event.sender,
     });
   });

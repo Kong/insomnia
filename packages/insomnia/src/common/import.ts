@@ -17,11 +17,9 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { insecureReadFile } from '~/main/secure-read-file';
 
 import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
-import { pathWithParamsAsPathParameters } from '../main/importers/importers/openapi-3';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import * as models from '../models/index';
 import { type AllTypes, type BaseModel, getModel } from '../models/index';
@@ -31,6 +29,7 @@ import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
+import { pathWithParamsAsPathParameters } from './path-with-params';
 
 const { isRequest } = models.request;
 const { isApiSpec } = models.apiSpec;
@@ -93,8 +92,12 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    // allow reading the file as it is chosen by user
-    return insecureReadFile(path);
+    const readFileProcessFork = async (path: string) =>
+      process.type === 'renderer'
+        ? window.main.insecureReadFile({ path })
+        : (await import('../main/secure-read-file')).insecureReadFile(path);
+
+    return readFileProcessFork(path);
   }
   // Treat everything else as raw text
   const content = decodeURIComponent(uri);
@@ -204,9 +207,9 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          const processFork =
+          const convertProcessFork =
             process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
-          result = (await processFork(importEntry)) as unknown as ConvertResult;
+          result = (await convertProcessFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
         if (v5Error) {

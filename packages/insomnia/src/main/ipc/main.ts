@@ -100,6 +100,17 @@ const writeResponseBodyToFile = async (
   _: unknown,
   options: { sourcePath: string; destinationPath: string; bodyCompression?: 'zip' | null },
 ) => {
+  // Validate sourcePath is within the expected responses directory to prevent a
+  // compromised renderer from using this handler to read arbitrary files on disk.
+  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
+  const allowedResponsesDir = path.join(userdataDirectory, 'responses');
+  const resolvedSource = path.resolve(options.sourcePath);
+  if (!resolvedSource.startsWith(allowedResponsesDir + path.sep) || !resolvedSource.endsWith('.response')) {
+    throw new Error(
+      'writeResponseBodyToFile: sourcePath is outside the allowed responses directory or does not end in .response',
+    );
+  }
+
   try {
     const dir = path.dirname(options.destinationPath);
     await fs.promises.mkdir(dir, { recursive: true });
