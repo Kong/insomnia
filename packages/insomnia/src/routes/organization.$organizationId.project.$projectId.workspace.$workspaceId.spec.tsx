@@ -27,7 +27,7 @@ import YAML from 'yaml';
 
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { debounce, isNotNullOrUndefined } from '~/common/misc';
+import { debounce } from '~/common/misc';
 import { services } from '~/insomnia-data';
 import * as models from '~/models/index';
 import { isScratchpadOrganizationId } from '~/models/organization';
@@ -41,8 +41,6 @@ import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codem
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
-import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
-import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showError } from '~/ui/components/modals';
@@ -931,7 +929,6 @@ const Component = ({ params }: Route.ComponentProps) => {
               </div>
             )}
           </div>
-          <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
           {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}

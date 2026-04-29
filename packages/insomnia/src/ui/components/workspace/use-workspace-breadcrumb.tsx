@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 
+import { models } from '~/insomnia-data';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
@@ -8,11 +9,12 @@ import type { PaneBreadcrumb } from '~/ui/components/pane-header';
 import { ResourceIcon } from '~/ui/components/workspace/resource-icon';
 import { buildResourceUrl } from '~/ui/hooks/use-insomnia-navigation';
 
-export function useWorkspaceBreadcrumbs({ isMcp }: { isMcp: boolean }) {
+export function useWorkspaceBreadcrumbs() {
   const { activeWorkspace, activeProject, collection } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
   const { organizationId } = useParams();
+  const isMcp = activeWorkspace && models.workspace.isMcp(activeWorkspace);
 
   const resourcesById = useMemo(() => {
     const map = new Map<string, (typeof collection)[number]['doc']>();
@@ -90,7 +92,7 @@ export function useWorkspaceBreadcrumbs({ isMcp }: { isMcp: boolean }) {
     }
 
     return crumbs;
-  }, [activeProject, activeWorkspace, ancestors, activeRequest, activeRequestGroup, organizationId]);
+  }, [activeProject, activeWorkspace, ancestors, activeRequest, activeRequestGroup, organizationId, isMcp]);
 
   return breadcrumbs;
 }

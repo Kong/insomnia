@@ -48,7 +48,6 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
   });
 
   const isMcp = activeWorkspace && models.workspace.isMcp(activeWorkspace);
-  const breadcrumbs = useWorkspaceBreadcrumbs({ isMcp });
 
   const caStatus = !isMcp
     ? null

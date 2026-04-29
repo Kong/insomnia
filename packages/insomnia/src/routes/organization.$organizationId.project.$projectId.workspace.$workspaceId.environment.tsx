@@ -470,7 +470,6 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
             );
           }}
         </GridList>
-        <WorkspaceSyncDropdown />
       </Panel>
       <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
       <Panel id="pane-one" className="pane-one theme--pane flex flex-col">

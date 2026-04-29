@@ -17,11 +17,9 @@ import {
 import { models, services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
-import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
-import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import { ProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
+import { SyncBar } from '~/ui/components/sidebar/sync-bar';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
@@ -185,17 +183,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 </a>
               </div>
             )}
-            {activeProject && models.project.isGitProject(activeProject) && (
-              <GitProjectSyncDropdown
-                key={activeProjectGitRepository?._id}
-                gitRepository={activeProjectGitRepository}
-                activeProject={activeProject}
-              />
-            )}
-            {activeProject &&
-              models.project.isLocalProject(activeProject) &&
-              !models.project.isGitProject(activeProject) && <LocalProjectBar />}
-            {activeProject && models.project.isRemoteProject(activeProject) && <CloudSyncProjectBar />}
+            <SyncBar />
           </div>
         </Panel>
         <PanelResizeHandle
