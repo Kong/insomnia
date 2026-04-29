@@ -22,20 +22,24 @@ export const WorkspaceSyncDropdown: FC = () => {
   }
 
   const isLocalProject =
-    !models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId && !models.project.isGitProject(activeProject);
+    !models.project.isRemoteProject(activeProject) &&
+    !activeWorkspaceMeta?.gitRepositoryId &&
+    !models.project.isGitProject(activeProject);
 
   if (isLocalProject) {
     return <LocalProjectBar />;
   }
 
-  const shouldShowCloudSyncDropdown = models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId;
+  const shouldShowCloudSyncDropdown =
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId;
 
   if (shouldShowCloudSyncDropdown) {
     return <SyncDropdown key={activeWorkspace?._id} workspace={activeWorkspace} project={activeProject} />;
   }
 
   const shouldShowGitSyncDropdown =
-    features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !models.project.isRemoteProject(activeProject));
+    features.gitSync.enabled &&
+    (activeWorkspaceMeta?.gitRepositoryId || !models.project.isRemoteProject(activeProject));
   if (shouldShowGitSyncDropdown) {
     if (models.project.isGitProject(activeProject)) {
       return (

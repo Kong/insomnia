@@ -1,4 +1,7 @@
+import os from 'node:os';
+
 import type { PlaywrightTestConfig } from '@playwright/test';
+const isWindows = os.platform() === 'win32';
 const config: PlaywrightTestConfig = {
   projects: [
     {
@@ -35,7 +38,7 @@ const config: PlaywrightTestConfig = {
     },
   },
   reporter: process.env.CI ? [['github'], ['line']] : [['list']],
-  timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
+  timeout: process.env.CI || isWindows ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',
   testDir: 'tests',

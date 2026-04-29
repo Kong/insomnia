@@ -8,6 +8,9 @@ export enum SegmentEvent {
   importStarted = 'Import Started',
   importScanned = 'Import Scanned',
   importCompleted = 'Import Completed',
+  importLoginRequired = 'Import Login Required',
+  importResumedAfterLogin = 'Import Resumed After Login',
+  importedRequestFirstSend = 'Imported Request First Send',
   documentCreate = 'Document Created',
   mockCreateModalOpened = 'Mock Server Create Modal Opened',
   mockCreate = 'Mock Created',
@@ -160,4 +163,29 @@ export function trackOnceDaily(event: SegmentEvent, properties?: Record<string, 
   }
   window.main.trackSegmentEvent({ event, properties });
   markTrackedToday(event);
+}
+
+export interface ImportAttribution {
+  importSource?: string;
+  importSourceUrl?: string;
+}
+
+export const PENDING_IMPORT_ATTRIBUTION_KEY = 'pendingImportAttribution';
+
+export const importAttributionKey = (requestId: string): string => `importAttribution:request:${requestId}`;
+
+export function readPendingImportAttribution(): ImportAttribution {
+  try {
+    const raw = window.sessionStorage.getItem(PENDING_IMPORT_ATTRIBUTION_KEY);
+    return raw ? (JSON.parse(raw) as ImportAttribution) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function trackImportEvent(event: SegmentEvent, properties: Record<string, unknown> = {}): void {
+  window.main.trackSegmentEvent({
+    event,
+    properties: { ...readPendingImportAttribution(), ...properties },
+  });
 }

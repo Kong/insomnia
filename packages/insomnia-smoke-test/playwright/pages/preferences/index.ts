@@ -1,25 +1,30 @@
 import type { ElectronApplication, Locator, Page } from '@playwright/test';
 
+import { PreferencesCredentialsTab } from './credentials-tab';
 import { PreferencesDataTab } from './data-tab';
 
-type PreferencesTab = 'Data' | 'General' | 'Themes' | 'Plugins' | 'Other';
+type PreferencesTab = 'Data' | 'General' | 'Themes' | 'Credentials' | 'Plugins' | 'Other';
 
 /**
  * Page Object for **Insomnia Preferences** modal.
  *
  * Composes preference tabs:
  * - Data tab (import/export)
+ * - Credentials tab (Git credentials management)
  * - Other tabs (themes, plugins, etc.) can be added as needed
  */
 export class PreferencesPage {
   /** Data tab (import/export functionality). */
   readonly dataTab: PreferencesDataTab;
+  /** Credentials tab (Git credentials management). */
+  readonly credentialsTab: PreferencesCredentialsTab;
 
   constructor(
     readonly page: Page,
     readonly app: ElectronApplication,
   ) {
     this.dataTab = new PreferencesDataTab(page, app);
+    this.credentialsTab = new PreferencesCredentialsTab(page, app);
   }
 
   /** The root preferences dialog. */
@@ -43,7 +48,7 @@ export class PreferencesPage {
    * Closes the preferences modal.
    */
   async closePreferences(): Promise<void> {
-    await this.page.locator('.app').press('Escape');
+    await this.page.getByRole('button', { name: 'Modal Close Button' }).click();
     await this.root.waitFor({ state: 'hidden' });
   }
 }
