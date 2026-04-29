@@ -28,8 +28,7 @@ Prerequisites:
 
 To run all tests:
 
-- In one terminal run: `npm run watch:app` OR `npm run dev`
-- In another terminal run: `npm run test:smoke:dev`
+- Run `npm run test:smoke:dev`
 
 To run single tests:
 
@@ -43,7 +42,6 @@ To run single tests:
 In order to run/debug tests directly from VS Code:
 
 - Install the [Playwright extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).
-- With the extension installed, run on terminal `npm run watch:app`.
 
 You can trigger tests from the `Testing` tab, or within the test files clicking the run button.
 
