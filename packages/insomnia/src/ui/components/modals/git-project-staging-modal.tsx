@@ -1061,7 +1061,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         <p className="mb-3 text-sm text-(--color-font)">
           You can now browse Git Sync project files on your local file system and manage changes using your normal Git
           workflows.{' '}
-          <a href="https://insomnia.rest" className="underline">
+          <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
             Learn more ↗
           </a>
         </p>

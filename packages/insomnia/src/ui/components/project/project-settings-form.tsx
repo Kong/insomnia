@@ -319,7 +319,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </Label>
                 <div className="text-xs text-(--hl-xl)">
                   Can be used to manage file changes with git.{' '}
-                  <a href="https://insomnia.rest" className="underline">
+                  <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
                     Learn more ↗
                   </a>
                 </div>
