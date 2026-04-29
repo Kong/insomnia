@@ -92,7 +92,7 @@ export function useWorkspaceBreadcrumbs() {
     }
 
     return crumbs;
-  }, [activeProject, activeWorkspace, ancestors, activeRequest, activeRequestGroup, organizationId]);
+  }, [activeProject, activeWorkspace, ancestors, activeRequest, activeRequestGroup, organizationId, isMcp]);
 
   return breadcrumbs;
 }

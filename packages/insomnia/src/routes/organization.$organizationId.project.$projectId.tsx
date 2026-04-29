@@ -17,9 +17,6 @@ import {
 import { models, services } from '~/insomnia-data';
 import { sortProjects } from '~/models/helpers/project';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
-import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
-import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import { ProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';

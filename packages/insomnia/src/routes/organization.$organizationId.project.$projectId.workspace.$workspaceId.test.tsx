@@ -19,7 +19,6 @@ import { NavLink, Route as RouteComponent, Routes, useFetchers, useLoaderData, u
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { database } from '~/common/database';
-import { isNotNullOrUndefined } from '~/common/misc';
 import type { UnitTestSuite } from '~/insomnia-data';
 import * as models from '~/models';
 import { useRootLoaderData } from '~/root';
@@ -30,9 +29,7 @@ import { useTestSuiteUpdateActionFetcher } from '~/routes/organization.$organiza
 import { useTestSuiteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.new';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
-import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
-import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
