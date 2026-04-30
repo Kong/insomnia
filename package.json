@@ -77,10 +77,13 @@
     "ajv-draft-04": {
       "ajv": "$ajv"
     },
-    "lodash@<=4.18.1": "4.18.1"
+    "jshint": {
+      "lodash": "4.18.1"
+    }
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "3.2.2",
-    "ajv": "^8.17.1"
+    "ajv": "^8.17.1",
+    "jshint": "^2.13.6"
   }
 }

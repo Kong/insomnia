@@ -1,3 +1,7 @@
+import { toBinary } from '@bufbuild/protobuf';
+import { FileDescriptorSetSchema } from '@bufbuild/protobuf/wkt';
+import { Code, ConnectError } from '@connectrpc/connect';
+import { createConnectTransport } from '@connectrpc/connect-node';
 import {
   type Call,
   ChannelCredentials,
@@ -113,43 +117,34 @@ interface MethodDefs {
   example?: Record<string, any>;
 }
 
+
 const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflectionApi']): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
+  const transport = createConnectTransport({
+    baseUrl: url,
+    httpVersion: '1.1',
+  });
   const headers: HeadersInit = {
     'User-Agent': `insomnia/${version}`,
-    'Content-Type': 'application/json',
     ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
   };
   try {
-    const response = await fetch(`${url}/buf.reflect.v1beta1.FileDescriptorSetService/GetFileDescriptorSet`, {
-      method: 'POST',
+    const response = await (transport as any).unary(
+      { kind: 'rpc', I: {}, O: {} },
+      undefined,
+      30_000,
       headers,
-      body: JSON.stringify({ module }),
-    });
+      { module },
+    );
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Invalid reflection server api key');
-      }
-      if (response.status === 404) {
-        throw new Error(
-          "The reflection server api key doesn't have access to the module or the module does not exists",
-        );
-      }
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json() as any;
-    const methodDefs: MethodDefs[] = [];
-
-    if (!data.fileDescriptorSet) {
+    const fileDescriptorSet = (response as any).message?.fileDescriptorSet;
+    if (!fileDescriptorSet) {
       return [];
     }
-
-    // fileDescriptorSet is base64 encoded in the JSON response
-    const binaryData = Buffer.from(data.fileDescriptorSet, 'base64');
-    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(binaryData);
-
+    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
+      Buffer.from(toBinary(FileDescriptorSetSchema, fileDescriptorSet)),
+    );
+    const methodDefs: MethodDefs[] = [];
     for (const definition of Object.values(packageDefinition)) {
       const serviceDefinition = asServiceDefinition(definition);
       if (serviceDefinition === null) {
@@ -160,10 +155,20 @@ const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflec
     }
     return methodDefs;
   } catch (error) {
-    if (error instanceof Error) {
-      throw error;
+    const connectError = ConnectError.from(error);
+    switch (connectError.code) {
+      case Code.Unauthenticated: {
+        throw new Error('Invalid reflection server api key');
+      }
+      case Code.NotFound: {
+        throw new Error(
+          "The reflection server api key doesn't have access to the module or the module does not exists",
+        );
+      }
+      default: {
+        throw error;
+      }
     }
-    throw new Error(`Failed to fetch from reflection server: ${String(error)}`);
   }
 };
 const getMethodsFromReflection = async (
