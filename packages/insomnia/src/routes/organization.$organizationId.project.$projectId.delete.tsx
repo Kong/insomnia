@@ -4,6 +4,7 @@ import { href, redirect } from 'react-router';
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import { services } from '~/insomnia-data';
+import * as models from '~/models';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
@@ -32,8 +33,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       });
     }
 
-    if (project.gitRepositoryId) {
-      const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+    if (models.project.isConnectedGitProject(project)) {
+      const effectiveRepoId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
+      const gitRepository = effectiveRepoId ? await services.gitRepository.getById(effectiveRepoId) : null;
       gitRepository && (await services.gitRepository.remove(gitRepository));
     }
 

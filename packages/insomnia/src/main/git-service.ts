@@ -218,12 +218,10 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   invariant(projectId, 'Project ID is required');
   const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
-  invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
-  invariant(
-    project.gitRepositoryId && !models.project.isEmptyGitProject(project),
-    'Project is not linked to a git repository',
-  );
-  const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+  invariant(models.project.isConnectedGitProject(project), 'Project is not linked to a git repository');
+  const repoId = models.project.getEffectiveRepoId(project);
+  invariant(repoId, 'Project is not linked to a git repository');
+  const gitRepository = await services.gitRepository.getById(repoId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
 }
@@ -293,22 +291,18 @@ export async function getProjectGitFileIssues({
   gitRepositoryId,
 }: GetProjectGitFileIssuesOptions): Promise<WorkspaceFileIssue[]> {
   const project = await services.project.getById(projectId);
-  if (
-    !project ||
-    !models.project.isGitProject(project) ||
-    !project.gitRepositoryId ||
-    models.project.isEmptyGitProject(project)
-  ) {
+  if (!project || !models.project.isConnectedGitProject(project)) {
     return [];
   }
 
-  if (gitRepositoryId && gitRepositoryId !== project.gitRepositoryId) {
+  const effectiveRepoId = models.project.getEffectiveRepoId(project);
+  if (gitRepositoryId && gitRepositoryId !== effectiveRepoId) {
     return [];
   }
 
   return mapWorkspaceFileIssues({
-    issues: repoFileWatcherRegistry.getProblems(project.gitRepositoryId),
-    repoId: project.gitRepositoryId,
+    issues: repoFileWatcherRegistry.getProblems(effectiveRepoId!),
+    repoId: effectiveRepoId!,
     metas: await getProjectWorkspacesWithMeta(projectId),
     workspaceId,
   });
@@ -1168,7 +1162,7 @@ export const cloneGitRepoAction = async ({
 
           await services.project.update(project, {
             remoteId: null,
-            gitRepositoryId: gitRepository._id,
+            gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
           });
 
           return project;
@@ -1177,7 +1171,7 @@ export const cloneGitRepoAction = async ({
         const project = await services.project.create({
           name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
           parentId: organizationId,
-          gitRepositoryId: gitRepository._id,
+          gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
         });
 
         return project;
@@ -1483,7 +1477,8 @@ export const updateGitRepoAction = async ({
     let gitRepository: GitRepository | undefined;
 
     if (gitRepositoryId && gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID) {
-      gitRepository = await services.gitRepository.getById(gitRepositoryId);
+      const effectiveId = models.project.decodeRepoId(gitRepositoryId);
+      gitRepository = await services.gitRepository.getById(effectiveId);
       invariant(gitRepository, 'GitRepository not found');
     } else {
       const newRepo: Partial<GitRepository> = {
@@ -1505,7 +1500,7 @@ export const updateGitRepoAction = async ({
       const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       await services.project.update(project, {
-        gitRepositoryId: gitRepository._id,
+        gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
       });
     }
 
@@ -2898,14 +2893,12 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   const failedProjects: { id: string; name: string }[] = [];
 
   const allProjects = await services.project.all();
-  const gitProjects = allProjects.filter(
-    (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
-  );
+  const gitProjects = allProjects.filter((p): p is GitProject => models.project.isConnectedGitProject(p));
 
   if (gitProjects.length === 0) return { logs, failedProjects };
 
   // Batch-fetch all git repositories in one query instead of N individual lookups.
-  const repoIds = gitProjects.map(p => p.gitRepositoryId);
+  const repoIds = gitProjects.map(p => models.project.getEffectiveRepoId(p)).filter(Boolean) as string[];
   const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
     _id: { $in: repoIds },
   });
@@ -2922,7 +2915,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
 
   await Promise.all(
     gitProjects.map(async project => {
-      const gitRepository = repoById.get(project.gitRepositoryId);
+      const gitRepository = repoById.get(models.project.getEffectiveRepoId(project)!);
       if (!gitRepository) return;
 
       const repoId = gitRepository._id;
@@ -2950,15 +2943,16 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
       logs.push(`${ts()} [INFO] ["${name}"] Converting to local project`);
       try {
         const project = await services.project.getById(id);
-        if (!project || !project.gitRepositoryId) {
+        if (!project || !models.project.isConnectedGitProject(project)) {
           logs.push(`${ts()} [WARN] ["${name}"] Project not found or already local — skipping`);
           return;
         }
 
-        const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+        const effectiveRepoId = models.project.getEffectiveRepoId(project as GitProject);
+        const gitRepository = effectiveRepoId ? await services.gitRepository.getById(effectiveRepoId) : null;
         if (gitRepository) {
           await services.gitRepository.remove(gitRepository);
-          logs.push(`${ts()} [INFO] ["${name}"] Removed git repository ${project.gitRepositoryId}`);
+          logs.push(`${ts()} [INFO] ["${name}"] Removed git repository ${effectiveRepoId}`);
         }
 
         await services.project.update(project, { name, gitRepositoryId: null });
