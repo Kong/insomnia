@@ -103,8 +103,8 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
   const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
-  const gitRepositoryId = models.project.isGitProject(activeProject)
-    ? activeProject.gitRepositoryId
+  const gitRepositoryId = models.project.isConnectedGitProject(activeProject)
+    ? models.project.getEffectiveRepoId(activeProject)
     : activeWorkspaceMeta.gitRepositoryId;
   const gitRepository = await services.gitRepository.getById(gitRepositoryId || '');
 
