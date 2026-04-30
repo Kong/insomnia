@@ -19,7 +19,7 @@ const viteServer: PlaywrightTestConfig['webServer'] = {
   cwd: '../../',
   command: 'npm run watch:app',
   url: 'http://localhost:3334',
-  timeout: 15 * 1000,
+  timeout: 120 * 1000,
   reuseExistingServer: !process.env.CI,
   stdout: 'pipe',
   stderr: 'pipe',
