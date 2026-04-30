@@ -50,9 +50,12 @@ DEBUG=pw:browser npm run test:smoke:dev     # Insomnia console logs
 DEBUG=pw:WebServer npm run test:smoke:dev   # Web server logs
 ```
 
-## Traces
+## Traces and error context
 
-Traces are written to `packages/insomnia-smoke-test/traces/` on failure.
+On failure, two artifacts are written under `packages/insomnia-smoke-test/traces/<test-name>/`:
+
+- **`error-context.md`** — error details, ARIA page snapshot at point of failure, and annotated test source. Read this first.
+- **`trace.zip`** — full Playwright trace (network, screenshots, DOM snapshots).
 
 Open a trace:
 
