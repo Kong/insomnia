@@ -43,9 +43,9 @@
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
     "@apidevtools/swagger-parser": "10.1.1",
-    "@bufbuild/protobuf": "^1.10.0",
-    "@connectrpc/connect": "^1.6.1",
-    "@connectrpc/connect-node": "^1.6.1",
+    "@bufbuild/protobuf": "^2.2.0",
+    "@connectrpc/connect": "^2.0.0",
+    "@connectrpc/connect-node": "^2.0.0",
     "@customerio/cdp-analytics-browser": "^0.3.9",
     "@faker-js/faker": "9.7.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
