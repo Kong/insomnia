@@ -117,16 +117,16 @@ export const useSidebarDragAndDrop = ({
         return;
       }
       const isBefore = dropPosition === 'before';
-      const dropedKey = key.toString();
+      const droppedKey = key.toString();
 
       const [draggedKey] = event.keys;
       const draggedItem = getCollectionItemByKey(draggedKey);
-      const targetItem = getCollectionItemByKey(dropedKey);
-      const realTargetItem = isBefore ? flatItemsById.get(dropedKey)?.[1] : targetItem;
+      const targetItem = getCollectionItemByKey(droppedKey);
+      const realTargetItem = isBefore ? flatItemsById.get(droppedKey)?.[1] : targetItem;
       if (
         !draggedItem ||
         !targetItem ||
-        !canDrop(draggedItem, targetItem, event.target, flatItemsById.get(dropedKey)?.[1] || null)
+        !canDrop(draggedItem, targetItem, event.target, flatItemsById.get(droppedKey)?.[1] || null)
       ) {
         return;
       }
@@ -220,6 +220,8 @@ export const useSidebarDragAndDrop = ({
           const draggedItem = getCollectionItemByKey(draggingCollectionItemIdRef.current);
           const targetItem = getCollectionItemByKey(target.key);
           if (
+            draggedItem == null ||
+            targetItem == null ||
             !canDrop(
               draggedItem as FlatItem,
               targetItem as FlatItem,
@@ -270,8 +272,8 @@ export const useSidebarDragAndDrop = ({
       ...collectionDragAndDrop.dragAndDropHooks,
       useDraggableItem(props, state) {
         const draggableItem = originalUseDraggableItem(props, state);
-        const isDraggable =
-          models.workspace.isWorkspaceId(props.key.toString()) || flatItemsById.has(props.key.toString());
+        const flatItem = flatItemsById.get(props.key.toString())?.[0];
+        const isDraggable = ['collectionChild', 'workspace'].includes(flatItem?.kind || '');
 
         if (!isDraggable) {
           return {

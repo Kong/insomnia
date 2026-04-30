@@ -28,9 +28,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   if (models.workspace.isWorkspaceId(id)) {
     const item = await services.workspace.getById(id);
     const targetItem = await services.project.getById(targetId);
-    if (!item || !targetItem) {
-      throw new Error('Item or target item not found');
-    }
+    invariant(item, 'Drag item not found');
+    invariant(targetItem, 'Target item not found');
     await services.workspace.update(item, {
       parentId: targetItem._id,
     });
@@ -41,9 +40,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   if (models.workspace.isWorkspaceId(targetId)) {
     const targetItem = await services.workspace.getById(targetId);
     const item = await getCollectionItem(id);
-    if (!item || !targetItem) {
-      throw new Error('Item or target item not found');
-    }
+    invariant(item, 'Drag item not found');
+    invariant(targetItem, 'Target item not found');
     const parentId = targetItem._id;
     await (isRequestGroup(item)
       ? services.requestGroup.update(item, { parentId, metaSortKey })
