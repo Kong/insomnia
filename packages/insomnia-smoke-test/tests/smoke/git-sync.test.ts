@@ -6,12 +6,19 @@ import { test } from '../../playwright/test';
 test.describe('Git Sync', () => {
   test.slow();
 
-  // Creates a git sync project, opens the Branches modal, creates "branch1",
-  // and verifies the active branch switches to branch1.
-  test('Create new branch and switch to it', async ({ insomnia, page }) => {
+  test.beforeEach(async ({ insomnia, request }) => {
+    await request.post('http://127.0.0.1:4010/v1/test-utils/git/setup');
     await addAccessTokenGitCredential(insomnia);
     await insomnia.projectPage.createGitSyncProject();
+  });
 
+  test.afterEach(async ({ request }) => {
+    await request.delete('http://127.0.0.1:4010/v1/test-utils/git/setup');
+  });
+
+  // Creates a git sync project, opens the Branches modal, creates "branch1",
+  // and verifies the active branch switches to branch1.
+  test('Create new branch and switch to it', async ({ page }) => {
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Branches' }).click();
     await page.getByRole('textbox', { name: 'New branch name:' }).click();
@@ -22,10 +29,7 @@ test.describe('Git Sync', () => {
 
   // Creates a collection to produce an unstaged change, stages it, commits with message "1",
   // then opens History and verifies the commit appears in the log.
-  test('Commit and check history', async ({ insomnia, page }) => {
-    await addAccessTokenGitCredential(insomnia);
-    await insomnia.projectPage.createGitSyncProject();
-
+  test('Commit and check history', async ({ page }) => {
     await page.getByRole('button', { name: 'New request collection' }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
@@ -50,13 +54,7 @@ test.describe('Git Sync', () => {
 
   // Creates branch1, commits a new collection on it, switches back to master,
   // merges branch1 into master, and verifies the collection is visible on master.
-  test('Merge branch and verify changes on the other branch has been merged into current branch', async ({
-    insomnia,
-    page,
-  }) => {
-    await addAccessTokenGitCredential(insomnia);
-    await insomnia.projectPage.createGitSyncProject();
-
+  test('Merge branch and verify changes on the other branch has been merged into current branch', async ({ page }) => {
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Branches' }).click();
     await page.getByRole('textbox', { name: 'New branch name:' }).click();
@@ -94,10 +92,7 @@ test.describe('Git Sync', () => {
 
   // Creates a collection, commits it, then pushes to the remote git server.
   // Verifies the "Push completed" toast appears, confirming a successful push.
-  test('Push committed changes to remote', async ({ insomnia, page }) => {
-    await addAccessTokenGitCredential(insomnia);
-    await insomnia.projectPage.createGitSyncProject();
-
+  test('Push committed changes to remote', async ({ page }) => {
     await page.getByRole('button', { name: 'New request collection' }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
@@ -121,10 +116,7 @@ test.describe('Git Sync', () => {
 
   // Creates "branch-to-delete", checks out master, then deletes the branch via the
   // two-step PromptButton (Delete → Confirm). Verifies the branch is removed from the list.
-  test('Delete a branch', async ({ insomnia, page }) => {
-    await addAccessTokenGitCredential(insomnia);
-    await insomnia.projectPage.createGitSyncProject();
-
+  test('Delete a branch', async ({ page }) => {
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Branches' }).click();
     await page.getByRole('textbox', { name: 'New branch name:' }).click();
@@ -148,10 +140,7 @@ test.describe('Git Sync', () => {
   // Creates a collection to produce an unstaged change, opens the staging modal,
   // clicks "Discard all changes" and confirms. Verifies the modal auto-closes,
   // indicating all changes were discarded.
-  test('Discard all unstaged changes', async ({ insomnia, page }) => {
-    await addAccessTokenGitCredential(insomnia);
-    await insomnia.projectPage.createGitSyncProject();
-
+  test('Discard all unstaged changes', async ({ page }) => {
     await page.getByRole('button', { name: 'New request collection' }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
