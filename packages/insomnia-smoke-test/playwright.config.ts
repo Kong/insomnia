@@ -1,4 +1,34 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
+<<<<<<< HEAD
+=======
+const isWindows = os.platform() === 'win32';
+const echoServer: PlaywrightTestConfig['webServer'] = {
+  name: 'Echo server',
+  command: 'npm run serve',
+  url: 'http://localhost:4010',
+  timeout: 15 * 1000,
+  reuseExistingServer: !process.env.CI,
+  stdout: 'pipe',
+  stderr: 'pipe',
+  wait: {
+    stdout: /Listening at http/,
+  },
+};
+const viteServer: PlaywrightTestConfig['webServer'] = {
+  name: 'Vite Server',
+  cwd: '../../',
+  command: 'npm run watch:app',
+  url: 'http://localhost:3334',
+  timeout: 120 * 1000,
+  reuseExistingServer: !process.env.CI,
+  stdout: 'pipe',
+  stderr: 'pipe',
+  wait: {
+    stdout: /VITE\s+ready in/,
+  },
+};
+const onlyStartWebServerInDev = !process.env.BUNDLE || process.env.BUNDLE === 'dev';
+>>>>>>> 7809d458a (Update E2E test for git sync [INS-2258] (#9878))
 const config: PlaywrightTestConfig = {
   projects: [
     {
