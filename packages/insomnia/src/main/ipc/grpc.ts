@@ -1,12 +1,4 @@
 import {
-  FileDescriptorSet as ProtobufEsFileDescriptorSet,
-  MethodIdempotency,
-  MethodKind,
-  proto3,
-} from '@bufbuild/protobuf';
-import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
-import { createConnectTransport } from '@connectrpc/connect-node';
-import {
   type Call,
   ChannelCredentials,
   type ClientDuplexStream,
@@ -123,66 +115,41 @@ interface MethodDefs {
 
 const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflectionApi']): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
-  const GetFileDescriptorSetRequest = proto3.makeMessageType('buf.reflect.v1beta1.GetFileDescriptorSetRequest', () => [
-    { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    {
-      no: 3,
-      name: 'symbols',
-      kind: 'scalar',
-      T: 9 /* ScalarType.STRING */,
-      repeated: true,
-    },
-  ]);
-  const GetFileDescriptorSetResponse = proto3.makeMessageType(
-    'buf.reflect.v1beta1.GetFileDescriptorSetResponse',
-    () => [
-      {
-        no: 1,
-        name: 'file_descriptor_set',
-        kind: 'message',
-        T: ProtobufEsFileDescriptorSet,
-      },
-      { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    ],
-  );
-  const FileDescriptorSetService = {
-    typeName: 'buf.reflect.v1beta1.FileDescriptorSetService',
-    methods: {
-      getFileDescriptorSet: {
-        name: 'GetFileDescriptorSet',
-        I: GetFileDescriptorSetRequest,
-        O: GetFileDescriptorSetResponse,
-        kind: MethodKind.Unary,
-        idempotency: MethodIdempotency.NoSideEffects,
-      },
-    },
-  } as const;
-  const transport = createConnectTransport({
-    baseUrl: url,
-    httpVersion: '1.1',
-  });
-  const client = createPromiseClient(FileDescriptorSetService, transport);
   const headers: HeadersInit = {
     'User-Agent': `insomnia/${version}`,
+    'Content-Type': 'application/json',
     ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
   };
   try {
-    const res = await client.getFileDescriptorSet(
-      {
-        module,
-      },
-      {
-        headers,
-      },
-    );
+    const response = await fetch(`${url}/buf.reflect.v1beta1.FileDescriptorSetService/GetFileDescriptorSet`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ module }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Invalid reflection server api key');
+      }
+      if (response.status === 404) {
+        throw new Error(
+          "The reflection server api key doesn't have access to the module or the module does not exists",
+        );
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json() as any;
     const methodDefs: MethodDefs[] = [];
-    if (res.fileDescriptorSet === undefined) {
+
+    if (!data.fileDescriptorSet) {
       return [];
     }
-    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
-      Buffer.from(res.fileDescriptorSet.toBinary()),
-    );
+
+    // fileDescriptorSet is base64 encoded in the JSON response
+    const binaryData = Buffer.from(data.fileDescriptorSet, 'base64');
+    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(binaryData);
+
     for (const definition of Object.values(packageDefinition)) {
       const serviceDefinition = asServiceDefinition(definition);
       if (serviceDefinition === null) {
@@ -193,20 +160,10 @@ const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflec
     }
     return methodDefs;
   } catch (error) {
-    const connectError = ConnectError.from(error);
-    switch (connectError.code) {
-      case Code.Unauthenticated: {
-        throw new Error('Invalid reflection server api key');
-      }
-      case Code.NotFound: {
-        throw new Error(
-          "The reflection server api key doesn't have access to the module or the module does not exists",
-        );
-      }
-      default: {
-        throw error;
-      }
+    if (error instanceof Error) {
+      throw error;
     }
+    throw new Error(`Failed to fetch from reflection server: ${String(error)}`);
   }
 };
 const getMethodsFromReflection = async (
