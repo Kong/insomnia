@@ -23,6 +23,17 @@ export const PROTECTED_GIT_REPO_PREFIX = 'gr_';
 const REAL_GIT_REPO_PREFIX = 'git_';
 
 /**
+ * Decode a raw gitRepositoryId string to the real GitRepository._id.
+ * Handles both the protected ('gr_xxx') and legacy ('git_xxx') formats.
+ */
+export function decodeRepoId(id: string): string {
+  if (id.startsWith(PROTECTED_GIT_REPO_PREFIX)) {
+    return REAL_GIT_REPO_PREFIX + id.slice(PROTECTED_GIT_REPO_PREFIX.length);
+  }
+  return id;
+}
+
+/**
  * Given a connected GitProject, return the real GitRepository._id.
  * Returns null when the project is not connected (gitRepositoryId is 'empty').
  *
@@ -33,10 +44,7 @@ const REAL_GIT_REPO_PREFIX = 'git_';
 export function getEffectiveRepoId(project: GitProject): string | null {
   const id = project.gitRepositoryId;
   if (id === EMPTY_GIT_PROJECT_ID) return null;
-  if (id.startsWith(PROTECTED_GIT_REPO_PREFIX)) {
-    return REAL_GIT_REPO_PREFIX + id.slice(PROTECTED_GIT_REPO_PREFIX.length);
-  }
-  return id; // legacy 'git_xxx'
+  return decodeRepoId(id);
 }
 
 /**
@@ -48,6 +56,18 @@ export function toProtectedRepoId(gitRepositoryId: string): string {
     return PROTECTED_GIT_REPO_PREFIX + gitRepositoryId.slice(REAL_GIT_REPO_PREFIX.length);
   }
   return gitRepositoryId; // already protected or unexpected format — pass through
+}
+
+/**
+ * Return all values that may be stored in Project.gitRepositoryId for a given real
+ * GitRepository._id, covering both legacy ('git_xxx') and protected ('gr_xxx') forms.
+ * Use this when building DB queries that must match projects regardless of which
+ * storage format they were written with.
+ */
+export function getQueryableGitRepositoryIds(gitRepositoryId: string): string[] {
+  const realId = decodeRepoId(gitRepositoryId);
+  const protectedId = toProtectedRepoId(realId);
+  return Array.from(new Set([realId, protectedId]));
 }
 
 export function isEmptyGitProject(project: Project) {

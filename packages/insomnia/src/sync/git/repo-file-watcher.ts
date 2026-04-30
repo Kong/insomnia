@@ -250,7 +250,8 @@ class RepoFileWatcher {
           const absPath = path.resolve(this.repoDir, gitFilePath);
 
           // Path-traversal guard
-          if (!absPath.startsWith(this.repoDir + path.sep)) return;
+          const rel = path.relative(this.repoDir, absPath);
+          if (rel.startsWith('..') || path.isAbsolute(rel)) return;
 
           // Get the most recently modified DB document in this workspace\u2019s tree
           const allDocs = await db.getWithDescendants(workspace);
@@ -289,10 +290,13 @@ class RepoFileWatcher {
           this.lastSyncMtime.set(normalised, newStat.mtimeMs);
 
           console.log(
-            `[repo-file-watcher] DB newer than disk for workspace ${workspace._id} — flushed to ${gitFilePath}`,
+            '[repo-file-watcher] DB newer than disk for workspace',
+            workspace._id,
+            '— flushed to',
+            gitFilePath,
           );
         } catch (err) {
-          console.warn(`[repo-file-watcher] flushNewerDbWorkspacesToDisk error for workspace ${workspace._id}:`, err);
+          console.warn('[repo-file-watcher] flushNewerDbWorkspacesToDisk error for workspace', workspace._id, err);
         }
       }),
     );

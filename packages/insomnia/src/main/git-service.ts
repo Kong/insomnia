@@ -1477,9 +1477,7 @@ export const updateGitRepoAction = async ({
     let gitRepository: GitRepository | undefined;
 
     if (gitRepositoryId && gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID) {
-      const effectiveId = gitRepositoryId.startsWith(models.project.PROTECTED_GIT_REPO_PREFIX)
-        ? 'git_' + gitRepositoryId.slice(models.project.PROTECTED_GIT_REPO_PREFIX.length)
-        : gitRepositoryId;
+      const effectiveId = models.project.decodeRepoId(gitRepositoryId);
       gitRepository = await services.gitRepository.getById(effectiveId);
       invariant(gitRepository, 'GitRepository not found');
     } else {
