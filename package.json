@@ -76,7 +76,8 @@
   "overrides": {
     "ajv-draft-04": {
       "ajv": "$ajv"
-    }
+    },
+    "lodash@<=4.18.1": "4.18.1"
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "3.2.2",
