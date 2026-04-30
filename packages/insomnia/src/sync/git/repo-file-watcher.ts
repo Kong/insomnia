@@ -147,6 +147,11 @@ class RepoFileWatcher {
     // 1. Load workspace-to-file mappings from the DB for rename detection.
     await watcher.loadKnownGitFilePaths();
 
+    // 1b. If the DB has newer data than what’s on disk (e.g. the user edited
+    //     requests on the old app during a downgrade), write fresh YAML to
+    //     disk BEFORE importing so those edits are not silently overwritten.
+    await watcher.flushNewerDbWorkspacesToDisk();
+
     // 2. Import all YAML files into the DB so it reflects disk state.
     //    This populates lastSyncMtime + lastWrittenHash as a side-effect,
     //    which prevents step 3's watchers from re-importing the same files.
@@ -222,10 +227,83 @@ class RepoFileWatcher {
   }
 
   /**
-   * Import all YAML files in the repo directory into the DB.
+   * For each workspace linked to this project, if the DB was modified more
+   * recently than the on-disk YAML, write fresh YAML to disk before the
+   * initial `importAllFiles` scan.
    *
-   * Called during watcher creation and after bulk git operations (clone, pull,
-   * merge, checkout) so the DB reflects the current disk state.
+   * This prevents the stale-YAML-wins problem that occurs when:
+   *   1. User downgrades (old app has no RepoFileWatcher — DB changes aren\u2019t flushed to disk).
+   *   2. User edits requests via the old app (DB updated, no YAML written).
+   *   3. User re-upgrades; without this guard those edits would be silently lost.
+   *
+   * Written files are recorded in `lastWrittenHash` / `lastSyncMtime` so that
+   * `importAllFiles` skips them (they are already up-to-date).
+   */
+  private async flushNewerDbWorkspacesToDisk(): Promise<void> {
+    const workspaces = await services.workspace.findByParentId(this.projectId);
+
+    await Promise.all(
+      workspaces.map(async workspace => {
+        try {
+          const meta = await services.workspaceMeta.getByParentId(workspace._id);
+          const gitFilePath = meta?.gitFilePath ?? `insomnia.${workspace._id}.yaml`;
+          const absPath = path.resolve(this.repoDir, gitFilePath);
+
+          // Path-traversal guard
+          const rel = path.relative(this.repoDir, absPath);
+          if (rel.startsWith('..') || path.isAbsolute(rel)) return;
+
+          // Get the most recently modified DB document in this workspace\u2019s tree
+          const allDocs = await db.getWithDescendants(workspace);
+          let maxDbModified: number = workspace.modified ?? 0;
+          for (const doc of allDocs) {
+            const m = (doc as { modified?: number }).modified ?? 0;
+            if (m > maxDbModified) maxDbModified = m;
+          }
+
+          // Compare against the on-disk mtime
+          let fileMtime = 0;
+          try {
+            const stat = await fs.promises.stat(absPath);
+            fileMtime = stat.mtimeMs;
+          } catch {
+            // File doesn\u2019t exist yet \u2014 nothing to do; importAllFiles will handle creation.
+            return;
+          }
+
+          if (maxDbModified <= fileMtime) return; // disk is up-to-date
+
+          // DB is newer \u2014 write fresh YAML so importAllFiles doesn\u2019t overwrite it
+          const yamlContent = await getInsomniaV5DataExport({
+            workspaceId: workspace._id,
+            includePrivateEnvironments: false,
+          });
+          if (!yamlContent?.trim()) return;
+
+          await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
+          await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+
+          const hash = contentHash(yamlContent);
+          const normalised = path.normalize(absPath);
+          this.lastWrittenHash.set(normalised, hash);
+          const newStat = await fs.promises.stat(absPath);
+          this.lastSyncMtime.set(normalised, newStat.mtimeMs);
+
+          console.log(
+            '[repo-file-watcher] DB newer than disk for workspace',
+            workspace._id,
+            '— flushed to',
+            gitFilePath,
+          );
+        } catch (err) {
+          console.warn('[repo-file-watcher] flushNewerDbWorkspacesToDisk error for workspace', workspace._id, err);
+        }
+      }),
+    );
+  }
+
+  /**
+   * Import all YAML files in the repo directory into the DB.
    *
    * Always bypasses the mtime fast-path (`forceRead`) so every file is read
    * and compared by content-hash. This makes the method safe to call at any
