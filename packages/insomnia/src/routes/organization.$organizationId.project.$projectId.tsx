@@ -29,8 +29,8 @@ export function useProjectLoaderData() {
 const Component = () => {
   const data = useProjectLoaderData();
   const gitRepositoryId =
-    data && models.project.isGitProject(data.activeProject) && !models.project.isEmptyGitProject(data.activeProject)
-      ? data.activeProject.gitRepositoryId
+    data && models.project.isConnectedGitProject(data.activeProject)
+      ? models.project.getEffectiveRepoId(data.activeProject)
       : null;
   const gitFileIssues = useProjectGitFileIssues({
     projectId: data?.activeProject._id,
