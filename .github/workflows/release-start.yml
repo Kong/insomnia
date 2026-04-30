@@ -53,15 +53,21 @@ jobs:
 
       - name: App version (stable, with a specific version)
         if: github.event.inputs.channel == 'stable' && github.event.inputs.version
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: npm --workspaces version "$VERSION"
 
       - name: App version (alpha/beta, patch latest alpha/beta)
         if: github.event.inputs.channel != 'stable' && !github.event.inputs.version
-        run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
+        env:
+          CHANNEL: ${{ github.event.inputs.channel }}
+        run: npm --workspaces version --preid "$CHANNEL" prerelease
 
       - name: App version (alpha/beta, with a specific version)
         if: github.event.inputs.channel != 'stable' && github.event.inputs.version
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: npm --workspaces version "$VERSION"
 
       # ############################################################
 
@@ -102,15 +108,21 @@ jobs:
 
       - name: (Re-run) App version (stable, with a specific version)
         if: github.event.inputs.channel == 'stable' && github.event.inputs.version
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: npm --workspaces version "$VERSION"
 
       - name: (Re-run) App version (alpha/beta, patch latest alpha/beta)
         if: github.event.inputs.channel != 'stable' && !github.event.inputs.version
-        run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
+        env:
+          CHANNEL: ${{ github.event.inputs.channel }}
+        run: npm --workspaces version --preid "$CHANNEL" prerelease
 
       - name: (Re-run) App version (alpha/beta, with a specific version)
         if: github.event.inputs.channel != 'stable' && github.event.inputs.version
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: npm --workspaces version "$VERSION"
 
       # ############################################################
 
