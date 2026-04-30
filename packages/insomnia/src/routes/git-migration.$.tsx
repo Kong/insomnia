@@ -73,15 +73,10 @@ const MigrationView = () => {
             <>
               <p className="text-sm">We hit an unexpected error while updating your file system. Please try again.</p>
               <p className="text-sm text-[#828282]">
-                If the issue persists, please{' '}
-                <Link className="underline" to="https://github.com/Kong/insomnia/issues/new/choose">
-                  raise a support ticket.
-                </Link>{' '}
-                You may also re-install the previous version by following the steps{' '}
-                <Link className="underline" to="https://insomnia.rest/changelog#12.5.0">
-                  here
+                Having trouble and need to contact us, or back up to an old version? See our docs
+                <Link className="underline" to="https://developer.konghq.com/insomnia/git-sync/">
+                  docs.
                 </Link>
-                .
               </p>
             </>
           ) : (
