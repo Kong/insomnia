@@ -111,6 +111,10 @@ export type ColorScheme = 'default' | 'light' | 'dark';
 
 let plugins: Plugin[] | null | undefined = null;
 
+export function _testOnlySetPlugins(p: Plugin[] | null) {
+  plugins = p;
+}
+
 export async function init() {
   await reloadPlugins();
 }
