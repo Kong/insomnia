@@ -597,6 +597,50 @@ These can continue to work while the new system is introduced, but should gain m
 - docs should include a feature matrix: supported, deprecated, unsupported, planned
 - hook and templating features should remain explicitly "legacy-supported" until a replacement plan is approved
 
+## Pre-Phase 1: legacy behaviour baseline
+
+Phase 1 must not break existing plugin behaviour. Before any structural changes are made, a test baseline must exist that covers how legacy plugin functions are invoked today and how errors are handled. Phase 1 does not begin until this baseline is in place and passing.
+
+### What to capture
+
+For each plugin export type, the baseline must cover:
+
+| Export type               | Invocation shape | Return value shape | Error behaviour |
+| ------------------------- | ---------------- | ------------------ | --------------- |
+| `templateTags`            | `render(context)` called with a mock tag context | rendered string | thrown errors propagate to the template engine as a render error |
+| `requestHooks`            | `hook(context)` called before request dispatch | void / mutates context | thrown errors abort the request with an error message |
+| `responseHooks`           | `hook(context)` called after response received | void / mutates context | thrown errors are logged; response is still returned |
+| `requestActions`          | menu item triggers `action(context)` | void | thrown errors shown as a notification |
+| `requestGroupActions`     | same as requestActions | void | same |
+| `workspaceActions`        | same as requestActions | void | same |
+| `documentActions`         | same as requestActions | void | same |
+| `unsafePluginMainActions` | invoked by name with args | serializable result | thrown errors returned as structured error to caller |
+| `themes`                  | queried by name for CSS vars | theme object | missing theme falls back to default |
+
+### What to write
+
+1. **Unit tests for each export type** — test the current invocation path in isolation. Use a minimal fixture plugin (inline object, not a real package). Assert the return value and that a thrown error produces the expected downstream behaviour (abort, notification, fallback, etc.).
+
+2. **Error propagation tests** — explicitly test the error path for each export type:
+   - synchronous throw
+   - rejected promise
+   - non-Error thrown value (e.g. a plain string)
+   
+   Assert the error reaches the right handler and does not crash the app.
+
+3. **IPC contract snapshot** — once the baseline tests pass, document the exact IPC message shapes that Phase 1 will introduce for each export type. These become the acceptance criteria for the Phase 1 IPC bridge: if a message shape changes, the test must be updated intentionally, not silently.
+
+### Success criteria for baseline
+
+- All export types have at least one happy-path test and one error-path test
+- Tests run in CI without requiring a live Electron renderer (use unit test mocks for IPC/context)
+- The test suite passes on the current `develop` branch before any Phase 1 work begins
+- Any Phase 1 change that causes a baseline test to fail is treated as a regression, not an acceptable trade-off
+
+### Where to put the tests
+
+Co-locate unit tests with the plugin execution code in `packages/insomnia/src/plugins/`. Name them `*.test.ts` following the existing Vitest convention. The baseline tests are not a one-off — they remain in the suite permanently as the regression guard for the hidden window migration and for Phase 2 sandbox hardening.
+
 ## Concrete implementation slices
 
 ### Phase 1 slices
@@ -654,11 +698,12 @@ These can continue to work while the new system is introduced, but should gain m
 
 ### Phase 1
 
+0. **Write and pass the legacy behaviour baseline** (see [Pre-Phase 1](#pre-phase-1-legacy-behaviour-baseline)). Do not begin steps 1–5 until baseline tests are green in CI.
 1. Create hidden plugin window in main; verify it can load a plugin module.
 2. Move plugin discovery and loading into hidden window via IPC.
 3. Redirect all app UI renderer plugin calls through the preload bridge.
 4. Extract networking from renderer plugin execution paths into main.
-5. Run full test suite; confirm zero regressions.
+5. Run full test suite; confirm zero regressions against the baseline.
 
 ### Phase 2
 

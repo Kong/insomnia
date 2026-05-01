@@ -1069,7 +1069,7 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
 };
 
-async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, renderedContext: Record<string, any>) {
+export async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, renderedContext: Record<string, any>) {
   const newRenderedRequest = clone(renderedRequest);
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
@@ -1092,7 +1092,7 @@ async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, render
   return newRenderedRequest;
 }
 
-async function _applyResponsePluginHooks(
+export async function _applyResponsePluginHooks(
   response: ResponsePatch,
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
