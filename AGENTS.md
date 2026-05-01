@@ -15,11 +15,14 @@
 - **No unsolicited formatting.** Rely on ESLint/Prettier. Do not reformat existing code.
 - **Strict scoping.** Only modify code directly related to the prompt. Do not refactor adjacent code unless asked.
 
-## First-time Setup
-Run once after cloning to configure local git settings for quieter output:
-```bash
-bash scripts/setup.sh
-```
+## Command Output
+Prefer quiet command variants to minimise output volume:
+- `git log --oneline -20` not `git log`
+- `git diff --stat` not `git diff`
+- `npm test --silent` not `npm test`
+- `tsc --noEmit 2>&1 | head -50` for type-check failures
+- Use the `Read` tool with `limit` rather than `cat` on large files
+- Use `Grep` with `head_limit` rather than unrestricted searches
 
 ## Validation Commands
 Run from repo root before considering work complete:
