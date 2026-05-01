@@ -63,6 +63,11 @@ const config = {
     notarize: true,
     asarUnpack: [
       'node_modules/@getinsomnia/node-libcurl',
+      // tree-sitter ships prebuilds for darwin-{arm64,x64}, linux-x64, win32-x64.
+      // Other targets (e.g. linux-arm64) fall back to node-gyp source compilation
+      // at install time
+      'node_modules/tree-sitter',
+      'node_modules/tree-sitter-bash',
       'node_modules/@node-llama-cpp/mac-arm64-metal',
       'node_modules/@node-llama-cpp/mac-x64',
       'node_modules/@node-llama-cpp/linux-arm64',

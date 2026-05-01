@@ -90,6 +90,7 @@
     "color": "^4.2.3",
     "content-disposition": "^0.5.4",
     "cookie-parser": "^1.4.7",
+    "curlconverter": "4.12.0",
     "date-fns": "^3.6.0",
     "decompress": "^4.2.1",
     "deep-equal": "2.2.3",

@@ -193,6 +193,52 @@ describe('curl', () => {
       curl: "curl -X POST https://example.com -d 'key=value'",
       expected: { body: { text: 'key=value' } },
     },
+    {
+      name: 'should join multiple -d flags with & without explicit urlencoded Content-Type',
+      curl: "curl -X POST https://example.com -d 'a=1' -d 'b=2'",
+      expected: { body: { text: 'a=1&b=2' } },
+    },
+
+    {
+      name: 'should preserve semicolons in quoted --form text value',
+      curl: `curl -X POST https://rest.rodeo -H 'Content-Type: multipart/form-data' --form 'types="water; ice; fairy";type=text/plain'`,
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'types', value: 'water; ice; fairy', type: 'text' }],
+        },
+      },
+    },
+    {
+      name: 'should parse chained modifiers from --form file value',
+      curl: "curl -X POST https://rest.rodeo -H 'Content-Type: multipart/form-data' --form 'team=@/tmp/vaporeon.bin;type=application/octet-stream;filename=water.bin'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'team', fileName: '/tmp/vaporeon.bin', type: 'file' }],
+        },
+      },
+    },
+    {
+      name: 'should preserve semicolons in quoted --form filename',
+      curl: `curl -X POST https://rest.rodeo -H 'Content-Type: multipart/form-data' --form 'chart=@"vaporeon;pokedex.txt";filename="cerulean;notes.txt"'`,
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'chart', fileName: 'vaporeon;pokedex.txt', type: 'file' }],
+        },
+      },
+    },
+    {
+      name: 'should parse ;type= modifier from --form text value',
+      curl: "curl -X POST https://rest.rodeo -H 'Content-Type: multipart/form-data' --form 'move=hydropump;type=text/plain'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'move', value: 'hydropump', type: 'text' }],
+        },
+      },
+    },
 
     // -H flags
     {
@@ -265,6 +311,14 @@ describe('curl', () => {
         ],
       },
     },
+    {
+      name: 'should prefer explicit bearer authorization header over basic auth',
+      curl: `curl https://rest.rodeo/pokemon/vaporeon -u username:password -H 'Authorization: Bearer mytoken123'`,
+      expected: {
+        authentication: { type: 'bearer', token: 'mytoken123' },
+        headers: [{ name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) }],
+      },
+    },
     // User-Agent injection
     {
       name: 'should inject default User-Agent when none is provided',
@@ -287,6 +341,92 @@ describe('curl', () => {
         headers: [{ name: 'user-agent', value: 'my-agent/1.0' }],
       },
     },
+    // Bug fixes
+    {
+      // https://github.com/Kong/insomnia/issues/9163
+      name: 'preserves JSON body containing `=` with --data-binary',
+      curl: `curl -X POST https://rest.rodeo -H 'Content-Type: application/json' --data-binary '{"species":"vaporeon","payload":"a=b==","dex":"134"}'`,
+      expected: {
+        body: { mimeType: 'application/json', text: '{"species":"vaporeon","payload":"a=b==","dex":"134"}' },
+      },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/9412
+      name: 'preserves multi-`=` token with -d (no Content-Type)',
+      curl: "curl -X POST https://rest.rodeo -d 'vaporeon_token=abc==123==xyz'",
+      expected: { body: { text: 'vaporeon_token=abc==123==xyz' } },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/6336
+      name: 'preserves `@` inside JSON body',
+      curl: `curl -X POST https://rest.rodeo -H 'Content-Type: application/json' -d '{"trainer":"misty@cerulean.kanto"}'`,
+      expected: { body: { mimeType: 'application/json', text: '{"trainer":"misty@cerulean.kanto"}' } },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/6731
+      name: 'parses --form value=@/path;type=… with content type',
+      curl: "curl -X POST https://rest.rodeo -F 'data=@/tmp/vaporeon-dex.json;type=application/json'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [
+            {
+              name: 'data',
+              fileName: '/tmp/vaporeon-dex.json',
+              type: 'file',
+            },
+          ],
+        },
+      },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/4530
+      name: 'preserves URL trailing slash',
+      curl: "curl 'https://rest.rodeo/pokemon/vaporeon/'",
+      expected: { url: 'https://rest.rodeo/pokemon/vaporeon/' },
+    },
+    {
+      name: 'strips trailing slash for root-path URLs', // maintain backcompat
+      curl: "curl 'https://rest.rodeo/'",
+      expected: { url: 'https://rest.rodeo' },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/8838
+      name: 'decodes URL-encoded query brackets',
+      curl: "curl 'https://rest.rodeo/?test\\[\\]=1234'",
+      expected: {
+        url: 'https://rest.rodeo/',
+        parameters: [{ name: 'test[]', value: '1234', disabled: false }],
+      },
+    },
+    {
+      name: 'preserves no-backslash multiline arguments',
+      curl: "curl https://rest.rodeo/pokemon/vaporeon\n  -H 'X-Test: yes'",
+      expected: {
+        headers: [
+          { name: 'X-Test', value: 'yes' },
+          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
+        ],
+      },
+    },
+    {
+      name: 'preserves terminal prompt multiline arguments with quoted semicolons',
+      curl: `$ curl 'https://rest.rodeo/v1/pokemon?q=vaporeon'
+  -H 'Accept: application/json'
+  -H 'X-Trace: hydro;pump'
+  --data-raw '{"note":"vaporeon;surf@rest.rodeo"}'`,
+      expected: {
+        body: { text: '{"note":"vaporeon;surf@rest.rodeo"}' },
+        headers: [
+          { name: 'Accept', value: 'application/json' },
+          { name: 'X-Trace', value: 'hydro;pump' },
+          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
+        ],
+        method: 'POST',
+        parameters: [{ name: 'q', value: 'vaporeon', disabled: false }],
+        url: 'https://rest.rodeo/v1/pokemon',
+      },
+    },
   ];
 
   it.each(testCases)('$name', async ({ curl, expected }) => {
@@ -304,5 +444,72 @@ describe('curl', () => {
     await services.settings.patch({ disableAppVersionUserAgent: true });
     const result = await convert("curl https://example.com -H 'User-Agent: my-agent/1.0'");
     expect(result).toMatchObject([{ headers: [{ name: 'User-Agent', value: 'my-agent/1.0' }] }]);
+  });
+
+  // https://github.com/Kong/insomnia/issues/9151
+  it('does not throw on non-curl input (e.g. Postman JSON)', async () => {
+    const postmanJson =
+      '{"info":{"name":"Vaporeon Collection","schema":"https://schema.getpostman.com/json/collection/v2.1.0"},"item":[]}';
+    const result = await convert(postmanJson);
+    expect(result).toBeNull();
+  });
+
+  it('returns convertErrorMessage for malformed curl input', async () => {
+    const result = await convert("curl 'https://rest.rodeo");
+    expect(result).toMatchObject({ convertErrorMessage: expect.any(String) });
+  });
+
+  // The fallback for "curl with no URL" keys off curlconverter's error message
+  // starting with `no URL specified`; pin both the message and the fallback
+  // shape so a future curlconverter bump that reworded it would fail loudly.
+  it('falls back to an empty-URL request when curlconverter reports "no URL specified"', async () => {
+    const { parse } = await import('curlconverter/dist/src/parse');
+    expect(() => parse('curl -X DELETE')).toThrow(/^no URL specified/);
+
+    const result = await convert('curl -X DELETE');
+    expect(result).toMatchObject([
+      {
+        url: '',
+        method: 'DELETE',
+        name: 'cURL Import 1',
+      },
+    ]);
+  });
+
+  it('prefers explicit non-bearer authorization header over basic auth', async () => {
+    const result = await convert(
+      "curl https://rest.rodeo/pokemon/vaporeon -u username:password -H 'Authorization: Basic custom'",
+    );
+    expect(result).toMatchObject([
+      {
+        headers: [
+          { name: 'Authorization', value: 'Basic custom' },
+          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
+        ],
+      },
+    ]);
+    if (!Array.isArray(result)) {
+      throw new TypeError('Expected curl import to return requests');
+    }
+    expect(result[0]?.authentication).toEqual({});
+  });
+
+  it('keeps curl commands around semicolon-separated non-curl commands', async () => {
+    const result = await convert(
+      "curl https://rest.rodeo/pokemon/vaporeon; echo 'ignored'; curl https://rest.rodeo/pokemon/eevee\n  -H 'X-Test: yes'",
+    );
+    expect(result).toMatchObject([
+      {
+        url: 'https://rest.rodeo/pokemon/vaporeon',
+        headers: [{ name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) }],
+      },
+      {
+        url: 'https://rest.rodeo/pokemon/eevee',
+        headers: [
+          { name: 'X-Test', value: 'yes' },
+          { name: 'User-Agent', value: expect.stringMatching(/^insomnia\//) },
+        ],
+      },
+    ]);
   });
 });

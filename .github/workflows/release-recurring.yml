@@ -58,6 +58,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+          # curlconverter's tree-sitter dependency (v0.21.1) has no linux-arm64 prebuild and falls back to source
+          # compilation. Its binding.gyp pins -std=c++17, but Node 24 requires c++20, hence this override
+          CXXFLAGS: ${{ matrix.os == 'ubuntu-24.04-arm' && '-std=c++20' || '' }}
 
       - name: Install x64 version of native Mac dependencies
         run: npm run install-x64-native-dependencies -w insomnia

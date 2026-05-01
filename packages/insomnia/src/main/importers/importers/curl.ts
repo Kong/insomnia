@@ -1,256 +1,240 @@
-import { URL } from 'node:url';
+import type { Request, RequestUrl } from 'curlconverter/dist/src/parse';
+import type { DataParam, FileDataParam } from 'curlconverter/dist/src/Request';
 
-import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
-
-import { type RequestAuthentication,services } from '~/insomnia-data';
+import { type RequestAuthentication, services } from '~/insomnia-data';
 
 import { getAppVersion } from '../../../common/constants';
-import { type Converter, type ImportRequest, type Parameter } from '../entities';
+import type { Converter, ImportRequest, Parameter } from '../entities';
 
 export const id = 'curl';
 export const name = 'cURL';
 export const description = 'cURL command line tool';
 
-let requestCount = 1;
+const isFileDataParam = (d: DataParam): d is FileDataParam => typeof d === 'object' && d !== null && 'filetype' in d;
 
-const SUPPORTED_ARGS = [
-  'url',
-  'u',
-  'user',
-  'header',
-  'H',
-  'cookie',
-  'b',
-  'get',
-  'G',
-  'd',
-  'data',
-  'data-raw',
-  'data-urlencode',
-  'data-binary',
-  'data-ascii',
-  'form',
-  'F',
-  'request',
-  'X',
-];
-
-type PairsByName = Record<string, (string | boolean)[]>;
-
-const importCommand = (parseEntries: ParseEntry[]) => {
-  // ~~~~~~~~~~~~~~~~~~~~~ //
-  // Collect all the flags //
-  // ~~~~~~~~~~~~~~~~~~~~~ //
-  const pairsByName: PairsByName = {};
-  const singletons: ParseEntry[] = [];
-
-  // Start at 1 so we can skip the ^curl part
-  for (let i = 1; i < parseEntries.length; i++) {
-    let parseEntry = parseEntries[i];
-    // trim leading spaces between parsed entries
-    // regex won't match otherwise (e.g.    -H 'Content-Type: application/json')
-    if (typeof parseEntry === 'string') {
-      parseEntry = parseEntry.trim();
-    }
-
-    if (typeof parseEntry === 'string' && parseEntry.match(/^-{1,2}[\w-]+/)) {
-      const isSingleDash = parseEntry[0] === '-' && parseEntry[1] !== '-';
-      let name = parseEntry.replace(/^-{1,2}/, '');
-
-      if (!SUPPORTED_ARGS.includes(name)) {
-        continue;
-      }
-
-      let value;
-      const nextEntry = parseEntries[i + 1];
-      if (isSingleDash && name.length > 1) {
-        // Handle squished arguments like -XPOST
-        value = name.slice(1);
-        name = name.slice(0, 1);
-      } else if (typeof nextEntry === 'string' && !nextEntry.startsWith('-')) {
-        // Next arg is not a flag, so assign it as the value
-        value = nextEntry;
-        i++; // Skip next one
-      } else {
-        value = true;
-      }
-
-      if (!pairsByName[name]) {
-        pairsByName[name] = [value];
-      } else {
-        pairsByName[name].push(value);
-      }
-    } else if (parseEntry) {
-      singletons.push(parseEntry);
-    }
-  }
-  return { pairsByName, singletons };
-};
-const extractUrlAndParameters = (urlValue: string): { url: string; parameters: Parameter[] } => {
+const decodeUrlEncoded = (s: string) => {
   try {
-    const { searchParams, href, search } = new URL(urlValue);
-    const parameters = Array.from(searchParams.entries()).map(([name, value]) => ({
-      name,
-      value,
-      disabled: false,
-    }));
-    const url = href.replace(search, '').replace(/\/$/, '');
-    return { url, parameters };
+    return decodeURIComponent(s.replace(/\+/g, ' '));
   } catch {
-    return { url: '', parameters: [] };
+    return s;
   }
 };
-const isBearerAuth = (header?: string, value?: string) =>
-  header?.toLowerCase() === 'authorization' && value?.trim().toLowerCase().startsWith('bearer');
-const extractAuth = (pairsByName: PairsByName): RequestAuthentication | {} => {
-  const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);
-  const allHeaders = [
-    ...((pairsByName.H as string[] | undefined) || []),
-    ...((pairsByName.header as string[] | undefined) || []),
-  ];
-  const bearerAuthHeader = allHeaders.find(h => {
-    const [name, value] = h.split(/:(.*)$/);
-    return isBearerAuth(name, value);
-  });
-  if (bearerAuthHeader) {
-    const [_, value] = bearerAuthHeader.split(/:(.*)$/);
-    return { type: 'bearer', token: value.trim().slice(7) };
-  }
-  return username
-    ? {
-        type: 'basic',
-        username: username.trim(),
-        password: password.trim(),
-      }
-    : {};
-};
-const extractHeaders = (pairsByName: PairsByName) => {
-  return [...((pairsByName.header as string[] | undefined) || []), ...((pairsByName.H as string[] | undefined) || [])]
-    .filter(header => header.includes(':'))
-    .filter(header => {
-      const [name, value] = header.split(/:(.*)$/);
-      return isBearerAuth(name, value) === false;
-    })
-    .map(header => {
-      const [name, value] = header.split(/:(.*)$/);
-      // remove final colon from header name if present
-      if (!value) {
-        return {
-          name: name.trim().replace(/;$/, ''),
-          value: '',
-        };
-      }
-      return {
-        name: name.trim(),
-        value: value.trim(),
-      };
-    });
-};
-const extractCookieHeaderValue = (pairsByName: PairsByName) => {
-  return [...((pairsByName.cookie as string[] | undefined) || []), ...((pairsByName.b as string[] | undefined) || [])]
-    .map(str => {
-      const name = str.split('=', 1)[0];
-      const value = str.replace(`${name}=`, '');
-      return `${name}=${value}`;
-    })
-    .join('; ');
-};
-const extractBody = (
-  dataParameters: Parameter[],
-  pairsByName: PairsByName,
-  headers: { name: string; value: string }[],
-) => {
-  const contentTypeHeader = headers.find(header => header.name.toLowerCase() === 'content-type');
-  const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
 
-  /// /////// Body (Multipart Form Data) //////////
-  const formDataParams = [
-    ...((pairsByName.form as string[] | undefined) || []),
-    ...((pairsByName.F as string[] | undefined) || []),
-  ].map(str => {
-    const [name, value] = str.split('=');
-    const item: Parameter = {
-      name,
-    };
+// Drop non-curl `;`-separated commands and rewrite `--d` (ambiguous in curl) to
+// `-d` so curlconverter accepts inputs the legacy importer used to handle.
+const preprocess = (raw: string) => {
+  const collapsed = raw.replace(/\\\r?\n/g, ' ').replace(/\r?\n/g, ' ');
+  const commands: string[] = [];
+  let current = '';
+  let quote: '"' | "'" | null = null;
+  let escaped = false;
 
-    if (value.indexOf('@') === 0) {
-      item.fileName = value.slice(1);
-      item.type = 'file';
-    } else {
-      item.value = value;
-      item.type = 'text';
+  for (const char of collapsed) {
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
     }
+    if (char === '\\') {
+      current += char;
+      escaped = true;
+      continue;
+    }
+    if ((char === '"' || char === "'") && quote === null) {
+      quote = char;
+    } else if (char === quote) {
+      quote = null;
+    }
+    if (char === ';' && quote === null) {
+      commands.push(current);
+      current = '';
+      continue;
+    }
+    current += char;
+  }
+  commands.push(current);
 
-    return item;
-  });
+  const filtered = commands
+    .map(command => command.trim())
+    .filter(command => /^\$?\s*curl(\s|;|\\|$)/.test(command))
+    .map(command => command.replace(/^\$\s+(curl)/, '$1'))
+    .join(';\n');
+  return filtered.replace(/(^|\s)--d(\s|=)/g, '$1-d$2');
+};
 
-  if (dataParameters.length !== 0 && mimeType === 'application/x-www-form-urlencoded') {
+const findExtraCookieValues = (raw: string) => {
+  const out: string[] = [];
+  // The unquoted alternative `[^;\s]+` deliberately stops at `;` because curl
+  // requires the user to quote multi-cookie values that contain `;` (otherwise
+  // the shell would split the argument). Multi-cookie unquoted values are not
+  // a valid curl invocation, so we don't try to recover them here.
+  const re = /(?:^|\s)(?:--cookie|-b)\s+(?:'([^']*)'|"([^"]*)"|([^;\s]+))/g;
+  let m: RegExpExecArray | null;
+  m = re.exec(raw);
+  while (m) {
+    const v = m[1] ?? m[2] ?? m[3];
+    // A `--cookie` value without `=` is treated as a cookie file path; skip those.
+    if (v?.includes('=')) {
+      out.push(v);
+    }
+    m = re.exec(raw);
+  }
+  return out;
+};
+
+const buildHeaders = (req: Request) => {
+  const out: { name: string; value: string }[] = [];
+  for (const [name, value] of req.headers) {
+    if (value === null) {
+      continue;
+    }
+    out.push({ name: name.toString().trim(), value: value.toString() });
+  }
+  return out;
+};
+
+const mergeDroppedCookies = (rawSegment: string, headers: { name: string; value: string }[]) => {
+  const existing = headers.find(h => h.name.toLowerCase() === 'cookie');
+  if (!existing) {
+    return;
+  }
+  for (const v of findExtraCookieValues(rawSegment)) {
+    if (!existing.value.includes(v)) {
+      existing.value = existing.value ? `${existing.value}; ${v}` : v;
+    }
+  }
+};
+
+const buildAuth = (
+  req: Request,
+  headers: { name: string; value: string }[],
+): RequestAuthentication | Record<string, never> => {
+  const idx = headers.findIndex(
+    h => h.name.toLowerCase() === 'authorization' && h.value.trim().toLowerCase().startsWith('bearer'),
+  );
+  if (idx !== -1) {
+    const token = headers[idx].value.trim().slice(7).trim();
+    headers.splice(idx, 1);
+    return { type: 'bearer', token };
+  }
+  if (headers.some(h => h.name.toLowerCase() === 'authorization')) {
+    return {};
+  }
+  const auth = req.urls[0]?.auth;
+  if (auth) {
     return {
-      mimeType,
-      params: dataParameters.map(parameter => ({
-        ...parameter,
-        name: decodeURIComponent(parameter.name || ''),
-        value: decodeURIComponent(parameter.value || ''),
-      })),
-    };
-  } else if (dataParameters.length !== 0) {
-    return {
-      text: dataParameters
-        .map(parameter => (parameter.name ? `${parameter.name}=${parameter.value}` : parameter.value))
-        .join('&'),
-      mimeType: mimeType || '',
-    };
-  } else if (formDataParams.length) {
-    return {
-      params: formDataParams,
-      mimeType: mimeType || 'multipart/form-data',
+      type: 'basic',
+      username: auth[0].toString(),
+      password: auth[1].toString(),
     };
   }
   return {};
 };
-const extractMethod = (pairsByName: PairsByName, body: any) => {
-  let method = getPairValue(pairsByName, '__UNSET__', ['X', 'request']).toUpperCase();
 
-  if (method === '__UNSET__' && body) {
-    method = 'text' in body || 'params' in body ? 'POST' : 'GET';
+const buildBody = (req: Request, mimeType: string | null) => {
+  if (req.multipartUploads?.length) {
+    return {
+      mimeType: mimeType ?? 'multipart/form-data',
+      params: req.multipartUploads.map<Parameter>(p => {
+        const param: Parameter = { name: p.name.toString() };
+        if ('contentFile' in p && p.contentFile !== undefined) {
+          param.fileName = p.contentFile.toString();
+          param.type = 'file';
+        } else if ('content' in p && p.content !== undefined) {
+          param.value = p.content.toString();
+          param.type = 'text';
+        }
+        return param;
+      }),
+    };
   }
-  return method;
+
+  if (req.dataArray === undefined) {
+    return {};
+  }
+
+  if (mimeType === 'application/x-www-form-urlencoded') {
+    const params: Parameter[] = [];
+    for (const d of req.dataArray) {
+      if (isFileDataParam(d)) {
+        params.push({
+          name: d.name?.toString() ?? '',
+          fileName: d.filename.toString(),
+          type: 'file',
+        });
+        continue;
+      }
+      for (const piece of d.toString().split('&')) {
+        const eq = piece.indexOf('=');
+        if (eq === -1) {
+          params.push({ name: '', value: decodeUrlEncoded(piece) });
+        } else {
+          params.push({
+            name: decodeUrlEncoded(piece.slice(0, eq)),
+            value: decodeUrlEncoded(piece.slice(eq + 1)),
+          });
+        }
+      }
+    }
+    // The user supplied a -d/--data-urlencode flag but it parsed to nothing
+    // (e.g. `--data-urlencode '='`). Surface a single empty row so the form
+    // editor shows the user that a body was intended.
+    if (params.length === 0) {
+      params.push({ name: '', value: '' });
+    }
+    return { mimeType, params };
+  }
+
+  const text = req.dataArray
+    .map(d => (isFileDataParam(d) ? `${d.name ? `${d.name.toString()}=` : ''}@${d.filename.toString()}` : d.toString()))
+    .join('&');
+  return { mimeType: mimeType ?? '', text };
 };
 
-const buildRequestObject = ({
-  pairsByName,
-  singletons,
-}: {
-  pairsByName: PairsByName;
-  singletons: ParseEntry[];
-}): ImportRequest => {
-  const urlValue = getPairValue(pairsByName, (singletons[0] as string) || '', ['url']);
-  const { url, parameters } = extractUrlAndParameters(urlValue);
-
-  const authentication = extractAuth(pairsByName);
-  const headers = extractHeaders(pairsByName);
-  const cookieHeaderValue = extractCookieHeaderValue(pairsByName);
-  // Convert cookie value to header
-  const existingCookieHeader = headers.find(header => header.name.toLowerCase() === 'cookie');
-  if (cookieHeaderValue && existingCookieHeader) {
-    // Has existing cookie header, so let's update it
-    existingCookieHeader.value += `; ${cookieHeaderValue}`;
-  } else if (cookieHeaderValue) {
-    // No existing cookie header, so let's make a new one
-    headers.push({
-      name: 'Cookie',
-      value: cookieHeaderValue,
-    });
-  }
-  const dataParameters = pairsToDataParameters(pairsByName);
-  let body = {};
-  if (dataParameters.length !== 0 && getPairValue(pairsByName, false, ['G', 'get'])) {
-    parameters.push(...dataParameters);
+const buildUrlAndParameters = (urlObj: RequestUrl) => {
+  const rawUrl = urlObj.urlWithoutQueryArray.toString();
+  const parsedUrl = new URL(rawUrl);
+  const fromUrl = !!urlObj.urlQueryArray;
+  const url = parsedUrl.pathname === '/' && !fromUrl && rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
+  const parameters: Parameter[] = [];
+  if (urlObj.queryList) {
+    for (const [n, v] of urlObj.queryList) {
+      const item: Parameter = { name: n.toString(), value: v.toString() };
+      if (fromUrl) {
+        item.disabled = false;
+      }
+      parameters.push(item);
+    }
   } else {
-    body = extractBody(dataParameters, pairsByName, headers);
+    // Fallback for query strings that don't round-trip (e.g. `?key` without value).
+    const queryStr = urlObj.urlObj.query.toString().replace(/^\?/, '');
+    if (queryStr) {
+      for (const [n, v] of new URLSearchParams(queryStr)) {
+        parameters.push({ name: n, value: v, disabled: false });
+      }
+    }
   }
-  const method = extractMethod(pairsByName, body);
-  const count = requestCount++;
+  return { url, parameters };
+};
+
+const buildRequest = (req: Request, count: number, rawSegment: string): ImportRequest => {
+  const headers = buildHeaders(req);
+  // prevents curlconverter from adding a Content-Type header if it's not in the raw segment to
+  // maintain backward compatibility with several tests
+  if (!/content-type/i.test(rawSegment)) {
+    const idx = headers.findIndex(h => h.name.toLowerCase() === 'content-type');
+    if (idx !== -1) {
+      headers.splice(idx, 1);
+    }
+  }
+  mergeDroppedCookies(rawSegment, headers);
+  const authentication = buildAuth(req, headers);
+  const ct = headers.find(h => h.name.toLowerCase() === 'content-type');
+  const mimeType = ct ? ct.value.split(';')[0] : null;
+  const body = buildBody(req, mimeType);
+  const urlObj = req.urls[0];
+  const { url, parameters } = urlObj ? buildUrlAndParameters(urlObj) : { url: '', parameters: [] };
+  const method = urlObj?.method.toString().toUpperCase() || ('text' in body || 'params' in body ? 'POST' : 'GET');
   return {
     _id: `__REQ_${count}__`,
     _type: 'request',
@@ -265,197 +249,48 @@ const buildRequestObject = ({
   };
 };
 
-/**
- * cURL supported -d, and --date[suffix] flags.
- */
-const dataFlags = [
-  /**
-   * https://curl.se/docs/manpage.html#-d
-   */
-  'd',
-  'data',
-
-  /**
-   * https://curl.se/docs/manpage.html#--data-raw
-   */
-  'data-raw',
-
-  /**
-   * https://curl.se/docs/manpage.html#--data-urlencode
-   */
-  'data-urlencode',
-
-  /**
-   * https://curl.se/docs/manpage.html#--data-binary
-   */
-  'data-binary',
-
-  /**
-   * https://curl.se/docs/manpage.html#--data-ascii
-   */
-  'data-ascii',
-];
-
-/**
- * Parses pairs supporting only flags dictated by {@link dataFlags}
- *
- * @param keyedPairs pairs with cURL flags as keys.
- */
-const pairsToDataParameters = (keyedPairs: PairsByName): Parameter[] => {
-  let dataParameters: Parameter[] = [];
-
-  for (const flagName of dataFlags) {
-    const pairs = keyedPairs[flagName];
-
-    if (!pairs || pairs.length === 0) {
-      continue;
-    }
-
-    switch (flagName) {
-      case 'd':
-      case 'data':
-      case 'data-ascii':
-      case 'data-binary': {
-        dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair, true)));
-        break;
-      }
-      case 'data-raw': {
-        dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair)));
-        break;
-      }
-      case 'data-urlencode': {
-        dataParameters = dataParameters.concat(
-          pairs
-            .flatMap(pair => pairToParameters(pair, true))
-            .map(parameter => {
-              if (parameter.type === 'file') {
-                return parameter;
-              }
-
-              return {
-                ...parameter,
-                value: encodeURIComponent(parameter.value ?? ''),
-              };
-            }),
-        );
-        break;
-      }
-      default: {
-        throw new Error(`unhandled data flag ${flagName}`);
-      }
-    }
-  }
-
-  return dataParameters;
-};
-
-/**
- * Converts pairs (that could include multiple via `&`) into {@link Parameter}s. This
- * method supports both `@filename` and `name@filename`.
- *
- * @param pair command line value
- * @param allowFiles whether to allow the `@` to support include files
- */
-const pairToParameters = (pair: string | boolean, allowFiles = false): Parameter[] => {
-  if (typeof pair === 'boolean') {
-    return [{ name: '', value: pair.toString() }];
-  }
-  try {
-    JSON.parse(pair);
-    return [{ name: '', value: pair }];
-  } catch {}
-
-  return pair.split('&').map(pair => {
-    if (pair.includes('@') && allowFiles) {
-      const [name, fileName] = pair.split('@');
-      return { name, fileName, type: 'file' };
-    }
-
-    const equalIndex = pair.indexOf('=');
-    if (equalIndex === -1) {
-      return { name: '', value: pair };
-    }
-
-    const name = pair.slice(0, equalIndex);
-    const value = pair.slice(equalIndex + 1);
-
-    return { name, value };
-  });
-};
-
-const getPairValue = <T extends string | boolean>(parisByName: PairsByName, defaultValue: T, names: string[]) => {
-  for (const name of names) {
-    if (parisByName[name] && parisByName[name].length) {
-      return parisByName[name][0] as T;
-    }
-  }
-
-  return defaultValue;
+const buildEmptyUrlRequest = (raw: string): ImportRequest => {
+  const methodMatch = /(?:-X|--request)\s+(['"]?)([A-Za-z]+)\1/.exec(raw);
+  return {
+    _id: '__REQ_1__',
+    _type: 'request',
+    parentId: '__WORKSPACE_ID__',
+    name: 'cURL Import 1',
+    parameters: [],
+    url: '',
+    method: (methodMatch?.[2] ?? 'POST').toUpperCase(),
+    headers: [],
+    authentication: {},
+    body: {},
+  };
 };
 
 export const convert: Converter = async rawData => {
-  requestCount = 1;
-
-  if (!rawData.match(/^\s*curl /)) {
+  if (!/^\s*\$?\s*curl[\s\\]/.test(rawData)) {
     return null;
   }
 
-  // Parse the whole thing into one big tokenized list
-  const parseEntries = parse(rawData.replace(/\n/g, ' '));
+  const cleaned = preprocess(rawData);
 
-  // ~~~~~~~~~~~~~~~~~~~~~~ //
-  // Aggregate the commands //
-  // ~~~~~~~~~~~~~~~~~~~~~~ //
-  const commands: ParseEntry[][] = [];
+  // Lazy-load curlconverter so its tree-sitter native module is only
+  // initialized when a curl import is actually attempted.
+  const { parse } = await import('curlconverter/dist/src/parse');
 
-  let currentCommand: ParseEntry[] = [];
-
-  for (const parseEntry of parseEntries) {
-    if (typeof parseEntry === 'string') {
-      if (parseEntry.startsWith('$')) {
-        currentCommand.push(parseEntry.slice(1));
-      } else {
-        currentCommand.push(parseEntry);
-      }
-      continue;
+  let requests: ImportRequest[];
+  try {
+    const parsedRequests = parse(cleaned);
+    // Pair each request with the curl line it came from so we can recover
+    // `--cookie` values that curlconverter drops when a Cookie header is also set.
+    const segments = cleaned.split(/\r?\n/).filter(l => /^\s*curl(\s|;|\\|$)/.test(l.trim()));
+    requests = parsedRequests.map((req, i) => buildRequest(req, i + 1, segments[i] ?? cleaned));
+  } catch (e) {
+    const msg = (e as Error).message;
+    if (msg.startsWith('no URL specified')) {
+      requests = [buildEmptyUrlRequest(cleaned)];
+    } else {
+      return { convertErrorMessage: msg };
     }
-
-    if ((parseEntry as { comment: string }).comment) {
-      continue;
-    }
-
-    const { op } = parseEntry as { op: 'glob'; pattern: string } | { op: ControlOperator };
-
-    // `;` separates commands
-    if (op === ';') {
-      commands.push(currentCommand);
-      currentCommand = [];
-      continue;
-    }
-
-    if (op?.startsWith('$')) {
-      // Handle the case where literal like -H $'Header: \'Some Quoted Thing\''
-      const str = op.slice(2, -1).replace(/\\'/g, "'");
-
-      currentCommand.push(str);
-      continue;
-    }
-
-    if (op === 'glob') {
-      currentCommand.push((parseEntry as { op: 'glob'; pattern: string }).pattern);
-      continue;
-    }
-
-    // Not sure what else this could be, so just keep going
   }
-
-  // Push the last unfinished command
-  commands.push(currentCommand);
-
-  const requests: ImportRequest[] = commands
-    .filter(command => command[0] === 'curl')
-    .map(importCommand)
-    .map(buildRequestObject);
 
   const { disableAppVersionUserAgent } = await services.settings.get();
   if (!disableAppVersionUserAgent) {

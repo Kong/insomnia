@@ -84,6 +84,8 @@ export default async function build(options: Options) {
     external: [
       'electron',
       '@getinsomnia/node-libcurl',
+      'tree-sitter',
+      'tree-sitter-bash',
       'fsevents',
       '@node-llama-cpp/mac-arm64-metal',
       '@node-llama-cpp/mac-x64',

@@ -81,7 +81,7 @@ exports[`Fixtures > Import curl > dollar-sign-input.sh 1`] = `
         },
         {
           "name": "Cookie",
-          "value": "CookieTestConsent={stamp:\\xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=='%2Cnecessary...",
+          "value": "CookieTestConsent={stamp:'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=='%2Cnecessary...",
         },
         {
           "name": "Connection",

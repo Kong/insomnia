@@ -41,7 +41,8 @@ const config: BuildOptions = {
     '__DEV__': JSON.stringify(!isProd),
   },
   // node-llama-cpp is not included here because inso does not need it
-  external: ['@getinsomnia/node-libcurl', 'fsevents', 'mocha'],
+  // tree-sitter / tree-sitter-bash ship .node prebuilds unused by inso
+  external: ['@getinsomnia/node-libcurl', 'tree-sitter', 'tree-sitter-bash', 'fsevents', 'mocha'],
   entryPoints: ['./src/index.ts'],
 };
 
