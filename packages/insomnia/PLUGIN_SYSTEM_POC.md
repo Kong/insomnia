@@ -351,14 +351,25 @@ This keeps the public renderer surface narrow and auditable.
 - The UI renderer must not import or execute plugin packages directly
 - The registry must detect mixed legacy/new export shapes and apply explicit coexistence rules
 
-## Open design questions
+## Design decisions
 
-1. Should public plugins ever get `mainFunctions`, or should that be opt-in behind a trust prompt?
-2. Should `mainFunctions` run in the main process directly, or in a dedicated utility process with a stricter bridge?
-3. Should plugin permissions be granted per plugin, per function, or per capability group?
-4. Should bundled first-party plugins keep a separate trusted path?
-5. What is the concrete host for `rendererFunctions`?
-6. What is the minimum viable mutation / command protocol for migrating legacy actions?
+1. **Should public plugins ever get `mainFunctions`, or should that be opt-in behind a trust prompt?**
+   Deferred to Phase 2. Phase 1 does not introduce `mainFunctions` for public plugins.
+
+2. **Should `mainFunctions` run in the main process directly, or in a dedicated utility process?**
+   Main process for now. The utility process option remains open for a later pass if the trust surface warrants it.
+
+3. **Should plugin permissions be granted per plugin, per function, or per capability group?**
+   Deferred to Phase 2 when the permission model is introduced.
+
+4. **Should bundled first-party plugins keep a separate trusted path?**
+   No. Bundled plugins are already co-located and implicitly trusted by virtue of being shipped with the app. No separate path is needed.
+
+5. **What is the concrete host for `rendererFunctions`?**
+   A dedicated hidden BrowserWindow. Phase 1 uses `nodeIntegration: true` to preserve existing behaviour. Phase 2 revisits the configuration to meet sandboxing requirements (see [Host decision](#host-decision)).
+
+6. **What is the minimum viable mutation / command protocol for migrating legacy actions?**
+   Deferred to Phase 2. In Phase 1, plugins run with `nodeIntegration: true` and can still call back to main via IPC using existing mechanisms, so direct model mutation is preserved. Phase 2 introduces the sandbox that removes direct model access, and at that point a command/patch protocol becomes necessary — plugins will return structured commands (e.g. `{ type: 'update-request', requestId, patch }`) rather than mutating models in place.
 
 ## POC phases
 
