@@ -83,7 +83,6 @@
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "3.2.2",
-    "ajv": "^8.17.1",
-    "jshint": "^2.13.6"
+    "ajv": "^8.17.1"
   }
 }
