@@ -8,7 +8,3 @@ git config --local log.decorate false
 git config --local status.short true
 git config --local diff.stat true
 
-echo ""
-echo "Optional shell aliases (add to ~/.zshrc manually):"
-echo '  alias gl="git log --oneline --no-merges -20"'
-echo '  alias gs="git status -s"'
