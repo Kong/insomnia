@@ -1,13 +1,4 @@
-import type { AnyMessage, MethodInfo, PartialMessage } from '@bufbuild/protobuf';
-import { create } from '@bufbuild/protobuf';
-import {
-  DescriptorProtoSchema,
-  FieldDescriptorProtoSchema,
-  FileDescriptorProtoSchema,
-  FileDescriptorSetSchema,
-  MethodDescriptorProtoSchema,
-  ServiceDescriptorProtoSchema,
-} from '@bufbuild/protobuf/wkt';
+import type { AnyMessage, MethodInfo, PartialMessage, ServiceType } from '@bufbuild/protobuf';
 import type { UnaryResponse } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import * as grpcReflection from 'grpc-reflection-js';
@@ -202,84 +193,25 @@ describe('loadMethodsFromReflection', () => {
         expect(options.baseUrl).toStrictEqual('https://buf.build');
         return {
           async unary(
+            service: ServiceType,
             method: MethodInfo,
-            signal: AbortSignal | undefined,
-            timeoutMs: number | undefined,
+            _: AbortSignal | undefined,
+            __: number | undefined,
             header: HeadersInit | undefined,
             input: PartialMessage<AnyMessage>,
           ): Promise<UnaryResponse> {
             expect(new Headers(header).get('Authorization')).toStrictEqual('Bearer TEST_KEY');
             expect(input).toStrictEqual({ module: 'buf.build/connectrpc/eliza' });
-            // Create a FileDescriptorSet-like response with the parsed proto file
-            const fileDescriptorSet = create(FileDescriptorSetSchema, {
-              file: [
-                create(FileDescriptorProtoSchema, {
-                  name: 'connectrpc/eliza/v1/eliza.proto',
-                  package: 'connectrpc.eliza.v1',
-                  messageType: [
-                    create(DescriptorProtoSchema, {
-                      name: 'SayRequest',
-                      field: [create(FieldDescriptorProtoSchema, { name: 'sentence', number: 1, label: 1, type: 9, jsonName: 'sentence' })],
-                    }),
-                    create(DescriptorProtoSchema, {
-                      name: 'SayResponse',
-                      field: [create(FieldDescriptorProtoSchema, { name: 'sentence', number: 1, label: 1, type: 9, jsonName: 'sentence' })],
-                    }),
-                    create(DescriptorProtoSchema, {
-                      name: 'ConverseRequest',
-                      field: [create(FieldDescriptorProtoSchema, { name: 'sentence', number: 1, label: 1, type: 9, jsonName: 'sentence' })],
-                    }),
-                    create(DescriptorProtoSchema, {
-                      name: 'ConverseResponse',
-                      field: [create(FieldDescriptorProtoSchema, { name: 'sentence', number: 1, label: 1, type: 9, jsonName: 'sentence' })],
-                    }),
-                    create(DescriptorProtoSchema, {
-                      name: 'IntroduceRequest',
-                      field: [create(FieldDescriptorProtoSchema, { name: 'name', number: 1, label: 1, type: 9, jsonName: 'name' })],
-                    }),
-                    create(DescriptorProtoSchema, {
-                      name: 'IntroduceResponse',
-                      field: [create(FieldDescriptorProtoSchema, { name: 'sentence', number: 1, label: 1, type: 9, jsonName: 'sentence' })],
-                    }),
-                  ],
-                  service: [
-                    create(ServiceDescriptorProtoSchema, {
-                      name: 'ElizaService',
-                      method: [
-                        create(MethodDescriptorProtoSchema, {
-                          name: 'Say',
-                          inputType: '.connectrpc.eliza.v1.SayRequest',
-                          outputType: '.connectrpc.eliza.v1.SayResponse',
-                        }),
-                        create(MethodDescriptorProtoSchema, {
-                          name: 'Converse',
-                          inputType: '.connectrpc.eliza.v1.ConverseRequest',
-                          outputType: '.connectrpc.eliza.v1.ConverseResponse',
-                          clientStreaming: true,
-                          serverStreaming: true,
-                        }),
-                        create(MethodDescriptorProtoSchema, {
-                          name: 'Introduce',
-                          inputType: '.connectrpc.eliza.v1.IntroduceRequest',
-                          outputType: '.connectrpc.eliza.v1.IntroduceResponse',
-                          serverStreaming: true,
-                        }),
-                      ],
-                    }),
-                  ],
-                  syntax: 'proto3',
-                }),
-              ],
-            });
             return {
-              service: {} as any,
+              service: service,
               method: method,
               header: new Headers(),
               trailer: new Headers(),
               stream: false,
-              message: {
-                fileDescriptorSet,
-              } as any,
+              // Output of running `buf curl https://buf.build/buf.reflect.v1beta1.FileDescriptorSetService/GetFileDescriptorSet --data '{"module": "buf.build/connectrpc/eliza"}' --schema buf.build/bufbuild/reflect -H 'Authorization: Bearer buf-token'`
+              message: method.O.fromJsonString(
+                '{"fileDescriptorSet":{"file":[{"name":"connectrpc/eliza/v1/eliza.proto","package":"connectrpc.eliza.v1","messageType":[{"name":"SayRequest","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]},{"name":"SayResponse","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]},{"name":"ConverseRequest","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]},{"name":"ConverseResponse","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]},{"name":"IntroduceRequest","field":[{"name":"name","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"name"}]},{"name":"IntroduceResponse","field":[{"name":"sentence","number":1,"label":"LABEL_OPTIONAL","type":"TYPE_STRING","jsonName":"sentence"}]}],"service":[{"name":"ElizaService","method":[{"name":"Say","inputType":".connectrpc.eliza.v1.SayRequest","outputType":".connectrpc.eliza.v1.SayResponse","options":{"idempotencyLevel":"NO_SIDE_EFFECTS"}},{"name":"Converse","inputType":".connectrpc.eliza.v1.ConverseRequest","outputType":".connectrpc.eliza.v1.ConverseResponse","options":{},"clientStreaming":true,"serverStreaming":true},{"name":"Introduce","inputType":".connectrpc.eliza.v1.IntroduceRequest","outputType":".connectrpc.eliza.v1.IntroduceResponse","options":{},"serverStreaming":true}]}],"syntax":"proto3"}]},"version":"233fca715f49425581ec0a1b660be886"}',
+              ),
             };
           },
         };

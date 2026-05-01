@@ -1,6 +1,10 @@
-import { toBinary } from '@bufbuild/protobuf';
-import { FileDescriptorSetSchema } from '@bufbuild/protobuf/wkt';
-import { Code, ConnectError } from '@connectrpc/connect';
+import {
+  FileDescriptorSet as ProtobufEsFileDescriptorSet,
+  MethodIdempotency,
+  MethodKind,
+  proto3,
+} from '@bufbuild/protobuf';
+import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import {
   type Call,
@@ -117,34 +121,68 @@ interface MethodDefs {
   example?: Record<string, any>;
 }
 
-
 const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflectionApi']): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
+  const GetFileDescriptorSetRequest = proto3.makeMessageType('buf.reflect.v1beta1.GetFileDescriptorSetRequest', () => [
+    { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 3,
+      name: 'symbols',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ]);
+  const GetFileDescriptorSetResponse = proto3.makeMessageType(
+    'buf.reflect.v1beta1.GetFileDescriptorSetResponse',
+    () => [
+      {
+        no: 1,
+        name: 'file_descriptor_set',
+        kind: 'message',
+        T: ProtobufEsFileDescriptorSet,
+      },
+      { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    ],
+  );
+  const FileDescriptorSetService = {
+    typeName: 'buf.reflect.v1beta1.FileDescriptorSetService',
+    methods: {
+      getFileDescriptorSet: {
+        name: 'GetFileDescriptorSet',
+        I: GetFileDescriptorSetRequest,
+        O: GetFileDescriptorSetResponse,
+        kind: MethodKind.Unary,
+        idempotency: MethodIdempotency.NoSideEffects,
+      },
+    },
+  } as const;
   const transport = createConnectTransport({
     baseUrl: url,
     httpVersion: '1.1',
   });
+  const client = createPromiseClient(FileDescriptorSetService, transport);
   const headers: HeadersInit = {
     'User-Agent': `insomnia/${version}`,
     ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
   };
   try {
-    const response = await (transport as any).unary(
-      { kind: 'rpc', I: {}, O: {} },
-      undefined,
-      30_000,
-      headers,
-      { module },
+    const res = await client.getFileDescriptorSet(
+      {
+        module,
+      },
+      {
+        headers,
+      },
     );
-
-    const fileDescriptorSet = (response as any).message?.fileDescriptorSet;
-    if (!fileDescriptorSet) {
+    const methodDefs: MethodDefs[] = [];
+    if (res.fileDescriptorSet === undefined) {
       return [];
     }
     const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
-      Buffer.from(toBinary(FileDescriptorSetSchema, fileDescriptorSet)),
+      Buffer.from(res.fileDescriptorSet.toBinary()),
     );
-    const methodDefs: MethodDefs[] = [];
     for (const definition of Object.values(packageDefinition)) {
       const serviceDefinition = asServiceDefinition(definition);
       if (serviceDefinition === null) {
