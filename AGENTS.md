@@ -15,6 +15,12 @@
 - **No unsolicited formatting.** Rely on ESLint/Prettier. Do not reformat existing code.
 - **Strict scoping.** Only modify code directly related to the prompt. Do not refactor adjacent code unless asked.
 
+## First-time Setup
+Run once after cloning to configure local git settings for quieter output:
+```bash
+bash scripts/setup.sh
+```
+
 ## Validation Commands
 Run from repo root before considering work complete:
 
