@@ -323,36 +323,29 @@ export const ProjectSettingsForm: FC<Props> = ({
                     Learn more ↗
                   </a>
                 </div>
-                <div className="flex items-stretch justify-between gap-2">
-                  <span
-                    title={repoPath}
-                    className="min-w-0 flex-1 truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 font-mono text-base leading-8 text-(--hl-xl)"
-                  >
+                <div className="mb-1 flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+                  <span className="min-w-0 flex-1 truncate" title={repoPath}>
                     {repoPath}
                   </span>
                   <Button
                     onPress={() => {
-                      window.clipboard.writeText(repoPath);
+                      window.clipboard.writeText(`cd "${repoPath}"`);
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
-                    className="flex shrink-0 items-center gap-1.5 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
+                    className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
                     aria-label="Copy repository path"
                   >
-                    <Icon icon={copied ? 'check' : 'copy'} />
-                    <span>{copied ? 'Copied!' : 'Copy'}</span>
-                  </Button>
-                  <Button
-                    onPress={() => {
-                      window.shell.showItemInFolder(repoPath);
-                    }}
-                    className="flex shrink-0 items-center gap-1.5 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
-                    aria-label="Open repository folder"
-                  >
-                    <Icon icon={'folder'} />
-                    <span>Open</span>
+                    <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
                   </Button>
                 </div>
+                <Button
+                  onPress={() => window.shell.openPath(repoPath)}
+                  className="cursor-pointer text-(--hl) underline"
+                  aria-label="Open repository folder"
+                >
+                  Open in file system
+                </Button>
               </div>
             </>
           )}
