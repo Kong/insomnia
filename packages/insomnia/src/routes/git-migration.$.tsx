@@ -28,7 +28,7 @@ const MigrationView = () => {
         setTimeout(() => {
           setMigrationLogs(result.logs);
           setFailedProjects(result.failedProjects);
-          setMigratedCount(result.totalProjects - result.failedProjects.length);
+          setMigratedCount(result.totalProjects);
           setStatus(result.failedProjects.length > 0 ? 'partiallyCompleted' : 'completed');
         }, remaining);
       })
