@@ -45,7 +45,7 @@ import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
-import { showError } from '~/ui/components/modals';
+import { showError, showModal } from '~/ui/components/modals';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { CertificatesModal } from '~/ui/components/modals/workspace-certificates-modal';
@@ -61,6 +61,7 @@ import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
 import { selectFileOrFolder } from '~/common/select-file-or-folder';
+import { AskModal } from '~/ui/components/modals/ask-modal';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
@@ -419,6 +420,23 @@ const Component = ({ params }: Route.ComponentProps) => {
     }
     await services.apiSpec.update(apiSpec, { rulesetFilePath: filePath });
     setRulesetPath(filePath);
+  };
+
+  const handleUnselectSpectralFile = async () => {
+    showModal(AskModal, {
+      title: 'Remove Ruleset File',
+      message:
+        'Are you sure you want to remove the custom ruleset file for this? This will disable all custom linting rules and use the default Spectral ruleset.',
+      yesText: 'Remove',
+      color: 'danger',
+      noText: 'Cancel',
+      onDone: async (confirmed: boolean) => {
+        if (confirmed) {
+          setRulesetPath(gitSyncRulesetPath || '');
+          await services.apiSpec.update(apiSpec, { rulesetFilePath: '' });
+        }
+      },
+    });
   };
 
   const specActionList: SpecActionItem[] = [
@@ -1083,6 +1101,20 @@ const Component = ({ params }: Route.ComponentProps) => {
                         </div>
                       </Tooltip>
                     </TooltipTrigger>
+                    {apiSpec.rulesetFilePath === rulesetPath && (
+                      <TooltipTrigger>
+                        <Button onPress={handleUnselectSpectralFile}>
+                          <Icon icon="xmark" />
+                        </Button>
+                        <Tooltip
+                          placement="top end"
+                          offset={8}
+                          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                        >
+                          <p>Clear custom ruleset and use default OAS ruleset</p>
+                        </Tooltip>
+                      </TooltipTrigger>
+                    )}
                     <span className="flex-1" />
                     {lintErrors.length > 0 && (
                       <div className="flex items-center gap-2 select-none">
