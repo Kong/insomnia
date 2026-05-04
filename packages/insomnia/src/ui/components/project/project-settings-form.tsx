@@ -35,6 +35,7 @@ import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
+import { platform } from '../../../common/platform';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
@@ -331,7 +332,11 @@ export const ProjectSettingsForm: FC<Props> = ({
                   </span>
                   <Button
                     onPress={() => {
-                      window.clipboard.writeText(`cd "${repoPath}"`);
+                      const cmd =
+                        platform === 'win32'
+                          ? `cd "${repoPath.replace(/"/g, '\\"')}"`
+                          : `cd '${repoPath.replace(/'/g, "'\\''")}'`;
+                      window.clipboard.writeText(cmd);
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
