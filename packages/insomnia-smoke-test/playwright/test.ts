@@ -153,9 +153,24 @@ export const test = baseTest.extend<{
     await electronApp.close();
   },
   page: async ({ app }, use) => {
-    const page = await app.firstWindow({ timeout: 60_000 });
+    let page = await app.firstWindow({ timeout: 60_000 });
 
     await page.waitForLoadState();
+
+    // The app creates a hidden plugin window alongside the main window. If Playwright
+    // races and hands us the plugin window (which has no window.main), find the real one.
+    const isMainWindow = await page.evaluate(() => !!(window as any).main).catch(() => false);
+    if (!isMainWindow) {
+      const windows = app.windows();
+      for (const win of windows) {
+        const hasMain = await win.evaluate(() => !!(window as any).main).catch(() => false);
+        if (hasMain) {
+          page = win;
+          await page.waitForLoadState();
+          break;
+        }
+      }
+    }
 
     // Seed a fake Konnect PAT so konnect-enabled UI renders in all tests
     await page.evaluate(() => (window as any).main.secretStorage.setSecret('konnectPat', 'kpat_test'));

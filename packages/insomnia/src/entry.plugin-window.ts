@@ -1,6 +1,14 @@
 import { ipcRenderer } from 'electron';
 
-import type { ExecutePluginActionArgs, ExecutePluginMainActionArgs, RunTemplateTagActionArgs } from './plugins/bridge-types';
+import { initDatabase, initServices } from '~/insomnia-data';
+import { servicesNodeImpl } from '~/insomnia-data/node';
+
+import { pluginWindowDatabase } from './main/database.plugin-window';
+import type {
+  ExecutePluginActionArgs,
+  ExecutePluginMainActionArgs,
+  RunTemplateTagActionArgs,
+} from './plugins/bridge-types';
 import * as pluginApp from './plugins/context/app';
 import * as pluginData from './plugins/context/data';
 import * as pluginNetwork from './plugins/context/network';
@@ -94,11 +102,25 @@ ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvok
 
         let allActions: any[];
         switch (type) {
-          case 'request': allActions = await getRequestActions(); break;
-          case 'requestGroup': allActions = await getRequestGroupActions(); break;
-          case 'workspace': allActions = await getWorkspaceActions(); break;
-          case 'document': allActions = await getDocumentActions(); break;
-          default: throw new Error(`[plugin-window] Unknown action type: ${type}`);
+          case 'request': {
+            allActions = await getRequestActions();
+            break;
+          }
+          case 'requestGroup': {
+            allActions = await getRequestGroupActions();
+            break;
+          }
+          case 'workspace': {
+            allActions = await getWorkspaceActions();
+            break;
+          }
+          case 'document': {
+            allActions = await getDocumentActions();
+            break;
+          }
+          default: {
+            throw new Error(`[plugin-window] Unknown action type: ${type}`);
+          }
         }
 
         const entry = allActions.find(a => a.plugin.name === pluginName && a.label === label);
@@ -169,4 +191,14 @@ ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvok
   }
 });
 
-ipcRenderer.send('plugin-window-ready');
+// Initialize database (via IPC proxy) and services before signalling readiness.
+// getPlugins() calls services.settings.get(), which requires this to be done first.
+(async () => {
+  try {
+    await initDatabase(pluginWindowDatabase);
+    initServices(servicesNodeImpl);
+  } catch (err) {
+    console.error('[plugin-window] Initialization failed:', err);
+  }
+  ipcRenderer.send('plugin-window-ready');
+})();

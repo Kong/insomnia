@@ -786,6 +786,10 @@ export function createWindowsAndReturnMain() {
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }
+  // Create eagerly so the 12 MB plugin-window bundle is parsed at startup rather
+  // than on the first plugin call (which would blow assertion timeouts in tests).
+  // The test fixture guards against firstWindow() returning this window instead
+  // of the main app window (the plugin window has no window.main).
   createPluginWindow();
   return mainWindow;
 }
