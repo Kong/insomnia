@@ -97,13 +97,13 @@ const MigrationView = () => {
           ) : (
             <>
               <p className="text-sm">
-                In order to continue with this update, we need to adjust your local file system. This is required to
-                enable managing Insomnia changes using git on the CLI.
+                In order to continue with this update, we need to adjust your local projects. This is required to enable
+                managing Insomnia changes using git on the CLI.
               </p>
               <p className="text-sm">
                 {isUpdateRunning
                   ? 'Note: Your data is safe and the update only takes seconds.'
-                  : 'Note: This update does NOT change your data and only affects how your local Insomnia files are stored.'}
+                  : 'Note: This update does NOT affect any ongoing work or pending changes, and only affects how your local Insomnia files are stored.'}
               </p>
             </>
           )}
