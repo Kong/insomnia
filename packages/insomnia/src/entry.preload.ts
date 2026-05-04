@@ -353,6 +353,7 @@ const main: Window['main'] = {
     getRequestGroupActions: () => invokeWithNormalizedError('plugins.getRequestGroupActions'),
     getWorkspaceActions: () => invokeWithNormalizedError('plugins.getWorkspaceActions'),
     getDocumentActions: () => invokeWithNormalizedError('plugins.getDocumentActions'),
+    executeAction: (args: import('./plugins/bridge-types').ExecutePluginActionArgs) => invokeWithNormalizedError('plugins.executeAction', args),
   },
 };
 

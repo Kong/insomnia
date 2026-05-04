@@ -164,6 +164,7 @@ export function registerPluginIpcHandlers() {
   ipcMain.handle('plugins.getRequestGroupActions', () => invokeInPluginWindow('getRequestGroupActions'));
   ipcMain.handle('plugins.getWorkspaceActions', () => invokeInPluginWindow('getWorkspaceActions'));
   ipcMain.handle('plugins.getDocumentActions', () => invokeInPluginWindow('getDocumentActions'));
+  ipcMain.handle('plugins.executeAction', (_event, args) => invokeInPluginWindow('executeAction', args));
 }
 
 export function getAppUserDataPath() {

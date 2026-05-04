@@ -1,5 +1,10 @@
 import { ipcRenderer } from 'electron';
 
+import type { ExecutePluginActionArgs } from './plugins/bridge-types';
+import * as pluginApp from './plugins/context/app';
+import * as pluginData from './plugins/context/data';
+import * as pluginNetwork from './plugins/context/network';
+import * as pluginStore from './plugins/context/store';
 import type { Plugin } from './plugins/index';
 import {
   getActivePlugins,
@@ -28,7 +33,7 @@ function serializePlugin(p: Plugin) {
   };
 }
 
-ipcRenderer.on('plugin-invoke', async (_event, { id, method }: PluginInvokeMessage) => {
+ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvokeMessage) => {
   try {
     let result: unknown;
 
@@ -78,6 +83,35 @@ ipcRenderer.on('plugin-invoke', async (_event, { id, method }: PluginInvokeMessa
       case 'getDocumentActions': {
         const actions = await getDocumentActions();
         result = actions.map(a => ({ label: a.label, hideAfterClick: a.hideAfterClick, pluginName: a.plugin.name }));
+        break;
+      }
+
+      case 'executeAction': {
+        const { type, pluginName, label, projectId, domainData } = args as ExecutePluginActionArgs;
+
+        let allActions: any[];
+        switch (type) {
+          case 'request': allActions = await getRequestActions(); break;
+          case 'requestGroup': allActions = await getRequestGroupActions(); break;
+          case 'workspace': allActions = await getWorkspaceActions(); break;
+          case 'document': allActions = await getDocumentActions(); break;
+          default: throw new Error(`[plugin-window] Unknown action type: ${type}`);
+        }
+
+        const entry = allActions.find(a => a.plugin.name === pluginName && a.label === label);
+        if (!entry) {
+          throw new Error(`[plugin-window] Action not found: ${pluginName}/${label}`);
+        }
+
+        const context = {
+          ...pluginApp.init(),
+          ...pluginData.init(projectId),
+          ...(pluginStore.init(entry.plugin) as Record<string, any>),
+          ...(pluginNetwork.init() as Record<string, any>),
+        };
+
+        await entry.action(context, domainData);
+        result = null;
         break;
       }
 

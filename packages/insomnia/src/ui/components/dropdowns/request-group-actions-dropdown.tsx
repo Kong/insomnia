@@ -14,12 +14,7 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { RequestGroupAction } from '../../../plugins';
-import { getRequestGroupActions } from '../../../plugins';
-import * as pluginApp from '../../../plugins/context/app';
-import * as pluginData from '../../../plugins/context/data';
-import * as pluginNetwork from '../../../plugins/context/network';
-import * as pluginStore from '../../../plugins/context/store';
+import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import type { CreateRequestType } from '../../hooks/use-request';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
@@ -42,7 +37,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
-  const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
+  const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
 
@@ -78,7 +73,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
     });
 
   const onOpen = async () => {
-    const actionPlugins = await getRequestGroupActions();
+    const actionPlugins = await window.main.plugins.getRequestGroupActions();
     setActionPlugins(actionPlugins);
   };
 
@@ -119,21 +114,18 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
     });
   };
 
-  const handlePluginClick = async ({ label, plugin, action }: RequestGroupAction) => {
+  const handlePluginClick = async ({ label, pluginName }: SerializableActionMeta) => {
     setLoadingActions({ ...loadingActions, [label]: true });
 
     try {
-      const context = {
-        ...(pluginApp.init() as Record<string, any>),
-        ...pluginData.init(activeProject._id),
-        ...(pluginStore.init(plugin) as Record<string, any>),
-        ...(pluginNetwork.init() as Record<string, any>),
-      };
       const requests = await services.request.findByParentId(requestGroup._id);
       requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
-      await action(context, {
-        requestGroup,
-        requests,
+      await window.main.plugins.executeAction({
+        type: 'requestGroup',
+        pluginName,
+        label,
+        projectId: activeProject._id,
+        domainData: { requestGroup, requests },
       });
     } catch (err) {
       showError({

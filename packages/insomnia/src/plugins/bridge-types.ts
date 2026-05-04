@@ -25,6 +25,16 @@ export interface SerializableDocumentActionMeta {
   hideAfterClick?: boolean;
 }
 
+export type PluginActionType = 'request' | 'requestGroup' | 'workspace' | 'document';
+
+export interface ExecutePluginActionArgs {
+  type: PluginActionType;
+  pluginName: string;
+  label: string;
+  projectId: string;
+  domainData: unknown;
+}
+
 export interface PluginsBridgeAPI {
   getThemes: () => Promise<SerializableTheme[]>;
   getPlugins: () => Promise<SerializablePlugin[]>;
@@ -34,4 +44,5 @@ export interface PluginsBridgeAPI {
   getRequestGroupActions: () => Promise<SerializableActionMeta[]>;
   getWorkspaceActions: () => Promise<SerializableActionMeta[]>;
   getDocumentActions: () => Promise<SerializableDocumentActionMeta[]>;
+  executeAction: (args: ExecutePluginActionArgs) => Promise<void>;
 }

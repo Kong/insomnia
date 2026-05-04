@@ -120,6 +120,7 @@ export type HandleChannels =
   | 'multipartBufferToArray'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'plugins.executeAction'
   | 'plugins.getActivePlugins'
   | 'plugins.getDocumentActions'
   | 'plugins.getPlugins'
