@@ -197,8 +197,8 @@ ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvok
   try {
     await initDatabase(pluginWindowDatabase);
     initServices(servicesNodeImpl);
+    ipcRenderer.send('plugin-window-ready');
   } catch (err) {
     console.error('[plugin-window] Initialization failed:', err);
   }
-  ipcRenderer.send('plugin-window-ready');
 })();
