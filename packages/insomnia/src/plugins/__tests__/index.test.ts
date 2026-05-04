@@ -90,6 +90,26 @@ describe('getRequestActions', () => {
     ]);
     expect(await getRequestActions()).toHaveLength(0);
   });
+
+  it('action is callable and receives the args passed by the caller', async () => {
+    const action = vi.fn().mockResolvedValue(undefined);
+    _testOnlySetPlugins([makePlugin({ module: { requestActions: [{ label: 'Run', action }] } })]);
+    const [{ action: retrieved }] = await getRequestActions();
+
+    const context = { app: {} };
+    const models = { request: { _id: 'req_1' } };
+    await retrieved(context as any, models as any);
+
+    expect(action).toHaveBeenCalledWith(context, models);
+  });
+
+  it('action errors propagate to the caller', async () => {
+    const action = vi.fn().mockRejectedValue(new Error('request action failed'));
+    _testOnlySetPlugins([makePlugin({ module: { requestActions: [{ label: 'Run', action }] } })]);
+    const [{ action: retrieved }] = await getRequestActions();
+
+    await expect(retrieved({} as any, {} as any)).rejects.toThrow('request action failed');
+  });
 });
 
 describe('getWorkspaceActions', () => {
@@ -107,6 +127,26 @@ describe('getWorkspaceActions', () => {
       makePlugin({ config: { disabled: true }, module: { workspaceActions: [{ label: 'Export', action: vi.fn() }] } }),
     ]);
     expect(await getWorkspaceActions()).toHaveLength(0);
+  });
+
+  it('action is callable and receives the args passed by the caller', async () => {
+    const action = vi.fn().mockResolvedValue(undefined);
+    _testOnlySetPlugins([makePlugin({ module: { workspaceActions: [{ label: 'Export', action }] } })]);
+    const [{ action: retrieved }] = await getWorkspaceActions();
+
+    const context = { app: {} };
+    const models = { workspace: { _id: 'wrk_1' }, requestGroups: [], requests: [] };
+    await retrieved(context as any, models as any);
+
+    expect(action).toHaveBeenCalledWith(context, models);
+  });
+
+  it('action errors propagate to the caller', async () => {
+    const action = vi.fn().mockRejectedValue(new Error('workspace action failed'));
+    _testOnlySetPlugins([makePlugin({ module: { workspaceActions: [{ label: 'Export', action }] } })]);
+    const [{ action: retrieved }] = await getWorkspaceActions();
+
+    await expect(retrieved({} as any, {} as any)).rejects.toThrow('workspace action failed');
   });
 });
 
@@ -129,6 +169,26 @@ describe('getRequestGroupActions', () => {
     ]);
     expect(await getRequestGroupActions()).toHaveLength(0);
   });
+
+  it('action is callable and receives the args passed by the caller', async () => {
+    const action = vi.fn().mockResolvedValue(undefined);
+    _testOnlySetPlugins([makePlugin({ module: { requestGroupActions: [{ label: 'Run All', action }] } })]);
+    const [{ action: retrieved }] = await getRequestGroupActions();
+
+    const context = { app: {} };
+    const models = { requestGroup: { _id: 'grp_1' }, requests: [] };
+    await retrieved(context as any, models as any);
+
+    expect(action).toHaveBeenCalledWith(context, models);
+  });
+
+  it('action errors propagate to the caller', async () => {
+    const action = vi.fn().mockRejectedValue(new Error('group action failed'));
+    _testOnlySetPlugins([makePlugin({ module: { requestGroupActions: [{ label: 'Run All', action }] } })]);
+    const [{ action: retrieved }] = await getRequestGroupActions();
+
+    await expect(retrieved({} as any, {} as any)).rejects.toThrow('group action failed');
+  });
 });
 
 describe('getDocumentActions', () => {
@@ -146,6 +206,32 @@ describe('getDocumentActions', () => {
       makePlugin({ config: { disabled: true }, module: { documentActions: [{ label: 'Lint', action: vi.fn() }] } }),
     ]);
     expect(await getDocumentActions()).toHaveLength(0);
+  });
+
+  it('action is callable and receives the args passed by the caller', async () => {
+    const action = vi.fn().mockResolvedValue(undefined);
+    _testOnlySetPlugins([makePlugin({ module: { documentActions: [{ label: 'Lint', action }] } })]);
+    const [{ action: retrieved }] = await getDocumentActions();
+
+    const context = { app: {} };
+    const spec = { contents: 'openapi: 3.0.0' };
+    await retrieved(context as any, spec as any);
+
+    expect(action).toHaveBeenCalledWith(context, spec);
+  });
+
+  it('action errors propagate to the caller — the plugin layer does not swallow them', async () => {
+    const action = vi.fn().mockRejectedValue(new Error('lint failed'));
+    _testOnlySetPlugins([makePlugin({ module: { documentActions: [{ label: 'Lint', action }] } })]);
+    const [{ action: retrieved }] = await getDocumentActions();
+
+    await expect(retrieved({} as any, {} as any)).rejects.toThrow('lint failed');
+  });
+
+  it('supports hideAfterClick flag', async () => {
+    _testOnlySetPlugins([makePlugin({ module: { documentActions: [{ label: 'Lint', action: vi.fn(), hideAfterClick: true }] } })]);
+    const [item] = await getDocumentActions();
+    expect(item.hideAfterClick).toBe(true);
   });
 });
 
