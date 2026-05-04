@@ -1057,16 +1057,24 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             PREVIEW
           </span>
           <span className="font-semibold">Manage changes on the Git CLI</span>
+          <TooltipTrigger>
+            <Button className="flex items-center justify-center rounded-xs p-0.5 text-(--hl) hover:bg-(--hl-xs)" aria-label="More information">
+              <Icon icon="circle-info" className="size-3.5" />
+            </Button>
+            <Tooltip
+              offset={8}
+              className="max-w-xs rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+            >
+              You can now browse Git Sync project files on your local file system and manage changes using your normal
+              Git workflows.{' '}
+              <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
+                Learn more ↗
+              </a>
+            </Tooltip>
+          </TooltipTrigger>
         </div>
-        <p className="mb-3 text-sm text-(--color-font)">
-          You can now browse Git Sync project files on your local file system and manage changes using your normal Git
-          workflows.{' '}
-          <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
-            Learn more ↗
-          </a>
-        </p>
         <p className="mb-1 text-xs font-semibold">Path to this project:</p>
-        <div className="mb-3 flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+        <div className="flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
           <span className="min-w-0 flex-1 truncate" title={repoPath}>
             {repoPath}
           </span>
@@ -1076,18 +1084,27 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
-            className="mb-1 flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+            className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
             aria-label="Copy path"
           >
             <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
           </Button>
+          <TooltipTrigger>
+            <Button
+              onPress={() => window.shell.openPath(repoPath)}
+              className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+              aria-label="Open in file system"
+            >
+              <Icon icon="folder-open" className="size-4" />
+            </Button>
+            <Tooltip
+              offset={8}
+              className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+            >
+              Open in file system
+            </Tooltip>
+          </TooltipTrigger>
         </div>
-        <Button
-          onPress={() => window.shell.showItemInFolder(repoPath)}
-          className="cursor-pointer text-(--hl) underline"
-        >
-          Open in file system
-        </Button>
       </div>
     </>
   );
