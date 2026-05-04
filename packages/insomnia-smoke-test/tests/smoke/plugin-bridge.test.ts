@@ -43,5 +43,5 @@ test('Plugin bridge routes requestAction execution through hidden BrowserWindow'
   await requestRow.getByLabel('Request Actions').click();
 
   // The plugin action must appear in the dropdown, proving end-to-end bridge execution.
-  await expect(page.getByRole('menuitemradio', { name: ACTION_LABEL })).toBeVisible();
+  await expect.soft(page.getByRole('menuitemradio', { name: ACTION_LABEL })).toBeVisible();
 });
