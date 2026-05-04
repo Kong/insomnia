@@ -354,6 +354,8 @@ const main: Window['main'] = {
     getWorkspaceActions: () => invokeWithNormalizedError('plugins.getWorkspaceActions'),
     getDocumentActions: () => invokeWithNormalizedError('plugins.getDocumentActions'),
     executeAction: (args: import('./plugins/bridge-types').ExecutePluginActionArgs) => invokeWithNormalizedError('plugins.executeAction', args),
+    getTemplateTags: () => invokeWithNormalizedError('plugins.getTemplateTags'),
+    runTemplateTagAction: (args: import('./plugins/bridge-types').RunTemplateTagActionArgs) => invokeWithNormalizedError('plugins.runTemplateTagAction', args),
   },
 };
 

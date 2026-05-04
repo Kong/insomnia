@@ -37,7 +37,7 @@ import type {
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
-import type { PluginTemplateTag, RenderedRequest } from '../../templating/types';
+import type { RenderedRequest } from '../../templating/types';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
@@ -194,7 +194,7 @@ export interface RendererToMainBridgeAPI {
   showNunjucksContextMenu: (options: {
     key: string;
     nunjucksTag?: { template: string; range: MarkerRange };
-    pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+    pluginTemplateTags?: { templateTag: Record<string, unknown> }[];
   }) => void;
   showContextMenu: (options: {
     key: string;

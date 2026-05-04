@@ -25,6 +25,17 @@ export interface SerializableDocumentActionMeta {
   hideAfterClick?: boolean;
 }
 
+export interface SerializableTemplateTagMeta {
+  pluginName: string;
+  templateTag: Record<string, unknown>;
+}
+
+export interface RunTemplateTagActionArgs {
+  pluginName: string;
+  tagName: string;
+  actionName: string;
+}
+
 export type PluginActionType = 'request' | 'requestGroup' | 'workspace' | 'document';
 
 export interface ExecutePluginActionArgs {
@@ -45,4 +56,6 @@ export interface PluginsBridgeAPI {
   getWorkspaceActions: () => Promise<SerializableActionMeta[]>;
   getDocumentActions: () => Promise<SerializableDocumentActionMeta[]>;
   executeAction: (args: ExecutePluginActionArgs) => Promise<void>;
+  getTemplateTags: () => Promise<SerializableTemplateTagMeta[]>;
+  runTemplateTagAction: (args: RunTemplateTagActionArgs) => Promise<void>;
 }

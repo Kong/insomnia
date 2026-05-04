@@ -14,7 +14,6 @@ import { fnOrString } from '../../common/misc';
 import {
   type NunjucksParsedTagArg,
   type NunjucksTagContextMenuAction,
-  type PluginTemplateTag,
 } from '../../templating/types';
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
@@ -121,6 +120,8 @@ export type HandleChannels =
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
   | 'plugins.executeAction'
+  | 'plugins.getTemplateTags'
+  | 'plugins.runTemplateTagAction'
   | 'plugins.getActivePlugins'
   | 'plugins.getDocumentActions'
   | 'plugins.getPlugins'
@@ -269,7 +270,7 @@ export function registerElectronHandlers() {
       options: {
         key: string;
         nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords>;
-        pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+        pluginTemplateTags?: { templateTag: Record<string, unknown> }[];
       },
     ) => {
       const { key, nunjucksTag, pluginTemplateTags = [] } = options;
@@ -314,10 +315,10 @@ export function registerElectronHandlers() {
               },
               { type: 'separator' },
             ];
-        const localTemplate: MenuItemConstructorOptions[] = [...localTemplateTags, ...pluginTemplateTags]
+        const localTemplate: MenuItemConstructorOptions[] = ([...localTemplateTags, ...pluginTemplateTags] as any[])
           // sort alphabetically
-          .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
-          .map(l => {
+          .sort((a: any, b: any) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
+          .map((l: any) => {
             const actions = l.templateTag.args?.[0];
             const needsEnterprisePlan = l.templateTag.needsEnterprisePlan || false;
             const additionalArgs = l.templateTag.args?.slice(1);
@@ -338,7 +339,7 @@ export function registerElectronHandlers() {
                     },
                   }
                 : {
-                    submenu: actions?.options?.map(action => ({
+                    submenu: actions?.options?.map((action: any) => ({
                       label: fnOrString(action.displayName),
                       click: () => {
                         const additionalTagFields = additionalArgs.length

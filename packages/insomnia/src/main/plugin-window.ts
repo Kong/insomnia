@@ -165,6 +165,8 @@ export function registerPluginIpcHandlers() {
   ipcMain.handle('plugins.getWorkspaceActions', () => invokeInPluginWindow('getWorkspaceActions'));
   ipcMain.handle('plugins.getDocumentActions', () => invokeInPluginWindow('getDocumentActions'));
   ipcMain.handle('plugins.executeAction', (_event, args) => invokeInPluginWindow('executeAction', args));
+  ipcMain.handle('plugins.getTemplateTags', () => invokeInPluginWindow('getTemplateTags'));
+  ipcMain.handle('plugins.runTemplateTagAction', (_event, args) => invokeInPluginWindow('runTemplateTagAction', args));
 }
 
 export function getAppUserDataPath() {

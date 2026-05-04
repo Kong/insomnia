@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron';
 
-import type { ExecutePluginActionArgs } from './plugins/bridge-types';
+import type { ExecutePluginActionArgs, RunTemplateTagActionArgs } from './plugins/bridge-types';
 import * as pluginApp from './plugins/context/app';
 import * as pluginData from './plugins/context/data';
 import * as pluginNetwork from './plugins/context/network';
@@ -12,6 +12,7 @@ import {
   getPlugins,
   getRequestActions,
   getRequestGroupActions,
+  getTemplateTags,
   getThemes,
   getWorkspaceActions,
   reloadPlugins,
@@ -111,6 +112,32 @@ ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvok
         };
 
         await entry.action(context, domainData);
+        result = null;
+        break;
+      }
+
+      case 'getTemplateTags': {
+        const tags = await getTemplateTags();
+        result = tags.map(({ plugin, templateTag }) => ({
+          pluginName: plugin.name,
+          // eslint-disable-next-line unicorn/prefer-structured-clone
+          templateTag: JSON.parse(JSON.stringify(templateTag)),
+        }));
+        break;
+      }
+
+      case 'runTemplateTagAction': {
+        const { pluginName, tagName, actionName } = args as RunTemplateTagActionArgs;
+        const tags = await getTemplateTags();
+        const tag = tags.find(t => t.plugin.name === pluginName && t.templateTag.name === tagName);
+        if (!tag) {
+          throw new Error(`[plugin-window] Template tag not found: ${pluginName}/${tagName}`);
+        }
+        const action = tag.templateTag.actions?.find((a: any) => a.name === actionName);
+        if (!action) {
+          throw new Error(`[plugin-window] Tag action not found: ${actionName}`);
+        }
+        await action.run(pluginStore.init(tag.plugin));
         result = null;
         break;
       }
