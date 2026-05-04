@@ -1090,7 +1090,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               setTimeout(() => setCopied(false), 2000);
             }}
             className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
-            aria-label="Copy path"
+            aria-label="Copy shell command"
           >
             <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
           </Button>
