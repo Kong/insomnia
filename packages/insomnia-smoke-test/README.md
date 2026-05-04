@@ -1,142 +1,98 @@
 # Insomnia Smoke Tests
 
-[![Playwright](https://img.shields.io/badge/playwright-blue.svg?style=for-the-badge&logo=playwright)](https://github.com/microsoft/playwright)
+Playwright E2E tests for the Insomnia desktop app.
 
-This project contains the smoke testing suite for Insomnia App.
+> CLI smoke tests: [CLI.md](CLI.md)
 
-> To find more about Inso CLI smoke tests, check [this document](CLI.md).
+## Test structure
 
-- [Insomnia Smoke Tests](#insomnia-smoke-tests)
-  - [Quick-start](#quick-start)
-  - [Debugging and Developing Tests locally](#debugging-and-developing-tests-locally)
-    - [Playwright VS Code extension](#playwright-vs-code-extension)
-    - [Playwright Inspector](#playwright-inspector)
-    - [Playwright Trace viewer](#playwright-trace-viewer)
-    - [Additional Log levels](#additional-log-levels)
-  - [Reproducing CI Failures](#reproducing-ci-failures)
-    - [Getting traces from CI](#getting-traces-from-ci)
-    - [Build and package methods](#build-and-package-methods)
-    - [Non recurring tests](#non-recurring-tests)
-    - [Refresh certs](#refresh-certs)
+```
+tests/
+  smoke/      # Main suite — runs on every CI push (Ubuntu only)
+  critical/   # Single critical-path test — runs on release
+  migration/  # Data migration tests
+```
+
+All commands below must be run from the **repo root**.
 
 ## Quick-start
 
-Prerequisites:
-
-- Clone the project
-- Run `npm install`
-
-To run all tests:
-
-- Run `npm run test:smoke:dev`
-
-To run single tests:
-
-- Filter by the file or test title, e.g. `npm run test:smoke:dev -- oauth`
-- Use playwright UI `npm run test:dev -w insomnia-smoke-test -- --project=Smoke --ui` to show all tests by project
-
-## Debugging and Developing Tests locally
-
-### Playwright VS Code extension
-
-In order to run/debug tests directly from VS Code:
-
-- Install the [Playwright extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright).
-
-You can trigger tests from the `Testing` tab, or within the test files clicking the run button.
-
-![editor](docs/imgs/editor.png)
-
-If no tests appear, you may need to run "Refresh playwright tests". This can be done from the command palette, or by using the button at the top of the `Testing` tab.
-
-![refresh](docs/imgs/refresh.png)
-
-### Playwright Inspector
-
-You can step through tests with playwright inspector: `PWDEBUG=1 npm run test:smoke:dev`
-
-This is also useful to help create new tests.
-
-![playwright inspector](docs/imgs/playwright-inspector.jpg)
-
-### Playwright Trace viewer
-
-We generate [Playwright Traces](https://playwright.dev/docs/trace-viewer) when tests run. These can be used to debug local and CI test failures.
-
-![playwright trace viewer](docs/imgs/playwright-trace.jpg)
-
-To open a local trace viewer for a given test output, run:
-
-```shell
-# Example:
-npx playwright show-trace packages/insomnia-smoke-test/traces/app-can-send-requests/trace.zip
+```bash
+npm install
+npm run test:smoke:dev   # run all Smoke tests (dev mode)
 ```
 
-Alternatively you can upload this trace to [trace.playwright.dev](https://trace.playwright.dev/).
+Both the echo server (port 4010) and the Vite dev server start automatically.
 
-### Additional Log levels
+**Filter to one test** — pass a substring of the test title or file name:
 
-You can enable additional logging to help you debug tests:
+```bash
+npm run test:smoke:dev -- oauth
+```
 
-- Playwright logs: `DEBUG=pw:api npm run test:smoke:dev`
-- Insomnia console logs: `DEBUG=pw:browser npm run test:smoke:dev`
-- WebServer console logs: `DEBUG=pw:WebServer npm run test:smoke:dev`
+**Interactive UI:**
 
-## Reproducing CI Failures
+```bash
+npm run test:smoke:dev -- --ui
+```
 
-### Getting traces from CI
+**Step-through debugger:**
 
-Traces from CI execution can be found in the failed CI job's artifacts.
+```bash
+PWDEBUG=1 npm run test:smoke:dev
+```
 
-![artifacts](docs/imgs/artifacts.png)
+## Additional log levels
 
-After downloading the artifacts, these can be extracted and loaded up into the [Trace viewer](#playwright-trace-viewer).
+```bash
+DEBUG=pw:api npm run test:smoke:dev         # Playwright API logs
+DEBUG=pw:browser npm run test:smoke:dev     # Insomnia console logs
+DEBUG=pw:WebServer npm run test:smoke:dev   # Web server logs
+```
 
-### Build and package methods
+## Traces and error context
 
-It's possible to run the smoke tests for:
+On failure, two artifacts are written under `packages/insomnia-smoke-test/traces/<test-name>/`:
 
-- A `build`, the JS bundle that is loaded into an electron client
-- A `package`, the executable binary (e.g. `.dmg` or `.exe`)
+- **`error-context.md`** — error details, ARIA page snapshot at point of failure, and annotated test source. Read this first.
+- **`trace.zip`** — full Playwright trace (network, screenshots, DOM snapshots).
 
-For `build`:
+Open a trace:
 
-```shell
-# Transpile js bundle
+```bash
+npx playwright show-trace packages/insomnia-smoke-test/traces/<test-name>/trace.zip
+```
+
+Or upload to [trace.playwright.dev](https://trace.playwright.dev/).
+
+CI traces are available as artifacts on failed workflow runs.
+
+## Build / package modes
+
+Run against a JS bundle (`build`) or a packaged binary (`package`) instead of the dev watcher:
+
+```bash
+# build mode
 npm run app-build
-
-# Run tests
 npm run test:smoke:build
-```
 
-For `package`:
-
-```shell
-# Build executable in /packages/insomnia/dist
+# package mode
 npm run app-package
-
-# Run tests
 npm run test:smoke:package
 ```
 
-> Note: for local testing of the packaged app on macOS you need to change the entitlements temporarily to allow unsigned apps to run. You can do this by changing the `com.apple.security.cs.disable-library-validation` key in `entitlements.mac.inherit.plist` file to `true`. (Remember do not commit to the origin repo!)
+> macOS package mode: set `com.apple.security.cs.disable-library-validation` to `true` in `entitlements.mac.inherit.plist` to allow unsigned local binaries. Do not commit this change.
 
-Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
+## Non-CI / pre-release tests
 
-### Non recurring tests
-
-Non recurring / non-CI tests, like pre-release ones, can be run using [Playwright VS Code extension](#playwright-vs-code-extension) or by running `test:dev` against the desired test file:
-
-```shell
-npm run test:dev -w packages/insomnia-smoke-test -- preferences-interactions
+```bash
+npm run test:dev -w insomnia-smoke-test -- tests/smoke/preferences-interactions.test.ts
 ```
 
-### Refresh certs
+## Cert refresh
 
-The certs might need to be replaced after 2026 to fix the custom ca cert test
+If the custom CA cert test fails after 2026:
 
-```sh
-mkcert -install
-mkcert localhost
-mkcert -CAROOT
+```bash
+mkcert -install && mkcert localhost && mkcert -CAROOT
 ```

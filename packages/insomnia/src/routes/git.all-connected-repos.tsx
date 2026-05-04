@@ -22,18 +22,17 @@ export async function clientLoader() {
 
   const organizationMap = Object.fromEntries(organizations.map(o => [o.id, o]));
 
-  const allConnectedGitProjects = allProjects.filter(
-    project => models.project.isGitProject(project) && !models.project.isEmptyGitProject(project),
-  );
+  const allConnectedGitProjects = allProjects.filter(project => models.project.isConnectedGitProject(project));
   const gitRepoURIInfoMap: Record<string, { organizationName: string; projectName: string }> = {};
   await Promise.all(
-    allConnectedGitProjects.map(async ({ gitRepositoryId, name, parentId }) => {
+    allConnectedGitProjects.map(async project => {
+      const gitRepositoryId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
       if (gitRepositoryId) {
         const gitRepository = await services.gitRepository.getById(gitRepositoryId);
         if (gitRepository) {
           gitRepoURIInfoMap[gitRepository.uri] = {
-            organizationName: organizationMap[parentId]?.name || '',
-            projectName: name,
+            organizationName: organizationMap[project.parentId]?.name || '',
+            projectName: project.name,
           };
         }
       }

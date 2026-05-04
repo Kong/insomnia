@@ -225,7 +225,8 @@ async function _removeAllCredentials() {
  *
  */
 async function _removeGitRepository(repo: GitRepository) {
-  const projects = await database.find<Project>(models.project.type, { gitRepositoryId: repo._id });
+  const queryIds = models.project.getQueryableGitRepositoryIds(repo._id);
+  const projects = await database.find<Project>(models.project.type, { gitRepositoryId: { $in: queryIds } });
   for (const p of projects) {
     await services.project.update(p, { gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
   }

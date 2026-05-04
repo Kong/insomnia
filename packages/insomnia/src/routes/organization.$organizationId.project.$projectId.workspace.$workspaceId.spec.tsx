@@ -84,9 +84,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
-  const isGitProject = models.project.isGitProject(project);
+  const isGitProject = models.project.isConnectedGitProject(project);
 
-  const gitRepositoryId = isGitProject ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const gitRepositoryId = models.project.isConnectedGitProject(project)
+    ? models.project.getEffectiveRepoId(project)
+    : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
   const gitSyncRulesetPath = gitRepositoryId

@@ -65,6 +65,9 @@ Organization
 - **HTTP Calls:** Use `insomniaFetch()` for Insomnia backend APIs. Use plain `fetch()` for external/third-party APIs.
 - **Styling:** Tailwind utility classes only. Use `clsx`/`tailwind-merge` for conditionals. Use React Aria for interactive HTML elements.
 - **Testing:** Use **Vitest** (unit) and **Playwright** (E2E). Co-locate unit tests as `filename.test.ts`. Use `vi.mock()`. Prefer testing logic via loaders over mounting components.
+- **E2E tests** live in `packages/insomnia-smoke-test/`. Full docs: [`packages/insomnia-smoke-test/README.md`](packages/insomnia-smoke-test/README.md).
+- Run E2E from repo root: `npm run test:smoke:dev` (filter: `npm run test:smoke:dev -- <title-substring>`).
+- New test imports: `import { test } from '../../playwright/test'` and `import { expect } from '@playwright/test'`.
 
 ## Sensitive Data
 - **Vault system (AES-GCM):** For environment secrets (`EnvironmentKvPairDataType.SECRET`).

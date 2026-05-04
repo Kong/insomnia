@@ -76,6 +76,9 @@
   "overrides": {
     "ajv-draft-04": {
       "ajv": "$ajv"
+    },
+    "jshint": {
+      "lodash": "4.18.1"
     }
   },
   "dependencies": {
