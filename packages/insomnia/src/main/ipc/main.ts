@@ -158,7 +158,11 @@ export interface RendererToMainBridgeAPI {
     bodyCompression?: 'zip' | null;
   }) => Promise<string>;
   getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<RequestHeader | undefined>;
-  getOAuth2Token: (requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => Promise<OAuth2Token | undefined>;
+  getOAuth2Token: (
+    requestId: string,
+    authentication: AuthTypeOAuth2,
+    forceRefresh?: boolean,
+  ) => Promise<OAuth2Token | undefined>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -199,6 +203,7 @@ export interface RendererToMainBridgeAPI {
     documentContent: string;
     rulesetPath: string;
   }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
+  watchRulesetFile: (options: { rulesetPath: string }) => void;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -354,6 +359,18 @@ export function registerMainHandlers() {
 
       process.postMessage({ documentContent, rulesetPath });
     });
+  });
+
+  ipcMainOn('watchRulesetFile', (event, options: { rulesetPath: string }) => {
+    try {
+      fs.watch(options.rulesetPath, eventType => {
+        if (eventType === 'change') {
+          event.sender.send('ruleset.file-changed', { rulesetPath: options.rulesetPath });
+        }
+      });
+    } catch (err) {
+      console.error('Failed to watch ruleset file:', err);
+    }
   });
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {
     return insecureReadFile(options.path);

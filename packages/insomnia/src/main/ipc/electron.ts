@@ -202,7 +202,8 @@ export type MainOnChannels =
   | 'sync.cancelConflict'
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
-  | 'writeText';
+  | 'writeText'
+  | 'watchRulesetFile';
 
 export type RendererOnChannels =
   | 'contextMenuCommand'
@@ -228,7 +229,8 @@ export type RendererOnChannels =
   | 'hide-oauth-authorization-modal'
   | 'mcp-auth-confirmation'
   | 'git.db-synced'
-  | 'git.file-problems-changed';
+  | 'git.file-problems-changed'
+  | 'ruleset.file-changed';
 
 export const ipcMainOn = (
   channel: MainOnChannels,

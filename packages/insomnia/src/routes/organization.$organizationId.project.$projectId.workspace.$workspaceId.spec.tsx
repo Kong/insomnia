@@ -60,6 +60,7 @@ import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
+import { selectFileOrFolder } from '~/common/select-file-or-folder';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
@@ -83,13 +84,12 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
+  const isGitProject = models.project.isGitProject(project);
 
-  const gitRepositoryId = models.project.isGitProject(project)
-    ? project.gitRepositoryId
-    : workspaceMeta?.gitRepositoryId;
+  const gitRepositoryId = isGitProject ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
-  const rulesetPath = gitRepositoryId
+  const gitSyncRulesetPath = gitRepositoryId
     ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
     : '';
 
@@ -101,7 +101,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   return {
     apiSpec,
-    rulesetPath,
+    gitSyncRulesetPath,
+    isGitProject,
     parsedSpec,
   };
 }
@@ -180,7 +181,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
-  const { apiSpec, rulesetPath, parsedSpec } = useLoaderData<typeof clientLoader>();
+  const { apiSpec, gitSyncRulesetPath, isGitProject, parsedSpec } = useLoaderData<typeof clientLoader>();
 
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
@@ -189,6 +190,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
+  const [rulesetPath, setRulesetPath] = useState<string>(gitSyncRulesetPath);
 
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
@@ -243,6 +245,18 @@ const Component = ({ params }: Route.ComponentProps) => {
     registerCodeMirrorLint(rulesetPath);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
+  }, [rulesetPath]);
+
+  useEffect(() => {
+    if (rulesetPath) {
+      window.main.watchRulesetFile({ rulesetPath });
+    }
+
+    return window.main.on('ruleset.file-changed', () => {
+      console.log('file changed...');
+      registerCodeMirrorLint(rulesetPath);
+      editor.current?.tryToSetOption('lint', { ...lintOptions });
+    });
   }, [rulesetPath]);
 
   reactUse.useUnmount(() => {
@@ -386,6 +400,20 @@ const Component = ({ params }: Route.ComponentProps) => {
     const contents = to === 'json' ? JSON.stringify(parsedSpec, null, 2) : YAML.stringify(parsedSpec);
     editor.current?.setValue(contents);
     updateApiSpec({ organizationId, projectId, workspaceId, contents });
+  };
+
+  const handleSelectSpectralFile = async () => {
+    const { filePath, canceled } = await selectFileOrFolder({
+      itemTypes: ['file'],
+      extensions: ['yaml', 'yml'],
+      showHiddenFiles: true,
+    });
+
+    if (canceled || !filePath) {
+      return;
+    }
+
+    setRulesetPath(filePath);
   };
 
   const specActionList: SpecActionItem[] = [
@@ -1017,9 +1045,10 @@ const Component = ({ params }: Route.ComponentProps) => {
                 >
                   <div className="flex items-center gap-2 p-(--padding-sm)">
                     <TooltipTrigger>
-                      <Button className="flex cursor-pointer items-center gap-2 select-none">
-                        <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-                        Ruleset
+                      <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
+                      Ruleset:
+                      <Button className="underline" onPress={handleSelectSpectralFile}>
+                        {rulesetPath ? window.path.basename(rulesetPath) : 'Upload yml file'}
                       </Button>
                       <Tooltip
                         placement="top end"
@@ -1034,39 +1063,46 @@ const Component = ({ params }: Route.ComponentProps) => {
                             </Fragment>
                           ) : (
                             <Fragment>
-                              <p>Using default OAS ruleset.</p>
                               <p>
-                                To use a custom ruleset add a <code className="p-0">.spectral.yaml</code> file to the
-                                root of your git repository
+                                Using default OAS ruleset. Click to upload a custom ruleset yaml file.
+                                {isGitProject && (
+                                  <span>
+                                    {' '}
+                                    Alternatively, add a <code className="p-0">.spectral.yaml</code> file to the root of
+                                    your git repository.
+                                  </span>
+                                )}
                               </p>
                             </Fragment>
                           )}
                         </div>
                       </Tooltip>
                     </TooltipTrigger>
+                    <span className="flex-1" />
                     {lintErrors.length > 0 && (
                       <div className="flex items-center gap-2 select-none">
                         <Icon icon="circle-xmark" className="text-(--color-danger)" />
-                        {lintErrors.length}
                       </div>
                     )}
                     {lintWarnings.length > 0 && (
                       <div className="flex items-center gap-2 select-none">
                         <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
-                        {lintWarnings.length}
                       </div>
                     )}
                     {apiSpec.contents && (
                       <div className="flex items-center gap-2 select-none">
                         {lintMessages.length === 0 && <Icon icon="check-square" className="text-(--color-success)" />}
-                        {lintMessages.length === 0 ? 'No lint problems' : 'Lint problems detected'}
+                        {lintMessages.length === 0 ? (
+                          'No lint problems'
+                        ) : (
+                          <Button onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
+                            <span className="underline">
+                              {lintErrors.length} {lintErrors.length === 1 ? 'error' : 'errors'}, {lintWarnings.length}{' '}
+                              {lintWarnings.length === 1 ? 'warning' : 'warnings'}
+                            </span>
+                          </Button>
+                        )}
                       </div>
-                    )}
-                    <span className="flex-1" />
-                    {lintMessages.length > 0 && (
-                      <Button aria-label="Toggle lint panel" onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
-                        <Icon icon={isLintPaneOpen ? 'chevron-down' : 'chevron-up'} />
-                      </Button>
                     )}
                   </div>
                   {isLintPaneOpen && (
