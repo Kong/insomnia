@@ -96,8 +96,6 @@ export const interceptorRules: ThreatRule[] = [
     buildMaskValue: violationCheck => (script: string) => {
       invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
       violationCheck(script);
-
-       
       return (0, eval)(script);
     },
   },
@@ -157,6 +155,41 @@ export const maskRules: ThreatRule[] = [
     name: 'WebAssembly',
     description: 'Prevents access to the WebAssembly API to prevent loading and executing arbitrary native bytecode, which would bypass JS-level sandboxing entirely.',
     maskName: 'WebAssembly',
+    maskValue: undefined,
+  },
+  // The five entries below mirror identifiers that are also in blockedRootRules (AST-level).
+  // They are duplicated here as runtime masks because the AST alias tracker only follows
+  // VariableDeclarator / AssignmentExpression — a function that returns a blocked root (e.g.
+  // `function() { return module; }`) passes the static check. Runtime masking to undefined
+  // is the only complete defence against indirect access patterns.
+  {
+    name: 'module',
+    description: 'Prevents access to the Node.js module object to block module.require() and module.children, which expose the full unfiltered module graph and bypass the require interceptor.',
+    maskName: 'module',
+    maskValue: undefined,
+  },
+  {
+    name: 'self',
+    description: 'Prevents access to the self global (Web Worker / browser alias for window) to block self.require() and other host APIs reachable via the real global object, bypassing the window mask.',
+    maskName: 'self',
+    maskValue: undefined,
+  },
+  {
+    name: 'exports',
+    description: 'Prevents access to the Node.js exports object to block indirect traversal of the live module cache.',
+    maskName: 'exports',
+    maskValue: undefined,
+  },
+  {
+    name: 'Buffer',
+    description: 'Prevents access to the Node.js Buffer global to block allocUnsafe(), which reads uninitialised heap memory, and indirect require() via the Buffer module object.',
+    maskName: 'Buffer',
+    maskValue: undefined,
+  },
+  {
+    name: 'frames',
+    description: 'Prevents access to the window.frames collection to block navigation to an unsandboxed global scope via frame traversal.',
+    maskName: 'frames',
     maskValue: undefined,
   },
 ];

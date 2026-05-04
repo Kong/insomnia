@@ -132,12 +132,13 @@ export const ScriptingSettings = () => {
 
   const sandboxEnabled = settings.scriptSandboxEnabled !== false;
   const strictModeEnabled = settings.scriptStrictModeEnabled !== false;
+  const blockUnresolvableEnabled = settings.scriptBlockUnresolvableProperties !== false;
   const disabledRules = settings.disabledSecurityRules ?? [];
   const disabledProperties = settings.disabledBlockedProperties ?? [];
   const disabledRoots = settings.disabledBlockedRoots ?? [];
 
   const GROUPED_MASK_NAMES = new Set([
-    'globalThis', 'global', 'process',
+    'globalThis', 'global', 'process', 'module', 'exports', 'Buffer', 'self', 'frames',
     'setImmediate', 'queueMicrotask',
     'Proxy', 'Reflect',
     'Function', 'WebAssembly',
@@ -147,7 +148,7 @@ export const ScriptingSettings = () => {
     {
       title: 'Global & Node.js Internals',
       description: 'References to the global scope and Node.js process information such as environment variables and runtime state.',
-      rules: maskRules.filter(r => ['globalThis', 'global', 'process'].includes(r.name)),
+      rules: maskRules.filter(r => ['globalThis', 'global', 'process', 'module', 'exports', 'Buffer', 'self', 'frames'].includes(r.name)),
     },
     {
       title: 'Async Scheduling',
@@ -248,13 +249,20 @@ export const ScriptingSettings = () => {
               </div>
             </Switch>
           </div>
-          <div className="ml-2 border-l-2 border-solid border-(--hl-sm) pl-3">
+          <div className="ml-2 border-l-2 border-solid border-(--hl-sm) pl-3 flex flex-col gap-4">
             <RuleToggle
               name="use strict"
               description="Wraps scripts with 'use strict' preventing the accidental creation of global variables and blocking restricted features."
               isEnabled={strictModeEnabled}
               isDisabled={!sandboxEnabled}
               onChange={enabled => patchSettings({ scriptStrictModeEnabled: enabled })}
+            />
+            <RuleToggle
+              name="block unresolvable properties"
+              description="Blocks computed property access that cannot be statically verified (e.g. obj['a'+'b'], obj[variable]). Disable to allow dynamic property keys."
+              isEnabled={blockUnresolvableEnabled}
+              isDisabled={!sandboxEnabled}
+              onChange={enabled => patchSettings({ scriptBlockUnresolvableProperties: enabled })}
             />
           </div>
         </div>
