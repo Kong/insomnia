@@ -1,11 +1,29 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../themes', () => ({ default: [] }));
+vi.mock('../context/app', () => ({ init: vi.fn().mockReturnValue({ app: {} }) }));
+vi.mock('../context/store', () => ({ init: vi.fn().mockReturnValue({ store: {} }) }));
+vi.mock('../context/network', () => ({ init: vi.fn().mockReturnValue({ network: {} }) }));
+vi.mock('~/insomnia-data', () => ({
+  services: {
+    settings: { get: vi.fn() },
+    request: { getById: vi.fn() },
+    cloudCredential: { getById: vi.fn(), update: vi.fn() },
+    workspace: { getById: vi.fn() },
+    oAuth2Token: { getByParentId: vi.fn() },
+    cookieJar: { getOrCreateForParentId: vi.fn() },
+    response: { getLatestForRequestId: vi.fn() },
+  },
+}));
+
+import { services } from '~/insomnia-data';
 
 import type { Plugin } from '../index';
 import {
   _testOnlySetPlugins,
+  executePluginMainAction,
   getDocumentActions,
+  getPluginCommonContext,
   getRequestActions,
   getRequestGroupActions,
   getRequestHooks,
@@ -92,7 +110,7 @@ describe('getRequestActions', () => {
   });
 
   it('action is callable and receives the args passed by the caller', async () => {
-    const action = vi.fn().mockResolvedValue(undefined);
+    const action = vi.fn().mockResolvedValue();
     _testOnlySetPlugins([makePlugin({ module: { requestActions: [{ label: 'Run', action }] } })]);
     const [{ action: retrieved }] = await getRequestActions();
 
@@ -130,7 +148,7 @@ describe('getWorkspaceActions', () => {
   });
 
   it('action is callable and receives the args passed by the caller', async () => {
-    const action = vi.fn().mockResolvedValue(undefined);
+    const action = vi.fn().mockResolvedValue();
     _testOnlySetPlugins([makePlugin({ module: { workspaceActions: [{ label: 'Export', action }] } })]);
     const [{ action: retrieved }] = await getWorkspaceActions();
 
@@ -171,7 +189,7 @@ describe('getRequestGroupActions', () => {
   });
 
   it('action is callable and receives the args passed by the caller', async () => {
-    const action = vi.fn().mockResolvedValue(undefined);
+    const action = vi.fn().mockResolvedValue();
     _testOnlySetPlugins([makePlugin({ module: { requestGroupActions: [{ label: 'Run All', action }] } })]);
     const [{ action: retrieved }] = await getRequestGroupActions();
 
@@ -209,7 +227,7 @@ describe('getDocumentActions', () => {
   });
 
   it('action is callable and receives the args passed by the caller', async () => {
-    const action = vi.fn().mockResolvedValue(undefined);
+    const action = vi.fn().mockResolvedValue();
     _testOnlySetPlugins([makePlugin({ module: { documentActions: [{ label: 'Lint', action }] } })]);
     const [{ action: retrieved }] = await getDocumentActions();
 
@@ -229,7 +247,9 @@ describe('getDocumentActions', () => {
   });
 
   it('supports hideAfterClick flag', async () => {
-    _testOnlySetPlugins([makePlugin({ module: { documentActions: [{ label: 'Lint', action: vi.fn(), hideAfterClick: true }] } })]);
+    _testOnlySetPlugins([
+      makePlugin({ module: { documentActions: [{ label: 'Lint', action: vi.fn(), hideAfterClick: true }] } }),
+    ]);
     const [item] = await getDocumentActions();
     expect(item.hideAfterClick).toBe(true);
   });
@@ -251,6 +271,13 @@ describe('getTemplateTags', () => {
     ]);
     expect(await getTemplateTags()).toHaveLength(0);
   });
+
+  it('run() is callable and errors propagate — the plugin layer does not catch them', async () => {
+    const run = vi.fn().mockRejectedValue(new Error('tag run failed'));
+    _testOnlySetPlugins([makePlugin({ module: { templateTags: [{ name: 'env', run }] } })]);
+    const [{ templateTag }] = await getTemplateTags();
+    await expect(templateTag.run({} as any, [])).rejects.toThrow('tag run failed');
+  });
 });
 
 describe('getThemes', () => {
@@ -268,5 +295,66 @@ describe('getThemes', () => {
       makePlugin({ config: { disabled: true }, module: { themes: [{ name: 'dracula', theme: {} }] } }),
     ]);
     expect(await getThemes()).toHaveLength(0);
+  });
+});
+
+describe('getPluginCommonContext', () => {
+  it('returns an object with the expected top-level keys', () => {
+    const ctx = getPluginCommonContext({ plugin: { name: 'test-plugin' } });
+    expect(ctx).toHaveProperty('app');
+    expect(ctx).toHaveProperty('store');
+    expect(ctx).toHaveProperty('network');
+    expect(ctx).toHaveProperty('util');
+  });
+});
+
+describe('executePluginMainAction', () => {
+  // @kong/insomnia-plugin-external-vault is a real bundlePlugin name from config.json
+  const bundlePluginName = '@kong/insomnia-plugin-external-vault';
+
+  beforeEach(() => {
+    vi.mocked(services.settings.get).mockResolvedValue({ pluginsAllowElevatedAccess: true } as any);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('executes the matching action and returns its result', async () => {
+    const action = vi.fn().mockResolvedValue('action-result');
+    _testOnlySetPlugins([
+      makePlugin({
+        name: bundlePluginName,
+        directory: '',
+        module: { unsafePluginMainActions: [{ name: 'doThing', action }] },
+      }),
+    ]);
+
+    const result = await executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' });
+
+    expect(result).toBe('action-result');
+    expect(action).toHaveBeenCalledOnce();
+  });
+
+  it('throws when the plugin is not found', async () => {
+    _testOnlySetPlugins([]);
+
+    await expect(executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' })).rejects.toThrow(
+      `Plugin ${bundlePluginName} not found`,
+    );
+  });
+
+  it('throws when the action name is not found in the plugin', async () => {
+    _testOnlySetPlugins([
+      makePlugin({
+        name: bundlePluginName,
+        directory: '',
+        module: { unsafePluginMainActions: [{ name: 'otherAction', action: vi.fn() }] },
+      }),
+    ]);
+
+    await expect(executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' })).rejects.toThrow(
+      'Action doThing not found',
+    );
   });
 });
