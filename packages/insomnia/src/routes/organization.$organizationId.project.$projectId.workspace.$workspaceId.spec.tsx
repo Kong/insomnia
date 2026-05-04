@@ -192,7 +192,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
-  const [rulesetPath, setRulesetPath] = useState<string>(gitSyncRulesetPath);
+  const [rulesetPath, setRulesetPath] = useState<string>('');
 
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
@@ -259,6 +259,10 @@ const Component = ({ params }: Route.ComponentProps) => {
       editor.current?.tryToSetOption('lint', { ...lintOptions });
     });
   }, [rulesetPath]);
+
+  useEffect(() => {
+    setRulesetPath(apiSpec.rulesetFilePath || gitSyncRulesetPath || '');
+  }, [apiSpec, gitSyncRulesetPath]);
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
@@ -413,7 +417,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     if (canceled || !filePath) {
       return;
     }
-
+    await services.apiSpec.update(apiSpec, { rulesetFilePath: filePath });
     setRulesetPath(filePath);
   };
 

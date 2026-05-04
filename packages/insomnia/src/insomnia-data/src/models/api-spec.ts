@@ -11,10 +11,13 @@ export const canDuplicate = true;
 
 export const canSync = true;
 
+export const optionalKeys = ['rulesetFilePath'];
+
 export interface BaseApiSpec {
   fileName: string;
   contentType: 'json' | 'yaml';
   contents: string;
+  rulesetFilePath?: string;
 }
 
 export type ApiSpec = BaseModel & BaseApiSpec;
