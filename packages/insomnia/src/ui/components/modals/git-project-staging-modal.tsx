@@ -11,6 +11,7 @@ import React, {
 import {
   Button,
   Dialog,
+  DialogTrigger,
   GridList,
   GridListItem,
   Heading,
@@ -18,6 +19,7 @@ import {
   Label,
   Modal,
   ModalOverlay,
+  Popover,
   TextArea,
   TextField,
   Tooltip,
@@ -1058,21 +1060,26 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             PREVIEW
           </span>
           <span className="font-semibold">Manage changes on the Git CLI</span>
-          <TooltipTrigger>
-            <Button className="flex items-center justify-center rounded-xs p-0.5 text-(--hl) hover:bg-(--hl-xs)" aria-label="More information">
+          <DialogTrigger>
+            <Button
+              className="flex items-center justify-center rounded-xs p-0.5 text-(--hl) hover:bg-(--hl-xs)"
+              aria-label="More information"
+            >
               <Icon icon="circle-info" className="size-3.5" />
             </Button>
-            <Tooltip
+            <Popover
               offset={8}
               className="max-w-xs rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
             >
-              You can now browse Git Sync project files on your local file system and manage changes using your normal
-              Git workflows.{' '}
-              <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
-                Learn more ↗
-              </a>
-            </Tooltip>
-          </TooltipTrigger>
+              <Dialog className="outline-none" >
+                You can now browse Git Sync project files on your local file system and manage changes using your normal
+                Git workflows.{' '}
+                <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
+                  Learn more ↗
+                </a>
+              </Dialog>
+            </Popover>
+          </DialogTrigger>
         </div>
         <p className="mb-1 text-xs font-semibold">Path to this project:</p>
         <div className="flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
