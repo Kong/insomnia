@@ -11,6 +11,8 @@ import {
   Select,
   SelectValue,
   TextField,
+  Tooltip,
+  TooltipTrigger,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -323,7 +325,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                     Learn more ↗
                   </a>
                 </div>
-                <div className="mb-1 flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+                <div className="flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
                   <span className="min-w-0 flex-1 truncate" title={repoPath}>
                     {repoPath}
                   </span>
@@ -338,14 +340,22 @@ export const ProjectSettingsForm: FC<Props> = ({
                   >
                     <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
                   </Button>
+                  <TooltipTrigger>
+                    <Button
+                      onPress={() => window.shell.openPath(repoPath)}
+                      className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+                      aria-label="Open in file system"
+                    >
+                      <Icon icon="folder-open" className="size-4" />
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+                    >
+                      Open in file system
+                    </Tooltip>
+                  </TooltipTrigger>
                 </div>
-                <Button
-                  onPress={() => window.shell.openPath(repoPath)}
-                  className="cursor-pointer text-(--hl) underline"
-                  aria-label="Open repository folder"
-                >
-                  Open in file system
-                </Button>
               </div>
             </>
           )}
