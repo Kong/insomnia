@@ -1056,7 +1056,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           <span className="rounded-xs border border-solid border-[#a78bfa] px-1.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
             PREVIEW
           </span>
-          <span className="font-semibold">Manage changes on the Git CLI</span>
+          <span className="text-sm font-semibold">Manage changes on the Git CLI</span>
         </div>
         <p className="mb-3 text-sm text-(--color-font)">
           You can now browse Git Sync project files on your local file system and manage changes using your normal Git
@@ -1065,7 +1065,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             Learn more ↗
           </a>
         </p>
-        <p className="mb-1 font-semibold">Path to this project:</p>
+        <p className="mb-1 text-xs font-semibold">Path to this project:</p>
         <div className="mb-3 flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
           <span className="min-w-0 flex-1 truncate" title={repoPath}>
             {repoPath}
