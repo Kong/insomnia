@@ -18,6 +18,10 @@ const withoutProperty = (name: string) =>
 const withoutRoot = (name: string) =>
   new Set([...ALL_BLOCKED_ROOTS].filter(r => r !== name));
 
+// Passes blockDynamic=false — mirrors disabling scriptBlockUnresolvableProperties in settings.
+const checkNoDynamic = (script: string) =>
+  () => checkSandboxViolations(script, ALL_BLOCKED_PROPERTIES, ALL_BLOCKED_ROOTS, false);
+
 // ---------------------------------------------------------------------------
 // Blocked properties — one canonical script per rule covering both dot and
 // bracket notation where applicable. The unblocking section below mirrors
@@ -236,6 +240,39 @@ describe('checkSandboxViolations', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Dynamic computed property access (fail-closed policy)
+  // ---------------------------------------------------------------------------
+
+  describe('unresolvable dynamic computed properties', () => {
+    it('blocks concatenated string key: obj["con"+"structor"]', () =>
+      blocked(`obj["con"+"structor"]`));
+
+    it('blocks variable key: const k = "constructor"; obj[k]', () =>
+      blocked(`const k = "constructor"; obj[k]`));
+
+    it('blocks unverifiable computed key: obj[someExpr]', () =>
+      blocked(`obj[someExpr]`));
+
+    it('blocks template literal with expressions: obj[`${x}`]', () =>
+      blocked('obj[`${x}`]'));
+  });
+
+  // ---------------------------------------------------------------------------
+  // Blocked properties with dynamic computed access (now fixed)
+  // ---------------------------------------------------------------------------
+
+  describe('blocked properties via computed access (BYPASS-1, BYPASS-2)', () => {
+    it('blocks constructor via template literal: obj[`constructor`]', () =>
+      blocked('obj[`constructor`]'));
+
+    it('blocks constructor via concatenation: obj["con"+"structor"]', () =>
+      blocked('obj["con"+"structor"]'));
+
+    it('blocks AsyncFunction constructor via template: (async()=>{})[`constructor`]', () =>
+      blocked('(async()=>{})[`constructor`]'));
+  });
+
+  // ---------------------------------------------------------------------------
   // Allowed scripts
   // ---------------------------------------------------------------------------
 
@@ -261,7 +298,95 @@ describe('checkSandboxViolations', () => {
     it('allows console.log', () =>
       allowed(`console.log('hello')`));
 
-    it('allows class with prototype-like property name in string', () =>
-      allowed(`const key = 'prototype'; obj[key]`));
+    it('allows safe property access via string literal', () =>
+      allowed(`obj['foo']`));
+
+    it('allows safe property access via dot notation', () =>
+      allowed(`obj.foo`));
+  });
+
+  describe('scriptBlockUnresolvableProperties toggle', () => {
+    it('allows concatenated string key when block-dynamic is off', () =>
+      expect(checkNoDynamic('obj["con"+"structor"]')).not.toThrow());
+
+    it('allows identifier variable key when block-dynamic is off', () =>
+      expect(checkNoDynamic('obj[someVar]')).not.toThrow());
+
+    it('allows template literal with expression when block-dynamic is off', () =>
+      expect(checkNoDynamic('obj[`${x}`]')).not.toThrow());
+
+    it('still blocks a static string literal with a blocked name even when block-dynamic is off', () =>
+      expect(checkNoDynamic('obj["constructor"]')).toThrow());
+
+    it('still blocks a no-expression template literal with a blocked name even when block-dynamic is off', () =>
+      expect(checkNoDynamic('obj[`constructor`]')).toThrow());
+  });
+
+  // ---------------------------------------------------------------------------
+  // PoC bypasses: function wrapper to escape AST alias tracking
+  // These scripts pass the AST check (documented vulnerability).
+  // They are blocked at runtime by masking the identifiers in maskRules.
+  // ---------------------------------------------------------------------------
+
+  describe('PoC: function wrapper bypasses for module/self (blocked by runtime masking in maskRules)', () => {
+    it('passes AST check for module indirection (PoC): const getModule = function() { return module; };', () => {
+      allowed(`
+        const getModule = function() { return module; };
+        const m = getModule();
+        m.require('child_process');
+      `);
+    });
+
+    it('passes AST check for self indirection (PoC): const getSelf = function() { return self; };', () => {
+      allowed(`
+        const getSelf = function() { return self; };
+        const w = getSelf();
+        w.require('child_process');
+      `);
+    });
+
+    it('passes AST check for exports indirection (PoC)', () => {
+      allowed(`
+        const getExports = function() { return exports; };
+        const e = getExports();
+        e.foo = 'bar';
+      `);
+    });
+
+    it('passes AST check for Buffer indirection (PoC)', () => {
+      allowed(`
+        const getBuf = function() { return Buffer; };
+        const b = getBuf();
+        b.allocUnsafe(256);
+      `);
+    });
+
+    it('passes AST check for frames indirection (PoC)', () => {
+      allowed(`
+        const getFrames = function() { return frames; };
+        const f = getFrames();
+        f[0];
+      `);
+    });
+  });
+
+  describe('PoC: AsyncFunction constructor via blockDynamic=false', () => {
+    it('blocks AsyncFunction constructor with blockDynamic=true (default)', () => {
+      expect(() => checkSandboxViolations(
+        `(async () => {})['con' + 'structor']`,
+        ALL_BLOCKED_PROPERTIES,
+        ALL_BLOCKED_ROOTS,
+        true
+      )).toThrow();
+    });
+
+    it('allows AsyncFunction constructor access when blockDynamic=false', () => {
+      expect(() => checkSandboxViolations(
+        `(async () => {})['con' + 'structor']`,
+        ALL_BLOCKED_PROPERTIES,
+        ALL_BLOCKED_ROOTS,
+        false
+      )).not.toThrow();
+    });
   });
 });

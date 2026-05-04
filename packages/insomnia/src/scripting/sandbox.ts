@@ -33,6 +33,10 @@ const SANDBOX_BLOCKED_ROOTS = new Set(blockedRootRules.map(r => r.name));
 // the sandbox is turned off, because they gate access to critical host APIs (require, window, eval).
 const ALWAYS_ON_INTERCEPTORS = new Set(['require', 'window', 'eval']);
 
+// Sentinel returned by getMemberPropertyName when the computed key cannot be statically resolved.
+// Callers must treat this as a hard block — unknown dynamic keys are rejected by policy.
+const UNRESOLVABLE = Symbol('unresolvable');
+
 // Walks a MemberExpression down to its root Identifier.
 function getMemberRoot(node: any): string | null {
   if (node.type === 'Identifier') return node.name;
@@ -40,14 +44,63 @@ function getMemberRoot(node: any): string | null {
   return null;
 }
 
- // Returns MemberExpression property name. 
-function getMemberPropertyName(node: acorn.MemberExpression): string | null {
+// Returns MemberExpression property name, or UNRESOLVABLE when the computed key cannot be
+// statically determined (e.g. BinaryExpression, dynamic TemplateLiteral). Returning null means
+// the access is non-computed (impossible to be a blocked property via this path).
+function getMemberPropertyName(node: acorn.MemberExpression): string | typeof UNRESOLVABLE | null {
   if (!node.computed && node.property.type === 'Identifier') {
     return (node.property as acorn.Identifier).name;
   }
   if (node.computed && node.property.type === 'Literal') {
     const val = (node.property as acorn.Literal).value;
     return typeof val === 'string' ? val : null;
+  }
+  // No-expression template literal: `constructor` has a statically known value.
+  if (node.computed && node.property.type === 'TemplateLiteral') {
+    const tl = node.property as any;
+    if (tl.expressions.length === 0) {
+      const cooked: string | null = tl.quasis[0].value.cooked;
+      return cooked !== null ? cooked : UNRESOLVABLE;
+    }
+    return UNRESOLVABLE;
+  }
+  // Any other computed expression (BinaryExpression, CallExpression, etc.) cannot be verified.
+  if (node.computed) {
+    return UNRESOLVABLE;
+  }
+  return null;
+}
+
+// Recursively searches an expression for a blocked identifier or `this`.
+// Returns the name of the first blocked identifier found, or null if none.
+// Descends into LogicalExpression, ConditionalExpression, and SequenceExpression
+// so that wrappers like `null || globalThis`, `false ? null : globalThis`, and
+// `(0, globalThis)` are all detected and their alias propagated.
+function extractBlockedIdentifier(
+  expr: any,
+  blocked: Map<string, string>,
+  blockedRoots: Set<string>,
+): string | null {
+  if (!expr) return null;
+  if (expr.type === 'Identifier') {
+    return blocked.has(expr.name) ? expr.name : null;
+  }
+  if (expr.type === 'ThisExpression') {
+    return blockedRoots.has('this') ? 'this' : null;
+  }
+  if (expr.type === 'LogicalExpression') {
+    return extractBlockedIdentifier(expr.left, blocked, blockedRoots)
+        ?? extractBlockedIdentifier(expr.right, blocked, blockedRoots);
+  }
+  if (expr.type === 'ConditionalExpression') {
+    return extractBlockedIdentifier(expr.consequent, blocked, blockedRoots)
+        ?? extractBlockedIdentifier(expr.alternate, blocked, blockedRoots);
+  }
+  if (expr.type === 'SequenceExpression') {
+    for (const e of expr.expressions) {
+      const hit = extractBlockedIdentifier(e, blocked, blockedRoots);
+      if (hit !== null) return hit;
+    }
   }
   return null;
 }
@@ -69,6 +122,7 @@ export function checkSandboxViolations(
   script: string,
   blockedProperties: Set<string> = SANDBOX_BLOCKED_PROPERTIES,
   blockedRoots: Set<string> = SANDBOX_BLOCKED_ROOTS,
+  blockDynamic = true,
 ): void {
   let tree: any;
   for (const sourceType of ['module', 'script'] as const) {
@@ -106,36 +160,22 @@ export function checkSandboxViolations(
   };
 
   walk.simple(tree, {
-    // const/let/var g = globalThis  OR  const s = this
+    // const/let/var g = globalThis  OR  const s = this  OR  const g = null || globalThis
     VariableDeclarator(node: acorn.VariableDeclarator) {
       if (node.id.type !== 'Identifier') return;
       const id = node.id as acorn.Identifier;
-      if (node.init?.type === 'Identifier') {
-        const initName = (node.init as acorn.Identifier).name;
-        const origin = blocked.get(initName);
-        if (origin !== undefined) {
-          blocked.set(id.name, origin);
-        }
-      }
-      // `this` is a ThisExpression, not an Identifier — handle separately.
-      // Only track aliases if the 'this' rule is active in the current policy.
-      if (node.init?.type === 'ThisExpression' && blockedRoots.has('this')) {
-        blocked.set(id.name, 'this');
+      const foundName = extractBlockedIdentifier(node.init, blocked, blockedRoots);
+      if (foundName !== null) {
+        blocked.set(id.name, blocked.get(foundName) ?? foundName);
       }
     },
-    // g = globalThis (bare assignment)  OR  s = this
+    // g = globalThis  OR  g = (0, globalThis)  OR  g = false ? null : globalThis
     AssignmentExpression(node: acorn.AssignmentExpression) {
       if (node.left.type !== 'Identifier') return;
       const id = node.left as acorn.Identifier;
-      if (node.right.type === 'Identifier') {
-        const rightName = (node.right as acorn.Identifier).name;
-        const origin = blocked.get(rightName);
-        if (origin !== undefined) {
-          blocked.set(id.name, origin);
-        }
-      }
-      if (node.right.type === 'ThisExpression' && blockedRoots.has('this')) {
-        blocked.set(id.name, 'this');
+      const foundName = extractBlockedIdentifier(node.right, blocked, blockedRoots);
+      if (foundName !== null) {
+        blocked.set(id.name, blocked.get(foundName) ?? foundName);
       }
     },
   });
@@ -161,6 +201,15 @@ export function checkSandboxViolations(
 
       // obj.constructor, obj['__proto__'], obj.getPrototypeOf, etc.
       const prop = getMemberPropertyName(node);
+      if (prop === UNRESOLVABLE) {
+        if (blockDynamic) {
+          throw new Error(
+            `The script was blocked because it used a dynamic computed property access that cannot be statically verified.\n` +
+            `Use dot notation or a string literal key instead, or disable 'block unresolvable properties' via Settings → Scripting → Script Sandbox.`,
+          );
+        }
+        return;
+      }
       if (prop && blockedProperties.has(prop)) {
         throw new Error(
           `The script was blocked because it used the property '${prop}'.\n` +
@@ -306,15 +355,19 @@ export async function prepareSandbox(
   let sandboxContext = context;
   let maskNames: string[] = [];
   let maskValues: unknown[] = [];
+  // Captured below so the scoped-eval patch (applied after both branches) uses the right checker.
+  let evalViolationCheck: (s: string) => void = checkSandboxViolations;
 
   if (context.settings.scriptSandboxEnabled !== false) {
     const disabledProps = new Set(context.settings.disabledBlockedProperties);
     const disabledRoots = new Set(context.settings.disabledBlockedRoots);
     const activeProperties = new Set([...SANDBOX_BLOCKED_PROPERTIES].filter(p => !disabledProps.has(p)));
     const activeRoots = new Set([...SANDBOX_BLOCKED_ROOTS].filter(r => !disabledRoots.has(r)));
+    const blockDynamic = context.settings.scriptBlockUnresolvableProperties !== false;
 
     // Bind the filtered checker so eval-intercept uses the same active policy.
-    const activeSandboxCheck = (s: string) => checkSandboxViolations(s, activeProperties, activeRoots);
+    const activeSandboxCheck = (s: string) => checkSandboxViolations(s, activeProperties, activeRoots, blockDynamic);
+    evalViolationCheck = activeSandboxCheck;
 
     try {
       activeSandboxCheck(script);
@@ -342,6 +395,36 @@ export async function prepareSandbox(
       interceptorRules.filter(r => ALWAYS_ON_INTERCEPTORS.has(r.name)),
     );
     ({ names: maskNames, values: maskValues } = alwaysOnPolicy.buildMaskScope(checkSandboxViolations));
+  }
+
+  // Replace the placeholder eval interceptor with one that carries the full parameter mask.
+  // The rule-level interceptor uses (0,eval) (indirect eval in global scope), which bypasses
+  // parameter masking and lets scripts access real globals like require, Function, process.
+  // Here we patch maskValues to use a new AsyncFunction with the same params and a direct eval,
+  // so eval'd code inherits the masked parameter bindings.
+  const evalIdx = maskNames.indexOf('eval');
+  if (evalIdx !== -1) {
+    const strictModeEnabled = context.settings.scriptStrictModeEnabled !== false;
+    const evalBody = strictModeEnabled
+      ? '"use strict"; return eval(__eval_script__);'
+      : 'return eval(__eval_script__);';
+    // Exclude 'eval' from the parameter list: naming a parameter 'eval' is illegal in strict mode,
+    // and the function needs to call the real eval (not the interceptor) for direct-eval scoping.
+    // Use a synchronous Function (not AsyncFunction) to preserve the synchronous return contract —
+    // AsyncFunction always returns a Promise, which breaks postMessage structured-clone for sync scripts.
+    const nonEvalMaskNames = maskNames.filter(n => n !== 'eval');
+    const nonEvalMaskValues = maskValues.filter((_, i) => maskNames[i] !== 'eval');
+    const scopedEvalFn = new Function(
+      ...nonEvalMaskNames, '__eval_script__',
+      evalBody,
+    );
+    maskValues[evalIdx] = (script: string) => {
+      if (!script || typeof script !== 'string') {
+        throw new Error('eval is called with invalid or empty value');
+      }
+      evalViolationCheck(script);
+      return scopedEvalFn(...nonEvalMaskValues, script);
+    };
   }
 
   const executionContext = await initInsomniaObject(sandboxContext, scriptConsole.log);

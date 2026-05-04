@@ -41,19 +41,21 @@ export const requireInterceptor = (moduleName: string): any => {
     // Block setImmediate 
     return blockMethods(require('node:timers'), ['setImmediate'], 'timers');
   } else if (moduleName === 'buffer') {
-    // Block unsafe allocation methods to prevent heap memory disclosure.
-    //  Buffer.allocUnsafe(n) / Buffer.allocUnsafeSlow(n) return a buffer backed by uninitialized memory. 
+    // Buffer.allocUnsafe / Buffer.allocUnsafeSlow (can return a buffer backed by uninitialized memory). 
     const bufferModule = require('node:buffer');
     return {
       ...bufferModule,
       Buffer: blockMethods(bufferModule.Buffer, ['allocUnsafe', 'allocUnsafeSlow'], 'Buffer'),
     };
   } else if (moduleName === 'util') {
-    // Block escape utils like util.inherits and util.debuglog
-    //  util.inherits(ctor, superCtor) — directly manipulates the prototype chain (
-    //  util.debuglog(section) — conditionally writes to stderr based on the NODE_DEBUG environment variable
+    // Block util.inherits (can directly manipulate the prototype chain). 
+    // Block util.debuglog (can write to stderr based on the NODE_DEBUG environment variable). 
     return blockMethods(require('node:util'), ['inherits', 'debuglog'], 'util');
-    
+    } else if (moduleName === 'lodash') {
+    const mod = externalModules.get('lodash')!;
+    // Block lodash.template (can compile strings in global scope).
+    // Block lodash.runInContext (runs code in a new global context).
+    return blockMethods(mod, ['template', 'runInContext'], 'lodash');
   } else if (
     [
       // node.js modules
@@ -74,13 +76,12 @@ export const requireInterceptor = (moduleName: string): any => {
     return moduleName === 'atob' ? atob : btoa;
   } else if (
     [
-      // external modules
+      // external modules (without lodash — handled above)
       'ajv',
       'chai',
       'cheerio',
       'crypto-js',
       'csv-parse/lib/sync',
-      'lodash',
       'moment',
       'tv4',
       'uuid',

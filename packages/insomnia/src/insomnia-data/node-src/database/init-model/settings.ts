@@ -5,11 +5,37 @@ import type { Settings } from '~/insomnia-data';
 export function migrate(doc: Settings) {
   try {
     doc = migrateEnsureHotKeys(doc);
+    doc = migrateEnsureScriptingDefaults(doc);
     return doc;
   } catch (e) {
     console.log('[db] Error during settings migration', e);
     throw e;
   }
+}
+
+/**
+ * Ensure new scripting settings fields exist with proper defaults
+ */
+function migrateEnsureScriptingDefaults(settings: Settings): Settings {
+  if (settings.scriptSandboxEnabled === undefined) {
+    settings.scriptSandboxEnabled = true;
+  }
+  if (settings.scriptStrictModeEnabled === undefined) {
+    settings.scriptStrictModeEnabled = true;
+  }
+  if (settings.scriptBlockUnresolvableProperties === undefined) {
+    settings.scriptBlockUnresolvableProperties = true;
+  }
+  if (settings.disabledSecurityRules === undefined) {
+    settings.disabledSecurityRules = [];
+  }
+  if (settings.disabledBlockedProperties === undefined) {
+    settings.disabledBlockedProperties = [];
+  }
+  if (settings.disabledBlockedRoots === undefined) {
+    settings.disabledBlockedRoots = [];
+  }
+  return settings;
 }
 
 /**
