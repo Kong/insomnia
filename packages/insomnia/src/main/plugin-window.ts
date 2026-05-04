@@ -7,6 +7,9 @@ let pluginWindow: BrowserWindow | null = null;
 let windowReady = false;
 const pendingRequests = new Map<string, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
 
+let cachedHasRequestHooks: boolean | null = null;
+let cachedHasResponseHooks: boolean | null = null;
+
 // Registered once so that persistent `ipcMain.on` handlers don't accumulate across window recreations.
 let ipcListenersRegistered = false;
 
@@ -158,6 +161,8 @@ export function registerPluginIpcHandlers() {
   ipcMain.handle('plugins.getPlugins', () => invokeInPluginWindow('getPlugins'));
   ipcMain.handle('plugins.getActivePlugins', () => invokeInPluginWindow('getActivePlugins'));
   ipcMain.handle('plugins.reloadPlugins', async () => {
+    cachedHasRequestHooks = null;
+    cachedHasResponseHooks = null;
     await invokeInPluginWindow('reloadPlugins');
   });
   ipcMain.handle('plugins.getRequestActions', () => invokeInPluginWindow('getRequestActions'));
@@ -169,6 +174,20 @@ export function registerPluginIpcHandlers() {
   ipcMain.handle('plugins.runTemplateTagAction', (_event, args) => invokeInPluginWindow('runTemplateTagAction', args));
   ipcMain.handle('plugins.getBundlePlugins', () => invokeInPluginWindow('getBundlePlugins'));
   ipcMain.handle('plugins.executePluginMainAction', (_event, args) => invokeInPluginWindow('executePluginMainAction', args));
+  ipcMain.handle('plugins.hasRequestHooks', async () => {
+    if (cachedHasRequestHooks === null) {
+      cachedHasRequestHooks = await invokeInPluginWindow('hasRequestHooks') as boolean;
+    }
+    return cachedHasRequestHooks;
+  });
+  ipcMain.handle('plugins.hasResponseHooks', async () => {
+    if (cachedHasResponseHooks === null) {
+      cachedHasResponseHooks = await invokeInPluginWindow('hasResponseHooks') as boolean;
+    }
+    return cachedHasResponseHooks;
+  });
+  ipcMain.handle('plugins.applyRequestHooks', (_event, args) => invokeInPluginWindow('applyRequestHooks', args));
+  ipcMain.handle('plugins.applyResponseHooks', (_event, args) => invokeInPluginWindow('applyResponseHooks', args));
 }
 
 export function getAppUserDataPath() {

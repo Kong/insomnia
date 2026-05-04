@@ -18,6 +18,8 @@ import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import type {
+  ApplyRequestHooksArgs,
+  ApplyResponseHooksArgs,
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
   RunTemplateTagActionArgs,
@@ -365,6 +367,10 @@ const main: Window['main'] = {
     getBundlePlugins: () => invokeWithNormalizedError('plugins.getBundlePlugins'),
     executePluginMainAction: (args: ExecutePluginMainActionArgs) =>
       invokeWithNormalizedError('plugins.executePluginMainAction', args),
+    hasRequestHooks: () => invokeWithNormalizedError('plugins.hasRequestHooks'),
+    hasResponseHooks: () => invokeWithNormalizedError('plugins.hasResponseHooks'),
+    applyRequestHooks: (args: ApplyRequestHooksArgs) => invokeWithNormalizedError('plugins.applyRequestHooks', args),
+    applyResponseHooks: (args: ApplyResponseHooksArgs) => invokeWithNormalizedError('plugins.applyResponseHooks', args),
   },
 };
 

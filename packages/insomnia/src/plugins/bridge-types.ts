@@ -1,3 +1,5 @@
+import type { ResponsePatch } from '../main/network/libcurl-promise';
+import type { RenderedRequest } from '../templating/types';
 import type { PluginTheme } from './misc';
 
 export interface SerializablePlugin {
@@ -46,6 +48,19 @@ export interface ExecutePluginActionArgs {
   domainData: unknown;
 }
 
+export interface ApplyRequestHooksArgs {
+  renderedRequest: RenderedRequest;
+  projectId: string;
+  environment: Record<string, any>;
+}
+
+export interface ApplyResponseHooksArgs {
+  response: ResponsePatch;
+  renderedRequest: RenderedRequest;
+  projectId: string;
+  environment: Record<string, any>;
+}
+
 export interface ExecutePluginMainActionArgs {
   pluginName: string;
   actionName: string;
@@ -67,4 +82,8 @@ export interface PluginsBridgeAPI {
   runTemplateTagAction: (args: RunTemplateTagActionArgs) => Promise<void>;
   getBundlePlugins: () => Promise<SerializablePlugin[]>;
   executePluginMainAction: (args: ExecutePluginMainActionArgs) => Promise<unknown>;
+  hasRequestHooks: () => Promise<boolean>;
+  hasResponseHooks: () => Promise<boolean>;
+  applyRequestHooks: (args: ApplyRequestHooksArgs) => Promise<RenderedRequest>;
+  applyResponseHooks: (args: ApplyResponseHooksArgs) => Promise<ResponsePatch>;
 }

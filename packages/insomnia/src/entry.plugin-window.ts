@@ -5,6 +5,8 @@ import { servicesNodeImpl } from '~/insomnia-data/node';
 
 import { pluginWindowDatabase } from './main/database.plugin-window';
 import type {
+  ApplyRequestHooksArgs,
+  ApplyResponseHooksArgs,
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
   RunTemplateTagActionArgs,
@@ -12,6 +14,8 @@ import type {
 import * as pluginApp from './plugins/context/app';
 import * as pluginData from './plugins/context/data';
 import * as pluginNetwork from './plugins/context/network';
+import * as pluginRequest from './plugins/context/request';
+import * as pluginResponse from './plugins/context/response';
 import * as pluginStore from './plugins/context/store';
 import type { Plugin } from './plugins/index';
 import {
@@ -22,6 +26,8 @@ import {
   getPlugins,
   getRequestActions,
   getRequestGroupActions,
+  getRequestHooks,
+  getResponseHooks,
   getTemplateTags,
   getThemes,
   getWorkspaceActions,
@@ -175,6 +181,70 @@ ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvok
         }
         await action.run(pluginStore.init(tag.plugin));
         result = null;
+        break;
+      }
+
+      case 'hasRequestHooks': {
+        const hooks = await getRequestHooks();
+        result = hooks.length > 0;
+        break;
+      }
+
+      case 'hasResponseHooks': {
+        const hooks = await getResponseHooks();
+        result = hooks.length > 0;
+        break;
+      }
+
+      case 'applyRequestHooks': {
+        const { renderedRequest, projectId, environment } = args as ApplyRequestHooksArgs;
+        const newRenderedRequest = { ...renderedRequest };
+        const renderedContext = { ...environment, getProjectId: () => projectId };
+
+        for (const { plugin, hook } of await getRequestHooks()) {
+          const context = {
+            ...pluginApp.init(),
+            ...pluginData.init(projectId),
+            ...(pluginStore.init(plugin) as Record<string, any>),
+            ...(pluginRequest.init(newRenderedRequest as any, renderedContext) as Record<string, any>),
+            ...(pluginNetwork.init() as Record<string, any>),
+          };
+          try {
+            await hook(context);
+          } catch (err) {
+            const error = err instanceof Error ? err : new Error(String(err));
+            throw new Error(`[plugin=${plugin.name}] ${error.message}`);
+          }
+        }
+
+        result = newRenderedRequest;
+        break;
+      }
+
+      case 'applyResponseHooks': {
+        const { response, renderedRequest, projectId, environment } = args as ApplyResponseHooksArgs;
+        const newResponse = { ...response };
+        const newRequest = { ...renderedRequest };
+        const renderedContext = { ...environment, getProjectId: () => projectId };
+
+        for (const { plugin, hook } of await getResponseHooks()) {
+          const context = {
+            ...pluginApp.init(),
+            ...pluginData.init(projectId),
+            ...(pluginStore.init(plugin) as Record<string, any>),
+            ...(pluginResponse.init(newResponse) as Record<string, any>),
+            ...(pluginRequest.init(newRequest as any, renderedContext, true) as Record<string, any>),
+            ...(pluginNetwork.init() as Record<string, any>),
+          };
+          try {
+            await hook(context);
+          } catch (err) {
+            const error = err instanceof Error ? err : new Error(String(err));
+            throw new Error(`[plugin=${plugin.name}] ${error.message}`);
+          }
+        }
+
+        result = newResponse;
         break;
       }
 

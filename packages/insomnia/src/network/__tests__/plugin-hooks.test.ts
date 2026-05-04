@@ -1,36 +1,40 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../plugins/index', () => ({
-  getRequestHooks: vi.fn(),
-  getResponseHooks: vi.fn(),
+const mockRequestCtx = vi.hoisted(() => ({
+  getEnvironmentVariable: vi.fn().mockReturnValue(null),
+  hasHeader: vi.fn().mockReturnValue(false),
+  removeHeader: vi.fn(),
+  setHeader: vi.fn(),
 }));
-vi.mock('../../plugins/context/app', () => ({ init: vi.fn().mockReturnValue({}) }));
-vi.mock('../../plugins/context/data', () => ({ init: vi.fn().mockReturnValue({}) }));
-vi.mock('../../plugins/context/store', () => ({ init: vi.fn().mockReturnValue({}) }));
-vi.mock('../../plugins/context/request', () => ({ init: vi.fn().mockReturnValue({}) }));
-vi.mock('../../plugins/context/response', () => ({ init: vi.fn().mockReturnValue({}) }));
-vi.mock('../../plugins/context/network', () => ({ init: vi.fn().mockReturnValue({}) }));
 
-import * as pluginsIndex from '../../plugins/index';
+const mockPlugins = vi.hoisted(() => ({
+  hasRequestHooks: vi.fn(),
+  hasResponseHooks: vi.fn(),
+  applyRequestHooks: vi.fn(),
+  applyResponseHooks: vi.fn(),
+}));
+
+vi.mock('../../plugins/context/request', () => ({
+  init: vi.fn().mockReturnValue({ request: mockRequestCtx }),
+}));
+
+Object.defineProperty(globalThis, 'window', {
+  value: { main: { plugins: mockPlugins } },
+  writable: true,
+  configurable: true,
+});
+
 import { _applyRequestPluginHooks, _applyResponsePluginHooks } from '../network';
-
-const mockPlugin = {
-  name: 'test-plugin',
-  description: '',
-  version: '1.0.0',
-  directory: '',
-  config: { disabled: false },
-  module: {},
-};
 
 const mockRenderedRequest = {
   url: 'http://example.com',
+  headers: [],
   settingSendCookies: true,
   settingStoreCookies: true,
 } as any;
 
 const mockRenderedContext = {
-  getProjectId: () => '',
+  getProjectId: () => 'test-project',
 } as any;
 
 const mockResponse = {
@@ -39,104 +43,85 @@ const mockResponse = {
 } as any;
 
 beforeEach(() => {
-  vi.mocked(pluginsIndex.getRequestHooks).mockResolvedValue([]);
-  vi.mocked(pluginsIndex.getResponseHooks).mockResolvedValue([]);
+  vi.clearAllMocks();
+  mockRequestCtx.getEnvironmentVariable.mockReturnValue(null);
+  mockPlugins.hasRequestHooks.mockResolvedValue(false);
+  mockPlugins.hasResponseHooks.mockResolvedValue(false);
+  mockPlugins.applyRequestHooks.mockResolvedValue(mockRenderedRequest);
+  mockPlugins.applyResponseHooks.mockResolvedValue(mockResponse);
 });
 
 describe('_applyRequestPluginHooks', () => {
-  it('calls each hook with a context object', async () => {
-    const hook = vi.fn();
-    vi.mocked(pluginsIndex.getRequestHooks).mockResolvedValue([{ plugin: mockPlugin, hook }]);
+  it('skips applyRequestHooks when hasRequestHooks returns false', async () => {
+    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
+    expect(mockPlugins.applyRequestHooks).not.toHaveBeenCalled();
+  });
+
+  it('calls applyRequestHooks when hasRequestHooks returns true', async () => {
+    mockPlugins.hasRequestHooks.mockResolvedValue(true);
+    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
+    expect(mockPlugins.applyRequestHooks).toHaveBeenCalledOnce();
+  });
+
+  it('passes projectId and environment to applyRequestHooks', async () => {
+    mockPlugins.hasRequestHooks.mockResolvedValue(true);
+    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
+    expect(mockPlugins.applyRequestHooks).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: 'test-project' }),
+    );
+  });
+
+  it('propagates errors from applyRequestHooks', async () => {
+    mockPlugins.hasRequestHooks.mockResolvedValue(true);
+    mockPlugins.applyRequestHooks.mockRejectedValue(new Error('[plugin=test-plugin] sync failure'));
+    await expect(_applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext)).rejects.toThrow('sync failure');
+  });
+
+  it('applies DEFAULT_HEADERS from the environment without invoking the plugin window', async () => {
+    mockRequestCtx.getEnvironmentVariable.mockReturnValue({ 'X-Custom': 'value' });
+    mockRequestCtx.hasHeader.mockReturnValue(false);
 
     await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
 
-    expect(hook).toHaveBeenCalledOnce();
-    expect(hook).toHaveBeenCalledWith(expect.any(Object));
+    expect(mockRequestCtx.setHeader).toHaveBeenCalledWith('X-Custom', 'value');
+    expect(mockPlugins.applyRequestHooks).not.toHaveBeenCalled();
   });
 
-  it('re-throws a synchronous hook error with err.plugin attached', async () => {
-    const error = new Error('sync failure');
-    vi.mocked(pluginsIndex.getRequestHooks).mockResolvedValue([
-      {
-        plugin: mockPlugin,
-        hook: () => {
-          throw error;
-        },
-      },
-    ]);
+  it('skips DEFAULT_HEADERS that already exist on the request', async () => {
+    mockRequestCtx.getEnvironmentVariable.mockReturnValue({ 'X-Custom': 'value' });
+    mockRequestCtx.hasHeader.mockReturnValue(true);
 
-    await expect(_applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext)).rejects.toThrow('sync failure');
-    expect(error).toHaveProperty('plugin', mockPlugin);
+    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
+
+    expect(mockRequestCtx.setHeader).not.toHaveBeenCalled();
   });
 
-  it('re-throws an async hook rejection with err.plugin attached', async () => {
-    const error = new Error('async failure');
-    vi.mocked(pluginsIndex.getRequestHooks).mockResolvedValue([
-      {
-        plugin: mockPlugin,
-        hook: async () => {
-          throw error;
-        },
-      },
-    ]);
+  it('removes a DEFAULT_HEADER when its value is "null"', async () => {
+    mockRequestCtx.getEnvironmentVariable.mockReturnValue({ 'X-Remove': 'null' });
+    mockRequestCtx.hasHeader.mockReturnValue(false);
 
-    await expect(_applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext)).rejects.toThrow('async failure');
-    expect(error).toHaveProperty('plugin', mockPlugin);
-  });
+    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
 
-  it('wraps non-Error throws into an Error with plugin metadata attached', async () => {
-    vi.mocked(pluginsIndex.getRequestHooks).mockResolvedValue([
-      {
-        plugin: mockPlugin,
-        hook: () => {
-          throw 'string error';
-        },
-      },
-    ]);
-
-    const error = await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext).catch(e => e);
-    expect(error).toBeInstanceOf(Error);
-    expect(error.message).toBe('string error');
-    expect(error).toHaveProperty('plugin', mockPlugin);
-  });
-
-  it('stops processing further hooks after the first failure', async () => {
-    const secondHook = vi.fn();
-    vi.mocked(pluginsIndex.getRequestHooks).mockResolvedValue([
-      {
-        plugin: mockPlugin,
-        hook: () => {
-          throw new Error('first hook fails');
-        },
-      },
-      { plugin: mockPlugin, hook: secondHook },
-    ]);
-
-    await expect(_applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext)).rejects.toThrow();
-    expect(secondHook).not.toHaveBeenCalled();
+    expect(mockRequestCtx.removeHeader).toHaveBeenCalledWith('X-Remove');
   });
 });
 
 describe('_applyResponsePluginHooks', () => {
-  it('calls each hook with a context object', async () => {
-    const hook = vi.fn();
-    vi.mocked(pluginsIndex.getResponseHooks).mockResolvedValue([{ plugin: mockPlugin, hook }]);
-
+  it('returns the original response when hasResponseHooks returns false', async () => {
     const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
+    expect(result).toBe(mockResponse);
+    expect(mockPlugins.applyResponseHooks).not.toHaveBeenCalled();
+  });
 
-    expect(hook).toHaveBeenCalledOnce();
-    expect(result).not.toHaveProperty('error');
+  it('calls applyResponseHooks when hasResponseHooks returns true', async () => {
+    mockPlugins.hasResponseHooks.mockResolvedValue(true);
+    await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
+    expect(mockPlugins.applyResponseHooks).toHaveBeenCalledOnce();
   });
 
   it('returns an error ResponsePatch instead of throwing on hook failure', async () => {
-    vi.mocked(pluginsIndex.getResponseHooks).mockResolvedValue([
-      {
-        plugin: mockPlugin,
-        hook: () => {
-          throw new Error('hook exploded');
-        },
-      },
-    ]);
+    mockPlugins.hasResponseHooks.mockResolvedValue(true);
+    mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] hook exploded'));
 
     const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
 
@@ -144,45 +129,17 @@ describe('_applyResponsePluginHooks', () => {
     expect(result.statusMessage).toBe('Error');
   });
 
-  it('includes the plugin name in the error message', async () => {
-    vi.mocked(pluginsIndex.getResponseHooks).mockResolvedValue([
-      {
-        plugin: mockPlugin,
-        hook: () => {
-          throw new Error('boom');
-        },
-      },
-    ]);
+  it('includes the error message in the error response', async () => {
+    mockPlugins.hasResponseHooks.mockResolvedValue(true);
+    mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] detailed failure reason'));
 
     const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
-
-    expect(result.error).toContain('test-plugin');
-  });
-
-  it('includes the original error message in the error response', async () => {
-    vi.mocked(pluginsIndex.getResponseHooks).mockResolvedValue([
-      {
-        plugin: mockPlugin,
-        hook: () => {
-          throw new Error('detailed failure reason');
-        },
-      },
-    ]);
-
-    const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
-
     expect(result.error).toContain('detailed failure reason');
   });
 
   it('returns an error ResponsePatch for async hook rejections', async () => {
-    vi.mocked(pluginsIndex.getResponseHooks).mockResolvedValue([
-      {
-        plugin: mockPlugin,
-        hook: async () => {
-          throw new Error('async boom');
-        },
-      },
-    ]);
+    mockPlugins.hasResponseHooks.mockResolvedValue(true);
+    mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] async boom'));
 
     const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
 
@@ -191,17 +148,10 @@ describe('_applyResponsePluginHooks', () => {
   });
 
   it('preserves the request URL in the error response', async () => {
-    vi.mocked(pluginsIndex.getResponseHooks).mockResolvedValue([
-      {
-        plugin: mockPlugin,
-        hook: () => {
-          throw new Error('fail');
-        },
-      },
-    ]);
+    mockPlugins.hasResponseHooks.mockResolvedValue(true);
+    mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] fail'));
 
     const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
-
     expect(result.url).toBe('http://example.com');
   });
 });

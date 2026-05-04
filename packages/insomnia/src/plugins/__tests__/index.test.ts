@@ -48,26 +48,24 @@ afterEach(() => {
 });
 
 describe('getRequestHooks', () => {
-  it('always includes the built-in default-headers hook', async () => {
+  it('returns empty array when no plugins are active', async () => {
     _testOnlySetPlugins([]);
-    const hooks = await getRequestHooks();
-    expect(hooks).toHaveLength(1);
-    expect(hooks[0].plugin.name).toBe('default-headers');
+    expect(await getRequestHooks()).toHaveLength(0);
   });
 
   it('includes plugin hooks with plugin metadata', async () => {
     const hook = vi.fn();
     _testOnlySetPlugins([makePlugin({ module: { requestHooks: [hook] } })]);
     const hooks = await getRequestHooks();
-    expect(hooks).toHaveLength(2);
-    expect(hooks[1].hook).toBe(hook);
-    expect(hooks[1].plugin.name).toBe('test-plugin');
+    expect(hooks).toHaveLength(1);
+    expect(hooks[0].hook).toBe(hook);
+    expect(hooks[0].plugin.name).toBe('test-plugin');
   });
 
   it('excludes hooks from disabled plugins', async () => {
     _testOnlySetPlugins([makePlugin({ config: { disabled: true }, module: { requestHooks: [vi.fn()] } })]);
     const hooks = await getRequestHooks();
-    expect(hooks).toHaveLength(1); // only built-in
+    expect(hooks).toHaveLength(0);
   });
 });
 
