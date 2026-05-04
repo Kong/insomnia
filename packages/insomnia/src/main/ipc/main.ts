@@ -36,6 +36,7 @@ import type {
 } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
+import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
 import type { PluginTemplateTag, RenderedRequest } from '../../templating/types';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
@@ -63,6 +64,7 @@ import {
 } from '../network/request-timing';
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
+import { registerPluginIpcHandlers } from '../plugin-window';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
@@ -237,6 +239,7 @@ export interface RendererToMainBridgeAPI {
     | { response: undefined; error: string }
   >;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
+  plugins: PluginsBridgeAPI;
 }
 
 export function registerMainHandlers() {
@@ -664,4 +667,6 @@ export function registerMainHandlers() {
       });
     });
   });
+
+  registerPluginIpcHandlers();
 }

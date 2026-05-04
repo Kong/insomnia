@@ -16,8 +16,7 @@ import { useRootLoaderData } from '~/root';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import type { Plugin } from '../../../plugins/index';
-import { getPlugins } from '../../../plugins/index';
+import type { SerializablePlugin } from '../../../plugins/bridge-types';
 import { reload } from '../../../templating/index';
 import { validatePluginName } from '../../../utils/plugin';
 import { useSettingsPatcher } from '../../hooks/use-request';
@@ -47,7 +46,7 @@ const getNpmRegistryUrlValidationError = (url: string): string | null => {
 };
 
 interface State {
-  plugins: Plugin[];
+  plugins: SerializablePlugin[];
   npmPluginValue: string;
   error: Error | null;
   installPluginErrMsg: string;
@@ -107,8 +106,9 @@ export const Plugins: FC = () => {
 
   async function handleReloadPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
-    // Get and reload plugins
-    const plugins = (await getPlugins(true)).filter(
+    await window.main.plugins.reloadPlugins();
+    const allPlugins = (await window.main.plugins.getPlugins()) as SerializablePlugin[];
+    const plugins = allPlugins.filter(
       // Filter out pre-bundled plugins
       p => p.directory,
     );
@@ -456,7 +456,7 @@ export const Plugins: FC = () => {
                             acc[plugin.name] = { ...plugin.config, disabled: !isSelected };
                             return acc;
                           },
-                          {} as Record<string, Plugin['config']>,
+                          {} as Record<string, SerializablePlugin['config']>,
                         );
 
                         patchSettings({ pluginConfig: { ...settings.pluginConfig, ...config } });

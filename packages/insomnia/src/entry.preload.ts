@@ -344,6 +344,16 @@ const main: Window['main'] = {
     invokeWithNormalizedError('generateCommitsFromDiff', input),
   generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
     invokeWithNormalizedError('generateMcpSamplingResponse', parameters),
+  plugins: {
+    getThemes: () => invokeWithNormalizedError('plugins.getThemes'),
+    getPlugins: () => invokeWithNormalizedError('plugins.getPlugins'),
+    getActivePlugins: () => invokeWithNormalizedError('plugins.getActivePlugins'),
+    reloadPlugins: () => invokeWithNormalizedError('plugins.reloadPlugins'),
+    getRequestActions: () => invokeWithNormalizedError('plugins.getRequestActions'),
+    getRequestGroupActions: () => invokeWithNormalizedError('plugins.getRequestGroupActions'),
+    getWorkspaceActions: () => invokeWithNormalizedError('plugins.getWorkspaceActions'),
+    getDocumentActions: () => invokeWithNormalizedError('plugins.getDocumentActions'),
+  },
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

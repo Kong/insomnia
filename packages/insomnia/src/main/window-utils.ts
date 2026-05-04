@@ -23,6 +23,7 @@ import { invariant } from '../utils/invariant';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
+import { createPluginWindow, destroyPluginWindow } from './plugin-window';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -785,5 +786,8 @@ export function createWindowsAndReturnMain() {
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }
+  createPluginWindow();
   return mainWindow;
 }
+
+export { destroyPluginWindow };
