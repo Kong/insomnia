@@ -1056,7 +1056,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           <span className="rounded-xs border border-solid border-[#a78bfa] px-1.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
             PREVIEW
           </span>
-          <span className="text-sm font-semibold">Manage changes on the Git CLI</span>
+          <span className="font-semibold">Manage changes on the Git CLI</span>
         </div>
         <p className="mb-3 text-sm text-(--color-font)">
           You can now browse Git Sync project files on your local file system and manage changes using your normal Git
@@ -1370,8 +1370,8 @@ const OriginalGitProjectStagingModal: FC<
                     </p>
                   </div>
                 )}
-                <div className="grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden">
-                  <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-2">
+                <div className="grid h-full grid-cols-[350px_1fr] gap-4 divide-x divide-solid divide-(--hl-md) overflow-hidden">
+                  <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
                     {isGenerateCommitMessagesWithAIEnabled && (
                       <div className="flex flex-col gap-3 rounded-sm border border-solid border-(--hl-md) p-3">
                         <h3 className="font-semibold">
