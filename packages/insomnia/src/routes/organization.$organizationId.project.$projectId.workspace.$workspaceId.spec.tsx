@@ -255,7 +255,6 @@ const Component = ({ params }: Route.ComponentProps) => {
     }
 
     return window.main.on('ruleset.file-changed', () => {
-      console.log('file changed...');
       registerCodeMirrorLint(rulesetPath);
       editor.current?.tryToSetOption('lint', { ...lintOptions });
     });
