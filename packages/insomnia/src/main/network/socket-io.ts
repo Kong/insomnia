@@ -95,6 +95,15 @@ const protocolName = 'socketIO';
 const getEventNotificationChannel = (responseId: string) =>
   `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 
+const sendToOpenWindows = (channel: string, ...args: unknown[]) => {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) {
+      continue;
+    }
+    window.webContents.send(channel, ...args);
+  }
+};
+
 const writeEventLogAndNotify = ({
   requestId,
   data,
@@ -105,17 +114,17 @@ const writeEventLogAndNotify = ({
   clearRequestIdMap?: boolean;
 }) => {
   eventLogFileStreams.get(requestId)?.write(data, () => {
+    const resId = requestIdToResponseIdMap.get(requestId);
+    if (!resId) {
+      return;
+    }
+
     // notify all renderers of new event has been received
-    for (const window of BrowserWindow.getAllWindows()) {
-      const resId = requestIdToResponseIdMap.get(requestId);
-      if (resId) {
-        const notifyChannel = getEventNotificationChannel(resId);
-        notifyChannel && window.webContents.send(notifyChannel);
-        if (clearRequestIdMap) {
-          // clean up maps after last event has been written to file
-          requestIdToResponseIdMap.delete(requestId);
-        }
-      }
+    const notifyChannel = getEventNotificationChannel(resId);
+    sendToOpenWindows(notifyChannel);
+    if (clearRequestIdMap) {
+      // clean up maps after last event has been written to file
+      requestIdToResponseIdMap.delete(requestId);
     }
   });
 };
@@ -329,9 +338,7 @@ const openSocketIOConnection = async (
     const openedEvents = request.eventListeners.filter(event => event.isOpen && event.eventName);
 
     socket.on('connect', async () => {
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, socket.connected);
-      }
+      sendToOpenWindows(readyStateChannel, socket.connected);
 
       const openEvent: SocketIOpenEvent = {
         _id: uuidV4(),
@@ -385,9 +392,7 @@ const openSocketIOConnection = async (
         timestamp: Date.now(),
       };
       deleteRequestMaps(request._id, reason, closeEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, socket.connected);
-      }
+      sendToOpenWindows(readyStateChannel, socket.connected);
     });
 
     socket.on('connect_error', error => {
