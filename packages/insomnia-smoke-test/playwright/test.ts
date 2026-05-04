@@ -158,25 +158,25 @@ export const test = baseTest.extend<{
     await page.waitForLoadState();
 
     // The app creates a hidden plugin window alongside the main window. If Playwright
-    // races and hands us the plugin window (which has no window.main), find the real one.
+    // races and hands us the plugin window (which has no window.main), poll until the
+    // real main window is available.
+    const findMainWindow = async () => {
+      const deadline = Date.now() + 30_000;
+      while (Date.now() < deadline) {
+        for (const win of app.windows()) {
+          if (await win.evaluate(() => !!(window as any).main).catch(() => false)) {
+            return win;
+          }
+        }
+        await new Promise(r => setTimeout(r, 200));
+      }
+      throw new Error('Main window not found within 30s');
+    };
+
     const isMainWindow = await page.evaluate(() => !!(window as any).main).catch(() => false);
     if (!isMainWindow) {
-      let found = false;
-      for (const win of app.windows()) {
-        const hasMain = await win.evaluate(() => !!(window as any).main).catch(() => false);
-        if (hasMain) {
-          page = win;
-          await page.waitForLoadState();
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        // Main window not yet in app.windows() — wait for it to open
-        const mainWin = await app.waitForEvent('window', { timeout: 30_000 });
-        await mainWin.waitForLoadState();
-        page = mainWin;
-      }
+      page = await findMainWindow();
+      await page.waitForLoadState();
     }
 
     // Seed a fake Konnect PAT so konnect-enabled UI renders in all tests
