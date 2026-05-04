@@ -84,9 +84,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
-  const isGitProject = models.project.isConnectedGitProject(project);
+  const isConnectedGitProject = models.project.isConnectedGitProject(project);
 
-  const gitRepositoryId = models.project.isConnectedGitProject(project)
+  const gitRepositoryId = isConnectedGitProject
     ? models.project.getEffectiveRepoId(project)
     : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
@@ -104,7 +104,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return {
     apiSpec,
     gitSyncRulesetPath,
-    isGitProject,
+    isConnectedGitProject,
     parsedSpec,
   };
 }
@@ -183,7 +183,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
-  const { apiSpec, gitSyncRulesetPath, isGitProject, parsedSpec } = useLoaderData<typeof clientLoader>();
+  const { apiSpec, gitSyncRulesetPath, isConnectedGitProject, parsedSpec } = useLoaderData<typeof clientLoader>();
 
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
@@ -1067,11 +1067,11 @@ const Component = ({ params }: Route.ComponentProps) => {
                             <Fragment>
                               <p>
                                 Using default OAS ruleset. Click to upload a custom ruleset yaml file.
-                                {isGitProject && (
+                                {isConnectedGitProject && (
                                   <span>
                                     {' '}
                                     Alternatively, add a <code className="p-0">.spectral.yaml</code> file to the root of
-                                    your git repository.
+                                    your connected git repository.
                                   </span>
                                 )}
                               </p>
