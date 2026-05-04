@@ -341,7 +341,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                       setTimeout(() => setCopied(false), 2000);
                     }}
                     className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
-                    aria-label="Copy repository path"
+                    aria-label="Copy cd command for repository path"
                   >
                     <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
                   </Button>
