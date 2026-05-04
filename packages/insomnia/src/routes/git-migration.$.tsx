@@ -9,24 +9,37 @@ import git_migration from '~/ui/images/git-migration/git.png';
 
 type MigrationStatus = 'default' | 'running' | 'completed' | 'partiallyCompleted' | 'error';
 
+const MIN_DISPLAY_MS = 3000;
+
 const MigrationView = () => {
   const [status, setStatus] = useState<MigrationStatus>('default');
   const [migrationLogs, setMigrationLogs] = useState<string[]>([]);
   const [failedProjects, setFailedProjects] = useState<{ id: string; name: string }[]>([]);
+  const [migratedCount, setMigratedCount] = useState(0);
 
   const handleMigration = () => {
     setStatus('running');
+    const startTime = Date.now();
     window.main.git
       .runAllGitRepoMigrations()
-      .then((result: { logs: string[]; failedProjects: { id: string; name: string }[] }) => {
-        setMigrationLogs(result.logs);
-        setFailedProjects(result.failedProjects);
-        setStatus(result.failedProjects.length > 0 ? 'partiallyCompleted' : 'completed');
+      .then((result: { logs: string[]; failedProjects: { id: string; name: string }[]; totalProjects: number }) => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
+        setTimeout(() => {
+          setMigrationLogs(result.logs);
+          setFailedProjects(result.failedProjects);
+          setMigratedCount(result.totalProjects - result.failedProjects.length);
+          setStatus(result.failedProjects.length > 0 ? 'partiallyCompleted' : 'completed');
+        }, remaining);
       })
       .catch((err: unknown) => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
         const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred.';
-        setMigrationLogs(prev => [...prev, `[ERROR] ${errorMsg}`]);
-        setStatus('error');
+        setTimeout(() => {
+          setMigrationLogs(prev => [...prev, `[ERROR] ${errorMsg}`]);
+          setStatus('error');
+        }, remaining);
       });
   };
 
@@ -39,7 +52,8 @@ const MigrationView = () => {
     <div className="flex h-full min-h-[500px] w-[600px] flex-col items-center justify-center">
       <div className="relative flex w-full flex-col items-center justify-center gap-(--padding-sm) rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-8">
         <div className="relative flex min-h-[150px] flex-col justify-between gap-4 text-left text-(--color-font)">
-          <h1 className="text-xl">
+          <h1 className="flex items-center gap-2 text-xl">
+            {isUpdateCompletedSuccessfully && <i className="fa fa-check-circle text-emerald-500" />}
             {isUpdateCompletedSuccessfully
               ? 'Update Successful'
               : isUpdateErrored
@@ -51,8 +65,9 @@ const MigrationView = () => {
 
           {isUpdateCompletedSuccessfully ? (
             <p className="text-sm">
-              Your file system has been successfully updated. Now you can explore all of your Insomnia files on your
-              local system and use git on your CLI to manage changes.
+              All {migratedCount} Insomnia git project{migratedCount !== 1 ? 's' : ''} on your local system have been
+              updated. You can now explore them, use git from your favourite CLI, or modify them from any other tool of
+              your choice.
             </p>
           ) : isUpdateCompletedWithErrors ? (
             <>
@@ -73,7 +88,7 @@ const MigrationView = () => {
             <>
               <p className="text-sm">We hit an unexpected error while updating your file system. Please try again.</p>
               <p className="text-sm text-[#828282]">
-                Having trouble and need to contact us, or back up to an old version? See our docs
+                Having trouble and need to contact us, or back up to an old version? See our{' '}
                 <Link className="underline" to="https://developer.konghq.com/insomnia/git-sync/">
                   docs.
                 </Link>
@@ -95,10 +110,7 @@ const MigrationView = () => {
 
           <div className="flex h-[32px] w-full justify-end">
             {isUpdateCompletedSuccessfully ? (
-              <Link
-                className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
-                to="/organization"
-              >
+              <Link className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80" to="/organization">
                 Open Insomnia
               </Link>
             ) : isUpdateCompletedWithErrors ? (
@@ -111,10 +123,7 @@ const MigrationView = () => {
                   <i className="fa fa-copy" />
                   Copy Error Logs
                 </CopyButton>
-                <Link
-                  className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
-                  to="/organization"
-                >
+                <Link className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80" to="/organization">
                   Open Insomnia
                 </Link>
               </div>
@@ -128,20 +137,12 @@ const MigrationView = () => {
                   <i className="fa fa-copy" />
                   Copy Error Logs
                 </CopyButton>
-                <Button
-                  className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
-                  onClick={handleMigration}
-                  isDisabled={isUpdateRunning}
-                >
+                <Button className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80" onClick={handleMigration} isDisabled={isUpdateRunning}>
                   {isUpdateRunning ? 'Updating...' : 'Retry Update'}
                 </Button>
               </div>
             ) : (
-              <Button
-                className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
-                onClick={handleMigration}
-                isDisabled={isUpdateRunning}
-              >
+              <Button className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80" onClick={handleMigration} isDisabled={isUpdateRunning}>
                 {isUpdateRunning ? 'Updating...' : 'Update Now'}
               </Button>
             )}
@@ -181,7 +182,7 @@ const Component = () => {
                 </div>
                 <div className="flex w-full justify-end">
                   <Button
-                    className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90"
+                    className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                     onClick={() => {
                       setShowMigrationView(true);
                     }}

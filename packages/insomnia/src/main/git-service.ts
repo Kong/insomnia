@@ -2886,6 +2886,7 @@ async function getCurrentBranchByRepositoryId({
 export interface MigrationSummary {
   logs: string[];
   failedProjects: { id: string; name: string }[];
+  totalProjects: number;
 }
 
 export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
@@ -2895,7 +2896,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   const allProjects = await services.project.all();
   const gitProjects = allProjects.filter((p): p is GitProject => models.project.isConnectedGitProject(p));
 
-  if (gitProjects.length === 0) return { logs, failedProjects };
+  if (gitProjects.length === 0) return { logs, failedProjects, totalProjects: 0 };
 
   // Batch-fetch all git repositories in one query instead of N individual lookups.
   const repoIds = gitProjects.map(p => models.project.getEffectiveRepoId(p)).filter(Boolean) as string[];
@@ -2965,7 +2966,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
     }),
   );
 
-  return { logs, failedProjects };
+  return { logs, failedProjects, totalProjects: gitProjects.length };
 }
 
 export interface GitServiceAPI {
