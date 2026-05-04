@@ -161,14 +161,21 @@ export const test = baseTest.extend<{
     // races and hands us the plugin window (which has no window.main), find the real one.
     const isMainWindow = await page.evaluate(() => !!(window as any).main).catch(() => false);
     if (!isMainWindow) {
-      const windows = app.windows();
-      for (const win of windows) {
+      let found = false;
+      for (const win of app.windows()) {
         const hasMain = await win.evaluate(() => !!(window as any).main).catch(() => false);
         if (hasMain) {
           page = win;
           await page.waitForLoadState();
+          found = true;
           break;
         }
+      }
+      if (!found) {
+        // Main window not yet in app.windows() — wait for it to open
+        const mainWin = await app.waitForEvent('window', { timeout: 30_000 });
+        await mainWin.waitForLoadState();
+        page = mainWin;
       }
     }
 
