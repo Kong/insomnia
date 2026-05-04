@@ -8,7 +8,7 @@ import type { IDatabase } from '~/insomnia-data';
 export const pluginWindowDatabase: IDatabase = new Proxy({} as IDatabase, {
   get(_target, fnName) {
     if (typeof fnName === 'symbol') {
-      return undefined;
+      return;
     }
     if (fnName === 'init') {
       // Main process already initialised the database.

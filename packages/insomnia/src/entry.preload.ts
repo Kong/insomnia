@@ -17,6 +17,11 @@ import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
+import type {
+  ExecutePluginActionArgs,
+  ExecutePluginMainActionArgs,
+  RunTemplateTagActionArgs,
+} from './plugins/bridge-types';
 import type { RenderedRequest } from './templating/types';
 import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
@@ -353,11 +358,13 @@ const main: Window['main'] = {
     getRequestGroupActions: () => invokeWithNormalizedError('plugins.getRequestGroupActions'),
     getWorkspaceActions: () => invokeWithNormalizedError('plugins.getWorkspaceActions'),
     getDocumentActions: () => invokeWithNormalizedError('plugins.getDocumentActions'),
-    executeAction: (args: import('./plugins/bridge-types').ExecutePluginActionArgs) => invokeWithNormalizedError('plugins.executeAction', args),
+    executeAction: (args: ExecutePluginActionArgs) => invokeWithNormalizedError('plugins.executeAction', args),
     getTemplateTags: () => invokeWithNormalizedError('plugins.getTemplateTags'),
-    runTemplateTagAction: (args: import('./plugins/bridge-types').RunTemplateTagActionArgs) => invokeWithNormalizedError('plugins.runTemplateTagAction', args),
+    runTemplateTagAction: (args: RunTemplateTagActionArgs) =>
+      invokeWithNormalizedError('plugins.runTemplateTagAction', args),
     getBundlePlugins: () => invokeWithNormalizedError('plugins.getBundlePlugins'),
-    executePluginMainAction: (args: import('./plugins/bridge-types').ExecutePluginMainActionArgs) => invokeWithNormalizedError('plugins.executePluginMainAction', args),
+    executePluginMainAction: (args: ExecutePluginMainActionArgs) =>
+      invokeWithNormalizedError('plugins.executePluginMainAction', args),
   },
 };
 
