@@ -1083,8 +1083,9 @@ export async function _applyRequestPluginHooks(renderedRequest: RenderedRequest,
     try {
       await hook(context);
     } catch (err) {
-      err.plugin = plugin;
-      throw err;
+      const error = err instanceof Error ? err : new Error(String(err));
+      (error as any).plugin = plugin;
+      throw error;
     }
   }
 
@@ -1113,8 +1114,9 @@ export async function _applyResponsePluginHooks(
       try {
         await hook(context);
       } catch (err) {
-        err.plugin = plugin;
-        throw err;
+        const error = err instanceof Error ? err : new Error(String(err));
+        (error as any).plugin = plugin;
+        throw error;
       }
     }
 

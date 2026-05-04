@@ -84,7 +84,7 @@ describe('_applyRequestPluginHooks', () => {
     expect(error).toHaveProperty('plugin', mockPlugin);
   });
 
-  it('attaches plugin metadata even when a non-Error value is thrown', async () => {
+  it('wraps non-Error throws into an Error with plugin metadata attached', async () => {
     vi.mocked(pluginsIndex.getRequestHooks).mockResolvedValue([
       {
         plugin: mockPlugin,
@@ -94,7 +94,10 @@ describe('_applyRequestPluginHooks', () => {
       },
     ]);
 
-    await expect(_applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext)).rejects.toThrow();
+    const error = await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext).catch(e => e);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toBe('string error');
+    expect(error).toHaveProperty('plugin', mockPlugin);
   });
 
   it('stops processing further hooks after the first failure', async () => {

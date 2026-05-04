@@ -207,7 +207,7 @@ Plugin capabilities are then re-exposed through a controlled preload bridge only
 - Module loading: Node `require()` in Phase 1; bundled/ESM modules via preload in Phase 2
 - Serialization: IPC boundary between hidden window and main process enforces JSON serialization from day one
 - UI helpers: dialog/prompt calls in Phase 1 route through IPC to the main renderer; in Phase 2 they become explicit bridge APIs
-- Startup cost: hidden window is created on first plugin invocation and kept alive, not spawned per call
+- Startup cost: hidden window is created eagerly at app startup and kept alive, not spawned per call
 
 ## Sandbox model
 

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 
 import { app, BrowserWindow, ipcMain } from 'electron';
@@ -6,7 +7,39 @@ let pluginWindow: BrowserWindow | null = null;
 let windowReady = false;
 const pendingRequests = new Map<string, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
 
-let requestCounter = 0;
+// Registered once so that persistent `ipcMain.on` handlers don't accumulate across window recreations.
+let ipcListenersRegistered = false;
+
+function ensureIpcListeners() {
+  if (ipcListenersRegistered) {
+    return;
+  }
+  ipcListenersRegistered = true;
+
+  ipcMain.on('plugin-window-ready', event => {
+    if (event.sender !== pluginWindow?.webContents) {
+      return;
+    }
+    windowReady = true;
+    console.log('[main] plugin window is ready');
+  });
+
+  ipcMain.on('plugin-invoke-result', (event, { id, result, error }: { id: string; result?: unknown; error?: string }) => {
+    if (event.sender !== pluginWindow?.webContents) {
+      return;
+    }
+    const pending = pendingRequests.get(id);
+    if (!pending) {
+      return;
+    }
+    pendingRequests.delete(id);
+    if (error) {
+      pending.reject(new Error(error));
+    } else {
+      pending.resolve(result);
+    }
+  });
+}
 
 export function getPluginWindow() {
   return pluginWindow;
@@ -16,6 +49,8 @@ export function createPluginWindow() {
   if (pluginWindow && !pluginWindow.isDestroyed()) {
     return;
   }
+
+  ensureIpcListeners();
 
   pluginWindow = new BrowserWindow({
     show: false,
@@ -38,39 +73,35 @@ export function createPluginWindow() {
     }
   });
 
-  ipcMain.removeAllListeners('plugin-window-ready');
-  ipcMain.once('plugin-window-ready', () => {
-    windowReady = true;
-    console.log('[main] plugin window is ready');
-  });
-
-  ipcMain.removeAllListeners('plugin-invoke-result');
-  ipcMain.on('plugin-invoke-result', (_event, { id, result, error }: { id: string; result?: unknown; error?: string }) => {
-    const pending = pendingRequests.get(id);
-    if (!pending) {
-      return;
-    }
-    pendingRequests.delete(id);
-    if (error) {
-      pending.reject(new Error(error));
-    } else {
-      pending.resolve(result);
-    }
-  });
-
   const pluginWindowPath = path.resolve(__dirname, 'plugin-window.html');
   pluginWindow.loadFile(pluginWindowPath);
   console.log(`[main] Loading plugin window from ${pluginWindowPath}`);
 }
 
-function waitForReady(): Promise<void> {
+function waitForReady(timeoutMs = 10_000): Promise<void> {
   if (windowReady) {
     return Promise.resolve();
   }
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
+    const onFailLoad = () => {
+      clearInterval(check);
+      clearTimeout(timer);
+      reject(new Error('[plugin-window] failed to load'));
+    };
+
+    pluginWindow?.webContents.once('did-fail-load', onFailLoad);
+
+    const timer = setTimeout(() => {
+      clearInterval(check);
+      pluginWindow?.webContents.off('did-fail-load', onFailLoad);
+      reject(new Error('[plugin-window] timed out waiting for ready'));
+    }, timeoutMs);
+
     const check = setInterval(() => {
       if (windowReady) {
         clearInterval(check);
+        clearTimeout(timer);
+        pluginWindow?.webContents.off('did-fail-load', onFailLoad);
         resolve();
       }
     }, 50);
@@ -85,7 +116,7 @@ export async function invokeInPluginWindow(method: string, args?: unknown): Prom
   await waitForReady();
 
   return new Promise((resolve, reject) => {
-    const id = `${++requestCounter}-${Date.now()}`;
+    const id = randomUUID();
 
     const timeout = setTimeout(() => {
       if (pendingRequests.has(id)) {
