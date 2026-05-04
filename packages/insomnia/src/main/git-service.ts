@@ -2914,6 +2914,8 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
     `${ts()} [INFO] Starting migration v${CURRENT_MIGRATION_VERSION} for ${gitProjects.length} repo(s): ${projectList}`,
   );
 
+  let migratedCount = 0;
+
   await Promise.all(
     gitProjects.map(async project => {
       const gitRepository = repoById.get(models.project.getEffectiveRepoId(project)!);
@@ -2934,6 +2936,8 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
       const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
       if (!success) {
         failedProjects.push({ id: project._id, name: project.name });
+      } else {
+        migratedCount++;
       }
     }),
   );
@@ -2966,7 +2970,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
     }),
   );
 
-  return { logs, failedProjects, totalProjects: gitProjects.length };
+  return { logs, failedProjects, totalProjects: migratedCount };
 }
 
 export interface GitServiceAPI {
