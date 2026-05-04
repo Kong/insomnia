@@ -120,6 +120,8 @@ export type HandleChannels =
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
   | 'plugins.executeAction'
+  | 'plugins.getBundlePlugins'
+  | 'plugins.executePluginMainAction'
   | 'plugins.getTemplateTags'
   | 'plugins.runTemplateTagAction'
   | 'plugins.getActivePlugins'

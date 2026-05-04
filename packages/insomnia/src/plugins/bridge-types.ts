@@ -46,6 +46,13 @@ export interface ExecutePluginActionArgs {
   domainData: unknown;
 }
 
+export interface ExecutePluginMainActionArgs {
+  pluginName: string;
+  actionName: string;
+  context?: Record<string, any>;
+  params?: Record<string, any>;
+}
+
 export interface PluginsBridgeAPI {
   getThemes: () => Promise<SerializableTheme[]>;
   getPlugins: () => Promise<SerializablePlugin[]>;
@@ -58,4 +65,6 @@ export interface PluginsBridgeAPI {
   executeAction: (args: ExecutePluginActionArgs) => Promise<void>;
   getTemplateTags: () => Promise<SerializableTemplateTagMeta[]>;
   runTemplateTagAction: (args: RunTemplateTagActionArgs) => Promise<void>;
+  getBundlePlugins: () => Promise<SerializablePlugin[]>;
+  executePluginMainAction: (args: ExecutePluginMainActionArgs) => Promise<unknown>;
 }

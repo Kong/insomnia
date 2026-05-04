@@ -1,13 +1,15 @@
 import { ipcRenderer } from 'electron';
 
-import type { ExecutePluginActionArgs, RunTemplateTagActionArgs } from './plugins/bridge-types';
+import type { ExecutePluginActionArgs, ExecutePluginMainActionArgs, RunTemplateTagActionArgs } from './plugins/bridge-types';
 import * as pluginApp from './plugins/context/app';
 import * as pluginData from './plugins/context/data';
 import * as pluginNetwork from './plugins/context/network';
 import * as pluginStore from './plugins/context/store';
 import type { Plugin } from './plugins/index';
 import {
+  executePluginMainAction,
   getActivePlugins,
+  getBundlePlugins,
   getDocumentActions,
   getPlugins,
   getRequestActions,
@@ -113,6 +115,18 @@ ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvok
 
         await entry.action(context, domainData);
         result = null;
+        break;
+      }
+
+      case 'getBundlePlugins': {
+        const plugins = await getBundlePlugins();
+        result = plugins.map(serializePlugin);
+        break;
+      }
+
+      case 'executePluginMainAction': {
+        const actionArgs = args as ExecutePluginMainActionArgs;
+        result = await executePluginMainAction(actionArgs);
         break;
       }
 

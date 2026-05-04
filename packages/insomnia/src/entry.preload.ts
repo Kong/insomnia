@@ -356,6 +356,8 @@ const main: Window['main'] = {
     executeAction: (args: import('./plugins/bridge-types').ExecutePluginActionArgs) => invokeWithNormalizedError('plugins.executeAction', args),
     getTemplateTags: () => invokeWithNormalizedError('plugins.getTemplateTags'),
     runTemplateTagAction: (args: import('./plugins/bridge-types').RunTemplateTagActionArgs) => invokeWithNormalizedError('plugins.runTemplateTagAction', args),
+    getBundlePlugins: () => invokeWithNormalizedError('plugins.getBundlePlugins'),
+    executePluginMainAction: (args: import('./plugins/bridge-types').ExecutePluginMainActionArgs) => invokeWithNormalizedError('plugins.executePluginMainAction', args),
   },
 };
 
