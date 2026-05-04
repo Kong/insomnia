@@ -1072,7 +1072,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </span>
           <Button
             onPress={() => {
-              window.clipboard.writeText(repoPath);
+              window.clipboard.writeText(`cd "${repoPath}"`);
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
