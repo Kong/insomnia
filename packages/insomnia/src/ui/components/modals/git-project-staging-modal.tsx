@@ -56,6 +56,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
+import { platform } from '../../../common/platform';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showToast } from '../toast-notification';
@@ -1080,7 +1081,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </span>
           <Button
             onPress={() => {
-              window.clipboard.writeText(`cd "${repoPath}"`);
+              const cmd =
+                platform === 'win32'
+                  ? `cd "${repoPath.replace(/"/g, '\\"')}"`
+                  : `cd '${repoPath.replace(/'/g, "'\\''")}'`;
+              window.clipboard.writeText(cmd);
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
