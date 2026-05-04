@@ -8,9 +8,11 @@ Design a new plugin system for the Electron app that supports:
 - `mainFunctions` for privileged capabilities that must run in the main process
 - a sandbox model that keeps third-party plugins off direct Electron and Node APIs unless explicitly allowed
 
-The migration is split into two phases to avoid breaking existing plugin behaviour:
+The migration is split into phases to avoid breaking existing plugin behaviour:
 
-- **Phase 1:** move all plugin loading and execution into a dedicated hidden BrowserWindow with `nodeIntegration: true`, and move networking into the main process. No API surface changes for plugin authors — existing plugins continue to work.
+- **Phase 1a:** improve the legacy behaviour test baseline and route all plugin execution through an IPC bridge to a hidden BrowserWindow with `nodeIntegration: true`. No plugin code is moved yet — the renderer still loads plugins, but all invocations cross the bridge. *(current PR)*
+- **Phase 1b:** move all plugin code to run exclusively inside the hidden BrowserWindow. Plugin context modules (`plugins/context/`, `plugins/index.ts`) are removed from the main renderer bundle entirely. The renderer becomes a pure client of the bridge.
+- **Phase 1c:** disable `nodeIntegration` in the main BrowserWindow. Tackle the remaining renderer-side Node.js dependencies together: direct Electron imports, `fs` operations, `process.env` access, dynamic `require('electron')`, and `node:crypto`/`node:os` usage.
 - **Phase 2:** replace the hidden window's `nodeIntegration: true` runtime with a stricter sandbox (`contextIsolation: true`, capability-based permissions). Plugin authors migrate to the new API surface.
 
 ## Why now
@@ -76,19 +78,23 @@ This is not how the app works today. The current system still allows plugin enum
 
 #### Phase 1 move
 
-Phase 1 moves the system from:
+Phase 1 moves the system in three steps.
+
+**Phase 1a** (current PR): adds the bridge and routes execution through it, but plugin code still lives in the renderer bundle:
 
 ```text
-renderer imports plugin helpers -> renderer fetches plugin exports -> renderer executes plugin code
+renderer loads plugins -> renderer calls bridge -> hidden window re-executes via its own copy of plugin code
 ```
 
-to:
+**Phase 1b**: removes plugin code from the renderer bundle entirely so only the hidden window owns it:
 
 ```text
 hidden plugin window loads plugins -> renderer requests execution via IPC bridge -> hidden window executes and returns result
 ```
 
-Plugin trust level is unchanged in Phase 1. The hidden window still has `nodeIntegration: true`.
+**Phase 1c**: disables `nodeIntegration` in the main window, eliminating residual Node.js usage in the renderer (direct `fs`, `require('electron')`, `process.env`, `node:crypto`, etc.).
+
+Plugin trust level is unchanged across all of Phase 1. The hidden window retains `nodeIntegration: true` throughout.
 
 #### Phase 2 move
 
@@ -165,6 +171,17 @@ UI -> preload bridge -> IPC -> plugin main registry -> mainFunction
 ```
 
 This keeps plugin loading and trust decisions out of the UI while still matching the existing preload and IPC pattern in `src/entry.preload.ts`.
+
+## inso CLI and `process.type` guards
+
+Many modules in `src/plugins/` contain branches guarded by `process.type === 'renderer'`. These are **not** general renderer-detection guards — they exist because the inso CLI reuses the same code paths as the Electron renderer but loads plugin implementations directly rather than going through the IPC bridge.
+
+In Electron the check is true and the code reaches IPC-bound paths. In inso (a Node.js process with no Electron renderer) the check is false and the code falls back to direct module imports.
+
+This has two consequences for Phase 1b:
+
+1. **Do not remove these guards.** Stripping them to simplify the hidden window code will break inso silently. The guards must be preserved in any shared module that inso also imports.
+2. **The hidden window is itself a renderer (`process.type === 'renderer'` is true).** Any code running there that hits these branches will follow the IPC path — which is correct for the app, but means the guard alone is not a reliable way to distinguish "app renderer" from "hidden plugin window." If Phase 1b needs to distinguish between the two contexts, use a dedicated flag (e.g. a custom `window.__PLUGIN_WINDOW__` set by the hidden window's preload) rather than relying on `process.type`.
 
 ## Host decision
 
@@ -373,32 +390,74 @@ This keeps the public renderer surface narrow and auditable.
 
 ## POC phases
 
-### Phase 1: lift and shift (non-breaking)
+### Phase 1a: bridge and baseline (current PR)
 
-**Goal:** move all plugin loading and execution out of the app UI renderer into a hidden BrowserWindow with `nodeIntegration: true`. Move plugin networking calls to main. No change to existing plugin behaviour.
+**Goal:** establish a legacy behaviour test baseline and route all plugin invocations through an IPC bridge to a hidden BrowserWindow. Plugin code still exists in the renderer bundle — this phase proves the bridge, not the isolation.
 
 #### What changes
 
-- All calls to `src/plugins/index.ts` that currently run in the renderer are redirected through IPC to the hidden plugin window
-- The hidden window owns plugin discovery, loading, and execution
-- Network requests made by plugin code (e.g. in requestHooks/responseHooks) move to main-process handlers
-- The app UI renderer communicates with plugins only through the preload bridge
+- Legacy behaviour baseline tests written for all plugin export types (happy path + error path)
+- Hidden BrowserWindow created and managed from main (`nodeIntegration: true`, `show: false`)
+- IPC bridge added so all renderer-side plugin invocations cross to the hidden window before executing
+- Renderer-side plugin calls redirected through the bridge; the hidden window runs the actual plugin code
 
 #### What does not change
 
+- Plugin code is still bundled with the renderer (duplication, not isolation)
 - Plugin export shape (`templateTags`, `requestHooks`, `responseHooks`, etc.) is unchanged
 - Plugin authors do not need to update anything
-- `nodeIntegration: true` is preserved in the hidden window so all existing Node/Electron usage continues
-- No permission model is enforced yet — plugins have the same trust level as today, just in a separate window
+- No permission model enforced
 
 #### Deliverables
 
-1. Hidden plugin window created and managed from main
-2. Plugin discovery and loading moved into the hidden window
-3. IPC bridge added so the app UI renderer can invoke plugin capabilities
-4. Networking extracted from renderer plugin execution paths and routed through main
-5. Existing plugin behaviour verified against the current test suite
-6. No new plugin API surface — purely structural
+1. Legacy behaviour baseline tests green in CI
+2. Hidden plugin window created and managed from main
+3. IPC bridge routing all renderer plugin invocations to the hidden window
+4. Zero behavioural regressions against baseline
+
+### Phase 1b: full plugin isolation in hidden window
+
+**Goal:** remove plugin code from the main renderer bundle entirely. The hidden window is the sole owner of plugin discovery, loading, and execution.
+
+#### What changes
+
+- `src/plugins/index.ts` and all plugin context modules (`plugins/context/`) removed from the renderer bundle
+- Renderer has no direct import of plugin packages; it communicates only through the IPC bridge
+- Plugin context modules that have `process.type === 'renderer'` guards must be audited carefully — see [inso CLI and `process.type` guards](#inso-cli-and-processtype-guards). Guards must be preserved for inso compatibility; any disambiguation between "app renderer" and "hidden plugin window" should use a dedicated flag, not `process.type`
+
+#### What does not change
+
+- Hidden window still runs with `nodeIntegration: true`
+- Plugin export shape and author-visible behaviour unchanged
+- inso CLI plugin paths unchanged
+
+#### Deliverables
+
+1. Renderer bundle contains no plugin module imports
+2. All baseline tests still pass
+3. inso CLI smoke-tested to confirm no regressions from `process.type` guard changes
+
+### Phase 1c: disable `nodeIntegration` in the main window
+
+**Goal:** harden the main BrowserWindow by removing its reliance on Node.js integration. This requires eliminating residual Node.js API usage in the renderer.
+
+#### What changes (grouped by effort)
+
+| Area | Files | Fix |
+|------|-------|-----|
+| Direct `import electron` in renderer | `routes/auth.clear-vault-key.tsx` | Replace `ipcRenderer.emit` with `window.main` equivalent |
+| `process.env` in renderer | `common/constants.ts`, `settings/plugins.tsx` | Expose `INSOMNIA_DATA_PATH` and `PORTABLE_EXECUTABLE_DIR` via preload |
+| `fs` in response/network/scripts | `models/helpers/response-operations.ts`, `script-executor.ts`, `network/grpc/write-proto-file.ts` | New IPC handlers in `src/main/ipc/`, exposed via preload |
+| Dynamic `require('electron')` | `network/network.ts` | Replace with static imports or `window.main` |
+| `node:crypto` / `node:os` | `sync/delta/diff.ts`, `sync/git/providers/gitlab.ts`, `templating/base-extension.ts` | Replace with Web Crypto API (`globalThis.crypto.subtle`) where possible; IPC bridge for remainder |
+
+These changes should land together in one PR where practical, since they all share the same prerequisite (Phase 1b complete) and the same goal (nodeIntegration: false on the main window).
+
+#### What does not change
+
+- Hidden window retains `nodeIntegration: true` — Phase 2 tightens that
+- Plugin author behaviour unchanged
+- inso CLI unaffected (Node.js process, no Electron renderer)
 
 ### Phase 2: sandbox hardening
 
@@ -466,38 +525,42 @@ That means the new plugin system does not need to preserve all current plugin fe
 
 ## Proposed delivery model
 
-### Phase 1: lift and shift
+### Phase 1: lift and shift (1a → 1b → 1c)
 
-The first phase moves plugin execution out of the app UI renderer without changing any plugin-visible behaviour. It is the prerequisite for all sandbox hardening work.
+The first phase moves plugin execution out of the app UI renderer without changing any plugin-visible behaviour. It is the prerequisite for all sandbox hardening work. It is delivered in three sub-phases.
 
-#### Goals
+#### Phase 1a goals (current PR)
 
-- all plugin loading and execution runs in a hidden BrowserWindow, not in the app UI renderer
-- plugin networking moves to the main process
-- zero breaking changes for existing plugins
-- app UI renderer interacts with plugins only through the preload bridge
+- legacy behaviour baseline tests green in CI for all plugin export types
+- all plugin invocations cross the IPC bridge to the hidden window
+- zero behavioural regressions
 
-#### In scope
+#### Phase 1b goals
 
-- hidden plugin window creation and lifecycle management
-- IPC bridge between app UI renderer and hidden plugin window
-- redirect of all current renderer-side plugin invocations through the bridge
-- extraction of networking from renderer plugin execution paths into main
-- plugin discovery compatibility with the existing install location
+- plugin code removed from the main renderer bundle entirely
+- hidden BrowserWindow is sole owner of plugin discovery, loading, and execution
+- `process.type` guards in shared modules preserved for inso CLI compatibility (see [inso CLI and `process.type` guards](#inso-cli-and-processtype-guards))
 
-#### Out of scope
+#### Phase 1c goals
+
+- `nodeIntegration: false` set on the main BrowserWindow
+- all residual renderer-side Node.js API usage eliminated (direct Electron imports, `fs`, `process.env`, dynamic `require`, `node:crypto`/`node:os`)
+- delivered as a single PR where practical, since all items share the same prerequisite (1b) and goal
+
+#### Out of scope for all of Phase 1
 
 - new plugin API surface or export shapes
 - permission model or trust gates
-- sandbox hardening
+- sandbox hardening on the hidden window
 - deprecation warnings
 
-#### Success criteria
+#### Success criteria (Phase 1 complete)
 
 - all existing plugins work without modification
 - app UI renderer contains no direct `require()` or import of plugin packages
 - all plugin invocations cross the IPC bridge
-- networking from plugin hooks runs in main, not in any renderer
+- main BrowserWindow runs with `nodeIntegration: false`
+- inso CLI plugin behaviour unchanged
 
 ### Phase 2: sandbox hardening and new API surface
 
@@ -645,24 +708,43 @@ Co-locate unit tests with the plugin execution code in `packages/insomnia/src/pl
 
 ### Phase 1 slices
 
-1. **Hidden plugin window**
+#### Phase 1a slices (current PR)
+
+1. **Baseline tests**
+   - write unit tests for each plugin export type covering happy path and error path
+   - tests must pass on `develop` before any structural changes
+
+2. **Hidden plugin window**
    - create and manage a hidden BrowserWindow from main (`nodeIntegration: true`, `show: false`)
-   - define window lifecycle: created on first plugin use, kept alive until app exit
+   - define window lifecycle: created eagerly at app startup, kept alive until app exit
    - add IPC channel for plugin invocation and result return
 
-2. **Plugin loader redirect**
-   - move `src/plugins/index.ts` plugin discovery and loading into the hidden window
+3. **Bridge routing**
    - add IPC handler in hidden window for each current plugin capability type
-   - redirect app UI renderer calls through `window.plugins` preload bridge
-
-3. **Networking extraction**
-   - identify all network calls triggered from renderer plugin execution paths
-   - move those calls to main-process IPC handlers
-   - hidden window calls main via IPC for network operations; main returns serialized responses
+   - redirect all app UI renderer plugin invocations through the bridge
+   - plugin code still bundled with renderer at this stage (duplication, not isolation)
 
 4. **Verification**
-   - run existing plugin tests against the new routing
-   - confirm zero behavioral regressions for all plugin export types
+   - run baseline tests against the new routing; confirm zero regressions
+
+#### Phase 1b slices
+
+1. **Bundle separation**
+   - remove `src/plugins/index.ts` and `plugins/context/` from the renderer bundle
+   - audit all `process.type === 'renderer'` guards in shared modules — preserve them for inso; use `window.__PLUGIN_WINDOW__` or equivalent to distinguish hidden window from app renderer if needed
+   - confirm renderer has zero direct plugin imports
+
+2. **inso validation**
+   - run inso CLI smoke tests to confirm `process.type` guard changes introduced no regressions
+
+#### Phase 1c slices
+
+1. **Remove direct Electron imports** — `routes/auth.clear-vault-key.tsx`: replace `ipcRenderer.emit` with `window.main`
+2. **Expose env vars via preload** — `common/constants.ts`, `settings/plugins.tsx`: add `INSOMNIA_DATA_PATH` and `PORTABLE_EXECUTABLE_DIR` to preload bridge
+3. **Bridge `fs` operations** — `models/helpers/response-operations.ts`, `script-executor.ts`, `network/grpc/write-proto-file.ts`: new IPC handlers in `src/main/ipc/`
+4. **Remove dynamic `require('electron')`** — `network/network.ts`: replace with static imports or `window.main`
+5. **Replace Node crypto/os** — `sync/delta/diff.ts`, `sync/git/providers/gitlab.ts`, `templating/base-extension.ts`: use `globalThis.crypto.subtle`; IPC bridge for remainder
+6. **Flip the flag** — set `nodeIntegration: false` on the main BrowserWindow and run full test suite
 
 ### Phase 2 slices
 
@@ -698,12 +780,23 @@ Co-locate unit tests with the plugin execution code in `packages/insomnia/src/pl
 
 ### Phase 1
 
-0. **Write and pass the legacy behaviour baseline** (see [Pre-Phase 1](#pre-phase-1-legacy-behaviour-baseline)). Do not begin steps 1–5 until baseline tests are green in CI.
+**Phase 1a (current PR)**
+0. Write and pass legacy behaviour baseline tests. Do not proceed until green in CI.
 1. Create hidden plugin window in main; verify it can load a plugin module.
-2. Move plugin discovery and loading into hidden window via IPC.
-3. Redirect all app UI renderer plugin calls through the preload bridge.
-4. Extract networking from renderer plugin execution paths into main.
-5. Run full test suite; confirm zero regressions against the baseline.
+2. Add IPC bridge; redirect all renderer plugin invocations through it.
+3. Run full test suite; confirm zero regressions.
+
+**Phase 1b**
+4. Remove plugin code from the renderer bundle entirely.
+5. Audit and preserve all `process.type === 'renderer'` guards for inso; add `window.__PLUGIN_WINDOW__` flag if disambiguation is needed.
+6. Run inso CLI smoke tests to confirm no regressions.
+
+**Phase 1c**
+7. Remove direct `import electron` and `require('electron')` from renderer.
+8. Expose required `process.env` vars via preload.
+9. Bridge `fs` operations in response/network/scripts via new IPC handlers.
+10. Replace `node:crypto`/`node:os` with Web Crypto or IPC bridges.
+11. Set `nodeIntegration: false` on the main BrowserWindow; run full test suite.
 
 ### Phase 2
 
@@ -720,7 +813,9 @@ Co-locate unit tests with the plugin execution code in `packages/insomnia/src/pl
 
 **Phase 1 must not break existing plugins.** The hidden window with `nodeIntegration: true` is an intentional trade-off: it buys the structural separation needed to later apply the sandbox, without requiring plugin authors to change anything first. Any breakage in Phase 1 is a regression, not an accepted trade-off.
 
-**Networking moves to main in Phase 1, not Phase 2.** Extracting network calls from renderer plugin paths is lower risk in Phase 1 (while Node APIs are still available) and reduces the surface that needs sandboxing in Phase 2.
+**Phase 1 is three sub-phases, not one.** 1a proves the bridge; 1b achieves true isolation; 1c hardens the main window. Each is a separate PR. 1c items should land together where practical since they share the same prerequisite and goal.
+
+**`process.type === 'renderer'` guards are for inso, not just renderer detection.** The inso CLI reuses renderer code paths but loads implementations directly rather than via IPC. These guards must be preserved in shared modules during Phase 1b. See [inso CLI and `process.type` guards](#inso-cli-and-processtype-guards).
 
 **Phase 2 is where the new API surface lands.** The `rendererFunctions` / `mainFunctions` shapes, permission model, and settings UI belong in Phase 2. They should not block Phase 1 delivery.
 
