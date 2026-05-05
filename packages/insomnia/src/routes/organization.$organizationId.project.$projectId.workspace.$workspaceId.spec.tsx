@@ -251,9 +251,9 @@ const Component = ({ params }: Route.ComponentProps) => {
   }, [rulesetPath]);
 
   useEffect(() => {
-    if (rulesetPath) {
-      window.main.watchRulesetFile({ rulesetPath });
-    }
+    if (!rulesetPath) return;
+
+    window.main.watchRulesetFile({ rulesetPath });
 
     return window.main.on('ruleset.file-changed', () => {
       registerCodeMirrorLint(rulesetPath);
