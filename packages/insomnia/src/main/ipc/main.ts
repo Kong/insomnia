@@ -364,7 +364,7 @@ export function registerMainHandlers() {
 
   ipcMainOn('watchRulesetFile', (event, options: { rulesetPath: string }) => {
     try {
-      rulesetFileWatcher?.close();
+      rulesetFileWatcher?.close(); // we should only have one watcher at a time, so close any existing watcher before creating a new one
       rulesetFileWatcher = fs.watch(options.rulesetPath, eventType => {
         if (eventType === 'change' && !event.sender.isDestroyed()) {
           event.sender.send('ruleset.file-changed', { rulesetPath: options.rulesetPath });
