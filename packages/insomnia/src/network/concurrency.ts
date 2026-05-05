@@ -1,3 +1,5 @@
+import { appendFile } from 'node:fs/promises';
+
 import type { queueAsPromised } from 'fastq';
 import * as fastq from 'fastq';
 
@@ -11,6 +13,7 @@ import type {
 } from '~/insomnia-data';
 
 import type { RequestContext, RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
+import { runScript } from '../script-executor';
 import { cancellableExecution } from './cancellation';
 
 export interface ExecuteScriptContext {
@@ -59,10 +62,17 @@ async function asyncWorker(arg: Task): Promise<any> {
   const timeoutPromise = new Promise<{ error: string }>(resolve =>
     setTimeout(resolve, timeoutValue, { error: `Executing script timeout: ${timeoutValue}` }),
   );
-  const executionPromise = Promise.race([
-    window.main.hiddenBrowserWindow.runScript({ script: arg.script, context: arg.context }),
-    timeoutPromise,
-  ]);
+
+  const scriptPromise =
+    process.type === 'renderer'
+      ? window.main.hiddenBrowserWindow.runScript({ script: arg.script, context: arg.context })
+      : runScript({
+          script: arg.script,
+          context: arg.context,
+          appendTimelineEntry: ({ timelinePath, data }) => appendFile(timelinePath, data),
+        });
+
+  const executionPromise = Promise.race([scriptPromise, timeoutPromise]);
   const result = await cancellableExecution({ id: arg.context.request._id, fn: executionPromise });
   return result;
 }

@@ -1,3 +1,5 @@
+import { appendFile } from 'node:fs/promises';
+
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { CurlRequestOptions } from '../main/network/libcurl-promise';
 import { runScript as nodejsRunScript } from '../script-executor';
@@ -49,7 +51,9 @@ export const cancellableRunScript = async (options: { script: string; context: R
   try {
     const result = await cancellablePromise({
       signal: controller.signal,
-      fn: process.type === 'renderer' ? window.main.hiddenBrowserWindow.runScript(options) : nodejsRunScript(options),
+      fn: process.type === 'renderer'
+        ? window.main.hiddenBrowserWindow.runScript(options)
+        : nodejsRunScript({ ...options, appendTimelineEntry: ({ timelinePath, data }) => appendFile(timelinePath, data) }),
     });
 
     return result;

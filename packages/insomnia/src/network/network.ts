@@ -639,6 +639,8 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
 
     if (runtime) {
       await runtime.appendTimeline(timelinePath, output.logs);
+    } else if (process.type !== 'renderer' && output?.logs?.length) {
+      await fs.promises.appendFile(timelinePath, output.logs.join('\n'));
     }
 
     if (output?.transientVariables !== undefined) {
