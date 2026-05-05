@@ -51,10 +51,11 @@ export interface KonnectRoute {
   service: { id: string } | null;
 }
 
-// The Konnect API sometimes omits nullable fields rather than returning `null`.
-// These normalizers run on every entity as it comes off the wire, so the rest
-// of the codebase can rely on the declared `T | null` shape without defensive
-// `?? null` / `arr == null` checks.
+// Boundary normalizers — coerce any missing nullable field to `null` so the
+// declared `T | null` types are honest. Defending against `undefined` once
+// here lets every downstream consumer use strict `=== null` checks and skip
+// the `?? null` / `arr == null` defensive plumbing that otherwise leaks
+// through sanitizeRoute, sync.ts, expression-parser, etc.
 function normalizeControlPlane(cp: KonnectControlPlane): KonnectControlPlane {
   return { ...cp, proxy_urls: cp.proxy_urls ?? null };
 }

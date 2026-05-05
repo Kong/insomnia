@@ -161,6 +161,24 @@ describe('fetchAllControlPlanes', () => {
     await expect(gen.next()).rejects.toThrow('Konnect API error 500 fetching control planes');
   });
 
+  it('normalizes omitted proxy_urls to null', async () => {
+    // The fetch boundary owns the `T | null` type contract: every nullable
+    // field must be defined, even when the upstream payload omits it. Without
+    // this, downstream code reading `controlPlane.proxy_urls` would see
+    // `undefined` despite the type saying otherwise.
+    const rawCp = { id: 'cp-1', name: 'CP 1', description: '', config: { cluster_type: 'HYBRID', control_plane_endpoint: '' } };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      jsonResponse({ data: [rawCp], meta: { page: { total: 1, size: 100, number: 1 } } }),
+    ));
+
+    const pages: any[][] = [];
+    for await (const page of fetchAllControlPlanes('faketoken')) {
+      pages.push(page);
+    }
+
+    expect(pages[0][0]).toEqual({ ...rawCp, proxy_urls: null });
+  });
+
   it('yields empty data when total is 0', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       jsonResponse({ data: [], meta: { page: { total: 0, size: 100, number: 1 } } }),
@@ -218,6 +236,19 @@ describe('fetchAllServices', () => {
     expect(fetchMock.mock.calls[0][0]).toMatch(/^https:\/\/eu\.api\.konghq\.com/);
   });
 
+  it('normalizes omitted nullable fields (name, path, tags) to null', async () => {
+    // The fetch boundary owns the `T | null` type contract: every nullable
+    // field must be defined, even when the upstream payload omits it. If a
+    // future change drops this normalization, downstream consumers reading
+    // `service.name` would see `undefined` despite the type saying otherwise.
+    const rawSvc = { id: 'svc-1', protocol: 'http', host: 'h', port: 80, enabled: true };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ data: [rawSvc], offset: null })));
+
+    const result = await fetchAllServices('faketoken', 'cp-1', 'us');
+
+    expect(result[0]).toEqual({ ...rawSvc, name: null, path: null, tags: null });
+  });
+
   it('throws on non-ok response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 502 })));
 
@@ -251,6 +282,30 @@ describe('fetchRoutesForService', () => {
     await fetchRoutesForService('faketoken', 'cp-1', 'svc-42', 'us');
 
     expect(fetchMock.mock.calls[0][0]).toContain('/services/svc-42/routes');
+  });
+
+  it('normalizes omitted nullable fields to null so sanitizeRoute can rely on them', async () => {
+    // The fetch boundary owns the `T | null` type contract: every nullable
+    // field must be defined, even when the upstream payload omits it.
+    // sanitizeRoute uses strict `!== null` checks on name/expression, so if
+    // this normalization regresses we'd hit `stripTemplateSyntax(undefined)`
+    // at runtime — caught here instead of in production.
+    const rawRoute = { id: 'r-1', protocols: ['http'] };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ data: [rawRoute], offset: null })));
+
+    const result = await fetchRoutesForService('faketoken', 'cp-1', 'svc-1', 'us');
+
+    expect(result[0]).toEqual({
+      ...rawRoute,
+      name: null,
+      methods: null,
+      paths: null,
+      hosts: null,
+      headers: null,
+      snis: null,
+      expression: null,
+      service: null,
+    });
   });
 });
 
