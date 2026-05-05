@@ -786,11 +786,11 @@ export function createWindowsAndReturnMain() {
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }
-  // Create eagerly so the 12 MB plugin-window bundle is parsed at startup rather
-  // than on the first plugin call (which would blow assertion timeouts in tests).
-  // The test fixture guards against firstWindow() returning this window instead
-  // of the main app window (the plugin window has no window.main).
-  createPluginWindow();
+  // Create the plugin window after the main window finishes its initial load so
+  // that Playwright's firstWindow() always returns the main app window. Creating
+  // it on did-finish-load still parses the 12 MB bundle well before any user
+  // plugin call would occur.
+  mainWindow.webContents.once('did-finish-load', () => createPluginWindow());
   return mainWindow;
 }
 
