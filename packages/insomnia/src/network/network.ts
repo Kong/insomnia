@@ -39,7 +39,13 @@ import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeader
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginData from '../plugins/context/data';
+import * as pluginNetwork from '../plugins/context/network';
 import * as pluginRequest from '../plugins/context/request';
+import * as pluginResponse from '../plugins/context/response';
+import * as pluginStore from '../plugins/context/store';
+import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -1083,6 +1089,26 @@ export async function _applyRequestPluginHooks(renderedRequest: RenderedRequest,
     }
   }
 
+  if (process.type !== 'renderer') {
+    for (const { plugin, hook } of await plugins.getRequestHooks()) {
+      const context = {
+        ...(pluginApp.init() as Record<string, any>),
+        ...pluginData.init(renderedContext.getProjectId()),
+        ...(pluginStore.init(plugin) as Record<string, any>),
+        ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
+        ...(pluginNetwork.init() as Record<string, any>),
+      };
+      try {
+        await hook(context);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        (error as any).plugin = plugin;
+        throw error;
+      }
+    }
+    return newRenderedRequest;
+  }
+
   if (!await window.main.plugins.hasRequestHooks()) {
     return newRenderedRequest;
   }
@@ -1100,6 +1126,29 @@ export async function _applyResponsePluginHooks(
   renderedContext: Record<string, any>,
 ): Promise<ResponsePatch> {
   try {
+    if (process.type !== 'renderer') {
+      const newResponse = clone(response);
+      const newRequest = clone(renderedRequest);
+      for (const { plugin, hook } of await plugins.getResponseHooks()) {
+        const context = {
+          ...(pluginApp.init() as Record<string, any>),
+          ...pluginData.init(renderedContext.getProjectId()),
+          ...(pluginStore.init(plugin) as Record<string, any>),
+          ...(pluginResponse.init(newResponse) as Record<string, any>),
+          ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
+          ...(pluginNetwork.init() as Record<string, any>),
+        };
+        try {
+          await hook(context);
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          (error as any).plugin = plugin;
+          throw error;
+        }
+      }
+      return newResponse;
+    }
+
     if (!await window.main.plugins.hasResponseHooks()) {
       return response;
     }
