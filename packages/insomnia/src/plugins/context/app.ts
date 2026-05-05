@@ -42,6 +42,9 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
     },
 
     getPath: (name: string) => {
+      if (!isRenderer) {
+        return '';
+      }
       invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
       return window.app.getPath('desktop');
     },
@@ -50,7 +53,7 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
 
     showSaveDialog: async (options = {}) => {
       const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
-      if (!sendOrNoRender) {
+      if (!sendOrNoRender || !isRenderer) {
         return null;
       }
 
@@ -63,9 +66,9 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
     },
 
     clipboard: {
-      readText: () => window.clipboard.readText(),
-      writeText: text => window.clipboard.writeText(text),
-      clear: () => window.clipboard.clear(),
+      readText: () => (isRenderer ? window.clipboard.readText() : ''),
+      writeText: text => { if (isRenderer) { window.clipboard.writeText(text); } },
+      clear: () => { if (isRenderer) { window.clipboard.clear(); } },
     },
   },
 });

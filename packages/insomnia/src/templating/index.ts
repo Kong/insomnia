@@ -2,11 +2,18 @@ import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import type { Environment } from 'nunjucks';
 
 import BaseExtension from './base-extension';
-import { nunjucks } from './nunjucks.client';
 import { extractUndefinedVariableKey, RenderError } from './render-error';
 
 // Some constants
 export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
+
+/** Load the appropriate nunjucks runtime: browser bundle for renderer, Node bundle otherwise. */
+async function loadNunjucks() {
+  if (process.type === 'renderer') {
+    return (await import('./nunjucks.client')).nunjucks;
+  }
+  return (await import('./nunjucks.node')).nunjucks;
+}
 
 type NunjucksEnvironment = Environment & {
   extensions: Record<string, any>;
@@ -139,7 +146,8 @@ async function getNunjucks(ignoreUndefinedEnvVariable?: boolean): Promise<Nunjuc
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
+  const nj = await loadNunjucks();
+  const nunjucksEnvironment = nj.configure(config) as NunjucksEnvironment;
   nunjucksEnvironment.addGlobal('range', () => {});
   nunjucksEnvironment.addGlobal('cycler', () => {});
   nunjucksEnvironment.addGlobal('joiner', () => {});

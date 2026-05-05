@@ -120,7 +120,12 @@ export default class BaseExtension {
             userInfo: os.userInfo(),
           };
         },
-        readFile: async (path: string) => window.main.secureReadFile({ path }),
+        readFile: async (path: string) => {
+          if (typeof window !== 'undefined' && window.main?.secureReadFile) {
+            return window.main.secureReadFile({ path });
+          }
+          return '';
+        },
         decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
         encode: async (input: string, encoding: BinaryToTextEncoding) =>
           crypto.createHash('md5').update(input).digest(encoding),
@@ -128,7 +133,11 @@ export default class BaseExtension {
           templating.render(str, {
             context: renderContext,
           }),
-        openInBrowser: (url: string) => window.main.openInBrowser(url),
+        openInBrowser: (url: string) => {
+          if (typeof window !== 'undefined' && window.main?.openInBrowser) {
+            window.main.openInBrowser(url);
+          }
+        },
         models: {
           request: {
             getById: services.request.getById,
