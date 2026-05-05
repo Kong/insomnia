@@ -737,4 +737,43 @@ describe('render tests', () => {
       );
     });
   });
+
+  describe('getRenderedRequestAndContext()', () => {
+    it('renders request templates in the main-process path', async () => {
+      const workspace = await services.workspace.create();
+      const environment = await services.environment.create({
+        parentId: workspace._id,
+        data: {
+          host: 'example.com',
+          name: 'world',
+        },
+      });
+      const request = Object.assign(models.request.init(), {
+        parentId: workspace._id,
+        name: 'Hello {{ name }}',
+        url: 'https://{{ host }}/{{ name }}',
+      });
+      const originalProcessType = process.type;
+
+      Object.defineProperty(process, 'type', {
+        configurable: true,
+        value: 'browser',
+      });
+
+      try {
+        const result = await renderUtils.getRenderedRequestAndContext({
+          request,
+          environment: environment._id,
+        });
+
+        expect(result.request.name).toBe('Hello world');
+        expect(result.request.url).toBe('https://example.com/world');
+      } finally {
+        Object.defineProperty(process, 'type', {
+          configurable: true,
+          value: originalProcessType,
+        });
+      }
+    });
+  });
 });
