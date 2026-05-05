@@ -116,9 +116,9 @@ describe('validatePat', () => {
 
 describe('fetchAllControlPlanes', () => {
   it('yields a single page when total <= PAGE_SIZE', async () => {
-    const cps = [{ id: 'cp-1', name: 'CP 1', description: '', config: { cluster_type: 'HYBRID', control_plane_endpoint: '' } }];
+    const page1Data = [{ id: 'cp-1', name: 'CP 1', description: '', config: { cluster_type: 'HYBRID', control_plane_endpoint: '' } }];
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
-      jsonResponse({ data: cps, meta: { page: { total: 1, size: 100, number: 1 } } }),
+      jsonResponse({ data: page1Data, meta: { page: { total: 1, size: 100, number: 1 } } }),
     ));
 
     const pages: any[][] = [];
@@ -127,7 +127,7 @@ describe('fetchAllControlPlanes', () => {
     }
 
     expect(pages).toHaveLength(1);
-    expect(pages[0]).toEqual(cps);
+    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, proxy_urls: null })));
   });
 
   it('yields multiple pages when total > PAGE_SIZE', async () => {
@@ -148,7 +148,7 @@ describe('fetchAllControlPlanes', () => {
 
     expect(pages).toHaveLength(2);
     expect(pages[0]).toHaveLength(100);
-    expect(pages[1]).toEqual(page2Data);
+    expect(pages[1]).toEqual(page2Data.map(cp => ({ ...cp, proxy_urls: null })));
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][0]).toContain('page[number]=1');
     expect(fetchMock.mock.calls[1][0]).toContain('page[number]=2');
@@ -401,7 +401,7 @@ describe('retry on 429', () => {
     await iterPromise;
 
     expect(pages).toHaveLength(1);
-    expect(pages[0]).toEqual(page1Data);
+    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, proxy_urls: null })));
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
