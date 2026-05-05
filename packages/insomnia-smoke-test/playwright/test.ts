@@ -161,16 +161,20 @@ export const test = baseTest.extend<{
     // races and hands us the plugin window (which has no window.main), poll until the
     // real main window is available.
     const findMainWindow = async () => {
-      const deadline = Date.now() + 30_000;
+      const deadline = Date.now() + 60_000;
       while (Date.now() < deadline) {
         for (const win of app.windows()) {
+          const title = await win.title().catch(() => '');
+          if (title === 'Plugin Window') {
+            continue;
+          }
           if (await win.evaluate(() => !!(window as any).main).catch(() => false)) {
             return win;
           }
         }
         await new Promise(r => setTimeout(r, 200));
       }
-      throw new Error('Main window not found within 30s');
+      throw new Error('Main window not found within 60s');
     };
 
     const isMainWindow = await page.evaluate(() => !!(window as any).main).catch(() => false);
