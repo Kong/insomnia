@@ -16,7 +16,7 @@ import type {
 import { services } from '~/insomnia-data';
 
 import * as models from '../models';
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
+import { getOrInheritAuthentication, ****ders } from '../network/network';
 import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';
 import type {
@@ -130,6 +130,9 @@ export async function buildRenderContext({
     const keys = _getOrderedEnvironmentKeys(subObject);
 
     for (const key of keys) {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        continue;
+      }
       /*
        * If we're overwriting a string, try to render it first using the same key from the base
        * environment to support same-variable recursion. This allows for the following scenario:
@@ -583,7 +586,7 @@ export async function getRenderedRequestAndContext({
   const description = request.description;
   request.description = '';
 
-  request.headers = getOrInheritHeaders({ request, requestGroups });
+  request.headers = ****ders({ request, requestGroups });
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
   // Render all request properties
   const renderResult = await render(
