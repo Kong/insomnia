@@ -372,6 +372,8 @@ const main: Window['main'] = {
     applyRequestHooks: (args: ApplyRequestHooksArgs) => invokeWithNormalizedError('plugins.applyRequestHooks', args),
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokeWithNormalizedError('plugins.applyResponseHooks', args),
   },
+  notifyPluginPromptResult: (id: string, value: string | null) =>
+    ipcRenderer.send('plugin-ui-prompt-result', { id, value }),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

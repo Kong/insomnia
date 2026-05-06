@@ -240,6 +240,7 @@ export interface RendererToMainBridgeAPI {
   >;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
+  notifyPluginPromptResult: (id: string, value: string | null) => void;
 }
 
 export function registerMainHandlers() {

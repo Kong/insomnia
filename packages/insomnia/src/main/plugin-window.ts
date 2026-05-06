@@ -9,6 +9,11 @@ const pendingRequests = new Map<string, { resolve: (v: unknown) => void; reject:
 
 let cachedHasRequestHooks: boolean | null = null;
 let cachedHasResponseHooks: boolean | null = null;
+const promptPendingRequests = new Map<string, (value: string | null) => void>();
+
+function getMainWindow() {
+  return BrowserWindow.getAllWindows().find(w => !w.isDestroyed() && w.getTitle() === 'Insomnia');
+}
 
 // Registered once so that persistent `ipcMain.on` handlers don't accumulate across window recreations.
 let ipcListenersRegistered = false;
@@ -25,6 +30,51 @@ function ensureIpcListeners() {
     }
     windowReady = true;
     console.log('[main] plugin window is ready');
+  });
+
+  ipcMain.on('plugin-ui-alert', (event, options: Record<string, unknown>) => {
+    if (event.sender !== pluginWindow?.webContents) {
+      return;
+    }
+    getMainWindow()?.webContents.send('plugin-ui-alert', options);
+  });
+
+  ipcMain.on('plugin-ui-dialog', (event, options: Record<string, unknown>) => {
+    if (event.sender !== pluginWindow?.webContents) {
+      return;
+    }
+    getMainWindow()?.webContents.send('plugin-ui-dialog', options);
+  });
+
+  ipcMain.handle('plugin-ui-prompt', async (event, options: Record<string, unknown>) => {
+    if (event.sender !== pluginWindow?.webContents) {
+      return null;
+    }
+    const mainWindow = getMainWindow();
+    if (!mainWindow) {
+      return null;
+    }
+    const id = randomUUID();
+    return new Promise<string | null>(resolve => {
+      const timeout = setTimeout(() => {
+        promptPendingRequests.delete(id);
+        resolve(null);
+      }, 60_000);
+      promptPendingRequests.set(id, value => {
+        clearTimeout(timeout);
+        resolve(value);
+      });
+      mainWindow.webContents.send('plugin-ui-prompt', id, options);
+    });
+  });
+
+  ipcMain.on('plugin-ui-prompt-result', (_event, { id, value }: { id: string; value: string | null }) => {
+    const resolve = promptPendingRequests.get(id);
+    if (!resolve) {
+      return;
+    }
+    promptPendingRequests.delete(id);
+    resolve(value);
   });
 
   ipcMain.on('plugin-invoke-result', (event, { id, result, error }: { id: string; result?: unknown; error?: string }) => {
