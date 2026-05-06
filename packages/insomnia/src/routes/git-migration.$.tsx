@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { CopyButton } from '~/ui/components/base/copy-button';
+import { Link as ExternalLink } from '~/ui/components/base/link';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 import git_migration from '~/ui/images/git-migration/git.png';
@@ -73,10 +74,10 @@ const MigrationView = () => {
             <>
               <p className="text-sm">We hit an unexpected error while updating your file system. Please try again.</p>
               <p className="text-sm text-[#828282]">
-                Having trouble and need to contact us, or back up to an old version? See our docs
-                <Link className="underline" to="https://developer.konghq.com/insomnia/git-sync/">
+                Having trouble and need to contact us, or back up to an old version? See our{' '}
+                <ExternalLink className="underline" href="https://developer.konghq.com/insomnia/git-sync/">
                   docs.
-                </Link>
+                </ExternalLink>
               </p>
             </>
           ) : (
@@ -84,6 +85,13 @@ const MigrationView = () => {
               <p className="text-sm">
                 In order to continue with this update, we need to adjust your local file system. This is required to
                 enable managing Insomnia changes using git on the CLI.
+              </p>
+              <p className="text-sm">
+                Note: This change is backwards compatible, but we strongly recommend{' '}
+                <ExternalLink className="underline" href="https://developer.konghq.com/insomnia/git-sync/">
+                  following these best practices
+                </ExternalLink>{' '}
+                when returning to an earlier version of Insomnia.
               </p>
               <p className="text-sm">
                 {isUpdateRunning
@@ -96,7 +104,7 @@ const MigrationView = () => {
           <div className="flex h-[32px] w-full justify-end">
             {isUpdateCompletedSuccessfully ? (
               <Link
-                className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 to="/organization"
               >
                 Open Insomnia
@@ -112,7 +120,7 @@ const MigrationView = () => {
                   Copy Error Logs
                 </CopyButton>
                 <Link
-                  className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   to="/organization"
                 >
                   Open Insomnia
@@ -129,7 +137,7 @@ const MigrationView = () => {
                   Copy Error Logs
                 </CopyButton>
                 <Button
-                  className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   onClick={handleMigration}
                   isDisabled={isUpdateRunning}
                 >
@@ -138,7 +146,7 @@ const MigrationView = () => {
               </div>
             ) : (
               <Button
-                className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 onClick={handleMigration}
                 isDisabled={isUpdateRunning}
               >
@@ -181,7 +189,7 @@ const Component = () => {
                 </div>
                 <div className="flex w-full justify-end">
                   <Button
-                    className="h-[32px] rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90"
+                    className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                     onClick={() => {
                       setShowMigrationView(true);
                     }}
