@@ -101,6 +101,13 @@ const MigrationView = () => {
                 managing Insomnia changes using git on the CLI.
               </p>
               <p className="text-sm">
+                Note: This change is backwards compatible, but we strongly recommend{' '}
+                <Link className="underline" to="https://developer.konghq.com/insomnia/git-sync/">
+                  following these best practices
+                </Link>{' '}
+                when returning to an earlier version of Insomnia.
+              </p>
+              <p className="text-sm">
                 {isUpdateRunning
                   ? 'Note: Your data is safe and the update only takes seconds.'
                   : 'Note: This update does NOT affect any ongoing work or pending changes, and only affects how your local Insomnia files are stored.'}
@@ -110,7 +117,10 @@ const MigrationView = () => {
 
           <div className="flex h-[32px] w-full justify-end">
             {isUpdateCompletedSuccessfully ? (
-              <Link className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80" to="/organization">
+              <Link
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                to="/organization"
+              >
                 Open Insomnia
               </Link>
             ) : isUpdateCompletedWithErrors ? (
@@ -123,7 +133,10 @@ const MigrationView = () => {
                   <i className="fa fa-copy" />
                   Copy Error Logs
                 </CopyButton>
-                <Link className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80" to="/organization">
+                <Link
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                  to="/organization"
+                >
                   Open Insomnia
                 </Link>
               </div>
@@ -137,12 +150,20 @@ const MigrationView = () => {
                   <i className="fa fa-copy" />
                   Copy Error Logs
                 </CopyButton>
-                <Button className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80" onClick={handleMigration} isDisabled={isUpdateRunning}>
+                <Button
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                  onClick={handleMigration}
+                  isDisabled={isUpdateRunning}
+                >
                   {isUpdateRunning ? 'Updating...' : 'Retry Update'}
                 </Button>
               </div>
             ) : (
-              <Button className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80" onClick={handleMigration} isDisabled={isUpdateRunning}>
+              <Button
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                onClick={handleMigration}
+                isDisabled={isUpdateRunning}
+              >
                 {isUpdateRunning ? 'Updating...' : 'Update Now'}
               </Button>
             )}
@@ -182,7 +203,7 @@ const Component = () => {
                 </div>
                 <div className="flex w-full justify-end">
                   <Button
-                    className="border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise) flex h-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                    className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                     onClick={() => {
                       setShowMigrationView(true);
                     }}
