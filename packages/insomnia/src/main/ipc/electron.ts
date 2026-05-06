@@ -148,6 +148,7 @@ export type HandleChannels =
   | 'webSocket.open'
   | 'webSocket.readyState'
   | 'writeFile'
+  | 'deleteFile'
   | 'writeResponseBodyToFile';
 
 export const ipcMainHandle = (

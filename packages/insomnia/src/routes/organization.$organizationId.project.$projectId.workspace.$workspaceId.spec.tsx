@@ -195,6 +195,17 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
   const [rulesetPath, setRulesetPath] = useState<string>('');
 
+  // This determines what path to write the ruleset content to when the user selects a custom ruleset file or when the rulesetContent in the DB changes.
+  // For git sync projects, this will be the git working directory so that it appears in the staging modal and can be committed.
+  // For cloud/local projects, this will be a per-workspace path — rulesetContent in the DB handles syncing for these projects.
+  // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
+  const rulesetWritePath = useMemo(
+    () =>
+      gitSyncRulesetPath ||
+      window.path.join(window.app.getPath('userData'), `workspaces/${workspaceId}/.spectral.yaml`),
+    [gitSyncRulesetPath, workspaceId],
+  );
+
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
 
@@ -262,8 +273,20 @@ const Component = ({ params }: Route.ComponentProps) => {
   }, [rulesetPath]);
 
   useEffect(() => {
-    setRulesetPath(apiSpec.rulesetFilePath || gitSyncRulesetPath || '');
-  }, [apiSpec, gitSyncRulesetPath]);
+    const syncRulesetToDisk = async () => {
+      if (apiSpec.rulesetContent) {
+        // Write the stored content to the correct path for this project type and use it for linting.
+        await window.main.writeFile({ path: rulesetWritePath, content: apiSpec.rulesetContent });
+        setRulesetPath(rulesetWritePath);
+      } else {
+        // No ruleset content — for git sync, fall back to any .spectral.yaml already present in the repo (e.g. committed by another user).
+        // For cloud/local projects, default to OAS ruleset.
+        setRulesetPath(gitSyncRulesetPath || '');
+      }
+    };
+
+    syncRulesetToDisk();
+  }, [apiSpec.rulesetContent, rulesetWritePath, gitSyncRulesetPath]);
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
@@ -411,15 +434,24 @@ const Component = ({ params }: Route.ComponentProps) => {
   const handleSelectSpectralFile = async () => {
     const { filePath, canceled } = await selectFileOrFolder({
       itemTypes: ['file'],
-      extensions: ['yaml', 'yml'],
+      extensions: ['yaml'],
       showHiddenFiles: true,
     });
 
     if (canceled || !filePath) {
       return;
     }
-    await services.apiSpec.update(apiSpec, { rulesetFilePath: filePath });
-    setRulesetPath(filePath);
+
+    if (window.path.basename(filePath) !== '.spectral.yaml') {
+      showError({ title: 'Invalid File', message: 'Please select a file named .spectral.yaml' });
+      return;
+    }
+
+    const content = await window.main.insecureReadFile({ path: filePath });
+
+    await window.main.writeFile({ path: rulesetWritePath, content });
+    await services.apiSpec.update(apiSpec, { rulesetContent: content });
+    setRulesetPath(rulesetWritePath);
   };
 
   const handleUnselectSpectralFile = async () => {
@@ -432,8 +464,9 @@ const Component = ({ params }: Route.ComponentProps) => {
       noText: 'Cancel',
       onDone: async (confirmed: boolean) => {
         if (confirmed) {
-          setRulesetPath(gitSyncRulesetPath || '');
-          await services.apiSpec.update(apiSpec, { rulesetFilePath: '' });
+          await window.main.deleteFile({ path: rulesetWritePath });
+          await services.apiSpec.update(apiSpec, { rulesetContent: '' });
+          setRulesetPath('');
         }
       },
     });
@@ -1101,7 +1134,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                         </div>
                       </Tooltip>
                     </TooltipTrigger>
-                    {apiSpec.rulesetFilePath === rulesetPath && (
+                    {!!apiSpec.rulesetContent && (
                       <TooltipTrigger>
                         <Button onPress={handleUnselectSpectralFile}>
                           <Icon icon="xmark" />

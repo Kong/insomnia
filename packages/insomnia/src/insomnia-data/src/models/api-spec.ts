@@ -11,13 +11,13 @@ export const canDuplicate = true;
 
 export const canSync = true;
 
-export const optionalKeys = ['rulesetFilePath'];
+export const optionalKeys = ['rulesetContent'];
 
 export interface BaseApiSpec {
   fileName: string;
   contentType: 'json' | 'yaml';
   contents: string;
-  rulesetFilePath?: string;
+  rulesetContent?: string; // This is the content of the spectral ruleset file for linting API specs. It is stored in the DB to support cloud sync, but also written to disk for spectral to use when linting.
 }
 
 export type ApiSpec = BaseModel & BaseApiSpec;

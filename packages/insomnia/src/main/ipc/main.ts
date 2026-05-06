@@ -153,6 +153,7 @@ export interface RendererToMainBridgeAPI {
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
+  deleteFile: (options: { path: string }) => Promise<void>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
     destinationPath: string;
@@ -317,6 +318,13 @@ export function registerMainHandlers() {
       await fs.promises.mkdir(dir, { recursive: true });
       await fs.promises.writeFile(options.path, options.content);
       return options.path;
+    } catch (err) {
+      throw new Error(err);
+    }
+  });
+  ipcMainHandle('deleteFile', async (_, options: { path: string }) => {
+    try {
+      await fs.promises.unlink(options.path);
     } catch (err) {
       throw new Error(err);
     }
