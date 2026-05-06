@@ -16,7 +16,7 @@ import type {
 import { services } from '~/insomnia-data';
 
 import * as models from '../models';
-import { getOrInheritAuthentication, ****ders } from '../network/network';
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';
 import type {
@@ -586,7 +586,7 @@ export async function getRenderedRequestAndContext({
   const description = request.description;
   request.description = '';
 
-  request.headers = ****ders({ request, requestGroups });
+  request.headers = getOrInheritHeaders({ request, requestGroups });
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
   // Render all request properties
   const renderResult = await render(

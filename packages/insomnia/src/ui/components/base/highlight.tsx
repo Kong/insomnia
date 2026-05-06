@@ -1,5 +1,4 @@
-import fuzzySort from 'fuzzysort';
-import React, { type FC } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 
 import { fuzzyMatch } from '../../../common/misc';
 
@@ -10,7 +9,6 @@ export interface HighlightProps {
 }
 
 export const Highlight: FC<HighlightProps> = ({ search, text, blankValue, ...otherProps }) => {
-  // Match loose here to make sure our highlighting always works
   const result = fuzzyMatch(search, text, {
     splitSpace: true,
     loose: true,
@@ -20,18 +18,32 @@ export const Highlight: FC<HighlightProps> = ({ search, text, blankValue, ...oth
     return <span {...otherProps}>{text || blankValue || ''}</span>;
   }
 
-  return (
-    <span
-      {...otherProps}
-      dangerouslySetInnerHTML={{
-        // @ts-expect-error -- TSCONVERSION
-        __html: fuzzySort.highlight(
-          // @ts-expect-error -- TSCONVERSION
-          result,
-          '<strong style="font-style: italic; text-decoration: underline;">',
-          '</strong>',
-        ),
-      }}
-    />
-  );
+  const matched = new Set(result.indexes);
+  const nodes: ReactNode[] = [];
+  let buffer = '';
+  let inMatch = false;
+
+  const flush = () => {
+    if (!buffer) {
+      return;
+    }
+    nodes.push(
+      inMatch
+        ? <strong key={nodes.length} className="italic underline">{buffer}</strong>
+        : buffer,
+    );
+    buffer = '';
+  };
+
+  for (const [i, char] of [...text].entries()) {
+    const isMatch = matched.has(i);
+    if (isMatch !== inMatch) {
+      flush();
+      inMatch = isMatch;
+    }
+    buffer += char;
+  }
+  flush();
+
+  return <span {...otherProps}>{nodes}</span>;
 };
