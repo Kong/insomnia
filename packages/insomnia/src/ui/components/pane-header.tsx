@@ -35,22 +35,28 @@ export const PaneHeader = ({ breadcrumbs, rightSlot, className = '' }: PaneHeade
                 {crumb.to && !isLast ? (
                   <NavLink
                     to={crumb.to}
-                    className="truncate rounded-xs px-1 py-0.5 text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                    className="truncate rounded-xs px-1 py-0.5 font-normal text-(--color-font) opacity-[0.7] ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                   >
                     {crumb.label}
                   </NavLink>
                 ) : (
-                  <span className={`truncate px-1 py-0.5 ${isLast ? 'text-(--color-font)' : 'text-(--hl)'}`}>
+                  <span
+                    className={`truncate px-1 py-0.5 font-normal opacity-[0.7] ${isLast ? 'text-(--color-font)' : 'text-(--hl)'}`}
+                  >
                     {crumb.label}
                   </span>
                 )}
-                {!isLast && <Icon icon="chevron-right" className="h-3 w-3 shrink-0 text-(--hl)" />}
+                {!isLast && <Icon icon="chevron-right" className="mr-2 h-3 w-3 shrink-0 text-(--hl)" />}
               </Breadcrumb>
             );
           })}
         </Breadcrumbs>
       </div>
-      {rightSlot ? <div className="ml-auto flex shrink-0 items-center gap-2">{rightSlot}</div> : null}
+      {rightSlot ? (
+        <div className="ml-auto flex h-full shrink-0 items-center gap-2 border-l border-(--hl-md) pl-2">
+          {rightSlot}
+        </div>
+      ) : null}
     </div>
   );
 };
