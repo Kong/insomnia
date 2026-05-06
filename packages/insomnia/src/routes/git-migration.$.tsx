@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { CopyButton } from '~/ui/components/base/copy-button';
+import { Link as ExternalLink } from '~/ui/components/base/link';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 import git_migration from '~/ui/images/git-migration/git.png';
@@ -89,9 +90,9 @@ const MigrationView = () => {
               <p className="text-sm">We hit an unexpected error while updating your file system. Please try again.</p>
               <p className="text-sm text-[#828282]">
                 Having trouble and need to contact us, or back up to an old version? See our{' '}
-                <Link className="underline" to="https://developer.konghq.com/insomnia/git-sync/">
+                <ExternalLink className="underline" href="https://developer.konghq.com/insomnia/git-sync/">
                   docs.
-                </Link>
+                </ExternalLink>
               </p>
             </>
           ) : (
@@ -102,9 +103,9 @@ const MigrationView = () => {
               </p>
               <p className="text-sm">
                 Note: This change is backwards compatible, but we strongly recommend{' '}
-                <Link className="underline" to="https://developer.konghq.com/insomnia/git-sync/">
+                <ExternalLink className="underline" href="https://developer.konghq.com/insomnia/git-sync/">
                   following these best practices
-                </Link>{' '}
+                </ExternalLink>{' '}
                 when returning to an earlier version of Insomnia.
               </p>
               <p className="text-sm">
