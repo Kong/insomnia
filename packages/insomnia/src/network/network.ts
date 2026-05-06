@@ -1163,7 +1163,7 @@ export async function _applyResponsePluginHooks(
     console.log('[plugin] Response hook failed', err, response);
     return {
       url: renderedRequest.url,
-      error: `[plugin] Response hook failed err=${err.message}`,
+      error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
       elapsedTime: 0, // 0 because this path is hit during plugin calls
       statusMessage: 'Error',
       settingSendCookies: renderedRequest.settingSendCookies,

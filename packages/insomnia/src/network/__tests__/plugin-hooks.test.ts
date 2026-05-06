@@ -143,6 +143,15 @@ describe('_applyResponsePluginHooks', () => {
     expect(result.error).toContain('detailed failure reason');
   });
 
+  it('handles non-Error rejections without producing undefined in the error message', async () => {
+    mockPlugins.hasResponseHooks.mockResolvedValue(true);
+    mockPlugins.applyResponseHooks.mockRejectedValue('string rejection');
+
+    const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
+    expect(result.error).toContain('string rejection');
+    expect(result.error).not.toContain('undefined');
+  });
+
   it('returns an error ResponsePatch for async hook rejections', async () => {
     mockPlugins.hasResponseHooks.mockResolvedValue(true);
     mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] async boom'));
