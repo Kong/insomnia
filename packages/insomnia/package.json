@@ -19,6 +19,7 @@
   "scripts": {
     "verify-bundle-plugins": "esr --cache ./scripts/verify-bundle-plugins.ts",
     "install-x64-native-dependencies": "esr --cache ./scripts/install-x64-native-dependencies.ts",
+    "sandbox:require:imports": "esr ./scripts/audit-require-interceptor.ts",
     "build": "react-router build && esr --cache ./scripts/build.ts --noErrorTruncation",
     "analyze:renderer-node-imports": "cross-env INSOMNIA_NODE_IMPORT_REPORT=1 react-router build",
     "check:renderer-node-imports": "npm run analyze:renderer-node-imports && esr --cache ./scripts/check-renderer-node-imports.ts",

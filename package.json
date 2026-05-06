@@ -26,6 +26,7 @@
     "dev": "npm start -w insomnia",
     "dev:autoRestart": "npm run start:autoRestart -w insomnia",
     "check:renderer-node-imports": "npm run check:renderer-node-imports -w insomnia",
+    "sandbox:require:imports": "npm run sandbox:require:imports -w insomnia",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
