@@ -11,6 +11,7 @@ import React, {
 import {
   Button,
   Dialog,
+  DialogTrigger,
   GridList,
   GridListItem,
   Heading,
@@ -18,6 +19,7 @@ import {
   Label,
   Modal,
   ModalOverlay,
+  Popover,
   TextArea,
   TextField,
   Tooltip,
@@ -56,6 +58,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
+import { platform } from '../../../common/platform';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showToast } from '../toast-notification';
@@ -1057,37 +1060,63 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             PREVIEW
           </span>
           <span className="font-semibold">Manage changes on the Git CLI</span>
+          <DialogTrigger>
+            <Button
+              className="flex items-center justify-center rounded-xs p-0.5 text-(--hl) hover:bg-(--hl-xs)"
+              aria-label="More information"
+            >
+              <Icon icon="circle-info" className="size-3.5" />
+            </Button>
+            <Popover
+              offset={8}
+              className="max-w-xs rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+            >
+              <Dialog className="outline-none" >
+                You can now browse Git Sync project files on your local file system and manage changes using your normal
+                Git workflows.{' '}
+                <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
+                  Learn more ↗
+                </a>
+              </Dialog>
+            </Popover>
+          </DialogTrigger>
         </div>
-        <p className="mb-3 text-sm text-(--color-font)">
-          You can now browse Git Sync project files on your local file system and manage changes using your normal Git
-          workflows.{' '}
-          <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
-            Learn more ↗
-          </a>
-        </p>
-        <p className="mb-1 font-semibold">Path to this project:</p>
-        <div className="mb-3 flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+        <p className="mb-1 text-xs font-semibold">Path to this project:</p>
+        <div className="flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
           <span className="min-w-0 flex-1 truncate" title={repoPath}>
             {repoPath}
           </span>
           <Button
             onPress={() => {
-              window.clipboard.writeText(repoPath);
+              const cmd =
+                platform === 'win32'
+                  ? `cd "${repoPath.replace(/"/g, '\\"')}"`
+                  : `cd '${repoPath.replace(/'/g, "'\\''")}'`;
+              window.clipboard.writeText(cmd);
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
-            className="mb-1 flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
-            aria-label="Copy path"
+            className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+            aria-label="Copy shell command"
           >
             <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
           </Button>
+          <TooltipTrigger>
+            <Button
+              onPress={() => window.shell.openPath(repoPath)}
+              className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+              aria-label="Open in file system"
+            >
+              <Icon icon="folder-open" className="size-4" />
+            </Button>
+            <Tooltip
+              offset={8}
+              className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+            >
+              Open in file system
+            </Tooltip>
+          </TooltipTrigger>
         </div>
-        <Button
-          onPress={() => window.shell.showItemInFolder(repoPath)}
-          className="cursor-pointer text-(--hl) underline"
-        >
-          Open in file system
-        </Button>
       </div>
     </>
   );
@@ -1370,8 +1399,8 @@ const OriginalGitProjectStagingModal: FC<
                     </p>
                   </div>
                 )}
-                <div className="grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden">
-                  <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-2">
+                <div className="grid h-full grid-cols-[350px_1fr] gap-4 divide-x divide-solid divide-(--hl-md) overflow-hidden">
+                  <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
                     {isGenerateCommitMessagesWithAIEnabled && (
                       <div className="flex flex-col gap-3 rounded-sm border border-solid border-(--hl-md) p-3">
                         <h3 className="font-semibold">

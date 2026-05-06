@@ -28,6 +28,7 @@ function makeCp(overrides: Partial<KonnectControlPlane> = {}): KonnectControlPla
       cluster_type: 'CLUSTER_TYPE_HYBRID',
       control_plane_endpoint: 'https://abc123.us.cp0.konghq.com',
     },
+    proxy_urls: null,
     ...overrides,
   };
 }

@@ -569,6 +569,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       ]
     : [];
 
+  const repoPath = gitRepository?._id
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository._id)
+    : '';
+
   const gitSyncActions: {
     id: string;
     label: string;
@@ -576,6 +580,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
     isDisabled?: boolean;
     action: () => void;
   }[] = [
+    {
+      id: 'open-folder',
+      label: 'Open folder',
+      isDisabled: !repoPath,
+      icon: 'folder-open',
+      action: () => window.shell.openPath(repoPath),
+    },
     {
       id: 'branches',
       label: 'Branches',

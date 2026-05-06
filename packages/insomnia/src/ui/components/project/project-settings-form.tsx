@@ -11,6 +11,8 @@ import {
   Select,
   SelectValue,
   TextField,
+  Tooltip,
+  TooltipTrigger,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -33,6 +35,7 @@ import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
+import { platform } from '../../../common/platform';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
@@ -323,35 +326,40 @@ export const ProjectSettingsForm: FC<Props> = ({
                     Learn more ↗
                   </a>
                 </div>
-                <div className="flex items-stretch justify-between gap-2">
-                  <span
-                    title={repoPath}
-                    className="min-w-0 flex-1 truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 font-mono text-base leading-8 text-(--hl-xl)"
-                  >
+                <div className="flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+                  <span className="min-w-0 flex-1 truncate" title={repoPath}>
                     {repoPath}
                   </span>
                   <Button
                     onPress={() => {
-                      window.clipboard.writeText(repoPath);
+                      const cmd =
+                        platform === 'win32'
+                          ? `cd "${repoPath.replace(/"/g, '\\"')}"`
+                          : `cd '${repoPath.replace(/'/g, "'\\''")}'`;
+                      window.clipboard.writeText(cmd);
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
-                    className="flex shrink-0 items-center gap-1.5 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
-                    aria-label="Copy repository path"
+                    className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+                    aria-label="Copy cd command for repository path"
                   >
-                    <Icon icon={copied ? 'check' : 'copy'} />
-                    <span>{copied ? 'Copied!' : 'Copy'}</span>
+                    <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
                   </Button>
-                  <Button
-                    onPress={() => {
-                      window.shell.showItemInFolder(repoPath);
-                    }}
-                    className="flex shrink-0 items-center gap-1.5 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
-                    aria-label="Open repository folder"
-                  >
-                    <Icon icon={'folder'} />
-                    <span>Open</span>
-                  </Button>
+                  <TooltipTrigger>
+                    <Button
+                      onPress={() => window.shell.openPath(repoPath)}
+                      className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+                      aria-label="Open in file system"
+                    >
+                      <Icon icon="folder-open" className="size-4" />
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+                    >
+                      Open in file system
+                    </Tooltip>
+                  </TooltipTrigger>
                 </div>
               </div>
             </>
