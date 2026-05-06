@@ -254,6 +254,41 @@ export const ipcMainOnce = (
   listener: (event: IpcMainEvent, ...args: any[]) => Promise<void> | any,
 ) => ipcMain.once(channel, listener);
 
+const normalizeIpcError = (error: unknown) => {
+  if (!(error instanceof Error)) {
+    return new Error(String(error));
+  }
+
+  const cleanedMessage = error.message.replace(/^Error invoking remote method '[^']+': Error:\s*/, '');
+
+  if (cleanedMessage === error.message) {
+    return error;
+  }
+
+  const normalized = new Error(cleanedMessage);
+  normalized.name = error.name;
+  normalized.stack = error.stack;
+  return normalized;
+};
+
+export const invokeWithNormalizedError = async <T>(channel: string, ...args: unknown[]) => {
+  try {
+    return (await ipcRenderer.invoke(channel, ...args)) as T;
+  } catch (error) {
+    throw normalizeIpcError(error);
+  }
+};
+
+interface ContextMenuTag {
+  templateTag: {
+    name: string;
+    displayName: string | (() => string);
+    args?: NunjucksParsedTagArg[];
+    needsEnterprisePlan?: boolean;
+  };
+}
+
+
 const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   if (arg.defaultValue === undefined) {
     return "''";
@@ -317,10 +352,10 @@ export function registerElectronHandlers() {
               },
               { type: 'separator' },
             ];
-        const localTemplate: MenuItemConstructorOptions[] = ([...localTemplateTags, ...pluginTemplateTags] as any[])
+        const localTemplate: MenuItemConstructorOptions[] = ([...localTemplateTags, ...pluginTemplateTags] as ContextMenuTag[])
           // sort alphabetically
-          .sort((a: any, b: any) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
-          .map((l: any) => {
+          .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
+          .map(l => {
             const actions = l.templateTag.args?.[0];
             const needsEnterprisePlan = l.templateTag.needsEnterprisePlan || false;
             const additionalArgs = l.templateTag.args?.slice(1);
@@ -341,10 +376,10 @@ export function registerElectronHandlers() {
                     },
                   }
                 : {
-                    submenu: actions?.options?.map((action: any) => ({
+                    submenu: actions?.options?.map(action => ({
                       label: fnOrString(action.displayName),
                       click: () => {
-                        const additionalTagFields = additionalArgs.length
+                        const additionalTagFields = additionalArgs?.length
                           ? ', ' + additionalArgs.map(getTemplateValue).join(', ')
                           : '';
                         const displayName = action.displayName;
