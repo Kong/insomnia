@@ -24,7 +24,7 @@ export interface KonnectControlPlane {
     cluster_type: string;
     control_plane_endpoint: string;
   };
-  proxy_urls?: KonnectProxyUrl[] | null;
+  proxy_urls: KonnectProxyUrl[] | null;
 }
 
 export interface KonnectService {
@@ -49,6 +49,33 @@ export interface KonnectRoute {
   snis: string[] | null;
   expression: string | null;
   service: { id: string } | null;
+}
+
+// Boundary normalizers — coerce any missing nullable field to `null` so the
+// declared `T | null` types are honest. Defending against `undefined` once
+// here lets every downstream consumer use strict `=== null` checks and skip
+// the `?? null` / `arr == null` defensive plumbing that otherwise leaks
+// through sanitizeRoute, sync.ts, expression-parser, etc.
+function normalizeControlPlane(cp: KonnectControlPlane): KonnectControlPlane {
+  return { ...cp, proxy_urls: cp.proxy_urls ?? null };
+}
+
+function normalizeService(s: KonnectService): KonnectService {
+  return { ...s, name: s.name ?? null, path: s.path ?? null, tags: s.tags ?? null };
+}
+
+function normalizeRoute(r: KonnectRoute): KonnectRoute {
+  return {
+    ...r,
+    name: r.name ?? null,
+    methods: r.methods ?? null,
+    paths: r.paths ?? null,
+    hosts: r.hosts ?? null,
+    headers: r.headers ?? null,
+    snis: r.snis ?? null,
+    expression: r.expression ?? null,
+    service: r.service ?? null,
+  };
 }
 
 async function fetchWithRetry(url: string, pat: string, signal?: AbortSignal): Promise<Response> {
@@ -121,7 +148,7 @@ export async function* fetchAllControlPlanes(
     const total: number = body?.meta?.page?.total ?? 0;
     totalPages = Math.ceil(total / PAGE_SIZE) || 1;
 
-    yield body.data as KonnectControlPlane[];
+    yield (body.data as KonnectControlPlane[]).map(normalizeControlPlane);
     page++;
   } while (page <= totalPages);
 }
@@ -157,12 +184,13 @@ export async function fetchAllServices(
   region: string,
   signal?: AbortSignal,
 ): Promise<KonnectService[]> {
-  return fetchAllOffsetPaginated<KonnectService>(
+  const services = await fetchAllOffsetPaginated<KonnectService>(
     `${regionalApiBase(region)}/v2/control-planes/${cpId}/core-entities/services`,
     pat,
     `fetching services for CP ${cpId}`,
     signal,
   );
+  return services.map(normalizeService);
 }
 
 export async function fetchRoutesForService(
@@ -172,12 +200,13 @@ export async function fetchRoutesForService(
   region: string,
   signal?: AbortSignal,
 ): Promise<KonnectRoute[]> {
-  return fetchAllOffsetPaginated<KonnectRoute>(
+  const routes = await fetchAllOffsetPaginated<KonnectRoute>(
     `${regionalApiBase(region)}/v2/control-planes/${cpId}/core-entities/services/${serviceId}/routes`,
     pat,
     `fetching routes for service ${serviceId}`,
     signal,
   );
+  return routes.map(normalizeRoute);
 }
 
 function regionalApiBase(region: string): string {

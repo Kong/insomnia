@@ -26,8 +26,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   const isLintError = (result: IRuleResult) => result.severity === 0;
 
-  const gitRepositoryId = models.project.isGitProject(project)
-    ? project.gitRepositoryId
+  const gitRepositoryId = models.project.isConnectedGitProject(project)
+    ? models.project.getEffectiveRepoId(project)
     : workspaceMeta?.gitRepositoryId;
 
   const rulesetPath = gitRepositoryId

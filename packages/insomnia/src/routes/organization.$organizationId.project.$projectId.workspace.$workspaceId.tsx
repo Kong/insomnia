@@ -101,8 +101,8 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
   const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
-  const gitRepositoryId = models.project.isGitProject(activeProject)
-    ? activeProject.gitRepositoryId
+  const gitRepositoryId = models.project.isConnectedGitProject(activeProject)
+    ? models.project.getEffectiveRepoId(activeProject)
     : activeWorkspaceMeta.gitRepositoryId;
   const gitRepository = await services.gitRepository.getById(gitRepositoryId || '');
 
@@ -426,6 +426,13 @@ const Component = () => {
             <div className="flex flex-col gap-3">
               <h2 className="text-2xl font-semibold text-(--color-font)">{modalText.modalTitle}</h2>
               <p className="max-w-2xl text-lg text-(--hl)">{modalText.summary}</p>
+              {currentIssue.relPath && (
+                <ul className="list-disc pl-5 text-left text-sm text-(--hl)">
+                  <li>
+                    <span className="font-mono">{currentIssue.relPath}</span>
+                  </li>
+                </ul>
+              )}
             </div>
             <Button
               onPress={handleBackToList}

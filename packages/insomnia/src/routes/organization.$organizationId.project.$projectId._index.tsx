@@ -132,7 +132,9 @@ export async function getProjectsWithGitRepositories({
     parentId: organizationId,
   });
 
-  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
+  const gitRepositoryIds = projects
+    .map(p => (models.project.isConnectedGitProject(p) ? models.project.getEffectiveRepoId(p) : null))
+    .filter(isNotNullOrUndefined);
 
   const gitRepositories = await database.find<GitRepository>('GitRepository', {
     _id: {
@@ -141,7 +143,10 @@ export async function getProjectsWithGitRepositories({
   });
 
   return projects.map(project => {
-    const gitRepository = gitRepositories.find(gr => gr._id === project.gitRepositoryId);
+    const effectiveId = models.project.isConnectedGitProject(project)
+      ? models.project.getEffectiveRepoId(project)
+      : null;
+    const gitRepository = gitRepositories.find(gr => gr._id === effectiveId);
     return {
       ...project,
       gitRepository,
@@ -399,8 +404,8 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
-    project && models.project.isGitProject(project)
-      ? await services.gitRepository.getById(project.gitRepositoryId || '')
+    project && models.project.isConnectedGitProject(project)
+      ? await services.gitRepository.getById(models.project.getEffectiveRepoId(project) || '')
       : null;
 
   return {

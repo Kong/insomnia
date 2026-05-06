@@ -1,6 +1,6 @@
 import { type FetchConfig, ResponseFailError } from 'insomnia-api';
 
-import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from './constants';
+import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT_TEST } from './constants';
 import { generateId } from './misc';
 
 // Adds headers, retries and opens deep links returned from the api
@@ -27,7 +27,7 @@ export async function insomniaFetch<T = void>({
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(data ? { 'Content-Type': 'application/json' } : {}),
       ...(organizationId ? { 'X-Insomnia-Org-Id': organizationId } : {}),
-      ...(PLAYWRIGHT ? { 'X-Mockbin-Test': 'true' } : {}),
+      ...(PLAYWRIGHT_TEST ? { 'X-Mockbin-Test': 'true' } : {}),
     },
     ...(data ? { body: JSON.stringify(data) } : {}),
     signal: AbortSignal.timeout(timeout),

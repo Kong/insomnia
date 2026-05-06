@@ -5,6 +5,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import YAML from 'yaml';
 
+import { pathWithParamsAsPathParameters } from '../../../common/path-with-params';
 import type { Converter, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
 
@@ -253,7 +254,7 @@ const importFolderItem =
  *
  * I.e. "/foo/{bar}" => "/foo/:bar"
  */
-export const pathWithParamsAsPathParameters = (path?: string) => path?.replace(VARIABLE_SEARCH_VALUE, ':$1') ?? '';
+export { pathWithParamsAsPathParameters };
 
 /**
  * Return Insomnia request

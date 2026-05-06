@@ -3,7 +3,7 @@ import { net } from 'electron/main';
 import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
-import { getApiBaseURL, getAppWebsiteBaseURL, PLAYWRIGHT } from '~/common/constants';
+import { getApiBaseURL, getAppWebsiteBaseURL, PLAYWRIGHT_TEST } from '~/common/constants';
 import type { GitCredentials, GitCredentialsV2 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { expiresAtFromOAuthExpiresIn } from '~/sync/git/utils';
@@ -292,7 +292,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
   async completeOAuth(code: string, state: string): Promise<OAuthCompleteResult> {
     try {
       // Validate state for security (CSRF protection)
-      if (!PLAYWRIGHT && !githubStatesCache.has(state)) {
+      if (!PLAYWRIGHT_TEST && !githubStatesCache.has(state)) {
         throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
       }
 

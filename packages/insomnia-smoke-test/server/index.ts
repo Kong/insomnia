@@ -1,13 +1,27 @@
+import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createServer } from 'node:https';
+import { tmpdir } from 'node:os';
 import nodePath from 'node:path';
+import type { Duplex } from 'node:stream';
 
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import express from 'express';
-import gitMiddleware from 'git-http-mock-server/middleware';
 import { createHandler } from 'graphql-http/lib/use/http';
+
+interface GitBackendService {
+  type: string;
+  cmd: string;
+  args: string[];
+  createStream(): Duplex;
+}
+// git-http-backend has no @types package; require+cast is the standard workaround
+const backend = require('git-http-backend') as (
+  url: string,
+  cb: (err: Error | null, service: GitBackendService) => void,
+) => NodeJS.ReadWriteStream;
 
 import { basicAuthRouter } from './basic-auth';
 import cloudSyncApi from './cloud-sync-api';
@@ -153,14 +167,50 @@ app.get('/v1/oauth/azure/config', (_req, res) => {
   });
 });
 
-app.use(
-  '/git',
-  gitMiddleware({
-    root: nodePath.join(__dirname, '../fixtures/git-repo'),
-    glob: '*',
-    route: '/',
-  }),
-);
+const GIT_FIXTURE_ROOT = nodePath.join(__dirname, '../fixtures/git-repo');
+let currentGitTmpDir: string | null = null;
+
+// Create a fresh per-test copy of the git fixture repo
+app.post('/v1/test-utils/git/setup', (_req, res) => {
+  if (currentGitTmpDir && existsSync(currentGitTmpDir)) {
+    rmSync(currentGitTmpDir, { recursive: true, force: true });
+  }
+  currentGitTmpDir = mkdtempSync(nodePath.join(tmpdir(), 'insomnia-git-'));
+  cpSync(GIT_FIXTURE_ROOT, currentGitTmpDir, { recursive: true });
+  res.json({ success: true });
+});
+
+// Remove the per-test copy
+app.delete('/v1/test-utils/git/setup', (_req, res) => {
+  if (currentGitTmpDir && existsSync(currentGitTmpDir)) {
+    rmSync(currentGitTmpDir, { recursive: true, force: true });
+  }
+  currentGitTmpDir = null;
+  res.json({ success: true });
+});
+
+// Git smart HTTP server backed by git-http-backend — accepts real pushes.
+// Falls back to the fixture root if no per-test dir is set up.
+app.use('/git', (req, res) => {
+  const root = currentGitTmpDir ?? GIT_FIXTURE_ROOT;
+  // req.url has the '/git' prefix stripped by Express, e.g. '/git-server.git/info/refs?...'
+  const repoPath = nodePath.join(root, req.url.split('?')[0].split('/')[1]);
+
+  req.pipe(
+    backend(req.url, (err, service) => {
+      if (err) {
+        res.status(500).end(err.message);
+        return;
+      }
+      res.setHeader('content-type', service.type);
+      const ps = spawn(service.cmd, service.args.concat(repoPath), {
+        env: { ...process.env, GIT_HTTP_EXPORT_ALL: '1' },
+      });
+      ps.stderr.on('data', d => console.error('[git]', String(d)));
+      ps.stdout.pipe(service.createStream()).pipe(ps.stdin);
+    }),
+  ).pipe(res);
+});
 
 startWebSocketServer(
   app.listen(port, '::', () => {

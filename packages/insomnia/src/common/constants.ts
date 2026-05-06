@@ -12,7 +12,7 @@ const env = process[ENV];
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
-export const PLAYWRIGHT = env.PLAYWRIGHT;
+export const PLAYWRIGHT_TEST = env.PLAYWRIGHT_TEST;
 export const OAUTH_WINDOW_SESSION_ID_KEY = 'current-oauth-session-id';
 
 // App Stuff
@@ -34,12 +34,12 @@ export const getAppBundlePlugins = () => appConfig.bundlePlugins;
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
-  appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'];
+  appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
 export const getCioWriteKey = () =>
-  appConfig.cio[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'].writeKey;
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].writeKey;
 export const getCioSiteId = () =>
-  appConfig.cio[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'].siteId;
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].siteId;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () =>

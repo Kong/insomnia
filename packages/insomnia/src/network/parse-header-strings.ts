@@ -1,11 +1,7 @@
-import { parse as urlParse } from 'node:url';
-
 import aws4 from 'aws4';
 import clone from 'clone';
 
-import type { RequestAuthentication } from '~/insomnia-data';
-
-import { CONTENT_TYPE_FORM_DATA } from '../../common/constants';
+import { CONTENT_TYPE_FORM_DATA } from '~/common/constants';
 import {
   getContentTypeHeader,
   getHostHeader,
@@ -13,8 +9,10 @@ import {
   hasAcceptHeader,
   hasAuthHeader,
   hasContentTypeHeader,
-} from '../../common/misc';
-import { DEFAULT_BOUNDARY } from './multipart';
+} from '~/common/misc';
+import type { RequestAuthentication } from '~/insomnia-data';
+
+import { DEFAULT_BOUNDARY } from './multipart-constants';
 
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
@@ -25,6 +23,7 @@ interface Input {
   requestBodyPath?: string;
   authHeader?: { name: string; value: string };
 }
+
 interface Req {
   headers: any;
   method: string;
@@ -42,6 +41,7 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
       { name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE },
     );
   }
+
   const { authentication, method } = req;
   if (authentication && 'type' in authentication) {
     const isDigest = authentication.type === 'digest';
@@ -114,6 +114,7 @@ interface AWSOptions {
   contentTypeHeader?: string;
   body?: string;
 }
+
 export function _getAwsAuthHeaders({
   authentication,
   url,
@@ -122,7 +123,7 @@ export function _getAwsAuthHeaders({
   contentTypeHeader,
   body,
 }: AWSOptions): { name: string; value: any }[] {
-  const { path, host } = urlParse(url);
+  const parsedUrl = new URL(url);
   const onlyContentTypeHeader = contentTypeHeader ? { 'content-type': contentTypeHeader } : {};
   const { service, region, accessKeyId, secretAccessKey, sessionToken } = authentication;
   const signature = aws4.sign(
@@ -132,15 +133,17 @@ export function _getAwsAuthHeaders({
       body,
       method,
       headers: onlyContentTypeHeader,
-      path: path || undefined,
+      path: `${parsedUrl.pathname}${parsedUrl.search}` || undefined,
       // AWS uses host header for signing so prioritize that if the user set it manually
-      host: hostHeader || host || undefined,
+      host: hostHeader || parsedUrl.host || undefined,
     },
     { accessKeyId, secretAccessKey, sessionToken },
   );
+
   if (!signature.headers) {
     return [];
   }
+
   return Object.entries(signature.headers)
     .filter(([name]) => name !== 'content-type') // Don't add this because we already have it
     .map(([name, value]) => ({ name, value }));
