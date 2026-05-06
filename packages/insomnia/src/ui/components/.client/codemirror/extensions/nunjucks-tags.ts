@@ -137,7 +137,7 @@ async function _highlightNunjucksTags(
       el.setAttribute('draggable', 'true');
       el.dataset.error = 'off';
       el.dataset.template = tok.string;
-      el.innerHTML = '<label></label>' + tok.string;
+      el.replaceChildren(document.createElement('label'), document.createTextNode(tok.string));
       const mark = this.markText(start, end, {
         // @ts-expect-error not a known property of TextMarkerOptions
         __nunjucks: true,
