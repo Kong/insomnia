@@ -5,22 +5,25 @@ import { Button, GridList, GridListItem, Input, SearchField } from 'react-aria-c
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { SortOrder } from '~/common/constants';
 import { fuzzyMatchAll } from '~/common/misc';
 import {
   getAllRemoteBackendProjectsByProjectId,
   getUnsyncedRemoteWorkspaces,
   type InsomniaFile,
 } from '~/common/project';
-import type { Workspace } from '~/insomnia-data';
+import type { RequestGroup, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { SegmentEvent } from '~/ui/analytics';
+import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
+import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
@@ -38,8 +41,8 @@ import {
   getWorkspacesByProjectIds,
 } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
-import { RequestNode } from './request-node';
-import type { FlatItem } from './types';
+import { PinnedHeaderNode, RequestNode } from './request-node';
+import type { EmptyNodeFlatItem, FlatItem } from './types';
 import { useProjectNavigationSidebarNavigation } from './use-project-navigation-sidebar-navigation';
 import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
@@ -101,6 +104,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   const tabNavigate = useTabNavigate();
 
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [collectionSortOrders, setCollectionSortOrders] = useState<Record<string, SortOrder>>({});
   const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
   const [projectNavigationSidebarFilter, setProjectNavigationSidebarFilter] = reactUse.useLocalStorage(
     `${organizationId}:project-navigation-sidebar-filter`,
@@ -345,8 +349,19 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
         const unsyncedWorkspaces = models.project.isRemoteProject(project)
           ? getUnsyncedRemoteWorkspaces(unsyncedFilesByProjectId.get(projectId) || [], sortedWorkspaces)
           : [];
+        const allWorkspaces = [...sortedWorkspaces, ...unsyncedWorkspaces];
+        // If there is no workspace under the project, show an empty workspace node
+        if (allWorkspaces.length === 0) {
+          items.push({
+            kind: 'emptyProject',
+            organizationId,
+            project,
+            hidden: isProjectCollapsed,
+            doc: { _id: `empty-project-${projectId}`, name: '' },
+          });
+        }
 
-        for (const workspace of [...sortedWorkspaces, ...unsyncedWorkspaces]) {
+        for (const workspace of allWorkspaces) {
           if (workspace.scope === 'unsynced') {
             items.push({
               kind: 'unsyncedWorkspace',
@@ -382,8 +397,14 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
             const shouldHideCollectionChildren = isWorkspaceCollapsed || isProjectCollapsed;
             let collectionChildren =
               (!shouldHideCollectionChildren || !!projectNavigationSidebarFilter) && allRequestsAndMetaInWorkspace
-                ? flattenCollectionChildren(workspaceId, shouldHideCollectionChildren, allRequestsAndMetaInWorkspace)
+                ? flattenCollectionChildren(
+                    workspaceId,
+                    shouldHideCollectionChildren,
+                    allRequestsAndMetaInWorkspace,
+                    collectionSortOrders[workspaceId] || 'type-manual',
+                  )
                 : [];
+            const pinnedCollectionChildren = collectionChildren.filter(child => child.pinned);
 
             if (projectNavigationSidebarFilter) {
               // apply filter to collection children first
@@ -402,6 +423,32 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
               items.find(i => i.kind === 'workspace' && i.doc._id === workspaceId)!.hidden = shouldHide;
             }
 
+            if (pinnedCollectionChildren.length > 0) {
+              items.push({
+                kind: 'pinnedHeader',
+                hidden: false,
+                doc: { _id: `${workspaceId}-pinned-header`, name: 'Pinned' },
+              });
+            }
+
+            pinnedCollectionChildren.forEach((child, idx) => {
+              items.push({
+                kind: 'pinnedRequest',
+                organizationId,
+                project: project,
+                workspace: workspace as Workspace,
+                children: child.children,
+                ancestors: child.ancestors,
+                doc: child.doc,
+                collapsed: child.collapsed,
+                hidden: child.hidden,
+                level: child.level,
+                pinned: child.pinned,
+                isFirstPinned: idx === 0,
+                isLastPinned: idx === pinnedCollectionChildren.length - 1,
+              });
+            });
+
             collectionChildren.forEach(child => {
               items.push({
                 kind: 'collectionChild',
@@ -416,7 +463,35 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                 level: child.level,
                 pinned: child.pinned,
               });
+              if (
+                models.requestGroup.isRequestGroupId(child.doc._id) &&
+                child.children?.length === 0 &&
+                !projectNavigationSidebarFilter
+              ) {
+                // If there is a request group with no children, add an empty folder node
+                items.push({
+                  kind: 'emptyFolder',
+                  organizationId,
+                  project,
+                  workspace: workspace as Workspace,
+                  requestGroup: child.doc as RequestGroup,
+                  doc: { _id: `empty-folder-${child.doc._id}`, name: '' },
+                  hidden: child.collapsed,
+                  level: child.level,
+                });
+              }
             });
+
+            if (collectionChildren.length === 0 && !shouldHideCollectionChildren && !projectNavigationSidebarFilter) {
+              items.push({
+                kind: 'emptyCollection',
+                organizationId,
+                project: project,
+                workspace: workspace as Workspace,
+                doc: { _id: `empty-collection-${(workspace as Workspace)._id}`, name: '' },
+                hidden: false,
+              });
+            }
           }
         }
 
@@ -435,7 +510,11 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
 
       // If there is an active filter, expand all items to show matched results and their ancestors
       if (projectNavigationSidebarFilter) {
-        items.forEach(item => (item.collapsed = false));
+        items.forEach(item => {
+          if ('collapsed' in item) {
+            item.collapsed = false;
+          }
+        });
       }
 
       setFlatItems(items);
@@ -448,6 +527,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     projectNavigationSidebarFilter,
     projectsWithPresence,
     unsyncedFilesByProjectId,
+    collectionSortOrders,
   ]);
 
   const toggleProjectOrWorkspace = useCallback(
@@ -518,48 +598,64 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
           const toggledChildren: { id: string; parentIsCollapsed: boolean }[] = [];
 
           return nextFlatItems.map(item => {
-            if (item.kind !== 'collectionChild') {
-              return item;
-            }
-
-            const { children, doc } = item;
-            // Find toggled request group and update collapsed state
-            if (doc._id === requestGroupId) {
-              // Add all children of the toggled request group to the array to update their hidden state
-              toggledChildren.push(
-                ...(children?.map(child => ({ id: child.doc._id, parentIsCollapsed: collapsed })) ?? []),
-              );
-
-              return {
-                ...item,
-                collapsed,
-                hidden: false,
-              };
-            }
-
-            const matchedToggledChild = toggledChildren.find(tc => tc.id === item.doc._id);
-            if (matchedToggledChild) {
-              const { parentIsCollapsed } = matchedToggledChild;
-              if (models.requestGroup.isRequestGroupId(doc._id)) {
-                // Add children of the toggled child request group to the array to update their hidden state
-                const isToggledRequestGroupCollapsed =
-                  parentIsCollapsed ||
-                  cachedCollectionChildrenAndMetaRef.current
-                    .get(workspace._id)
-                    ?.requestGroupMetas.find(rgm => rgm.parentId === doc._id)?.collapsed ||
-                  false;
+            if (item.kind === 'collectionChild') {
+              const { children, doc } = item;
+              // Find toggled request group and update collapsed state
+              if (doc._id === requestGroupId) {
+                // Add all children of the toggled request group to the array to update their hidden state
                 toggledChildren.push(
-                  ...(item.children?.map(child => ({
-                    id: child.doc._id,
-                    parentIsCollapsed: isToggledRequestGroupCollapsed,
-                  })) ?? []),
+                  ...(children?.map(child => ({ id: child.doc._id, parentIsCollapsed: collapsed })) ?? []),
                 );
+
+                return {
+                  ...item,
+                  collapsed,
+                  hidden: false,
+                };
               }
 
-              return {
-                ...item,
-                hidden: parentIsCollapsed,
-              };
+              const matchedToggledChild = toggledChildren.find(tc => tc.id === item.doc._id);
+              if (matchedToggledChild) {
+                const { parentIsCollapsed } = matchedToggledChild;
+                if (models.requestGroup.isRequestGroupId(doc._id)) {
+                  // Add children of the toggled child request group to the array to update their hidden state
+                  const isToggledRequestGroupCollapsed =
+                    parentIsCollapsed ||
+                    cachedCollectionChildrenAndMetaRef.current
+                      .get(workspace._id)
+                      ?.requestGroupMetas.find(rgm => rgm.parentId === doc._id)?.collapsed ||
+                    false;
+                  toggledChildren.push(
+                    ...(item.children?.map(child => ({
+                      id: child.doc._id,
+                      parentIsCollapsed: isToggledRequestGroupCollapsed,
+                    })) ?? []),
+                  );
+                }
+
+                return {
+                  ...item,
+                  hidden: parentIsCollapsed,
+                };
+              }
+            }
+
+            if (item.kind === 'emptyFolder') {
+              const parentFolder = item.requestGroup;
+              const parentFolderId = parentFolder?._id;
+              const matchedToggledChild = toggledChildren.find(tc => tc.id === parentFolderId);
+              // Update the emptyFolder node hidden state based on its parent request group collapsed state.
+              if (parentFolderId === requestGroupId) {
+                return {
+                  ...item,
+                  hidden: collapsed,
+                };
+              } else if (matchedToggledChild) {
+                return {
+                  ...item,
+                  hidden: matchedToggledChild.parentIsCollapsed,
+                };
+              }
             }
 
             return item;
@@ -599,15 +695,23 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex shrink-0 border-b border-solid border-b-(--hl-md)">
-        {['projects', 'konnect'].map(tabName => (
-          <button
-            key={tabName}
-            className={`border-b-2 border-solid px-4 py-2 text-xs uppercase ${activeTab === tabName ? 'border-(--color-surprise) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
-            onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
-          >
-            {tabName === 'projects' ? `Projects (${nonKonnectProjects.length})` : `Konnect (${konnectProjects.length})`}
-          </button>
-        ))}
+        {!isScratchPad &&
+          ['projects', 'konnect'].map(tabName => (
+            <button
+              key={tabName}
+              className={`border-b-2 border-solid px-4 py-2 text-xs ${activeTab === tabName ? 'border-(--color-surprise) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
+              onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
+            >
+              {tabName === 'projects' ? (
+                `Projects (${nonKonnectProjects.length})`
+              ) : (
+                <span className="flex items-center gap-1">
+                  <KongLogo />
+                  Konnect ({konnectProjects.length})
+                </span>
+              )}
+            </button>
+          ))}
       </div>
       <div className="flex justify-between gap-1 p-(--padding-sm)">
         <SearchField
@@ -679,8 +783,9 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
 
             return (
               <GridListItem
-                key={virtualItem.key}
-                id={item.doc._id}
+                // Prefix pinned-request to the key and id to ensure pinned items have a different key and id from non-pinned items with the same doc._id
+                key={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${virtualItem.key}`}
+                id={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`}
                 textValue={item.doc.name || item.kind}
                 onAuxClick={e => {
                   if (e.button === 1 && item.kind === 'collectionChild') {
@@ -719,7 +824,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                         { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
                       );
                     }
-                  } else if (item.kind === 'collectionChild') {
+                  } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
                     if (
                       routeInfo?.resourceId === docId &&
                       models.requestGroup.isRequestGroupId(docId) &&
@@ -753,10 +858,33 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                   <ProjectNode item={item} onToggle={toggleProjectOrWorkspace} storageRules={storageRules} />
                 )}
 
-                {item.kind === 'workspace' && <WorkspaceNode item={item} onToggle={toggleProjectOrWorkspace} />}
+                {item.kind === 'workspace' && (
+                  <WorkspaceNode
+                    item={item}
+                    onToggle={toggleProjectOrWorkspace}
+                    sortOrder={collectionSortOrders[item.doc._id] || 'type-manual'}
+                    onSortOrderChange={newSortOder => {
+                      if (item.doc.scope === 'collection') {
+                        setCollectionSortOrders(prev => {
+                          const newCollectionSortOrders = { ...prev, [item.doc._id]: newSortOder };
+                          return newCollectionSortOrders;
+                        });
+                      }
+                    }}
+                  />
+                )}
+
+                {item.kind === 'pinnedHeader' && <PinnedHeaderNode />}
 
                 {item.kind === 'collectionChild' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
+
+                {item.kind === 'pinnedRequest' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
+
                 {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
+
+                {item.kind === 'emptyProject' || item.kind === 'emptyCollection' || item.kind === 'emptyFolder' ? (
+                  <EmptyNode item={item} storageRules={storageRules} />
+                ) : null}
               </GridListItem>
             );
           }}

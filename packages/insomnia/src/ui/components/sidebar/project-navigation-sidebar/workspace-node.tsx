@@ -1,6 +1,7 @@
 import { Button } from 'react-aria-components';
 
-import { scopeToIconMap } from '~/common/get-workspace-label';
+import type { SortOrder } from '~/common/constants';
+import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { SidebarWorkspaceDropdown } from '~/ui/components/dropdowns/sidebar-workspace-dropdown';
 
 import { Icon } from '../../icon';
@@ -15,10 +16,12 @@ import { type WorkspaceFlatItem } from './types';
 
 interface WorkspaceNodeProps {
   item: WorkspaceFlatItem;
+  sortOrder: SortOrder;
   onToggle: (workspaceId: string) => void;
+  onSortOrderChange: (newSortOrder: SortOrder) => void;
 }
 
-export const WorkspaceNode = ({ item, onToggle }: WorkspaceNodeProps) => {
+export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: WorkspaceNodeProps) => {
   const { doc, collapsed, project, organizationId } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
   const isCollection = workspaceScope === 'collection';
@@ -35,11 +38,22 @@ export const WorkspaceNode = ({ item, onToggle }: WorkspaceNodeProps) => {
         {isCollection ? <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} /> : null}
       </Button>
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left transition-colors">
-        <Icon icon={scopeToIconMap[workspaceScope]} className={ICON_CLASS} />
-        <span className="min-w-0 flex-1 truncate text-sm">{workspaceName}</span>
+        <div
+          className={`${scopeToBgColorMap[workspaceScope]} ${scopeToTextColorMap[workspaceScope]} flex h-5 w-5 items-center justify-center rounded-sm px-2`}
+        >
+          <Icon icon={scopeToIconMap[workspaceScope]} className={ICON_CLASS} />
+        </div>
+
+        <span className="min-w-0 flex-1 truncate text-base">{workspaceName}</span>
       </div>
       <div className="shrink-0">
-        <SidebarWorkspaceDropdown workspace={doc} project={project} organizationId={organizationId} />
+        <SidebarWorkspaceDropdown
+          workspace={doc}
+          project={project}
+          sortOrder={sortOrder}
+          organizationId={organizationId}
+          onSortOrderChange={onSortOrderChange}
+        />
       </div>
     </div>
   );

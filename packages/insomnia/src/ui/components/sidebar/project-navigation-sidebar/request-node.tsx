@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 
+import { toKebabCase } from '~/common/misc';
 import type {
   GrpcRequest,
   McpRequest,
@@ -16,9 +17,12 @@ import { RequestGroupActionsDropdown } from '~/ui/components/dropdowns/request-g
 import { EditableInput } from '~/ui/components/editable-input';
 import { showModal } from '~/ui/components/modals';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
-import type { CollectionChildFlatItem } from '~/ui/components/sidebar/project-navigation-sidebar/types';
+import type {
+  CollectionChildFlatItem,
+  PinnedRequestFlatItem,
+} from '~/ui/components/sidebar/project-navigation-sidebar/types';
 import { getMethodShortHand, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
-import { useRequestGroupPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
+import { useRequestGroupPatcher, useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
 import { Icon } from '../../icon';
 import {
@@ -82,32 +86,28 @@ const getRequestNameOrFallback = (
 };
 
 interface RequestNodeProps {
-  item: CollectionChildFlatItem;
+  item: CollectionChildFlatItem | PinnedRequestFlatItem;
   onToggleFolder: (requestGroupIds: string[], workspace: Workspace) => void;
+  className?: string;
 }
 
-export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
-  const { doc, level, workspace, project, collapsed } = item;
+export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProps) => {
+  const { doc, level: requestLevel, workspace, project, collapsed, pinned, kind } = item;
+  const isPinnedRequest = kind === 'pinnedRequest';
+  const isLastPinned = item.kind === 'pinnedRequest' && item.isLastPinned;
 
-  const patchRequest = useRequestPatcher();
-  const patchGroup = useRequestGroupPatcher();
+  const workspaceId = workspace._id;
+  const patchRequest = useRequestPatcher(workspaceId);
+  const patchGroup = useRequestGroupPatcher(workspaceId);
+  const patchRequestMeta = useRequestMetaPatcher(workspaceId);
   const isFolder = models.requestGroup.isRequestGroup(doc);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const [isEditable, setIsEditable] = useState(false);
+  // Pinned requests are always shown at the top level of the sidebar, so we set their level to 0.
+  const level = isPinnedRequest ? 0 : requestLevel;
 
-  return (
-    <div className={ROW_CLASS} style={{ paddingLeft: `${level + 3}rem` }}>
-      {Array.from({ length: level + 2 }, (_, i) => {
-        const isActive = i === level + 1;
-        return (
-          <span
-            key={i}
-            className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm) ${isActive ? 'group-hover:bg-(--hl-sm)' : ''}`}
-            style={{ left: `${i + 1.5}em` }}
-          />
-        );
-      })}
-      <span className={ACTIVE_BORDER_CLASS} />
+  const content = (
+    <>
       <Button
         aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${doc.name}`}
         onPress={() => isFolder && onToggleFolder([doc._id], workspace)}
@@ -115,28 +115,40 @@ export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
       >
         {isFolder ? <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} /> : null}
       </Button>
-
-      {isFolder ? (
-        <Icon icon="folder" className={ICON_CLASS} />
-      ) : (
-        <>
-          <MethodBadge doc={doc} />
-        </>
+      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left transition-colors">
+        {isFolder ? <Icon icon="folder" className={ICON_CLASS} /> : <MethodBadge doc={doc} />}
+        <EditableInput
+          value={getRequestNameOrFallback(doc)}
+          name="request name"
+          ariaLabel="request name"
+          className="flex-1 text-base hover:bg-transparent!"
+          onEditableChange={editable => setIsEditable(editable)}
+          onSubmit={newName => {
+            if (models.requestGroup.isRequestGroup(doc)) {
+              patchGroup(doc._id, { name: newName });
+            } else {
+              patchRequest(doc._id, { name: newName });
+            }
+          }}
+        />
+      </div>
+      {!models.requestGroup.isRequestGroup(doc) && pinned && !isPinnedRequest && (
+        <TooltipTrigger>
+          <Button
+            data-testid={`pin-${toKebabCase(doc.name)}`}
+            className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            onPress={() => patchRequestMeta(item.doc._id, { pinned: false })}
+          >
+            <Icon icon="thumb-tack" />
+          </Button>
+          <Tooltip
+            offset={8}
+            className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-base text-(--color-font) shadow-lg select-none focus:outline-hidden"
+          >
+            Unpin Request
+          </Tooltip>
+        </TooltipTrigger>
       )}
-      <EditableInput
-        value={getRequestNameOrFallback(doc)}
-        name="request name"
-        ariaLabel="request name"
-        className="flex-1 px-1 text-sm"
-        onEditableChange={editable => setIsEditable(editable)}
-        onSubmit={newName => {
-          if (models.requestGroup.isRequestGroup(doc)) {
-            patchGroup(doc._id, { name: newName });
-          } else {
-            patchRequest(doc._id, { name: newName });
-          }
-        }}
-      />
       {models.requestGroup.isRequestGroup(doc) && !isEditable && (
         <RequestGroupActionsDropdown
           requestGroup={doc}
@@ -176,6 +188,54 @@ export const RequestNode = ({ item, onToggleFolder }: RequestNodeProps) => {
           onOpenChange={setIsContextMenuOpen}
         />
       )}
+    </>
+  );
+
+  return (
+    <div
+      className={`${ROW_CLASS} ${className ?? ''} ${isPinnedRequest ? 'h-full! group-hover:bg-transparent! group-focus:bg-transparent!' : ''}`}
+      style={{ paddingLeft: `${level + 3}rem` }}
+    >
+      {isPinnedRequest ? (
+        <>
+          <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
+          <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
+        </>
+      ) : (
+        Array.from({ length: level + 2 }, (_, i) => {
+          const isActive = i === level + 1;
+          return (
+            <span
+              key={i}
+              className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm) ${isActive ? 'group-hover:bg-(--hl-sm)' : ''}`}
+              style={{ left: `${i + 1.5}em` }}
+            />
+          );
+        })
+      )}
+      <span className={ACTIVE_BORDER_CLASS} />
+      {isPinnedRequest ? (
+        <div
+          className={`ml-2 flex h-full min-w-0 flex-1 items-center overflow-hidden border-x border-solid border-(--hl-md) bg-(--hl-xs) pr-2 group-hover:bg-(--hl-sm) group-focus:bg-(--hl-sm) ${isLastPinned ? 'border-b' : ''}`}
+        >
+          {content}
+        </div>
+      ) : (
+        content
+      )}
+    </div>
+  );
+};
+
+export const PinnedHeaderNode = () => {
+  return (
+    <div className={`${ROW_CLASS} group h-full! pl-12 group-hover:bg-transparent!`}>
+      <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
+      <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
+      <div className="ml-2 flex h-full w-full items-center border border-b-0 border-solid border-(--hl-md) bg-(--hl-xs) p-1 text-(--hl)">
+        <Icon icon="thumb-tack" className="h-4 w-4 shrink-0" />
+        <span className="ml-1 text-xs">Pinned</span>
+      </div>
     </div>
   );
 };

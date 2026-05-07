@@ -1,5 +1,5 @@
 import type { InsomniaFile } from '~/common/project';
-import type { BaseModel, GitRepository, Project, Workspace, WorkspaceMeta } from '~/insomnia-data';
+import type { BaseModel, GitRepository, Project, RequestGroup, Workspace, WorkspaceMeta } from '~/insomnia-data';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
 export type ProjectWithPresence = Project & {
@@ -39,7 +39,7 @@ export interface WorkspaceFlatItem extends BaseFlatItem<Workspace> {
 
 //unsynced workspace in clod sync project
 type UnsyncedWorkspaceDoc = InsomniaFile & { _id: string };
-export type UnsyncedWorkspaceFlatItem = Exclude<BaseFlatItem<any>, 'doc'> &
+export type UnsyncedWorkspaceFlatItem = Omit<BaseFlatItem<any>, 'doc'> &
   Pick<WorkspaceFlatItem, 'project'> & {
     kind: 'unsyncedWorkspace';
     doc: UnsyncedWorkspaceDoc;
@@ -59,4 +59,34 @@ export interface CollectionChildFlatItem extends BaseFlatItem<Child['doc']> {
   pinned: boolean;
 }
 
-export type FlatItem = ProjectFlatItem | WorkspaceFlatItem | CollectionChildFlatItem | UnsyncedWorkspaceFlatItem;
+export interface PinnedRequestFlatItem extends Omit<CollectionChildFlatItem, 'kind'> {
+  kind: 'pinnedRequest';
+  isFirstPinned: boolean;
+  isLastPinned: boolean;
+}
+
+export interface PinnedHeaderFlatItem {
+  kind: 'pinnedHeader';
+  hidden: boolean;
+  doc: { _id: string; name: string };
+}
+
+export interface EmptyNodeFlatItem {
+  kind: 'emptyProject' | 'emptyCollection' | 'emptyFolder';
+  hidden: boolean;
+  organizationId: string;
+  doc: { _id: string; name: string };
+  project: ProjectWithPresence;
+  workspace?: Workspace;
+  requestGroup?: RequestGroup;
+  level?: number;
+}
+
+export type FlatItem =
+  | ProjectFlatItem
+  | WorkspaceFlatItem
+  | CollectionChildFlatItem
+  | UnsyncedWorkspaceFlatItem
+  | PinnedRequestFlatItem
+  | PinnedHeaderFlatItem
+  | EmptyNodeFlatItem;
