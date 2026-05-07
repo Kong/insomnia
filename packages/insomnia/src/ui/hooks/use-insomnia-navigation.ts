@@ -16,7 +16,6 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
 
 export type NavigationResource =
   | undefined
@@ -44,7 +43,7 @@ const NAVIGATION_ROUTES = [
     id: 'request',
     path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
     getResourceId: params => params.requestId,
-    getResource: (resourceId: string) => requestOperations.getById(resourceId),
+    getResource: (resourceId: string) => services.helpers.getRequestById(resourceId),
   },
   {
     id: 'runner',
