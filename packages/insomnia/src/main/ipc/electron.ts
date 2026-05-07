@@ -203,8 +203,7 @@ export type MainOnChannels =
   | 'sync.cancelConflict'
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
-  | 'writeText'
-  | 'watchRulesetFile';
+  | 'writeText';
 
 export type RendererOnChannels =
   | 'contextMenuCommand'

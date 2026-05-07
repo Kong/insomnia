@@ -279,7 +279,6 @@ const main: Window['main'] = {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
-  watchRulesetFile: options => ipcRenderer.send('watchRulesetFile', options),
   webSocket,
   socketIO,
   mcp,

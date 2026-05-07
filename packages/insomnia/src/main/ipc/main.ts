@@ -70,7 +70,6 @@ import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
 
 let lintProcess: Electron.UtilityProcess | null = null;
-let rulesetFileWatcher: fs.FSWatcher | null = null;
 
 export const openInBrowser = (href: string) => {
   const { protocol } = new URL(href);
@@ -205,7 +204,6 @@ export interface RendererToMainBridgeAPI {
     documentContent: string;
     rulesetPath: string;
   }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
-  watchRulesetFile: (options: { rulesetPath: string }) => void;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -368,19 +366,6 @@ export function registerMainHandlers() {
 
       process.postMessage({ documentContent, rulesetPath });
     });
-  });
-
-  ipcMainOn('watchRulesetFile', (event, options: { rulesetPath: string }) => {
-    try {
-      rulesetFileWatcher?.close(); // we should only have one watcher at a time, so close any existing watcher before creating a new one
-      rulesetFileWatcher = fs.watch(options.rulesetPath, eventType => {
-        if (eventType === 'change' && !event.sender.isDestroyed()) {
-          event.sender.send('ruleset.file-changed', { rulesetPath: options.rulesetPath });
-        }
-      });
-    } catch (err) {
-      console.error('Failed to watch ruleset file:', err);
-    }
   });
 
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {
