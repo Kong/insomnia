@@ -155,6 +155,7 @@ const LocalBranchItem = ({
                           .continueMerge({
                             projectId,
                             handledMergeConflicts: conflicts,
+                            autoResolvedConflicts: result.autoResolvedConflicts,
                             commitMessage: result.commitMessage,
                             commitParent: result.commitParent,
                           })
@@ -165,7 +166,7 @@ const LocalBranchItem = ({
                       },
                       onCancelUnresolved: () => {
                         // user aborted merge
-                        window.main.git.abortMerge();
+                        window.main.git.abortMerge({ projectId });
                         // TODO: the abortMerge method provided by isomorphic-git is unreliable
                         // clean up any partial merges here
                         reject(
@@ -310,6 +311,7 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
       }}
       isDismissable
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      data-testid="git-project-branches-modal-overlay"
     >
       <Modal
         onOpenChange={isOpen => {
@@ -327,6 +329,7 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
+                  data-testid="close-git-project-branches-modal"
                 >
                   <Icon icon="x" />
                 </Button>

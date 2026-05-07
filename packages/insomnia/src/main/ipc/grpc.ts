@@ -61,16 +61,7 @@ export interface gRPCBridgeAPI {
   loadMethods: typeof loadMethods;
   loadMethodsFromReflection: typeof loadMethodsFromReflection;
   closeAll: typeof closeAll;
-}
-
-export function registergRPCHandlers() {
-  ipcMainOn('grpc.start', start);
-  ipcMainOn('grpc.sendMessage', sendMessage);
-  ipcMainOn('grpc.commit', (_, requestId) => commit(requestId));
-  ipcMainOn('grpc.cancel', (_, requestId) => cancel(requestId));
-  ipcMainOn('grpc.closeAll', closeAll);
-  ipcMainHandle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
-  ipcMainHandle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
+  writeProtoFile: (protoFileId: string) => Promise<{ filePath: string; dirs: string[] }>;
 }
 
 const grpcOptions = {
@@ -80,6 +71,29 @@ const grpcOptions = {
   defaults: true,
   oneofs: true,
 };
+
+export const writeProtoFileById = async (protoFileId: string): Promise<{ filePath: string; dirs: string[] }> => {
+  const protoFile = await services.protoFile.getById(protoFileId);
+  invariant(protoFile, `Proto file ${protoFileId} not found`);
+  const result = await writeProtoFile(protoFile);
+  await protoLoader.load(result.filePath, {
+    ...grpcOptions,
+    includeDirs: result.dirs,
+  });
+  return result;
+};
+
+export function registergRPCHandlers() {
+  ipcMainOn('grpc.start', start);
+  ipcMainOn('grpc.sendMessage', sendMessage);
+  ipcMainOn('grpc.commit', (_, requestId) => commit(requestId));
+  ipcMainOn('grpc.cancel', (_, requestId) => cancel(requestId));
+  ipcMainOn('grpc.closeAll', closeAll);
+  ipcMainHandle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
+  ipcMainHandle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
+  ipcMainHandle('grpc.writeProtoFile', (_, protoFileId: string) => writeProtoFileById(protoFileId));
+}
+
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
   const definition = await protoLoader.load(filePath, {
     ...grpcOptions,

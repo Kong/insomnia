@@ -2,13 +2,9 @@ import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import type { Environment, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import type { BaseModel, Environment, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
-import type { BaseModel } from '../models';
-import * as models from '../models';
-import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginRequest from '../plugins/context/request';
@@ -307,6 +303,10 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
 
   // Set auth header if we have it
   if (!hasAuthHeader(renderedRequest.headers)) {
+    const getAuthHeader =
+      process.type === 'renderer'
+        ? window.main.getAuthHeader
+        : (await import('../main/network/get-auth-header')).getAuthHeader;
     const header = await getAuthHeader(renderedRequest, url);
 
     if (header) {
@@ -403,7 +403,7 @@ function mapCookie(cookie: ToughCookie) {
 }
 
 async function getResponseContent(response: Response) {
-  let body = await getBodyBuffer(response);
+  let body = await services.helpers.getResponseBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);

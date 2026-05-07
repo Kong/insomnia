@@ -1,5 +1,6 @@
 import { strings } from '~/common/strings';
-import type { BaseModel } from '~/models/types';
+
+import type { BaseModel } from './base-types';
 
 export const name = 'Workspace';
 export const type = 'Workspace';

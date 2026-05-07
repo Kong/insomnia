@@ -21,7 +21,13 @@ import {
   type ScanResult,
 } from '../../../../common/import';
 import { invariant } from '../../../../utils/invariant';
-import { SegmentEvent } from '../../../analytics';
+import {
+  importAttributionKey,
+  PENDING_IMPORT_ATTRIBUTION_KEY,
+  readPendingImportAttribution,
+  SegmentEvent,
+  trackImportEvent,
+} from '../../../analytics';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalHeader } from '../../base/modal-header';
 import { HelpTooltip } from '../../help-tooltip';
@@ -269,16 +275,18 @@ export const ImportModal: FC<ImportModalProps> = ({
   // Track the import completion event, redirect to the new workspace and close the modal
   useEffect(() => {
     if (importFetcher?.data?.done === true && scanResourcesFetcherData?.length) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.importCompleted,
-        properties: {
-          workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
-          requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
-        },
+      trackImportEvent(SegmentEvent.importCompleted, {
+        workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
+        requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
       });
       const workspace = importFetcher?.data?.singleImportedWorkspace;
       const request = importFetcher?.data?.singleImportedRequest;
       const targetProjectId = importFetcher?.data?.singleImportedProjectId || createdProjectId || defaultProjectId;
+      const attribution = readPendingImportAttribution();
+      if ((attribution.importSource || attribution.importSourceUrl) && request) {
+        window.localStorage.setItem(importAttributionKey(request._id), JSON.stringify(attribution));
+      }
+      window.sessionStorage.removeItem(PENDING_IMPORT_ATTRIBUTION_KEY);
       if (workspace && request) {
         navigate(
           `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/debug/request/${request._id}`,
@@ -397,10 +405,7 @@ export const ImportModal: FC<ImportModalProps> = ({
                 .filter(({ errors }) => errors.length === 0)
                 .forEach(scanResult => {
                   const type = scanResult.type?.id ?? 'unknown';
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.dataImport,
-                    properties: { 'data-import-type': type },
-                  });
+                  trackImportEvent(SegmentEvent.dataImport, { 'data-import-type': type });
                 });
             }}
           />
@@ -436,8 +441,7 @@ export const validateCurl = async (value: string): Promise<{ isValid: boolean; m
       : { isValid: false, message: 'Invalid cURL request' };
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : String(error);
-    const cleanedMessage = rawMessage.replace("Error invoking remote method 'parseImport': Error: ", '');
-    const finalMessage = rawMessage.includes('No importers found for file') ? 'Invalid cURL request' : cleanedMessage;
+    const finalMessage = rawMessage.includes('No importers found for file') ? 'Invalid cURL request' : rawMessage;
     console.log('[importer] error', finalMessage);
     return finalMessage.includes('No importers found for file')
       ? { isValid: false, message: 'Invalid cURL request' }

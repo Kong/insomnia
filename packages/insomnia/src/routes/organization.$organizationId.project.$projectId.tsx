@@ -14,11 +14,11 @@ import {
   getProjectsWithGitRepositories,
 } from '~/common/project';
 import { models, services } from '~/insomnia-data';
-import { sortProjects } from '~/models/helpers/project';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import { ProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';
+import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
@@ -86,7 +86,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     getAllLocalFiles({ projectId }),
     getProjectsWithGitRepositories({ organizationId }),
   ]);
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
 
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
@@ -119,7 +119,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 export function useProjectLoaderData() {
   return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId');
 }
-
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -139,6 +138,14 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const { features } = useOrganizationPermissions();
 
   const isScratchPad = models.project.isScratchpadProject(activeProject);
+  const gitRepositoryId =
+    activeProject && models.project.isConnectedGitProject(activeProject)
+      ? models.project.getEffectiveRepoId(activeProject)
+      : null;
+  const gitFileIssues = useProjectGitFileIssues({
+    projectId: activeProject?._id,
+    gitRepositoryId,
+  });
 
   return (
     <>
@@ -189,7 +196,9 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
           hitAreaMargins={{ coarse: 15, fine: 15 }}
         />
         <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
-          <Outlet />
+          <GitFileIssuesProvider value={gitFileIssues}>
+            <Outlet />
+          </GitFileIssuesProvider>
         </Panel>
       </PanelGroup>
     </>

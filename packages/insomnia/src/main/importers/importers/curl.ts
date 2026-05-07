@@ -2,8 +2,9 @@ import { URL } from 'node:url';
 
 import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
 
-import type { RequestAuthentication } from '~/insomnia-data';
+import { type RequestAuthentication,services } from '~/insomnia-data';
 
+import { getAppVersion } from '../../../common/constants';
 import { type Converter, type ImportRequest, type Parameter } from '../entities';
 
 export const id = 'curl';
@@ -392,7 +393,7 @@ const getPairValue = <T extends string | boolean>(parisByName: PairsByName, defa
   return defaultValue;
 };
 
-export const convert: Converter = rawData => {
+export const convert: Converter = async rawData => {
   requestCount = 1;
 
   if (!rawData.match(/^\s*curl /)) {
@@ -455,6 +456,18 @@ export const convert: Converter = rawData => {
     .filter(command => command[0] === 'curl')
     .map(importCommand)
     .map(buildRequestObject);
+
+  const { disableAppVersionUserAgent } = await services.settings.get();
+  if (!disableAppVersionUserAgent) {
+    const defaultUserAgent = `insomnia/${getAppVersion()}`;
+    for (const req of requests) {
+      const headers = req.headers ?? [];
+      if (!headers.some(header => header.name.toLowerCase() === 'user-agent')) {
+        headers.push({ name: 'User-Agent', value: defaultUserAgent });
+        req.headers = headers;
+      }
+    }
+  }
 
   return requests;
 };

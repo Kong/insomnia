@@ -36,6 +36,8 @@ export type HandleChannels =
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'generateCommitsFromDiff'
   | 'generateMockRouteDataFromSpec'
+  | 'getAuthHeader'
+  | 'getOAuth2Token'
   | 'getExecution'
   | 'getLocalStorageDataFromFileOrigin'
   | 'git.abortMerge'
@@ -51,6 +53,7 @@ export type HandleChannels =
   | 'git.diffFileLoader'
   | 'git.discardChanges'
   | 'git.fetchGitRemoteBranches'
+  | 'git.getProjectGitFileIssues'
   | 'git.validateGitRepositoryCredentials'
   | 'git.validateGitCredentialById'
   | 'git.getGitBranches'
@@ -67,7 +70,9 @@ export type HandleChannels =
   | 'git.pullFromGitRemote'
   | 'git.pushToGitRemote'
   | 'git.resetGitRepo'
+  | 'git.runAllGitRepoMigrations'
   | 'git.getCurrentBranchByRepositoryId'
+  | 'git.getBranchRemoteInfo'
   | 'git.stageChanges'
   | 'git.unstageChanges'
   | 'git.updateGitRepo'
@@ -78,6 +83,8 @@ export type HandleChannels =
   | 'git.getGitProviderEmails'
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
+  | 'grpc.writeProtoFile'
+  | 'initializeWorkspaceBackendProject'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'
@@ -119,6 +126,8 @@ export type HandleChannels =
   | 'readDir'
   | 'readOrCreateDataDir'
   | 'restoreBackup'
+  | 'electronStorage.getItem'
+  | 'electronStorage.setItem'
   | 'secretStorage.decryptString'
   | 'secretStorage.deleteSecret'
   | 'secretStorage.encryptString'
@@ -129,13 +138,17 @@ export type HandleChannels =
   | 'showSaveDialog'
   | 'socketIO.event.findMany'
   | 'socketIO.event.send'
+  | 'syncNewWorkspaceIfNeeded'
+  | 'sync.invoke'
+  | 'sync.pullRemoteBackendProject'
   | 'socketIO.open'
   | 'socketIO.readyState'
   | 'webSocket.event.findMany'
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
-  | 'writeFile';
+  | 'writeFile'
+  | 'writeResponseBodyToFile';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -186,6 +199,8 @@ export type MainOnChannels =
   | 'mcp.closeAll'
   | 'mcp.client.responseElicitationRequest'
   | 'mcp.client.responseSamplingRequest'
+  | 'sync.cancelConflict'
+  | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
   | 'writeText';
 
@@ -205,12 +220,15 @@ export type RendererOnChannels =
   | 'shell:open'
   | 'show-notification'
   | 'show-toast'
+  | 'sync.merge-conflicts'
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
   | 'show-oauth-authorization-modal'
   | 'hide-oauth-authorization-modal'
-  | 'mcp-auth-confirmation';
+  | 'mcp-auth-confirmation'
+  | 'git.db-synced'
+  | 'git.file-problems-changed';
 
 export const ipcMainOn = (
   channel: MainOnChannels,

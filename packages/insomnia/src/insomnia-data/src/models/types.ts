@@ -1,3 +1,5 @@
+export type { BaseModel, AllTypes } from './base-types';
+
 //  flat re-exports for convenient consumer access, only export types that are needed outside of this package
 export type { ApiSpec } from './api-spec';
 export type { CaCertificate } from './ca-certificate';
@@ -92,6 +94,8 @@ export type { UnitTestSuite } from './unit-test-suite';
 export type { SocketIOPayload } from './socket-io-payload';
 export type { BaseSocketIORequest, SocketIOEventListener, SocketIORequest } from './socket-io-request';
 export type { SocketIOResponse } from './socket-io-response';
+export type { SocketIORequestMeta } from './socket-io-request-meta';
 export type { WebSocketPayload } from './websocket-payload';
 export type { BaseWebSocketRequest, WebSocketRequest } from './websocket-request';
 export type { WebSocketResponse } from './websocket-response';
+export type { WebSocketRequestMeta } from './websocket-request-meta';

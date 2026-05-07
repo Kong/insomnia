@@ -12,6 +12,23 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 const rendererBuiltinSpecifiers = [...builtinModules, ...builtinModules.map(moduleName => `node:${moduleName}`)];
+const generalRestrictedImportPatterns = [
+  // Shouldn't import packages by relative path
+  {
+    group: ['**/*/insomnia-api/**'],
+    message: "Please use 'insomnia-api' instead of relative paths",
+  },
+  // Block relative paths to insomnia-data
+  {
+    group: ['./**/insomnia-data', './**/insomnia-data/**', '../**/insomnia-data', '../**/insomnia-data/**'],
+    message: "Please use '~/insomnia-data' instead of relative paths",
+  },
+  // Only allow ~/insomnia-data and ~/insomnia-data/node
+  {
+    regex: '^~/insomnia-data/(?!node($|/)).+',
+    message: "Only '~/insomnia-data' and '~/insomnia-data/node' are allowed",
+  },
+];
 const rendererNodeMigrationOffenders = [
   'packages/insomnia/src/common/misc.ts',
   'packages/insomnia/src/common/significant-diff-detection.ts',
@@ -86,23 +103,6 @@ export default defineConfig([
       'playwright/no-wait-for-timeout': 'error',
     },
   },
-  // nodeIntegration: false section
-  {
-    files: [
-      'packages/insomnia/src/ui/**/*.{ts,tsx}',
-      'packages/insomnia/src/routes/**/*.{ts,tsx}',
-      'packages/insomnia/src/common/**/*.{ts,tsx}',
-    ],
-    ignores: rendererNodeRestrictionIgnores,
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: rendererBuiltinSpecifiers,
-        },
-      ],
-    },
-  },
   // React hooks section
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
@@ -168,23 +168,25 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
-            // Shouldn't import packages by relative path
-            {
-              group: ['**/*/insomnia-api/**'],
-              message: "Please use 'insomnia-api' instead of relative paths",
-            },
-            // Block relative paths to insomnia-data
-            {
-              group: ['./**/insomnia-data', './**/insomnia-data/**', '../**/insomnia-data', '../**/insomnia-data/**'],
-              message: "Please use '~/insomnia-data' instead of relative paths",
-            },
-            // Only allow ~/insomnia-data and ~/insomnia-data/node
-            {
-              regex: '^~/insomnia-data/(?!node($|/)).+',
-              message: "Only '~/insomnia-data' and '~/insomnia-data/node' are allowed",
-            },
-          ],
+          patterns: generalRestrictedImportPatterns,
+        },
+      ],
+    },
+  },
+  // nodeIntegration: false section
+  {
+    files: [
+      'packages/insomnia/src/ui/**/*.{ts,tsx}',
+      'packages/insomnia/src/routes/**/*.{ts,tsx}',
+      'packages/insomnia/src/common/**/*.{ts,tsx}',
+    ],
+    ignores: rendererNodeRestrictionIgnores,
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: rendererBuiltinSpecifiers,
+          patterns: generalRestrictedImportPatterns,
         },
       ],
     },

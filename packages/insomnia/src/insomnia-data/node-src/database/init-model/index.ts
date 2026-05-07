@@ -1,7 +1,6 @@
 import { generateId } from '~/common/misc';
+import type { AllTypes, BaseModel } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
-import type { AllTypes, BaseModel } from '~/models';
-import { getModel } from '~/models';
 import { typedKeys } from '~/utils';
 
 import { migrate as migrateCookieJar } from './cookie-jar';
@@ -11,7 +10,7 @@ import { migrate as migrateSettings } from './settings';
 import { migrate as migrateWorkspace } from './workspace';
 
 export async function initModel<T extends BaseModel>(type: AllTypes, ...sources: Record<string, any>[]): Promise<T> {
-  const model = getModel(type);
+  const model = models.getModel(type);
 
   if (!model) {
     const choices = models

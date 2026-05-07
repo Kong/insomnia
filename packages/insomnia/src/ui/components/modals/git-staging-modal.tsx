@@ -148,7 +148,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className="grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden">
+              <div className="grid h-full grid-cols-[350px_1fr] gap-4 divide-x divide-solid divide-(--hl-md) overflow-hidden">
                 <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                   <form
                     onSubmit={e => {

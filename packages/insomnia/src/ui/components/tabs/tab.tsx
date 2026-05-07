@@ -4,6 +4,7 @@ import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
 
 import { models } from '~/insomnia-data';
+import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { scrollElementIntoView } from '../../../utils';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
@@ -75,7 +76,7 @@ const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
   },
 };
 
-export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
+export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: WorkspaceFileIssue }) => {
   const { closeTabById, currentOrgTabs } = useInsomniaTabContext();
 
   const renderTabIcon = (type: TabType, tabId: string) => {
@@ -187,6 +188,11 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
             >
               {models.mcpRequest.isMcpRequestId(tab.id) ? tab.workspaceName : tab.name}
             </span>
+            {fileIssue && (
+              <span className="mr-2 flex shrink-0 items-center text-(--color-warning)">
+                <Icon icon="triangle-exclamation" />
+              </span>
+            )}
             <Button
               aria-label="Close Tab"
               data-testid="tab-close-button"

@@ -160,6 +160,7 @@ const LocalBranchItem = ({
                             projectId,
                             workspaceId,
                             handledMergeConflicts: conflicts,
+                            autoResolvedConflicts: result.autoResolvedConflicts,
                             commitMessage: result.commitMessage,
                             commitParent: result.commitParent,
                           })

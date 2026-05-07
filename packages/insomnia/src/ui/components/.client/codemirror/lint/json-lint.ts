@@ -39,12 +39,12 @@ async function validator(text: string): Promise<ValidationError[]> {
   };
 
   // Render any Nunjucks templates before attempting to parse
-  const renderedText: string | null = await render(text, {});
-  if (renderedText) {
-    try {
+  try {
+    const renderedText: string | null = await render(text, {});
+    if (renderedText) {
       jsonlint.parse(renderedText);
-    } catch {}
-  }
+    }
+  } catch {}
 
   return found;
 }

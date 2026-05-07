@@ -16,7 +16,7 @@ import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
 import type { GitProject, GitRepository } from '~/insomnia-data';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models } from '~/insomnia-data';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
@@ -32,6 +32,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { MergeConflict } from '../../../sync/types';
+import { GitNonOriginBranchBanner } from '../git/git-non-origin-branch-banner';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { GitProjectBranchesModal } from '../modals/git-project-branches-modal';
@@ -73,7 +74,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }
@@ -113,6 +114,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
     gitRepoDataFetcher.data.legacyInsomniaWorkspace
       ? gitRepoDataFetcher.data.legacyInsomniaWorkspace
       : null;
+
+  const branchRemoteInfo =
+    gitRepoDataFetcher.data && 'branchRemoteInfo' in gitRepoDataFetcher.data && gitRepoDataFetcher.data.branchRemoteInfo
+      ? gitRepoDataFetcher.data.branchRemoteInfo
+      : null;
+
+  const isNonOriginBranch = branchRemoteInfo ? !branchRemoteInfo.isOrigin : false;
 
   // Only fetch the repo status if we have a repo uri and we don't have the status already
   const shouldFetchGitRepoStatus = Boolean(
@@ -232,11 +240,21 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         status: 'error',
       });
     } else if (gitCheckoutFetcher.data && 'success' in gitCheckoutFetcher.data && gitCheckoutFetcher.data.success) {
-      showToast({
-        icon,
-        title: `Checkout completed`,
-        status: 'success',
-      });
+      const warnings = 'warnings' in gitCheckoutFetcher.data ? (gitCheckoutFetcher.data.warnings as string[]) : [];
+      if (warnings.length > 0) {
+        showToast({
+          icon,
+          title: 'Checkout completed with warnings',
+          description: warnings.join('\n'),
+          status: 'warning',
+        });
+      } else {
+        showToast({
+          icon,
+          title: `Checkout completed`,
+          status: 'success',
+        });
+      }
     }
   }, [gitCheckoutFetcher.data, icon]);
 
@@ -355,6 +373,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         closeGitProjectStagingModalRef.current = showModal(GitProjectStagingModal, {
           mode: StagingModalModes.commitAndPull,
           callbackRef: gitProjectStagingModalCallbackPropsRef,
+          isNonOriginBranch,
         });
       } else if ('errors' in pullResult && pullResult.errors) {
         if (pullResult.errors.includes(GitVCSOperationErrors.AuthenticationRequiredError)) {
@@ -411,6 +430,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               .continueMerge({
                 projectId,
                 handledMergeConflicts: conflicts,
+                autoResolvedConflicts: pullResult.autoResolvedConflicts,
                 commitMessage: pullResult.commitMessage,
                 commitParent: pullResult.commitParent,
               })
@@ -439,6 +459,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               });
           },
           onCancelUnresolved: () => {
+            window.main.git.abortMerge({ projectId });
             closeGitProjectStagingModalRef.current?.();
             setIsPulling(false);
             showToast({
@@ -504,6 +525,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
             closeGitProjectStagingModalRef.current = showModal(GitProjectStagingModal, {
               mode: StagingModalModes.default,
               callbackRef: gitProjectStagingModalCallbackPropsRef,
+              isNonOriginBranch,
             });
           },
         },
@@ -511,14 +533,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           id: 'pull',
           icon: isPulling ? 'refresh' : 'cloud-download',
           label: 'Pull',
-          isDisabled: false,
+          isDisabled: isNonOriginBranch,
           action: async () => handlePull(),
         },
         {
           id: 'push',
           icon: 'cloud-upload',
           label: 'Push',
-          isDisabled: false,
+          isDisabled: isNonOriginBranch,
           action: () => handlePush({ force: false }),
         },
         {
@@ -531,7 +553,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         {
           id: 'fetch',
           icon: 'refresh',
-          isDisabled: false,
+          isDisabled: isNonOriginBranch,
           label: 'Fetch',
           action: () => {
             setOperationError(null);
@@ -547,6 +569,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       ]
     : [];
 
+  const repoPath = gitRepository?._id
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository._id)
+    : '';
+
   const gitSyncActions: {
     id: string;
     label: string;
@@ -554,6 +580,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
     isDisabled?: boolean;
     action: () => void;
   }[] = [
+    {
+      id: 'open-folder',
+      label: 'Open folder',
+      isDisabled: !repoPath,
+      icon: 'folder-open',
+      action: () => window.shell.openPath(repoPath),
+    },
     {
       id: 'branches',
       label: 'Branches',
@@ -604,6 +637,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
   return (
     <>
+      {isNonOriginBranch && branchRemoteInfo?.trackingRemote && currentBranch && (
+        <GitNonOriginBranchBanner
+          trackingRemote={branchRemoteInfo.trackingRemote}
+          remoteUrl={branchRemoteInfo.remoteUrl}
+          currentBranch={currentBranch}
+        />
+      )}
       {operationError && (
         <div className="flex gap-2 bg-[rgba(var(--color-danger-rgb),1)] px-2 py-1 text-xs text-(--color-font-danger)">
           <div className="flex items-center gap-2">

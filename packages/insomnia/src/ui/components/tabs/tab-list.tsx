@@ -12,14 +12,14 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { MockRoute, Request } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { BaseModel, MockRoute, Request } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
-import * as models from '../../../models/index';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
@@ -50,6 +50,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   const newRequestFetcher = useRequestNewActionFetcher();
   const { organizationId, projectId } = useParams();
+  const gitFileIssues = useGitFileIssues();
 
   useInsomniaTab({ organizationId: organizationId || '' });
 
@@ -74,6 +75,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   } = useInsomniaTabContext();
 
   const { tabList, activeTabId } = currentOrgTabs;
+  const issuesByWorkspaceId = gitFileIssues.issuesByWorkspaceId;
 
   // Register keyboard shortcuts for tab navigation
   useDocBodyKeyboardShortcuts({
@@ -139,7 +141,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   );
 
   const handleUpdate = useCallback(
-    async (doc: models.BaseModel, patches: Partial<models.BaseModel>[] = []) => {
+    async (doc: BaseModel, patches: Partial<BaseModel>[] = []) => {
       const patchObj: Record<string, any> = {};
       patches.forEach(patch => {
         Object.assign(patchObj, patch);
@@ -394,9 +396,10 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           className="flex h-[41px] w-fit"
           dragAndDropHooks={dragAndDropHooks}
           items={tabList}
+          dependencies={[issuesByWorkspaceId]}
           ref={tabListInnerRef}
         >
-          {item => <InsomniaTab tab={item} />}
+          {item => <InsomniaTab tab={item} fileIssue={issuesByWorkspaceId[item.workspaceId]} />}
         </GridList>
       </div>
       <Button

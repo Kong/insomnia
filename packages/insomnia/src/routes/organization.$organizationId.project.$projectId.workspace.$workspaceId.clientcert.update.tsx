@@ -1,6 +1,7 @@
 import { href } from 'react-router';
 
-import { type ClientCertificate, services } from '~/insomnia-data';
+import type { ClientCertificate } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 

@@ -11,6 +11,7 @@ import React, {
 import {
   Button,
   Dialog,
+  DialogTrigger,
   GridList,
   GridListItem,
   Heading,
@@ -18,6 +19,7 @@ import {
   Label,
   Modal,
   ModalOverlay,
+  Popover,
   TextArea,
   TextField,
   Tooltip,
@@ -56,6 +58,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
+import { platform } from '../../../common/platform';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showToast } from '../toast-notification';
@@ -124,6 +127,7 @@ interface GeneratedCommitsFormProps {
   gitRepository?: GitRepository | null;
   selectedCredential?: GitCredentials | null;
   selectedProvider?: GitProviderOption | null;
+  isNonOriginBranch?: boolean;
 }
 
 interface FileItem {
@@ -288,6 +292,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
   gitRepository,
   selectedCredential,
   selectedProvider,
+  isNonOriginBranch,
 }) => {
   const commitsFetcher = useGitProjectCommitsActionFetcher();
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
@@ -523,7 +528,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
 
           <Button
             type="submit"
-            isDisabled={committingActionRef.current === 'commit-push' && isCommitting}
+            isDisabled={isNonOriginBranch || (committingActionRef.current === 'commit-push' && isCommitting)}
             name="push"
             value="true"
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -584,6 +589,7 @@ interface ManualCommitFormProps {
   gitRepository?: GitRepository | null;
   selectedCredential?: GitCredentials | null;
   selectedProvider?: GitProviderOption | null;
+  isNonOriginBranch?: boolean;
 }
 
 const ManualCommitForm: FC<ManualCommitFormProps> = ({
@@ -600,6 +606,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   gitRepository,
   selectedCredential,
   selectedProvider,
+  isNonOriginBranch,
 }) => {
   const commitFetcher = useGitProjectCommitActionFetcher();
 
@@ -608,6 +615,11 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
   const [message, setMessage] = useState('');
   const committingActionRef = useRef<'commit' | 'commit-push' | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const repoPath = gitRepository?._id
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository._id)
+    : '';
   const completeSignInFetcher = useGitProviderCompleteSignInFetcher({ key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY });
   const prevCompleteSignInStateRef = useRef(completeSignInFetcher.state);
   useEffect(() => {
@@ -745,19 +757,38 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               Commit
             </Button>
 
-            <Button
-              type="submit"
-              isDisabled={(committingActionRef.current === 'commit-push' && isCommitting) || stagedCount === 0}
-              name="push"
-              value="true"
-              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon
-                icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
-                className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
-              />{' '}
-              Commit and push
-            </Button>
+            {isNonOriginBranch ? (
+              <TooltipTrigger>
+                <Button
+                  name="push"
+                  value="true"
+                  onPress={() => {}}
+                  className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) opacity-50 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="cloud-arrow-up" className="w-5" /> Commit and push
+                </Button>
+                <Tooltip
+                  offset={8}
+                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                >
+                  Push action is not allowed for branches on non-origin remotes
+                </Tooltip>
+              </TooltipTrigger>
+            ) : (
+              <Button
+                type="submit"
+                isDisabled={committingActionRef.current === 'commit-push' && isCommitting}
+                name="push"
+                value="true"
+                className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+              >
+                <Icon
+                  icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
+                  className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
+                />{' '}
+                Commit and push
+              </Button>
+            )}
           </div>
         )}
         {operationError && selectedProvider && isGitRepoLoadAuthHttp40Error([operationError]) ? (
@@ -785,8 +816,8 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         ) : null}
       </form>
 
-      <div className="grid auto-rows-auto gap-2 overflow-y-auto">
-        <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
+      <div>
+        <div>
           <Heading className="group flex w-full shrink-0 items-center justify-between gap-2 py-1 font-semibold">
             <span className="flex-1">Staged changes</span>
             <TooltipTrigger>
@@ -812,7 +843,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               {changes.staged.length}
             </span>
           </Heading>
-          <div className="flex w-full flex-1 overflow-y-auto select-none">
+          <div className="mt-2 flex max-h-60 w-full overflow-y-auto select-none">
             <GridList
               className="w-full"
               aria-label="Staged changes"
@@ -872,7 +903,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
             </GridList>
           </div>
         </div>
-        <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
+        <div>
           <Heading className="group flex w-full shrink-0 items-center justify-between py-1 font-semibold">
             <span>Unstaged changes</span>
             <div className="flex items-center gap-2">
@@ -931,7 +962,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               </span>
             </div>
           </Heading>
-          <div className="flex w-full flex-1 overflow-y-auto select-none">
+          <div className="mt-2 flex max-h-60 w-full overflow-y-auto select-none">
             <GridList
               aria-label="Unstaged changes"
               className="w-full"
@@ -1022,6 +1053,71 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </div>
         </div>
       </div>
+
+      <div className="mt-auto rounded-md border border-solid border-(--hl-sm) p-4 text-sm text-(--color-font)">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="rounded-xs border border-solid border-[#a78bfa] px-1.5 py-0.5 text-xs font-semibold text-[#a78bfa]">
+            PREVIEW
+          </span>
+          <span className="font-semibold">Manage changes on the Git CLI</span>
+          <DialogTrigger>
+            <Button
+              className="flex items-center justify-center rounded-xs p-0.5 text-(--hl) hover:bg-(--hl-xs)"
+              aria-label="More information"
+            >
+              <Icon icon="circle-info" className="size-3.5" />
+            </Button>
+            <Popover
+              offset={8}
+              className="max-w-xs rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+            >
+              <Dialog className="outline-none" >
+                You can now browse Git Sync project files on your local file system and manage changes using your normal
+                Git workflows.{' '}
+                <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
+                  Learn more ↗
+                </a>
+              </Dialog>
+            </Popover>
+          </DialogTrigger>
+        </div>
+        <p className="mb-1 text-xs font-semibold">Path to this project:</p>
+        <div className="flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+          <span className="min-w-0 flex-1 truncate" title={repoPath}>
+            {repoPath}
+          </span>
+          <Button
+            onPress={() => {
+              const cmd =
+                platform === 'win32'
+                  ? `cd "${repoPath.replace(/"/g, '\\"')}"`
+                  : `cd '${repoPath.replace(/'/g, "'\\''")}'`;
+              window.clipboard.writeText(cmd);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+            aria-label="Copy shell command"
+          >
+            <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
+          </Button>
+          <TooltipTrigger>
+            <Button
+              onPress={() => window.shell.openPath(repoPath)}
+              className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+              aria-label="Open in file system"
+            >
+              <Icon icon="folder-open" className="size-4" />
+            </Button>
+            <Tooltip
+              offset={8}
+              className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+            >
+              Open in file system
+            </Tooltip>
+          </TooltipTrigger>
+        </div>
+      </div>
     </>
   );
 };
@@ -1034,6 +1130,7 @@ export interface GitProjectStagingModalCallbackProps {
 
 export interface GitProjectStagingModalOptions {
   mode?: StagingModalMode;
+  isNonOriginBranch?: boolean;
   /* Why is callbackRef a ref object?
    * The callbacks passed to the modal (onClose, onPullAfterCommit, onPushAfterPull) may change after the show function is called.
    * If we were to pass the callbacks directly, the modal would capture the initial callbacks and not reflect any updates to them.
@@ -1057,8 +1154,8 @@ export const GitProjectStagingModal = forwardRef<GitProjectStagingModalHandle>((
   }, []);
 
   useImperativeHandle(ref, () => ({
-    show: ({ mode: newMode = StagingModalModes.default, callbackRef }) => {
-      setModalOptions({ mode: newMode, callbackRef });
+    show: ({ mode: newMode = StagingModalModes.default, callbackRef, isNonOriginBranch }) => {
+      setModalOptions({ mode: newMode, callbackRef, isNonOriginBranch });
       setIsOpen(true);
     },
     hide,
@@ -1082,6 +1179,7 @@ export const GitProjectStagingModal = forwardRef<GitProjectStagingModalHandle>((
     isOpen && (
       <OriginalGitProjectStagingModal
         mode={modalOptions?.mode}
+        isNonOriginBranch={modalOptions?.isNonOriginBranch}
         onClose={onClose}
         onPullAfterCommit={onPullAfterCommit}
         onPushAfterPull={onPushAfterPull}
@@ -1094,8 +1192,9 @@ GitProjectStagingModal.displayName = 'GitProjectStagingModal';
 const OriginalGitProjectStagingModal: FC<
   {
     mode?: StagingModalMode;
+    isNonOriginBranch?: boolean;
   } & GitProjectStagingModalCallbackProps
-> = ({ mode = StagingModalModes.default, onClose, onPullAfterCommit, onPushAfterPull }) => {
+> = ({ mode = StagingModalModes.default, isNonOriginBranch, onClose, onPullAfterCommit, onPushAfterPull }) => {
   const { projectId } = useParams() as { projectId: string };
 
   const [commitGenerationKey, setCommitGenerationKey] = useState(0);
@@ -1300,8 +1399,8 @@ const OriginalGitProjectStagingModal: FC<
                     </p>
                   </div>
                 )}
-                <div className="grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden">
-                  <div className="flex flex-1 flex-col gap-4 overflow-hidden p-2">
+                <div className="grid h-full grid-cols-[350px_1fr] gap-4 divide-x divide-solid divide-(--hl-md) overflow-hidden">
+                  <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
                     {isGenerateCommitMessagesWithAIEnabled && (
                       <div className="flex flex-col gap-3 rounded-sm border border-solid border-(--hl-md) p-3">
                         <h3 className="font-semibold">
@@ -1373,6 +1472,7 @@ const OriginalGitProjectStagingModal: FC<
                         gitRepository={gitRepository}
                         selectedCredential={selectedCredential}
                         selectedProvider={selectedProvider}
+                        isNonOriginBranch={isNonOriginBranch}
                       />
                     )}
 
@@ -1391,6 +1491,7 @@ const OriginalGitProjectStagingModal: FC<
                         gitRepository={gitRepository}
                         selectedCredential={selectedCredential}
                         selectedProvider={selectedProvider}
+                        isNonOriginBranch={isNonOriginBranch}
                       />
                     )}
                   </div>
@@ -1547,6 +1648,7 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                   Cancel
                 </Button>
                 <Button
+                  data-testid="discard-changes-confirm-button"
                   className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   onPress={() => {
                     if (typeof onConfirm === 'function') {

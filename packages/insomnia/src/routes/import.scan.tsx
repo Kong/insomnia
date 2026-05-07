@@ -9,7 +9,7 @@ import {
   scanResources,
 } from '~/common/import';
 import type { ImportEntry } from '~/main/importers/entities';
-import { SegmentEvent } from '~/ui/analytics';
+import { SegmentEvent, trackImportEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -27,12 +27,7 @@ export const scanImportResources = async (data: {
   invariant(typeof source === 'string', 'Source is required.');
   invariant(IMPORT_SOURCE_TYPES.includes(source), 'Unsupported import type');
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.importScanned,
-    properties: {
-      source,
-    },
-  });
+  trackImportEvent(SegmentEvent.importScanned, { source });
 
   const contentList: ImportEntry[] = [];
 

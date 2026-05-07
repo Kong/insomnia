@@ -13,9 +13,8 @@ import type {
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
-import * as models from '../models';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';

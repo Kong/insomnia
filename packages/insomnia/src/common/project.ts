@@ -34,6 +34,10 @@ export interface InsomniaFile {
   hasUncommittedChanges?: boolean;
   hasUnpushedChanges?: boolean;
   gitFilePath?: string | null;
+  fileIssue?: {
+    kind: 'conflict' | 'parse-error';
+    message: string;
+  };
 }
 
 const lockGenerator = () => {

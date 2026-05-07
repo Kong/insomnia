@@ -1,4 +1,7 @@
-import { type BaseModel, request, requestGroup, workspace } from '../../models';
+import type { BaseModel } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
+
+const { workspace, requestGroup, request } = models;
 
 export const data: Record<string, Partial<BaseModel>[]> = {
   [workspace.type]: [

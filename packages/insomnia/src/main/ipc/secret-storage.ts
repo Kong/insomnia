@@ -1,7 +1,6 @@
 import { safeStorage } from 'electron';
 
-import type ElectronStorage from '../electron-storage';
-import { initElectronStorage } from '../window-utils';
+import { getElectronStorage } from '../electron-storage';
 import { ipcMainHandle } from './electron';
 
 export interface secretStorageBridgeAPI {
@@ -19,15 +18,6 @@ export function registerSecretStorageHandlers() {
   ipcMainHandle('secretStorage.encryptString', (_, raw) => encryptString(raw));
   ipcMainHandle('secretStorage.decryptString', (_, raw) => decryptString(raw));
 }
-
-let electronStorage: ElectronStorage | null = null;
-
-const getElectronStorage = () => {
-  if (!electronStorage) {
-    electronStorage = initElectronStorage();
-  }
-  return electronStorage;
-};
 
 const setSecret = async (key: string, secret: string) => {
   try {

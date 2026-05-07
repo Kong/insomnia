@@ -48,12 +48,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('../models', () => ({
-  settings: {
-    get: vi.fn(() => Promise.resolve({})),
-  },
-}));
-
 // Mock the entire install-plugin module
 vi.mock('../main/install-plugin', async () => {
   const actual = await vi.importActual('../main/install-plugin');
