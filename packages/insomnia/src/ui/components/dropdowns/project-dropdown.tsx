@@ -176,7 +176,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
       // Use this because createNewWorkspace action will navigate to the newly create workspace page
       setNewWorkspaceModalState(prev => prev && { ...prev, isOpen: false });
     }
-  }, [newWorkspaceModalState?.isOpen, workspaceId]);
+  }, [workspaceId]);
 
   return (
     <Fragment>

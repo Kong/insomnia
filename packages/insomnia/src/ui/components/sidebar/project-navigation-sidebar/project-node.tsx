@@ -38,7 +38,7 @@ export const ProjectNode = ({ item, storageRules, onToggle }: ProjectNodeProps) 
                 : 'laptop'
           }
         />
-        <span className="min-w-0 flex-1 truncate text-sm">{projectName}</span>
+        <span className="min-w-0 flex-1 truncate text-base text-[rgb(var(--color-font-rgb),0.8)]">{projectName}</span>
       </div>
       {presence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={presence} />}
       {projectId !== models.project.SCRATCHPAD_PROJECT_ID && (
