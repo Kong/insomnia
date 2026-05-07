@@ -137,7 +137,7 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
           <Button
             data-testid={`pin-${toKebabCase(doc.name)}`}
             className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            onClick={() => patchRequestMeta(item.doc._id, { pinned: false })}
+            onPress={() => patchRequestMeta(item.doc._id, { pinned: false })}
           >
             <Icon icon="thumb-tack" />
           </Button>
@@ -216,7 +216,7 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
       <span className={ACTIVE_BORDER_CLASS} />
       {isPinnedRequest ? (
         <div
-          className={`group-focus: -bg-(--hl-sm) ml-2 flex h-full min-w-0 flex-1 items-center overflow-hidden border-x border-solid border-(--hl-md) bg-(--hl-xs) pr-2 group-hover:bg-(--hl-sm) ${isLastPinned ? 'border-b' : ''}`}
+          className={`ml-2 flex h-full min-w-0 flex-1 items-center overflow-hidden border-x border-solid border-(--hl-md) bg-(--hl-xs) pr-2 group-hover:bg-(--hl-sm) group-focus:bg-(--hl-sm) ${isLastPinned ? 'border-b' : ''}`}
         >
           {content}
         </div>

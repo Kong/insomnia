@@ -1,15 +1,6 @@
 export const KongLogo = ({ ...props }: {} & React.SVGProps<SVGSVGElement>) => (
-  <svg
-    width="13"
-    height="12"
-    viewBox="0 0 13 12"
-    xmlns="http://www.w3.org/2000/svg"
-    style={{
-      zIndex: 1,
-    }}
-    {...props}
-  >
-    <g opacity="0.6" clip-path="url(#clip0_4460_9459)">
+  <svg width="13" height="12" viewBox="0 0 13 12" xmlns="http://www.w3.org/2000/svg" className="z-1" {...props}>
+    <g opacity="0.6" clipPath="url(#clip0_4460_9459)">
       <path
         d="M4.25676 9.83691L3.94238 10.2486L4.66461 11.4048L4.58813 11.9391H7.64696L7.85938 11.4048L6.62735 9.83691H4.26526H4.25676Z"
         fill="#CCFF00"

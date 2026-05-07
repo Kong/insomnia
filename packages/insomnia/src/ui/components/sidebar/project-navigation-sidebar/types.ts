@@ -1,5 +1,5 @@
 import type { InsomniaFile } from '~/common/project';
-import type { GitRepository, Project, Workspace, WorkspaceMeta } from '~/insomnia-data';
+import type { GitRepository, Project, RequestGroup, Workspace, WorkspaceMeta } from '~/insomnia-data';
 import type { BaseModel } from '~/models/types';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
@@ -73,12 +73,13 @@ export interface PinnedHeaderFlatItem {
 }
 
 export interface EmptyNodeFlatItem {
-  kind: 'emptyWorkspace' | 'emptyCollection' | 'emptyFolder';
+  kind: 'emptyProject' | 'emptyCollection' | 'emptyFolder';
   hidden: boolean;
   organizationId: string;
   doc: { _id: string; name: string };
   project: ProjectWithPresence;
   workspace?: Workspace;
+  requestGroup?: RequestGroup;
   level?: number;
 }
 

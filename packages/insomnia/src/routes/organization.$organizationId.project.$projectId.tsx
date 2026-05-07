@@ -138,8 +138,16 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+  const [isSidebarCollapsed] = reactUse.useLocalStorage('project-navigation-collapsed', false);
+  const isSidebarCollapsedRef = useRef(isSidebarCollapsed);
 
   useEffect(() => {
+    if (isSidebarCollapsedRef.current) {
+      sidebarPanelRef.current?.collapse();
+    } else {
+      sidebarPanelRef.current?.expand();
+    }
+
     return uiEventBus.on(TOGGLE_PROJECT_SIDEBAR, (collapsed: boolean) => {
       if (collapsed) {
         sidebarPanelRef.current?.collapse();

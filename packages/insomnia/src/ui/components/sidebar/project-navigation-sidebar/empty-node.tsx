@@ -1,5 +1,3 @@
-import { create } from 'node:domain';
-
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
 import { useState } from 'react';
@@ -30,7 +28,7 @@ interface ActionItem {
 }
 
 export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
-  const { doc, organizationId, project, workspace, requestGroup, level = 0, kind } = item;
+  const { organizationId, project, workspace, requestGroup, level = 0, kind } = item;
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: WorkspaceScope;
     isOpen: boolean;
