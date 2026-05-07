@@ -26,11 +26,7 @@ export async function absorbKey(sessionId: string, key: string) {
     getUserProfile({ sessionId: sessionIdResolved }),
     getEncryptionKeys({ sessionId: sessionIdResolved }),
   ]);
-  const {
-    public_key: publicKey,
-    enc_private_key: encPrivateKey,
-    enc_symmetric_key: encSymmetricKey,
-  } = keys;
+  const { public_key: publicKey, enc_private_key: encPrivateKey, enc_symmetric_key: encSymmetricKey } = keys;
   const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
 
@@ -224,7 +220,7 @@ async function _removeAllCredentials() {
  * each model instance individually to clear them all out.
  *
  */
-async function _removeGitRepository(repo: GitRepository) {
+export async function _removeGitRepository(repo: GitRepository) {
   const queryIds = models.project.getQueryableGitRepositoryIds(repo._id);
   const projects = await database.find<Project>(models.project.type, { gitRepositoryId: { $in: queryIds } });
   for (const p of projects) {

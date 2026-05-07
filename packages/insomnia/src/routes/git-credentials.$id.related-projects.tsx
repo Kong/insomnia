@@ -1,6 +1,7 @@
+import type { Organization } from 'insomnia-api';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/git-credentials.$id.related-projects';
@@ -14,8 +15,17 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const relatedProjects = await services.project.getAllByGitRepositoryIds(gitRepositoryIds);
 
+  const { accountId } = await services.userSession.getOrCreate();
+  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
+  const currentUserOrganizationIds = new Set([
+    ...organizations.map(o => o.id),
+    models.organization.SCRATCHPAD_ORGANIZATION_ID,
+  ]);
+
+  const currentUserProjects = relatedProjects.filter(p => currentUserOrganizationIds.has(p.parentId));
+
   return {
-    projects: relatedProjects,
+    projects: currentUserProjects,
   };
 }
 
