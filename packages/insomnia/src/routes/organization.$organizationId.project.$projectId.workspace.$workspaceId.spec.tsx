@@ -262,17 +262,6 @@ const Component = ({ params }: Route.ComponentProps) => {
   }, [rulesetPath]);
 
   useEffect(() => {
-    if (!rulesetPath) return;
-
-    window.main.watchRulesetFile({ rulesetPath });
-
-    return window.main.on('ruleset.file-changed', () => {
-      registerCodeMirrorLint(rulesetPath);
-      editor.current?.tryToSetOption('lint', { ...lintOptions }); // do we even need this?
-    });
-  }, [rulesetPath]);
-
-  useEffect(() => {
     const syncRulesetToDisk = async () => {
       if (apiSpec.rulesetContent) {
         // Write the stored content to the correct path for this project type and use it for linting.
@@ -287,6 +276,16 @@ const Component = ({ params }: Route.ComponentProps) => {
 
     syncRulesetToDisk();
   }, [apiSpec.rulesetContent, rulesetWritePath, gitSyncRulesetPath]);
+
+  useEffect(() => {
+    const syncRulesetForGitProject = async () => {
+      if (gitSyncRulesetPath && !apiSpec.rulesetContent) {
+        const content = await window.main.insecureReadFile({ path: gitSyncRulesetPath });
+        await services.apiSpec.update(apiSpec, { rulesetContent: content });
+      }
+    };
+    syncRulesetForGitProject();
+  }, []);
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
@@ -458,15 +457,15 @@ const Component = ({ params }: Route.ComponentProps) => {
     showModal(AskModal, {
       title: 'Remove Ruleset File',
       message:
-        'Are you sure you want to remove the custom ruleset file for this? This will disable all custom linting rules and use the default Spectral ruleset.',
+        'Are you sure you want to remove this custom ruleset? This will disable all custom linting rules and use the default Spectral ruleset.',
       yesText: 'Remove',
       color: 'danger',
       noText: 'Cancel',
       onDone: async (confirmed: boolean) => {
         if (confirmed) {
-          await window.main.deleteFile({ path: rulesetWritePath });
-          await services.apiSpec.update(apiSpec, { rulesetContent: '' });
+          await services.apiSpec.update(apiSpec, { rulesetContent: undefined });
           setRulesetPath('');
+          await window.main.deleteFile({ path: rulesetWritePath });
         }
       },
     });
@@ -1134,7 +1133,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                         </div>
                       </Tooltip>
                     </TooltipTrigger>
-                    {!!apiSpec.rulesetContent && (
+                    {!!rulesetPath && (
                       <TooltipTrigger>
                         <Button onPress={handleUnselectSpectralFile}>
                           <Icon icon="xmark" />
