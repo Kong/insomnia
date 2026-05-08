@@ -57,9 +57,9 @@ jobs:
           - os: ubuntu-24.04
             csc_link_secret: ''
             csc_key_password_secret: ''
-          # - os: ubuntu-24.04-arm
-          #   csc_link_secret: ''
-          #   csc_key_password_secret: ''
+          - os: ubuntu-24.04-arm
+            csc_link_secret: ''
+            csc_key_password_secret: ''
     steps:
       - name: Checkout branch
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -83,6 +83,19 @@ jobs:
         shell: bash
         run: |
           echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
+
+      # tree-sitter has no linux-arm64 prebuild; rebuild inside Debian 11
+      # (glibc 2.31) so the resulting binding loads on Ubuntu 22+. Relies on
+      # electron-builder's npmRebuild:false to ship what we install here.
+      - name: Rebuild tree-sitter for older glibc (Linux ARM64 only)
+        if: runner.os == 'Linux' && runner.arch == 'ARM64'
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/work" -w /work \
+            -u "$(id -u):$(id -g)" -e HOME=/tmp \
+            -e CXXFLAGS=-std=c++20 \
+            node:24-bullseye \
+            npm rebuild --build-from-source tree-sitter tree-sitter-bash
 
       - name: Package app (Linux ARM64 only)
         if: runner.os == 'Linux' && runner.arch == 'ARM64'

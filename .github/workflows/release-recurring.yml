@@ -62,6 +62,19 @@ jobs:
           # compilation. Its binding.gyp pins -std=c++17, but Node 24 requires c++20, hence this override
           CXXFLAGS: ${{ matrix.os == 'ubuntu-24.04-arm' && '-std=c++20' || '' }}
 
+      # tree-sitter has no linux-arm64 prebuild; rebuild inside Debian 11
+      # (glibc 2.31) so the resulting binding loads on Ubuntu 22+. Relies on
+      # electron-builder's npmRebuild:false to ship what we install here.
+      - name: Rebuild tree-sitter for older glibc (Linux ARM64 only)
+        if: matrix.os == 'ubuntu-24.04-arm'
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/work" -w /work \
+            -u "$(id -u):$(id -g)" -e HOME=/tmp \
+            -e CXXFLAGS=-std=c++20 \
+            node:24-bullseye \
+            npm rebuild --build-from-source tree-sitter tree-sitter-bash
+
       - name: Install x64 version of native Mac dependencies
         run: npm run install-x64-native-dependencies -w insomnia
         if: ${{ matrix.os == 'macos-latest-large' }}
