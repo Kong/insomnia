@@ -134,7 +134,7 @@ const writeResponseBodyToFile = async (
 };
 
 export interface RendererToMainBridgeAPI {
-  loginStateChange: () => void;
+  loginStateChange: (isLoggedIn: boolean) => void;
   openInBrowser: (url: string) => void;
   restart: () => void;
   halfSecondAfterAppStart: () => void;
@@ -278,9 +278,9 @@ export function registerMainHandlers() {
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);
   });
-  ipcMainOn('loginStateChange', async () => {
+  ipcMainOn('loginStateChange', async (_, isLoggedIn: boolean) => {
     BrowserWindow.getAllWindows().forEach(w => {
-      w.webContents.send('loggedIn');
+      w.webContents.send('loggedIn', isLoggedIn);
     });
   });
   ipcMainHandle('backup', async () => {
