@@ -330,6 +330,12 @@ const Root = () => {
   const latestInSubmission = useLatest(ifInSubmission);
 
   useEffect(() => {
+    return window.main.on('loggedIn', () => {
+      revalidate();
+    });
+  }, [revalidate]);
+
+  useEffect(() => {
     return window.main.on('git.db-synced', () => {
       if (!latestInSubmission.current) {
         revalidate();
