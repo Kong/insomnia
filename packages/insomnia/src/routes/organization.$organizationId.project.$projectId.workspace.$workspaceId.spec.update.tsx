@@ -10,20 +10,21 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { workspaceId } = params;
 
-  const formData = await request.formData();
-  const contents = formData.get('contents');
-  const fromTemplate = Boolean(formData.get('fromTemplate'));
-
-  invariant(typeof contents === 'string', 'Contents is required');
+  const { contents, fromTemplate, rulesetContent } = (await request.json()) as {
+    contents?: string;
+    fromTemplate?: boolean;
+    rulesetContent?: string | null;
+  };
 
   const apiSpec = await services.apiSpec.getByParentId(workspaceId);
-
   invariant(apiSpec, 'API Spec not found');
+
   await database.update({
     ...apiSpec,
     modified: Date.now(),
     created: fromTemplate ? Date.now() : apiSpec.created,
-    contents,
+    ...(contents !== undefined && { contents }),
+    ...(rulesetContent !== undefined && { rulesetContent: rulesetContent ?? undefined }),
   });
 
   return null;
@@ -37,12 +38,14 @@ export const useSpecUpdateActionFetcher = createFetcherSubmitHook(
       workspaceId,
       contents,
       fromTemplate = false,
+      rulesetContent,
     }: {
       organizationId: string;
       projectId: string;
       workspaceId: string;
-      contents: string;
+      contents?: string;
       fromTemplate?: boolean;
+      rulesetContent?: string | null;
     }) => {
       const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec/update', {
         organizationId,
@@ -50,15 +53,11 @@ export const useSpecUpdateActionFetcher = createFetcherSubmitHook(
         workspaceId,
       });
 
-      const formData = new FormData();
-      formData.append('contents', contents);
-      if (fromTemplate) {
-        formData.append('fromTemplate', 'true');
-      }
-
-      return submit(formData, {
+      return submit(JSON.stringify({ contents, fromTemplate, rulesetContent }), {
         action: url,
         method: 'POST',
+        encType: 'application/json',
       });
     },
+  clientAction,
 );
