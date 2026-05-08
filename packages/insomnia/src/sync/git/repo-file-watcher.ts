@@ -43,13 +43,13 @@ import path from 'node:path';
 
 import { BrowserWindow } from 'electron';
 
-import { models, services, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
+import type { Workspace, WorkspaceMeta } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
-import { canSync } from '../../models';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -347,7 +347,7 @@ class RepoFileWatcher {
         return;
       }
 
-      const hasSyncableChange = changes.some(([, doc]) => canSync(doc));
+      const hasSyncableChange = changes.some(([, doc]) => models.canSync(doc));
       if (!hasSyncableChange) {
         return;
       }
@@ -635,7 +635,9 @@ class RepoFileWatcher {
       return;
     }
     const originDocs = await db.getWithDescendants(existingWorkspace);
-    const deletedDocs = originDocs.filter(originDoc => !docs.some(d => d._id === originDoc._id) && canSync(originDoc));
+    const deletedDocs = originDocs.filter(
+      originDoc => !docs.some(d => d._id === originDoc._id) && models.canSync(originDoc),
+    );
     for (const doc of deletedDocs) {
       await db.unsafeRemove(doc);
     }

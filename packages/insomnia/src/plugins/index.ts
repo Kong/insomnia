@@ -4,15 +4,13 @@ import path from 'node:path';
 import electron from 'electron';
 
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import { models, services } from '~/insomnia-data';
 import { fetchFromTemplateWorkerDatabase } from '~/templating/base-extension-worker';
 
 import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
-import * as models from '../models';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
@@ -411,7 +409,7 @@ export function getPluginCommonContext({
         },
         response: {
           getLatestForRequestId: services.response.getLatestForRequestId,
-          getBodyBuffer,
+          getBodyBuffer: services.helpers.getResponseBodyBuffer,
         },
         settings: {
           get: services.settings.get,

@@ -2,7 +2,9 @@ import orderedJSON from 'json-order';
 import { z, type ZodError } from 'zod/v4';
 
 import type {
+  AllTypes,
   ApiSpec,
+  BaseModel,
   CookieJar,
   Environment,
   EnvironmentKvPairData,
@@ -16,13 +18,11 @@ import type {
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
-import * as models from '../models/index';
-import { type AllTypes, type BaseModel, getModel } from '../models/index';
 import { invariant } from '../utils/invariant';
 import { parseApiSpec, type ParsedApiSpec } from './api-specs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
@@ -534,7 +534,7 @@ export const importResourcesToWorkspace = async ({
     const subEnvironments = resources.filter(models.environment.isEnvironment).filter(isSubEnvironmentResource) || [];
 
     for (const environment of subEnvironments) {
-      const model = getModel(environment.type);
+      const model = models.getModel(environment.type);
       model && ResourceIdMap.set(environment._id, generateId(model.prefix));
       await services.environment.create({
         ...environment,
@@ -545,13 +545,13 @@ export const importResourcesToWorkspace = async ({
 
     // Create new ids for each resource below optionalResources
     for (const resource of optionalResources) {
-      const model = getModel(resource.type);
+      const model = models.getModel(resource.type);
       model && ResourceIdMap.set(resource._id, generateId(model.prefix));
     }
 
     // Preserve optionalResource relationships
     for (const resource of optionalResources) {
-      const model = getModel(resource.type);
+      const model = models.getModel(resource.type);
       if (model) {
         const rewritten = models.rewriteReferences(resource, ResourceIdMap);
         const objectToWrite = {
@@ -629,12 +629,12 @@ export const importResourcesToNewWorkspace = async ({
   );
 
   for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
-    const model = getModel(resource.type);
+    const model = models.getModel(resource.type);
     model && ResourceIdMap.set(resource._id, generateId(model.prefix));
   }
 
   for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
-    const model = getModel(resource.type);
+    const model = models.getModel(resource.type);
 
     if (model) {
       const newParentId = ResourceIdMap.get(resource.parentId);

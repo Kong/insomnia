@@ -10,7 +10,7 @@ import { configureFetch } from 'insomnia-api';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import type { Project, RemoteProject, Stats } from '~/insomnia-data';
-import { database, initDatabase, initServices, services } from '~/insomnia-data';
+import { database, initDatabase, initServices, models, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
@@ -41,7 +41,6 @@ import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import * as models from './models/index';
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage

@@ -7,7 +7,6 @@ import { LearnMoreLink } from '~/basic-components/link';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { models } from '~/insomnia-data';
-import { isOwnerOfOrganization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import type { ProjectType } from '~/ui/components/project/utils';
@@ -28,7 +27,9 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
   // TODO: extract to a hook later
   const isUserOwner =
-    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+    organization &&
+    userSession.accountId &&
+    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   return (
     <>
       {storageType === 'git' &&

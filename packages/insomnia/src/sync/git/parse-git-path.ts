@@ -1,6 +1,7 @@
 import path from 'node:path';
 
-import { type AllTypes, isValidType } from '~/models';
+import type { AllTypes } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 
 import { GIT_CLONE_DIR } from './git-vcs';
 
@@ -25,7 +26,7 @@ const parseGitPath = (filePath: string): GitPathSegments => {
   const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
   return {
     root: root || null,
-    type: isValidType(type) ? type : null,
+    type: models.isValidType(type) ? type : null,
     id: id || null,
   };
 };

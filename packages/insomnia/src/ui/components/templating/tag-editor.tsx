@@ -5,16 +5,14 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import type { CloudProviderCredential, Request, RequestGroup, Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { BaseModel, CloudProviderCredential, Request, RequestGroup, Workspace } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString, SECURITY_SETTINGS_PATH_LABEL } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
-import * as models from '../../../models';
-import type { BaseModel } from '../../../models/index';
 import * as plugins from '../../../plugins';
 import * as pluginStore from '../../../plugins/context/store';
 import * as templating from '../../../templating';
@@ -85,7 +83,7 @@ export const TagEditor: FC<Props> = props => {
 
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));
-    const allDocs: Record<string, models.BaseModel[]> = {};
+    const allDocs: Record<string, BaseModel[]> = {};
     for (const type of models.types()) {
       allDocs[type] = [];
     }
@@ -95,9 +93,10 @@ export const TagEditor: FC<Props> = props => {
     }
     // add global Cloud Credential data
     allDocs[cloudCredentialModelType] = await services.cloudCredential.all();
+    const requestDocs = allDocs[models.request.type] as (Request | RequestGroup)[] | undefined;
+    const requestGroupDocs = allDocs[models.requestGroup.type] as (Request | RequestGroup)[] | undefined;
     allDocs[models.request.type] = sortRequests(
-      // @ts-expect-error -- type unsoundness
-      (allDocs[models.request.type] || []).concat(allDocs[models.requestGroup.type] || []),
+      (requestDocs || []).concat(requestGroupDocs || []),
       props.workspace._id,
     );
     setState(state => ({ ...state, allDocs, loadingDocs: false }));

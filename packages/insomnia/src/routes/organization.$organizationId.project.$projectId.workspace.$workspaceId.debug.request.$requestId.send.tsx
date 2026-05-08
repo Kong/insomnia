@@ -11,10 +11,9 @@ import type {
   RunnerResultPerRequestPerIteration,
   UserUploadEnvironment,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
-import * as models from '~/models';
 import {
   defaultSendActionRuntime,
   fetchRequestData,

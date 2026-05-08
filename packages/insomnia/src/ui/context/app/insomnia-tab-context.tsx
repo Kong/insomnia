@@ -2,7 +2,7 @@ import React, { createContext, type FC, type PropsWithChildren, useCallback, use
 import { useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models } from '~/insomnia-data';
 import type { BaseTab } from '~/ui/components/tabs/tab';
 import type { OrganizationTabs } from '~/ui/components/tabs/tab-list';
 import uiEventBus from '~/ui/event-bus';
@@ -203,7 +203,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
 
       // If the tab being deleted is the only tab and is active, navigate to the project dashboard
       if (currentTabs.activeTabId === id && currentTabs.tabList.length === 1) {
-        if (!isScratchpadOrganizationId(organizationId)) {
+        if (!models.organization.isScratchpadOrganizationId(organizationId)) {
           navigate(`/organization/${organizationId}/project/${projectId}`);
         }
         updateInsomniaTabs({
@@ -267,7 +267,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       }
 
       if (currentTabs.tabList.every(tab => deleteIds.includes(tab.id))) {
-        if (options.navigateOnAllClose !== false && !isScratchpadOrganizationId(organizationId)) {
+        if (options.navigateOnAllClose !== false && !models.organization.isScratchpadOrganizationId(organizationId)) {
           navigate(`/organization/${organizationId}/project/${projectId}`);
         }
         updateInsomniaTabs({

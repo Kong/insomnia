@@ -1,9 +1,9 @@
 import type { CurlRequestOutput } from 'insomnia/src/main/network/libcurl-promise';
-import { readCurlResponse } from 'insomnia/src/models/helpers/response-operations';
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { Settings } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 import { RequestAuth } from './auth';
 import { fromPreRequestAuth } from './auth';
@@ -264,8 +264,7 @@ async function curlOutputToResponse(
       originalRequest,
     });
   }
-  const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
-  const bodyResult = await nodejsReadCurlResponse({
+  const bodyResult = await services.helpers.readCurlResponse({
     bodyPath: result.responseBodyPath,
     bodyCompression: result.patch.bodyCompression,
   });

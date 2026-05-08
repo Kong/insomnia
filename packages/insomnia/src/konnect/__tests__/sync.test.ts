@@ -6,11 +6,11 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { initDatabase, models, type Request,services as insoservices } from '~/insomnia-data';
+import { initDatabase, models, services as insoservices } from '~/insomnia-data';
 
+import { resetV4Counter } from '../../__mocks__/uuid';
 import { database as db } from '../../common/database';
 import { mainDatabase } from '../../main/database.main';
-import { resetV4Counter } from '../../models/__mocks__/uuid';
 import type { KonnectControlPlane, KonnectRoute, KonnectService } from '../api';
 import { syncKonnect } from '../sync';
 

@@ -1,10 +1,11 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
-import { invokeWithNormalizedError } from '~/main/ipc/electron';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from '~/insomnia-data';
+import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
@@ -384,19 +385,6 @@ const webUtils: Window['webUtils'] = {
 const database: Window['database'] = {
   invoke: (fnName, ...args) => invokeWithNormalizedError('database.invoke', fnName, ...args),
 };
-
-const servicesProxy = new Proxy({} as Services, {
-  get(_target, serviceName: string) {
-    return new Proxy(
-      {},
-      {
-        get(_target, methodName: string) {
-          return (...args: unknown[]) => invokeWithNormalizedError('services.invoke', serviceName, methodName, ...args);
-        },
-      },
-    );
-  },
-});
 
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);

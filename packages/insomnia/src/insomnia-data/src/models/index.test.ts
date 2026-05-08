@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { generateId } from '../../../common/misc';
-import * as models from '../../index';
+import * as models from './';
 
 const { isProtoDirectory } = models.protoDirectory;
 const { isProtoFile } = models.protoFile;

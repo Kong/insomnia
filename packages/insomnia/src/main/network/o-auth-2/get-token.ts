@@ -18,7 +18,6 @@ import { database as db, models, services } from '~/insomnia-data';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
 import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-storage';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { version } from '../../../../package.json';
 import { getOauthRedirectUrl, getOauthRelayUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../../common/constants';
@@ -382,7 +381,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
 
   const statusCode = response.statusCode || 0;
-  const bodyBuffer = await getBodyBuffer(response);
+  const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
 
   if (statusCode === 401) {
     const old = await services.oAuth2Token.getOrCreateByParentId(closestAuthId);
@@ -424,7 +423,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
 }
 
 export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {
-  const bodyBuffer = await getBodyBuffer(response);
+  const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
   if (!bodyBuffer) {
     return {
       xResponseId: response._id,

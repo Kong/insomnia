@@ -2,12 +2,9 @@ import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import type { Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import type { BaseModel, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
-import type { BaseModel } from '../models';
-import * as models from '../models';
 import * as plugins from '../plugins';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginRequest from '../plugins/context/request';
@@ -392,7 +389,7 @@ function mapCookie(cookie: ToughCookie) {
 }
 
 async function getResponseContent(response: Response) {
-  let body = await getBodyBuffer(response);
+  let body = await services.helpers.getResponseBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);

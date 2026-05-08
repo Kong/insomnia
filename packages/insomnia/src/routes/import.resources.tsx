@@ -9,7 +9,6 @@ import {
 } from '~/common/import';
 import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -100,7 +99,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     // When navigating, we are interested in knowing if there was only one workspace and only one request
     const singleImportedWorkspace =
       Array.isArray(importedWorkspaces) && importedWorkspaces.length === 1 && importedWorkspaces[0];
-    const requests = singleImportedWorkspace && (await requestOperations.findByParentId(singleImportedWorkspace._id));
+    const requests =
+      singleImportedWorkspace && (await services.helpers.findRequestByParentId(singleImportedWorkspace._id));
     const singleImportedRequest = Array.isArray(requests) && requests.length === 1 && requests.at(0);
     return { done: true, singleImportedWorkspace, singleImportedRequest };
   } catch (error) {

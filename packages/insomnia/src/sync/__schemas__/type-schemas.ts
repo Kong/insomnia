@@ -1,6 +1,6 @@
 import { createBuilder, type Schema } from '@develohpanda/fluent-builder';
 
-import { baseModelSchema } from '../../models/__schemas__/model-schemas';
+import { baseModelSchema } from '../../sync/__schemas__/model-schemas';
 import type {
   BackendProject,
   BackendProjectWithTeam,

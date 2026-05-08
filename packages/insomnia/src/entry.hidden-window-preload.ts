@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 import type { Compression } from '~/insomnia-data';
+import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import {
   asyncTasksAllSettled,
@@ -63,7 +64,9 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('bridge', bridge);
   contextBridge.exposeInMainWorld('Promise', ProxiedPromise);
+  contextBridge.exposeInMainWorld('_dataServices', servicesProxy);
 } else {
   window.bridge = bridge;
   window.Promise = ProxiedPromise;
+  window._dataServices = servicesProxy;
 }

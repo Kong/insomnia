@@ -17,7 +17,6 @@ import * as reactUse from 'react-use';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import type { Settings } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { isOwnerOfOrganization, isPersonalOrganization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
@@ -306,8 +305,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                               });
                             }}
                           >
-                            {isPersonalOrganization(organization) &&
-                            isOwnerOfOrganization({
+                            {models.organization.isPersonalOrganization(organization) &&
+                            models.organization.isOwnerOfOrganization({
                               organization,
                               accountId: userSession.accountId || '',
                             }) ? (

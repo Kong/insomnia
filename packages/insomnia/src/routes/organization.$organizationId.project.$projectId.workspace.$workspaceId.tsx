@@ -27,9 +27,7 @@ import type {
   Workspace,
   WorkspaceMeta,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { sortProjects } from '~/models/helpers/project';
+import { models, services } from '~/insomnia-data';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -159,7 +157,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
       parentId: organizationId,
     })) || [];
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
 
   const searchParams = new URL(request.url).searchParams;
   const sortOrder = searchParams.get('sortOrder') as SortOrder;

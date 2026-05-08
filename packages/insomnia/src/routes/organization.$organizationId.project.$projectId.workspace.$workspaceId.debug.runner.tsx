@@ -23,11 +23,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
 import type { RunnerResultPerRequest, RunnerTestResult, UserUploadEnvironment } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
-import * as models from '~/models';
-import { getTimeline } from '~/models/helpers/response-operations';
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
@@ -73,7 +71,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
     const resp = await services.response.getById(respInfo.responseId);
 
     if (resp) {
-      const timeline = getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
+      const timeline = (await services.helpers.getResponseTimeline(resp, true)) as unknown as ResponseTimelineEntry[];
       timelines = [
         ...timelines,
         {

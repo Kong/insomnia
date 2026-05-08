@@ -1,7 +1,6 @@
 import { getOrganizationStorageRule, type StorageRules } from 'insomnia-api';
 
-import { services } from '~/insomnia-data';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 
 const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
@@ -19,7 +18,7 @@ export async function fetchAndCacheOrganizationStorageRule(
 ): Promise<StorageRules> {
   invariant(organizationId, 'Organization ID is required');
 
-  if (isScratchpadOrganizationId(organizationId)) {
+  if (models.organization.isScratchpadOrganizationId(organizationId)) {
     return {
       enableCloudSync: false,
       enableLocalVault: true,

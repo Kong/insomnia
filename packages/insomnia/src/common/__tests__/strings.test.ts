@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import * as models from '../../models';
+import { models } from '~/insomnia-data';
+
 import { getWorkspaceLabel } from '../get-workspace-label';
 import { strings } from '../strings';
 

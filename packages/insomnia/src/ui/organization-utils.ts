@@ -1,32 +1,34 @@
 import {
+  createTeamProject,
+  fetchTeamProjects,
   getCurrentPlan,
   getOrganizations,
   getUserProfile,
+  isApiError,
   type Organization,
 } from 'insomnia-api';
-import { fetchTeamProjects } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
-import type { Project } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { Project, Workspace } from '~/insomnia-data';
+import { database, models, services } from '~/insomnia-data';
+import { invariant } from '~/utils/invariant';
 
-import { database } from '../common/database';
-import { project } from '../models';
-import { updateLocalProjectToRemote } from '../models/helpers/project';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
+import {
+  initializeLocalBackendProjectAndMarkForSync,
+  pushSnapshotOnInitialize,
+  type SyncVCSLike,
+} from '../sync/vcs/initialize-backend-project';
 import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
-import { invariant } from '../utils/invariant';
-
 export { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 
 export function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(
     organization =>
-      isPersonalOrganization(organization) &&
-      isOwnerOfOrganization({
+      models.organization.isPersonalOrganization(organization) &&
+      models.organization.isOwnerOfOrganization({
         organization,
         accountId,
       }),
@@ -34,8 +36,8 @@ export function sortOrganizations(accountId: string, organizations: Organization
   const myOrgs = organizations
     .filter(
       organization =>
-        !isPersonalOrganization(organization) &&
-        isOwnerOfOrganization({
+        !models.organization.isPersonalOrganization(organization) &&
+        models.organization.isOwnerOfOrganization({
           organization,
           accountId,
         }),
@@ -44,7 +46,7 @@ export function sortOrganizations(accountId: string, organizations: Organization
   const notMyOrgs = organizations
     .filter(
       organization =>
-        !isOwnerOfOrganization({
+        !models.organization.isOwnerOfOrganization({
           organization,
           accountId,
         }),
@@ -84,6 +86,72 @@ export async function syncOrganizations(sessionId: string, accountId: string) {
   } catch (error) {
     console.log('[organization] Failed to load Organizations', error);
   }
+}
+
+export async function updateLocalProjectToRemote({
+  project,
+  vcs,
+  sessionId,
+  organizationId,
+}: {
+  project: Project;
+  vcs: SyncVCSLike;
+  sessionId: string;
+  organizationId: string;
+}) {
+  try {
+    const newCloudProject = await createTeamProject({
+      sessionId,
+      organizationId,
+      name: project.name,
+    });
+    const updatedProject = await services.project.update(project, {
+      name: newCloudProject.name,
+      remoteId: newCloudProject.id,
+    });
+
+    // For each workspace in the local project
+    const projectWorkspaces = await database.find<Workspace>('Workspace', {
+      parentId: updatedProject._id,
+    });
+
+    for (const workspace of projectWorkspaces) {
+      const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+      // Initialize Sync on the workspace if it's not using Git sync
+      try {
+        if (!workspaceMeta.gitRepositoryId) {
+          invariant(vcs, 'VCS must be initialized');
+
+          await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
+          await pushSnapshotOnInitialize({ vcs, workspace, project: updatedProject });
+        }
+      } catch (e) {
+        console.warn(
+          'Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.',
+          e,
+        );
+        // TODO: here we should show the try again dialog
+      }
+    }
+  } catch (error: unknown) {
+    if (isApiError(error)) {
+      let errorMessage = 'An unexpected error occurred while connecting the project. Please try again.';
+      if (error.name === 'FORBIDDEN' || error.name === 'NEEDS_TO_UPGRADE') {
+        errorMessage = error.message;
+      }
+      return {
+        error: errorMessage,
+      };
+    }
+    return {
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  return {
+    error: null,
+  };
 }
 
 export async function migrateProjectsUnderOrganization(personalOrganizationId: string, sessionId: string) {
@@ -139,7 +207,7 @@ async function syncTeamProjects({
   // assumption: api teamProjects is the source of truth for migrated projects
   // once migrated orgs become the source of truth for projects
   // its important that migration be completed before this code is run
-  const existingRemoteProjects = await database.find<Project>(project.type, {
+  const existingRemoteProjects = await database.find<Project>(models.project.type, {
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
 
@@ -157,7 +225,7 @@ async function syncTeamProjects({
     }),
   );
 
-  const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(project.type, {
+  const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(models.project.type, {
     // Remote ID is in the list of remote projects
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
@@ -174,7 +242,7 @@ async function syncTeamProjects({
   );
 
   // Turn remote projects from the current organization that are not in the list of remote projects into local projects.
-  const removedRemoteProjects = await database.find<Project>(project.type, {
+  const removedRemoteProjects = await database.find<Project>(models.project.type, {
     // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
     parentId: organizationId,
     // Remote ID is not in the list of remote projects.
@@ -199,7 +267,7 @@ export const syncProjects = projectLock.wrapWithLock(async (organizationId: stri
   const user = await services.userSession.getOrCreate();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
-  if (Array.isArray(teamProjects) && user.id && !isScratchpadOrganizationId(organizationId)) {
+  if (Array.isArray(teamProjects) && user.id && !models.organization.isScratchpadOrganizationId(organizationId)) {
     await syncTeamProjects({
       organizationId,
       teamProjects,

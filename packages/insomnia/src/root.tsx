@@ -23,8 +23,7 @@ import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { SCRATCHPAD_ORGANIZATION_ID } from '~/models/organization';
+import { models, services } from '~/insomnia-data';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -633,7 +632,7 @@ const Root = () => {
   // default in the import dialog is the correct behaviour.
   useEffect(() => {
     const pendingDeepLink = window.sessionStorage.getItem('pendingDeepLinkAfterAuthorize');
-    if (pendingDeepLink && organizationId && organizationId !== SCRATCHPAD_ORGANIZATION_ID) {
+    if (pendingDeepLink && organizationId && organizationId !== models.organization.SCRATCHPAD_ORGANIZATION_ID) {
       window.sessionStorage.removeItem('pendingDeepLinkAfterAuthorize');
       window.sessionStorage.setItem('suppressWelcomeModals', 'true');
       trackImportEvent(SegmentEvent.importResumedAfterLogin);
