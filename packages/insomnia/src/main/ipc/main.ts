@@ -324,6 +324,9 @@ export function registerMainHandlers() {
     try {
       await fs.promises.unlink(options.path);
     } catch (err) {
+      if (err?.code === 'ENOENT') {
+        return;
+      }
       throw new Error(err);
     }
   });
