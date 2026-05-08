@@ -6,7 +6,20 @@ import { DropIndicator, useDragAndDrop } from 'react-aria-components';
 import { models } from '~/insomnia-data';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 
-import type { FlatItem } from './types';
+import type { CollectionChildFlatItem, FlatItem } from './types';
+
+const allowDragKinds: FlatItem['kind'][] = ['workspace', 'collectionChild'];
+const allowDropKinds: FlatItem['kind'][] = ['workspace', 'collectionChild', 'project'];
+type AllowDragItem = Extract<FlatItem, { kind: 'workspace' | 'collectionChild' }>;
+type AllowDropTarget = Extract<FlatItem, { kind: 'workspace' | 'collectionChild' | 'project' }>;
+
+function isAllowDragItem(item: FlatItem): item is AllowDragItem {
+  return allowDragKinds.includes(item.kind);
+}
+
+function isAllowDropTarget(item: FlatItem): item is AllowDropTarget {
+  return allowDropKinds.includes(item.kind);
+}
 
 function canDrop(
   dragItem: FlatItem,
@@ -16,15 +29,16 @@ function canDrop(
 ) {
   const realDropItem = dropPosition === 'before' ? dropPrevItem : dropItem;
   // drag and drop items are same.
-  if (!realDropItem || dragItem.doc._id === dropItem.doc._id || dragItem.doc._id === realDropItem.doc._id) {
+  if (
+    !realDropItem ||
+    dragItem.doc._id === dropItem.doc._id ||
+    dragItem.doc._id === realDropItem.doc._id ||
+    !isAllowDropTarget(realDropItem)
+  ) {
     return false;
   }
 
-  if (dragItem.kind === 'unsyncedWorkspace' || realDropItem.kind === 'unsyncedWorkspace') {
-    return false;
-  }
-
-  if (dragItem.kind === 'project') {
+  if (!isAllowDragItem(dragItem)) {
     return false;
   }
 
@@ -79,6 +93,7 @@ export const useSidebarDragAndDrop = ({
   virtualizer,
 }: UseSidebarDragAndDropOptions): DragAndDropHooks => {
   const reorderFetcher = useDebugReorderActionFetcher();
+
   const flatItemsById = useMemo(() => {
     const visibles = flatItems.filter(item => !item.hidden);
     return new Map(visibles.map((item, index) => [item.doc._id, [item, visibles[index - 1]]] as const)); // keep previous item for "move into collection/project" logic
@@ -120,19 +135,14 @@ export const useSidebarDragAndDrop = ({
       const droppedKey = key.toString();
 
       const [draggedKey] = event.keys;
-      const draggedItem = getCollectionItemByKey(draggedKey);
-      const targetItem = getCollectionItemByKey(droppedKey);
+      const draggedItem = getCollectionItemByKey(draggedKey) as AllowDragItem | null;
+      const targetItem = getCollectionItemByKey(droppedKey) as AllowDropTarget | null;
       const realTargetItem = isBefore ? flatItemsById.get(droppedKey)?.[1] : targetItem;
       if (
         !draggedItem ||
         !targetItem ||
         !canDrop(draggedItem, targetItem, event.target, flatItemsById.get(droppedKey)?.[1] || null)
       ) {
-        return;
-      }
-
-      if (draggedItem.kind === 'project' || draggedItem.kind === 'unsyncedWorkspace') {
-        // make type checker happy
         return;
       }
 
@@ -153,7 +163,10 @@ export const useSidebarDragAndDrop = ({
 
       // move request or request group into collection
       if (realTargetItem?.kind === 'workspace' && models.workspace.isCollection(realTargetItem!.doc)) {
-        const siblingItem = flatItems.find(item => item.doc.parentId === realTargetItem!.doc._id);
+        const siblingItem = flatItems.find(
+          (item): item is CollectionChildFlatItem =>
+            item.kind === 'collectionChild' && item.doc.parentId === realTargetItem!.doc._id,
+        );
         reorderFetcher.submit({
           organizationId,
           projectId: draggedItem.project._id,
@@ -171,7 +184,8 @@ export const useSidebarDragAndDrop = ({
       const id = draggedItem.doc._id;
       const targetId = targetItem.doc._id;
       const workspaceCollectionItems = flatItems.filter(
-        item => 'workspace' in item && item.workspace._id === draggedItem.workspace._id,
+        (item): item is CollectionChildFlatItem =>
+          item.kind === 'collectionChild' && item.workspace._id === draggedItem.workspace._id,
       );
       let metaSortKey = 0;
       const isMovingItemInsideFolder =
@@ -181,19 +195,22 @@ export const useSidebarDragAndDrop = ({
         const children = workspaceCollectionItems.filter(item => item.doc.parentId === targetId);
         metaSortKey = children.length > 0 ? children[0].doc.metaSortKey - 100 : -1 * Date.now();
       } else {
+        // move before or after another request in same or different collection
         const siblingItems = workspaceCollectionItems.filter(item => item.doc.parentId === targetItem.doc.parentId);
         const targetIndex = siblingItems.findIndex(item => item.doc._id === targetId);
 
-        if (event.target.dropPosition === 'after') {
-          const afterItem = siblingItems[targetIndex + 1];
-          metaSortKey = afterItem
-            ? targetItem.doc.metaSortKey - (targetItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2
-            : targetItem.doc.metaSortKey + 100;
-        } else {
-          const beforeItem = siblingItems[targetIndex - 1];
-          metaSortKey = beforeItem
-            ? targetItem.doc.metaSortKey - (targetItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2
-            : targetItem.doc.metaSortKey - 100;
+        if ('metaSortKey' in targetItem.doc && targetItem.doc.metaSortKey != null) {
+          if (event.target.dropPosition === 'after') {
+            const afterItem = siblingItems[targetIndex + 1];
+            metaSortKey = afterItem
+              ? targetItem.doc.metaSortKey - (targetItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2
+              : targetItem.doc.metaSortKey + 100;
+          } else {
+            const beforeItem = siblingItems[targetIndex - 1];
+            metaSortKey = beforeItem
+              ? targetItem.doc.metaSortKey - (targetItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2
+              : targetItem.doc.metaSortKey - 100;
+          }
         }
       }
 

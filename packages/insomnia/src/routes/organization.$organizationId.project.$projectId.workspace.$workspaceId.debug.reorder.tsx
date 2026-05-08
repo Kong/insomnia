@@ -44,7 +44,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     const parentId = targetItem._id;
     await (isRequestGroup(item)
       ? services.requestGroup.update(item, { parentId, metaSortKey })
-      : update(item, { parentId, metaSortKey }));
+      : services.helpers.updateRequest(item, { parentId, metaSortKey }));
     return null;
   }
 

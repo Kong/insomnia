@@ -42,7 +42,7 @@ import {
 } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
-import type { EmptyNodeFlatItem, FlatItem } from './types';
+import type { FlatItem } from './types';
 import { useProjectNavigationSidebarNavigation } from './use-project-navigation-sidebar-navigation';
 import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
