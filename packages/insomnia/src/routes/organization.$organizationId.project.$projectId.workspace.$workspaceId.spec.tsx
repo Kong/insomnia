@@ -298,6 +298,12 @@ const Component = ({ params }: Route.ComponentProps) => {
     syncCloudRuleset();
   }, [apiSpec.rulesetContent, rulesetWritePath, gitSyncRulesetPath]);
 
+  useEffect(() => {
+    if (lintErrors.length > 0 || lintWarnings.length > 0) {
+      setIsLintPaneOpen(true);
+    }
+  }, [lintErrors.length, lintWarnings.length]);
+
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
     CodeMirror.registerHelper('lint', 'openapi', () => {});
