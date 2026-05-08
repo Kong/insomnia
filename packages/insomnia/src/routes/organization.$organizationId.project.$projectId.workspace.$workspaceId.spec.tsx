@@ -260,7 +260,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     registerCodeMirrorLint(rulesetPath);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-  }, [rulesetPath]);
+  }, [rulesetPath, apiSpec?.rulesetContent]);
 
   // For git sync projects, .spectral.yaml on disk is the source of truth.
   // Runs on mount and whenever gitVersion changes (e.g. after a pull)
@@ -472,7 +472,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     // Instead, .spectral.yaml is written directly to the git working directory and
     // tracked by git like any other file — committed, pushed, and pulled normally.
     if (!gitSyncRulesetPath) {
-      await services.apiSpec.update(apiSpec, { rulesetContent: content });
+      updateApiSpec({ organizationId, projectId, workspaceId, rulesetContent: content });
     }
 
     setRulesetPath(rulesetWritePath);
@@ -489,7 +489,7 @@ const Component = ({ params }: Route.ComponentProps) => {
       onDone: async (confirmed: boolean) => {
         if (confirmed) {
           if (!gitSyncRulesetPath) {
-            await services.apiSpec.update(apiSpec, { rulesetContent: undefined });
+            updateApiSpec({ organizationId, projectId, workspaceId, rulesetContent: null });
           }
           await window.main.deleteFile({ path: rulesetWritePath });
           setRulesetPath('');
