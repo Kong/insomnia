@@ -6,12 +6,16 @@ import { DropIndicator, useDragAndDrop } from 'react-aria-components';
 import { models } from '~/insomnia-data';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 
-import type { CollectionChildFlatItem, FlatItem } from './types';
+import type { CollectionChildFlatItem, EmptyNodeFlatItem, FlatItem } from './types';
 
 const allowDragKinds: FlatItem['kind'][] = ['workspace', 'collectionChild'];
-const allowDropKinds: FlatItem['kind'][] = ['workspace', 'collectionChild', 'project'];
+const emptyNodeKinds: FlatItem['kind'][] = ['emptyFolder', 'emptyProject', 'emptyCollection'];
+const allowDropKinds: FlatItem['kind'][] = ['workspace', 'collectionChild', 'project', ...emptyNodeKinds];
 type AllowDragItem = Extract<FlatItem, { kind: 'workspace' | 'collectionChild' }>;
-type AllowDropTarget = Extract<FlatItem, { kind: 'workspace' | 'collectionChild' | 'project' }>;
+type AllowDropTarget = Extract<
+  FlatItem,
+  { kind: 'workspace' | 'collectionChild' | 'project' | 'emptyFolder' | 'emptyProject' | 'emptyCollection' }
+>;
 
 function isAllowDragItem(item: FlatItem): item is AllowDragItem {
   return allowDragKinds.includes(item.kind);
@@ -19,6 +23,10 @@ function isAllowDragItem(item: FlatItem): item is AllowDragItem {
 
 function isAllowDropTarget(item: FlatItem): item is AllowDropTarget {
   return allowDropKinds.includes(item.kind);
+}
+
+function isEmptyNode(item: FlatItem): item is EmptyNodeFlatItem {
+  return emptyNodeKinds.includes(item.kind);
 }
 
 function canDrop(
@@ -47,13 +55,25 @@ function canDrop(
 
   // workspace -> project: cannot involve cloud project, and cannot move into same project
   if (dragItem.kind === 'workspace') {
-    if (realDropItem && realDropItem.kind === 'project') {
-      return (
-        dragItem.project._id !== realDropItem.doc._id &&
-        !dragInCloud &&
-        !models.project.isRemoteProject(realDropItem.doc)
-      );
+    if (realDropItem) {
+      // move into project after
+      if (realDropItem.kind === 'project') {
+        return (
+          dragItem.project._id !== realDropItem.doc._id &&
+          !dragInCloud &&
+          !models.project.isRemoteProject(realDropItem.doc)
+        );
+      }
+      // move into between workspaces, only allow if they are from different projects and none of them are in cloud
+      if (realDropItem.kind === 'workspace') {
+        return (
+          dragItem.project._id !== realDropItem.project._id &&
+          !dragInCloud &&
+          !models.project.isRemoteProject(realDropItem.project)
+        );
+      }
     }
+
     return false;
   }
 
@@ -73,8 +93,8 @@ function canDrop(
     return !dragInCloud && !dropInCloud;
   }
 
-  // move other things into workspace is not allowed
-  if (realDropItem.kind === 'workspace') {
+  // move other things into workspace is not allowed, or move after empty node is not allowed
+  if (realDropItem.kind === 'workspace' || isEmptyNode(realDropItem)) {
     return false;
   }
 
@@ -127,10 +147,11 @@ export const useSidebarDragAndDrop = ({
       return 'move';
     },
     onMove(event) {
-      const { type, dropPosition, key } = event.target;
+      const { type, dropPosition: _dropPosition, key } = event.target;
       if (type !== 'item') {
         return;
       }
+      let dropPosition = _dropPosition;
       const isBefore = dropPosition === 'before';
       const droppedKey = key.toString();
 
@@ -138,6 +159,7 @@ export const useSidebarDragAndDrop = ({
       const draggedItem = getCollectionItemByKey(draggedKey) as AllowDragItem | null;
       const targetItem = getCollectionItemByKey(droppedKey) as AllowDropTarget | null;
       const realTargetItem = isBefore ? flatItemsById.get(droppedKey)?.[1] : targetItem;
+      console.log('Drag and drop', { draggedItem, targetItem, realTargetItem, dropPosition });
       if (
         !draggedItem ||
         !targetItem ||
@@ -154,7 +176,7 @@ export const useSidebarDragAndDrop = ({
           workspaceId: draggedItem.doc._id,
           params: {
             type: 'move-workspace',
-            targetId: realTargetItem!.doc._id,
+            targetId: realTargetItem?.kind === 'workspace' ? realTargetItem.project._id : realTargetItem!.doc._id,
             id: draggedItem.doc._id,
           },
         });
@@ -182,25 +204,39 @@ export const useSidebarDragAndDrop = ({
       }
 
       const id = draggedItem.doc._id;
-      const targetId = targetItem.doc._id;
+      let targetId = targetItem.doc._id;
+      const targetIsEmptyNode = isEmptyNode(targetItem);
       const workspaceCollectionItems = flatItems.filter(
         (item): item is CollectionChildFlatItem =>
           item.kind === 'collectionChild' && item.workspace._id === draggedItem.workspace._id,
       );
       let metaSortKey = 0;
       const isMovingItemInsideFolder =
-        models.requestGroup.isRequestGroup(targetItem.doc) && event.target.dropPosition === 'after';
+        !targetIsEmptyNode && models.requestGroup.isRequestGroup(targetItem.doc) && dropPosition === 'after';
+
+      const isMovingOnEmptyNode =
+        realTargetItem &&
+        'type' in realTargetItem.doc &&
+        models.requestGroup.isRequestGroup(realTargetItem.doc) &&
+        targetIsEmptyNode;
+
       if (isMovingItemInsideFolder) {
         // The reorder route interprets "after folder" as moving into that folder.
         const children = workspaceCollectionItems.filter(item => item.doc.parentId === targetId);
         metaSortKey = children.length > 0 ? children[0].doc.metaSortKey - 100 : -1 * Date.now();
+      } else if (isMovingOnEmptyNode) {
+        targetId = realTargetItem.doc._id;
+        dropPosition = 'after';
+        metaSortKey = -1 * Date.now();
       } else {
         // move before or after another request in same or different collection
-        const siblingItems = workspaceCollectionItems.filter(item => item.doc.parentId === targetItem.doc.parentId);
+        const siblingItems = workspaceCollectionItems.filter(
+          item => 'parentId' in targetItem.doc && item.doc.parentId === targetItem.doc.parentId,
+        );
         const targetIndex = siblingItems.findIndex(item => item.doc._id === targetId);
 
         if ('metaSortKey' in targetItem.doc && targetItem.doc.metaSortKey != null) {
-          if (event.target.dropPosition === 'after') {
+          if (dropPosition === 'after') {
             const afterItem = siblingItems[targetIndex + 1];
             metaSortKey = afterItem
               ? targetItem.doc.metaSortKey - (targetItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2
@@ -225,7 +261,7 @@ export const useSidebarDragAndDrop = ({
         params: {
           targetId,
           id,
-          dropPosition: event.target.dropPosition,
+          dropPosition,
           metaSortKey,
         },
       });
