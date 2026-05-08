@@ -191,14 +191,15 @@ const Component = ({ params }: Route.ComponentProps) => {
   const editor = useRef<CodeEditorHandle>(null);
   const { submit: updateApiSpec } = useSpecUpdateActionFetcher();
   const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
+  const gitVersion = useGitVCSVersion();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
   const [rulesetPath, setRulesetPath] = useState<string>('');
 
-  // This determines what path to write the ruleset content to when the user selects a custom ruleset file or when the rulesetContent in the DB changes.
-  // For git sync projects, this will be the git working directory so that it appears in the staging modal and can be committed.
-  // For cloud/local projects, this will be a per-workspace path — rulesetContent in the DB handles syncing for these projects.
   // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
+  // For git sync projects, write .spectral.yaml directly to the git working directory so it
+  // appears in the staging modal and can be committed/pushed/pulled like any other file.
+  // For cloud/local projects, write to a per-workspace scratch path — rulesetContent in NeDB handles syncing.
   const rulesetWritePath = useMemo(
     () =>
       gitSyncRulesetPath ||
@@ -261,31 +262,41 @@ const Component = ({ params }: Route.ComponentProps) => {
     editor.current?.tryToSetOption('lint', { ...lintOptions });
   }, [rulesetPath]);
 
+  // For git sync projects, .spectral.yaml on disk is the source of truth.
+  // Runs on mount and whenever gitVersion changes (e.g. after a pull)
+  // to detect whether .spectral.yaml exists and update rulesetPath accordingly.
   useEffect(() => {
-    const syncRulesetToDisk = async () => {
+    const syncGitRuleset = async () => {
+      if (gitSyncRulesetPath) {
+        try {
+          const content = await window.main.insecureReadFile({ path: gitSyncRulesetPath });
+          setRulesetPath(content ? gitSyncRulesetPath : '');
+        } catch {
+          setRulesetPath('');
+        }
+      }
+    };
+
+    syncGitRuleset();
+  }, [gitSyncRulesetPath, gitVersion]);
+
+  // For cloud/local projects, rulesetContent in NeDB is the source of truth.
+  // Write to the /workspace/${workspaceId} path for Spectral and update rulesetPath accordingly.
+  useEffect(() => {
+    const syncCloudRuleset = async () => {
+      if (gitSyncRulesetPath) return;
+
       if (apiSpec.rulesetContent) {
-        // Write the stored content to the correct path for this project type and use it for linting.
         await window.main.writeFile({ path: rulesetWritePath, content: apiSpec.rulesetContent });
         setRulesetPath(rulesetWritePath);
       } else {
-        // No ruleset content — for git sync, fall back to any .spectral.yaml already present in the repo (e.g. committed by another user).
-        // For cloud/local projects, default to OAS ruleset.
-        setRulesetPath(gitSyncRulesetPath || '');
+        await window.main.deleteFile({ path: rulesetWritePath });
+        setRulesetPath('');
       }
     };
 
-    syncRulesetToDisk();
+    syncCloudRuleset();
   }, [apiSpec.rulesetContent, rulesetWritePath, gitSyncRulesetPath]);
-
-  useEffect(() => {
-    const syncRulesetForGitProject = async () => {
-      if (gitSyncRulesetPath && !apiSpec.rulesetContent) {
-        const content = await window.main.insecureReadFile({ path: gitSyncRulesetPath });
-        await services.apiSpec.update(apiSpec, { rulesetContent: content });
-      }
-    };
-    syncRulesetForGitProject();
-  }, []);
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
@@ -449,7 +460,15 @@ const Component = ({ params }: Route.ComponentProps) => {
     const content = await window.main.insecureReadFile({ path: filePath });
 
     await window.main.writeFile({ path: rulesetWritePath, content });
-    await services.apiSpec.update(apiSpec, { rulesetContent: content });
+
+    // We do not write rulesetContent to NeDB for git sync projects because it would
+    // be serialized into insomnia.{workspaceId}.yaml, creating a duplicate representation.
+    // Instead, .spectral.yaml is written directly to the git working directory and
+    // tracked by git like any other file — committed, pushed, and pulled normally.
+    if (!gitSyncRulesetPath) {
+      await services.apiSpec.update(apiSpec, { rulesetContent: content });
+    }
+
     setRulesetPath(rulesetWritePath);
   };
 
@@ -463,9 +482,11 @@ const Component = ({ params }: Route.ComponentProps) => {
       noText: 'Cancel',
       onDone: async (confirmed: boolean) => {
         if (confirmed) {
-          await services.apiSpec.update(apiSpec, { rulesetContent: undefined });
-          setRulesetPath('');
+          if (!gitSyncRulesetPath) {
+            await services.apiSpec.update(apiSpec, { rulesetContent: undefined });
+          }
           await window.main.deleteFile({ path: rulesetWritePath });
+          setRulesetPath('');
         }
       },
     });
@@ -521,7 +542,6 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const disabledKeys = specActionList.filter(item => item.isDisabled).map(item => item.id);
 
-  const gitVersion = useGitVCSVersion();
   const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${vcsVersion}`;
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
