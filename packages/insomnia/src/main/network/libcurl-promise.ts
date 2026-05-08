@@ -26,9 +26,9 @@ import type { ClientCertificate, RequestHeader, ResponseHeader } from '~/insomni
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
+import { parseHeaderStrings } from '../../network/parse-header-strings';
 import { insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
-import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {
   requestId: string; // for cancellation
   req: RequestUsedHere;
@@ -179,7 +179,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       }
 
       // NOTE: temporary workaround for testing mockbin api
-      if (process.env.PLAYWRIGHT) {
+      if (process.env.PLAYWRIGHT_TEST) {
         req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
       }
 

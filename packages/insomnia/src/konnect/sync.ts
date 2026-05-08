@@ -3,15 +3,27 @@ import { EnvironmentKvPairDataType, models, services as insoservices } from '~/i
 
 import { database as db } from '../common/database';
 import {
-  extractRegionFromEndpoint,
   fetchAllControlPlanes,
   fetchAllServices,
   fetchRoutesForService,
-  KONNECT_PROXY_VAR_NAMES,
   type KonnectControlPlane,
   type KonnectRoute,
   type KonnectService,
 } from './api';
+import { applyExpressionFields } from './expression-parser';
+import {
+  buildRequestName,
+  deriveProxyVarDefaults,
+  extractRegionFromEndpoint,
+  KONNECT_PROXY_VAR_NAMES,
+  konnectHeadersChanged,
+  mergeHeaders,
+  mergePathParameters,
+  pathParametersChanged,
+  resolvePath,
+  routeDisplayName,
+  sanitizeRoute,
+} from './transform';
 
 interface SyncCounts {
   total: number;
@@ -67,42 +79,6 @@ function mergeCounts(target: SyncCounts, source: SyncCounts): void {
   target.skipped += source.skipped;
 }
 
-/** Strips the Kong regex `~` prefix from a path, or returns '' for null. */
-function resolvePath(rawPath: string | null): string {
-  if (rawPath === null) { return ''; }
-  return rawPath.startsWith('~') ? rawPath.slice(1) : rawPath;
-}
-
-function routeDisplayName(route: { name: string | null; id: string }): string {
-  return route.name ?? `Route ${route.id}`;
-}
-
-function buildRequestName(
-  route: { name: string | null; paths: string[] | null; id: string },
-): string {
-  const rawPath = route.paths?.[0];
-  return rawPath !== undefined ? resolvePath(rawPath) : routeDisplayName(route);
-}
-
-/**
- * Merges Konnect-managed headers into an existing header array.
- * Konnect header names are stored lowercase at the API boundary, so all comparisons
- * here are direct string equality. Previously Konnect-managed headers that are no
- * longer incoming are removed using the persisted `prevManagedNames` set — on first
- * sync this will be empty so no existing headers are incorrectly stripped.
- * User-added headers outside that set are always preserved.
- */
-function mergeHeaders(
-  existing: { name: string; value: string }[],
-  konnect: { name: string; value: string }[],
-  prevManagedNames: string[],
-): { name: string; value: string }[] {
-  const incomingNames = new Set(konnect.map(h => h.name));
-  const prevManaged = new Set(prevManagedNames);
-  const userHeaders = existing.filter(h => !incomingNames.has(h.name) && !prevManaged.has(h.name));
-  return [...konnect, ...userHeaders];
-}
-
 /** Finds or creates a RequestGroup folder. For route-level folders, omit `name` match. */
 async function upsertFolder(parentId: string, name: string, konnectRouteId: string): Promise<string> {
   const existing = (await db.find<RequestGroup>(models.requestGroup.type, { parentId, konnectRouteId, name }))[0];
@@ -122,33 +98,6 @@ async function upsertRouteFolder(parentId: string, name: string, konnectRouteId:
 }
 
 const L4_PROTOCOLS = new Set(['tcp', 'tls', 'udp', 'tls_passthrough']);
-
-/**
- * Returns true if the Konnect-managed portion of the existing headers differs from the incoming ones.
- * Konnect header names are stored lowercase at the API boundary, so all comparisons are direct
- * string equality. `prevManagedNames` is used to detect the case where all Konnect headers were
- * removed from the route — incoming is empty but there are still managed headers to clean up.
- */
-function konnectHeadersChanged(
-  existing: { name: string; value: string }[],
-  incoming: { name: string; value: string }[],
-  prevManagedNames: string[],
-): boolean {
-  const prevManaged = new Set(prevManagedNames);
-  if (incoming.length === 0) {
-    return existing.some(h => prevManaged.has(h.name));
-  }
-  const incomingByName = new Map(incoming.map(h => [h.name, h.value]));
-  let matched = 0;
-  for (const h of existing) {
-    const expected = incomingByName.get(h.name);
-    if (expected !== undefined) {
-      if (h.value !== expected) { return true; }
-      matched++;
-    }
-  }
-  return matched !== incoming.length;
-}
 
 interface ExistingRequestMaps {
   http: Map<string, Request>;
@@ -200,7 +149,7 @@ async function syncGrpcRoute(
   const routeFolderId = await upsertRouteFolder(workspaceId, routeDisplayName(route), route.id);
 
   for (const rawPath of paths) {
-    const protoMethodName = resolvePath(rawPath);
+    const protoMethodName = resolvePath(rawPath).path;
     const baseName = protoMethodName || routeDisplayName(route);
 
     for (const protocol of grpcProtocols) {
@@ -250,7 +199,7 @@ async function syncWsRoute(
   const routeFolderId = await upsertRouteFolder(workspaceId, routeDisplayName(route), route.id);
 
   for (const rawPath of paths) {
-    const path = resolvePath(rawPath);
+    const { path, pathParameters } = resolvePath(rawPath);
     const baseName = buildRequestName({ ...route, paths: rawPath !== null ? [rawPath] : null });
 
     for (const protocol of wsProtocols) {
@@ -272,12 +221,13 @@ async function syncWsRoute(
       const konnectManagedHeaderNames = headers.map(h => h.name);
       if (existing) {
         const merged = mergeHeaders(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? []);
-        if (existing.url !== url || existing.name !== name || konnectHeadersChanged(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? [])) {
-          await insoservices.webSocketRequest.update(existing, { url, name, headers: merged, konnectManagedHeaderNames });
+        const mergedPathParams = mergePathParameters(existing.pathParameters ?? [], pathParameters);
+        if (existing.url !== url || existing.name !== name || konnectHeadersChanged(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? []) || pathParametersChanged(existing.pathParameters ?? [], pathParameters)) {
+          await insoservices.webSocketRequest.update(existing, { url, name, headers: merged, pathParameters: mergedPathParams, konnectManagedHeaderNames });
           routeCounts.updated++;
         }
       } else {
-        await insoservices.webSocketRequest.create({ parentId, url, name, headers, konnectRouteKey: key, konnectManagedHeaderNames });
+        await insoservices.webSocketRequest.create({ parentId, url, name, headers, pathParameters, konnectRouteKey: key, konnectManagedHeaderNames });
         routeCounts.created++;
       }
     }
@@ -301,7 +251,7 @@ async function syncHttpRoute(
   const routeFolderId = await upsertRouteFolder(workspaceId, routeDisplayName(route), route.id);
 
   for (const routePath of paths) {
-    const resolvedPath = resolvePath(routePath);
+    const { path: resolvedPath, pathParameters } = resolvePath(routePath);
     const pathSegment = routePath ?? '';
     const baseName = buildRequestName({ ...route, paths: routePath !== null ? [routePath] : null });
 
@@ -324,12 +274,13 @@ async function syncHttpRoute(
         const konnectManagedHeaderNames = headers.map(h => h.name);
         if (existing) {
           const merged = mergeHeaders(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? []);
-          if (existing.method !== method || existing.url !== url || existing.name !== name || konnectHeadersChanged(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? [])) {
-            await insoservices.request.update(existing, { method, url, name, headers: merged, konnectManagedHeaderNames });
+          const mergedPathParams = mergePathParameters(existing.pathParameters ?? [], pathParameters);
+          if (existing.method !== method || existing.url !== url || existing.name !== name || konnectHeadersChanged(existing.headers ?? [], headers, existing.konnectManagedHeaderNames ?? []) || pathParametersChanged(existing.pathParameters ?? [], pathParameters)) {
+            await insoservices.request.update(existing, { method, url, name, headers: merged, pathParameters: mergedPathParams, konnectManagedHeaderNames });
             routeCounts.updated++;
           }
         } else {
-          await insoservices.request.create({ parentId, method, url, name, headers, konnectRouteKey: key, konnectManagedHeaderNames });
+          await insoservices.request.create({ parentId, method, url, name, headers, pathParameters, konnectRouteKey: key, konnectManagedHeaderNames });
           routeCounts.created++;
         }
       }
@@ -420,7 +371,7 @@ async function syncServiceWorkspace(
   }
   await insoservices.cookieJar.getOrCreateForParentId(workspace._id);
 
-  const incomingRoutes = await fetchRoutesForService(pat, controlPlane.id, service.id, region, signal);
+  const incomingRoutes = (await fetchRoutesForService(pat, controlPlane.id, service.id, region, signal)).map(sanitizeRoute);
   const existingData = await loadExistingRequestData(workspace._id);
   const incomingKeys = new Set<string>();
   const incomingRouteIds = new Set<string>();
@@ -428,35 +379,46 @@ async function syncServiceWorkspace(
   for (const route of incomingRoutes) {
     signal?.throwIfAborted();
     incomingRouteIds.add(route.id);
-    const isL4 = route.protocols.every(p => L4_PROTOCOLS.has(p));
-    const isGrpc = route.protocols.some(p => p === 'grpc' || p === 'grpcs');
-    const isWs = route.protocols.some(p => p === 'ws' || p === 'wss');
 
-    const routeName = routeDisplayName(route);
+    const expressionResult = applyExpressionFields(route);
+    if (!expressionResult.syncable) {
+      counts.routes.skipped++;
+      skippedRoutes.push({ routeName: expressionResult.routeName, reason: expressionResult.reason, serviceName });
+      continue;
+    }
+    const effectiveRoute = expressionResult.route;
+
+    const isL4 = effectiveRoute.protocols.every(p => L4_PROTOCOLS.has(p));
+    const isGrpc = effectiveRoute.protocols.some(p => p === 'grpc' || p === 'grpcs');
+    const isWs = effectiveRoute.protocols.some(p => p === 'ws' || p === 'wss');
+
+    const routeName = routeDisplayName(effectiveRoute);
 
     if (isL4) {
       counts.routes.skipped++;
-      skippedRoutes.push({ routeName, reason: `Unsupported protocol: ${route.protocols.join(', ')}`, serviceName });
+      skippedRoutes.push({ routeName, reason: `Unsupported protocol: ${effectiveRoute.protocols.join(', ')}`, serviceName });
       continue;
     }
 
     // Routes matched by SNI cannot be represented — Insomnia derives SNI implicitly
     // from the URL hostname and has no SNI override.
-    if ((route.snis?.length ?? 0) > 0) {
+    // Note: expression-router tls.sni is caught earlier in applyExpressionFields;
+    // this check covers the traditional router's snis field.
+    if ((effectiveRoute.snis?.length ?? 0) > 0) {
       counts.routes.skipped++;
       skippedRoutes.push({ routeName, reason: 'Route uses SNI matching — unsupported in Insomnia', serviceName });
       continue;
     }
 
     if (isGrpc) {
-      await syncGrpcRoute(route, workspace._id, existingData.maps.grpc, counts.routes, incomingKeys);
+      await syncGrpcRoute(effectiveRoute, workspace._id, existingData.maps.grpc, counts.routes, incomingKeys);
     } else {
       // Host header only applies to HTTP/WS — gRPC uses :authority which Insomnia derives from the URL
       const headers = [
-        ...(route.hosts?.[0] ? [{ name: 'host', value: route.hosts[0] }] : []),
-        ...Object.entries(route.headers ?? {}).map(([name, values]) => ({ name: name.toLowerCase(), value: values[0] })),
+        ...(effectiveRoute.hosts?.[0] ? [{ name: 'host', value: effectiveRoute.hosts[0] }] : []),
+        ...Object.entries(effectiveRoute.headers ?? {}).map(([name, values]) => ({ name: name.toLowerCase(), value: values[0] })),
       ];
-      await (isWs ? syncWsRoute(route, workspace._id, headers, existingData.maps.ws, counts.routes, incomingKeys) : syncHttpRoute(route, workspace._id, headers, existingData.maps.http, counts.routes, incomingKeys));
+      await (isWs ? syncWsRoute(effectiveRoute, workspace._id, headers, existingData.maps.ws, counts.routes, incomingKeys) : syncHttpRoute(effectiveRoute, workspace._id, headers, existingData.maps.http, counts.routes, incomingKeys));
     }
   }
 
@@ -479,14 +441,27 @@ async function upsertProjectEnvVars(controlPlane: KonnectControlPlane, project: 
     });
 
   const projectEnv = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
-  const existingNames = new Set((projectEnv.kvPairData ?? []).map(kv => kv.name));
+  const existingKvPairs = projectEnv.kvPairData ?? [];
+  const existingByName = new Map(existingKvPairs.map(kv => [kv.name, kv]));
+  const proxyDefaults = deriveProxyVarDefaults(controlPlane.proxy_urls);
   const newKvPairs = [...KONNECT_PROXY_VAR_NAMES]
-    .filter(name => !existingNames.has(name))
-    .map(name => ({ id: `env_${name}`, name, value: '', type: EnvironmentKvPairDataType.STRING, enabled: true }));
+    .filter(name => !existingByName.has(name))
+    .map(name => ({ id: `env_${name}`, name, value: proxyDefaults[name] ?? '', type: EnvironmentKvPairDataType.STRING, enabled: true }));
 
-  if (newKvPairs.length > 0) {
+  // For existing vars that are still empty, fill in from proxy_urls if available
+  const updatedExisting = existingKvPairs.map(kv => {
+    if (kv.value === '' && (KONNECT_PROXY_VAR_NAMES as readonly string[]).includes(kv.name)) {
+      const defaultValue = proxyDefaults[kv.name as (typeof KONNECT_PROXY_VAR_NAMES)[number]];
+      if (defaultValue) {
+        return { ...kv, value: defaultValue };
+      }
+    }
+    return kv;
+  });
+
+  if (newKvPairs.length > 0 || updatedExisting.some((kv, i) => kv !== existingKvPairs[i])) {
     await insoservices.environment.update(projectEnv, {
-      kvPairData: [...(projectEnv.kvPairData ?? []), ...newKvPairs],
+      kvPairData: [...updatedExisting, ...newKvPairs],
     });
   }
 

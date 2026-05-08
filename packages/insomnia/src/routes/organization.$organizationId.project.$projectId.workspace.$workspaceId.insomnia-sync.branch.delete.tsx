@@ -1,7 +1,6 @@
 import { href, redirect } from 'react-router';
 
 import { models, services } from '~/insomnia-data';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { remoteBranchesCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -16,10 +15,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(typeof branch === 'string', 'Branch is required');
 
   try {
-    const vcs = VCSInstance();
-    await vcs.removeRemoteBranch(branch);
+    await window.main.sync.removeRemoteBranch(branch);
     try {
-      await vcs.removeBranch(branch);
+      await window.main.sync.removeBranch(branch);
     } catch {
       // Branch doesn't exist locally, ignore
     }

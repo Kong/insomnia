@@ -2,7 +2,7 @@ import { href } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
-import { UserAbortResolveMergeConflictError, VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -15,11 +15,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-  const vcs = VCSInstance();
   const { syncItems } = await getSyncItems({ workspaceId });
   let delta;
   try {
-    delta = await vcs.merge(syncItems, branch);
+    delta = await window.main.sync.merge(syncItems, branch);
   } catch (err) {
     if (err instanceof UserAbortResolveMergeConflictError) {
       return null;

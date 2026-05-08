@@ -40,10 +40,10 @@ import {
 import * as reactUse from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
-import { type ChangeBufferEvent } from '~/common/database';
 import { generateId } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
 import type {
+  ChangeBufferEvent,
   Environment,
   GrpcRequest,
   Project,
@@ -53,10 +53,8 @@ import type {
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
-import * as models from '~/models';
-import { isScratchpadOrganizationId } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -1166,7 +1164,9 @@ const Debug = () => {
       <Panel className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
-        {!panel && !isScratchpadOrganizationId(organizationId) && <WorkspacePaneHeader hasSettings />}
+        {!panel && !models.organization.isScratchpadOrganizationId(organizationId) && (
+          <WorkspacePaneHeader hasSettings />
+        )}
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Routes>
             <RouteComponent

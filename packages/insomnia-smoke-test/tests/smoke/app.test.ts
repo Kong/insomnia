@@ -120,5 +120,5 @@ test('can send requests', async ({ page, insomnia }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
   await page.getByRole('button', { name: 'Cancel Request' }).click();
-  await page.click('text=Request was cancelled');
+  await page.getByText('Request was cancelled').click();
 });

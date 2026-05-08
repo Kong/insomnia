@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { _buildBearerHeader, getAuthHeader, getAuthObjectOrNull, getAuthQueryParams } from '../authentication';
+import { getAuthHeader } from '../../main/network/get-auth-header';
+import { _buildBearerHeader, getAuthObjectOrNull } from '../authentication';
 
 describe('OAuth 1.0', () => {
   it('Does OAuth 1.0', async () => {
@@ -180,23 +181,6 @@ describe('API Key', () => {
       expect(header).toEqual({
         name: 'Cookie',
         value: 'x-api-key=test',
-      });
-    });
-  });
-
-  describe('getAuthQueryParams', () => {
-    it('Creates a query param with key as parameter name and value as parameter value, when addTo is "queryParams"', async () => {
-      const authentication = {
-        type: 'apikey',
-        key: 'x-api-key',
-        value: 'test',
-        addTo: 'queryParams',
-      };
-
-      const header = getAuthQueryParams(authentication, 'https://insomnia.rest/');
-      expect(header).toEqual({
-        name: 'x-api-key',
-        value: 'test',
       });
     });
   });

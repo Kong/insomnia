@@ -1,6 +1,5 @@
-import type { BaseModel } from '~/models/types';
-
 import type { RequestTestResult } from '../../../../../insomnia-scripting-environment/src/objects';
+import type { BaseModel } from './base-types';
 
 export const name = 'Runner Test Result';
 

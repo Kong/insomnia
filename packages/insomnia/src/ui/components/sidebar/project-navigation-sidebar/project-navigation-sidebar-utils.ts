@@ -14,8 +14,8 @@ import type {
   WebSocketRequestMeta,
   Workspace,
 } from '~/insomnia-data';
+import type { BaseModel } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
-import type { BaseModel } from '~/models/types';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
 export interface SlimRequestDoc extends BaseModel {

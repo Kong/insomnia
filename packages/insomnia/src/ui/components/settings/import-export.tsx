@@ -1,15 +1,10 @@
 import { format } from 'date-fns';
 import { getProductName } from 'insomnia/src/common/constants';
-import { database } from 'insomnia/src/common/database';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
 import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
 import { strings } from 'insomnia/src/common/strings';
-import * as requestOperations from 'insomnia/src/models/helpers/request-operations';
-import * as models from 'insomnia/src/models/index';
-import { type BaseModel, environment } from 'insomnia/src/models/index';
-import { isScratchpadOrganizationId } from 'insomnia/src/models/organization';
 import { SegmentEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
@@ -22,7 +17,8 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
-import type { Environment, Project, Workspace } from '~/insomnia-data';
+import type { BaseModel, Environment, Project, Workspace } from '~/insomnia-data';
+import { database, models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -150,11 +146,11 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
 
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
-      const baseEnvironments = await database.find<Environment>(environment.type, {
+      const baseEnvironments = await database.find<Environment>(models.environment.type, {
         parentId: { $in: workspacesForActiveProject.map(w => w._id) },
       });
 
-      const subEnvironments = await database.find<Environment>(environment.type, {
+      const subEnvironments = await database.find<Environment>(models.environment.type, {
         parentId: { $in: baseEnvironments.map(w => w._id) },
       });
       const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -267,11 +263,11 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
     return;
   }
 
-  const baseEnvironments = await database.find<Environment>(environment.type, {
+  const baseEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: workspace._id,
   });
 
-  const subEnvironments = await database.find<Environment>(environment.type, {
+  const subEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: { $in: baseEnvironments.map(w => w._id) },
   });
   const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -305,16 +301,16 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
     onDone: async selectedFormat => {
       const requests: BaseModel[] = [];
       for (const requestId of requestIds) {
-        const request = await requestOperations.getById(requestId);
+        const request = await services.helpers.getRequestById(requestId);
         if (request) {
           requests.push(request);
         }
       }
-      const [baseEnvironment] = await database.find<Environment>(environment.type, {
+      const [baseEnvironment] = await database.find<Environment>(models.environment.type, {
         parentId: workspaceId,
       });
 
-      const subEnvironments = await database.find<Environment>(environment.type, {
+      const subEnvironments = await database.find<Environment>(models.environment.type, {
         parentId: baseEnvironment?._id,
       });
       const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -419,11 +415,11 @@ export async function exportWorkspaceData({
 export async function exportAllData({ dirPath }: { dirPath: string }): Promise<void> {
   const workspaces = await database.find<Workspace>(models.workspace.type);
 
-  const baseEnvironments = await database.find<Environment>(environment.type, {
+  const baseEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: { $in: workspaces.map(w => w._id) },
   });
 
-  const subEnvironments = await database.find<Environment>(environment.type, {
+  const subEnvironments = await database.find<Environment>(models.environment.type, {
     parentId: { $in: baseEnvironments.map(w => w._id) },
   });
   const shouldPrompt = subEnvironments.some(e => e.isPrivate);
@@ -665,7 +661,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && organizationId && projectId && !isScratchpadOrganizationId(organizationId)) {
+    if (
+      isIdleAndUninitialized &&
+      organizationId &&
+      projectId &&
+      !models.organization.isScratchpadOrganizationId(organizationId)
+    ) {
       workspacesFetcher.load({
         organizationId,
         projectId,

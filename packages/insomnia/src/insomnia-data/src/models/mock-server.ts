@@ -1,4 +1,4 @@
-import type { BaseModel } from '~/models/types';
+import type { BaseModel } from './base-types';
 
 export const name = 'Mock Server';
 

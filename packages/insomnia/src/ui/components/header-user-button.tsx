@@ -1,4 +1,4 @@
-import { type CurrentPlan, type UserProfile } from 'insomnia-api';
+import { type CurrentPlan, type User } from 'insomnia-api';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
@@ -10,7 +10,7 @@ import { LogoutModal } from '~/ui/components/modals/logout-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 interface UserButtonProps {
-  user: UserProfile;
+  user: User;
   currentPlan?: CurrentPlan;
   isMinimal?: boolean;
 }
@@ -23,7 +23,7 @@ export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) =
         data-testid="user-dropdown"
         className="flex shrink-0 items-center justify-center gap-2 rounded-md px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
       >
-        <Avatar src={user.picture} alt={user.name} />
+        <Avatar src={user.picture ?? ''} alt={[user.first_name, user.last_name].filter(Boolean).join(' ')} />
         <Icon className="w-4 pr-2" icon={isMinimal ? 'caret-up' : 'caret-down'} />
       </Button>
       <Popover className="max-h-[85vh] min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden">

@@ -1,9 +1,6 @@
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import * as requestOperations from '~/models/helpers/request-operations';
-import { removeResponse } from '~/models/helpers/response-operations';
+import { models, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -12,7 +9,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { workspaceId, requestId } = params;
 
-  const req = await requestOperations.getById(requestId);
+  const req = await services.helpers.getRequestById(requestId);
   invariant(req, 'Request not found');
 
   const { responseId } = await request.json();
@@ -38,7 +35,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const res = await responseModel.getById(responseId);
   invariant(res, 'Response not found');
 
-  await removeResponse(res);
+  await services.helpers.removeResponse(res);
   const response = await responseModel.getLatestForRequestId(requestId, workspaceMeta.activeEnvironmentId);
   if (response?.requestVersionId) {
     await services.requestVersion.restore(response.requestVersionId);

@@ -5,8 +5,7 @@ import zlib from 'node:zlib';
 
 import { describe, expect, it } from 'vitest';
 
-import { models } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import { models, services } from '~/insomnia-data';
 
 import { initModel } from './index';
 
@@ -17,7 +16,7 @@ describe('migrate()', () => {
     const response = await initModel(models.response.type, {
       bodyPath,
     });
-    const body = (await getBodyBuffer(response)).toString();
+    const body = (await services.helpers.getResponseBodyBuffer(response)).toString();
     expect(response.bodyCompression).toBe('zip');
     expect(body).toBe('Hello World!');
   });

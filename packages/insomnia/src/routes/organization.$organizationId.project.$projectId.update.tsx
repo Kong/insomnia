@@ -4,8 +4,7 @@ import { href } from 'react-router';
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
 import type { WorkspaceMeta } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
@@ -40,7 +39,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  const gitRepository = project.gitRepositoryId ? await services.gitRepository.getById(project.gitRepositoryId) : null;
+  const effectiveRepoId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
+  const gitRepository = effectiveRepoId ? await services.gitRepository.getById(effectiveRepoId) : null;
 
   const user = await services.userSession.getOrCreate();
   const sessionId = user.id;
@@ -165,8 +165,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           },
         });
 
-        if (project.gitRepositoryId) {
-          const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+        if (models.project.isConnectedGitProject(project)) {
+          const gitRepository = await services.gitRepository.getById(models.project.getEffectiveRepoId(project) || '');
 
           gitRepository && (await services.gitRepository.remove(gitRepository));
         }
@@ -337,7 +337,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // convert from git to local
     if (storageType === 'local' && project.gitRepositoryId) {
-      const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+      const effectiveId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
+      const gitRepository = effectiveId ? await services.gitRepository.getById(effectiveId) : null;
 
       gitRepository && (await services.gitRepository.remove(gitRepository));
       await services.project.update(project, { name, gitRepositoryId: null });

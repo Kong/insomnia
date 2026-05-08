@@ -12,7 +12,6 @@ import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organiz
 import { useStorageRulesActionFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
 import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
 
@@ -70,12 +69,11 @@ interface UserPresenceEvent extends UserPresence {
   type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged' | 'StorageRuleChanged';
 }
 
-const isSameWorkspaceWithRemote = (workspaceId: string | undefined, remoteWorkspaceId: string | undefined) => {
+const isSameWorkspaceWithRemote = async (workspaceId: string | undefined, remoteWorkspaceId: string | undefined) => {
   if (!workspaceId || !remoteWorkspaceId) {
     return false;
   }
-  const vcs = VCSInstance();
-  const currentBackendProject = vcs.getActiveBackendProject();
+  const currentBackendProject = await window.main.sync.getActiveBackendProject();
   if (
     currentBackendProject &&
     currentBackendProject?.id === remoteWorkspaceId &&
@@ -146,7 +144,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       try {
         const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams`);
 
-        source.addEventListener('message', e => {
+        source.addEventListener('message', async e => {
           try {
             const event = JSON.parse(e.data) as
               | UserPresenceEvent
@@ -221,7 +219,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               event.project === latestRemoteId.current
             ) {
               // If the file changed is the current workspace, we need to sync it
-              if (isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
+              if (await isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
                 syncDataSubmit({
                   organizationId: organizationId,
                   projectId: latestProjectId.current,

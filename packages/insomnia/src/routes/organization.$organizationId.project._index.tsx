@@ -5,9 +5,7 @@ import { href, redirect, useParams } from 'react-router';
 import { logout } from '~/account/session';
 import { getProjectsWithGitRepositories } from '~/common/project';
 import type { GitRepository, Project } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { sortProjects } from '~/models/helpers/project';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models, services } from '~/insomnia-data';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
@@ -33,7 +31,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   }
 
   const organizationProjects = await getProjectsWithGitRepositories({ organizationId });
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
   // If there are projects in the organization and no project is selected, redirect to the first project
   if (projects.length > 0) {
     return redirect(`/organization/${organizationId}/project/${projects[0]._id}`);
@@ -54,7 +52,7 @@ const Component = () => {
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
 
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }

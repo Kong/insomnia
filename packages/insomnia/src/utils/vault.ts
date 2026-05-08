@@ -1,7 +1,7 @@
 import { services } from '~/insomnia-data';
 
 import { type AESMessage, decryptAES, encryptAES } from '../account/crypt';
-import { getInsomniaVaultKey, PLAYWRIGHT } from '../common/constants';
+import { getInsomniaVaultKey, PLAYWRIGHT_TEST } from '../common/constants';
 
 export const base64encode = (input: string | JsonWebKey) => {
   const inputStr = typeof input === 'string' ? input : JSON.stringify(input);
@@ -26,7 +26,7 @@ export function base64decode(base64Str: string, toObject: boolean): string | obj
 export function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey: true): Promise<object>;
 export function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey: false): Promise<string>;
 export async function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey: boolean): Promise<string | object> {
-  if (PLAYWRIGHT) {
+  if (PLAYWRIGHT_TEST) {
     const testVaultKey = getInsomniaVaultKey() || '';
     if (testVaultKey) {
       // return vault key from environment variable directly when running playwright tests

@@ -13,7 +13,7 @@ import {
   getClientString,
   getProductName,
   getSegmentWriteKey,
-  PLAYWRIGHT,
+  PLAYWRIGHT_TEST,
 } from '../common/constants';
 import { platform } from '../common/platform';
 
@@ -84,7 +84,7 @@ function hashString(input: string) {
 }
 
 export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
-  if (PLAYWRIGHT) {
+  if (PLAYWRIGHT_TEST) {
     return;
   }
   const settings = await services.settings.getOrCreate();
@@ -138,7 +138,7 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
 }
 
 export async function trackPageView(name: string) {
-  if (PLAYWRIGHT) {
+  if (PLAYWRIGHT_TEST) {
     return;
   }
   const settings = await services.settings.getOrCreate();

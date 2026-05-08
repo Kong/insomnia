@@ -1,10 +1,7 @@
 import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { services } from '~/insomnia-data';
-
-import { database as db } from '../../../../common/database';
-import * as models from '../../../../models';
+import { database as db, services } from '~/insomnia-data';
 
 // @vitest-environment jsdom
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
+import { models } from '~/insomnia-data';
 import {
   fallbackBilling,
   fallbackFeatures,
   useOrganizationPermissionsLoaderFetcher,
 } from '~/routes/organization.$organizationId.permissions';
 
-import { isScratchpadOrganizationId } from '../../models/organization';
 import { useLoaderDeferData } from './use-loader-defer-data';
 
 export function useOrganizationPermissions() {
@@ -22,7 +22,7 @@ export function useOrganizationPermissions() {
   // Load organization permissions and features if they are not already loaded.
   useEffect(() => {
     const isIdleAndUninitialized = permissionsFetcher.state === 'idle' && !permissionsFetcher.data;
-    if (organizationId && !isScratchpadOrganizationId(organizationId) && isIdleAndUninitialized) {
+    if (organizationId && !models.organization.isScratchpadOrganizationId(organizationId) && isIdleAndUninitialized) {
       permissionsFetcher.load({
         organizationId,
       });

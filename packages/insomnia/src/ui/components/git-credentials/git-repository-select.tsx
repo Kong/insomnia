@@ -47,6 +47,7 @@ export const GitRepositorySelect = ({
     <div className="flex flex-col">
       <ComboBox
         aria-label="Repositories"
+        name="uri"
         allowsCustomValue={false}
         className="w-full"
         isRequired

@@ -1,9 +1,7 @@
 import { href, redirect } from 'react-router';
 
 import type { Project, Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { models, services } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { invariant } from '~/utils/invariant';
@@ -17,10 +15,11 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
 
   if (models.project.isRemoteProject(project) && !isGitSync) {
     try {
-      const vcs = VCSInstance();
-      await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
+      await window.main.sync.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
       // For cloud sync workspaces, delete only local file or also delete remote copy
-      await (localOnly ? vcs.removeBackendProjectsForRoot(workspace._id) : vcs.archiveProject());
+      await (localOnly
+        ? window.main.sync.removeBackendProjectsForRoot(workspace._id)
+        : window.main.sync.archiveProject());
       // Emit cloud sync file change event when cloud sync workspace is deleted to refresh the remote projects list cache
       uiEventBus.emit(CLOUD_SYNC_FILE_CHANGE);
     } catch (err) {

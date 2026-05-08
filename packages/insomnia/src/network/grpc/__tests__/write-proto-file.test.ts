@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { services } from '~/insomnia-data';
 
-import * as models from '../../../models';
 import { writeProtoFile } from '../write-proto-file';
 
 describe('writeProtoFile', () => {

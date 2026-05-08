@@ -1,4 +1,8 @@
+import type { User, UserEncryptionKeys } from '@getinsomnia/insomnia-v3-fetch';
+
 import { fetch } from './fetch';
+
+export type { User, UserEncryptionKeys };
 
 // POST /auth/logout
 export const logout = ({ sessionId }: { sessionId: string }) => {
@@ -9,66 +13,14 @@ export const logout = ({ sessionId }: { sessionId: string }) => {
   });
 };
 
-// GET /auth/whoami
-interface WhoamiResponse {
-  sessionAge: number;
-  sessionExpiry: number;
-  accountId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  created: number;
-  publicKey: string;
-  encSymmetricKey: string;
-  encPrivateKey: string;
-  saltEnc: string;
-  isPaymentRequired: boolean;
-  isTrialing: boolean;
-  isVerified: boolean;
-  isAdmin: boolean;
-  trialEnd: string;
-  planName: string;
-  planId: string;
-  canManageTeams: boolean;
-  maxTeamMembers: number;
-}
-
-export const whoami = async ({ sessionId }: { sessionId: string }): Promise<WhoamiResponse> => {
-  const response = await fetch<WhoamiResponse>({
-    method: 'GET',
-    path: '/auth/whoami',
-    sessionId,
-  });
-  if (typeof response === 'string') {
-    throw new TypeError('Unexpected plaintext response: ' + response);
-  }
-  if (response && !response?.encSymmetricKey) {
-    throw new Error('Unexpected response: ' + JSON.stringify(response));
-  }
-  return response;
+// GET /v3/users/me
+export const getUserProfile = async ({ sessionId }: { sessionId: string }): Promise<User> => {
+  return await fetch<User>({ method: 'GET', path: '/v3/users/me', sessionId });
 };
 
-// GET /v1/user/profile
-export interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  picture: string;
-  bio: string;
-  github: string;
-  linkedin: string;
-  twitter: string;
-  identities: any;
-  given_name: string;
-  family_name: string;
-}
-
-export const getUserProfile = async ({ sessionId }: { sessionId: string }) => {
-  return fetch<UserProfile>({
-    method: 'GET',
-    path: '/v1/user/profile',
-    sessionId,
-  });
+// GET /v3/users/me/encryption-keys
+export const getEncryptionKeys = async ({ sessionId }: { sessionId: string }): Promise<UserEncryptionKeys> => {
+  return fetch<UserEncryptionKeys>({ method: 'GET', path: '/v3/users/me/encryption-keys', sessionId });
 };
 
 // GET /v1/billing/current-plan

@@ -1,18 +1,12 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 import { upsertMockbin } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
 import type { MockRoute, MockServer, WorkspaceScope } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
-import { initializeLocalBackendProjectAndMarkForSync } from '~/sync/vcs/initialize-backend-project';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { invariant } from '~/utils/invariant';
@@ -110,7 +104,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const safeToUseFileNameWithExtension = safeToUseInsomniaFileNameWithExt(fileName);
 
       await services.workspaceMeta.update(workspaceMeta, {
-        gitFilePath: path.join(workspaceData.folderPath || '', safeToUseFileNameWithExtension),
+        gitFilePath: window.path.join(workspaceData.folderPath || '', safeToUseFileNameWithExtension),
       });
     }
 
@@ -169,10 +163,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       !models.project.isGitProject(project) &&
       !models.project.isLocalProject(project)
     ) {
-      const vcs = VCSInstance();
-      await initializeLocalBackendProjectAndMarkForSync({
-        vcs,
-        workspace,
+      await window.main.initializeWorkspaceBackendProject({
+        workspaceId: workspace._id,
       });
     }
 
@@ -318,7 +310,16 @@ async function createMockServer(
       if (workspaceData.apiSpecContents) {
         openapiSpec = workspaceData.apiSpecContents;
       } else if (workspaceData.mockServerSpecSource === 'file') {
-        openapiSpec = fs.readFileSync(workspaceData.mockServerOASFilePath!, 'utf8');
+        const { content, error } = await window.main.insecureReadFileWithEncoding({
+          path: workspaceData.mockServerOASFilePath!,
+          encoding: 'utf8',
+        });
+
+        if (error) {
+          throw new Error(String(error));
+        }
+
+        openapiSpec = content;
       } else if (workspaceData.mockServerSpecSource === 'url') {
         specUrl = workspaceData.mockServerSpecURL!;
       } else if (workspaceData.mockServerSpecSource === 'text') {
@@ -353,10 +354,8 @@ async function createMockServer(
 
     const { id } = await services.userSession.getOrCreate();
     if (id && !workspaceMeta.gitRepositoryId) {
-      const vcs = VCSInstance();
-      await initializeLocalBackendProjectAndMarkForSync({
-        vcs,
-        workspace,
+      await window.main.initializeWorkspaceBackendProject({
+        workspaceId: workspace._id,
       });
     }
 

@@ -20,8 +20,16 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
-import type { GitRemoteProviderType, GitRepository, WorkspaceScope } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type {
+  BaseModel,
+  GitProject,
+  GitRemoteProviderType,
+  GitRepository,
+  Workspace,
+  WorkspaceMeta,
+  WorkspaceScope,
+} from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
@@ -29,14 +37,15 @@ import {
   type ProviderEmail,
   type ProviderRepository,
 } from '~/sync/git/providers';
+import type { FileIssue, FileIssueKind } from '~/sync/git/repo-file-watcher';
 
 import { INSOMNIA_GITLAB_API_URL } from '../common/constants';
 import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
-import * as models from '../models';
 import { fsClient } from '../sync/git/fs-client';
+import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
   fetchRemoteBranches,
   GIT_CLONE_DIR,
@@ -51,17 +60,46 @@ import GitVCS, {
 } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
-import { GitProjectNeDBClient } from '../sync/git/project-ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
+import { createElectronNotifier, RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
-import type { MergeConflict } from '../sync/types';
+import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
 import { invariant } from '../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
 
 // Initialize Git Remote Providers on module load
 initializeGitRemoteProviders();
+
+/**
+ * Set of repo IDs for which conflict problems should be suppressed in the
+ * file-problems-changed IPC broadcast.  Active while the user is resolving
+ * conflicts via SyncMergeModal so the generic "CLI conflict" blocking modal
+ * does not appear on top of the interactive resolver.
+ */
+const suppressedConflictRepos = new Set<string>();
+
+const _electronNotifier = createElectronNotifier();
+const conflictFilteringNotifier: WatcherNotifier = {
+  onDbSynced: () => _electronNotifier.onDbSynced(),
+  onProblemsChanged: payload => {
+    _electronNotifier.onProblemsChanged({
+      ...payload,
+      conflictsSuppressed: suppressedConflictRepos.has(payload.repoId),
+    });
+  },
+};
+
+const repoFileWatcherRegistry = new RepoFileWatcherRegistry(conflictFilteringNotifier);
+
+function suppressConflictProblems(repoId: string): void {
+  suppressedConflictRepos.add(repoId);
+}
+
+function clearConflictSuppression(repoId: string): void {
+  suppressedConflictRepos.delete(repoId);
+}
 
 type PushPull = 'push' | 'pull';
 type VCSAction =
@@ -119,6 +157,20 @@ export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?
   return { type, action, error };
 }
 
+export interface WorkspaceFileIssue {
+  workspaceId: string;
+  gitRepositoryId: string;
+  relPath: string;
+  kind: FileIssueKind;
+  message: string;
+}
+
+interface GetProjectGitFileIssuesOptions {
+  projectId: string;
+  workspaceId?: string;
+  gitRepositoryId?: string;
+}
+
 /**
  * Converts various Git URL formats to HTTPS URLs
  * Handles SSH URLs, Git URLs, and self-hosted Git servers
@@ -166,14 +218,127 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   invariant(projectId, 'Project ID is required');
   const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
-  invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
-  invariant(
-    project.gitRepositoryId && !models.project.isEmptyGitProject(project),
-    'Project is not linked to a git repository',
-  );
-  const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+  invariant(models.project.isConnectedGitProject(project), 'Project is not linked to a git repository');
+  const repoId = models.project.getEffectiveRepoId(project);
+  invariant(repoId, 'Project is not linked to a git repository');
+  const gitRepository = await services.gitRepository.getById(repoId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
+}
+
+function toPosixRelPath(relPath: string) {
+  return relPath.split(path.sep).join(path.posix.sep);
+}
+
+async function getProjectWorkspacesWithMeta(projectId: string) {
+  const workspaces = await services.workspace.findByParentId(projectId);
+  const metas = await Promise.all(
+    workspaces.map(async workspace => ({
+      workspace,
+      meta: await services.workspaceMeta.getByParentId(workspace._id),
+    })),
+  );
+
+  return metas;
+}
+
+export function mapWorkspaceFileIssues({
+  issues,
+  repoId,
+  metas,
+  workspaceId,
+}: {
+  issues: FileIssue[];
+  repoId: string;
+  metas: { workspace: Workspace; meta: WorkspaceMeta | null | undefined }[];
+  workspaceId?: string;
+}) {
+  const relPathToWorkspaceId = new Map<string, string>();
+
+  for (const { workspace, meta } of metas) {
+    if (workspaceId && workspace._id !== workspaceId) {
+      continue;
+    }
+
+    if (!meta?.gitFilePath) {
+      continue;
+    }
+
+    relPathToWorkspaceId.set(toPosixRelPath(meta.gitFilePath), workspace._id);
+  }
+
+  return issues.flatMap<WorkspaceFileIssue>(issue => {
+    const matchedWorkspaceId = relPathToWorkspaceId.get(toPosixRelPath(issue.relPath));
+    if (!matchedWorkspaceId) {
+      return [];
+    }
+
+    return [
+      {
+        workspaceId: matchedWorkspaceId,
+        gitRepositoryId: repoId,
+        relPath: issue.relPath,
+        kind: issue.kind,
+        message: issue.message,
+      },
+    ];
+  });
+}
+
+export async function getProjectGitFileIssues({
+  projectId,
+  workspaceId,
+  gitRepositoryId,
+}: GetProjectGitFileIssuesOptions): Promise<WorkspaceFileIssue[]> {
+  const project = await services.project.getById(projectId);
+  if (!project || !models.project.isConnectedGitProject(project)) {
+    return [];
+  }
+
+  const effectiveRepoId = models.project.getEffectiveRepoId(project);
+  if (gitRepositoryId && gitRepositoryId !== effectiveRepoId) {
+    return [];
+  }
+
+  return mapWorkspaceFileIssues({
+    issues: repoFileWatcherRegistry.getProblems(effectiveRepoId!),
+    repoId: effectiveRepoId!,
+    metas: await getProjectWorkspacesWithMeta(projectId),
+    workspaceId,
+  });
+}
+
+export interface BranchRemoteInfo {
+  trackingRemote: string | null;
+  isOrigin: boolean;
+  remoteUrl: string | null;
+  remotes: { remote: string; url: string }[];
+}
+
+export const getBranchRemoteInfo = async ({
+  projectId,
+  workspaceId,
+}: {
+  projectId: string;
+  workspaceId?: string;
+}): Promise<BranchRemoteInfo> => {
+  await getGitRepository({ projectId, workspaceId });
+  const branchInfo = await GitVCS.getBranchRemoteInfo();
+  const remotes = await GitVCS.listRemotes();
+  return { ...branchInfo, remotes };
+};
+
+async function assertBranchOnOrigin(context: string): Promise<void> {
+  const { trackingRemote, isOrigin, remoteUrl } = await GitVCS.getBranchRemoteInfo();
+  if (!isOrigin) {
+    const branch = await GitVCS.getCurrentBranch();
+    throw new Error(
+      `Cannot ${context}: branch "${branch}" tracks remote "${trackingRemote}" (${remoteUrl}), ` +
+        `but Insomnia only manages the "origin" remote. ` +
+        `Use the git CLI to ${context} this branch, or run: ` +
+        `git branch --set-upstream-to=origin/${branch}`,
+    );
+  }
 }
 
 /**
@@ -221,17 +386,17 @@ async function getGitFSClient({
   }
 
   // Project FS Client
-  // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
-  const neDbClient = GitProjectNeDBClient.createClient(projectId);
-
-  // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
+  // All git metadata in the GIT_INTERNAL_DIR directory is stored in a .git/ directory on the filesystem
   const gitDataClient = fsClient(baseDir);
 
-  // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
-  const otherDataClient = fsClient(path.join(baseDir, 'other'));
+  // All files (YAML + non-YAML) are stored at the repository root so that
+  // native Git tools can operate directly on the repository directory.
+  // The RepoFileWatcher is solely responsible for syncing YAML ↔ NeDB.
+  const diskClient = fsClient(baseDir);
 
-  // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
-  const routableFS = projectRoutableFSClient(otherDataClient, neDbClient, {
+  // The routable FS client routes prefix-matched paths (e.g. .git) to
+  // specialised FS clients; everything else goes to the disk client.
+  const routableFS = projectRoutableFSClient(diskClient, {
     [GIT_INTERNAL_DIR]: gitDataClient,
   });
 
@@ -332,6 +497,11 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    const baseDir = path.join(
+      process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+      `version-control/git/${gitRepository._id}`,
+    );
+
     const bufferId = await database.bufferChanges();
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
 
@@ -339,6 +509,8 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       let legacyInsomniaWorkspace;
       if (!workspaceId) {
         legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
+        // Ensure watcher is running (idempotent)
+        await repoFileWatcherRegistry.startWatcher(gitRepository._id, baseDir, projectId);
       }
 
       return {
@@ -346,6 +518,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         branches: await GitVCS.listBranches(),
         gitRepository: gitRepository,
         legacyInsomniaWorkspace,
+        branchRemoteInfo: {
+          ...(await GitVCS.getBranchRemoteInfo()),
+          remotes: await GitVCS.listRemotes(),
+        },
       };
     }
 
@@ -384,6 +560,13 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     await GitVCS.setAuthor();
     await GitVCS.addRemote(uri);
 
+    // Start file watcher for project-scoped repos so external YAML edits
+    // (native git CLI, VS Code, etc.) flow back into the database.
+    // The watcher automatically imports all YAML files during creation.
+    if (!workspaceId) {
+      await repoFileWatcherRegistry.startWatcher(gitRepository._id, baseDir, projectId);
+    }
+
     let legacyInsomniaWorkspace;
     if (!workspaceId) {
       legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
@@ -396,6 +579,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
       branches: await GitVCS.listBranches(),
       gitRepository,
       legacyInsomniaWorkspace,
+      branchRemoteInfo: {
+        ...(await GitVCS.getBranchRemoteInfo()),
+        remotes: await GitVCS.listRemotes(),
+      },
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while fetching git repository.';
@@ -440,6 +627,7 @@ export const getGitBranches = async ({
 
 export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
   try {
+    await assertBranchOnOrigin('fetch');
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     await GitVCS.fetch({
       singleBranch: true,
@@ -515,6 +703,8 @@ export const gitChangesLoader = async ({
 }): Promise<GitChangesLoaderData> => {
   try {
     const gitRepository = await getGitRepository({ projectId, workspaceId });
+    // Flush DB changes to disk before checking git status
+    await repoFileWatcherRegistry.flushNow(gitRepository._id);
     const branch = await GitVCS.getCurrentBranch();
 
     const { changes, hasUncommittedChanges } = await getGitChanges();
@@ -552,6 +742,10 @@ export const canPushLoader = async ({
   workspaceId?: string;
 }): Promise<GitCanPushLoaderData> => {
   try {
+    const { isOrigin } = await GitVCS.getBranchRemoteInfo();
+    if (!isOrigin) {
+      return { canPush: false };
+    }
     let hasUnpushedChanges = false;
     const gitRepository = await getGitRepository({ workspaceId, projectId });
     hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
@@ -675,7 +869,7 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
       }
 
       // Parse the YAML file to get the document
-      const doc: models.BaseModel = YAML.parse(fileContents);
+      const doc: BaseModel = YAML.parse(fileContents);
 
       // Validate that the document ID matches the file path
       if (!legacyInsomniaFile.filePath.includes(doc._id)) {
@@ -968,7 +1162,7 @@ export const cloneGitRepoAction = async ({
 
           await services.project.update(project, {
             remoteId: null,
-            gitRepositoryId: gitRepository._id,
+            gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
           });
 
           return project;
@@ -977,7 +1171,7 @@ export const cloneGitRepoAction = async ({
         const project = await services.project.create({
           name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
           parentId: organizationId,
-          gitRepositoryId: gitRepository._id,
+          gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
         });
 
         return project;
@@ -1019,6 +1213,13 @@ export const cloneGitRepoAction = async ({
       if (hasLegacyInsomniaDir) {
         await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
       }
+
+      // Start watcher — it automatically imports all YAML files during creation
+      const cloneBaseDir = path.join(
+        process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+        `version-control/git/${gitRepository._id}`,
+      );
+      await repoFileWatcherRegistry.startWatcher(gitRepository._id, cloneBaseDir, project._id);
 
       const updateRepository = await services.gitRepository.getById(gitRepository._id);
       invariant(updateRepository, 'Git Repository not found');
@@ -1276,7 +1477,8 @@ export const updateGitRepoAction = async ({
     let gitRepository: GitRepository | undefined;
 
     if (gitRepositoryId && gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID) {
-      gitRepository = await services.gitRepository.getById(gitRepositoryId);
+      const effectiveId = models.project.decodeRepoId(gitRepositoryId);
+      gitRepository = await services.gitRepository.getById(effectiveId);
       invariant(gitRepository, 'GitRepository not found');
     } else {
       const newRepo: Partial<GitRepository> = {
@@ -1298,7 +1500,7 @@ export const updateGitRepoAction = async ({
       const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       await services.project.update(project, {
-        gitRepositoryId: gitRepository._id,
+        gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
       });
     }
 
@@ -1363,6 +1565,10 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
   }
 
   await services.gitRepository.remove(repo);
+  // Stop the file watcher for this repository (project-scoped flow only).
+  repoFileWatcherRegistry.stopWatcher(repo._id);
+  clearConflictSuppression(repo._id);
+
   await database.flushChanges(flushId);
 
   return null;
@@ -1383,6 +1589,8 @@ export const commitToGitRepoAction = async ({
 }): Promise<CommitToGitRepoResult> => {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
+    // Flush DB changes to disk before committing
+    await repoFileWatcherRegistry.flushNow(gitRepository._id);
     await GitVCS.setAuthor();
     await GitVCS.commit(message);
 
@@ -1427,7 +1635,9 @@ export const multipleCommitToGitRepoAction = async ({
     files: string[];
   }[];
 }) => {
-  await getGitRepository({ projectId, workspaceId });
+  const gitRepository = await getGitRepository({ projectId, workspaceId });
+  // Flush DB changes to disk before committing
+  await repoFileWatcherRegistry.flushNow(gitRepository._id);
   await GitVCS.setAuthor();
 
   for (const commit of commits) {
@@ -1495,6 +1705,7 @@ export const commitAndPushToGitRepoAction = async ({
   workspaceId?: string;
   message: string;
 }): Promise<CommitToGitRepoResult> => {
+  await assertBranchOnOrigin('push');
   const repo = await getGitRepository({ workspaceId, projectId });
 
   // Validate credentials before committing to prevent orphaned local commits
@@ -1507,6 +1718,8 @@ export const commitAndPushToGitRepoAction = async ({
   }
 
   try {
+    // Flush DB changes to disk before committing
+    await repoFileWatcherRegistry.flushNow(repo._id);
     await GitVCS.setAuthor();
     await GitVCS.commit(message);
 
@@ -1672,6 +1885,7 @@ export const createNewGitBranchAction = async ({
 export interface CheckoutGitBranchResult {
   errors?: string[];
   success?: boolean;
+  warnings?: string[];
 }
 
 export const checkoutGitBranchAction = async ({
@@ -1688,6 +1902,9 @@ export const checkoutGitBranchAction = async ({
 
     const bufferId = await database.bufferChanges();
     await GitVCS.checkout(branch);
+
+    // Import all YAML files from disk into the DB after checkout
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
 
     const log = (await GitVCS.log({ depth: 1 })) || [];
 
@@ -1713,6 +1930,18 @@ export const checkoutGitBranchAction = async ({
     });
 
     await database.flushChanges(bufferId);
+
+    const branchRemoteInfo = await GitVCS.getBranchRemoteInfo(branch);
+    if (!branchRemoteInfo.isOrigin) {
+      return {
+        success: true,
+        warnings: [
+          `Branch "${branch}" tracks remote "${branchRemoteInfo.trackingRemote}". ` +
+            `Push, pull, and fetch will not work from Insomnia. Use the git CLI to sync this branch.`,
+        ],
+      };
+    }
+
     return {
       success: true,
     };
@@ -1778,6 +2007,7 @@ export const mergeGitBranch = async ({
   const bufferId = await database.bufferChanges();
 
   try {
+    suppressConflictProblems(gitRepository._id);
     await GitVCS.merge({
       theirsBranch,
       allowUncommittedChangesBeforeMerge,
@@ -1785,6 +2015,12 @@ export const mergeGitBranch = async ({
     // isomorphic-git does not update the working area after merge, we need to do it manually by checking out the current branch
     const currentBranch = await GitVCS.getCurrentBranch();
     await GitVCS.checkout(currentBranch);
+
+    // Import all YAML files from disk into the DB after merge + checkout
+    const gitRepoId = gitRepository._id;
+    await repoFileWatcherRegistry.importAllFiles(gitRepoId);
+    clearConflictSuppression(gitRepository._id);
+
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'merge_branch'),
       providerName,
@@ -1804,8 +2040,10 @@ export const mergeGitBranch = async ({
     return {};
   } catch (err) {
     if (err instanceof MergeConflictError) {
+      // Keep suppression active — user will resolve via SyncMergeModal.
       return err.data;
     }
+    clearConflictSuppression(gitRepository._id);
     let errorMessage = getErrorMessage(err);
 
     if (err instanceof Errors.HttpError) {
@@ -1876,7 +2114,11 @@ export const pushToGitRemoteAction = async ({
   workspaceId?: string;
   force?: boolean;
 }): Promise<PushToGitRemoteResult> => {
+  await assertBranchOnOrigin('push');
   const gitRepository = await getGitRepository({ projectId, workspaceId });
+
+  // Flush DB changes to disk before pushing
+  await repoFileWatcherRegistry.flushNow(gitRepository._id);
 
   // Check if there is anything to push
   let canPush = false;
@@ -2018,14 +2260,23 @@ export async function fetchGitRemoteBranches({
 }
 
 export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
+  let repoId: string | null = null;
   try {
+    await assertBranchOnOrigin('pull');
     const gitRepository = await getGitRepository({ projectId, workspaceId });
+    repoId = gitRepository._id;
+    suppressConflictProblems(repoId);
     invariant(gitRepository.credentialsId, 'Git Credentials ID is required');
     const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
     invariant(credentials, 'Git Credentials not found');
 
     const bufferId = await database.bufferChanges();
     await GitVCS.pullWithConflictSupport(gitRepository.credentialsId);
+
+    // Import all YAML files from disk into the DB after pull
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    clearConflictSuppression(repoId);
+
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'pull'),
       providerName: credentials.provider,
@@ -2048,8 +2299,12 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     };
   } catch (err: unknown) {
     if (err instanceof MergeConflictError) {
+      // Keep suppression active — user will resolve via SyncMergeModal.
+      // clearConflictSuppression is called by continueMerge or abortMergeAction.
       return err.data;
     }
+
+    if (repoId) clearConflictSuppression(repoId);
 
     if (
       err instanceof Errors.UserCanceledError ||
@@ -2092,12 +2347,14 @@ export const continueMerge = async ({
   projectId,
   workspaceId,
   handledMergeConflicts,
+  autoResolvedConflicts,
   commitMessage,
   commitParent,
 }: {
   projectId: string;
   workspaceId?: string;
   handledMergeConflicts: MergeConflict[];
+  autoResolvedConflicts?: AutoResolvedConflict[];
   commitMessage: string;
   commitParent: string[];
 }) => {
@@ -2107,9 +2364,16 @@ export const continueMerge = async ({
 
     await GitVCS.continueMerge({
       handledMergeConflicts,
+      autoResolvedConflicts,
       commitMessage,
       commitParent,
     });
+
+    // Import all YAML files from disk into the DB after merge resolution
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    // Files are clean now — lift the conflict suppression so any remaining
+    // issues (parse errors etc.) are reported normally.
+    clearConflictSuppression(gitRepository._id);
 
     const log = (await GitVCS.log({ depth: 1 })) || [];
 
@@ -2172,6 +2436,8 @@ export const discardChangesAction = async ({
 
     await GitVCS.discardChanges(files);
 
+    await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+
     await services.gitRepository.update(gitRepository, {
       cachedGitLastCommitTime: Date.now(),
     });
@@ -2188,7 +2454,9 @@ export const discardChangesAction = async ({
   }
 };
 
-export const abortMergeAction = async () => {
+export const abortMergeAction = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
+  const gitRepository = await getGitRepository({ projectId, workspaceId });
+  clearConflictSuppression(gitRepository._id);
   return GitVCS.abortMerge();
 };
 
@@ -2207,6 +2475,8 @@ export const gitStatusAction = async ({
 }): Promise<GitStatusResult> => {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
+    // Flush DB changes to disk before checking git status
+    await repoFileWatcherRegistry.flushNow(gitRepository._id);
     const { hasUncommittedChanges, changes } = await getGitChanges();
     const localChanges = changes.staged.length + changes.unstaged.length;
 
@@ -2613,6 +2883,96 @@ async function getCurrentBranchByRepositoryId({
   });
 }
 
+export interface MigrationSummary {
+  logs: string[];
+  failedProjects: { id: string; name: string }[];
+  totalProjects: number;
+}
+
+export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
+  const logs: string[] = [];
+  const failedProjects: { id: string; name: string }[] = [];
+
+  const allProjects = await services.project.all();
+  const gitProjects = allProjects.filter((p): p is GitProject => models.project.isConnectedGitProject(p));
+
+  if (gitProjects.length === 0) return { logs, failedProjects, totalProjects: 0 };
+
+  // Batch-fetch all git repositories in one query instead of N individual lookups.
+  const repoIds = gitProjects.map(p => models.project.getEffectiveRepoId(p)).filter(Boolean) as string[];
+  const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
+    _id: { $in: repoIds },
+  });
+  const repoById = new Map(gitRepositories.map(r => [r._id, r]));
+
+  // Hoist — same value for every repo.
+  const baseDataPath = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
+
+  const ts = () => new Date().toISOString();
+  const projectList = gitProjects.map(p => `"${p.name}"`).join(', ');
+  logs.push(
+    `${ts()} [INFO] Starting migration v${CURRENT_MIGRATION_VERSION} for ${gitProjects.length} repo(s): ${projectList}`,
+  );
+
+  let migratedCount = 0;
+
+  await Promise.all(
+    gitProjects.map(async project => {
+      const gitRepository = repoById.get(models.project.getEffectiveRepoId(project)!);
+      if (!gitRepository) return;
+
+      const repoId = gitRepository._id;
+      const logger = (level: 'info' | 'warn' | 'error', message: string) => {
+        logs.push(`${ts()} [${level.toUpperCase()}] ["${project.name}"] ${message}`);
+      };
+
+      const allowedBase = path.resolve(baseDataPath);
+      const baseDir = path.resolve(allowedBase, 'version-control', 'git', repoId);
+      if (!baseDir.startsWith(allowedBase + path.sep)) {
+        logger('warn', `Skipping repo with unsafe path — repoId may contain path traversal: ${repoId}`);
+        return;
+      }
+
+      const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
+      if (!success) {
+        failedProjects.push({ id: project._id, name: project.name });
+      } else {
+        migratedCount++;
+      }
+    }),
+  );
+
+  // In case we have any failed projects, convert them to local projects.
+  await Promise.all(
+    failedProjects.map(async ({ id, name }) => {
+      logs.push(`${ts()} [INFO] ["${name}"] Converting to local project`);
+      try {
+        const project = await services.project.getById(id);
+        if (!project || !models.project.isConnectedGitProject(project)) {
+          logs.push(`${ts()} [WARN] ["${name}"] Project not found or already local — skipping`);
+          return;
+        }
+
+        const effectiveRepoId = models.project.getEffectiveRepoId(project as GitProject);
+        const gitRepository = effectiveRepoId ? await services.gitRepository.getById(effectiveRepoId) : null;
+        if (gitRepository) {
+          await services.gitRepository.remove(gitRepository);
+          logs.push(`${ts()} [INFO] ["${name}"] Removed git repository ${effectiveRepoId}`);
+        }
+
+        await services.project.update(project, { name, gitRepositoryId: null });
+        logs.push(`${ts()} [INFO] ["${name}"] Successfully converted to local`);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const stack = err instanceof Error && err.stack ? `\n${err.stack}` : '';
+        logs.push(`${ts()} [ERROR] ["${name}"] Failed to convert to local: ${message}${stack}`);
+      }
+    }),
+  );
+
+  return { logs, failedProjects, totalProjects: migratedCount };
+}
+
 export interface GitServiceAPI {
   loadGitRepository: typeof loadGitRepository;
   getGitBranches: typeof getGitBranches;
@@ -2646,6 +3006,7 @@ export interface GitServiceAPI {
   fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
   validateGitRepositoryCredentials: typeof validateGitRepositoryCredentials;
   validateGitCredentialById: typeof validateGitCredentialById;
+  getProjectGitFileIssues: typeof getProjectGitFileIssues;
 
   initSignInToGitProvider: typeof initSignInToGitProvider;
   completeSignInToGitProvider: typeof completeSignInToGitProvider;
@@ -2654,6 +3015,8 @@ export interface GitServiceAPI {
   getGitProviderRepositories: typeof getGitProviderRepositories;
   getGitProviderEmails: typeof getGitProviderEmails;
   listGitProviders: typeof listGitProviders;
+  getBranchRemoteInfo: typeof getBranchRemoteInfo;
+  runAllGitRepoMigrations: typeof runAllGitRepoMigrations;
 }
 
 export const registerGitServiceAPI = () => {
@@ -2666,12 +3029,13 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle(
     'git.validateGitRepositoryCredentials',
-    (_, options: Parameters<typeof validateGitRepositoryCredentials>[0]) =>
-      validateGitRepositoryCredentials(options),
+    (_, options: Parameters<typeof validateGitRepositoryCredentials>[0]) => validateGitRepositoryCredentials(options),
   );
-  ipcMainHandle(
-    'git.validateGitCredentialById',
-    (_, options: Parameters<typeof validateGitCredentialById>[0]) => validateGitCredentialById(options),
+  ipcMainHandle('git.validateGitCredentialById', (_, options: Parameters<typeof validateGitCredentialById>[0]) =>
+    validateGitCredentialById(options),
+  );
+  ipcMainHandle('git.getProjectGitFileIssues', (_, options: Parameters<typeof getProjectGitFileIssues>[0]) =>
+    getProjectGitFileIssues(options),
   );
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));
@@ -2720,7 +3084,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.discardChanges', (_, options: Parameters<typeof discardChangesAction>[0]) =>
     discardChangesAction(options),
   );
-  ipcMainHandle('git.abortMerge', _ => abortMergeAction());
+  ipcMainHandle('git.abortMerge', (_, options: Parameters<typeof abortMergeAction>[0]) => abortMergeAction(options));
   ipcMainHandle('git.gitStatus', (_, options: Parameters<typeof gitStatusAction>[0]) => gitStatusAction(options));
   ipcMainHandle('git.diff', () => diff());
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) =>
@@ -2756,4 +3120,8 @@ export const registerGitServiceAPI = () => {
     'git.getCurrentBranchByRepositoryId',
     (_, options: Parameters<typeof getCurrentBranchByRepositoryId>[0]) => getCurrentBranchByRepositoryId(options),
   );
+  ipcMainHandle('git.getBranchRemoteInfo', (_, options: Parameters<typeof getBranchRemoteInfo>[0]) =>
+    getBranchRemoteInfo(options),
+  );
+  ipcMainHandle('git.runAllGitRepoMigrations', () => runAllGitRepoMigrations());
 };

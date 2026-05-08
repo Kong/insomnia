@@ -25,6 +25,7 @@ import {
 import { href, useNavigate, useParams } from 'react-router';
 
 import type { Workspace } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
@@ -32,7 +33,6 @@ import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import * as models from '../../../models';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -459,7 +459,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                         {getWorkspaceLabel(activeWorkspace).singular}
                       </p>
                       {models.project.isRemoteProject(activeProject) && (
-                        <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
+                        <RadioGroup name="localOnly" defaultValue="true" className="mb-2 flex flex-col gap-2">
                           <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
                           <div className="flex gap-2">
                             <Radio

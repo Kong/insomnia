@@ -9,7 +9,7 @@ import { database } from '~/common/database';
 import type { ScanResult } from '~/common/import';
 import { selectFileOrFolder } from '~/common/select-file-or-folder';
 import type { Project } from '~/insomnia-data';
-import * as models from '~/models';
+import { models } from '~/insomnia-data';
 import { importScannedResources } from '~/routes/import.resources';
 import { scanImportResources } from '~/routes/import.scan';
 import { useOrganizationLoaderData } from '~/routes/organization';

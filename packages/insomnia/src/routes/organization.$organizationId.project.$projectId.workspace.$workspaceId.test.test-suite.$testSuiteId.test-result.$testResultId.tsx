@@ -3,7 +3,7 @@ import { useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import type { UnitTestResult } from '~/insomnia-data';
-import * as models from '~/models';
+import { models } from '~/insomnia-data';
 import { Icon } from '~/ui/components/icon';
 import { invariant } from '~/utils/invariant';
 

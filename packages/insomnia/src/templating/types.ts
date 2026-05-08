@@ -19,7 +19,6 @@ import type {
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
-import type { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PluginStore } from '../plugins/context/store';
@@ -296,7 +295,7 @@ export interface PluginTemplateTagContext {
       };
       response: {
         getLatestForRequestId: Services['response']['getLatestForRequestId'];
-        getBodyBuffer: typeof getBodyBuffer;
+        getBodyBuffer: Services['helpers']['getResponseBodyBuffer'];
       };
       settings: {
         get: Services['settings']['get'];

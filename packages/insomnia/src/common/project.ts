@@ -14,7 +14,6 @@ import {
   type WorkspaceMeta,
   type WorkspaceScope,
 } from '~/insomnia-data';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 
 export interface InsomniaFile {
   id: string;
@@ -34,6 +33,10 @@ export interface InsomniaFile {
   hasUncommittedChanges?: boolean;
   hasUnpushedChanges?: boolean;
   gitFilePath?: string | null;
+  fileIssue?: {
+    kind: 'conflict' | 'parse-error';
+    message: string;
+  };
 }
 
 const lockGenerator = () => {
@@ -208,8 +211,7 @@ export const getAllRemoteBackendProjectsByProjectId = async ({
   teamProjectId: string;
   organizationId: string;
 }) => {
-  const vcs = VCSInstance();
-  return vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId });
+  return window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId });
 };
 
 export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspaces: Workspace[]) =>
@@ -230,12 +232,10 @@ export async function getAllRemoteFiles({ projectId, organizationId }: { project
       `remoteId: ${remoteId}`,
     );
 
-    const vcs = VCSInstance();
-
     const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
-      vcs.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
+      window.main.sync.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
       // Remote backend projects are fetched from the backend since they are not stored locally
-      vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
+      window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
     ]);
     console.log(
       `[getAllRemoteFiles] found allPulledBackendProjectsForRemoteId: ${allPulledBackendProjectsForRemoteId.length} and allFetchedRemoteBackendProjectsForRemoteId: ${allFetchedRemoteBackendProjectsForRemoteId.length} for remoteId: ${remoteId}`,

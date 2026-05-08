@@ -17,74 +17,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/common/misc.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/common/misc.ts",
-      "builtin": "zlib"
-    },
-    {
-      "importer": "src/common/significant-diff-detection.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/main/importers/importers/curl.ts",
-      "builtin": "url"
-    },
-    {
-      "importer": "src/main/importers/importers/openapi-3.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/main/importers/importers/openapi-3.ts",
-      "builtin": "url"
-    },
-    {
-      "importer": "src/main/importers/importers/swagger-2.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/main/network/libcurl-promise.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/main/network/libcurl-promise.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/main/network/libcurl-promise.ts",
-      "builtin": "url"
-    },
-    {
-      "importer": "src/main/network/multipart.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/main/network/multipart.ts",
-      "builtin": "os"
-    },
-    {
-      "importer": "src/main/network/multipart.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/main/network/parse-header-strings.ts",
-      "builtin": "url"
-    },
-    {
-      "importer": "src/main/secure-read-file.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/main/secure-read-file.ts",
-      "builtin": "os"
-    },
-    {
-      "importer": "src/main/secure-read-file.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/models/helpers/response-operations.ts",
       "builtin": "fs"
     },
@@ -93,48 +25,12 @@
       "builtin": "zlib"
     },
     {
-      "importer": "src/network/grpc/proto-directory-loader.tsx",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/grpc/proto-directory-loader.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "os"
-    },
-    {
-      "importer": "src/network/grpc/write-proto-file.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/network/network.ts",
       "builtin": "fs"
     },
     {
       "importer": "src/network/network.ts",
       "builtin": "path"
-    },
-    {
-      "importer": "src/network/o-auth-1/get-token.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/network/o-auth-2/get-token.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/network/o-auth-2/get-token.ts",
-      "builtin": "querystring"
-    },
-    {
-      "importer": "src/network/o-auth-2/utils.ts",
-      "builtin": "crypto"
     },
     {
       "importer": "src/network/url-matches-cert-host.ts",
@@ -145,6 +41,10 @@
       "builtin": "fs"
     },
     {
+      "importer": "src/plugins/context/response.ts",
+      "builtin": "zlib"
+    },
+    {
       "importer": "src/plugins/create.ts",
       "builtin": "fs"
     },
@@ -158,22 +58,6 @@
     },
     {
       "importer": "src/plugins/index.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send.tsx",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send.tsx",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx",
       "builtin": "path"
     },
     {
@@ -181,36 +65,16 @@
       "builtin": "fs/promises"
     },
     {
-      "importer": "src/sync/store/drivers/file-system-driver.ts",
-      "builtin": "fs/promises"
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "buffer"
     },
     {
-      "importer": "src/sync/store/drivers/file-system-driver.ts",
-      "builtin": "path"
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "timers"
     },
     {
-      "importer": "src/sync/store/drivers/graceful-rename.ts",
-      "builtin": "fs/promises"
-    },
-    {
-      "importer": "src/sync/store/hooks/compress.ts",
-      "builtin": "zlib"
-    },
-    {
-      "importer": "src/sync/store/index.ts",
-      "builtin": "path"
-    },
-    {
-      "importer": "src/sync/vcs/util.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/sync/vcs/vcs.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/sync/vcs/vcs.ts",
-      "builtin": "path"
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "util"
     },
     {
       "importer": "src/templating/base-extension.ts",
@@ -227,10 +91,6 @@
     {
       "importer": "src/utils/plugin.ts",
       "builtin": "path"
-    },
-    {
-      "importer": "src/utils/url/querystring.ts",
-      "builtin": "url"
     }
   ]
 }

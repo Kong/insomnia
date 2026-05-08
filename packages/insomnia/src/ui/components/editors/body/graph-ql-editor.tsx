@@ -24,7 +24,6 @@ import * as reactUse from 'react-use';
 
 import type { Request } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
@@ -185,7 +184,7 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       };
     }
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     if (bodyBuffer) {
       const { data, errors } = JSON.parse(bodyBuffer.toString());
       if (errors?.length) {

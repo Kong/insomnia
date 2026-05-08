@@ -28,9 +28,7 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
-import { services } from '~/insomnia-data';
-import * as models from '~/models/index';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
@@ -83,13 +81,13 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
 
-  const gitRepositoryId = models.project.isGitProject(project)
-    ? project.gitRepositoryId
+  const gitRepositoryId = models.project.isConnectedGitProject(project)
+    ? models.project.getEffectiveRepoId(project)
     : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
   const rulesetPath = gitRepositoryId
-    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
     : '';
 
   let parsedSpec: OpenAPIV3.Document | undefined;
@@ -168,7 +166,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
 
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }

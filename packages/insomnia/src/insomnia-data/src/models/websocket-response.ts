@@ -1,5 +1,4 @@
-import type { BaseModel } from '~/models/types';
-
+import type { BaseModel } from './base-types';
 import type { ResponseHeader } from './response';
 
 export const name = 'WebSocket Response';

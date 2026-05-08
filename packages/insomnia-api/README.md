@@ -11,5 +11,5 @@ Uses npm workspace, so no need to install.
 ### Import
 
 ```ts
-import { getUserProfile, type UserProfileResponse } from 'insomnia-api';
+import { getUserProfile, getEncryptionKeys, type User, type UserEncryptionKeys } from 'insomnia-api';
 ```

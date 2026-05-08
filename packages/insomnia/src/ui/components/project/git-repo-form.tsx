@@ -12,7 +12,8 @@ import {
 } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
-import { type GitCredentials, models, type ProviderEmail } from '~/insomnia-data';
+import type { GitCredentials, ProviderEmail } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useAllConnectedReposLoaderFetcher } from '~/routes/git.all-connected-repos';
 import type { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitValidateCredentialFetcher } from '~/routes/git.validate-credential';
@@ -96,7 +97,7 @@ export const GitRepoForm: FC<Props> = ({
   const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
 
   const isCredentialInvalid =
-    validateCredentialFetcher.state !== 'idle' ||
+    (validateCredentialFetcher.state !== 'idle' && !validateCredentialFetcher.data) ||
     Boolean(
       validateCredentialFetcher.data &&
         'errors' in validateCredentialFetcher.data &&
@@ -224,7 +225,7 @@ export const GitRepoForm: FC<Props> = ({
               </div>
             </Popover>
           </Select>
-          {validateCredentialFetcher.state !== 'idle' && (
+          {validateCredentialFetcher.state !== 'idle' && !validateCredentialFetcher.data && (
             <div className="flex items-center gap-2 text-sm">
               <Icon icon="spinner" className="animate-spin" />
               <span>Validating credential...</span>
@@ -297,8 +298,8 @@ export const GitRepoForm: FC<Props> = ({
               </Popover>
             </Select>
           )}
-          {selectedProvider && !isCredentialInvalid && (
-            <>
+          {selectedProvider && (
+            <div className={isCredentialInvalid ? 'hidden' : ''}>
               {selectedProvider.supportsFetchRepos ? (
                 <GitRepositorySelect
                   allConnectedRepoURIInfoMap={allConnectedRepoURIInfoMap}
@@ -329,12 +330,16 @@ export const GitRepoForm: FC<Props> = ({
                   }}
                 />
               )}
-            </>
+            </div>
           )}
 
-          {!isCredentialInvalid && (
-            <GitRemoteBranchSelect credentialsId={selectedCredentialsId} url={projectData.uri || ''} isDisabled={false} />
-          )}
+          <div className={isCredentialInvalid ? 'hidden' : ''}>
+            <GitRemoteBranchSelect
+              credentialsId={selectedCredentialsId}
+              url={projectData.uri || ''}
+              isDisabled={false}
+            />
+          </div>
         </Form>
       )}
     </ErrorBoundary>

@@ -217,6 +217,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                             projectId,
                             workspaceId,
                             handledMergeConflicts: conflicts,
+                            autoResolvedConflicts: result.autoResolvedConflicts,
                             commitMessage: result.commitMessage,
                             commitParent: result.commitParent,
                           })
