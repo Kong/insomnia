@@ -373,7 +373,7 @@ class RepoFileWatcher {
     const entries = await this.getWorkspacesWithMeta();
     const currentWorkspaceIds = new Set(entries.map(({ workspace }) => workspace._id));
 
-    // find deleted workspace and remove their files from disk
+    // Find deleted workspaces and remove their files from disk.
     for (const [workspaceId, absPath] of Array.from(this.lastKnownGitFilePath.entries())) {
       if (currentWorkspaceIds.has(workspaceId)) {
         continue;
