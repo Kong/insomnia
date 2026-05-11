@@ -7,7 +7,7 @@ import type { MockRoute, MockServer, WorkspaceScope } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -144,8 +144,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         description: '',
       });
 
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.mcpClientAdded,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.mcpClientAdded,
       });
     }
 
@@ -168,20 +168,20 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       });
     }
 
-    let event = SegmentEvent.documentCreate;
+    let event = AnalyticsEvent.documentCreate;
     let environmentType: string | undefined;
 
     if (models.workspace.isCollection(workspace)) {
-      event = SegmentEvent.collectionCreate;
+      event = AnalyticsEvent.collectionCreate;
     } else if (models.workspace.isEnvironment(workspace)) {
-      event = SegmentEvent.environmentCreate;
+      event = AnalyticsEvent.environmentCreate;
       const environment = await services.environment.getById(workspace._id);
       environmentType = environment?.isPrivate ? 'private' : 'global';
     } else if (scope === 'mcp') {
-      event = SegmentEvent.mcpClientWorkspaceCreate;
+      event = AnalyticsEvent.mcpClientWorkspaceCreate;
     }
 
-    window.main.trackSegmentEvent({
+    window.main.trackAnalyticsEvent({
       event: event,
       ...(environmentType && {
         properties: {
@@ -212,7 +212,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })
       )._id;
 
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestCreated, properties: { requestType: 'HTTP' } });
+      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestCreated, properties: { requestType: 'HTTP' } });
 
       return redirect(
         href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
@@ -351,8 +351,8 @@ async function createMockServer(
       });
     }
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.mockCreate,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.mockCreate,
       properties: {
         provider: (modelConfig && modelConfig.backend) || '',
         model: (modelConfig && modelConfig.model) || '',

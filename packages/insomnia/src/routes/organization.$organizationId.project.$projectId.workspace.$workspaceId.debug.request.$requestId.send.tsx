@@ -27,7 +27,7 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
-import { type ImportAttribution, importAttributionKey, SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent, type ImportAttribution, importAttributionKey } from '~/ui/analytics';
 import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -369,8 +369,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           const allPreScripts = docsWithScripts.map(doc => doc.preRequestScript).filter((s): s is string => !!s);
           const allPostScripts = docsWithScripts.map(doc => doc.afterResponseScript).filter((s): s is string => !!s);
 
-          window.main.trackSegmentEvent({
-            event: SegmentEvent.requestExecuted,
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.requestExecuted,
             properties: {
               preferredHttpVersion: settings.preferredHttpVersion,
               // @ts-expect-error -- who cares
@@ -397,8 +397,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           if (jsonImportAttribution) {
             try {
               const importAttribution = JSON.parse(jsonImportAttribution) as ImportAttribution;
-              window.main.trackSegmentEvent({
-                event: SegmentEvent.importedRequestFirstSend,
+              window.main.trackAnalyticsEvent({
+                event: AnalyticsEvent.importedRequestFirstSend,
                 properties: {
                   ...importAttribution,
                   protocol: activeRequest.type,

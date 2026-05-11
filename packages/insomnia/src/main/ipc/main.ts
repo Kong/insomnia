@@ -37,8 +37,8 @@ import type {
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginTemplateTag, RenderedRequest } from '../../templating/types';
-import type { SegmentEvent } from '../analytics';
-import { setCurrentOrganizationId, trackPageView, trackSegmentEvent } from '../analytics';
+import type { AnalyticsEvent } from '../analytics';
+import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
@@ -186,7 +186,7 @@ export interface RendererToMainBridgeAPI {
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
   sync: SyncBridgeAPI;
-  trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
+  trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
   showNunjucksContextMenu: (options: {
@@ -413,8 +413,8 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn('trackSegmentEvent', (_, options: { event: SegmentEvent; properties?: Record<string, unknown> }): void => {
-    trackSegmentEvent(options.event, options.properties);
+  ipcMainOn('trackAnalyticsEvent', (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
+    trackAnalyticsEvent(options.event, options.properties);
   });
   ipcMainOn('trackPageView', (_, options: { name: string }): void => {
     trackPageView(options.name);

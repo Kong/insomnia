@@ -37,7 +37,7 @@ import { useInviteFetcher } from '~/routes/organization.$organizationId.collabor
 import { useReinviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
 import { useCollaboratorsCheckSeatsLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-check-seats';
 import { useOrganizationMemberRolesActionFetcher } from '~/routes/organization.$organizationId.members.$userId.roles';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
@@ -408,7 +408,7 @@ const MemberListItem: FC<{
                   organizationId,
                   invitationId: member.metadata.invitationId,
                 });
-                window.main.trackSegmentEvent({ event: SegmentEvent.inviteResent });
+                window.main.trackAnalyticsEvent({ event: AnalyticsEvent.inviteResent });
               }
             }}
             className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
@@ -519,7 +519,7 @@ const MemberListItem: FC<{
                 .then(() => {
                   onResetCurrentPage();
                   onRemoveMember();
-                  window.main.trackSegmentEvent({ event: SegmentEvent.inviteRevoked });
+                  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.inviteRevoked });
                 })
                 .catch(error => {
                   onError(error.message);
@@ -665,7 +665,7 @@ export const InviteModalContainer: FC<{
   // track event when modal is opened
   useEffect(() => {
     if (isOpen) {
-      window.main.trackSegmentEvent({ event: SegmentEvent.inviteTrigger });
+      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.inviteTrigger });
     }
   }, [isOpen]);
 

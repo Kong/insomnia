@@ -22,10 +22,10 @@ import {
 } from '../../../../common/import';
 import { invariant } from '../../../../utils/invariant';
 import {
+  AnalyticsEvent,
   importAttributionKey,
   PENDING_IMPORT_ATTRIBUTION_KEY,
   readPendingImportAttribution,
-  SegmentEvent,
   trackImportEvent,
 } from '../../../analytics';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
@@ -275,7 +275,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   // Track the import completion event, redirect to the new workspace and close the modal
   useEffect(() => {
     if (importFetcher?.data?.done === true && scanResourcesFetcherData?.length) {
-      trackImportEvent(SegmentEvent.importCompleted, {
+      trackImportEvent(AnalyticsEvent.importCompleted, {
         workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
         requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
       });
@@ -405,7 +405,7 @@ export const ImportModal: FC<ImportModalProps> = ({
                 .filter(({ errors }) => errors.length === 0)
                 .forEach(scanResult => {
                   const type = scanResult.type?.id ?? 'unknown';
-                  trackImportEvent(SegmentEvent.dataImport, { 'data-import-type': type });
+                  trackImportEvent(AnalyticsEvent.dataImport, { 'data-import-type': type });
                 });
             }}
           />

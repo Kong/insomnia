@@ -1,7 +1,7 @@
 import iconv from 'iconv-lite';
 import { Fragment, useCallback, useRef, useState } from 'react';
 
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import {
@@ -248,8 +248,8 @@ export const ResponseViewer = ({
           updateFilter?.(filter);
 
           if (filter) {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.filterCreatedResponseBody,
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.filterCreatedResponseBody,
             });
           }
         }}
@@ -375,8 +375,8 @@ export const ResponseViewer = ({
         updateFilter?.(filter);
 
         if (filter) {
-          window.main.trackSegmentEvent({
-            event: SegmentEvent.filterCreatedResponseBody,
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.filterCreatedResponseBody,
           });
         }
       }}

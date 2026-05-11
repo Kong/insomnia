@@ -35,7 +35,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
-import { PENDING_IMPORT_ATTRIBUTION_KEY, SegmentEvent, trackImportEvent } from '~/ui/analytics';
+import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
@@ -391,10 +391,10 @@ const Root = () => {
         if (!userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
           window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
-          trackImportEvent(SegmentEvent.importLoginRequired);
+          trackImportEvent(AnalyticsEvent.importLoginRequired);
           return navigate(href('/auth/login'));
         }
-        trackImportEvent(SegmentEvent.importStarted, { source: 'import-url' });
+        trackImportEvent(AnalyticsEvent.importStarted, { source: 'import-url' });
 
         if (params.uri) {
           return setImportObject({
@@ -640,7 +640,7 @@ const Root = () => {
     if (pendingDeepLink && organizationId && organizationId !== models.organization.SCRATCHPAD_ORGANIZATION_ID) {
       window.sessionStorage.removeItem('pendingDeepLinkAfterAuthorize');
       window.sessionStorage.setItem('suppressWelcomeModals', 'true');
-      trackImportEvent(SegmentEvent.importResumedAfterLogin);
+      trackImportEvent(AnalyticsEvent.importResumedAfterLogin);
       window.main.openDeepLink(pendingDeepLink);
     }
   }, [organizationId]);

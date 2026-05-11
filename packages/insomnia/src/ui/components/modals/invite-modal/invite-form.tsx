@@ -21,7 +21,7 @@ import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 
@@ -380,8 +380,8 @@ export const InviteForm = ({
             })
               .then(
                 () => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.inviteMember,
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.inviteMember,
                     properties: {
                       numberOfInvites: emailsToInvite.length,
                       numberOfTeams: groupsToInvite.length,

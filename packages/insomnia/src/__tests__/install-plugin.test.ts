@@ -66,8 +66,8 @@ vi.mock('../main/install-plugin', async () => {
 });
 
 vi.mock('../main/analytics', () => ({
-  trackSegmentEvent: vi.fn(),
-  SegmentEvent: {
+  trackAnalyticsEvent: vi.fn(),
+  AnalyticsEvent: {
     installPlugin: 'Plugin Installed',
   },
 }));
