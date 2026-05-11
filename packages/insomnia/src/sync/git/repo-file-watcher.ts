@@ -717,11 +717,22 @@ class RepoFileWatcher {
     try {
       await fs.promises.unlink(normalisedPath);
       console.log('[repo-file-watcher] Removed workspace file from disk:', workspaceId, normalisedPath);
-    } catch {
-      // Old file may already be gone — that's fine.
-    }
+      this.cleanupRemovedWorkspaceFileTracking(workspaceId, normalisedPath);
+    } catch (error) {
+      const err = error as NodeJS.ErrnoException;
+      if (err.code === 'ENOENT') {
+        // Old file may already be gone — that's fine.
+        this.cleanupRemovedWorkspaceFileTracking(workspaceId, normalisedPath);
+        return;
+      }
 
-    this.cleanupRemovedWorkspaceFileTracking(workspaceId, normalisedPath);
+      console.warn(
+        '[repo-file-watcher] Failed to remove workspace file from disk:',
+        workspaceId,
+        normalisedPath,
+        err,
+      );
+    }
   }
 
   /** Convert an absolute path to a posix-style path relative to the repo root. */
