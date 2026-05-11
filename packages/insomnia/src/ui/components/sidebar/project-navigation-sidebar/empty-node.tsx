@@ -194,7 +194,7 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
   const paddingLeft = kind === 'emptyProject' ? '2em' : `${level + 3}rem`;
 
   return (
-    <div className={ROW_CLASS} style={{ paddingLeft }}>
+    <div className={ROW_CLASS} style={{ paddingLeft }} data-testid={`empty-node-${kind}`}>
       <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
       {kind !== 'emptyProject' && <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />}
       {kind === 'emptyFolder' &&

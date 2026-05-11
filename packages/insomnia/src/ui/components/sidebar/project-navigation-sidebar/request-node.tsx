@@ -195,6 +195,7 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
     <div
       className={`${ROW_CLASS} ${className ?? ''} ${isPinnedRequest ? 'h-full! group-hover:bg-transparent! group-focus:bg-transparent!' : ''}`}
       style={{ paddingLeft: `${level + 3}rem` }}
+      data-testid={`request-node-${getRequestNameOrFallback(doc)}`}
     >
       {isPinnedRequest ? (
         <>
