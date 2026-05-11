@@ -641,61 +641,91 @@ const Debug = () => {
           name: 'HTTP Request',
           icon: 'plus-circle',
           hint: hotKeyRegistry.request_createHTTP,
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'HTTP',
               parentId: workspaceId,
-            }),
+            })
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.requestCreated,
+              properties: { requestType: 'HTTP', source: 'sidebar'},
+            });
+          },
         },
         {
           id: 'Event Stream',
           name: 'Event Stream Request (SSE)',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'Event Stream',
               parentId: workspaceId,
-            }),
+            });
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.requestCreated,
+              properties: { requestType: 'Event Stream' , source: 'sidebar'},
+            });
+          },
         },
         {
           id: 'GraphQL Request',
           name: 'GraphQL Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'GraphQL',
               parentId: workspaceId,
-            }),
+            });
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.requestCreated,
+              properties: { requestType: 'GraphQL' , source: 'sidebar'},
+            });
+          },
         },
         {
           id: 'gRPC Request',
           name: 'gRPC Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'gRPC',
               parentId: workspaceId,
-            }),
+            });
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.requestCreated,
+              properties: { requestType: 'gRPC' , source: 'sidebar'},
+            });
+          },
         },
         {
           id: 'WebSocket Request',
           name: 'WebSocket Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'WebSocket',
               parentId: workspaceId,
-            }),
+            });
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.requestCreated,
+              properties: { requestType: 'WebSocket' , source: 'sidebar'},
+            });
+          },
         },
         {
           id: 'Socket.IO Request',
           name: 'Socket.IO Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'SocketIO',
               parentId: workspaceId,
-            }),
+            });
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.requestCreated,
+              properties: { requestType: 'SocketIO' , source: 'sidebar'},
+            });
+          },
         },
       ],
     },
