@@ -195,6 +195,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
   const [rulesetPath, setRulesetPath] = useState<string>('');
+  const [ruleSetVersion, setRuleSetVersion] = useState<number>(1);
 
   // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
   // For git sync projects, write .spectral.yaml directly to the git working directory so it
@@ -260,7 +261,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     registerCodeMirrorLint(rulesetPath);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-  }, [rulesetPath, apiSpec?.rulesetContent]);
+  }, [rulesetPath, apiSpec?.rulesetContent, ruleSetVersion]);
 
   // For git sync projects, .spectral.yaml on disk is the source of truth.
   // Runs on mount and whenever gitVersion changes (e.g. after a pull)
@@ -450,16 +451,11 @@ const Component = ({ params }: Route.ComponentProps) => {
   const handleSelectSpectralFile = async () => {
     const { filePath, canceled } = await selectFileOrFolder({
       itemTypes: ['file'],
-      extensions: ['yaml'],
+      extensions: ['yaml', 'yml'],
       showHiddenFiles: true,
     });
 
     if (canceled || !filePath) {
-      return;
-    }
-
-    if (window.path.basename(filePath) !== '.spectral.yaml') {
-      showError({ title: 'Invalid File', message: 'Please select a file named .spectral.yaml' });
       return;
     }
 
@@ -474,7 +470,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     if (!gitSyncRulesetPath) {
       updateApiSpec({ organizationId, projectId, workspaceId, rulesetContent: content });
     }
-
+    setRuleSetVersion(prev => prev + 1);
     setRulesetPath(rulesetWritePath);
   };
 
@@ -493,6 +489,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           }
           await window.main.deleteFile({ path: rulesetWritePath });
           setRulesetPath('');
+          setRuleSetVersion(prev => prev + 1);
         }
       },
     });
