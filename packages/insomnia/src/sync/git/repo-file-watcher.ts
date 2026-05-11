@@ -371,6 +371,16 @@ class RepoFileWatcher {
    */
   private async flushProjectWorkspacesToDisk(): Promise<void> {
     const entries = await this.getWorkspacesWithMeta();
+    const currentWorkspaceIds = new Set(entries.map(({ workspace }) => workspace._id));
+
+    // find deleted workspace and remove their files from disk
+    for (const [workspaceId, absPath] of Array.from(this.lastKnownGitFilePath.entries())) {
+      if (currentWorkspaceIds.has(workspaceId)) {
+        continue;
+      }
+
+      await this.removeWorkspaceFileFromDisk(workspaceId, absPath);
+    }
 
     for (const { workspace, meta } of entries) {
       if (this.stopped) {
@@ -407,16 +417,7 @@ class RepoFileWatcher {
 
         // New file written successfully — now safe to remove the old one
         if (isRename) {
-          try {
-            await fs.promises.unlink(previousAbsPath);
-            console.log('[repo-file-watcher] Removed old file after rename:', previousAbsPath, '→', absPath);
-          } catch {
-            // Old file may already be gone — that's fine
-          }
-          // Clean up tracking for the old path so the watcher doesn't
-          // try to re-import a file that no longer exists
-          this.lastSyncMtime.delete(previousAbsPath);
-          this.lastWrittenHash.delete(previousAbsPath);
+          await this.removeWorkspaceFileFromDisk(workspace._id, previousAbsPath);
         }
 
         // Record hash + mtime so the FS→DB side skips this echo
@@ -701,6 +702,26 @@ class RepoFileWatcher {
     this.lastSyncMtime.delete(normalised);
     this.lastWrittenHash.delete(normalised);
     this.clearProblem(normalised);
+  }
+
+  private cleanupRemovedWorkspaceFileTracking(workspaceId: string, normalisedPath: string): void {
+    if (this.lastKnownGitFilePath.get(workspaceId) === normalisedPath) {
+      this.lastKnownGitFilePath.delete(workspaceId);
+    }
+    this.lastSyncMtime.delete(normalisedPath);
+    this.lastWrittenHash.delete(normalisedPath);
+    this.clearProblem(normalisedPath);
+  }
+
+  private async removeWorkspaceFileFromDisk(workspaceId: string, normalisedPath: string): Promise<void> {
+    try {
+      await fs.promises.unlink(normalisedPath);
+      console.log('[repo-file-watcher] Removed workspace file from disk:', workspaceId, normalisedPath);
+    } catch {
+      // Old file may already be gone — that's fine.
+    }
+
+    this.cleanupRemovedWorkspaceFileTracking(workspaceId, normalisedPath);
   }
 
   /** Convert an absolute path to a posix-style path relative to the repo root. */
