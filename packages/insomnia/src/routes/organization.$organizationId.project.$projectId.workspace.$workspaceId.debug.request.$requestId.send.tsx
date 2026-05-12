@@ -365,6 +365,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               count_headers: response.headers.length,
               count_cookies: response.headers.find(h => h.name === 'set-cookie')?.value.split(',').length || 0,
               count_tests: response.requestTestResults?.length || 0,
+              has_prescript: !!activeRequest.preRequestScript,
+              has_postscript: !!activeRequest.afterResponseScript,
+              count_prescript_lines: activeRequest.preRequestScript ? activeRequest.preRequestScript.split('\n').length : 0,
+              count_postscript_lines: activeRequest.afterResponseScript ? activeRequest.afterResponseScript.split('\n').length : 0,
             },
           });
 
