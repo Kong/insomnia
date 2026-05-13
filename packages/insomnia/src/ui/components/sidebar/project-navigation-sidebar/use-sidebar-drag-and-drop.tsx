@@ -159,7 +159,6 @@ export const useSidebarDragAndDrop = ({
       const draggedItem = getCollectionItemByKey(draggedKey) as AllowDragItem | null;
       const targetItem = getCollectionItemByKey(droppedKey) as AllowDropTarget | null;
       const realTargetItem = isBefore ? flatItemsById.get(droppedKey)?.[1] : targetItem;
-      console.log('Drag and drop', { draggedItem, targetItem, realTargetItem, dropPosition });
       if (
         !draggedItem ||
         !targetItem ||
