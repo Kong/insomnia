@@ -6,6 +6,7 @@ import {
   Breadcrumb,
   Breadcrumbs,
   Button,
+  Dialog,
   GridList,
   GridListItem,
   Heading,
@@ -14,19 +15,22 @@ import {
   Menu,
   MenuItem,
   MenuTrigger,
+  Modal,
+  ModalOverlay,
   Popover,
   ToggleButton,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, NavLink, redirect, useLoaderData } from 'react-router';
+import { href, NavLink, redirect, useLoaderData, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
 
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import { validateSpectralRuleset } from '~/common/spectral-ruleset-validator';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
 import { services } from '~/insomnia-data';
 import * as models from '~/models/index';
@@ -96,6 +100,14 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
     : '';
 
+  let rulesetContent = '';
+  if (gitSyncRulesetPath) {
+    const { content } = await window.main.insecureReadFileWithEncoding({ path: gitSyncRulesetPath });
+    rulesetContent = content;
+  } else {
+    rulesetContent = apiSpec.rulesetContent || '';
+  }
+
   let parsedSpec: OpenAPIV3.Document | undefined;
 
   try {
@@ -107,6 +119,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     gitSyncRulesetPath,
     isConnectedGitProject,
     parsedSpec,
+    rulesetContent,
   };
 }
 
@@ -169,6 +182,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
+  const [isViewRulesetModalOpen, setIsViewRulesetModalOpen] = useState(false);
 
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
 
@@ -184,7 +198,9 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
-  const { apiSpec, gitSyncRulesetPath, isConnectedGitProject, parsedSpec } = useLoaderData<typeof clientLoader>();
+  const { apiSpec, gitSyncRulesetPath, isConnectedGitProject, parsedSpec, rulesetContent } =
+    useLoaderData<typeof clientLoader>();
+  const revalidator = useRevalidator();
 
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
@@ -194,8 +210,9 @@ const Component = ({ params }: Route.ComponentProps) => {
   const gitVersion = useGitVCSVersion();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
-  const [rulesetPath, setRulesetPath] = useState<string>('');
-  const [ruleSetVersion, setRuleSetVersion] = useState<number>(1);
+  const [selectedRulesetPath, setSelectedRulesetPath] = useState<string>(
+    gitSyncRulesetPath && rulesetContent ? gitSyncRulesetPath : '',
+  );
 
   // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
   // For git sync projects, write .spectral.yaml directly to the git working directory so it
@@ -258,52 +275,34 @@ const Component = ({ params }: Route.ComponentProps) => {
   };
 
   useEffect(() => {
-    registerCodeMirrorLint(rulesetPath);
+    registerCodeMirrorLint(selectedRulesetPath);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-  }, [rulesetPath, apiSpec?.rulesetContent, ruleSetVersion]);
-
-  // For git sync projects, .spectral.yaml on disk is the source of truth.
-  // Runs on mount and whenever gitVersion changes (e.g. after a pull)
-  // to detect whether .spectral.yaml exists and update rulesetPath accordingly.
-  useEffect(() => {
-    const syncGitRuleset = async () => {
-      if (gitSyncRulesetPath) {
-        try {
-          const content = await window.main.insecureReadFile({ path: gitSyncRulesetPath });
-          setRulesetPath(content ? gitSyncRulesetPath : '');
-        } catch {
-          setRulesetPath('');
-        }
-      }
-    };
-
-    syncGitRuleset();
-  }, [gitSyncRulesetPath, gitVersion]);
-
-  // For cloud/local projects, rulesetContent in NeDB is the source of truth.
-  // Write to the /workspace/${workspaceId} path for Spectral and update rulesetPath accordingly.
-  useEffect(() => {
-    const syncCloudRuleset = async () => {
-      if (gitSyncRulesetPath) return;
-
-      if (apiSpec.rulesetContent) {
-        await window.main.writeFile({ path: rulesetWritePath, content: apiSpec.rulesetContent });
-        setRulesetPath(rulesetWritePath);
-      } else {
-        await window.main.deleteFile({ path: rulesetWritePath });
-        setRulesetPath('');
-      }
-    };
-
-    syncCloudRuleset();
-  }, [apiSpec.rulesetContent, rulesetWritePath, gitSyncRulesetPath]);
+  }, [selectedRulesetPath, rulesetContent]); //removed rulesetVersion here, removed apiSpec.rulesetContent
 
   useEffect(() => {
     if (lintErrors.length > 0 || lintWarnings.length > 0) {
       setIsLintPaneOpen(true);
     }
   }, [lintErrors.length, lintWarnings.length]);
+
+  useEffect(() => {
+    const syncRuleset = async () => {
+      if (gitSyncRulesetPath) {
+        // Git-sync: file is already on disk at gitSyncRulesetPath.
+        setSelectedRulesetPath(rulesetContent ? gitSyncRulesetPath : '');
+      } else if (rulesetContent) {
+        // Cloud/local: write rulesetContent to disk and update selectedRulesetPath.
+        await window.main.writeFile({ path: rulesetWritePath, content: rulesetContent });
+        setSelectedRulesetPath(rulesetWritePath);
+      } else {
+        await window.main.deleteFile({ path: rulesetWritePath });
+        setSelectedRulesetPath('');
+      }
+    };
+
+    syncRuleset();
+  }, [rulesetContent, rulesetWritePath, gitSyncRulesetPath]);
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
@@ -459,7 +458,21 @@ const Component = ({ params }: Route.ComponentProps) => {
       return;
     }
 
-    const content = await window.main.insecureReadFile({ path: filePath });
+    const raw = await window.main.insecureReadFile({ path: filePath });
+    const content = raw
+      .split('\n')
+      .map(line => line.trimEnd())
+      .join('\n')
+      .trim();
+
+    const validation = validateSpectralRuleset(content);
+    if (!validation.isValid) {
+      showError({
+        title: 'Invalid Spectral Ruleset',
+        message: validation.error,
+      });
+      return;
+    }
 
     await window.main.writeFile({ path: rulesetWritePath, content });
 
@@ -467,11 +480,12 @@ const Component = ({ params }: Route.ComponentProps) => {
     // be serialized into insomnia.{workspaceId}.yaml, creating a duplicate representation.
     // Instead, .spectral.yaml is written directly to the git working directory and
     // tracked by git like any other file — committed, pushed, and pulled normally.
-    if (!gitSyncRulesetPath) {
+    if (gitSyncRulesetPath) {
+      revalidator.revalidate();
+    } else {
       updateApiSpec({ organizationId, projectId, workspaceId, rulesetContent: content });
     }
-    setRuleSetVersion(prev => prev + 1);
-    setRulesetPath(rulesetWritePath);
+    setSelectedRulesetPath(rulesetWritePath);
   };
 
   const handleUnselectSpectralFile = async () => {
@@ -488,8 +502,10 @@ const Component = ({ params }: Route.ComponentProps) => {
             updateApiSpec({ organizationId, projectId, workspaceId, rulesetContent: null });
           }
           await window.main.deleteFile({ path: rulesetWritePath });
-          setRulesetPath('');
-          setRuleSetVersion(prev => prev + 1);
+          if (gitSyncRulesetPath) {
+            revalidator.revalidate();
+          }
+          setSelectedRulesetPath('');
         }
       },
     });
@@ -1072,6 +1088,39 @@ const Component = ({ params }: Route.ComponentProps) => {
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
           {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
           {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
+          {isViewRulesetModalOpen && (
+            <ModalOverlay
+              isOpen={isViewRulesetModalOpen}
+              onOpenChange={setIsViewRulesetModalOpen}
+              isDismissable
+              className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-(--color-bg) py-[100px]"
+            >
+              <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
+                <Dialog className="relative outline-hidden">
+                  {({ close }) => (
+                    <>
+                      <div className="flex items-center justify-between gap-2 pb-(--padding-sm)">
+                        <Heading slot="title" className="mb-[14px] text-[22px] leading-[34px]">
+                          Existing Ruleset Contents
+                        </Heading>
+                        <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
+                      </div>
+                      {rulesetContent && (
+                        <CodeEditor
+                          id="ruleset-viewer"
+                          mode="yaml"
+                          readOnly
+                          noLint
+                          defaultValue={rulesetContent}
+                          className="h-[400px]"
+                        />
+                      )}
+                    </>
+                  )}
+                </Dialog>
+              </Modal>
+            </ModalOverlay>
+          )}
           {isNewMockServerModalOpen && (
             <NewWorkspaceModal
               isOpen={isNewMockServerModalOpen}
@@ -1123,10 +1172,18 @@ const Component = ({ params }: Route.ComponentProps) => {
                 >
                   <div className="flex items-center gap-2 p-(--padding-sm)">
                     <TooltipTrigger>
-                      <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-                      Ruleset:
+                      <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
+                      <div className="ml-2 inline-flex items-center">
+                        <span className="mr-[2px]">Ruleset</span>
+                        {!!selectedRulesetPath && (
+                          <Button className="underline" onPress={() => setIsViewRulesetModalOpen(true)}>
+                            (View)
+                          </Button>
+                        )}
+                        :
+                      </div>
                       <Button className="underline" onPress={handleSelectSpectralFile}>
-                        {rulesetPath ? window.path.basename(rulesetPath) : 'Upload yml file'}
+                        {selectedRulesetPath ? window.path.basename(selectedRulesetPath) : 'Upload yml file'}
                       </Button>
                       <Tooltip
                         placement="top end"
@@ -1134,10 +1191,10 @@ const Component = ({ params }: Route.ComponentProps) => {
                         className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                       >
                         <div>
-                          {rulesetPath ? (
+                          {selectedRulesetPath ? (
                             <Fragment>
                               <p>Using ruleset from</p>
-                              <code className="p-0 wrap-break-word">{rulesetPath}</code>
+                              <code className="p-0 wrap-break-word">{selectedRulesetPath}</code>
                             </Fragment>
                           ) : (
                             <Fragment>
@@ -1156,7 +1213,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                         </div>
                       </Tooltip>
                     </TooltipTrigger>
-                    {!!rulesetPath && (
+                    {!!selectedRulesetPath && (
                       <TooltipTrigger>
                         <Button onPress={handleUnselectSpectralFile}>
                           <Icon icon="xmark" />
