@@ -99,7 +99,7 @@ export class ProjectPage extends BasePage {
     if (await projectModalCloseButton.isVisible()) {
       await projectModalCloseButton.click();
     }
-    await this.page.getByRole('button', { name: 'Personal workspace' }).click();
+    await this.page.getByTestId('project-node-Personal Workspace').click();
     await this.page.getByRole('option', { name: /Magic/ }).locator('span').click();
     await this.page.getByRole('button', { name: /Magic/ }).click();
     await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
@@ -137,8 +137,8 @@ export class ProjectPage extends BasePage {
 
       // After import, app redirects to workspace page
       // Navigate back to project page for next import or to continue testing
-      await this.page.getByTestId('project').waitFor({ state: 'visible' });
-      await this.page.getByTestId('project').click();
+      await this.page.getByTestId('workspace-breadcrumb-level-0').waitFor({ state: 'visible' });
+      await this.page.getByTestId('workspace-breadcrumb-level-0').click();
     }
   }
 
