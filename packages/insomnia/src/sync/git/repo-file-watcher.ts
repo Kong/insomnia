@@ -437,6 +437,11 @@ class RepoFileWatcher {
       const gitFilePath: string = meta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
       const absPath = path.normalize(path.join(this.repoDir, gitFilePath));
 
+      const rel = path.relative(this.repoDir, absPath);
+      if (rel.startsWith('..') || path.isAbsolute(rel)) {
+        continue;
+      }
+
       if (this.hasProblem(absPath)) {
         continue;
       }
@@ -653,12 +658,16 @@ class RepoFileWatcher {
     normalised: string,
     forceRead = false,
   ): Promise<{ content: string; hash: string; mtimeMs: number } | null> {
-    // ── Check if file still exists ───────────────────────────────────
+    // ── Check if file still exists and is not a symlink ──────────────
     let fileStat: fs.Stats;
     try {
-      fileStat = await fs.promises.stat(absPath);
+      fileStat = await fs.promises.lstat(absPath);
     } catch {
       await this.handleFileDeletion(normalised);
+      return null;
+    }
+
+    if (fileStat.isSymbolicLink()) {
       return null;
     }
 
@@ -964,6 +973,10 @@ class RepoFileWatcher {
     for (const { workspace, meta } of entries) {
       if (meta?.gitFilePath) {
         const absPath = path.normalize(path.join(this.repoDir, meta.gitFilePath));
+        const rel = path.relative(this.repoDir, absPath);
+        if (rel.startsWith('..') || path.isAbsolute(rel)) {
+          continue;
+        }
         this.lastKnownGitFilePath.set(workspace._id, absPath);
       }
     }
