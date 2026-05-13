@@ -7,6 +7,9 @@ import path from 'node:path';
 
 import { oas } from '@stoplight/spectral-rulesets';
 import { DiagnosticSeverity } from '@stoplight/types';
+import { safeRefResolver } from 'insomnia/src/common/safe-ref-resolver';
+import { validateSpectralRuleset } from 'insomnia/src/common/spectral-ruleset-validator';
+import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 
 import { InsoError } from '../errors';
 import { logger } from '../logger';
@@ -31,11 +34,17 @@ export async function lintSpecification({
   specContent: string;
   rulesetFileName?: string;
 }) {
-  const spectral = new Spectral();
+  const spectral = new Spectral({ resolver: safeRefResolver });
   // Use custom ruleset if present
   let ruleset = oas;
   try {
     if (rulesetFileName) {
+      const rulesetContent = await fs.promises.readFile(rulesetFileName, 'utf8');
+      const validation = validateSpectralRuleset(rulesetContent);
+      if (!validation.isValid) {
+        logger.fatal(`Invalid Spectral ruleset at ${rulesetFileName}: ${validation.error}`);
+        return { isValid: false };
+      }
       ruleset = await bundleAndLoadRuleset(rulesetFileName, { fs });
     }
   } catch (error) {
@@ -44,7 +53,24 @@ export async function lintSpecification({
   }
 
   spectral.setRuleset(ruleset as RulesetDefinition);
-  const results = await spectral.run(specContent);
+
+  const LINT_TIMEOUT_MS = 30_000;
+  let results: ISpectralDiagnostic[];
+
+  try {
+    const timeoutPromise = new Promise<ISpectralDiagnostic[]>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`Linting exceeded the ${LINT_TIMEOUT_MS / 1000}s time limit and was aborted.`)),
+        LINT_TIMEOUT_MS,
+      ),
+    );
+
+    results = await Promise.race([spectral.run(specContent), timeoutPromise]);
+  } catch (error) {
+    logger.fatal(error.message);
+    return { isValid: false };
+  }
+
   if (!results.length) {
     logger.log('No linting errors or warnings.');
     return { results, isValid: true };

@@ -20,6 +20,7 @@ import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
+import { validateSpectralRuleset } from '~/common/spectral-ruleset-validator';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
@@ -339,6 +340,20 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
+
+    //defensive validation for ruleset file before spawning the spectral lint worker
+    if (rulesetPath) {
+      try {
+        const rulesetContent = await fs.promises.readFile(rulesetPath, 'utf8');
+        const validation = validateSpectralRuleset(rulesetContent);
+        if (!validation.isValid) {
+          return { error: `Invalid Spectral ruleset: ${validation.error}` };
+        }
+      } catch (err) {
+        return { error: `Failed to read ruleset file: ${err instanceof Error ? err.message : String(err)}` };
+      }
+    }
+
     return new Promise((resolve, reject) => {
       // Use a filescoped variable to store and terminate the last open
       // This ensures we use a last in first out type of process management
@@ -351,12 +366,26 @@ export function registerMainHandlers() {
 
       let process: UtilityProcess | null = lintProcess!;
 
+      const LINT_WORKER_TIMEOUT_MS = 30_000;
+      const timeoutHandle = setTimeout(() => {
+        if (process) {
+          console.warn(`[lint-process] exceeded ${LINT_WORKER_TIMEOUT_MS}ms wall-clock limit; terminating.`);
+          process.kill();
+          process = null;
+          resolve({
+            error: `Linting exceeded the ${LINT_WORKER_TIMEOUT_MS / 1000}s time limit and was terminated. The ruleset or specification may contain a catastrophic regex or deeply nested schema.`,
+          });
+        }
+      }, LINT_WORKER_TIMEOUT_MS);
+
       process.on('exit', code => {
         console.log('[lint-process] exited with code:', code);
+        clearTimeout(timeoutHandle);
         resolve({ cancelled: true });
       });
 
       process.on('message', msg => {
+        clearTimeout(timeoutHandle);
         resolve(msg);
         process?.kill();
         process = null;
@@ -364,6 +393,7 @@ export function registerMainHandlers() {
 
       process.on('error', err => {
         console.error('[lint-process] error:', err);
+        clearTimeout(timeoutHandle);
         reject({ error: err.toString() });
       });
 
