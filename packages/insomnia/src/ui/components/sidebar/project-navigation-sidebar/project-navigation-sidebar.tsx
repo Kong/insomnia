@@ -350,8 +350,8 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
           ? getUnsyncedRemoteWorkspaces(unsyncedFilesByProjectId.get(projectId) || [], sortedWorkspaces)
           : [];
         const allWorkspaces = [...sortedWorkspaces, ...unsyncedWorkspaces];
-        // If there is no workspace under the project, show an empty workspace node
-        if (allWorkspaces.length === 0) {
+        // If there is no workspace under the project, show an empty workspace if no active filter
+        if (allWorkspaces.length === 0 && !projectNavigationSidebarFilter) {
           items.push({
             kind: 'emptyProject',
             organizationId,
@@ -404,7 +404,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                     collectionSortOrders[workspaceId] || 'type-manual',
                   )
                 : [];
-            const pinnedCollectionChildren = collectionChildren.filter(child => child.pinned);
+            const pinnedCollectionChildren = collectionChildren.filter(child => child.pinned && !child.hidden);
 
             if (projectNavigationSidebarFilter) {
               // apply filter to collection children first
