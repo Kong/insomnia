@@ -31,15 +31,15 @@ export class NavigationSidebar {
   // ===========================================================================
 
   get filterInput(): Locator {
-    return this.root.getByLabel('Projects filter').getByRole('textbox');
+    return this.root.getByLabel('Projects filter');
   }
 
-  async filter(text: string): Promise<void> {
+  async fillFilter(text: string): Promise<void> {
     await this.filterInput.fill(text);
   }
 
   async clearFilter(): Promise<void> {
-    await this.root.getByLabel('Projects filter').getByRole('button').click();
+    await this.root.getByRole('button', { name: 'Clear search' }).click();
   }
 
   // ===========================================================================
@@ -59,7 +59,20 @@ export class NavigationSidebar {
   }
 
   async openProjectActionsDropdown(projectName: string): Promise<void> {
-    await this.projectRow(projectName).getByLabel('Project Actions').click();
+    const projectRow = this.projectRow(projectName);
+    await projectRow.hover();
+    await projectRow.getByLabel('Project Actions').click();
+  }
+
+  async selectProjectDropdownOption({
+    actionName,
+    projectName,
+  }: {
+    actionName: string;
+    projectName: string;
+  }): Promise<void> {
+    await this.openProjectActionsDropdown(projectName);
+    await this.page.getByRole('menuitemradio', { name: actionName }).click();
   }
 
   async expandProject(projectName: string): Promise<void> {
@@ -73,57 +86,99 @@ export class NavigationSidebar {
   // ===========================================================================
   // Workspace nodes
   // ===========================================================================
-  workspaceRow(workspaceName: string, projectName?: string): Locator {
-    if (projectName) {
-      return this.projectRow(projectName).getByTestId(`workspace-node-${workspaceName}`);
-    }
+  workspaceRow(workspaceName: string): Locator {
     return this.root.getByTestId(`workspace-node-${workspaceName}`);
   }
 
-  async selectWorkspace(workspaceName: string, projectName: string): Promise<void> {
-    await this.workspaceRow(workspaceName, projectName).click();
+  async selectWorkspace(workspaceName: string): Promise<void> {
+    await this.workspaceRow(workspaceName).click();
   }
 
-  async openWorkspaceActionsDropdown(workspaceName: string, projectName?: string): Promise<void> {
-    await this.workspaceRow(workspaceName, projectName).getByLabel('SideBar Workspace Actions').click();
+  async openWorkspaceActionsDropdown(workspaceName: string): Promise<void> {
+    const workspaceRow = this.workspaceRow(workspaceName);
+    await workspaceRow.hover();
+    await workspaceRow.getByLabel('SideBar Workspace Actions').click();
   }
 
-  async expandWorkspace(workspaceName: string, projectName: string): Promise<void> {
-    await this.workspaceRow(workspaceName, projectName).getByLabel(`Expand ${workspaceName}`).click();
+  async selectWorkspaceDropdownOption({
+    actionName,
+    workspaceName,
+  }: {
+    actionName: string;
+    workspaceName: string;
+  }): Promise<void> {
+    await this.openWorkspaceActionsDropdown(workspaceName);
+    await this.page.getByRole('menuitemradio', { name: actionName }).click();
   }
 
-  async collapseWorkspace(workspaceName: string, projectName: string): Promise<void> {
-    await this.workspaceRow(workspaceName, projectName).getByLabel(`Collapse ${workspaceName}`).click();
+  async expandWorkspace(workspaceName: string): Promise<void> {
+    await this.workspaceRow(workspaceName).getByLabel(`Expand ${workspaceName}`).click();
+  }
+
+  async collapseWorkspace(workspaceName: string): Promise<void> {
+    await this.workspaceRow(workspaceName).getByLabel(`Collapse ${workspaceName}`).click();
   }
 
   // ===========================================================================
   // Request / Request Group nodes
   // ===========================================================================
 
-  requestRow(requestOrGroupName: string, workspaceName?: string, projectName?: string): Locator {
-    if (projectName) {
-      return workspaceName
-        ? this.projectRow(projectName)
-            .getByTestId(`workspace-node-${workspaceName}`)
-            .getByTestId(`request-node-${requestOrGroupName}`)
-        : this.projectRow(projectName).getByTestId(`request-node-${requestOrGroupName}`);
-    }
-
-    if (workspaceName) {
-      return this.workspaceRow(workspaceName).getByTestId(`request-node-${requestOrGroupName}`);
-    }
-
+  requestRow(requestOrGroupName: string): Locator {
     return this.root.getByTestId(`request-node-${requestOrGroupName}`);
   }
 
-  async clickRequestOrFolder(requestOrGroupName: string, workspaceName?: string, projectName?: string): Promise<void> {
-    const row = this.requestRow(requestOrGroupName, workspaceName, projectName);
+  pinnedRequestRow(requestName: string): Locator {
+    return this.root.getByTestId(`pinned-request-node-${requestName}`);
+  }
 
+  async clickRequestOrFolder(requestOrGroupName: string): Promise<void> {
+    const row = this.requestRow(requestOrGroupName);
     await row.click();
   }
 
-  async openRequestActionsDropdown(requestName: string, workspaceName?: string, projectName?: string): Promise<void> {
-    await this.requestRow(requestName, workspaceName, projectName).getByLabel('Request Actions').click();
+  async openRequestActionsDropdown(requestName: string): Promise<void> {
+    const requestRow = this.requestRow(requestName);
+    await requestRow.hover();
+    await requestRow.getByLabel('Request Actions').click();
+  }
+
+  async openRequestGroupActionsDropdown(requestName: string): Promise<void> {
+    const requestRow = this.requestRow(requestName);
+    await requestRow.hover();
+    await requestRow.getByLabel('Request Group Actions').click();
+  }
+
+  async selectRequestDropdownOption({
+    actionName,
+    requestName,
+  }: {
+    actionName: string;
+    requestName: string;
+  }): Promise<void> {
+    await this.openRequestActionsDropdown(requestName);
+    await this.page.getByRole('menuitemradio', { name: actionName }).click();
+  }
+
+  async selectRequestGroupDropdownOption({
+    actionName,
+    requestGroupName,
+  }: {
+    actionName: string;
+    requestGroupName: string;
+  }): Promise<void> {
+    await this.openRequestGroupActionsDropdown(requestGroupName);
+    await this.page.getByRole('menuitemradio', { name: actionName }).click();
+  }
+
+  async pinRequest(requestName: string): Promise<void> {
+    await this.openRequestActionsDropdown(requestName);
+    await this.page.getByRole('menuitemradio', { name: 'Pin' }).click();
+  }
+
+  async unpinRequest(requestName: string): Promise<void> {
+    const requestRow = this.requestRow(requestName);
+    await requestRow.hover();
+    await requestRow.getByLabel('Unpin request').click();
   }
 
   async expandFolder(folderName: string): Promise<void> {
