@@ -1168,7 +1168,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                 <div
                   className={`flex ${isLintPaneOpen ? '' : 'h-(--line-height-sm)'} box-border flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden`}
                 >
-                  <div className="flex items-center gap-2 p-(--padding-sm)">
+                  <div className="flex flex-wrap items-center gap-2 p-(--padding-sm)">
                     <TooltipTrigger>
                       <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
                       <div className="ml-2 inline-flex items-center">
@@ -1226,31 +1226,33 @@ const Component = ({ params }: Route.ComponentProps) => {
                       </TooltipTrigger>
                     )}
                     <span className="flex-1" />
-                    {lintErrors.length > 0 && (
-                      <div className="flex items-center gap-2 select-none">
-                        <Icon icon="circle-xmark" className="text-(--color-danger)" />
-                      </div>
-                    )}
-                    {lintWarnings.length > 0 && (
-                      <div className="flex items-center gap-2 select-none">
-                        <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
-                      </div>
-                    )}
-                    {apiSpec.contents && (
-                      <div className="flex items-center gap-2 select-none">
-                        {lintMessages.length === 0 && <Icon icon="check-square" className="text-(--color-success)" />}
-                        {lintMessages.length === 0 ? (
-                          'No lint problems'
-                        ) : (
-                          <Button onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
-                            <span className="underline">
-                              {lintErrors.length} {lintErrors.length === 1 ? 'error' : 'errors'}, {lintWarnings.length}{' '}
-                              {lintWarnings.length === 1 ? 'warning' : 'warnings'}
-                            </span>
-                          </Button>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {lintErrors.length > 0 && (
+                        <div className="flex items-center gap-2 select-none">
+                          <Icon icon="circle-xmark" className="text-(--color-danger)" />
+                        </div>
+                      )}
+                      {lintWarnings.length > 0 && (
+                        <div className="flex items-center gap-2 select-none">
+                          <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
+                        </div>
+                      )}
+                      {apiSpec.contents && (
+                        <div className="flex items-center gap-2 select-none">
+                          {lintMessages.length === 0 && <Icon icon="check-square" className="text-(--color-success)" />}
+                          {lintMessages.length === 0 ? (
+                            'No lint problems'
+                          ) : (
+                            <Button onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
+                              <span className="underline">
+                                {lintErrors.length} {lintErrors.length === 1 ? 'error' : 'errors'},{' '}
+                                {lintWarnings.length} {lintWarnings.length === 1 ? 'warning' : 'warnings'}
+                              </span>
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   {isLintPaneOpen && (
                     <ListBox
