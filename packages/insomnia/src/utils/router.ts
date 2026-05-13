@@ -47,7 +47,7 @@ export const getInitialRouteForOrganization = async ({
     const match = getMatchParams(prevOrganizationLocation);
 
     if (match && match.params.organizationId && match.params.projectId) {
-      const existingProject = await services.project.getById(match.params.projectId);
+      const existingProject = await services.project.get(match.params.projectId);
 
       if (existingProject) {
         console.log('Redirecting to last visited project', existingProject._id);
@@ -119,7 +119,7 @@ export const getInitialEntry = async () => {
 
     const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
 
-    const user = await services.userSession.getOrCreate();
+    const user = await services.userSession.get();
     if (user.id) {
       const organizations = JSON.parse(
         localStorage.getItem(`${user.accountId}:organizations`) || '[]',

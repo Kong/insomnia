@@ -26,11 +26,7 @@ export async function absorbKey(sessionId: string, key: string) {
     getUserProfile({ sessionId: sessionIdResolved }),
     getEncryptionKeys({ sessionId: sessionIdResolved }),
   ]);
-  const {
-    public_key: publicKey,
-    enc_private_key: encPrivateKey,
-    enc_symmetric_key: encSymmetricKey,
-  } = keys;
+  const { public_key: publicKey, enc_private_key: encPrivateKey, enc_symmetric_key: encSymmetricKey } = keys;
   const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
 
@@ -67,7 +63,7 @@ export async function getPrivateKey() {
 }
 
 export async function getCurrentSessionId() {
-  const { id } = await services.userSession.getOrCreate();
+  const { id } = await services.userSession.get();
   return id;
 }
 
@@ -122,16 +118,14 @@ export async function setSessionData(
     lastName,
   };
 
-  const userData = await services.userSession.getOrCreate();
-  await services.userSession.update(userData, sessionData);
+  await services.userSession.update(sessionData);
 
   return sessionData;
 }
 
 /** Update the session data with vault salt and vault key */
 export async function setVaultSessionData(vaultSalt: string, vaultKey: string) {
-  const userData = await services.userSession.getOrCreate();
-  await services.userSession.update(userData, { vaultSalt, vaultKey });
+  await services.userSession.update({ vaultSalt, vaultKey });
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -139,25 +133,13 @@ export async function setVaultSessionData(vaultSalt: string, vaultKey: string) {
 // ~~~~~~~~~~~~~~~~ //
 
 export async function getUserSession(): Promise<SessionData> {
-  const userData = await services.userSession.getOrCreate();
+  const userData = await services.userSession.get();
 
   return userData;
 }
 
 async function _unsetSessionData() {
-  await services.userSession.getOrCreate();
-  await services.userSession.update(await services.userSession.getOrCreate(), {
-    id: '',
-    accountId: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    symmetricKey: {} as JsonWebKey,
-    publicKey: {} as JsonWebKey,
-    encPrivateKey: {} as crypt.AESMessage,
-    vaultSalt: '',
-    vaultKey: '',
-  });
+  await services.userSession.remove();
 }
 
 /**
@@ -272,12 +254,12 @@ export async function migrateFromLocalStorage() {
   try {
     const sessionData = JSON.parse(session) as SessionData;
 
-    const currentUserSession = await services.userSession.getOrCreate();
+    const currentUserSession = await services.userSession.get();
 
     if (currentUserSession.id) {
       console.warn('Session already exists, skipping migration');
     } else {
-      await services.userSession.update(currentUserSession, sessionData);
+      await services.userSession.update(sessionData);
     }
   } catch (e) {
     console.error('Failed to parse session data', e);

@@ -35,10 +35,6 @@ describe('getAuthQueryParams', () => {
   });
 });
 describe('sendCurlAndWriteTimeline()', () => {
-  beforeEach(async () => {
-    await services.project.all();
-  });
-
   it('sends a generic request', async () => {
     const workspace = await services.workspace.create();
     const settings = await services.settings.getOrCreate();

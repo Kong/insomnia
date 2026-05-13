@@ -37,7 +37,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { organizationId, projectId } = params;
   try {
     const workspaceData = (await request.json()) as NewWorkspaceData;
-    const project = await services.project.getById(projectId);
+    const project = await services.project.get(projectId);
 
     invariant(project, 'Project not found');
 
@@ -156,7 +156,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     await database.flushChanges(flushId);
 
-    const { id } = await services.userSession.getOrCreate();
+    const { id } = await services.userSession.get();
     if (
       id &&
       !workspaceMeta.gitRepositoryId &&
@@ -336,7 +336,7 @@ async function createMockServer(
         return result.error;
       }
 
-      const { id: sessionId } = await services.userSession.getOrCreate();
+      const { id: sessionId } = await services.userSession.get();
       await createMockRoutes(result.routes, mockServer, sessionId, organizationId);
     }
 
@@ -344,7 +344,7 @@ async function createMockServer(
 
     const generationDurationMs = Date.now() - generationStartTime;
 
-    const { id } = await services.userSession.getOrCreate();
+    const { id } = await services.userSession.get();
     if (id && !workspaceMeta.gitRepositoryId) {
       await window.main.initializeWorkspaceBackendProject({
         workspaceId: workspace._id,

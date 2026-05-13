@@ -36,13 +36,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const { organizationId, projectId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
   const effectiveRepoId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
   const gitRepository = effectiveRepoId ? await services.gitRepository.getById(effectiveRepoId) : null;
 
-  const user = await services.userSession.getOrCreate();
+  const user = await services.userSession.get();
   const sessionId = user.id;
 
   try {

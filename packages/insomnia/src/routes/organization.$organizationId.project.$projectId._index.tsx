@@ -253,7 +253,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
 
 async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
   try {
-    const project = await services.project.getById(projectId);
+    const project = await services.project.get(projectId);
 
     const remoteId = project?.remoteId;
     if (!remoteId) {
@@ -359,7 +359,7 @@ const CheckAllProjectSyncStatus = async (projects: Project[]) => {
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
-  const { id: sessionId } = await services.userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.get();
   const fallbackLearningFeature = {
     active: false,
     title: '',
@@ -389,7 +389,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
   invariant(projectId, 'projectId parameter is required');
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   console.log('[project loader] Loading project:', project?.name, projectId);
   const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),

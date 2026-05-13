@@ -35,7 +35,7 @@ export const importScannedResources = async ({
   invariant(organizationId && typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(projectId && typeof projectId === 'string', 'ProjectId is required.');
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found.');
 
   return await (typeof workspaceId === 'string' && workspaceId

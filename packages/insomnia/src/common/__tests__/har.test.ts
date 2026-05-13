@@ -12,7 +12,7 @@ import { getRenderedRequestAndContext } from '../render';
 describe('export', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
-    await services.project.all();
+    await services.project.list();
     await services.settings.getOrCreate();
   });
 

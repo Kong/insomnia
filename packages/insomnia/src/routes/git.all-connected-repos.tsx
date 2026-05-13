@@ -7,7 +7,7 @@ import { models, services } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 export async function clientLoader() {
-  const { accountId } = await services.userSession.getOrCreate();
+  const { accountId } = await services.userSession.get();
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
   const allProjects = (
     await Promise.all(

@@ -161,7 +161,7 @@ export const useRootLoaderData = () => {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
   const workspaceCount = await services.workspace.count();
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   const cloudCredentials = await services.cloudCredential.all();
 
   return {
@@ -382,7 +382,7 @@ const Root = () => {
           );
         }
 
-        const userSession = await services.userSession.getOrCreate();
+        const userSession = await services.userSession.get();
         if (!userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
           window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
@@ -511,7 +511,7 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://app/open/organization') {
         // if user is logged out, navigate to authorize instead
         // gracefully handle open org in app from browser
-        const userSession = await services.userSession.getOrCreate();
+        const userSession = await services.userSession.get();
         if (!userSession.id || userSession.id === '') {
           const url = new URL(getLoginUrl());
           window.main.openInBrowser(url.toString());

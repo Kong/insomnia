@@ -53,7 +53,7 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
 };
 
 const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
-  const user = await services.userSession.getOrCreate();
+  const user = await services.userSession.get();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
 

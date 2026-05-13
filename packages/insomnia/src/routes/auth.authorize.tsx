@@ -36,14 +36,14 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     event: SegmentEvent.loginSuccess,
   });
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   const { accountId, id: sessionId } = userSession;
   try {
     // check vault salt exists in server
     const { salt: vaultSalt } = await getVault({ sessionId });
     if (vaultSalt) {
       // save vault salt to session
-      await services.userSession.update(userSession, { vaultSalt });
+      await services.userSession.update({ vaultSalt });
       // get vault key saved in local
       const localVaultKey = await getVaultKeyFromStorage(accountId);
       if (localVaultKey) {
@@ -52,7 +52,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
         if (validateResult) {
           // Encrypt vault key and save encrypted vault key & raw vault salt to session
           const encryptedVaultKey = await window.main.secretStorage.encryptString(localVaultKey);
-          await services.userSession.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
+          await services.userSession.update({ vaultKey: encryptedVaultKey, vaultSalt });
         }
       }
     }
