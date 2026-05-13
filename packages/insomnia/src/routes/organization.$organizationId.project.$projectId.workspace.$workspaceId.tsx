@@ -419,7 +419,12 @@ const Component = () => {
   return (
     <div className="h-full w-full overflow-hidden" data-testid="workspace-page">
       <Outlet />
-      <Modal isOpen={isIssueModalOpen} onClose={handleBackToList} className="w-[min(44rem,calc(100vw-2rem))] max-w-3xl">
+      <Modal
+        parent={document.getElementById('workspace-wrapper')}
+        isOpen={isIssueModalOpen}
+        onClose={handleBackToList}
+        className="relative w-[min(44rem,calc(100vw-2rem))] max-w-3xl"
+      >
         {modalText ? (
           <div className="flex flex-col items-center gap-6 px-4 pt-4 pb-2 text-center">
             <Icon icon="lock" className="text-6xl text-(--hl)" />
