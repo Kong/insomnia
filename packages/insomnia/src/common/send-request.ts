@@ -1,12 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import type { Environment, Settings, UserUploadEnvironment } from '~/insomnia-data';
+import type { BaseModel, Environment, Settings, UserUploadEnvironment } from '~/insomnia-data';
 import { database, initDatabase, services } from '~/insomnia-data';
 import { createNedbDatabase } from '~/insomnia-data/node';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
 
-import type { BaseModel } from '../models';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -140,7 +138,7 @@ export async function getSendRequestCallbackMemDb(
       (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
       {},
     );
-    const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
+    const bodyBuffer = (await services.helpers.getResponseBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
     const testResults = [

@@ -2,7 +2,6 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 
 import type { Response } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { getTimeline } from '~/models/helpers/response-operations';
 
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
@@ -47,7 +46,7 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
           console.error('No response found');
           return;
         }
-        const timeline = await getTimeline(response, options.showBody);
+        const timeline = await services.helpers.getResponseTimeline(response, options.showBody);
         setState({
           responseId: response._id,
           timeline,

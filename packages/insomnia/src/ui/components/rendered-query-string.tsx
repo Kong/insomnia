@@ -10,12 +10,12 @@ import type {
   SocketIORequest,
   WebSocketRequest,
 } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { SegmentEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import { SECURITY_SETTINGS_PATH_LABEL } from '../../common/misc';
-import * as models from '../../models';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
 import { RenderError } from '../../templating/render-error';

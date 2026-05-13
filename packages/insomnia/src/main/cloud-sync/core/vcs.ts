@@ -8,12 +8,12 @@ import clone from 'clone';
 import { runVcsGraphQL } from 'insomnia-api';
 
 import { PLAYWRIGHT_TEST } from '~/common/constants';
+import type { BaseModel } from '~/insomnia-data';
 
 import * as crypt from '../../../account/crypt';
 import * as session from '../../../account/session';
 import type { Operation } from '../../../common/database';
 import { generateId } from '../../../common/misc';
-import type { BaseModel } from '../../../models';
 import type {
   BackendProject,
   BackendProjectWithTeams,

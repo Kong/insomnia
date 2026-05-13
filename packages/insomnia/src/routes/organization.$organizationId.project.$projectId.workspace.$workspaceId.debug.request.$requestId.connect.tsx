@@ -1,10 +1,14 @@
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import { href } from 'react-router';
 
-import type { ChangeBufferEvent } from '~/common/database';
-import type { CookieJar, McpTransportType, RequestAuthentication, RequestHeader } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
+import type {
+  ChangeBufferEvent,
+  CookieJar,
+  McpTransportType,
+  RequestAuthentication,
+  RequestHeader,
+} from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type { RenderedRequest } from '~/templating/types';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -29,7 +33,7 @@ export interface ConnectActionParams {
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { requestId, workspaceId } = params;
 
-  const req = await requestOperations.getById(requestId);
+  const req = await services.helpers.getRequestById(requestId);
   invariant(req, 'Request not found');
   invariant(workspaceId, 'Workspace ID is required');
   const rendered = (await request.json()) as ConnectActionParams;

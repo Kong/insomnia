@@ -24,7 +24,7 @@ import type {
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
-import { EnvironmentType, services } from '~/insomnia-data';
+import { EnvironmentType, models, services } from '~/insomnia-data';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
@@ -39,7 +39,6 @@ import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeader
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
-import * as models from '../models';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginData from '../plugins/context/data';
 import * as pluginNetwork from '../plugins/context/network';

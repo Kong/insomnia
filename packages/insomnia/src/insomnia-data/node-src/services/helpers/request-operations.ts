@@ -1,16 +1,20 @@
 import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 
-import * as models from '../index';
+import * as grpcRequestService from '../grpc-request';
+import * as mcpRequestService from '../mcp-request';
+import * as requestService from '../request';
+import * as socketIORequestService from '../socket-io-request';
+import * as webSocketRequestService from '../websocket-request';
 
-export function findByParentId(
+export function findRequestByParentId(
   parentId: string,
 ): Promise<(Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest)[]> {
   return Promise.all([
-    services.request.findByParentId(parentId),
-    services.grpcRequest.findByParentId(parentId),
-    services.webSocketRequest.findByParentId(parentId),
-    services.socketIORequest.findByParentId(parentId),
+    requestService.findByParentId(parentId),
+    grpcRequestService.findByParentId(parentId),
+    webSocketRequestService.findByParentId(parentId),
+    socketIORequestService.findByParentId(parentId),
   ]).then(([requests, grpcRequests, webSocketRequests, socketIORequests]) => [
     ...requests,
     ...grpcRequests,
@@ -19,88 +23,88 @@ export function findByParentId(
   ]);
 }
 
-export function getById(
+export function getRequestById(
   requestId: string,
 ): Promise<Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest | undefined> {
   if (models.grpcRequest.isGrpcRequestId(requestId)) {
-    return services.grpcRequest.getById(requestId);
+    return grpcRequestService.getById(requestId);
   }
   if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
-    return services.webSocketRequest.getById(requestId);
+    return webSocketRequestService.getById(requestId);
   }
 
   if (models.socketIORequest.isSocketIORequestId(requestId)) {
-    return services.socketIORequest.getById(requestId);
+    return socketIORequestService.getById(requestId);
   }
 
   if (models.mcpRequest.isMcpRequestId(requestId)) {
-    return services.mcpRequest.getById(requestId);
+    return mcpRequestService.getById(requestId);
   }
-  return services.request.getById(requestId);
+  return requestService.getById(requestId);
 }
 
-export function remove(request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest) {
+export function removeRequest(request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest) {
   if (models.grpcRequest.isGrpcRequest(request)) {
-    return services.grpcRequest.remove(request);
+    return grpcRequestService.remove(request);
   }
   if (models.webSocketRequest.isWebSocketRequest(request)) {
-    return services.webSocketRequest.remove(request);
+    return webSocketRequestService.remove(request);
   }
 
   if (models.socketIORequest.isSocketIORequest(request)) {
-    return services.socketIORequest.remove(request);
+    return socketIORequestService.remove(request);
   }
 
   if (models.mcpRequest.isMcpRequest(request)) {
-    return services.mcpRequest.remove(request);
+    return mcpRequestService.remove(request);
   }
 
-  return services.request.remove(request);
+  return requestService.remove(request);
 }
 
-export function update<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
+export function updateRequest<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
   // @ts-expect-error -- TSCONVERSION
   if (models.grpcRequest.isGrpcRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return services.grpcRequest.update(request, patch);
+    return grpcRequestService.update(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
   if (models.webSocketRequest.isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return services.webSocketRequest.update(request, patch);
+    return webSocketRequestService.update(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
   if (models.socketIORequest.isSocketIORequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return services.socketIORequest.update(request, patch);
+    return socketIORequestService.update(request, patch);
   }
 
   // @ts-expect-error -- TSCONVERSION
   if (models.mcpRequest.isMcpRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return services.mcpRequest.update(request, patch);
+    return mcpRequestService.update(request, patch);
   }
 
   // @ts-expect-error -- TSCONVERSION
-  return services.request.update(request, patch);
+  return requestService.update(request, patch);
 }
 
-export function duplicate<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
+export function duplicateRequest<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
   // @ts-expect-error -- TSCONVERSION
   if (models.grpcRequest.isGrpcRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return services.grpcRequest.duplicate(request, patch);
+    return grpcRequestService.duplicate(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
   if (models.webSocketRequest.isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return services.webSocketRequest.duplicate(request, patch);
+    return webSocketRequestService.duplicate(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
   if (models.socketIORequest.isSocketIORequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return services.socketIORequest.duplicate(request, patch);
+    return socketIORequestService.duplicate(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
-  return services.request.duplicate(request, patch);
+  return requestService.duplicate(request, patch);
 }

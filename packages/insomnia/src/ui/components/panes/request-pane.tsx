@@ -5,11 +5,10 @@ import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import type { RequestParameter, Settings } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
-import * as models from '../../../models';
-import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
@@ -106,7 +105,9 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
           <RequestUrlBar
             key={requestId}
             uniquenessKey={uniqueKey}
-            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
+            handleAutocompleteUrls={() =>
+              services.helpers.queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)
+            }
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             onPaste={onPaste}
             ref={requestUrlBarRef}

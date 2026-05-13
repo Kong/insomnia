@@ -1,7 +1,6 @@
 import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { invariant } from '~/utils/invariant';
 

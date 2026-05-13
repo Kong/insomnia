@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { services } from '~/insomnia-data';
 
-import * as models from '../index';
-
 describe('create()', () => {
   it('fails when missing parentId', async () => {
     expect(() =>

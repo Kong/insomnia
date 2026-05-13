@@ -10,7 +10,6 @@ import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import type { CookieJar, RequestAuthentication, RequestHeader, Response } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
-import { readCurlResponse } from '~/models/helpers/response-operations';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import { filterClientCertificates } from '../../network/certificate';
@@ -435,7 +434,9 @@ export const registerCurlHandlers = () => {
   ipcMainOn('curl.closeAll', closeAllCurlConnections);
   ipcMainHandle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
   ipcMainHandle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
-  ipcMainHandle('readCurlResponse', (_, options: Parameters<typeof readCurlResponse>[0]) => readCurlResponse(options));
+  ipcMainHandle('readCurlResponse', (_, options: Parameters<typeof services.helpers.readCurlResponse>[0]) =>
+    services.helpers.readCurlResponse(options),
+  );
 };
 
 electron.app.on('window-all-closed', closeAllCurlConnections);

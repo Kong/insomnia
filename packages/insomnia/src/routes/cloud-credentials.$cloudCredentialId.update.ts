@@ -1,7 +1,8 @@
 import { href } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
-import { type CloudProviderCredential, services } from '~/insomnia-data';
+import type { CloudProviderCredential } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { executePluginMainAction } from '~/plugins';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';

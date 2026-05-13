@@ -1,6 +1,5 @@
 import type { Organization } from 'insomnia-api';
 
-import { database } from '~/common/database';
 import { fuzzyMatch } from '~/common/misc';
 import type {
   Environment,
@@ -11,13 +10,13 @@ import type {
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { environment, grpcRequest, project, request, requestGroup, workspace } from '~/models';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { database, models, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
 import type { Route } from './+types/commands';
+
+const { environment, grpcRequest, project, request, requestGroup, workspace } = models;
 
 export async function clientLoader(args: Route.ClientLoaderArgs) {
   const searchParams = new URL(args.request.url).searchParams;
@@ -43,7 +42,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
 
   const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 
-  const allOrganizationsIds = isScratchpadOrganizationId(organizationId)
+  const allOrganizationsIds = models.organization.isScratchpadOrganizationId(organizationId)
     ? [organizationId]
     : allOrganizations.map(org => org.id);
 

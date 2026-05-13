@@ -41,6 +41,10 @@
       "builtin": "fs"
     },
     {
+      "importer": "src/plugins/context/response.ts",
+      "builtin": "zlib"
+    },
+    {
       "importer": "src/plugins/create.ts",
       "builtin": "fs"
     },

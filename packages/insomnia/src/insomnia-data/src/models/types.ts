@@ -1,3 +1,5 @@
+export type { BaseModel, AllTypes } from './base-types';
+
 //  flat re-exports for convenient consumer access, only export types that are needed outside of this package
 export type { ApiSpec } from './api-spec';
 export type { CaCertificate } from './ca-certificate';

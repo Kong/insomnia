@@ -21,6 +21,7 @@ import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
 import type {
+  BaseModel,
   GitProject,
   GitRemoteProviderType,
   GitRepository,
@@ -28,7 +29,7 @@ import type {
   WorkspaceMeta,
   WorkspaceScope,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
@@ -43,7 +44,6 @@ import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
-import * as models from '../models';
 import { fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -869,7 +869,7 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
       }
 
       // Parse the YAML file to get the document
-      const doc: models.BaseModel = YAML.parse(fileContents);
+      const doc: BaseModel = YAML.parse(fileContents);
 
       // Validate that the document ID matches the file path
       if (!legacyInsomniaFile.filePath.includes(doc._id)) {

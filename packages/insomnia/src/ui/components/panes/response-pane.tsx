@@ -1,8 +1,8 @@
-import { type FC, useCallback, useMemo } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { services } from '~/insomnia-data';
-import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
+import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
 
@@ -36,6 +36,7 @@ import { downloadResponseBody } from './response-pane-utils';
 interface Props {
   activeRequestId: string;
 }
+
 export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const { activeRequest, activeRequestMeta, activeResponse, responses, requestVersions } =
     useRequestLoaderData() as RequestLoaderData;
@@ -69,6 +70,26 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     (prettify: boolean) => downloadResponseBody(activeRequest, activeResponse, prettify),
     [activeRequest, activeResponse],
   );
+  const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (!activeResponse) {
+      setTimeline([]);
+      return;
+    }
+
+    services.helpers.getResponseTimeline(activeResponse).then(responseTimeline => {
+      if (!isCancelled) {
+        setTimeline(responseTimeline);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeResponse]);
 
   const { passedTestCount, totalTestCount } = useMemo(() => {
     let passedTestCount = 0;
@@ -103,7 +124,6 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     );
   }
 
-  const timeline = getTimeline(activeResponse);
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
 
   return (
@@ -197,7 +217,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={async () => {
-                const bodyBuffer = activeResponse ? await getBodyBuffer(activeResponse) : null;
+                const bodyBuffer = activeResponse ? await services.helpers.getResponseBodyBuffer(activeResponse) : null;
                 if (bodyBuffer) {
                   window.clipboard.writeText(bodyBuffer.toString('utf8'));
                 }
@@ -216,7 +236,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             filter={filter}
             filterHistory={filterHistory}
             bodyBuffer={activeResponse.bodyBuffer}
-            getBody={() => getBodyBuffer(activeResponse)}
+            getBody={() => services.helpers.getResponseBodyBuffer(activeResponse)}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}

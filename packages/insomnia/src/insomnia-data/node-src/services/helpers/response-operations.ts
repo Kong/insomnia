@@ -1,18 +1,17 @@
 import fs from 'node:fs';
-import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
-import { database as db } from '~/common/database';
 import type { Compression, McpResponse, Response, SocketIOResponse, WebSocketResponse } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
-import * as models from '~/models/index';
 import { deserializeNDJSON } from '~/utils/ndjson';
+
+import * as settingsService from '../settings';
 
 const { isResponse, type: responseType } = models.response;
 
 export async function removeResponsesForRequest(requestId: string, environmentId?: string | null) {
-  const settings = await services.settings.get();
+  const settings = await settingsService.get();
   const query: Record<string, any> = {
     parentId: requestId,
   };
@@ -70,28 +69,9 @@ export function removeResponse(response: Response | WebSocketResponse | SocketIO
   return db.remove(response);
 }
 
-export const getBodyStream = (
-  response?: { bodyPath?: string; bodyCompression?: Compression },
-  readFailureValue?: string,
-): Readable | string | null => {
-  if (!response?.bodyPath) {
-    return null;
-  }
-  try {
-    fs.statSync(response?.bodyPath);
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return readFailureValue === undefined ? null : readFailureValue;
-  }
-  if (response?.bodyCompression === 'zip') {
-    return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
-  }
-  return fs.createReadStream(response?.bodyPath);
-};
-
 export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
-  const bodyBufferOrErrMsg = await getBodyBuffer(options, readFailureMsg);
+  const bodyBufferOrErrMsg = await getResponseBodyBuffer(options, readFailureMsg);
   // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
 
   if (!bodyBufferOrErrMsg) {
@@ -106,7 +86,7 @@ export const readCurlResponse = async (options: { bodyPath?: string; bodyCompres
   return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
 };
 
-export function getTimeline(response: Response, showBody?: boolean) {
+export async function getResponseTimeline(response: Response, showBody?: boolean): Promise<ResponseTimelineEntry[]> {
   const { timelinePath, bodyPath } = response;
 
   if (!timelinePath) {
@@ -114,7 +94,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
   }
 
   try {
-    const rawBuffer = fs.readFileSync(timelinePath);
+    const rawBuffer = await fs.promises.readFile(timelinePath);
     const timelineString = rawBuffer.toString();
     const timeline = deserializeNDJSON(timelineString);
 
@@ -123,7 +103,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
           {
             name: 'DataOut',
             timestamp: Date.now(),
-            value: fs.readFileSync(bodyPath).toString(),
+            value: (await fs.promises.readFile(bodyPath)).toString(),
           },
         ]
       : [];
@@ -135,7 +115,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
   }
 }
 
-export const getBodyBuffer = async (
+export const getResponseBodyBuffer = async (
   response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: string,
 ): Promise<Buffer | string> => {

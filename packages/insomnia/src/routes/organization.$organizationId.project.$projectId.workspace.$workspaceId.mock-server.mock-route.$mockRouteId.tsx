@@ -18,9 +18,7 @@ import {
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
 import type { MockRoute, MockServer, Request, RequestHeader, Response } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { getBodyBuffer } from '~/models/helpers/response-operations';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
@@ -67,7 +65,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
     // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
-      const buffer = await getBodyBuffer(activeResponse);
+      const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
       activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
     }
   }

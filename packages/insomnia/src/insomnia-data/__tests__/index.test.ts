@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { getModel, mustGetModel } from '../index';
-import * as models from '../index';
+import { models } from '~/insomnia-data';
+
+const { getModel, mustGetModel } = models;
 
 describe('index', () => {
   describe('getModel()', () => {

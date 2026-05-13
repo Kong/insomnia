@@ -1,7 +1,8 @@
 import { getAppDefaultDarkTheme, getAppDefaultLightTheme, getAppDefaultTheme } from '~/common/constants';
 import * as hotkeys from '~/common/hotkeys';
 import { HttpVersions, type Settings as BaseSettings, UpdateChannel } from '~/common/settings';
-import type { BaseModel } from '~/models/types';
+
+import type { BaseModel } from './base-types';
 
 export type Settings = BaseModel & BaseSettings;
 export const name = 'Settings';

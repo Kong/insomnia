@@ -4,7 +4,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { AI_PLUGIN_NAME, isKonnectSyncEnabled } from '~/common/constants';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models } from '~/insomnia-data';
 import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
 import { SegmentEvent } from '~/ui/analytics';
@@ -50,7 +50,12 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
       setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
 
-      if (isKonnectSyncEnabled() && userSession.id && organizationId && !isScratchpadOrganizationId(organizationId)) {
+      if (
+        isKonnectSyncEnabled() &&
+        userSession.id &&
+        organizationId &&
+        !models.organization.isScratchpadOrganizationId(organizationId)
+      ) {
         try {
           const res = await getOrganizationFeatures({ organizationId, sessionId: userSession.id });
           setShouldShowKonnectTab(res?.features?.konnectSync?.enabled ?? false);

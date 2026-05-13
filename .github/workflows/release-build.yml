@@ -141,7 +141,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          smctl credentials save ${SM_API_KEY} ${SM_CLIENT_CERT_PASSWORD}
+          # smctl credentials save ${SM_API_KEY} ${SM_CLIENT_CERT_PASSWORD}
           NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
         env:
           SM_HOST: ${{ vars.DIGICERT_SM_HOST }}

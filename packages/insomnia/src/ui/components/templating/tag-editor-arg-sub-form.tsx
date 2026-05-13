@@ -1,6 +1,7 @@
 import React from 'react';
 
-import type { BaseModel } from '../../../models';
+import type { BaseModel } from '~/insomnia-data';
+
 import type { NunjucksParsedTag } from '../../../templating/types';
 import { isBase64String, isValidJSONString } from '../../../utils/string-check';
 import { ExternalVaultForm } from './external-vault/external-vault-form';

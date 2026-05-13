@@ -1,10 +1,8 @@
 import type { Organization } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
-import { database } from '~/common/database';
 import type { Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { findPersonalOrganization } from '~/models/organization';
+import { database, models, services } from '~/insomnia-data';
 import { migrateProjectsUnderOrganization, syncOrganizations, syncProjects } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 import { AsyncTask, createFetcherSubmitHook } from '~/utils/router';
@@ -37,7 +35,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     if (asyncTaskList.includes(AsyncTask.MigrateProjects)) {
       const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
       invariant(organizations, 'Failed to fetch organizations.');
-      const personalOrganization = findPersonalOrganization(organizations, accountId);
+      const personalOrganization = models.organization.findPersonalOrganization(organizations, accountId);
       invariant(personalOrganization, 'personalOrganization is required');
       invariant(personalOrganization.id, 'personalOrganizationId is required');
       invariant(sessionId, 'sessionId is required');

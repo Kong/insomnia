@@ -43,13 +43,13 @@ import path from 'node:path';
 
 import { BrowserWindow } from 'electron';
 
-import { models, services, type Workspace, type WorkspaceMeta } from '~/insomnia-data';
+import type { Workspace, WorkspaceMeta } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
-import { canSync } from '../../models';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -347,7 +347,7 @@ class RepoFileWatcher {
         return;
       }
 
-      const hasSyncableChange = changes.some(([, doc]) => canSync(doc));
+      const hasSyncableChange = changes.some(([, doc]) => models.canSync(doc));
       if (!hasSyncableChange) {
         return;
       }
@@ -371,6 +371,16 @@ class RepoFileWatcher {
    */
   private async flushProjectWorkspacesToDisk(): Promise<void> {
     const entries = await this.getWorkspacesWithMeta();
+    const currentWorkspaceIds = new Set(entries.map(({ workspace }) => workspace._id));
+
+    // Find deleted workspaces and remove their files from disk.
+    for (const [workspaceId, absPath] of Array.from(this.lastKnownGitFilePath.entries())) {
+      if (currentWorkspaceIds.has(workspaceId)) {
+        continue;
+      }
+
+      await this.removeWorkspaceFileFromDisk(workspaceId, absPath);
+    }
 
     for (const { workspace, meta } of entries) {
       if (this.stopped) {
@@ -407,16 +417,7 @@ class RepoFileWatcher {
 
         // New file written successfully — now safe to remove the old one
         if (isRename) {
-          try {
-            await fs.promises.unlink(previousAbsPath);
-            console.log('[repo-file-watcher] Removed old file after rename:', previousAbsPath, '→', absPath);
-          } catch {
-            // Old file may already be gone — that's fine
-          }
-          // Clean up tracking for the old path so the watcher doesn't
-          // try to re-import a file that no longer exists
-          this.lastSyncMtime.delete(previousAbsPath);
-          this.lastWrittenHash.delete(previousAbsPath);
+          await this.removeWorkspaceFileFromDisk(workspace._id, previousAbsPath);
         }
 
         // Record hash + mtime so the FS→DB side skips this echo
@@ -635,7 +636,9 @@ class RepoFileWatcher {
       return;
     }
     const originDocs = await db.getWithDescendants(existingWorkspace);
-    const deletedDocs = originDocs.filter(originDoc => !docs.some(d => d._id === originDoc._id) && canSync(originDoc));
+    const deletedDocs = originDocs.filter(
+      originDoc => !docs.some(d => d._id === originDoc._id) && models.canSync(originDoc),
+    );
     for (const doc of deletedDocs) {
       await db.unsafeRemove(doc);
     }
@@ -699,6 +702,37 @@ class RepoFileWatcher {
     this.lastSyncMtime.delete(normalised);
     this.lastWrittenHash.delete(normalised);
     this.clearProblem(normalised);
+  }
+
+  private cleanupRemovedWorkspaceFileTracking(workspaceId: string, normalisedPath: string): void {
+    if (this.lastKnownGitFilePath.get(workspaceId) === normalisedPath) {
+      this.lastKnownGitFilePath.delete(workspaceId);
+    }
+    this.lastSyncMtime.delete(normalisedPath);
+    this.lastWrittenHash.delete(normalisedPath);
+    this.clearProblem(normalisedPath);
+  }
+
+  private async removeWorkspaceFileFromDisk(workspaceId: string, normalisedPath: string): Promise<void> {
+    try {
+      await fs.promises.unlink(normalisedPath);
+      console.log('[repo-file-watcher] Removed workspace file from disk:', workspaceId, normalisedPath);
+      this.cleanupRemovedWorkspaceFileTracking(workspaceId, normalisedPath);
+    } catch (error) {
+      const err = error as NodeJS.ErrnoException;
+      if (err.code === 'ENOENT') {
+        // Old file may already be gone — that's fine.
+        this.cleanupRemovedWorkspaceFileTracking(workspaceId, normalisedPath);
+        return;
+      }
+
+      console.warn(
+        '[repo-file-watcher] Failed to remove workspace file from disk:',
+        workspaceId,
+        normalisedPath,
+        err,
+      );
+    }
   }
 
   /** Convert an absolute path to a posix-style path relative to the repo root. */

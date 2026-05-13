@@ -1,8 +1,8 @@
 import type { StorageRules } from 'insomnia-api';
 
-import type { BaseModel } from '~/models/types';
+import { generateId } from '~/common/misc';
 
-import { generateId } from '../../../common/misc';
+import type { BaseModel } from './base-types';
 
 export const name = 'Project';
 export const type = 'Project';
@@ -135,6 +135,11 @@ export function isDefaultOrganizationProject(project: Project) {
   // new remoteId = proj_org_xxx
   return project.remoteId?.startsWith('proj_team') || project.remoteId?.startsWith('proj_org');
 }
+
+export const sortProjects = (projects: Project[]) => [
+  ...projects.filter(project => isDefaultOrganizationProject(project)).sort((a, b) => a.name.localeCompare(b.name)),
+  ...projects.filter(project => !isDefaultOrganizationProject(project)).sort((a, b) => a.name.localeCompare(b.name)),
+];
 
 export function getDefaultProjectStorageType(
   storageRules: StorageRules,

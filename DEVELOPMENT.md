@@ -61,7 +61,7 @@ There are a few notable directories inside it:
 - `/src/ui` React components and styling.
 - `/src/common` Utilities used across both main and render processes.
 - `/src/plugins` Logic around installation and usage of plugins.
-- `/src/models` DB models used to store user data.
+- `/src/insomnia-data` Data models, services and database for managing application state.
 - `/src/network` Sending requests and performing auth (e.g. OAuth 2).
 - `/src/templating` Nunjucks and rendering related code.
 - `/src/sync` and `/src/account` Team sync and account stuff.

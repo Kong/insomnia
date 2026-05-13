@@ -6,7 +6,6 @@ import { useParams } from 'react-router';
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 
-import { requestGroup } from '../../../models';
 import {
   type Child,
   useWorkspaceLoaderFetcher,
@@ -237,9 +236,9 @@ export const ExportRequestsModal = ({
     setState({
       treeRoot: {
         doc: {
-          ...requestGroup.init(),
+          ...models.requestGroup.init(),
           _id: 'all',
-          type: requestGroup.type,
+          type: models.requestGroup.type,
           name: 'All requests',
           parentId: '',
           modified: 0,

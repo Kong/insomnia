@@ -17,9 +17,10 @@ import { OperationTypeNode } from 'graphql';
 
 import type { OAuth1SignatureMethod } from '~/common/constants';
 import { METHOD_GET } from '~/common/constants';
-import { replaceIdsInFields } from '~/models/helpers/replace-ids-in-fields';
-import type { BaseModel } from '~/models/types';
 import { getOperationType } from '~/utils/graph-ql';
+
+import type { BaseModel } from './base-types';
+import { replaceIdsInFields } from './utils/replace-ids-in-fields';
 
 export const name = 'Request';
 

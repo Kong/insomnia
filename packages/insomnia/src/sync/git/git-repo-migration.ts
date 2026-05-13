@@ -29,10 +29,9 @@ import path from 'node:path';
 export type MigrationLogger = (level: 'info' | 'warn' | 'error', message: string) => void;
 
 import type { GitRepository, Workspace, WorkspaceMeta } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 
-import { database as db } from '../../common/database';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
-import * as models from '../../models';
 import { CURRENT_MIGRATION_VERSION } from './git-migration-version';
 
 export { CURRENT_MIGRATION_VERSION };
@@ -98,12 +97,7 @@ async function moveDirectoryContents(srcDir: string, destDir: string, logger?: M
       // Guard against crafted entry names containing traversal sequences.
       const relSrc = path.relative(resolvedSrcDir, srcPath);
       const relDest = path.relative(resolvedDestDir, destPath);
-      if (
-        relSrc.startsWith('..') ||
-        path.isAbsolute(relSrc) ||
-        relDest.startsWith('..') ||
-        path.isAbsolute(relDest)
-      ) {
+      if (relSrc.startsWith('..') || path.isAbsolute(relSrc) || relDest.startsWith('..') || path.isAbsolute(relDest)) {
         logger?.('warn', `Skipping entry with unsafe name: ${entry.name}`);
         return;
       }

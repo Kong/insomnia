@@ -18,9 +18,10 @@ import path from 'node:path';
 import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
+import type { BaseModel } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
+
 import { database as db } from '../../common/database';
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
 import { resetKeys } from '../ignore-keys';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';

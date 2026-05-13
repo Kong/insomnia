@@ -33,7 +33,6 @@ import {
   getAppWebsiteBaseURL,
   isKonnectSyncEnabled,
 } from '~/common/constants';
-import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
@@ -46,10 +45,7 @@ import type {
   WorkspaceMeta,
   WorkspaceScope,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { sortProjects } from '~/models/helpers/project';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
+import { database, models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -403,7 +399,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
 
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
@@ -493,7 +489,7 @@ const Component = () => {
     'There are issues with one or more Insomnia files in this project. Use the git CLI and your local file system to resolve them and continue.';
 
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }
@@ -520,8 +516,10 @@ const Component = () => {
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
   const isUserOwner =
-    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
-  const isPersonalOrg = organization && isPersonalOrganization(organization);
+    organization &&
+    userSession.accountId &&
+    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const isPersonalOrg = organization && models.organization.isPersonalOrganization(organization);
 
   const tabNavigate = useTabNavigate();
 
