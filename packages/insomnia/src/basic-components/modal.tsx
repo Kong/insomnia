@@ -52,7 +52,6 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
   const dialogContent = (
     <>
       <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-        {' '}
         <div className="flex shrink-0 items-center justify-between gap-2">
           {title && (
             <Heading slot="title" className="text-3xl">

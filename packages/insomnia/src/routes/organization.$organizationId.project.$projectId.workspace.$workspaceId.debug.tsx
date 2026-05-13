@@ -784,7 +784,7 @@ const Debug = () => {
         {!panel && !models.organization.isScratchpadOrganizationId(organizationId) && (
           <WorkspacePaneHeader hasSettings />
         )}
-        <PanelGroup autoSaveId="insomnia-panels" className="relative" id="workspace-wrapper" direction={direction}>
+        <PanelGroup autoSaveId="insomnia-panels" className="relative" id="workspace-wrapper" direction="horizontal">
           {/* Design page has a collection view with legacy collection list */}
           {isDesignWorkspace && (
             <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
@@ -1134,73 +1134,78 @@ const Debug = () => {
             </Panel>
           )}
           <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-          <Routes>
-            <RouteComponent
-              path="*"
-              element={
-                <>
-                  <Panel id="pane-one" order={1} minSize={10} className="pane-one theme--pane">
-                    {workspaceId ? (
-                      <ErrorBoundary showAlert>
-                        {isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
-                        {models.grpcRequest.isGrpcRequestId(requestId) &&
-                          grpcState &&
-                          activeRequest?._id === requestId && (
-                            <GrpcRequestPane
-                              key={grpcState.requestId}
-                              grpcState={grpcState}
-                              setGrpcState={setGrpcState}
-                              reloadRequests={reloadRequests}
+          <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
+            <Routes>
+              <RouteComponent
+                path="*"
+                element={
+                  <>
+                    <Panel id="pane-one" order={1} minSize={10} className="pane-one theme--pane">
+                      {workspaceId ? (
+                        <ErrorBoundary showAlert>
+                          {isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
+                          {models.grpcRequest.isGrpcRequestId(requestId) &&
+                            grpcState &&
+                            activeRequest?._id === requestId && (
+                              <GrpcRequestPane
+                                key={grpcState.requestId}
+                                grpcState={grpcState}
+                                setGrpcState={setGrpcState}
+                                reloadRequests={reloadRequests}
+                              />
+                            )}
+                          {models.webSocketRequest.isWebSocketRequestId(requestId) &&
+                            activeRequest?._id === requestId && (
+                              <WebSocketRequestPane environment={activeEnvironment} />
+                            )}
+                          {models.socketIORequest.isSocketIORequestId(requestId) &&
+                            activeRequest?._id === requestId && <SocketIORequestPane environment={activeEnvironment} />}
+                          {isRequestId(requestId) && activeRequest?._id === requestId && (
+                            <RequestPane
+                              environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                              settings={settings}
+                              onPaste={text => {
+                                setPastedCurl(text);
+                                setPasteCurlModalOpen(true);
+                              }}
                             />
                           )}
-                        {models.webSocketRequest.isWebSocketRequestId(requestId) &&
-                          activeRequest?._id === requestId && <WebSocketRequestPane environment={activeEnvironment} />}
-                        {models.socketIORequest.isSocketIORequestId(requestId) && activeRequest?._id === requestId && (
-                          <SocketIORequestPane environment={activeEnvironment} />
-                        )}
-                        {isRequestId(requestId) && activeRequest?._id === requestId && (
-                          <RequestPane
-                            environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                            settings={settings}
-                            onPaste={text => {
-                              setPastedCurl(text);
-                              setPasteCurlModalOpen(true);
-                            }}
-                          />
-                        )}
-                        {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
-                        {isRequestSettingsModalOpen && activeRequest && (
-                          <RequestSettingsModal
-                            request={activeRequest}
-                            onHide={() => setIsRequestSettingsModalOpen(false)}
-                          />
-                        )}
-                      </ErrorBoundary>
-                    ) : null}
-                  </Panel>
-                  {activeRequest ? (
-                    <>
-                      <PanelResizeHandle
-                        className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
-                      />
-                      <Panel id="pane-two" order={2} minSize={10} className="pane-two theme--pane">
-                        <ErrorBoundary showAlert>
-                          {activeRequest && models.grpcRequest.isGrpcRequest(activeRequest) && grpcState && (
-                            <GrpcResponsePane grpcState={grpcState} />
-                          )}
-                          {isRealtimeRequest && <RealtimeResponsePane requestId={activeRequest._id} />}
-                          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-                            <ResponsePane activeRequestId={activeRequest._id} />
+                          {Boolean(!requestId && !requestGroupId) && <PlaceholderRequestPane />}
+                          {isRequestSettingsModalOpen && activeRequest && (
+                            <RequestSettingsModal
+                              request={activeRequest}
+                              onHide={() => setIsRequestSettingsModalOpen(false)}
+                            />
                           )}
                         </ErrorBoundary>
-                      </Panel>
-                    </>
-                  ) : null}
-                </>
-              }
-            />
-            <RouteComponent path="runner" element={<Runner />} />
-          </Routes>
+                      ) : null}
+                    </Panel>
+                    {activeRequest ? (
+                      <>
+                        <PanelResizeHandle
+                          className={
+                            direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'
+                          }
+                        />
+                        <Panel id="pane-two" order={2} minSize={10} className="pane-two theme--pane">
+                          <ErrorBoundary showAlert>
+                            {activeRequest && models.grpcRequest.isGrpcRequest(activeRequest) && grpcState && (
+                              <GrpcResponsePane grpcState={grpcState} />
+                            )}
+                            {isRealtimeRequest && <RealtimeResponsePane requestId={activeRequest._id} />}
+                            {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+                              <ResponsePane activeRequestId={activeRequest._id} />
+                            )}
+                          </ErrorBoundary>
+                        </Panel>
+                      </>
+                    ) : null}
+                  </>
+                }
+              />
+              <RouteComponent path="runner" element={<Runner />} />
+            </Routes>
+          </PanelGroup>
         </PanelGroup>
       </Panel>
     </PanelGroup>
