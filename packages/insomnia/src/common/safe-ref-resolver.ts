@@ -2,6 +2,7 @@ import { Resolver } from '@stoplight/spectral-ref-resolver';
 
 import { isPrivateOrLoopbackHost } from './spectral-ruleset-validator';
 
+// Protect against SSRF attacks in spec $ref resolution
 function isSafeRefUrl(href: string): boolean {
   let url: URL;
   try {
