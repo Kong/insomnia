@@ -15,6 +15,7 @@ interface Props {
   className?: string;
   // Custom parents must already establish a positioning context.
   parent?: HTMLElement | null;
+  centered?: boolean;
 }
 
 export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
@@ -25,6 +26,7 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
   closable,
   isDismissable,
   parent,
+  centered,
   children,
 }) => {
   const hasCustomParent = parent !== undefined;
@@ -77,6 +79,11 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
     className,
   );
 
+  const overlayClassName = classnames('z-10 flex justify-center overflow-y-auto bg-black/30', {
+    'items-center': centered,
+    'items-start pt-[10%]': !centered,
+  });
+
   if (hasCustomParent) {
     if (!isScopedModalOpen || !parent) {
       return null;
@@ -84,7 +91,7 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
 
     return (
       <Overlay portalContainer={parent}>
-        <div {...underlayProps} className="absolute inset-0 z-10 flex items-center justify-center bg-black/30">
+        <div {...underlayProps} className={classnames('absolute inset-0', overlayClassName)}>
           <div {...overlayProps} ref={dialogRef} className={dialogClassName}>
             <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">{dialogContent}</Dialog>
           </div>
@@ -98,7 +105,7 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
       isDismissable={isDismissable}
-      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      className={classnames('fixed top-0 left-0 h-(--visual-viewport-height) w-full', overlayClassName)}
     >
       <RAModal onOpenChange={handleOpenChange} className={dialogClassName}>
         <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">{dialogContent}</Dialog>
