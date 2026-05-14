@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import path from 'node:path';
 
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
@@ -682,6 +682,19 @@ test.describe('unhappy paths', () => {
   });
 });
 
+// Race the expected pre-toggle error text against a 200 OK response. Abort immediately on failure instead of waiting for the error locator to time out.
+async function expectBlockedBeforeOk(page: Page, errorText: string) {
+  const errorLocator = page.getByTestId('response-pane').getByText(errorText);
+  const okLocator = page.locator('[data-testid="response-status-tag"]:visible', { hasText: '200 OK' });
+  const testResponseCode = await Promise.race([
+    errorLocator.waitFor({ state: 'visible' }).then(() => 'blocked' as const),
+    okLocator.waitFor({ state: 'visible' }).then(() => 'ok' as const),
+  ]);
+  if (testResponseCode !== 'blocked') {
+    throw new Error(`expected the script to be blocked with "${errorText}", but a 200 OK response arrived first`);
+  }
+}
+
 test.describe('sandbox features', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
@@ -709,11 +722,7 @@ test.describe('sandbox features', () => {
     await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
 
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
-    // verify blocked-root error
-    await expect
-      .soft(page.getByTestId('response-pane'))
-      .toContainText("The script was blocked because it used 'this'.");
+    await expectBlockedBeforeOk(page, "The script was blocked because it used 'this'.");
 
     // navigate to Settings → Scripting, disable the "Scopes" blocked roots group
     await page.getByTestId('settings-button').click();
@@ -746,11 +755,7 @@ test.describe('sandbox features', () => {
     await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
 
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
-    // verify blocked-property error
-    await expect
-      .soft(page.getByTestId('response-pane'))
-      .toContainText("The script was blocked because it used the property 'prototype'.");
+    await expectBlockedBeforeOk(page, "The script was blocked because it used the property 'prototype'.");
 
     // navigate to Settings → Scripting, disable the "Prototype Mutation" blocked properties group
     await page.getByTestId('settings-button').click();
@@ -786,8 +791,7 @@ test.describe('sandbox features', () => {
 
     // send — Function masked to undefined → V8 uses the identifier name: "Function is not a constructor"
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
-    await expect.soft(page.getByTestId('response-pane')).toContainText('Function is not a constructor');
+    await expectBlockedBeforeOk(page, 'Function is not a constructor');
 
     // navigate to Settings → Scripting, disable the "Runtime APIs" mask group
     await page.getByTestId('settings-button').click();
@@ -817,11 +821,7 @@ test.describe('sandbox features', () => {
     await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
 
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
-    // verify blocked-root error
-    await expect
-      .soft(page.getByTestId('response-pane'))
-      .toContainText("The script was blocked because it used 'process'.");
+    await expectBlockedBeforeOk(page, "The script was blocked because it used 'process'.");
 
     // navigate to Settings → Scripting, disable only the "Node.js Internals" BLOCKED ROOTS group.
     await page.getByTestId('settings-button').click();
@@ -840,6 +840,239 @@ test.describe('sandbox features', () => {
     await expect
       .soft(page.getByTestId('response-pane'))
       .not.toContainText("The script was blocked because it used 'process'.");
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
+  });
+
+  // Master sandbox toggle: turning it off disables all static checks.
+  test("master 'Enable script sandbox' toggle", async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`insomnia.environment.set('result', String(this?.x));`);
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expectBlockedBeforeOk(page, "The script was blocked because it used 'this'.");
+
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+
+    const masterSwitch = page.locator(
+      'xpath=//span[normalize-space(text())="Enable script sandbox"]/ancestor::div[contains(@class,"justify-between")][1]//label[@data-react-aria-pressable]',
+    );
+    await masterSwitch.scrollIntoViewIfNeeded();
+    await masterSwitch.click();
+    await expect.soft(masterSwitch).not.toHaveAttribute('data-selected');
+
+    // child toggles become disabled when the master is off
+    const strictSwitch = page.locator(
+      'xpath=//span[normalize-space(text())="use strict"]/ancestor::div[contains(@class,"justify-between")][1]//label[@data-react-aria-pressable]',
+    );
+    await expect.soft(strictSwitch).toHaveAttribute('data-disabled');
+
+    await page.locator('.app').press('Escape');
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .not.toContainText("The script was blocked because it used 'this'.");
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
+  });
+
+  // 'use strict' toggle: strict mode causes assignment to undeclared identifier to throw.
+  test("'use strict' toggle", async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`function f(){ undeclared = 1; return undeclared; } insomnia.environment.set('result', String(f()));`);
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expectBlockedBeforeOk(page, 'undeclared is not defined');
+
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const strictSwitch = page.locator(
+      'xpath=//span[normalize-space(text())="use strict"]/ancestor::div[contains(@class,"justify-between")][1]//label[@data-react-aria-pressable]',
+    );
+    await strictSwitch.scrollIntoViewIfNeeded();
+    await strictSwitch.click();
+    await expect.soft(strictSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.getByTestId('response-pane')).not.toContainText('undeclared is not defined');
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
+  });
+
+  // 'block unresolvable properties' toggle: dynamic computed access is statically blocked.
+  test("'block unresolvable properties' toggle", async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`const k = 'foo'; const o = { foo: 42 }; insomnia.environment.set('result', String(o[k]));`);
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expectBlockedBeforeOk(page, 'dynamic computed property access that cannot be statically verified');
+
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const blockUnresolvableSwitch = page.locator(
+      'xpath=//span[normalize-space(text())="block unresolvable properties"]/ancestor::div[contains(@class,"justify-between")][1]//label[@data-react-aria-pressable]',
+    );
+    await blockUnresolvableSwitch.scrollIntoViewIfNeeded();
+    await blockUnresolvableSwitch.click();
+    await expect.soft(blockUnresolvableSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .not.toContainText('dynamic computed property access that cannot be statically verified');
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
+  });
+
+  // Mask Rules / Async Scheduling group: setImmediate is masked to undefined at runtime.
+  test('Mask Rules / Async Scheduling group', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`setImmediate(() => {}); insomnia.environment.set('result', 'ok');`);
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expectBlockedBeforeOk(page, 'setImmediate is not a function');
+
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const asyncSchedulingSwitch = page.locator(
+      'div:has(> h4:has-text("Async Scheduling")) label[data-react-aria-pressable]',
+    );
+    await asyncSchedulingSwitch.scrollIntoViewIfNeeded();
+    await asyncSchedulingSwitch.click();
+    await expect.soft(asyncSchedulingSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.getByTestId('response-pane')).not.toContainText('setImmediate is not a function');
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
+  });
+
+  // Blocked Properties / Stack Inspection group: 'captureStackTrace' is blocked.
+  test('Blocked Properties / Stack Inspection group', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`insomnia.environment.set('result', String(typeof Error.captureStackTrace));`);
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expectBlockedBeforeOk(page, "The script was blocked because it used the property 'captureStackTrace'.");
+
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const stackInspectionSwitch = page.locator(
+      'div:has(> h4:has-text("Stack Inspection")) label[data-react-aria-pressable]',
+    );
+    await stackInspectionSwitch.scrollIntoViewIfNeeded();
+    await stackInspectionSwitch.click();
+    await expect.soft(stackInspectionSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .not.toContainText("The script was blocked because it used the property 'captureStackTrace'.");
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
+  });
+
+  // Blocked Properties / Accessor Helpers group: 'defineProperty' is blocked.
+  test('Blocked Properties / Accessor Helpers group', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`const o = {}; Object.defineProperty(o, 'a', { value: 1 }); insomnia.environment.set('result', String(o.a));`);
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expectBlockedBeforeOk(page, "The script was blocked because it used the property 'defineProperty'.");
+
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const accessorHelpersSwitch = page.locator(
+      'div:has(> h4:has-text("Accessor Helpers")) label[data-react-aria-pressable]',
+    );
+    await accessorHelpersSwitch.scrollIntoViewIfNeeded();
+    await accessorHelpersSwitch.click();
+    await expect.soft(accessorHelpersSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .not.toContainText("The script was blocked because it used the property 'defineProperty'.");
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
+  });
+
+  // Blocked Roots / Global Object Aliases group: 'globalThis' is blocked.
+  test('Blocked Roots / Global Object Aliases group', async ({ page }) => {
+    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+
+    await page.getByRole('tab', { name: 'Scripts' }).click();
+    const editor = page.getByTestId('CodeEditor').getByRole('textbox');
+    await editor.fill(`insomnia.environment.set('result', String(globalThis.Object));`);
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expectBlockedBeforeOk(page, "The script was blocked because it used 'globalThis'.");
+
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const globalAliasesSwitch = page.locator(
+      'div:has(> h4:has-text("Global Object Aliases")) label[data-react-aria-pressable]',
+    );
+    await globalAliasesSwitch.scrollIntoViewIfNeeded();
+    await globalAliasesSwitch.click();
+    await expect.soft(globalAliasesSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    // Static rule passes, but the mask still resolves `globalThis` to undefined,
+    // so `globalThis.Object` throws — verify we now hit the next security layer.
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .toContainText("Cannot read properties of undefined (reading 'Object')");
+
+    // Disable the matching mask group so `globalThis` resolves to the real host global.
+    await page.getByTestId('settings-button').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByRole('tab', { name: 'Scripting' }).click();
+    const globalMaskSwitch = page.locator(
+      'div:has(> h4:has-text("Global & Node.js Internals")) label[data-react-aria-pressable]',
+    );
+    await globalMaskSwitch.scrollIntoViewIfNeeded();
+    await globalMaskSwitch.click();
+    await expect.soft(globalMaskSwitch).not.toHaveAttribute('data-selected');
+    await page.locator('.app').press('Escape');
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect
+      .soft(page.getByTestId('response-pane'))
+      .not.toContainText("Cannot read properties of undefined (reading 'Object')");
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
   });
 });

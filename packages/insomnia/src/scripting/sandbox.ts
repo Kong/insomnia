@@ -25,16 +25,13 @@ export interface SandboxContext {
   bridgeOps: BridgeOps;
 }
 
-// Derive the default blocked sets from the canonical rule lists in script-security-policy.
 const SANDBOX_BLOCKED_PROPERTIES = new Set(blockedPropertyRules.map(r => r.name));
 const SANDBOX_BLOCKED_ROOTS = new Set(blockedRootRules.map(r => r.name));
 
-// These interceptor rules always apply — they cannot be disabled via settings and run even when
-// the sandbox is turned off, because they gate access to critical host APIs (require, window, eval).
+// The original (v12.5.0) interceptor rules always apply. 
 const ALWAYS_ON_INTERCEPTORS = new Set(['require', 'window', 'eval']);
 
-// Sentinel returned by getMemberPropertyName when the computed key cannot be statically resolved.
-// Callers must treat this as a hard block — unknown dynamic keys are rejected by policy.
+// AST check operates based on getMemberPropertyName, some keys may not be statically resolved. We can drop all unresolvable properties to resolve this. 
 const UNRESOLVABLE = Symbol('unresolvable');
 
 // Walks a MemberExpression down to its root Identifier.
@@ -44,8 +41,7 @@ function getMemberRoot(node: any): string | null {
   return null;
 }
 
-// Returns MemberExpression property name, or UNRESOLVABLE when the computed key cannot be
-// statically determined (e.g. BinaryExpression, dynamic TemplateLiteral). 
+// Returns MemberExpression property name, or UNRESOLVABLE when the computed key cannot statically determined. 
 function getMemberPropertyName(node: acorn.MemberExpression): string | typeof UNRESOLVABLE | null {
   if (!node.computed && node.property.type === 'Identifier') {
     return (node.property as acorn.Identifier).name;
@@ -392,33 +388,22 @@ export async function prepareSandbox(
     ({ names: maskNames, values: maskValues } = alwaysOnPolicy.buildMaskScope(checkSandboxViolations));
   }
 
-  // Replace the placeholder eval interceptor with one that carries the full parameter mask.
-  // The rule-level interceptor uses (0,eval) (indirect eval in global scope), which bypasses
-  // parameter masking and lets scripts access real globals like require, Function, process.
-  // Here we patch maskValues to use a new AsyncFunction with the same params and a direct eval,
-  // so eval'd code inherits the masked parameter bindings.
+  // Wrap eval so user-supplied source is checked and then evaluated in a scope that inherits the same masked bindings as the outer sandbox.
   const evalIdx = maskNames.indexOf('eval');
   if (evalIdx !== -1) {
-    const strictModeEnabled = context.settings.scriptStrictModeEnabled !== false;
-    const evalBody = strictModeEnabled
-      ? '"use strict"; return eval(__eval_script__);'
-      : 'return eval(__eval_script__);';
-    // Exclude 'eval' from the parameter list: naming a parameter 'eval' is illegal in strict mode,
-    // and the function needs to call the real eval (not the interceptor) for direct-eval scoping.
-    // Use a synchronous Function (not AsyncFunction) to preserve the synchronous return contract —
-    // AsyncFunction always returns a Promise, which breaks postMessage structured-clone for sync scripts.
-    const nonEvalMaskNames = maskNames.filter(n => n !== 'eval');
-    const nonEvalMaskValues = maskValues.filter((_, i) => maskNames[i] !== 'eval');
-    const scopedEvalFn = new Function(
-      ...nonEvalMaskNames, '__eval_script__',
-      evalBody,
-    );
+    const useStrict = context.settings.scriptStrictModeEnabled !== false;
+    const body = `${useStrict ? '"use strict"; ' : ''}return eval(__eval_script__);`;
+    // 'eval' is excluded from params: it's illegal as a strict-mode param name,
+    // and the wrapper must call the real eval for direct-eval scoping to apply.
+    const paramNames = maskNames.filter(n => n !== 'eval');
+    const paramValues = maskValues.filter((_, i) => maskNames[i] !== 'eval');
+    const scopedEvalFn = new Function(...paramNames, '__eval_script__', body);
     maskValues[evalIdx] = (script: string) => {
       if (!script || typeof script !== 'string') {
         throw new Error('eval is called with invalid or empty value');
       }
       evalViolationCheck(script);
-      return scopedEvalFn(...nonEvalMaskValues, script);
+      return scopedEvalFn(...paramValues, script);
     };
   }
 
