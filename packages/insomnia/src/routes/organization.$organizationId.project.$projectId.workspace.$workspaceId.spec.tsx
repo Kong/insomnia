@@ -289,8 +289,12 @@ const Component = ({ params }: Route.ComponentProps) => {
         // Git-sync: file is already on disk at gitSyncRulesetPath.
         setSelectedRulesetPath(rulesetContent ? gitSyncRulesetPath : '');
       } else if (rulesetContent) {
-        // Cloud/local: write rulesetContent to disk and update selectedRulesetPath.
-        await window.main.writeFile({ path: rulesetWritePath, content: rulesetContent });
+        // Cloud sync: ensure rulesetContent is on disk so collaborators are able to pull changes.
+        // Note: We need this check because handleSelectSpectralFile also writes to disk which would trigger this useEffect again for an uploader and write to disk again unnecessarily.
+        const existing = await window.main.insecureReadFile({ path: rulesetWritePath });
+        if (existing !== rulesetContent) {
+          await window.main.writeFile({ path: rulesetWritePath, content: rulesetContent });
+        }
         setSelectedRulesetPath(rulesetWritePath);
       } else {
         await window.main.deleteFile({ path: rulesetWritePath });
