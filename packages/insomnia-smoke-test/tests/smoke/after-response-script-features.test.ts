@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 test.describe('after-response script features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test('all', async ({ page, app }) => {
+  test('all', async ({ page, app, insomnia }) => {
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), globalEnvText);
@@ -26,7 +26,7 @@ test.describe('after-response script features tests', () => {
 
     // set transient var
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.getByLabel('Request Collection').getByTestId('transient var').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('transient var');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -41,7 +41,7 @@ test.describe('after-response script features tests', () => {
     await expect.soft(rows.first()).toContainText('PASS');
 
     // post: insomnia.test and insomnia.expect can work together
-    await page.getByLabel('Request Collection').getByTestId('tests with expect and test').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('tests with expect and test');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -71,7 +71,7 @@ test.describe('after-response script features tests', () => {
 
     // environment and baseEnvironment can be persisted
     const statusTag1 = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.getByLabel('Request Collection').getByTestId('persist environments').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('persist environments');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -97,7 +97,7 @@ test.describe('after-response script features tests', () => {
 
     // globals and baseGlobals can be persisted
     await page.locator('body').click();
-    await page.getByLabel('Request Collection').getByTestId('persist global environment').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('persist global environment');
     // activate global sub environment
     await page.getByLabel('Manage Environments').click();
     await page.getByPlaceholder('Choose a global environment').click();
