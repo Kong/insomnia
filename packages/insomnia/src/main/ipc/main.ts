@@ -399,8 +399,7 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const dataPath = app.getPath('userData');
-    const folderPath = path.join(dataPath, options.folder);
+    const folderPath = path.join(app.getPath('userData'), options.folder);
     mkdirSync(folderPath, { recursive: true });
     return readDir(_, { path: folderPath });
   });
