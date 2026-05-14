@@ -24,6 +24,7 @@ const checkNoDynamic = (script: string) =>
 
 describe('checkSandboxViolations', () => {
 
+  // Blocked property names accessed via dot notation (obj.constructor, etc.)
   describe('properties: dot', () => {
     it('blocks prototype',               () => blocked('Promise.prototype.then'));
     it('blocks mainModule',              () => blocked('proc.mainModule'));
@@ -45,6 +46,7 @@ describe('checkSandboxViolations', () => {
     it('blocks getOwnPropertyDescriptors', () => blocked('Object.getOwnPropertyDescriptors(obj)'));
   });
 
+  // Same property names but via static-string bracket access (obj["constructor"])
   describe('properties: bracket', () => {
     it('blocks constructor',       () => blocked('obj["constructor"]'));
     it('blocks __proto__',         () => blocked('obj["__proto__"]'));
@@ -54,6 +56,7 @@ describe('checkSandboxViolations', () => {
     it('blocks defineProperty',    () => blocked('Object["defineProperty"](obj, "key", desc)'));
   });
 
+  // Blocked global roots accessed directly via member expressions
   describe('roots: member', () => {
     it('blocks this',       () => blocked('this.x'));
     it('blocks globalThis', () => blocked('globalThis.require'));
@@ -68,6 +71,7 @@ describe('checkSandboxViolations', () => {
     it('blocks arguments',  () => blocked('arguments[0]'));
   });
 
+  // Direct invocation of a blocked root identifier — caught by the CallExpression visitor
   describe('roots: call', () => {
     it('blocks constructor called directly', () =>
       blocked('constructor("return process")()'));
@@ -79,6 +83,7 @@ describe('checkSandboxViolations', () => {
       blocked('const c = constructor; c("return process")()'));
   });
 
+  // Blocked roots reached via bracket access — root traversal still matches
   describe('roots: bracket', () => {
     it('blocks globalThis["require"]', () => blocked('globalThis["require"]()'));
     it('blocks window["process"]',     () => blocked('window["process"]'));
@@ -86,6 +91,7 @@ describe('checkSandboxViolations', () => {
     it('blocks process["env"]',        () => blocked('process["env"]'));
   });
 
+  // ThisExpression handling: dynamic keys, const/let aliasing, and destructuring forms
   describe('this: aliases & destructuring', () => {
     it('blocks this.process.mainModule.require via member', () =>
       blocked(`this.process.mainModule.require('child_process')`));
@@ -109,6 +115,7 @@ describe('checkSandboxViolations', () => {
       blocked(`({ process } = this)`));
   });
 
+  // Alias-tracking for globalThis: covers Logical/Conditional/Sequence init forms and transitive aliases
   describe('globalThis: aliases & destructuring', () => {
     it('blocks const alias: const g = globalThis; g.require', () =>
       blocked(`const g = globalThis; g.require('child_process')`));
@@ -144,6 +151,7 @@ describe('checkSandboxViolations', () => {
       blocked(`a.b.c = globalThis.process`));
   });
 
+  // Reads and writes against built-in .prototype objects must be rejected
   describe('prototype mutation', () => {
     it('blocks Promise.prototype.then mutation', () =>
       blocked(`Promise.prototype.then = function(fn) { fn.call(globalThis); }`));
@@ -164,6 +172,7 @@ describe('checkSandboxViolations', () => {
       blocked(`Promise['prototype']`));
   });
 
+  // Static `import` declarations and dynamic `import()` are both rejected at the AST level
   describe('import', () => {
     it('blocks dynamic import()', () =>
       blocked(`import('child_process')`));
@@ -178,6 +187,7 @@ describe('checkSandboxViolations', () => {
       blocked(`import { readFile } from 'fs'`));
   });
 
+  // Symbol.species would let user code subvert built-in subclassing — always blocked
   describe('Symbol.species', () => {
     it('blocks Symbol.species', () =>
       blocked(`Symbol.species`));
@@ -186,6 +196,7 @@ describe('checkSandboxViolations', () => {
       blocked(`Symbol['species']`));
   });
 
+  // Verify each blocked property rule can be individually disabled by settings
   describe('unblocking: properties', () => {
     const cases: [name: string, script: string][] = [
       ['prototype',                'Promise.prototype.then'],
@@ -214,6 +225,7 @@ describe('checkSandboxViolations', () => {
     }
   });
 
+  // Verify each blocked root rule can be individually disabled and that alias tracking follows
   describe('unblocking: roots', () => {
     const cases: [name: string, script: string][] = [
       ['this',        'this.x'],
@@ -242,6 +254,7 @@ describe('checkSandboxViolations', () => {
       expect(check('const g = globalThis; g.require', ALL_BLOCKED_PROPERTIES, withoutRoot('globalThis'))).not.toThrow());
   });
 
+  // Fail-closed policy: any computed key that cannot be resolved at parse time is rejected
   describe('dynamic computed keys', () => {
     it('blocks concatenated string key: obj["con"+"structor"]', () =>
       blocked(`obj["con"+"structor"]`));
@@ -256,6 +269,7 @@ describe('checkSandboxViolations', () => {
       blocked('obj[`${x}`]'));
   });
 
+  // Static-but-obfuscated keys (template literals, concatenation) must still resolve and block
   describe('blocked properties via computed access', () => {
     it('blocks constructor via template literal: obj[`constructor`]', () =>
       blocked('obj[`constructor`]'));
@@ -267,6 +281,7 @@ describe('checkSandboxViolations', () => {
       blocked('(async()=>{})[`constructor`]'));
   });
 
+  // Generic JS patterns and common pm/insomnia usage that must continue to pass
   describe('allowed scripts', () => {
     it('allows normal variable declarations', () =>
       allowed(`const x = 1 + 2`));
@@ -344,6 +359,7 @@ describe('checkSandboxViolations', () => {
       allowed(`insomnia.request.headers.add({ key: 'X', value: '1' })`));
   });
 
+  // With dynamic-key blocking disabled, only statically resolvable blocked names still throw
   describe('blockDynamic=false toggle', () => {
     it('allows concatenated string key when block-dynamic is off', () =>
       expect(checkNoDynamic('obj["con"+"structor"]')).not.toThrow());
@@ -404,6 +420,7 @@ describe('checkSandboxViolations', () => {
     });
   });
 
+  // Demonstrates the trade-off when block-dynamic is disabled: AsyncFunction reachable via concat
   describe('AsyncFunction constructor via computed access', () => {
     it('blocks AsyncFunction constructor with blockDynamic=true (default)', () => {
       expect(() => checkSandboxViolations(
