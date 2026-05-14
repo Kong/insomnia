@@ -45,8 +45,7 @@ function getMemberRoot(node: any): string | null {
 }
 
 // Returns MemberExpression property name, or UNRESOLVABLE when the computed key cannot be
-// statically determined (e.g. BinaryExpression, dynamic TemplateLiteral). Returning null means
-// the access is non-computed (impossible to be a blocked property via this path).
+// statically determined (e.g. BinaryExpression, dynamic TemplateLiteral). 
 function getMemberPropertyName(node: acorn.MemberExpression): string | typeof UNRESOLVABLE | null {
   if (!node.computed && node.property.type === 'Identifier') {
     return (node.property as acorn.Identifier).name;
@@ -71,11 +70,7 @@ function getMemberPropertyName(node: acorn.MemberExpression): string | typeof UN
   return null;
 }
 
-// Recursively searches an expression for a blocked identifier or `this`.
-// Returns the name of the first blocked identifier found, or null if none.
-// Descends into LogicalExpression, ConditionalExpression, and SequenceExpression
-// so that wrappers like `null || globalThis`, `false ? null : globalThis`, and
-// `(0, globalThis)` are all detected and their alias propagated.
+// Recursively walk AST expression for blocked identifier. 
 function extractBlockedIdentifier(
   expr: any,
   blocked: Map<string, string>,
