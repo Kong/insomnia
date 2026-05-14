@@ -48,7 +48,7 @@ function pushUnique<T>(list: T[], value: T): void {
   }
 }
 
-// Recursively flattens local-file "extends" entries, returning a singular ruleset whose "extends"
+// Recursively resolves local-file "extends" entries, returning a singular ruleset whose "extends"
 // contains only built-in spectral identifiers and remote URLs. Rules are merged such that the parent overrides
 // its extends, and among multiple extends entries the later ones override earlier. (ref: https://docs.stoplight.io/docs/spectral/83527ef2dd8c0-extending-rulesets)
 async function flattenRuleset(filePath: string, visited: Set<string>, depth: number): Promise<Ruleset> {
