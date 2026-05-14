@@ -47,7 +47,7 @@ export function toArray<T>(value: T | T[] | undefined): T[] {
 }
 
 // Given our support for remote extends, we need to protect against the possibility of SSRF attacks. We block any hostname that is a loopback or private network address, as well as "localhost".
-// Note: The logic in this function is duplicated in the main process's Spectral linting handler (lint-process.mjs) to protect against SSRF via $ref resolution in extends files.
+// Note: The logic in this function is duplicated in the main process's Spectral linting handler (lint-process.mjs) to protect against SSRF via $ref resolution in spec files.
 // If logic is changed here, mirror it there.
 export function isPrivateOrLoopbackHost(hostname: string): boolean {
   if (hostname === 'localhost' || hostname.endsWith('.localhost')) {
@@ -79,13 +79,13 @@ function fail(error: string): SpectralRulesetValidationResult {
 function validateThen(ruleName: string, then: Record<string, unknown>): string | null {
   // We do not allow javascript prototype pollution via the "field" property
   if (typeof then.field === 'string' && (containsPrototypePollution(then.field) || /[.\[\]]/.test(then.field))) {
-    return `Rule "${ruleName}" has a "field" containing a disallowed token or traversal syntax.`;
+    return `Rule "${ruleName}" has an invalid "field" value "${then.field}". The "field" must be a plain property name. It cannot contain ".", "[", or "]", or use reserved names like __proto__, prototype, or constructor.`;
   }
 
   // only Spectral's documented built-in functions are reachable.
   if (then.function !== undefined) {
     if (typeof then.function !== 'string' || !ALLOWED_BUILTIN_FUNCTIONS.includes(then.function)) {
-      return `Rule "${ruleName}" uses function "${String(then.function)}" which is not an allowed Spectral built-in.`;
+      return `Rule "${ruleName}" uses function "${String(then.function)}" which is not an allowed Spectral built-in function.`;
     }
   }
 

@@ -21,7 +21,7 @@ const safeHttpResolver = {
   async resolve(ref: { href: () => string }): Promise<string> {
     const href = ref.href();
     if (!isSafeRefUrl(href)) {
-      throw new Error(`Refused to resolve $ref "${href}" — only https URLs to public unicast hosts are allowed.`);
+      throw new Error(`Refused to resolve $ref "${href}" — only https URLs to public hosts are allowed.`);
     }
     const response = await fetch(href);
     if (!response.ok) {
