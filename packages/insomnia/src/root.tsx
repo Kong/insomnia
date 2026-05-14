@@ -203,6 +203,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             *
             insomnia://*
       ;
+      frame-src
+            blob:
+            *
+            insomnia://*
+      ;
       script-src
             'self'
             'unsafe-eval'
