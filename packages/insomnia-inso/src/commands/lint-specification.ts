@@ -41,7 +41,7 @@ export async function lintSpecification({
       const rulesetContent = await fs.promises.readFile(rulesetFileName, 'utf8');
       const validation = validateSpectralRuleset(rulesetContent);
       if (!validation.isValid) {
-        logger.fatal(`Invalid Spectral ruleset at ${rulesetFileName}: ${validation.error}`);
+        logger.fatal(`Invalid Spectral ruleset: ${validation.error}`);
         return { isValid: false };
       }
       ruleset = await bundleAndLoadRuleset(rulesetFileName, { fs });
