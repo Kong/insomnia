@@ -401,7 +401,11 @@ export function registerMainHandlers() {
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
     const folderPath = path.join(app.getPath('userData'), options.folder);
     mkdirSync(folderPath, { recursive: true });
-    return readDir(_, { path: folderPath });
+    try {
+      return await readDir(_, { path: folderPath });
+    } catch {
+      return [];
+    }
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
