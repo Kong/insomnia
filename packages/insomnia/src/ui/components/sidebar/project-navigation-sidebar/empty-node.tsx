@@ -191,6 +191,23 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
     }
   };
 
+  const getAriaLabel = () => {
+    switch (kind) {
+      case 'emptyProject': {
+        return 'empty project';
+      }
+      case 'emptyCollection': {
+        return 'empty collection';
+      }
+      case 'emptyFolder': {
+        return 'empty folder';
+      }
+      default: {
+        return '';
+      }
+    }
+  };
+
   const paddingLeft = kind === 'emptyProject' ? '2em' : `${level + 3}rem`;
 
   return (
@@ -208,14 +225,14 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
       <span className="ml-3 min-w-0 flex-1 truncate text-xs">{getLabel()}</span>
       <MenuTrigger>
         <Button
-          aria-label="Create in project"
+          aria-label={`Create in ${getAriaLabel()}`}
           className="flex items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <Icon icon="plus-circle" /> <span className="hidden md:block">Create</span>
         </Button>
         <Popover className="flex min-w-max flex-col overflow-y-hidden">
           <Menu
-            aria-label="Create in project actions"
+            aria-label={`Create in ${getAriaLabel()} actions`}
             selectionMode="single"
             onAction={key => {
               const item = (kind === 'emptyProject' ? createInProjectActionList : createRequestActionItems).find(

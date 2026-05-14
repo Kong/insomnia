@@ -119,11 +119,23 @@ export class NavigationSidebar {
     await this.workspaceRow(workspaceName).getByLabel(`Collapse ${workspaceName}`).click();
   }
 
+  async getWorkspaceParentName(workspaceName: string): Promise<string | null> {
+    const workspaceRow = this.workspaceRow(workspaceName);
+    const projectName = await workspaceRow.getAttribute('data-project');
+    return projectName;
+  }
+
   // ===========================================================================
   // Request / Request Group nodes
   // ===========================================================================
 
-  requestRow(requestOrGroupName: string): Locator {
+  requestRow(requestOrGroupName: string, workspaceName?: string): Locator {
+    if (workspaceName) {
+      // If workspaceName is provided, scope the locator to that workspace's subtree to avoid collisions between workspaces
+      return this.root
+        .getByTestId(`request-node-${requestOrGroupName}`)
+        .and(this.page.locator(`[data-workspace="${workspaceName}"]`));
+    }
     return this.root.getByTestId(`request-node-${requestOrGroupName}`);
   }
 
@@ -131,43 +143,61 @@ export class NavigationSidebar {
     return this.root.getByTestId(`pinned-request-node-${requestName}`);
   }
 
-  async clickRequestOrFolder(requestOrGroupName: string): Promise<void> {
-    const row = this.requestRow(requestOrGroupName);
+  async clickRequestOrFolder(requestOrGroupName: string, workspaceName?: string): Promise<void> {
+    const row = this.requestRow(requestOrGroupName, workspaceName);
     await row.click();
   }
 
-  async openRequestActionsDropdown(requestName: string): Promise<void> {
-    const requestRow = this.requestRow(requestName);
+  async openRequestActionsDropdown(requestName: string, workspaceName?: string): Promise<void> {
+    const requestRow = this.requestRow(requestName, workspaceName);
     await requestRow.hover();
     await requestRow.getByLabel('Request Actions').click();
   }
 
-  async openRequestGroupActionsDropdown(requestName: string): Promise<void> {
-    const requestRow = this.requestRow(requestName);
-    await requestRow.hover();
+  async openRequestGroupActionsDropdown(requestName: string, workspaceName?: string): Promise<void> {
+    const requestRow = this.requestRow(requestName, workspaceName);
+    await requestRow.click();
     await requestRow.getByLabel('Request Group Actions').click();
   }
 
   async selectRequestDropdownOption({
     actionName,
     requestName,
+    workspaceName,
   }: {
     actionName: string;
     requestName: string;
+    workspaceName?: string;
   }): Promise<void> {
-    await this.openRequestActionsDropdown(requestName);
+    await this.openRequestActionsDropdown(requestName, workspaceName);
     await this.page.getByRole('menuitemradio', { name: actionName }).click();
   }
 
   async selectRequestGroupDropdownOption({
     actionName,
     requestGroupName,
+    workspaceName,
   }: {
     actionName: string;
     requestGroupName: string;
+    workspaceName?: string;
   }): Promise<void> {
-    await this.openRequestGroupActionsDropdown(requestGroupName);
+    await this.openRequestGroupActionsDropdown(requestGroupName, workspaceName);
     await this.page.getByRole('menuitemradio', { name: actionName }).click();
+  }
+
+  async renameRequestOrFolder(requestName: string, newName: string): Promise<void> {
+    const row = this.requestRow(requestName);
+    await row.dblclick();
+    const input = row.getByRole('textbox');
+    await input.fill(newName);
+    // Click outside the input to trigger the blur event
+    await this.root.click();
+  }
+
+  async isRequestOrGroupSelected(requestOrGroupName: string): Promise<boolean> {
+    const row = this.requestRow(requestOrGroupName);
+    return (await row.getAttribute('data-selected')) === 'true';
   }
 
   async pinRequest(requestName: string): Promise<void> {
@@ -193,12 +223,20 @@ export class NavigationSidebar {
   // Unsynced workspace nodes
   // ===========================================================================
 
-  unsyncedWorkspaceButton(name: string): Locator {
-    return this.navigationTree.getByRole('row', { name }).getByRole('button', { name });
+  unsyncedWorkspaceRow(workspaceName: string): Locator {
+    return this.root.getByTestId(`unsynced-workspace-node-${workspaceName}`);
+  }
+
+  unsyncedWorkspaceButton(workspaceName: string): Locator {
+    return this.unsyncedWorkspaceRow(workspaceName).getByRole('button', { name: 'Fetch unsynced workspace' });
   }
 
   async fetchUnsyncedWorkspace(name: string): Promise<void> {
-    await this.unsyncedWorkspaceButton(name).click();
+    const unsyncedWorkspaceButton = this.unsyncedWorkspaceButton(name);
+    await unsyncedWorkspaceButton.click();
+    await this.unsyncedWorkspaceRow(name)
+      .waitFor({ state: 'hidden', timeout: 5000 })
+      .catch(() => {});
   }
 
   // ===========================================================================

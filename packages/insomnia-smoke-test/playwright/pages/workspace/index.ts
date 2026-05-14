@@ -60,7 +60,10 @@ export class WorkspacePage extends BasePage {
     await mockSaveDialogForFile(this.app, exportPath);
 
     // Open workspace dropdown and select Export option
-    await this.navigationSidebar.selectWorkspaceDropdownOption('Export', workspaceName);
+    await this.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Export',
+      workspaceName,
+    });
 
     // Click Export button in the export requests modal (all requests selected by default)
     await this.page.getByRole('dialog').getByRole('button', { name: 'Export' }).click();
