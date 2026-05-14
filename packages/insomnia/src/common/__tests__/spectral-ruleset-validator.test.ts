@@ -1,5 +1,3 @@
-/* eslint-disable unicorn/no-useless-undefined */
-// `toArray(undefined)` is an explicit call to exercise the undefined-input code path.
 import { describe, expect, it } from 'vitest';
 
 import {
