@@ -35,8 +35,15 @@ const PROTOTYPE_POLLUTION_TOKENS = ['__proto__', 'prototype', 'constructor'];
 // For security reasons we only allow extends URLs with certain safe schemes and hosts.
 const SAFE_URL_SCHEMES = ['https:'];
 
-function isFilePath(value: string): boolean {
+export function isLocalFilePath(value: string): boolean {
   return value.startsWith('./') || value.startsWith('../') || path.isAbsolute(value);
+}
+
+export function toArray<T>(value: T | T[] | undefined): T[] {
+  if (value === undefined) {
+    return [];
+  }
+  return Array.isArray(value) ? value : [value];
 }
 
 // Given our support for remote extends, we need to protect against the possibility of SSRF attacks. We block any hostname that is a loopback or private network address, as well as "localhost".
@@ -63,13 +70,6 @@ function isSafeUrl(value: string): boolean {
   } catch {
     return false;
   }
-}
-
-function toArray<T>(value: T | T[] | undefined): T[] {
-  if (value === undefined) {
-    return [];
-  }
-  return Array.isArray(value) ? value : [value];
 }
 
 function fail(error: string): SpectralRulesetValidationResult {
@@ -99,7 +99,7 @@ function validateExtends(value: unknown): string | null {
     }
 
     // allow built in identifier and local file paths without further validation
-    if (ALLOWED_EXTENDS_IDENTIFIERS.includes(entry) || isFilePath(entry)) {
+    if (ALLOWED_EXTENDS_IDENTIFIERS.includes(entry) || isLocalFilePath(entry)) {
       continue;
     }
 
