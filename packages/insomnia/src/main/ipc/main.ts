@@ -386,14 +386,15 @@ export function registerMainHandlers() {
 
       let process: UtilityProcess | null = lintProcess!;
 
+      // defends against ReDoS via pattern function regex. We terminate the lintProcess worker if it exceeds a reasonable time limit (30s) so it does not pin a CPU core indefinitely.
       const LINT_WORKER_TIMEOUT_MS = 30_000;
       const timeoutHandle = setTimeout(() => {
         if (process) {
-          console.warn(`[lint-process] exceeded ${LINT_WORKER_TIMEOUT_MS}ms wall-clock limit; terminating.`);
+          console.warn(`[lint-process] exceeded ${LINT_WORKER_TIMEOUT_MS / 1000}s limit; terminating.`);
           process.kill();
           process = null;
           resolve({
-            error: `Linting exceeded the ${LINT_WORKER_TIMEOUT_MS / 1000}s time limit and was terminated. The ruleset or specification may contain a catastrophic regex or deeply nested schema.`,
+            error: `Linting exceeded the ${LINT_WORKER_TIMEOUT_MS / 1000}s time limit and was terminated. The ruleset or specification may contain a deeply nested schema.`,
           });
         }
       }, LINT_WORKER_TIMEOUT_MS);
