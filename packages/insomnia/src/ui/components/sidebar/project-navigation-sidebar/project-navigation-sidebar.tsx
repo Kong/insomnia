@@ -738,7 +738,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
               aria-label="Create new Project"
               onPress={() => setIsNewProjectModalOpen(true)}
               isDisabled={projects.length === 0}
-              className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+              className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-md) px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             >
               <Icon icon="plus" className="h-2.5 w-2.5" />
               <span>New Project</span>
@@ -792,6 +792,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                 key={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${virtualItem.key}`}
                 id={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`}
                 textValue={item.doc.name || item.kind}
+                isDisabled={item.kind === 'pinnedHeader'}
                 onAuxClick={e => {
                   if (e.button === 1 && item.kind === 'collectionChild') {
                     e.preventDefault();
