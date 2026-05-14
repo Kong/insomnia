@@ -89,6 +89,7 @@ export type HandleChannels =
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'
   | 'lintSpec'
+  | 'bundleSpectralRuleset'
   | 'llm.clearActiveBackend'
   | 'llm.getActiveBackend'
   | 'llm.getAIFeatureEnabled'

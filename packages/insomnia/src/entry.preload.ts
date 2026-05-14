@@ -276,6 +276,7 @@ const main: Window['main'] = {
   readDir: options => invokeWithNormalizedError('readDir', options),
   readOrCreateDataDir: options => invokeWithNormalizedError('readOrCreateDataDir', options),
   lintSpec: options => invokeWithNormalizedError('lintSpec', options),
+  bundleSpectralRuleset: options => invokeWithNormalizedError('bundleSpectralRuleset', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);

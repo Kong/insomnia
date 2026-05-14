@@ -30,8 +30,8 @@ import YAML from 'yaml';
 
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { validateSpectralRuleset } from '~/common/spectral-ruleset-validator';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
+import { selectFileOrFolder } from '~/common/select-file-or-folder';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -48,6 +48,7 @@ import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showError, showModal } from '~/ui/components/modals';
+import { AskModal } from '~/ui/components/modals/ask-modal';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { CertificatesModal } from '~/ui/components/modals/workspace-certificates-modal';
@@ -62,8 +63,6 @@ import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
-import { selectFileOrFolder } from '~/common/select-file-or-folder';
-import { AskModal } from '~/ui/components/modals/ask-modal';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
@@ -456,18 +455,12 @@ const Component = ({ params }: Route.ComponentProps) => {
       return;
     }
 
-    const raw = await window.main.insecureReadFile({ path: filePath });
-    const content = raw
-      .split('\n')
-      .map(line => line.trimEnd())
-      .join('\n')
-      .trim();
-
-    const validation = validateSpectralRuleset(content);
-    if (!validation.isValid) {
+    // We have to flatten the rules within each extends local path because we can only have one ruleset file on disk for Spectral to consume and to sync to cloud/git projects.
+    const { content, error } = await window.main.bundleSpectralRuleset({ sourcePath: filePath });
+    if (error || !content) {
       showError({
         title: 'Invalid Spectral Ruleset',
-        message: validation.error,
+        message: error ?? 'Failed to bundle ruleset.',
       });
       return;
     }

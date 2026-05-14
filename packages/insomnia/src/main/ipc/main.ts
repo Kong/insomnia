@@ -23,6 +23,7 @@ import { cannotAccessPathError } from '~/common/misc';
 import { validateSpectralRuleset } from '~/common/spectral-ruleset-validator';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
+import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import { convert } from '~/main/importers/convert';
@@ -205,6 +206,7 @@ export interface RendererToMainBridgeAPI {
     documentContent: string;
     rulesetPath: string;
   }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
+  bundleSpectralRuleset: (options: { sourcePath: string }) => Promise<{ content?: string; error?: string }>;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -344,13 +346,25 @@ export function registerMainHandlers() {
   ipcMainHandle('getOAuth2Token', (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
     return getOAuth2TokenInMain(requestId, authentication, forceRefresh);
   });
+  ipcMainHandle('bundleSpectralRuleset', async (_, options: { sourcePath: string }) => {
+    try {
+      const content = await bundleSpectralRuleset(options.sourcePath);
+      const validation = validateSpectralRuleset(content);
+      if (!validation.isValid) {
+        return { error: `Invalid Spectral ruleset: ${validation.error}` };
+      }
+      return { content };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : String(err) };
+    }
+  });
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
 
     //defensive validation for ruleset file before spawning the spectral lint worker
     if (rulesetPath) {
       try {
-        const rulesetContent = await fs.promises.readFile(rulesetPath, 'utf8');
+        const rulesetContent = await fs.promises.readFile(rulesetPath, { encoding: 'utf-8' });
         const validation = validateSpectralRuleset(rulesetContent);
         if (!validation.isValid) {
           return { error: `Invalid Spectral ruleset: ${validation.error}` };
