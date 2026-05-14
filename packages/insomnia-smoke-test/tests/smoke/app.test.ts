@@ -91,6 +91,25 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
+
+  const pdfIframe = page.getByTestId('ResponsePDFView');
+  await expect.soft(pdfIframe).toBeVisible();
+  await expect.soft(pdfIframe).toHaveAttribute('src', /^blob:/);
+
+  // find Electron/Chromium's built-in PDF viewer extension
+  await expect
+    .poll(() => page.frames().some(f => f.url().startsWith('chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai')), {
+      timeout: 5000,
+      message: 'Expected Chromium built-in PDF viewer extension frame to mount inside the PDF preview iframe',
+    })
+    .toBe(true);
+
+  await expect.soft(pdfIframe).toHaveScreenshot('dummy-pdf-preview.png', {
+    animations: 'disabled',
+    maxDiffPixelRatio: 0.15, // 15% discrepancy allowed for CI/environment differences
+    timeout: 5000,
+  });
+
   await page.getByRole('tab', { name: 'Console' }).click();
   await page.locator('pre').filter({ hasText: '< Content-Type: application/pdf' }).click();
 
