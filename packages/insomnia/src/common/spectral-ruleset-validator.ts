@@ -77,7 +77,7 @@ function fail(error: string): SpectralRulesetValidationResult {
 }
 
 function validateThen(ruleName: string, then: Record<string, unknown>): string | null {
-  // We do not allow javascript prototype pollution via the "field" property
+  // We do not allow javascript prototype pollution via the "field" property as well as square brackets/dot notation that could traverse beyond a single property level.
   if (typeof then.field === 'string' && (containsPrototypePollution(then.field) || /[.\[\]]/.test(then.field))) {
     return `Rule "${ruleName}" has an invalid "field" value "${then.field}". The "field" must be a plain property name. It cannot contain ".", "[", or "]", or use reserved names like __proto__, prototype, or constructor.`;
   }
