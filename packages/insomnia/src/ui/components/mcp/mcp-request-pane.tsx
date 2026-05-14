@@ -20,7 +20,7 @@ import {
   type McpRequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { SegmentEvent } from '../../../ui/analytics';
+import { AnalyticsEvent } from '../../../ui/analytics';
 import { useRequestPatcher, useRequestPayloadPatcher } from '../../hooks/use-request';
 import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -373,7 +373,7 @@ export const McpRequestPane: FC<Props> = ({
                         mode="json"
                         placeholder=""
                         onPrettify={() => {
-                          window.main.trackSegmentEvent({ event: SegmentEvent.mcpRequestParamsBeautifyClicked });
+                          window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpRequestParamsBeautifyClicked });
                         }}
                       />
                     </div>
@@ -404,7 +404,7 @@ export const McpRequestPane: FC<Props> = ({
             isDisabled={!isDisconnected}
             requestType="McpRequest"
             onDescriptionToggle={() => {
-              window.main.trackSegmentEvent({ event: SegmentEvent.mcpRequestHeadersDescriptionToggled });
+              window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpRequestHeadersDescriptionToggled });
             }}
           />
         </TabPanel>

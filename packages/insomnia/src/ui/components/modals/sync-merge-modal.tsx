@@ -20,7 +20,7 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 
 import { type MergeConflict, RESOLUTION_SOURCE } from '../../../sync/types';
-import { SegmentEvent } from '../../analytics';
+import { AnalyticsEvent } from '../../analytics';
 import { MergeEditor } from '../.client/codemirror/merge-editor';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
@@ -137,8 +137,8 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
         onCancelUnresolvedRef.current = onCancelUnresolved;
         setIsOpen(true);
 
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.syncConflictResolutionStart,
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.syncConflictResolutionStart,
         });
       },
     }),
@@ -309,14 +309,14 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                             );
                             // if at least one conflict.choose is theirsBlob, track conflict resolution complete as theirs
                             if (conflicts?.some(conflict => conflict.choose === conflict.theirsBlob)) {
-                              window.main.trackSegmentEvent({
-                                event: SegmentEvent.syncConflictResolutionCompleteTheirs,
+                              window.main.trackAnalyticsEvent({
+                                event: AnalyticsEvent.syncConflictResolutionCompleteTheirs,
                               });
                             }
                             // if at least one conflict.choose is mine, track conflict resolution complete as mine
                             if (conflicts?.some(conflict => conflict.choose === conflict.mineBlob)) {
-                              window.main.trackSegmentEvent({
-                                event: SegmentEvent.syncConflictResolutionCompleteMine,
+                              window.main.trackAnalyticsEvent({
+                                event: AnalyticsEvent.syncConflictResolutionCompleteMine,
                               });
                             }
 

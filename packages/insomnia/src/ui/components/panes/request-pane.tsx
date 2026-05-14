@@ -15,7 +15,7 @@ import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { SegmentEvent } from '../../../ui/analytics';
+import { AnalyticsEvent } from '../../../ui/analytics';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -206,7 +206,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                       isDisabled={!urlHasQueryParameters}
                       onPress={() => {
                         handleImportQueryFromUrl();
-                        window.main.trackSegmentEvent({ event: SegmentEvent.requestParamsImportFromURLClicked });
+                        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsImportFromURLClicked });
                       }}
                       className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
                     >
@@ -217,7 +217,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                         patchSettings({
                           useBulkParametersEditor: isSelected,
                         });
-                        window.main.trackSegmentEvent({ event: SegmentEvent.requestParamsBulkEditToggled });
+                        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsBulkEditToggled });
                       }}
                       isSelected={settings.useBulkParametersEditor}
                       className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
@@ -239,7 +239,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                     key={contentType}
                     bulk={settings.useBulkParametersEditor}
                     onDescriptionToggle={() => {
-                      window.main.trackSegmentEvent({ event: SegmentEvent.requestParamsDescriptionToggled });
+                      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsDescriptionToggled });
                     }}
                   />
                 </ErrorBoundary>
@@ -307,7 +307,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 headers={activeRequest.headers}
                 requestType="Request"
                 onDescriptionToggle={() => {
-                  window.main.trackSegmentEvent({ event: SegmentEvent.requestHeadersDescriptionToggled });
+                  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestHeadersDescriptionToggled });
                 }}
               />
             </div>
@@ -320,7 +320,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 patchSettings({
                   useBulkHeaderEditor: !settings.useBulkHeaderEditor,
                 });
-                window.main.trackSegmentEvent({ event: SegmentEvent.requestHeadersBulkEditToggled });
+                window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestHeadersBulkEditToggled });
               }}
             >
               {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
@@ -370,8 +370,8 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
                   settings={settings}
                   onSnippetAdded={snippetName => {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.requestScriptsPreScriptSnippetAdded,
+                    window.main.trackAnalyticsEvent({
+                      event: AnalyticsEvent.requestScriptsPreScriptSnippetAdded,
                       properties: { snippetName },
                     });
                   }}
@@ -386,8 +386,8 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   onChange={afterResponseScript => patchRequest(requestId, { afterResponseScript })}
                   settings={settings}
                   onSnippetAdded={snippetName => {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.requestScriptsPostScriptSnippetAdded,
+                    window.main.trackAnalyticsEvent({
+                      event: AnalyticsEvent.requestScriptsPostScriptSnippetAdded,
                       properties: { snippetName },
                     });
                   }}

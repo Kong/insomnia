@@ -50,7 +50,7 @@ import {
 import type { GitFileType } from '~/sync/git/git-vcs';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { GitProviderOption } from '~/sync/git/providers/types';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { Badge } from '~/ui/components/base/badge';
 import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth-utils';
@@ -395,8 +395,8 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
           }))
           .filter(commit => commit.id !== DO_NOT_COMMIT_ID && commit.files.length > 0);
 
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.recommendCommitsSaved,
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.recommendCommitsSaved,
           properties: {
             group_count: commits.length,
             file_excluded_count: commitsSections.getItem(DO_NOT_COMMIT_ID)?.value?.files?.length || 0,
@@ -1303,12 +1303,12 @@ const OriginalGitProjectStagingModal: FC<
 
   const handleGenerateCommits = React.useCallback(() => {
     if (commitGenerationCompleted) {
-      window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsCancelled });
+      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.recommendCommitsCancelled });
       setCommitGenerationKey(commitGenerationKey + 1);
       return;
     }
 
-    window.main.trackSegmentEvent({ event: SegmentEvent.recommendCommitsClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.recommendCommitsClicked });
     generateCommitsFetcher.submit({
       projectId,
     });

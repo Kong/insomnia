@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { app, net } from 'electron';
 
 import { services } from '~/insomnia-data';
-import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';
 import { validatePluginName } from '../utils/plugin';
@@ -160,7 +160,7 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
         }),
     );
 
-    trackSegmentEvent(SegmentEvent.installPlugin, {
+    trackAnalyticsEvent(AnalyticsEvent.installPlugin, {
       pluginName: moduleName,
       pluginVersion: info.version,
     });

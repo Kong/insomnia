@@ -4,7 +4,7 @@ import { app } from 'electron';
 
 import { LLM_BACKENDS } from '~/common/constants';
 import { services } from '~/insomnia-data';
-import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
 
 const LLM_PLUGIN_NAME = 'insomnia-llm';
@@ -123,7 +123,7 @@ export const getAIFeatureEnabled = async (feature: AIFeatureNames): Promise<bool
 export const setAIFeatureEnabled = async (feature: AIFeatureNames, enabled: boolean): Promise<void> => {
   await services.pluginData.upsertByKey(LLM_PLUGIN_NAME, `feature.${feature}`, String(enabled));
 
-  trackSegmentEvent(enabled ? SegmentEvent.aiFeatureEnabled : SegmentEvent.aiFeatureDisabled, {
+  trackAnalyticsEvent(enabled ? AnalyticsEvent.aiFeatureEnabled : AnalyticsEvent.aiFeatureDisabled, {
     feature: feature,
     set_for: 'user',
   });

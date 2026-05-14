@@ -28,7 +28,7 @@ import { useCommandsLoaderFetcher } from '~/routes/commands';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 import { useRemoteFilesLoaderFetcher } from '~/routes/remote-files';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -49,8 +49,8 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {
       setIsOpen(true);
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.quickSearchOpenedByKeyboard,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.quickSearchOpenedByKeyboard,
       });
     },
   });
@@ -62,8 +62,8 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
       onOpenChange={isOpen => {
         setIsOpen(isOpen);
         if (isOpen) {
-          window.main.trackSegmentEvent({
-            event: SegmentEvent.quickSearchOpenedByMouse,
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.quickSearchOpenedByMouse,
           });
         }
       }}

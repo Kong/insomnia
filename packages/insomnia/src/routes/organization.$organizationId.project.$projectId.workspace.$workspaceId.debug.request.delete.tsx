@@ -1,7 +1,7 @@
 import { href, redirect } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -19,8 +19,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Workspace meta not found');
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.requestDeleted,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.requestDeleted,
   });
 
   if (workspaceMeta.activeRequestId === id) {

@@ -34,7 +34,7 @@ import {
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
-import { SegmentEvent } from '../../analytics';
+import { AnalyticsEvent } from '../../analytics';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -76,12 +76,12 @@ export const ContentTypeDropdown: FC = () => {
         addCancel: true,
         onConfirm: async () => {
           patchRequest(requestId, { body: { mimeType } });
-          window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
+          window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestBodyTypeSelect, properties: { type: mimeType } });
         },
       });
     } else {
       patchRequest(requestId, { body: { mimeType } });
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
+      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestBodyTypeSelect, properties: { type: mimeType } });
     }
   };
 
