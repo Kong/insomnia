@@ -2,7 +2,8 @@ import { Resolver } from '@stoplight/spectral-ref-resolver';
 
 import { isPrivateOrLoopbackHost } from './spectral-ruleset-validator';
 
-// Protect against SSRF attacks in spec $ref resolution
+// Protect against SSRF attacks in spec $ref resolution.
+// Note: This is duplicated in lint-process.mjs. Remember to mirror changes there as well.
 function isSafeRefUrl(href: string): boolean {
   let url: URL;
   try {
