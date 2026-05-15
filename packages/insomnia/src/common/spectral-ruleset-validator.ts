@@ -44,10 +44,11 @@ export function isLocalFilePath(value: string): boolean {
 }
 
 export function toArray<T>(value: T | T[] | undefined): T[] {
+  //no extends key in the ruleset
   if (value === undefined) {
     return [];
   }
-  return Array.isArray(value) ? value : [value];
+  return Array.isArray(value) ? value : [value]; // handles both array and single value cases for extends in a given ruleset
 }
 
 // Given our support for remote extends, we need to protect against the possibility of SSRF attacks. We block any hostname that is a loopback or private network address, as well as "localhost".
@@ -99,29 +100,34 @@ function validateThen(ruleName: string, then: Record<string, unknown>): string |
 
 function validateExtends(value: unknown): string | null {
   for (const entry of toArray(value)) {
-    if (typeof entry !== 'string') {
+    if (Array.isArray(entry)) {
+      return `"extends" entry ${JSON.stringify(entry)} uses tuple format (e.g. [path, severity]) which is not supported. Use a plain string instead.`;
+    }
+
+    const path = entry;
+    if (typeof path !== 'string') {
       return '"extends" entries must be strings.';
     }
 
     // allow built in identifier and local file paths without further validation
-    if (ALLOWED_EXTENDS_IDENTIFIERS.includes(entry) || isLocalFilePath(entry)) {
+    if (ALLOWED_EXTENDS_IDENTIFIERS.includes(path) || isLocalFilePath(path)) {
       continue;
     }
 
     // validate remote URLs
     let url: URL;
     try {
-      url = new URL(entry);
+      url = new URL(path);
     } catch {
-      return `"extends" entry "${entry}" is not a recognized Spectral identifier or a valid URL.`;
+      return `"extends" entry "${path}" is not a recognized Spectral identifier or a valid URL.`;
     }
 
     if (!SAFE_URL_SCHEMES.includes(url.protocol)) {
-      return `"extends" entry "${entry}" must use https (got "${url.protocol}").`;
+      return `"extends" entry "${path}" must use https (got "${url.protocol}").`;
     }
 
     if (!url.hostname || isPrivateOrLoopbackHost(url.hostname.toLocaleLowerCase())) {
-      return `"extends" entry "${entry}" targets a disallowed host`;
+      return `"extends" entry "${path}" targets a disallowed host`;
     }
   }
   return null;

@@ -83,6 +83,11 @@ async function flattenRuleset(filePath: string, visited: Set<string>, depth: num
   //   - keep them in a separate list
   //   - include them later in the final "extends" array
   for (const entry of toArray(ruleset.extends)) {
+    if (Array.isArray(entry)) {
+      throw new Error(
+        `Failed to process "extends" entry ${JSON.stringify(entry)}: tuple format (e.g. [path, severity]) is not supported. Use a plain string instead.`,
+      );
+    }
     // If this entry is NOT a local file path,
     // keep it as-is for the final output.
     if (!isLocalFilePath(entry)) {
