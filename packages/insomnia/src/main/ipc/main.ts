@@ -364,7 +364,7 @@ export function registerMainHandlers() {
     //defensive validation for ruleset file before spawning the spectral lint worker
     if (rulesetPath) {
       try {
-        const rulesetContent = await fs.promises.readFile(rulesetPath, { encoding: 'utf-8' });
+        const rulesetContent = await fs.promises.readFile(rulesetPath, { encoding: 'utf8' });
         const validation = validateSpectralRuleset(rulesetContent);
         if (!validation.isValid) {
           return { error: `Invalid Spectral ruleset: ${validation.error}` };

@@ -1,6 +1,5 @@
 import ipaddr from 'ipaddr.js';
 import YAML from 'yaml';
-import path from 'path';
 
 export type SpectralRulesetValidationResult = { isValid: true } | { isValid: false; error: string };
 
@@ -35,8 +34,13 @@ const PROTOTYPE_POLLUTION_TOKENS = ['__proto__', 'prototype', 'constructor'];
 // For security reasons we only allow extends URLs with certain safe schemes and hosts.
 const SAFE_URL_SCHEMES = ['https:'];
 
+// Check if path is absolute file path (e.g. /foo/bar.yaml, C:\foo\bar.yaml, \\server\share\file.yaml)
+function isAbsoluteFilePath(value: string): boolean {
+  return value.startsWith('/') || value.startsWith('\\\\') || /^[A-Za-z]:[\\/]/.test(value);
+}
+
 export function isLocalFilePath(value: string): boolean {
-  return value.startsWith('./') || value.startsWith('../') || path.isAbsolute(value);
+  return value.startsWith('./') || value.startsWith('../') || isAbsoluteFilePath(value);
 }
 
 export function toArray<T>(value: T | T[] | undefined): T[] {
@@ -83,10 +87,11 @@ function validateThen(ruleName: string, then: Record<string, unknown>): string |
   }
 
   // only Spectral's documented built-in functions are reachable.
-  if (then.function !== undefined) {
-    if (typeof then.function !== 'string' || !ALLOWED_BUILTIN_FUNCTIONS.includes(then.function)) {
-      return `Rule "${ruleName}" uses function "${String(then.function)}" which is not an allowed Spectral built-in function.`;
-    }
+  if (
+    then.function !== undefined &&
+    (typeof then.function !== 'string' || !ALLOWED_BUILTIN_FUNCTIONS.includes(then.function))
+  ) {
+    return `Rule "${ruleName}" uses function "${String(then.function)}" which is not an allowed Spectral built-in function.`;
   }
 
   return null;
@@ -181,7 +186,7 @@ export function validateSpectralRuleset(content: string): SpectralRulesetValidat
   let parsed: unknown;
   try {
     parsed = YAML.parse(content);
-  } catch (err) {
+  } catch {
     return fail(`Ruleset is not valid YAML or JSON`);
   }
 
