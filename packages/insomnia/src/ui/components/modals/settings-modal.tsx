@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { AI_PLUGIN_NAME, isKonnectSyncEnabled } from '~/common/constants';
+import { AI_PLUGIN_NAME } from '~/common/constants';
 import { models } from '~/insomnia-data';
 import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
@@ -51,7 +51,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
 
       if (
-        isKonnectSyncEnabled() &&
         userSession.id &&
         organizationId &&
         !models.organization.isScratchpadOrganizationId(organizationId)

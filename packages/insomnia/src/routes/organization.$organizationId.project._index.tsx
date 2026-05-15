@@ -4,7 +4,7 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { href, redirect, useLoaderData, useNavigate, useParams } from 'react-router';
 
 import { logout } from '~/account/session';
-import { DEFAULT_SIDEBAR_SIZE, isKonnectSyncEnabled } from '~/common/constants';
+import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import type { GitRepository, Project } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
@@ -119,7 +119,7 @@ const Component = () => {
                 projects={projectsWithPresence}
                 storageRules={storageRules}
                 onCreateProject={() => setIsNewProjectModalOpen(true)}
-                konnectSyncEnabled={isKonnectSyncEnabled() && features.konnectSync.enabled}
+                konnectSyncEnabled={features.konnectSync.enabled}
               />
             </div>
           </Panel>
