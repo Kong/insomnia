@@ -5,8 +5,9 @@ import { test } from '../../playwright/test';
 test('can send requests', async ({ page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+  const statusTag = page.getByTestId('response-pane').getByTestId('response-status-tag');
   const responseBody = page.getByTestId('response-pane');
+  const responsePreviewBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible');
 
   await insomnia.projectPage.importFixture('smoke-test-collection.yaml');
 
@@ -33,10 +34,10 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('"id": "1"');
+  await expect.soft(responsePreviewBody).toContainText('"id": "1"');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
-  await expect.soft(responseBody).toContainText('{"id":"1"}');
+  await expect.soft(responsePreviewBody).toContainText('{"id":"1"}');
 
   await page
     .getByLabel('Request Collection')
@@ -47,7 +48,7 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Connect' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await page.getByRole('tab', { name: 'Console' }).click();
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('Connected to 127.0.0.1');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Disconnect' }).click();
 
@@ -64,7 +65,7 @@ test('can send requests', async ({ page, insomnia }) => {
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
-  await expect.soft(responseBody).toContainText('a,b,c');
+  await expect.soft(responsePreviewBody).toContainText('a,b,c');
 
   await page
     .getByLabel('Request Collection')
@@ -77,8 +78,8 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('xml version="1.0"');
-  await expect.soft(responseBody).toContainText('<LoginResult>');
+  await expect.soft(responsePreviewBody).toContainText('xml version="1.0"');
+  await expect.soft(responsePreviewBody).toContainText('<LoginResult>');
 
   await page
     .getByLabel('Request Collection')
@@ -110,13 +111,18 @@ test('can send requests', async ({ page, insomnia }) => {
     timeout: 5000,
   });
 
-  await page.getByRole('tab', { name: 'Console' }).click();
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
   await page.locator('pre').filter({ hasText: '< Content-Type: application/pdf' }).click();
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Preview' }).click();
 
   await page.getByLabel('Request Collection').getByTestId('sends request with basic authentication').press('Enter');
+  await expect
+    .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText('http://127.0.0.1:4010/auth/basic'))
+    .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('basic auth received');
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Preview' }).click();
+  await expect.soft(responsePreviewBody).toContainText('basic auth received');
 
   await page
     .getByLabel('Request Collection')
@@ -127,7 +133,7 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await page.getByRole('tab', { name: 'Console' }).click();
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('Set-Cookie: insomnia-test-cookie=value123');
 
   await page.getByLabel('Request Collection').getByTestId('delayed request').press('Enter');
