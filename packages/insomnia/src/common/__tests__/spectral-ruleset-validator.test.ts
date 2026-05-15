@@ -88,7 +88,8 @@ describe('isPrivateOrLoopbackHost()', () => {
 
 describe('toArray()', () => {
   it('returns [] for undefined', () => {
-    expect(toArray(undefined)).toEqual([]);
+    const value = undefined;
+    expect(toArray(value)).toEqual([]);
   });
 
   it('wraps a single value in an array', () => {
