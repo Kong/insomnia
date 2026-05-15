@@ -11,9 +11,9 @@ const MAX_EXTENDS_DEPTH = 5;
 const ALLOWED_EXTENSIONS = ['.yaml', '.yml'];
 
 // `extends` is the only key we touch by name in this file: local paths get resolved away and
-// remote/built-in entries are carried through. Every other top-level key — `rules`, `aliases`,
-// `parserOptions`, anything we may add later — flows through the generic `mergeInto` step.
-// The validator that runs after bundling decides which keys are actually allowed.
+// remote URLs and spectral identifier entries are carried through. Every other top-level key — 'rules', 'aliases',
+// 'parserOptions', anything we may add later — flows through the generic 'mergeInto' step.
+// The validator that runs after bundling (ref: spectral-ruleset-validator.ts) decides which keys are actually allowed and all of the constraints.
 type Ruleset = Record<string, unknown> & {
   extends?: string[];
 };
@@ -71,17 +71,25 @@ async function flattenRuleset(filePath: string, visited: Set<string>, depth: num
   const nextVisited = new Set(visited).add(absolute);
 
   const flattenedRuleset: Ruleset = {}; // Flattended ruleset containing all rules within this file path and its local extends
-  const remainingExtends: string[] = []; // non local file paths — built-in identifiers and remote URLs; deduped at return
+  const remainingExtends: string[] = []; // non local file paths — built-in identifiers and remote URLs
 
-  // Resolve 'extends' first: recurse on local file paths and merge each flattened child into 'flattenedRuleset',
-  // Collect any non-local entries (built-in identifiers, https URLs) for the final 'extends'.
+  // Process everything listed in "extends".
+  //
+  // For local file paths:
+  //   - recursively load and flatten them
+  //   - merge their rules into the current result
+  //
+  // For non-local entries (built in identifiers / remote URLs):
+  //   - keep them in a separate list
+  //   - include them later in the final "extends" array
   for (const entry of toArray(ruleset.extends)) {
-    // Keep built-in rulesets and remote URLs.
+    // If this entry is NOT a local file path,
+    // keep it as-is for the final output.
     if (!isLocalFilePath(entry)) {
       remainingExtends.push(entry);
       continue;
     }
-    // flatten local rulesets
+    // Local file paths are recursively loaded and flattened.
     const childRuleset = await flattenRuleset(path.resolve(baseDir, entry), nextVisited, depth + 1);
     if (childRuleset.extends) {
       remainingExtends.push(...childRuleset.extends);
@@ -90,15 +98,26 @@ async function flattenRuleset(filePath: string, visited: Set<string>, depth: num
     mergeInto(flattenedRuleset, childRuleset); // merge child's rules and other keys into the flattenedRuleset, with child taking precedence over parent
   }
 
-  // Now layer the parent ruleset over the inherited values (parent wins on collisions).
-  // We exclude the parent's 'extends' from this step — its local paths have already been
-  // resolved in the loop above, and the final value lives in 'remainingExtends'.
+  // After all inherited rulesets are merged,
+  // apply the current file's own rules on top.
+  //
+  // If parent and child define the same rule,
+  // the parent value wins.
+  //
+  // Do NOT merge the parent's "extends" field here,
+  // because:
+  //   - local file paths were already flattened above
+  //   - non-local entries are already stored in "remainingExtends"
   const parentOverrides: Ruleset = { ...ruleset };
   delete parentOverrides.extends;
   mergeInto(flattenedRuleset, parentOverrides);
 
-  // The parent's own 'extends' is already represented in 'remainingExtends' (resolved or carried).
-  // Remove duplicates while preserving order, and return the final flattened ruleset with a consolidated 'extends' array containing only built-in identifiers and remote URLs.
+  // At this point:
+  //   - all local file-based "extends" have been flattened
+  //   - only built-in spectral identifiers and remote URLs remain
+  //
+  // Remove duplicate entries while preserving order,
+  // then return the final flattened ruleset.
   const uniqueExtends = [...new Set(remainingExtends)];
   delete flattenedRuleset.extends;
   return uniqueExtends.length > 0 ? { extends: uniqueExtends, ...flattenedRuleset } : flattenedRuleset;
