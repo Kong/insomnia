@@ -1168,18 +1168,22 @@ const Component = ({ params }: Route.ComponentProps) => {
                   <div className="flex flex-wrap items-center gap-2 p-(--padding-sm)">
                     <TooltipTrigger>
                       <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-                      <div className="ml-2 inline-flex items-center">
-                        <span className="mr-[2px]">Ruleset</span>
-                        {!!selectedRulesetPath && (
-                          <Button className="underline" onPress={() => setIsViewRulesetModalOpen(true)}>
-                            (View)
-                          </Button>
-                        )}
-                        :
+                      <div className="ml-2 inline-flex items-center gap-2">
+                        <span className="mr-[2px]">
+                          {selectedRulesetPath ? (
+                            <>
+                              <Button className="underline" onPress={() => setIsViewRulesetModalOpen(true)}>
+                                Custom Ruleset
+                              </Button>
+                            </>
+                          ) : (
+                            'Default OAS Ruleset'
+                          )}
+                        </span>
+                        <Button className="underline" onPress={handleSelectSpectralFile}>
+                          {selectedRulesetPath ? '(Edit)' : '(Upload)'}
+                        </Button>
                       </div>
-                      <Button className="underline" onPress={handleSelectSpectralFile}>
-                        {selectedRulesetPath ? window.path.basename(selectedRulesetPath) : 'Upload yml file'}
-                      </Button>
                       <Tooltip
                         placement="top end"
                         offset={8}
@@ -1194,7 +1198,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                           ) : (
                             <Fragment>
                               <p>
-                                Using default OAS ruleset. Click to upload a custom ruleset yaml file.
+                                Using default OAS ruleset. Upload a custom Spectral ruleset.
                                 {isConnectedGitProject && (
                                   <span>
                                     {' '}
