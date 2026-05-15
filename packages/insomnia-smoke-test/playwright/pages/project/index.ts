@@ -99,8 +99,8 @@ export class ProjectPage extends BasePage {
     if (await projectModalCloseButton.isVisible()) {
       await projectModalCloseButton.click();
     }
-    await this.page.getByTestId('project-node-Personal Workspace').click();
-    await this.page.getByRole('option', { name: /Magic/ }).locator('span').click();
+    await this.page.getByRole('button', { name: 'Personal workspace Organizations' }).click();
+    await this.page.getByRole('option', { name: /Magic/ }).click();
     await this.page.getByRole('button', { name: /Magic/ }).click();
     await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
     await this.page.getByText('Git Project').waitFor({ state: 'visible', timeout: 10_000 });

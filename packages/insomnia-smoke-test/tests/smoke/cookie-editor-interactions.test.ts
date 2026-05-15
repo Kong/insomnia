@@ -13,7 +13,9 @@ test.describe('Cookie editor', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   });
 
-  test('create and send a cookie', async ({ page }) => {
+  // has issue?
+
+  test('create and send a cookie', async ({ page, insomnia }) => {
     // Open cookie editor
     await page.getByRole('button', { name: 'Cookies' }).click();
 
@@ -25,7 +27,7 @@ test.describe('Cookie editor', () => {
     await page.getByTestId('cookie-test-iteration-0').click();
 
     // Create a new cookie
-    await page.getByRole('button', { name: 'Add Cookie' }).click();
+    await page.getByLabel('Cookies Modal').getByRole('button', { name: 'Add Cookie' }).click();
 
     await page.getByTestId('cookie-test-iteration-0').getByRole('button', { name: 'Edit' }).click();
 
@@ -40,7 +42,7 @@ test.describe('Cookie editor', () => {
     await page.getByText('Done').click();
 
     // Send http request
-    await page.getByLabel('Request Collection').getByTestId('example http').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('example http');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // Check in the timeline that the cookie was sent
@@ -49,7 +51,7 @@ test.describe('Cookie editor', () => {
     await expect.soft(page.getByText('foo2=bar2')).toBeVisible();
 
     // Send ws request
-    await page.getByLabel('Request Collection').getByTestId('example websocket').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('example websocket');
     await page.getByText('ws://localhost:4010').click();
     await page.getByTestId('request-pane').getByText('Connect').click();
 
@@ -58,12 +60,12 @@ test.describe('Cookie editor', () => {
     await expect.soft(page.getByText('foo2=bar2')).toBeVisible();
   });
 
-  test('support __Host- prefix', async ({ page }) => {
+  test('support __Host- prefix', async ({ page, insomnia }) => {
     // Open cookie editor
     await page.getByRole('button', { name: 'Cookies' }).click();
 
     // Create a new cookie
-    await page.getByRole('button', { name: 'Add Cookie' }).click();
+    await page.getByLabel('Cookies Modal').getByRole('button', { name: 'Add Cookie' }).click();
 
     // Edit the new cookie
     await page.getByTestId('cookie-test-iteration-0').getByRole('button', { name: 'Edit' }).click();
@@ -77,7 +79,7 @@ test.describe('Cookie editor', () => {
     await page.getByText('Done').click();
 
     // Send request
-    await page.getByLabel('Request Collection').getByTestId('example http').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('example http');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // Check in the timeline that the cookie was sent
@@ -85,7 +87,7 @@ test.describe('Cookie editor', () => {
     await expect.soft(page.getByText('__Host-foo=bar')).toBeVisible();
   });
 
-  test('cookie list should update when cookie is updated', async ({ page }) => {
+  test('cookie list should update when cookie is updated', async ({ page, insomnia }) => {
     // Open cookie editor
     await page.getByRole('button', { name: 'Cookies' }).click();
 
