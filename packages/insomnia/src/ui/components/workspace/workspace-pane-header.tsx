@@ -77,6 +77,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
             />
             {!isMcp && (
               <Button
+                aria-label="Add Cookies"
                 onPress={() => {
                   window.main.trackSegmentEvent({
                     event: SegmentEvent.requestAddCookiesClicked,
@@ -92,6 +93,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
               </Button>
             )}
             <Button
+              aria-label="Add Certificates"
               onPress={() => {
                 window.main.trackSegmentEvent({
                   event: SegmentEvent.requestAddCertificatesClicked,

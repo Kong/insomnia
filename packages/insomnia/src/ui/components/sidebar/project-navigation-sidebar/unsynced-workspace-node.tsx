@@ -37,7 +37,11 @@ export const UnsyncedWorkspaceNode = ({ item }: { item: UnsyncedWorkspaceFlatIte
   }, [pullRemoteFileFetcher.data, pullRemoteFileFetcher.state, item.doc.name]);
 
   return (
-    <div className={`${ROW_CLASS} group`} style={{ paddingLeft: '2em' }}>
+    <div
+      className={`${ROW_CLASS} group`}
+      style={{ paddingLeft: '2em' }}
+      data-testid={`unsynced-workspace-node-${item.doc.name}`}
+    >
       <span className={ACTIVE_BORDER_CLASS} />
       <span className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`} style={{ left: '1.5em' }} />
       <Button className={TOGGLE_BTN_CLASS} aria-label="" isDisabled />

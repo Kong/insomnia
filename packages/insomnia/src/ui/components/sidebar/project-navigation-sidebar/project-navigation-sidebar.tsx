@@ -672,7 +672,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     getScrollElement: () => parentRef.current,
     count: visibleFlatItems.length,
     estimateSize: useCallback(() => 32, []),
-    overscan: 10,
+    overscan: 30,
     getItemKey: index => visibleFlatItems[index].doc._id,
   });
   const sidebarDragAndDropHooks = useSidebarDragAndDrop({
@@ -693,13 +693,14 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       : [];
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
+    <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
       <div className="flex shrink-0 border-b border-solid border-b-(--hl-md)">
         {!isScratchPad &&
           ['projects', 'konnect'].map(tabName => (
             <button
               key={tabName}
               className={`border-b-2 border-solid px-4 py-2 text-xs ${activeTab === tabName ? 'border-(--color-surprise) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
+              data-testid={`sidebar-tab-${tabName}`}
               onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
             >
               {tabName === 'projects' ? (
@@ -767,7 +768,11 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       {!isProjectTabActive && syncing && <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>}
       {!isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
 
-      <div ref={parentRef} className="group/tree flex-1 overflow-y-auto py-(--padding-sm)">
+      <div
+        ref={parentRef}
+        className="group/tree flex-1 overflow-y-auto py-(--padding-sm)"
+        data-testid="project-navigation-tree-container"
+      >
         <GridList
           aria-label="Project Navigation Tree"
           items={virtualizer.getVirtualItems()}

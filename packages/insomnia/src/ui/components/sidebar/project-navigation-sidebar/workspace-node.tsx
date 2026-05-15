@@ -27,7 +27,11 @@ export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: 
   const isCollection = workspaceScope === 'collection';
 
   return (
-    <div className={`${ROW_CLASS} group`} style={{ paddingLeft: '2em' }}>
+    <div
+      className={`${ROW_CLASS} group`}
+      style={{ paddingLeft: '2em' }}
+      data-testid={`workspace-node-${workspaceName}`}
+    >
       <span className={ACTIVE_BORDER_CLASS} />
       <span className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`} style={{ left: '1.5em' }} />
       <Button

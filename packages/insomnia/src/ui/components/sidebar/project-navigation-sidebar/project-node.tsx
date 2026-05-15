@@ -19,7 +19,7 @@ export const ProjectNode = ({ item, storageRules, onToggle }: ProjectNodeProps) 
   const { doc, collapsed, organizationId } = item;
   const { name: projectName, presence, _id: projectId } = doc;
   return (
-    <div className={ROW_CLASS} style={{ paddingLeft: '1em' }}>
+    <div className={ROW_CLASS} style={{ paddingLeft: '1em' }} data-testid={`project-node-${projectName}`}>
       <span className={ACTIVE_BORDER_CLASS} />
       <Button
         aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${projectName}`}
