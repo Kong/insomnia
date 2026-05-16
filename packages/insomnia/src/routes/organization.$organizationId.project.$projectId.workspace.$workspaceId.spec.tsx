@@ -207,9 +207,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const gitVersion = useGitVCSVersion();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
-  const [selectedRulesetPath, setSelectedRulesetPath] = useState<string>(
-    gitSyncRulesetPath && rulesetContent ? gitSyncRulesetPath : '',
-  );
+  const [selectedRulesetPath, setSelectedRulesetPath] = useState<string>('');
 
   // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
   // For git sync projects, write .spectral.yaml directly to the git working directory so it
@@ -272,14 +270,10 @@ const Component = ({ params }: Route.ComponentProps) => {
   };
 
   useEffect(() => {
-    // For git-sync projects the correct path is derivable synchronously from rulesetContent,
-    // so compute it here instead of relying on selectedRulesetPath state which may lag by one
-    // render cycle (syncRuleset effect runs after this one and hasn't called setSelectedRulesetPath yet).
-    const effectivePath = gitSyncRulesetPath ? (rulesetContent ? gitSyncRulesetPath : '') : selectedRulesetPath;
-    registerCodeMirrorLint(effectivePath);
+    registerCodeMirrorLint(selectedRulesetPath);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-  }, [selectedRulesetPath, rulesetContent, gitSyncRulesetPath]);
+  }, [selectedRulesetPath, rulesetContent]);
 
   useEffect(() => {
     if (lintErrors.length > 0 || lintWarnings.length > 0) {
@@ -290,13 +284,12 @@ const Component = ({ params }: Route.ComponentProps) => {
   useEffect(() => {
     const syncRuleset = async () => {
       if (gitSyncRulesetPath) {
-        // Git-sync: file is already on disk at gitSyncRulesetPath.
         setSelectedRulesetPath(rulesetContent ? gitSyncRulesetPath : '');
       } else if (rulesetContent) {
-        // Cloud sync: ensure rulesetContent is on disk at at rulesWritePath
+        // Cloud sync: ensure rulesetContent is on disk at rulesetWritePath
         try {
           const existing = await window.main.insecureReadFile({ path: rulesetWritePath });
-          //file exists but there is new content, we should update the file with the new content
+          // file exists but there is new content, we should update the file with the new content
           if (existing !== rulesetContent) {
             await window.main.writeFile({ path: rulesetWritePath, content: rulesetContent });
           }
