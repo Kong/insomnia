@@ -272,10 +272,14 @@ const Component = ({ params }: Route.ComponentProps) => {
   };
 
   useEffect(() => {
-    registerCodeMirrorLint(selectedRulesetPath);
+    // For git-sync projects the correct path is derivable synchronously from rulesetContent,
+    // so compute it here instead of relying on selectedRulesetPath state which may lag by one
+    // render cycle (syncRuleset effect runs after this one and hasn't called setSelectedRulesetPath yet).
+    const effectivePath = gitSyncRulesetPath ? (rulesetContent ? gitSyncRulesetPath : '') : selectedRulesetPath;
+    registerCodeMirrorLint(effectivePath);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-  }, [selectedRulesetPath, rulesetContent]);
+  }, [selectedRulesetPath, rulesetContent, gitSyncRulesetPath]);
 
   useEffect(() => {
     if (lintErrors.length > 0 || lintWarnings.length > 0) {
@@ -289,14 +293,24 @@ const Component = ({ params }: Route.ComponentProps) => {
         // Git-sync: file is already on disk at gitSyncRulesetPath.
         setSelectedRulesetPath(rulesetContent ? gitSyncRulesetPath : '');
       } else if (rulesetContent) {
-        // Cloud sync: ensure rulesetContent is on disk so collaborators are able to pull changes.
-        // Note: We need this check because handleSelectSpectralFile also writes to disk which would trigger this useEffect again for an uploader and write to disk again unnecessarily.
-        const existing = await window.main.insecureReadFile({ path: rulesetWritePath });
-        if (existing !== rulesetContent) {
-          await window.main.writeFile({ path: rulesetWritePath, content: rulesetContent });
+        // Cloud sync: ensure rulesetContent is on disk at at rulesWritePath
+        try {
+          const existing = await window.main.insecureReadFile({ path: rulesetWritePath });
+          //file exists but there is new content, we should update the file with the new content
+          if (existing !== rulesetContent) {
+            await window.main.writeFile({ path: rulesetWritePath, content: rulesetContent });
+          }
+          setSelectedRulesetPath(rulesetWritePath);
+        } catch (err) {
+          // File does not exist, we should create it with the rulesetContent
+          const isFileNotFound = err instanceof Error && err.message.includes('ENOENT');
+          if (isFileNotFound) {
+            await window.main.writeFile({ path: rulesetWritePath, content: rulesetContent });
+            setSelectedRulesetPath(rulesetWritePath);
+          }
         }
-        setSelectedRulesetPath(rulesetWritePath);
       } else {
+        // No ruleset content, ensure file is deleted
         await window.main.deleteFile({ path: rulesetWritePath });
         setSelectedRulesetPath('');
       }
