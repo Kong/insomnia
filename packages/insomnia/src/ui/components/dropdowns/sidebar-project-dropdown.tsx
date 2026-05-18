@@ -19,6 +19,7 @@ import * as reactUse from 'react-use';
 
 import type { SORT_ORDERS } from '~/common/constants';
 import { sortOrderName } from '~/common/constants';
+import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import type { GitRepository, Project, WorkspaceScope } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
@@ -29,6 +30,8 @@ import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { ProjectModal } from '../modals/project-modal';
+
+export const ICON_CLASS = 'h-3 w-3 shrink-0';
 
 export type WorkspaceSortOrder = Exclude<(typeof SORT_ORDERS)[number], 'http-method' | 'type-desc' | 'type-asc'>;
 const workspaceSortOrder: WorkspaceSortOrder[] = [
@@ -51,6 +54,7 @@ interface ProjectActionItem {
   id: string;
   name: string;
   icon: IconProp;
+  scope?: WorkspaceScope;
   action: (projectId: string, projectName: string) => void;
   hasSubmenu?: boolean;
   submenuItems?: Omit<ProjectActionItem, 'icon'>[];
@@ -136,18 +140,21 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
     {
       id: 'new-collection',
       name: 'Request collection',
+      scope: 'collection',
       icon: 'bars',
       action: createNewCollection,
     },
     {
       id: 'new-document',
       name: 'Design document',
+      scope: 'design',
       icon: 'file',
       action: createNewDocument,
     },
     {
       id: 'new-mcp-client',
       name: 'MCP Client',
+      scope: 'mcp',
       icon: ['fac', 'mcp'] as unknown as IconProp,
       action: createNewMcpClient,
     },
@@ -156,6 +163,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
           {
             id: 'new-mock-server',
             name: 'Mock Server',
+            scope: 'mock-server' as WorkspaceScope,
             icon: 'server' as IconName,
             action: createNewMockServer,
           },
@@ -164,6 +172,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
     {
       id: 'new-environment',
       name: 'Environment',
+      scope: 'environment',
       icon: 'code',
       action: createNewGlobalEnvironment,
     },
@@ -264,7 +273,15 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
                         className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                         aria-label={item.name}
                       >
-                        <Icon icon={item.icon} />
+                        {section.name === 'CREATE' && item.scope ? (
+                          <div
+                            className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
+                          >
+                            <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
+                          </div>
+                        ) : (
+                          <Icon icon={item.icon} className="h-4 w-4 shrink-0" />
+                        )}
                         <span>{item.name}</span>
                       </MenuItem>
                     ) : (
@@ -273,7 +290,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
                           className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label={item.name}
                         >
-                          <Icon icon={item.icon} className="h-4 w-3" />
+                          <Icon icon={item.icon} className="h-4 w-4 shrink-0" />
                           <span>{item.name}</span>
                           <Icon icon="chevron-right" className="ml-auto" />
                         </MenuItem>
