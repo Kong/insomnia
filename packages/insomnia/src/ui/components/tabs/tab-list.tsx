@@ -15,7 +15,7 @@ import { useParams } from 'react-router';
 import type { BaseModel, MockRoute, Request } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { SegmentEvent } from '~/ui/analytics';
+import { makeRequestCreatedEvent } from '~/ui/analytics';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
@@ -262,13 +262,9 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         parentId: workspaceId,
       });
 
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.requestCreated,
-        properties: {
-          requestType: 'HTTP',
-          source: "tab-list"
-        },
-      });
+      window.main.trackAnalyticsEvent(
+        makeRequestCreatedEvent('HTTP', 'tab-list')
+      );
     }
   };
 

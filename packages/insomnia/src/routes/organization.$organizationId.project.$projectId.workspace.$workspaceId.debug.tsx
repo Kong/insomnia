@@ -58,6 +58,7 @@ import { useRequestNewActionFetcher } from '~/routes/organization.$organizationI
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
+import { makeRequestCreatedEvent } from '~/ui/analytics';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { DropdownHint } from '~/ui/components/base/dropdown/dropdown-hint';
 import { DocumentTab } from '~/ui/components/document-tab';
@@ -646,10 +647,9 @@ const Debug = () => {
               requestType: 'HTTP',
               parentId: workspaceId,
             })
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.requestCreated,
-              properties: { requestType: 'HTTP', source: 'sidebar'},
-            });
+            window.main.trackAnalyticsEvent(
+              makeRequestCreatedEvent('HTTP', 'sidebar')
+            );
           },
         },
         {
@@ -661,10 +661,9 @@ const Debug = () => {
               requestType: 'Event Stream',
               parentId: workspaceId,
             });
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.requestCreated,
-              properties: { requestType: 'Event Stream' , source: 'sidebar'},
-            });
+            window.main.trackAnalyticsEvent(
+              makeRequestCreatedEvent('Event Stream', 'sidebar')
+            );
           },
         },
         {
@@ -676,10 +675,9 @@ const Debug = () => {
               requestType: 'GraphQL',
               parentId: workspaceId,
             });
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.requestCreated,
-              properties: { requestType: 'GraphQL' , source: 'sidebar'},
-            });
+            window.main.trackAnalyticsEvent(
+              makeRequestCreatedEvent('GraphQL', 'sidebar')
+            );
           },
         },
         {
@@ -691,10 +689,9 @@ const Debug = () => {
               requestType: 'gRPC',
               parentId: workspaceId,
             });
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.requestCreated,
-              properties: { requestType: 'gRPC' , source: 'sidebar'},
-            });
+            window.main.trackAnalyticsEvent(
+              makeRequestCreatedEvent('gRPC', 'sidebar')
+            );
           },
         },
         {
@@ -706,10 +703,9 @@ const Debug = () => {
               requestType: 'WebSocket',
               parentId: workspaceId,
             });
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.requestCreated,
-              properties: { requestType: 'WebSocket' , source: 'sidebar'},
-            });
+            window.main.trackAnalyticsEvent(
+              makeRequestCreatedEvent('WebSocket', 'sidebar')
+            );
           },
         },
         {
@@ -721,10 +717,9 @@ const Debug = () => {
               requestType: 'SocketIO',
               parentId: workspaceId,
             });
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.requestCreated,
-              properties: { requestType: 'SocketIO' , source: 'sidebar'},
-            });
+            window.main.trackAnalyticsEvent(
+              makeRequestCreatedEvent('SocketIO', 'sidebar')
+            );
           },
         },
       ],
