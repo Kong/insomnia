@@ -108,6 +108,7 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
 
   const content = (
     <>
+      <Button slot="drag" className="hidden" />
       {!isPinnedRequest && (
         <Button
           aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${doc.name}`}
@@ -233,6 +234,7 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
 export const PinnedHeaderNode = () => {
   return (
     <div className={`${ROW_CLASS} group h-full! pl-12 group-hover:bg-transparent!`}>
+      <Button slot="drag" className="hidden" />
       <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
       <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
       <div className="ml-2 flex h-full w-full items-center rounded-sm border border-b-0 border-solid border-(--hl-md) bg-(--hl-xs) px-2 pt-1 text-(--hl)">

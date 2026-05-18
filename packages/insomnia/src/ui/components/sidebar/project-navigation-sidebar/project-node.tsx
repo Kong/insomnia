@@ -23,6 +23,7 @@ export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrd
   return (
     <div className={ROW_CLASS} style={{ paddingLeft: '1em' }} data-testid={`project-node-${projectName}`}>
       <span className={ACTIVE_BORDER_CLASS} />
+      <Button slot="drag" className="hidden" />
       <Button
         aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${projectName}`}
         onPress={() => onToggle(projectId)}

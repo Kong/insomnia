@@ -44,6 +44,7 @@ export const UnsyncedWorkspaceNode = ({ item }: { item: UnsyncedWorkspaceFlatIte
     >
       <span className={ACTIVE_BORDER_CLASS} />
       <span className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`} style={{ left: '1.5em' }} />
+      <Button slot="drag" className="hidden" />
       <Button className={TOGGLE_BTN_CLASS} aria-label="" isDisabled />
       <TooltipTrigger>
         <Button
