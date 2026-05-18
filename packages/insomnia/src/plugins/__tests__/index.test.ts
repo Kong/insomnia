@@ -13,6 +13,7 @@ vi.mock('~/insomnia-data', () => ({
     oAuth2Token: { getByParentId: vi.fn() },
     cookieJar: { getOrCreateForParentId: vi.fn() },
     response: { getLatestForRequestId: vi.fn() },
+    helpers: { getResponseBodyBuffer: vi.fn() },
   },
 }));
 
