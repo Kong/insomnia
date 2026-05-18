@@ -58,8 +58,7 @@ import { useRequestNewActionFetcher } from '~/routes/organization.$organizationI
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
-import { makeRequestCreatedEvent } from '~/ui/analytics';
-import { AnalyticsEvent } from '~/ui/analytics';
+ import { AnalyticsEvent, makeRequestCreatedEvent } from '~/ui/analytics';
 import { DropdownHint } from '~/ui/components/base/dropdown/dropdown-hint';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
@@ -646,7 +645,7 @@ const Debug = () => {
             createRequest({
               requestType: 'HTTP',
               parentId: workspaceId,
-            })
+            });
             window.main.trackAnalyticsEvent(
               makeRequestCreatedEvent('HTTP', 'sidebar')
             );
