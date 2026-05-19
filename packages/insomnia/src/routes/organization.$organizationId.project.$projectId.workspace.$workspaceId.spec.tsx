@@ -1110,7 +1110,6 @@ const Component = ({ params }: Route.ComponentProps) => {
                         </Heading>
                         <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
                       </div>
-                      <div></div>
                       {rulesetContent && (
                         <CodeEditor
                           id="ruleset-viewer"
@@ -1192,8 +1191,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                           )}
                         </span>
                         <Button className="underline" onPress={handleSelectSpectralFile}>
-                          {/* {selectedRulesetPath ? '(Edit)' : '(Upload)'} */}
-                          (Upload)
+                          {selectedRulesetPath ? '(Edit)' : '(Upload)'}
                         </Button>
                       </div>
                       <Tooltip
