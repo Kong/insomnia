@@ -219,7 +219,7 @@ export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspa
 
 export async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
   try {
-    const project = await services.project.getById(projectId);
+    const project = await services.project.get(projectId);
 
     const remoteId = project?.remoteId;
     if (!remoteId) {

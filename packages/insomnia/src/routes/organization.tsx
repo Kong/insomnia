@@ -11,7 +11,6 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
 import { HeaderInviteButton } from '~/ui/components/header-invite-button';
@@ -29,10 +28,7 @@ import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
 import uiEventBus, { TOGGLE_PROJECT_SIDEBAR } from '~/ui/event-bus';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
-import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { sortOrganizations } from '~/ui/organization-utils';
 import type { AsyncTask } from '~/utils/router';
-import { getInitialRouteForOrganization } from '~/utils/router';
 
 import type { Route } from './+types/organization';
 

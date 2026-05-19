@@ -17,7 +17,7 @@ import { models, services } from '~/insomnia-data';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
@@ -113,8 +113,8 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
 
   useEffect(() => {
     if (projectNavigationSidebarFilter) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.projectListFiltered,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.projectListFiltered,
       });
     }
   }, [projectNavigationSidebarFilter]);
@@ -200,7 +200,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     isFetchingUnsyncedFilesRef.current = true;
     for (const projectId of cloudSyncProjectIds) {
       try {
-        const targetProject = await services.project.getById(projectId);
+        const targetProject = await services.project.get(projectId);
         if (targetProject && 'remoteId' in targetProject && targetProject.remoteId) {
           const files = await getAllRemoteBackendProjectsByProjectId({
             teamProjectId: targetProject.remoteId,
@@ -815,7 +815,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
                     if (routeInfo?.resourceId === docId) {
                       toggleProjectOrWorkspace(docId);
                     } else {
-                      !isScratchPad && window.main.trackSegmentEvent({ event: SegmentEvent.projectSwitched });
+                      !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched });
                       !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
                     }
                   } else if (item.kind === 'workspace') {
