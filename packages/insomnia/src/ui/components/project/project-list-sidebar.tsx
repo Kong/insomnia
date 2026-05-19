@@ -7,7 +7,7 @@ import * as reactUse from 'react-use';
 import type { GitRepository, Project } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import type { SyncResult } from '~/konnect/sync';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 
 import { useKonnectSync } from '../../hooks/use-konnect-sync';
 import { AvatarGroup } from '../avatar';
@@ -270,7 +270,7 @@ export const ProjectListSidebar = ({
           onChange={value => {
             setProjectListFilter(value);
             if (value.trim() !== '') {
-              window.main.trackSegmentEvent({ event: SegmentEvent.filterCreatedProjects });
+              window.main.trackAnalyticsEvent({ event: AnalyticsEvent.filterCreatedProjects });
             }
           }}
         />

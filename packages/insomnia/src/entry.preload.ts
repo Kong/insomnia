@@ -289,7 +289,7 @@ const main: Window['main'] = {
   secretStorage,
   electronStorage,
   sync,
-  trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
+  trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
   showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),

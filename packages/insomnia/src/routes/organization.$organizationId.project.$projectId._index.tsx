@@ -51,7 +51,7 @@ import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
+import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
@@ -970,7 +970,7 @@ const Component = () => {
                       onChange={filter => {
                         setWorkspaceListFilter(filter);
                         if (filter.trim() !== '') {
-                          trackOnceDaily(SegmentEvent.homepageFiltered);
+                          trackOnceDaily(AnalyticsEvent.homepageFiltered);
                         }
                       }}
                     >
@@ -1066,8 +1066,8 @@ const Component = () => {
 
                     <Button
                       onPress={() => {
-                        window.main.trackSegmentEvent({
-                          event: SegmentEvent.importStarted,
+                        window.main.trackAnalyticsEvent({
+                          event: AnalyticsEvent.importStarted,
                           properties: {
                             source: 'project',
                           },

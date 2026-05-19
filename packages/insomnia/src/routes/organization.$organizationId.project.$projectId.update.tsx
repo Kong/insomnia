@@ -6,7 +6,7 @@ import { projectLock } from '~/common/project';
 import type { WorkspaceMeta } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -106,8 +106,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           sessionId,
         });
 
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.projectUpdated,
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'local',
           },
@@ -158,8 +158,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           name,
         });
 
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.projectUpdated,
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'remote',
           },
@@ -222,8 +222,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             sessionId,
           });
 
-          window.main.trackSegmentEvent({
-            event: SegmentEvent.projectUpdated,
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.projectUpdated,
             properties: {
               storage: 'git',
             },
@@ -376,8 +376,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // local project rename
     await services.project.update(project, { name });
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.projectUpdated,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.projectUpdated,
       properties: {
         storage: 'local',
       },

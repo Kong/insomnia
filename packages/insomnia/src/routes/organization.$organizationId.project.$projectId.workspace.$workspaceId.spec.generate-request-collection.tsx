@@ -3,7 +3,7 @@ import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
 import { models, services } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -53,8 +53,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     workspaceId,
   });
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.generateCollection,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.generateCollection,
     properties: {
       count_requests: scannedResources.map(r => r.requests?.length ?? 0).reduce((a, b) => a + b, 0),
     },
