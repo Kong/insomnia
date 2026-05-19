@@ -1,20 +1,9 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import {
-  Breadcrumb,
-  Breadcrumbs,
-  Button,
-  GridList,
-  GridListItem,
-  Menu,
-  MenuItem,
-  MenuTrigger,
-  Popover,
-} from 'react-aria-components';
+import { Button, GridList, GridListItem, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   href,
-  NavLink,
   redirect,
   Route as RouteComponent,
   Routes,
@@ -29,7 +18,6 @@ import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockRouteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
-import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
@@ -41,7 +29,6 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { isPrimaryClickModifier } from '~/ui/utils';
 

@@ -24,7 +24,6 @@ import {
   type DashboardSortOrder,
   dashboardSortOrderName,
   getAppWebsiteBaseURL,
-  isKonnectSyncEnabled,
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll } from '~/common/misc';

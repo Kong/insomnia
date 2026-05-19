@@ -131,6 +131,9 @@ export enum AnalyticsEvent {
   kongKonnectSyncCompleted = 'kong-konnect-sync-completed',
   emptyStateSendRequestClicked = 'empty-state-send-request-clicked',
   emptyStateCreateDocumentClicked = 'empty-state-create-document-clicked',
+  projectListFiltered = 'project-list-filtered',
+  projectSwitched = 'project-switched',
+  organizationSwitched = 'organization-switched',
 }
 
 export enum InsoEvent {

@@ -1,8 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   DropIndicator,
   GridList,
@@ -15,7 +13,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, Route as RouteComponent, Routes, useFetchers, useLoaderData, useParams } from 'react-router';
+import { Route as RouteComponent, Routes, useFetchers, useLoaderData, useParams } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { database } from '~/common/database';
@@ -28,7 +26,6 @@ import { TestRunStatus } from '~/routes/organization.$organizationId.project.$pr
 import { useTestSuiteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.update';
 import { useTestSuiteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.new';
 import { DocumentTab } from '~/ui/components/document-tab';
-import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
@@ -41,7 +38,6 @@ import { CertificatesModal } from '~/ui/components/modals/workspace-certificates
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';

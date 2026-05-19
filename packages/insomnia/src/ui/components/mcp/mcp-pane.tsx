@@ -404,7 +404,7 @@ export const McpPane = () => {
                         setCollapsedPrimitives(['tools', 'resources', 'prompts']);
                       }
                       setAllExpanded(newState);
-                      window.main.trackSegmentEvent({ event: SegmentEvent.mcpListExpandCollapseClicked });
+                      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpListExpandCollapseClicked });
                     }}
                     className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                   >

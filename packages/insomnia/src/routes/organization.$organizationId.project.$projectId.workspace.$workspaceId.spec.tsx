@@ -3,8 +3,6 @@ import CodeMirror from 'codemirror';
 import type { OpenAPIV3 } from 'openapi-types';
 import { Fragment, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   GridList,
   GridListItem,
@@ -20,14 +18,14 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, NavLink, redirect, useLoaderData } from 'react-router';
+import { href, redirect, useLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
 
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { debounce, isNotNullOrUndefined } from '~/common/misc';
+import { debounce } from '~/common/misc';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -38,7 +36,6 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
-import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showError } from '~/ui/components/modals';
@@ -50,7 +47,6 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast, showToast } from '~/ui/components/toast-notification';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
@@ -493,8 +489,8 @@ const Component = ({ params }: Route.ComponentProps) => {
               {isGenerateMockServersWithAIEnabled && (
                 <Button
                   onPress={() => {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.designerGenerateMockClicked,
+                    window.main.trackAnalyticsEvent({
+                      event: AnalyticsEvent.designerGenerateMockClicked,
                     });
                     setNewMockServerModalOpen(true);
                   }}
@@ -511,8 +507,8 @@ const Component = ({ params }: Route.ComponentProps) => {
                 className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onChange={value => {
                   setIsSpecPaneOpen(value);
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.designerPreviewToggled,
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.designerPreviewToggled,
                     properties: {
                       status: !value ? 'open' : 'collapsed',
                     },
