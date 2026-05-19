@@ -462,7 +462,18 @@ Phase 1a is a transport and hosting proof. Reviewers should read the deliverable
 - _inso CLI compatibility._ inso does not use the bridge. Any divergence between app-side and CLI-side plugin behaviour is unaddressed here and only surfaces in Phase 1b when `process.type` guards are touched.
 - _True isolation._ The hidden window runs with `nodeIntegration: true` and `contextIsolation: false`. Plugins are still trusted with full Node access. Sandbox claims belong to Phase 1c (renderer hardening) and Phase 2 (plugin window hardening), not 1a.
 - _Final plugin API._ Plugin authors see no API change. The `rendererFunctions`/`mainFunctions`/permission shape from this document is design-only until Phase 2.
-- _Crash recovery._ `render-process-gone` increments a counter and rejects in-flight requests, but there is no auto-restart loop. A crashed plugin window will be recreated lazily on the next invocation; held subscriptions and warm caches are lost. Acceptable for 1a but worth validating in production telemetry before relying on it.s
+- _Crash recovery._ `render-process-gone` increments a counter and rejects in-flight requests, but there is no auto-restart loop. A crashed plugin window will be recreated lazily on the next invocation; held subscriptions and warm caches are lost. Acceptable for 1a but worth validating in production telemetry before relying on it.
+
+#### Phase 1a rollback switch
+
+Phase 1a keeps the legacy renderer plugin execution path available behind a boot-time environment flag:
+
+INSOMNIA_ENABLE_PLUGIN_BRIDGE=false
+
+When unset or set to any other value, plugin calls use the hidden plugin window bridge.
+When set to false, window.main.plugins.\* falls back to the legacy in-renderer execution path for the current app session.
+
+This switch is intended as a developer and rollout safety valve during Phase 1a. It is not a user-facing feature and should be removed once the bridge path is fully validated.
 
 ### Phase 1b: full plugin isolation in hidden window
 
