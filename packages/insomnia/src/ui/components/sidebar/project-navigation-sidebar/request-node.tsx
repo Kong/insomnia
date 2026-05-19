@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { useParams } from 'react-router';
 
-import { toKebabCase } from '~/common/misc';
 import type {
   GrpcRequest,
   McpRequest,
@@ -22,6 +22,8 @@ import type {
   PinnedRequestFlatItem,
 } from '~/ui/components/sidebar/project-navigation-sidebar/types';
 import { getMethodShortHand, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
+import { useExecutionState } from '~/ui/hooks/use-execution-state';
+import { useReadyState } from '~/ui/hooks/use-ready-state';
 import { useRequestGroupPatcher, useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
 import { Icon } from '../../icon';
@@ -77,6 +79,46 @@ function MethodBadge({ doc }: { doc: Request | WebSocketRequest | GrpcRequest | 
   return null;
 }
 
+const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
+  const readyState = useReadyState({ requestId, protocol: 'webSocket' });
+  return readyState ? (
+    <div
+      className="mr-(--padding-sm) h-2.5 w-2.5 shrink-0 rounded-full bg-(--color-success)"
+      data-testid="WebSocketSpinner__Connected"
+    />
+  ) : null;
+};
+
+const SocketIOSpinner = ({ requestId }: { requestId: string }) => {
+  const readyState = useReadyState({ requestId, protocol: 'socketIO' });
+  return readyState ? (
+    <div
+      className="mr-(--padding-sm) h-2.5 w-2.5 shrink-0 rounded-full bg-(--color-success)"
+      data-testid="SocketIOSpinner__Connected"
+    />
+  ) : null;
+};
+
+const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
+  const readyState = useReadyState({ requestId, protocol: 'curl' });
+  return readyState ? (
+    <div
+      className="mr-(--padding-sm) h-2.5 w-2.5 shrink-0 rounded-full bg-(--color-success)"
+      data-testid="EventStreamSpinner__Connected"
+    />
+  ) : null;
+};
+
+const RequestTiming = ({ requestId }: { requestId: string }) => {
+  const { isExecuting } = useExecutionState({ requestId });
+  return isExecuting ? (
+    <div
+      className="mr-(--padding-sm) h-2.5 w-2.5 shrink-0 rounded-full bg-(--color-success)"
+      data-testid="WebSocketSpinner__Connected"
+    />
+  ) : null;
+};
+
 const getRequestNameOrFallback = (
   doc: Request | RequestGroup | GrpcRequest | WebSocketRequest | SocketIORequest,
 ): string => {
@@ -105,6 +147,8 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
   const [isEditable, setIsEditable] = useState(false);
   // Pinned requests are always shown at the top level of the sidebar, so we set their level to 0.
   const level = isPinnedRequest ? 0 : requestLevel;
+  const params = useParams() as { requestId?: string; requestGroupId?: string };
+  const isSelected = item.doc._id === params.requestId || item.doc._id === params.requestGroupId;
 
   const content = (
     <>
@@ -120,7 +164,7 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
         <EditableInput
           value={getRequestNameOrFallback(doc)}
           name="request name"
-          ariaLabel="request name"
+          ariaLabel={getRequestNameOrFallback(doc)}
           className="flex-1 text-base hover:bg-transparent!"
           onEditableChange={editable => setIsEditable(editable)}
           onSubmit={newName => {
@@ -132,10 +176,15 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
           }}
         />
       </div>
+      {models.webSocketRequest.isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+      {models.socketIORequest.isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
+      {models.request.isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+      {models.request.isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
+      {models.request.isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
       {!models.requestGroup.isRequestGroup(doc) && pinned && !isPinnedRequest && (
         <TooltipTrigger>
           <Button
-            data-testid={`pin-${toKebabCase(doc.name)}`}
+            aria-label="Unpin request"
             className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)"
             onPress={() => patchRequestMeta(item.doc._id, { pinned: false })}
           >
@@ -195,7 +244,14 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
     <div
       className={`${ROW_CLASS} ${className ?? ''} ${isPinnedRequest ? 'h-full! group-hover:bg-transparent! group-focus:bg-transparent!' : ''}`}
       style={{ paddingLeft: `${level + 3}rem` }}
-      data-testid={`request-node-${getRequestNameOrFallback(doc)}`}
+      data-testid={
+        isPinnedRequest
+          ? `pinned-request-node-${getRequestNameOrFallback(doc)}`
+          : `request-node-${getRequestNameOrFallback(doc)}`
+      }
+      data-project={project.name}
+      data-workspace={workspace.name}
+      data-selected={isSelected}
     >
       {isPinnedRequest ? (
         <>
@@ -230,7 +286,10 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
 
 export const PinnedHeaderNode = () => {
   return (
-    <div className={`${ROW_CLASS} group h-full! pl-12 group-hover:bg-transparent!`}>
+    <div
+      className={`${ROW_CLASS} group h-full! pl-12 group-hover:bg-transparent!`}
+      data-testid="pinned-requests-header"
+    >
       <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
       <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
       <div className="ml-2 flex h-full w-full items-center border border-b-0 border-solid border-(--hl-md) bg-(--hl-xs) p-1 text-(--hl)">

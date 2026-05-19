@@ -60,6 +60,7 @@ export const UnsyncedWorkspaceNode = ({ item }: { item: UnsyncedWorkspaceFlatIte
           }}
           isDisabled={isPulling}
           className={`flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left opacity-60 transition-colors ${isPulling ? 'animate-pulse cursor-not-allowed' : ''}`}
+          aria-label="Fetch unsynced workspace"
         >
           <div className="flex h-5 w-5 items-center justify-center rounded-sm px-2">
             <Icon icon={isPulling ? 'spinner' : 'cloud-download'} className={ICON_CLASS} spin={isPulling} />

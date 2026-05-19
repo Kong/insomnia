@@ -75,7 +75,7 @@ test.describe('Check vault used in environment', () => {
     },
   });
 
-  test('global private sub environment to store vaults', async ({ page, app }) => {
+  test('global private sub environment to store vaults', async ({ page, app, insomnia }) => {
     await page.getByTestId('settings-button').click();
     await page.getByTestId('dataFolders').fill(getFixturePath('vault-collection.yaml'));
     await page.getByTestId('dataFolders-btn').click();
@@ -150,7 +150,7 @@ test.describe('Check vault used in environment', () => {
     await page.locator('body').click();
 
     // activate request and validate newly created vault env has been applied
-    await page.getByTestId('normal').getByLabel('GET normal', { exact: true }).click();
+    await insomnia.navigationSidebar.clickRequestOrFolder('normal');
     await page.getByRole('button', { name: 'Send' }).click();
 
     await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
@@ -173,12 +173,10 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('legacy vault value array').click();
     await page.locator('body').click();
     // activate request
-    await page
-      .getByTestId('legacy-array-vault')
-      .getByLabel('GET legacy-array-vault', { exact: true })
-      .click({
-        modifiers: ['ControlOrMeta'],
-      });
+    await insomnia.navigationSidebar.requestRow('legacy-array-vault').click({
+      modifiers: ['ControlOrMeta'],
+    });
+
     // Wait for tab appear
     await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-array-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
@@ -194,12 +192,9 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('legacy vault value object').click();
     await page.locator('body').click();
     // activate request
-    await page
-      .getByTestId('legacy-object-vault')
-      .getByLabel('GET legacy-object-vault', { exact: true })
-      .click({
-        modifiers: ['ControlOrMeta'],
-      });
+    await insomnia.navigationSidebar.requestRow('legacy-object-vault').click({
+      modifiers: ['ControlOrMeta'],
+    });
     await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-object-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
 
@@ -214,12 +209,9 @@ test.describe('Check vault used in environment', () => {
     await page.getByText('base with vault').click();
     await page.locator('body').click();
     // activate request
-    await page
-      .getByTestId('legacy-invalid-vault')
-      .getByLabel('GET legacy-invalid-vault', { exact: true })
-      .click({
-        modifiers: ['ControlOrMeta'],
-      });
+    await insomnia.navigationSidebar.requestRow('legacy-invalid-vault').click({
+      modifiers: ['ControlOrMeta'],
+    });
     await expect
       .soft(page.getByLabel('Insomnia Tabs').getByText('legacy-invalid-vault', { exact: true }))
       .toBeVisible();

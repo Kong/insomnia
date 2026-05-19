@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('Setup external vault and used in request', async ({ app, page }) => {
+test('Setup external vault and used in request', async ({ app, page, insomnia }) => {
   // import request collection and replace the template tag file path with the actual fixture file path
   const text = (await loadFixture('template-tag-collection.yaml')).replace(
     '__TEMPLATE_TAG_FILE_PATH',
@@ -67,7 +67,7 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.locator('.app').press('Escape');
 
   // used in request
-  await page.getByLabel('Request Collection').getByTestId('External Vault Tag').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('External Vault Tag');
   await page.getByText('Body', { exact: true }).click();
   const externalVaultTestCases = {
     aws: {

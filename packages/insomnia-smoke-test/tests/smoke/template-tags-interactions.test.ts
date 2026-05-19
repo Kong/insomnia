@@ -63,7 +63,7 @@ const templateTagTestCases: Record<string, TemplateTagTestCase[]> = {
   ],
 };
 
-test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
+test('Critical Path For Template Tags Interactions', async ({ page, app, insomnia }) => {
   // import request collection and replace the template tag file path with the actual fixture file path
   const text = (await loadFixture('template-tag-collection.yaml')).replace(
     '__TEMPLATE_TAG_FILE_PATH',
@@ -82,7 +82,7 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   await page.locator('.app').press('Escape');
 
   // test common template tags
-  await page.getByLabel('Request Collection').getByTestId('Common Tag').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('Common Tag');
   await page.getByText('Body', { exact: true }).click();
   let commonTagTestCases: TemplateTagTestCase[] = [];
   Object.keys(templateTagTestCases)
@@ -108,7 +108,7 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   }
 
   // test request template tags
-  await page.getByLabel('Request Collection').getByTestId('Request Tag').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('Request Tag');
   await page.getByText('Body', { exact: true }).click();
   for (const { tagPrefix, expectedResult } of templateTagTestCases.request) {
     await page.locator(`[data-template^="${tagPrefix}"]`).click();
@@ -123,19 +123,14 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
 
   // test response template tags
   // send request first to populate response
-  await page
-    .getByLabel('Request Collection')
-    .getByTestId('Base Response')
-    .click({ modifiers: ['ControlOrMeta'] });
+  await insomnia.navigationSidebar.requestRow('Base Response').click({ modifiers: ['ControlOrMeta'] });
   // Wait for tab appear
   await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Base Response', { exact: true })).toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   await expect.soft(statusTag).toContainText('200 OK');
-  await page
-    .getByLabel('Request Collection')
-    .getByTestId('Response Tag')
-    .click({ modifiers: ['ControlOrMeta'] });
+
+  await insomnia.navigationSidebar.requestRow('Response Tag').click({ modifiers: ['ControlOrMeta'] });
   await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Response Tag', { exact: true })).toBeVisible();
   await page.getByText('Body', { exact: true }).click();
   for (const { tagPrefix, expectedResult } of templateTagTestCases.response) {
@@ -150,7 +145,7 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   }
 
   // test prompt template tags
-  await page.getByLabel('Request Collection').getByTestId('Prompt Tag').press('Enter');
+  await insomnia.navigationSidebar.requestRow('Prompt Tag').click({ modifiers: ['ControlOrMeta'] });
   await page.getByText('Body', { exact: true }).click();
   const { tagPrefix } = templateTagTestCases.prompt[0];
   await page.locator(`[data-template^="${tagPrefix}"]`).isVisible();

@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can requests that contain templated header keys and values', async ({ app, page }) => {
+test('can requests that contain templated header keys and values', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
@@ -19,7 +19,7 @@ test('can requests that contain templated header keys and values', async ({ app,
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.getByLabel('Request Collection').getByTestId('pet2').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('pet2');
 
   await page.getByRole('button', { name: 'Send' }).click();
 

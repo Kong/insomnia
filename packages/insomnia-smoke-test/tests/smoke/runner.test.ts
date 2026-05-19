@@ -28,7 +28,7 @@ test.describe('runner features tests', () => {
     const testResults = page.getByTestId(`runner-test-result-iteration-${iteration}`).getByTestId('test-result-row');
     const testResultCount = await testResults.count();
 
-    expect.soft(expectedTestOrder.length).toEqual(testResultCount);
+    expect.soft(expectedTestOrder).toHaveLength(testResultCount);
 
     for (let i = 0; i < testResultCount; i++) {
       const resultMsg = await testResults.nth(i).textContent();
@@ -50,8 +50,11 @@ test.describe('runner features tests', () => {
     expect.soft(passedResultCount + failedResultCount + skippedResultCount).toEqual(expectedTotal);
   };
 
-  test('run collection runner', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('run collection runner', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     // select requests to test
     await page.locator('.runner-request-list-req1').click();
@@ -65,10 +68,10 @@ test.describe('runner features tests', () => {
       await page.getByText('Req2-Pre-Check').click();
 
       const testResultCounts = await page.locator('.test-result-count').allInnerTexts();
-      expect.soft(testResultCounts.length).toBe(1);
+      expect.soft(testResultCounts).toHaveLength(1);
 
       const countParts = testResultCounts[0].split('/');
-      expect.soft(countParts.length).toBe(2);
+      expect.soft(countParts).toHaveLength(2);
 
       const summarizedPassedCount = Number.parseInt(countParts[0], 10);
       const summarizedTotalCount = Number.parseInt(countParts[1], 10);
@@ -92,9 +95,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 6, 1, 8, expectedTestOrder);
   });
 
-  test('run collection runner with data upload', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('run collection runner with data upload', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     // upload data
     await page.getByText('Upload Data').click();
     const uploadDataPath = getFixturePath('files/runner-data.json');
@@ -136,9 +141,11 @@ test.describe('runner features tests', () => {
     ]);
   });
 
-  test('run req4 3 times with setNextRequest the pre-request script', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('run req4 3 times with setNextRequest the pre-request script', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     await page.locator('.runner-request-list-req4').click();
 
     // send
@@ -152,9 +159,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
   });
 
-  test('await test works', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('await test works', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     await page.locator('.runner-request-list-await-test').click();
 
     // send
@@ -168,9 +177,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 0, 0, 3, expectedTestOrder, 1);
   });
 
-  test('run req5 3 times with setNextRequest in the after-response script', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('run req5 3 times with setNextRequest in the after-response script', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     await page.locator('.runner-request-list-req5').click();
 
     // send
@@ -184,9 +195,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
   });
 
-  test('skip req01 with setNextRequest', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('skip req01 with setNextRequest', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     await page.locator('.runner-request-list-req0').click();
     await page.locator('.runner-request-list-req01').click();
     await page.locator('.runner-request-list-req02').click();
@@ -206,8 +219,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 1, 1, 2, expectedTestOrder, 1);
   });
 
-  test('can read variables during whole execution', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('can read variables during whole execution', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     await page.locator('.runner-request-list-set-var1').click();
     await page.locator('.runner-request-list-read-var1').click();
@@ -223,8 +239,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
   });
 
-  test('can detect sync and async test failure', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('can detect sync and async test failure', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     await page.locator('.runner-request-list-async-test').click();
 
@@ -239,8 +258,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
   });
 
-  test('delay input can be cleared to enter a new value', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('delay input can be cleared to enter a new value', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     const delayInput = page.locator('input[name="Delay"]');
 
@@ -256,8 +278,11 @@ test.describe('runner features tests', () => {
     await expect.soft(delayInput).toHaveValue('500');
   });
 
-  test('running with cleared delay input uses last valid value', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('running with cleared delay input uses last valid value', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     const delayInput = page.locator('input[name="Delay"]');
 
@@ -274,8 +299,11 @@ test.describe('runner features tests', () => {
     await expect.soft(delayInput).toHaveValue('100');
   });
 
-  test('iterations input can be cleared to enter a new value', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('iterations input can be cleared to enter a new value', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     const iterationsInput = page.locator('input[name="Iterations"]');
 
@@ -291,8 +319,11 @@ test.describe('runner features tests', () => {
     await expect.soft(iterationsInput).toHaveValue('3');
   });
 
-  test('running with cleared iterations input uses last valid value', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('running with cleared iterations input uses last valid value', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     const iterationsInput = page.locator('input[name="Iterations"]');
 
@@ -314,8 +345,11 @@ test.describe('runner features tests', () => {
     await expect.soft(page.getByTestId('runner-test-result-iteration-3')).toBeHidden();
   });
 
-  test('settings: can turn off logs', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('settings: can turn off logs', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     await page.locator('.runner-request-list-printLogs').click();
     await page.getByRole('tab', { name: 'advanced' }).click();
