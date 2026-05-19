@@ -22,11 +22,27 @@ import type {
   ApplyResponseHooksArgs,
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
+  PluginsBridgeAPI,
   RunTemplateTagActionArgs,
 } from './plugins/bridge-types';
+import { invokePluginMethod, type PluginInvokeMethod } from './plugins/invoke-method';
 import type { RenderedRequest } from './templating/types';
 import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
+// Phase 1a rollback switch: keep legacy in-renderer execution available for the whole app session.
+const pluginBridgeEnabled = process.env.INSOMNIA_ENABLE_PLUGIN_BRIDGE !== 'false';
+
+type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI
+  ? Awaited<ReturnType<PluginsBridgeAPI[T]>>
+  : never;
+
+const invokePluginBridgeMethod = <T extends PluginInvokeMethod>(method: T, args?: unknown): Promise<PluginMethodResult<T>> => {
+  if (!pluginBridgeEnabled) {
+    return invokePluginMethod(method, args) as Promise<PluginMethodResult<T>>;
+  }
+
+  return invokeWithNormalizedError(`plugins.${method}`, args) as Promise<PluginMethodResult<T>>;
+};
 
 const webSocket: WebSocketBridgeAPI = {
   open: options => invokeWithNormalizedError('webSocket.open', options),
@@ -352,25 +368,23 @@ const main: Window['main'] = {
   generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
     invokeWithNormalizedError('generateMcpSamplingResponse', parameters),
   plugins: {
-    getThemes: () => invokeWithNormalizedError('plugins.getThemes'),
-    getPlugins: () => invokeWithNormalizedError('plugins.getPlugins'),
-    getActivePlugins: () => invokeWithNormalizedError('plugins.getActivePlugins'),
-    reloadPlugins: () => invokeWithNormalizedError('plugins.reloadPlugins'),
-    getRequestActions: () => invokeWithNormalizedError('plugins.getRequestActions'),
-    getRequestGroupActions: () => invokeWithNormalizedError('plugins.getRequestGroupActions'),
-    getWorkspaceActions: () => invokeWithNormalizedError('plugins.getWorkspaceActions'),
-    getDocumentActions: () => invokeWithNormalizedError('plugins.getDocumentActions'),
-    executeAction: (args: ExecutePluginActionArgs) => invokeWithNormalizedError('plugins.executeAction', args),
-    getTemplateTags: () => invokeWithNormalizedError('plugins.getTemplateTags'),
-    runTemplateTagAction: (args: RunTemplateTagActionArgs) =>
-      invokeWithNormalizedError('plugins.runTemplateTagAction', args),
-    getBundlePlugins: () => invokeWithNormalizedError('plugins.getBundlePlugins'),
-    executePluginMainAction: (args: ExecutePluginMainActionArgs) =>
-      invokeWithNormalizedError('plugins.executePluginMainAction', args),
-    hasRequestHooks: () => invokeWithNormalizedError('plugins.hasRequestHooks'),
-    hasResponseHooks: () => invokeWithNormalizedError('plugins.hasResponseHooks'),
-    applyRequestHooks: (args: ApplyRequestHooksArgs) => invokeWithNormalizedError('plugins.applyRequestHooks', args),
-    applyResponseHooks: (args: ApplyResponseHooksArgs) => invokeWithNormalizedError('plugins.applyResponseHooks', args),
+    getThemes: () => invokePluginBridgeMethod('getThemes'),
+    getPlugins: () => invokePluginBridgeMethod('getPlugins'),
+    getActivePlugins: () => invokePluginBridgeMethod('getActivePlugins'),
+    reloadPlugins: () => invokePluginBridgeMethod('reloadPlugins'),
+    getRequestActions: () => invokePluginBridgeMethod('getRequestActions'),
+    getRequestGroupActions: () => invokePluginBridgeMethod('getRequestGroupActions'),
+    getWorkspaceActions: () => invokePluginBridgeMethod('getWorkspaceActions'),
+    getDocumentActions: () => invokePluginBridgeMethod('getDocumentActions'),
+    executeAction: (args: ExecutePluginActionArgs) => invokePluginBridgeMethod('executeAction', args),
+    getTemplateTags: () => invokePluginBridgeMethod('getTemplateTags'),
+    runTemplateTagAction: (args: RunTemplateTagActionArgs) => invokePluginBridgeMethod('runTemplateTagAction', args),
+    getBundlePlugins: () => invokePluginBridgeMethod('getBundlePlugins'),
+    executePluginMainAction: (args: ExecutePluginMainActionArgs) => invokePluginBridgeMethod('executePluginMainAction', args),
+    hasRequestHooks: () => invokePluginBridgeMethod('hasRequestHooks'),
+    hasResponseHooks: () => invokePluginBridgeMethod('hasResponseHooks'),
+    applyRequestHooks: (args: ApplyRequestHooksArgs) => invokePluginBridgeMethod('applyRequestHooks', args),
+    applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
     getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },
   notifyPluginPromptResult: (id: string, value: string | null) =>
