@@ -1,9 +1,3 @@
-import * as pluginApp from './context/app';
-import * as pluginData from './context/data';
-import * as pluginNetwork from './context/network';
-import * as pluginRequest from './context/request';
-import * as pluginResponse from './context/response';
-import * as pluginStore from './context/store';
 import type {
   ApplyRequestHooksArgs,
   ApplyResponseHooksArgs,
@@ -11,6 +5,12 @@ import type {
   ExecutePluginMainActionArgs,
   RunTemplateTagActionArgs,
 } from './bridge-types';
+import * as pluginApp from './context/app';
+import * as pluginData from './context/data';
+import * as pluginNetwork from './context/network';
+import * as pluginRequest from './context/request';
+import * as pluginResponse from './context/response';
+import * as pluginStore from './context/store';
 import type { Plugin } from './index';
 import {
   executePluginMainAction,
@@ -233,7 +233,9 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
 
       return newResponse;
     }
-  }
 
-  throw new Error(`[plugin-window] Unknown method: ${method}`);
+    default: {
+      throw new Error(`[plugin-window] Unknown method: ${method}`);
+    }
+  }
 }

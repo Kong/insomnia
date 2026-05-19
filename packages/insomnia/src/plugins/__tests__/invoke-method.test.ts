@@ -49,7 +49,7 @@ describe('invokePluginMethod', () => {
   });
 
   it('executes the matching action locally', async () => {
-    const action = vi.fn().mockResolvedValue(undefined);
+    const action = vi.fn().mockResolvedValue(null);
     _testOnlySetPlugins([makePlugin({ module: { requestActions: [{ label: 'Run', action }] } })]);
 
     await expect(
