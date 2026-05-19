@@ -1,8 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   DropIndicator,
   GridList,
@@ -18,18 +16,19 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
 import { EnvironmentKvPairDataType, EnvironmentType, models, services } from '~/insomnia-data';
-import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
 import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
-import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
 import {
   EnvironmentEditor,
@@ -44,7 +43,6 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
 import { getDataFromKVPair } from '~/utils/environment-utils';
@@ -304,7 +302,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       <PanelGroup
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
-        id="workspace-wrapper"
+        id={WORKSPACE_CONTENT_WRAPPER}
         className="new-sidebar relative w-full flex-1 text-(--color-font)"
         direction="horizontal"
       >

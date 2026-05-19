@@ -48,6 +48,7 @@ import { useRootLoaderData } from '~/root';
 import {
   type Child,
   useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
@@ -782,8 +783,8 @@ const Debug = () => {
       <PanelGroup
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
-        id="wrapper"
-        className="new-sidebar h-full w-full text-(--color-font)"
+        id={WORKSPACE_CONTENT_WRAPPER}
+        className="new-sidebar relative h-full w-full text-(--color-font)"
         direction="horizontal"
       >
         {/* Design page has a collection view with legacy collection list */}
