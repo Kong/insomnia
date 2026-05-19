@@ -26,8 +26,8 @@ describe('migrate()', () => {
     for (const cert of certs) {
       expect(typeof cert.modified).toBe('number');
       expect(typeof cert.created).toBe('number');
-      delete cert.modified;
-      delete cert.created;
+      delete (cert as Partial<typeof cert>).modified;
+      delete (cert as Partial<typeof cert>).created;
     }
 
     expect(certs.length).toBe(2);
@@ -66,15 +66,19 @@ describe('migrate()', () => {
 
   it('translates the scope correctly', async () => {
     const specW = await services.workspace.create({
+      // @ts-expect-error
       scope: 'spec',
     });
     const debugW = await services.workspace.create({
+      // @ts-expect-error
       scope: 'debug',
     });
     const nullW = await services.workspace.create({
+      // @ts-expect-error
       scope: null,
     });
     const somethingElseW = await services.workspace.create({
+      // @ts-expect-error
       scope: 'something',
     });
     const designW = await services.workspace.create({

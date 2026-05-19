@@ -47,6 +47,7 @@ describe('validateTheme', () => {
       displayName,
       theme: {
         background: {
+          // @ts-ignore
           default: nunjucksValue,
           info: '#abcdef',
         },
@@ -67,6 +68,7 @@ describe('validateTheme', () => {
         styles: {
           appHeader: {
             foreground: {
+              // @ts-ignore
               default: nunjucksValue,
               info: '#abcdef',
             },

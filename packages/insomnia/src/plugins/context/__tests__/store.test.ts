@@ -10,9 +10,7 @@ const PLUGIN = {
 
 describe('init()', () => {
   it('initializes correctly', async () => {
-    const result = plugin.init({
-      name: PLUGIN,
-    });
+    const result = plugin.init(PLUGIN);
     expect(Object.keys(result.store).sort()).toEqual(['all', 'clear', 'getItem', 'hasItem', 'removeItem', 'setItem']);
   });
 });

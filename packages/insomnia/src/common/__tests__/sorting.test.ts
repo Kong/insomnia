@@ -958,9 +958,11 @@ describe('Sorting methods', () => {
     expect(
       metaSortKeySort(
         {
+          _id: 'id_1',
           metaSortKey: 1,
         },
         {
+          _id: 'id_2',
           metaSortKey: 2,
         },
       ),
@@ -968,9 +970,11 @@ describe('Sorting methods', () => {
     expect(
       metaSortKeySort(
         {
+          _id: 'id_1',
           metaSortKey: 2,
         },
         {
+          _id: 'id_2',
           metaSortKey: 1,
         },
       ),
@@ -978,9 +982,11 @@ describe('Sorting methods', () => {
     expect(
       metaSortKeySort(
         {
+          _id: 'id_1',
           metaSortKey: -2,
         },
         {
+          _id: 'id_2',
           metaSortKey: 1,
         },
       ),
@@ -988,9 +994,11 @@ describe('Sorting methods', () => {
     expect(
       metaSortKeySort(
         {
+          _id: 'id_1',
           metaSortKey: 1,
         },
         {
+          _id: 'id_2',
           metaSortKey: -2,
         },
       ),
@@ -999,11 +1007,11 @@ describe('Sorting methods', () => {
       metaSortKeySort(
         {
           metaSortKey: 1,
-          _id: 2,
+          _id: 'id_2',
         },
         {
           metaSortKey: 1,
-          _id: 1,
+          _id: 'id_1',
         },
       ),
     ).toBe(-1);
@@ -1011,11 +1019,11 @@ describe('Sorting methods', () => {
       metaSortKeySort(
         {
           metaSortKey: 1,
-          _id: 1,
+          _id: 'id_1',
         },
         {
           metaSortKey: 1,
-          _id: 2,
+          _id: 'id_2',
         },
       ),
     ).toBe(1);

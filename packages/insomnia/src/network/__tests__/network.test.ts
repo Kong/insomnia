@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fs from 'node:fs';
 import nodePath from 'node:path';
 
