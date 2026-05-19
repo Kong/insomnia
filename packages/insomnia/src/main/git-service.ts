@@ -21,6 +21,7 @@ import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
 import type {
+  BaseModel,
   GitProject,
   GitRemoteProviderType,
   GitRepository,
@@ -28,7 +29,7 @@ import type {
   WorkspaceMeta,
   WorkspaceScope,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
@@ -43,7 +44,6 @@ import { database } from '../common/database';
 import { InsomniaFileSchema, InsomniaFileTypeValues } from '../common/import-v5-parser';
 import { migrateToLatestYaml } from '../common/insomnia-schema-migrations';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
-import * as models from '../models';
 import { fsClient } from '../sync/git/fs-client';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../sync/git/git-repo-migration';
 import GitVCS, {
@@ -61,16 +61,45 @@ import GitVCS, {
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
-import { repoFileWatcherRegistry } from '../sync/git/repo-file-watcher';
+import { createElectronNotifier, RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
 import { invariant } from '../utils/invariant';
-import { SegmentEvent, trackSegmentEvent } from './analytics';
+import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
 
 // Initialize Git Remote Providers on module load
 initializeGitRemoteProviders();
+
+/**
+ * Set of repo IDs for which conflict problems should be suppressed in the
+ * file-problems-changed IPC broadcast.  Active while the user is resolving
+ * conflicts via SyncMergeModal so the generic "CLI conflict" blocking modal
+ * does not appear on top of the interactive resolver.
+ */
+const suppressedConflictRepos = new Set<string>();
+
+const _electronNotifier = createElectronNotifier();
+const conflictFilteringNotifier: WatcherNotifier = {
+  onDbSynced: () => _electronNotifier.onDbSynced(),
+  onProblemsChanged: payload => {
+    _electronNotifier.onProblemsChanged({
+      ...payload,
+      conflictsSuppressed: suppressedConflictRepos.has(payload.repoId),
+    });
+  },
+};
+
+const repoFileWatcherRegistry = new RepoFileWatcherRegistry(conflictFilteringNotifier);
+
+function suppressConflictProblems(repoId: string): void {
+  suppressedConflictRepos.add(repoId);
+}
+
+function clearConflictSuppression(repoId: string): void {
+  suppressedConflictRepos.delete(repoId);
+}
 
 type PushPull = 'push' | 'pull';
 type VCSAction =
@@ -124,7 +153,7 @@ export function getErrorMessage(error: unknown): string {
   // Non-Error objects
   return 'Unknown Error';
 }
-export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?: string) {
+export function vcsEventProperties(type: 'git', action: VCSAction, error?: string) {
   return { type, action, error };
 }
 
@@ -189,12 +218,10 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   invariant(projectId, 'Project ID is required');
   const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
-  invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
-  invariant(
-    project.gitRepositoryId && !models.project.isEmptyGitProject(project),
-    'Project is not linked to a git repository',
-  );
-  const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+  invariant(models.project.isConnectedGitProject(project), 'Project is not linked to a git repository');
+  const repoId = models.project.getEffectiveRepoId(project);
+  invariant(repoId, 'Project is not linked to a git repository');
+  const gitRepository = await services.gitRepository.getById(repoId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
 }
@@ -264,22 +291,18 @@ export async function getProjectGitFileIssues({
   gitRepositoryId,
 }: GetProjectGitFileIssuesOptions): Promise<WorkspaceFileIssue[]> {
   const project = await services.project.getById(projectId);
-  if (
-    !project ||
-    !models.project.isGitProject(project) ||
-    !project.gitRepositoryId ||
-    models.project.isEmptyGitProject(project)
-  ) {
+  if (!project || !models.project.isConnectedGitProject(project)) {
     return [];
   }
 
-  if (gitRepositoryId && gitRepositoryId !== project.gitRepositoryId) {
+  const effectiveRepoId = models.project.getEffectiveRepoId(project);
+  if (gitRepositoryId && gitRepositoryId !== effectiveRepoId) {
     return [];
   }
 
   return mapWorkspaceFileIssues({
-    issues: repoFileWatcherRegistry.getProblems(project.gitRepositoryId),
-    repoId: project.gitRepositoryId,
+    issues: repoFileWatcherRegistry.getProblems(effectiveRepoId!),
+    repoId: effectiveRepoId!,
     metas: await getProjectWorkspacesWithMeta(projectId),
     workspaceId,
   });
@@ -846,7 +869,7 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
       }
 
       // Parse the YAML file to get the document
-      const doc: models.BaseModel = YAML.parse(fileContents);
+      const doc: BaseModel = YAML.parse(fileContents);
 
       // Validate that the document ID matches the file path
       if (!legacyInsomniaFile.filePath.includes(doc._id)) {
@@ -1074,8 +1097,8 @@ export const cloneGitRepoAction = async ({
     }
 
     if (!projectId) {
-      trackSegmentEvent(SegmentEvent.vcsSyncStart, {
-        ...vcsSegmentEventProperties('git', 'clone'),
+      trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
+        ...vcsEventProperties('git', 'clone'),
         provider,
         repoId: repoSettingsPatch._id,
       });
@@ -1139,7 +1162,7 @@ export const cloneGitRepoAction = async ({
 
           await services.project.update(project, {
             remoteId: null,
-            gitRepositoryId: gitRepository._id,
+            gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
           });
 
           return project;
@@ -1148,7 +1171,7 @@ export const cloneGitRepoAction = async ({
         const project = await services.project.create({
           name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
           parentId: organizationId,
-          gitRepositoryId: gitRepository._id,
+          gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
         });
 
         return project;
@@ -1207,8 +1230,8 @@ export const cloneGitRepoAction = async ({
       });
 
       await database.flushChanges(bufferId);
-      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-        ...vcsSegmentEventProperties('git', 'clone'),
+      trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+        ...vcsEventProperties('git', 'clone'),
         providerName,
         repoId: repoSettingsPatch._id,
       });
@@ -1222,8 +1245,8 @@ export const cloneGitRepoAction = async ({
     const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
-    trackSegmentEvent(SegmentEvent.vcsSyncStart, {
-      ...vcsSegmentEventProperties('git', 'clone'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
+      ...vcsEventProperties('git', 'clone'),
       provider,
       repoId: repoSettingsPatch._id,
     });
@@ -1281,8 +1304,8 @@ export const cloneGitRepoAction = async ({
       });
       await services.apiSpec.getOrCreateForParentId(workspace._id);
 
-      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-        ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
+      trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+        ...vcsEventProperties('git', 'clone', 'no directory found'),
         providerName: provider,
         repoId: repoSettingsPatch._id,
       });
@@ -1300,8 +1323,8 @@ export const cloneGitRepoAction = async ({
       const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
 
       if (workspaces.length === 0) {
-        trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-          ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
+        trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+          ...vcsEventProperties('git', 'clone', 'no workspaces found'),
           providerName: provider,
           repoId: repoSettingsPatch._id,
         });
@@ -1312,8 +1335,8 @@ export const cloneGitRepoAction = async ({
       }
 
       if (workspaces.length > 1) {
-        trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-          ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'),
+        trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+          ...vcsEventProperties('git', 'clone', 'multiple workspaces found'),
           providerName: provider,
           repoId: repoSettingsPatch._id,
         });
@@ -1401,8 +1424,8 @@ export const cloneGitRepoAction = async ({
 
     // Flush DB changes
     await database.flushChanges(bufferId);
-    trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-      ...vcsSegmentEventProperties('git', 'clone'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+      ...vcsEventProperties('git', 'clone'),
       providerName: provider,
       repoId: repoSettingsPatch._id,
     });
@@ -1454,7 +1477,8 @@ export const updateGitRepoAction = async ({
     let gitRepository: GitRepository | undefined;
 
     if (gitRepositoryId && gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID) {
-      gitRepository = await services.gitRepository.getById(gitRepositoryId);
+      const effectiveId = models.project.decodeRepoId(gitRepositoryId);
+      gitRepository = await services.gitRepository.getById(effectiveId);
       invariant(gitRepository, 'GitRepository not found');
     } else {
       const newRepo: Partial<GitRepository> = {
@@ -1476,7 +1500,7 @@ export const updateGitRepoAction = async ({
       const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       await services.project.update(project, {
-        gitRepositoryId: gitRepository._id,
+        gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
       });
     }
 
@@ -1543,6 +1567,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
   await services.gitRepository.remove(repo);
   // Stop the file watcher for this repository (project-scoped flow only).
   repoFileWatcherRegistry.stopWatcher(repo._id);
+  clearConflictSuppression(repo._id);
 
   await database.flushChanges(flushId);
 
@@ -1576,8 +1601,8 @@ export const commitToGitRepoAction = async ({
       providerName = credentials.provider;
     }
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'commit'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'commit'),
       providerName,
       repoId: gitRepository._id,
     });
@@ -1705,8 +1730,8 @@ export const commitAndPushToGitRepoAction = async ({
       providerName = credentials.provider;
     }
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'commit'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'commit'),
       providerName,
       repoId: repo._id,
     });
@@ -1745,8 +1770,8 @@ export const commitAndPushToGitRepoAction = async ({
   try {
     await GitVCS.push(repo.credentialsId);
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'push'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'push'),
       providerName,
       repoId: repo._id,
     });
@@ -1779,8 +1804,8 @@ export const commitAndPushToGitRepoAction = async ({
     }
     const errorMessage = getErrorMessage(err);
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'push', errorMessage),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'push', errorMessage),
       providerName,
       repoId: repo._id,
     });
@@ -1821,8 +1846,8 @@ export const createNewGitBranchAction = async ({
       providerName = credentials.provider;
     }
     await GitVCS.checkout(branch);
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'create_branch'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'create_branch'),
       providerName,
       repoId: gitRepository._id,
     });
@@ -1982,6 +2007,7 @@ export const mergeGitBranch = async ({
   const bufferId = await database.bufferChanges();
 
   try {
+    suppressConflictProblems(gitRepository._id);
     await GitVCS.merge({
       theirsBranch,
       allowUncommittedChangesBeforeMerge,
@@ -1993,9 +2019,10 @@ export const mergeGitBranch = async ({
     // Import all YAML files from disk into the DB after merge + checkout
     const gitRepoId = gitRepository._id;
     await repoFileWatcherRegistry.importAllFiles(gitRepoId);
+    clearConflictSuppression(gitRepository._id);
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'merge_branch'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'merge_branch'),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2013,16 +2040,18 @@ export const mergeGitBranch = async ({
     return {};
   } catch (err) {
     if (err instanceof MergeConflictError) {
+      // Keep suppression active — user will resolve via SyncMergeModal.
       return err.data;
     }
+    clearConflictSuppression(gitRepository._id);
     let errorMessage = getErrorMessage(err);
 
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
     }
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'merge_branch', errorMessage),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'merge_branch', errorMessage),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2057,8 +2086,8 @@ export const deleteGitBranchAction = async ({
       providerName = credentials.provider;
     }
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'delete_branch'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'delete_branch'),
       providerName,
       repoId: repo._id,
     });
@@ -2134,8 +2163,8 @@ export const pushToGitRemoteAction = async ({
     const bufferId = await database.bufferChanges();
     await GitVCS.push(gitRepository.credentialsId);
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', force ? 'force_push' : 'push'),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2179,8 +2208,8 @@ export const pushToGitRemoteAction = async ({
     }
     const errorMessage = getErrorMessage(err);
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'push', errorMessage),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'push', errorMessage),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2231,9 +2260,12 @@ export async function fetchGitRemoteBranches({
 }
 
 export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
+  let repoId: string | null = null;
   try {
     await assertBranchOnOrigin('pull');
     const gitRepository = await getGitRepository({ projectId, workspaceId });
+    repoId = gitRepository._id;
+    suppressConflictProblems(repoId);
     invariant(gitRepository.credentialsId, 'Git Credentials ID is required');
     const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
     invariant(credentials, 'Git Credentials not found');
@@ -2243,9 +2275,10 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
 
     // Import all YAML files from disk into the DB after pull
     await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    clearConflictSuppression(repoId);
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'pull'),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'pull'),
       providerName: credentials.provider,
       repoId: gitRepository._id,
     });
@@ -2266,8 +2299,12 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     };
   } catch (err: unknown) {
     if (err instanceof MergeConflictError) {
+      // Keep suppression active — user will resolve via SyncMergeModal.
+      // clearConflictSuppression is called by continueMerge or abortMergeAction.
       return err.data;
     }
+
+    if (repoId) clearConflictSuppression(repoId);
 
     if (
       err instanceof Errors.UserCanceledError ||
@@ -2293,8 +2330,8 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
       providerName = credentials.provider;
     }
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'pull', errorMessage),
+    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
+      ...vcsEventProperties('git', 'pull', errorMessage),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2334,6 +2371,9 @@ export const continueMerge = async ({
 
     // Import all YAML files from disk into the DB after merge resolution
     await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
+    // Files are clean now — lift the conflict suppression so any remaining
+    // issues (parse errors etc.) are reported normally.
+    clearConflictSuppression(gitRepository._id);
 
     const log = (await GitVCS.log({ depth: 1 })) || [];
 
@@ -2414,7 +2454,9 @@ export const discardChangesAction = async ({
   }
 };
 
-export const abortMergeAction = async () => {
+export const abortMergeAction = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
+  const gitRepository = await getGitRepository({ projectId, workspaceId });
+  clearConflictSuppression(gitRepository._id);
   return GitVCS.abortMerge();
 };
 
@@ -2746,9 +2788,9 @@ async function completeSignInToGitProvider({
     }
 
     if (isEditing) {
-      trackSegmentEvent(SegmentEvent.gitAuthenticationUpdated, { provider });
+      trackAnalyticsEvent(AnalyticsEvent.gitAuthenticationUpdated, { provider });
     } else {
-      trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider });
+      trackAnalyticsEvent(AnalyticsEvent.gitAuthenticationCompleted, { provider });
     }
 
     return {};
@@ -2844,6 +2886,7 @@ async function getCurrentBranchByRepositoryId({
 export interface MigrationSummary {
   logs: string[];
   failedProjects: { id: string; name: string }[];
+  totalProjects: number;
 }
 
 export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
@@ -2851,14 +2894,12 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
   const failedProjects: { id: string; name: string }[] = [];
 
   const allProjects = await services.project.all();
-  const gitProjects = allProjects.filter(
-    (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
-  );
+  const gitProjects = allProjects.filter((p): p is GitProject => models.project.isConnectedGitProject(p));
 
-  if (gitProjects.length === 0) return { logs, failedProjects };
+  if (gitProjects.length === 0) return { logs, failedProjects, totalProjects: 0 };
 
   // Batch-fetch all git repositories in one query instead of N individual lookups.
-  const repoIds = gitProjects.map(p => p.gitRepositoryId);
+  const repoIds = gitProjects.map(p => models.project.getEffectiveRepoId(p)).filter(Boolean) as string[];
   const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
     _id: { $in: repoIds },
   });
@@ -2869,11 +2910,15 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
 
   const ts = () => new Date().toISOString();
   const projectList = gitProjects.map(p => `"${p.name}"`).join(', ');
-  logs.push(`${ts()} [INFO] Starting migration v${CURRENT_MIGRATION_VERSION} for ${gitProjects.length} repo(s): ${projectList}`);
+  logs.push(
+    `${ts()} [INFO] Starting migration v${CURRENT_MIGRATION_VERSION} for ${gitProjects.length} repo(s): ${projectList}`,
+  );
+
+  let migratedCount = 0;
 
   await Promise.all(
     gitProjects.map(async project => {
-      const gitRepository = repoById.get(project.gitRepositoryId);
+      const gitRepository = repoById.get(models.project.getEffectiveRepoId(project)!);
       if (!gitRepository) return;
 
       const repoId = gitRepository._id;
@@ -2891,6 +2936,8 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
       const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
       if (!success) {
         failedProjects.push({ id: project._id, name: project.name });
+      } else {
+        migratedCount++;
       }
     }),
   );
@@ -2901,15 +2948,16 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
       logs.push(`${ts()} [INFO] ["${name}"] Converting to local project`);
       try {
         const project = await services.project.getById(id);
-        if (!project || !project.gitRepositoryId) {
+        if (!project || !models.project.isConnectedGitProject(project)) {
           logs.push(`${ts()} [WARN] ["${name}"] Project not found or already local — skipping`);
           return;
         }
 
-        const gitRepository = await services.gitRepository.getById(project.gitRepositoryId);
+        const effectiveRepoId = models.project.getEffectiveRepoId(project as GitProject);
+        const gitRepository = effectiveRepoId ? await services.gitRepository.getById(effectiveRepoId) : null;
         if (gitRepository) {
           await services.gitRepository.remove(gitRepository);
-          logs.push(`${ts()} [INFO] ["${name}"] Removed git repository ${project.gitRepositoryId}`);
+          logs.push(`${ts()} [INFO] ["${name}"] Removed git repository ${effectiveRepoId}`);
         }
 
         await services.project.update(project, { name, gitRepositoryId: null });
@@ -2922,7 +2970,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
     }),
   );
 
-  return { logs, failedProjects };
+  return { logs, failedProjects, totalProjects: migratedCount };
 }
 
 export interface GitServiceAPI {
@@ -3036,7 +3084,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.discardChanges', (_, options: Parameters<typeof discardChangesAction>[0]) =>
     discardChangesAction(options),
   );
-  ipcMainHandle('git.abortMerge', _ => abortMergeAction());
+  ipcMainHandle('git.abortMerge', (_, options: Parameters<typeof abortMergeAction>[0]) => abortMergeAction(options));
   ipcMainHandle('git.gitStatus', (_, options: Parameters<typeof gitStatusAction>[0]) => gitStatusAction(options));
   ipcMainHandle('git.diff', () => diff());
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) =>

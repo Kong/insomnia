@@ -16,8 +16,9 @@ export function getByRemoteId(remoteId: string) {
 }
 
 export function getAllByGitRepositoryIds(gitRepositoryIds: string[]) {
+  const queryIds = gitRepositoryIds.flatMap(id => models.project.getQueryableGitRepositoryIds(id));
   return db.find<Project>(type, {
-    gitRepositoryId: { $in: gitRepositoryIds },
+    gitRepositoryId: { $in: queryIds },
   });
 }
 

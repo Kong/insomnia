@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_JSON } from '~/common/constants';
-import { replaceIdsInFields } from '~/models/helpers/replace-ids-in-fields';
-import type { BaseModel } from '~/models/types';
+
+import type { BaseModel } from './base-types';
+import { replaceIdsInFields } from './utils/replace-ids-in-fields';
 
 export const name = 'SocketIO Payload';
 

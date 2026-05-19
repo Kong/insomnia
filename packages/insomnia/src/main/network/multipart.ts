@@ -10,7 +10,7 @@ import { lookup } from 'mime-types';
 
 import type { RequestBodyParameter } from '~/insomnia-data';
 
-export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
+import { DEFAULT_BOUNDARY } from '../../network/multipart-constants';
 
 interface Multipart {
   boundary: typeof DEFAULT_BOUNDARY;

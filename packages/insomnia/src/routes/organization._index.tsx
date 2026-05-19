@@ -2,8 +2,7 @@ import type { Organization } from 'insomnia-api';
 import { href, redirect } from 'react-router';
 
 import * as session from '~/account/session';
-import { services } from '~/insomnia-data';
-import { findPersonalOrganization } from '~/models/organization';
+import { models, services } from '~/insomnia-data';
 import { migrateProjectsUnderOrganization, syncOrganizations } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
@@ -17,7 +16,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     invariant(organizations.length, 'Failed to fetch organizations. Check your network connection and try again.');
 
-    const personalOrganization = findPersonalOrganization(organizations, accountId);
+    const personalOrganization = models.organization.findPersonalOrganization(organizations, accountId);
     invariant(
       personalOrganization,
       'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.',

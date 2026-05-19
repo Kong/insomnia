@@ -1,4 +1,4 @@
-import type { BaseModel } from '~/models/types';
+import type { BaseModel } from './base-types';
 
 /* When viewing a specific request, the user can click the Send button to test-send it.
 Each time the user sends the request, the parameters may differ—they might edit the body, headers, and so on—and Insomnia records every sent request as history.

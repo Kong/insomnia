@@ -1,7 +1,7 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { baseModelSchema, workspaceModelSchema } from '../../../../models/__schemas__/model-schemas';
+import { baseModelSchema, workspaceModelSchema } from '../../../../sync/__schemas__/model-schemas';
 import { projectSchema } from '../../../../sync/__schemas__/type-schemas';
 import { shouldIgnoreKey } from '../../../../sync/ignore-keys';
 import { deterministicStringify } from '../../../../sync/lib/deterministic-stringify';

@@ -14,13 +14,12 @@ import {
 import { useParams } from 'react-router';
 
 import type { MockServer, Project, Workspace } from '~/insomnia-data';
-import { removeResponsesForRequest } from '~/models/helpers/response-operations';
+import { models, services } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import * as models from '../../../models/index';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -198,7 +197,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                             const docs = await db.getWithDescendants(workspace, [models.request.type]);
                             const requests = docs.filter(models.request.isRequest);
                             for (const req of requests) {
-                              await removeResponsesForRequest(req._id);
+                              await services.helpers.removeResponsesForRequest(req._id);
                             }
                             close();
                           }}

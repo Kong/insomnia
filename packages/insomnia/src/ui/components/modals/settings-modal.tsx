@@ -4,13 +4,14 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { AI_PLUGIN_NAME, isKonnectSyncEnabled } from '~/common/constants';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models } from '~/insomnia-data';
 import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { KonnectSettings } from '~/ui/components/settings/konnect-settings';
+import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -31,7 +32,7 @@ export interface SettingsModalHandle {
   show: (options?: { tab?: SettingsModalTabKey }) => void;
 }
 
-type SettingsModalTabKey = 'data' | 'keyboard' | 'themes' | 'plugins' | 'general' | 'proxy' | 'credentials' | 'ai' | 'konnect';
+type SettingsModalTabKey = 'data' | 'keyboard' | 'themes' | 'plugins' | 'general' | 'proxy' | 'credentials' | 'ai' | 'scripting' | 'konnect';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
@@ -49,7 +50,12 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
       setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
 
-      if (isKonnectSyncEnabled() && userSession.id && organizationId && !isScratchpadOrganizationId(organizationId)) {
+      if (
+        isKonnectSyncEnabled() &&
+        userSession.id &&
+        organizationId &&
+        !models.organization.isScratchpadOrganizationId(organizationId)
+      ) {
         try {
           const res = await getOrganizationFeatures({ organizationId, sessionId: userSession.id });
           setShouldShowKonnectTab(res?.features?.konnectSync?.enabled ?? false);
@@ -99,8 +105,8 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           onSelectionChange={key => {
             setDefaultTabKey(key.toString());
 
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.preferencesViewed,
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.preferencesViewed,
               properties: { tab: key.toString() },
             });
           }}
@@ -152,6 +158,12 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
               id="credentials"
             >
               Credentials
+            </Tab>
+            <Tab
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+              id="scripting"
+            >
+              Scripting
             </Tab>
             {shouldShowAiSettingsTab && (
               <Tab
@@ -224,6 +236,9 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="credentials">
             <CredentialsSettings />
           </TabPanel>
+          <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="scripting">
+            <ScriptingSettings />
+          </TabPanel>
           {shouldShowAiSettingsTab && (
             <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="ai">
               <AISettings />
@@ -245,8 +260,8 @@ SettingsModal.displayName = 'SettingsModal';
 export const showSettingsModal = (options?: { tab?: SettingsModalTabKey }) => {
   showModal(SettingsModal, options);
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.preferencesViewed,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.preferencesViewed,
     properties: { tab: options?.tab || 'general' },
   });
 };

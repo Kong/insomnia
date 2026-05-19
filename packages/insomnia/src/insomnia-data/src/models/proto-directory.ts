@@ -1,5 +1,6 @@
 import { generateId } from '~/common/misc';
-import type { BaseModel } from '~/models/types';
+
+import type { BaseModel } from './base-types';
 
 export const name = 'Proto Directory';
 

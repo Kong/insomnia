@@ -12,15 +12,14 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { MockRoute, Request } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { BaseModel, MockRoute, Request } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
-import * as models from '../../../models/index';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
@@ -142,7 +141,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   );
 
   const handleUpdate = useCallback(
-    async (doc: models.BaseModel, patches: Partial<models.BaseModel>[] = []) => {
+    async (doc: BaseModel, patches: Partial<BaseModel>[] = []) => {
       const patchObj: Record<string, any> = {};
       patches.forEach(patch => {
         Object.assign(patchObj, patch);

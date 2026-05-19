@@ -3,11 +3,8 @@ import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
 import type { GitProject, GitRepository, Project } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { database, models, services } from '~/insomnia-data';
 
-import { database } from '../common/database';
-import * as models from '../models';
-import { findPersonalOrganization, SCRATCHPAD_ORGANIZATION_ID } from '../models/organization';
 import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
 
 export const enum AsyncTask {
@@ -127,7 +124,7 @@ export const getInitialEntry = async () => {
       const organizations = JSON.parse(
         localStorage.getItem(`${user.accountId}:organizations`) || '[]',
       ) as Organization[];
-      const personalOrganization = findPersonalOrganization(organizations, user.accountId);
+      const personalOrganization = models.organization.findPersonalOrganization(organizations, user.accountId);
       // If the personal org is not found in local storage go fetch from org index loader
       if (!personalOrganization) {
         return href('/organization');
@@ -157,13 +154,13 @@ export const getInitialEntry = async () => {
     }
 
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
-      organizationId: SCRATCHPAD_ORGANIZATION_ID,
+      organizationId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
       projectId: models.project.SCRATCHPAD_PROJECT_ID,
       workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
     });
   } catch {
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
-      organizationId: SCRATCHPAD_ORGANIZATION_ID,
+      organizationId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
       projectId: models.project.SCRATCHPAD_PROJECT_ID,
       workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
     });

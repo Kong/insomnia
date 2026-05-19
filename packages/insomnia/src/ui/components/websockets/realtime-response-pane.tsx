@@ -16,7 +16,7 @@ import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promis
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { SegmentEvent } from '../../../ui/analytics';
+import { AnalyticsEvent } from '../../../ui/analytics';
 import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
@@ -415,7 +415,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                 <ResponseHeadersViewer
                   headers={response.headers}
                   onCopyAll={() => {
-                    window.main.trackSegmentEvent({ event: SegmentEvent.mcpResponseHeadersCopyAllClicked });
+                    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpResponseHeadersCopyAllClicked });
                   }}
                 />
               </ErrorBoundary>

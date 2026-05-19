@@ -17,26 +17,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/main/importers/importers/openapi-3.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/main/importers/importers/openapi-3.ts",
-      "builtin": "url"
-    },
-    {
-      "importer": "src/main/secure-read-file.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/main/secure-read-file.ts",
-      "builtin": "os"
-    },
-    {
-      "importer": "src/main/secure-read-file.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/models/helpers/response-operations.ts",
       "builtin": "fs"
     },
@@ -53,24 +33,16 @@
       "builtin": "path"
     },
     {
-      "importer": "src/network/o-auth-2/get-token.ts",
-      "builtin": "crypto"
-    },
-    {
-      "importer": "src/network/o-auth-2/get-token.ts",
-      "builtin": "querystring"
-    },
-    {
-      "importer": "src/network/o-auth-2/utils.ts",
-      "builtin": "crypto"
-    },
-    {
       "importer": "src/network/url-matches-cert-host.ts",
       "builtin": "url"
     },
     {
       "importer": "src/plugins/context/response.ts",
       "builtin": "fs"
+    },
+    {
+      "importer": "src/plugins/context/response.ts",
+      "builtin": "zlib"
     },
     {
       "importer": "src/plugins/create.ts",
@@ -91,6 +63,18 @@
     {
       "importer": "src/script-executor.ts",
       "builtin": "fs/promises"
+    },
+    {
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "buffer"
+    },
+    {
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "timers"
+    },
+    {
+      "importer": "src/scripting/require-interceptor.ts",
+      "builtin": "util"
     },
     {
       "importer": "src/templating/base-extension.ts",

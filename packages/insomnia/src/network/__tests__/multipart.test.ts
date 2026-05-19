@@ -3,7 +3,8 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildMultipart, DEFAULT_BOUNDARY } from '../../main/network/multipart';
+import { buildMultipart } from '../../main/network/multipart';
+import { DEFAULT_BOUNDARY } from '../multipart-constants';
 
 describe('buildMultipart()', () => {
   it('builds a simple request', async () => {

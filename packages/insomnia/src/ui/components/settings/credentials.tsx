@@ -696,7 +696,7 @@ const GitCredentialsList = () => {
 
 export const CredentialsSettings = () => {
   return (
-    <div>
+    <div data-testid="credentials-settings-tab">
       <GitCredentialsList />
       <CloudServiceCredentialList />
     </div>

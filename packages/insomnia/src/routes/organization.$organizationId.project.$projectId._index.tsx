@@ -33,7 +33,6 @@ import {
   getAppWebsiteBaseURL,
   isKonnectSyncEnabled,
 } from '~/common/constants';
-import { database } from '~/common/database';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort, sortMethodMap } from '~/common/sorting';
@@ -46,16 +45,13 @@ import type {
   WorkspaceMeta,
   WorkspaceScope,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { sortProjects } from '~/models/helpers/project';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '~/models/organization';
+import { database, models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
+import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
@@ -136,7 +132,9 @@ export async function getProjectsWithGitRepositories({
     parentId: organizationId,
   });
 
-  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
+  const gitRepositoryIds = projects
+    .map(p => (models.project.isConnectedGitProject(p) ? models.project.getEffectiveRepoId(p) : null))
+    .filter(isNotNullOrUndefined);
 
   const gitRepositories = await database.find<GitRepository>('GitRepository', {
     _id: {
@@ -145,7 +143,10 @@ export async function getProjectsWithGitRepositories({
   });
 
   return projects.map(project => {
-    const gitRepository = gitRepositories.find(gr => gr._id === project.gitRepositoryId);
+    const effectiveId = models.project.isConnectedGitProject(project)
+      ? models.project.getEffectiveRepoId(project)
+      : null;
+    const gitRepository = gitRepositories.find(gr => gr._id === effectiveId);
     return {
       ...project,
       gitRepository,
@@ -398,13 +399,13 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
 
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
-    project && models.project.isGitProject(project)
-      ? await services.gitRepository.getById(project.gitRepositoryId || '')
+    project && models.project.isConnectedGitProject(project)
+      ? await services.gitRepository.getById(models.project.getEffectiveRepoId(project) || '')
       : null;
 
   return {
@@ -488,7 +489,7 @@ const Component = () => {
     'There are issues with one or more Insomnia files in this project. Use the git CLI and your local file system to resolve them and continue.';
 
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }
@@ -515,8 +516,10 @@ const Component = () => {
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const organization = organizationData?.organizations.find(o => o.id === organizationId);
   const isUserOwner =
-    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
-  const isPersonalOrg = organization && isPersonalOrganization(organization);
+    organization &&
+    userSession.accountId &&
+    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const isPersonalOrg = organization && models.organization.isPersonalOrganization(organization);
 
   const tabNavigate = useTabNavigate();
 
@@ -967,7 +970,7 @@ const Component = () => {
                       onChange={filter => {
                         setWorkspaceListFilter(filter);
                         if (filter.trim() !== '') {
-                          trackOnceDaily(SegmentEvent.homepageFiltered);
+                          trackOnceDaily(AnalyticsEvent.homepageFiltered);
                         }
                       }}
                     >
@@ -1063,8 +1066,8 @@ const Component = () => {
 
                     <Button
                       onPress={() => {
-                        window.main.trackSegmentEvent({
-                          event: SegmentEvent.importStarted,
+                        window.main.trackAnalyticsEvent({
+                          event: AnalyticsEvent.importStarted,
                           properties: {
                             source: 'project',
                           },

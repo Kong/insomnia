@@ -1,8 +1,7 @@
 import type { Project, RemoteProject } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { database } from '../../common/database';
-import * as models from '../../models';
 
 // Migration:
 // Team ~= Project > Workspaces

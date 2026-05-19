@@ -20,11 +20,10 @@ import type {
   RequestHeader,
   WebSocketResponse,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
-import * as models from '../../models';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';

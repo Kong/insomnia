@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
 import { EnvironmentType, services } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -22,8 +22,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     isPrivate,
   });
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.environmentCreate,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.environmentCreate,
     properties: { type: isPrivate ? 'private' : 'global' },
   });
 

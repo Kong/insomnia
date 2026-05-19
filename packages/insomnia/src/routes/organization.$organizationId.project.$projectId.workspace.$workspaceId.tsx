@@ -27,9 +27,7 @@ import type {
   Workspace,
   WorkspaceMeta,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { sortProjects } from '~/models/helpers/project';
+import { models, services } from '~/insomnia-data';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -103,8 +101,8 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
   const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
-  const gitRepositoryId = models.project.isGitProject(activeProject)
-    ? activeProject.gitRepositoryId
+  const gitRepositoryId = models.project.isConnectedGitProject(activeProject)
+    ? models.project.getEffectiveRepoId(activeProject)
     : activeWorkspaceMeta.gitRepositoryId;
   const gitRepository = await services.gitRepository.getById(gitRepositoryId || '');
 
@@ -159,7 +157,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
       parentId: organizationId,
     })) || [];
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
 
   const searchParams = new URL(request.url).searchParams;
   const sortOrder = searchParams.get('sortOrder') as SortOrder;
@@ -401,7 +399,7 @@ const Component = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { issuesByWorkspaceId } = useGitFileIssues();
+  const { issuesByWorkspaceId, conflictsSuppressed } = useGitFileIssues();
   const currentIssue = issuesByWorkspaceId[workspaceId];
 
   const handleBackToList = () => {
@@ -414,7 +412,9 @@ const Component = () => {
   };
 
   const modalText = currentIssue ? workspaceFileIssueModalText[currentIssue.kind] : null;
-  const isIssueModalOpen = Boolean(currentIssue && modalText);
+  const isIssueModalOpen = Boolean(
+    currentIssue && modalText && !(currentIssue.kind === 'conflict' && conflictsSuppressed),
+  );
 
   return (
     <div className="h-full w-full overflow-hidden" data-testid="workspace-page">
@@ -426,6 +426,13 @@ const Component = () => {
             <div className="flex flex-col gap-3">
               <h2 className="text-2xl font-semibold text-(--color-font)">{modalText.modalTitle}</h2>
               <p className="max-w-2xl text-lg text-(--hl)">{modalText.summary}</p>
+              {currentIssue.relPath && (
+                <ul className="list-disc pl-5 text-left text-sm text-(--hl)">
+                  <li>
+                    <span className="font-mono">{currentIssue.relPath}</span>
+                  </li>
+                </ul>
+              )}
             </div>
             <Button
               onPress={handleBackToList}

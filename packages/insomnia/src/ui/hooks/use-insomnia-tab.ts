@@ -17,7 +17,6 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
@@ -459,7 +458,7 @@ const buildTabFromUrl = async (pathname: string, searchParams: URLSearchParams):
   const resource = await (async () => {
     switch (tabType) {
       case 'request': {
-        return await requestOperations.getById(id);
+        return await services.helpers.getRequestById(id);
       }
       case 'folder': {
         return await database.findOne('RequestGroup', { _id: id });

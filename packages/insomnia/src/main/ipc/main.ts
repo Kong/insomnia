@@ -37,8 +37,8 @@ import type {
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginTemplateTag, RenderedRequest } from '../../templating/types';
-import type { SegmentEvent } from '../analytics';
-import { setCurrentOrganizationId, trackPageView, trackSegmentEvent } from '../analytics';
+import type { AnalyticsEvent } from '../analytics';
+import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
@@ -100,6 +100,17 @@ const writeResponseBodyToFile = async (
   _: unknown,
   options: { sourcePath: string; destinationPath: string; bodyCompression?: 'zip' | null },
 ) => {
+  // Validate sourcePath is within the expected responses directory to prevent a
+  // compromised renderer from using this handler to read arbitrary files on disk.
+  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
+  const allowedResponsesDir = path.join(userdataDirectory, 'responses');
+  const resolvedSource = path.resolve(options.sourcePath);
+  if (!resolvedSource.startsWith(allowedResponsesDir + path.sep) || !resolvedSource.endsWith('.response')) {
+    throw new Error(
+      'writeResponseBodyToFile: sourcePath is outside the allowed responses directory or does not end in .response',
+    );
+  }
+
   try {
     const dir = path.dirname(options.destinationPath);
     await fs.promises.mkdir(dir, { recursive: true });
@@ -175,7 +186,7 @@ export interface RendererToMainBridgeAPI {
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
   sync: SyncBridgeAPI;
-  trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
+  trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
   showNunjucksContextMenu: (options: {
@@ -256,7 +267,13 @@ export function registerMainHandlers() {
     if (typeof fn !== 'function') {
       throw new TypeError(`Unknown service method: ${serviceName}.${methodName}`);
     }
-    return (fn as (...args: unknown[]) => unknown).call(service, ...args);
+    const result = await (fn as (...args: unknown[]) => unknown).call(service, ...args);
+    // Tag Buffer results before contextBridge serializes them as plain Uint8Array,
+    // so the preload can distinguish them from intentional Uint8Array returns.
+    if (Buffer.isBuffer(result)) {
+      return { __type: 'Buffer', data: Array.from(result as Buffer) };
+    }
+    return result;
   });
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);
@@ -384,10 +401,13 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const dataPath = app.getPath('userData');
-    const folderPath = path.join(dataPath, options.folder);
+    const folderPath = path.join(app.getPath('userData'), options.folder);
     mkdirSync(folderPath, { recursive: true });
-    return readDir(_, { path: folderPath });
+    try {
+      return await readDir(_, { path: folderPath });
+    } catch {
+      return [];
+    }
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
@@ -398,8 +418,8 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn('trackSegmentEvent', (_, options: { event: SegmentEvent; properties?: Record<string, unknown> }): void => {
-    trackSegmentEvent(options.event, options.properties);
+  ipcMainOn('trackAnalyticsEvent', (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
+    trackAnalyticsEvent(options.event, options.properties);
   });
   ipcMainOn('trackPageView', (_, options: { name: string }): void => {
     trackPageView(options.name);

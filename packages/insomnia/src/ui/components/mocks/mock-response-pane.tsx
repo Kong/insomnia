@@ -5,7 +5,6 @@ import * as reactUse from 'react-use';
 
 import type { MockRoute, MockServer, Response } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
@@ -48,7 +47,7 @@ export const MockResponsePane = () => {
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
-        const timeline = await getTimeline(activeResponse, true);
+        const timeline = await services.helpers.getResponseTimeline(activeResponse, true);
         setTimeline(timeline);
       }
     };
@@ -131,7 +130,7 @@ export const MockResponsePane = () => {
               filter={''}
               filterHistory={[]}
               bodyBuffer={activeResponse.bodyBuffer}
-              getBody={() => getBodyBuffer(activeResponse)}
+              getBody={() => services.helpers.getResponseBodyBuffer(activeResponse)}
               previewMode={previewMode}
               responseId={activeResponse._id}
               updateFilter={activeResponse.error ? undefined : () => {}}
@@ -300,7 +299,7 @@ const PreviewModeDropdown = ({
             icon="copy"
             label="Copy raw response"
             onClick={async () => {
-              const bodyBuffer = await getBodyBuffer(activeResponse);
+              const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
               bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
             }}
           />
@@ -332,7 +331,7 @@ const PreviewModeDropdown = ({
               icon="save"
               label="Export prettified response"
               onClick={async () => {
-                const bodyBuffer = await getBodyBuffer(activeResponse);
+                const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
                 const { canceled, filePath } = await window.dialog.showSaveDialog({
                   title: 'Save Full Response',
                   buttonLabel: 'Save',
@@ -364,7 +363,7 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath) {
                 return;
               }
-              const timeline = getTimeline(activeResponse);
+              const timeline = await services.helpers.getResponseTimeline(activeResponse);
               const headers = timeline
                 .filter(v => v.name === 'HeaderIn')
                 .map(v => v.value)

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { grpcRequest, request, requestGroup } from '../../models';
+import { models } from '~/insomnia-data';
+
 import {
   METHOD_DELETE,
   METHOD_GET,
@@ -17,6 +18,8 @@ import {
   metaSortKeySort,
   sortMethodMap,
 } from '../sorting';
+
+const { request, requestGroup, grpcRequest } = models;
 
 describe('Sorting methods', () => {
   it('defaults to ascending metaSortKey aka descending but flipped (* -1)', () => {

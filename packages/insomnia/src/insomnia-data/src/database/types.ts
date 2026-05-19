@@ -1,7 +1,7 @@
 // Database interfaces and types for IoC pattern
 // This file defines the abstract interface that different database implementations must adhere to.
 
-import type { AllTypes, BaseModel } from '~/models/types';
+import type { AllTypes, BaseModel } from '../models/types';
 
 // Avoid import nedb here to prevent it injecting the node types into renderer process
 export interface DataStoreOptions {

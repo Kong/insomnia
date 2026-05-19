@@ -48,12 +48,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('../models', () => ({
-  settings: {
-    get: vi.fn(() => Promise.resolve({})),
-  },
-}));
-
 // Mock the entire install-plugin module
 vi.mock('../main/install-plugin', async () => {
   const actual = await vi.importActual('../main/install-plugin');
@@ -72,8 +66,8 @@ vi.mock('../main/install-plugin', async () => {
 });
 
 vi.mock('../main/analytics', () => ({
-  trackSegmentEvent: vi.fn(),
-  SegmentEvent: {
+  trackAnalyticsEvent: vi.fn(),
+  AnalyticsEvent: {
     installPlugin: 'Plugin Installed',
   },
 }));

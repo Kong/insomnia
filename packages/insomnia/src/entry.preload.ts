@@ -1,10 +1,11 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
-import { invokeWithNormalizedError } from '~/main/ipc/electron';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from '~/insomnia-data';
+import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
@@ -196,7 +197,7 @@ const git: GitServiceAPI = {
   pullFromGitRemote: options => invokeWithNormalizedError('git.pullFromGitRemote', options),
   continueMerge: options => invokeWithNormalizedError('git.continueMerge', options),
   discardChanges: options => invokeWithNormalizedError('git.discardChanges', options),
-  abortMerge: () => invokeWithNormalizedError('git.abortMerge'),
+  abortMerge: options => invokeWithNormalizedError('git.abortMerge', options),
   gitStatus: options => invokeWithNormalizedError('git.gitStatus', options),
   diff: () => invokeWithNormalizedError('git.diff'),
   multipleCommitToGitRepo: options => invokeWithNormalizedError('git.multipleCommitToGitRepo', options),
@@ -265,7 +266,8 @@ const main: Window['main'] = {
     requestId: string,
     authentication: AuthTypeOAuth2,
     forceRefresh?: boolean,
-  ): Promise<OAuth2Token | undefined> => invokeWithNormalizedError('getOAuth2Token', requestId, authentication, forceRefresh),
+  ): Promise<OAuth2Token | undefined> =>
+    invokeWithNormalizedError('getOAuth2Token', requestId, authentication, forceRefresh),
   insecureReadFile: options => invokeWithNormalizedError('insecureReadFile', options),
   insecureReadFileWithEncoding: options => invokeWithNormalizedError('insecureReadFileWithEncoding', options),
   secureReadFile: options => invokeWithNormalizedError('secureReadFile', options),
@@ -287,7 +289,7 @@ const main: Window['main'] = {
   secretStorage,
   electronStorage,
   sync,
-  trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
+  trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
   showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),
@@ -383,19 +385,6 @@ const webUtils: Window['webUtils'] = {
 const database: Window['database'] = {
   invoke: (fnName, ...args) => invokeWithNormalizedError('database.invoke', fnName, ...args),
 };
-
-const servicesProxy = new Proxy({} as Services, {
-  get(_target, serviceName: string) {
-    return new Proxy(
-      {},
-      {
-        get(_target, methodName: string) {
-          return (...args: unknown[]) => invokeWithNormalizedError('services.invoke', serviceName, methodName, ...args);
-        },
-      },
-    );
-  },
-});
 
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);

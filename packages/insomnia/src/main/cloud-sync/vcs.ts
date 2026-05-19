@@ -37,15 +37,15 @@ const requestConflictResolution = (conflicts: MergeConflict[], labels: { ours: s
   const context = syncInvocationContext.getStore();
   invariant(context, 'Sync conflict resolution requires a renderer context');
 
-  const requestId = randomUUID();
+  const handlerId = randomUUID();
   context.sender.send('sync.merge-conflicts', {
-    requestId,
+    handlerId,
     conflicts,
     labels,
   });
 
   return new Promise<MergeConflict[]>((resolve, reject) => {
-    pendingConflictResolutions.set(requestId, {
+    pendingConflictResolutions.set(handlerId, {
       senderId: context.sender.id,
       resolve,
       reject,
@@ -82,34 +82,34 @@ export const invokeMainVCS = async (sender: WebContents, methodName: string, ...
 };
 
 export const resolvePendingSyncConflict = ({
-  requestId,
+  handlerId,
   sender,
   conflicts,
 }: {
-  requestId: string;
+  handlerId: string;
   sender: WebContents;
   conflicts: MergeConflict[];
 }) => {
-  const pendingConflictResolution = pendingConflictResolutions.get(requestId);
-  invariant(pendingConflictResolution, `Unknown sync conflict request: ${requestId}`);
+  const pendingConflictResolution = pendingConflictResolutions.get(handlerId);
+  invariant(pendingConflictResolution, `Unknown sync conflict request: ${handlerId}`);
   invariant(
     pendingConflictResolution.senderId === sender.id,
-    `Sync conflict request ${requestId} was resolved by an unexpected renderer`,
+    `Sync conflict request ${handlerId} was resolved by an unexpected renderer`,
   );
 
-  pendingConflictResolutions.delete(requestId);
+  pendingConflictResolutions.delete(handlerId);
   pendingConflictResolution.resolve(conflicts);
 };
 
-export const cancelPendingSyncConflict = ({ requestId, sender }: { requestId: string; sender: WebContents }) => {
-  const pendingConflictResolution = pendingConflictResolutions.get(requestId);
-  invariant(pendingConflictResolution, `Unknown sync conflict request: ${requestId}`);
+export const cancelPendingSyncConflict = ({ handlerId, sender }: { handlerId: string; sender: WebContents }) => {
+  const pendingConflictResolution = pendingConflictResolutions.get(handlerId);
+  invariant(pendingConflictResolution, `Unknown sync conflict request: ${handlerId}`);
   invariant(
     pendingConflictResolution.senderId === sender.id,
-    `Sync conflict request ${requestId} was cancelled by an unexpected renderer`,
+    `Sync conflict request ${handlerId} was cancelled by an unexpected renderer`,
   );
 
-  pendingConflictResolutions.delete(requestId);
+  pendingConflictResolutions.delete(handlerId);
   pendingConflictResolution.reject(new UserAbortResolveMergeConflictError());
 };
 

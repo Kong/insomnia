@@ -2,9 +2,8 @@ import type { IRuleResult } from '@stoplight/spectral-core';
 import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { SegmentEvent } from '~/ui/analytics';
+import { models, services } from '~/insomnia-data';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -27,8 +26,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   const isLintError = (result: IRuleResult) => result.severity === 0;
 
-  const gitRepositoryId = models.project.isGitProject(project)
-    ? project.gitRepositoryId
+  const gitRepositoryId = models.project.isConnectedGitProject(project)
+    ? models.project.getEffectiveRepoId(project)
     : workspaceMeta?.gitRepositoryId;
 
   const rulesetPath = gitRepositoryId
@@ -54,8 +53,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     workspaceId,
   });
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.generateCollection,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.generateCollection,
     properties: {
       count_requests: scannedResources.map(r => r.requests?.length ?? 0).reduce((a, b) => a + b, 0),
     },

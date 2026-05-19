@@ -1,8 +1,9 @@
 import fs from 'node:fs';
+import type { Readable } from 'node:stream';
+import zlib from 'node:zlib';
 
-import type { ResponseHeader } from '~/insomnia-data';
-import { getBodyBuffer, getBodyStream } from '~/models/helpers/response-operations';
-
+import type { Compression, ResponseHeader } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
 interface MaybeResponse {
   parentId?: string;
@@ -49,11 +50,31 @@ export function init(response?: MaybeResponse) {
       },
 
       getBody() {
-        return getBodyBuffer(response);
+        return services.helpers.getResponseBodyBuffer(response);
       },
 
       getBodyStream() {
-        return getBodyStream(response);
+        // To avoid break the plugin APIs, keep this API as synchronous and move the implementation here.
+        const getResponseBodyStream = (
+          response?: { bodyPath?: string; bodyCompression?: Compression },
+          readFailureValue?: string,
+        ): Readable | string | null => {
+          if (!response?.bodyPath) {
+            return null;
+          }
+          try {
+            fs.statSync(response?.bodyPath);
+          } catch (err) {
+            console.warn('Failed to read response body', err.message);
+            return readFailureValue === undefined ? null : readFailureValue;
+          }
+          if (response?.bodyCompression === 'zip') {
+            return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
+          }
+          return fs.createReadStream(response?.bodyPath);
+        };
+
+        return getResponseBodyStream(response);
       },
 
       setBody(body: Buffer) {

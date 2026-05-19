@@ -28,15 +28,13 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce, isNotNullOrUndefined } from '~/common/misc';
-import { services } from '~/insomnia-data';
-import * as models from '~/models/index';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
@@ -84,8 +82,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
 
-  const gitRepositoryId = models.project.isGitProject(project)
-    ? project.gitRepositoryId
+  const gitRepositoryId = models.project.isConnectedGitProject(project)
+    ? models.project.getEffectiveRepoId(project)
     : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
@@ -169,7 +167,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
 
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }
@@ -406,8 +404,8 @@ const Component = ({ params }: Route.ComponentProps) => {
       name: 'Toggle preview',
       icon: <Icon className="w-3" icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
       action: () => {
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.designerPreviewToggled,
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.designerPreviewToggled,
           properties: {
             status: !isSpecPaneOpen ? 'open' : 'collapsed',
           },
@@ -544,8 +542,8 @@ const Component = ({ params }: Route.ComponentProps) => {
             {isGenerateMockServersWithAIEnabled && (
               <Button
                 onPress={() => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.designerGenerateMockClicked,
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.designerGenerateMockClicked,
                   });
                   setNewMockServerModalOpen(true);
                 }}
@@ -562,8 +560,8 @@ const Component = ({ params }: Route.ComponentProps) => {
               className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               onChange={value => {
                 setIsSpecPaneOpen(value);
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.designerPreviewToggled,
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.designerPreviewToggled,
                   properties: {
                     status: !value ? 'open' : 'collapsed',
                   },

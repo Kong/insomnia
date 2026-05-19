@@ -16,7 +16,7 @@ import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
 import type { GitProject, GitRepository } from '~/insomnia-data';
-import { isScratchpadOrganizationId } from '~/models/organization';
+import { models } from '~/insomnia-data';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
@@ -24,7 +24,7 @@ import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
@@ -74,7 +74,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
   const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
   useEffect(() => {
-    if (!isScratchpadOrganizationId(organizationId)) {
+    if (!models.organization.isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       load({ organizationId });
     }
@@ -459,6 +459,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               });
           },
           onCancelUnresolved: () => {
+            window.main.git.abortMerge({ projectId });
             closeGitProjectStagingModalRef.current?.();
             setIsPulling(false);
             showToast({
@@ -568,6 +569,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       ]
     : [];
 
+  const repoPath = gitRepository?._id
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository._id)
+    : '';
+
   const gitSyncActions: {
     id: string;
     label: string;
@@ -575,6 +580,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
     isDisabled?: boolean;
     action: () => void;
   }[] = [
+    {
+      id: 'open-folder',
+      label: 'Open folder',
+      isDisabled: !repoPath,
+      icon: 'folder-open',
+      action: () => window.shell.openPath(repoPath),
+    },
     {
       id: 'branches',
       label: 'Branches',
@@ -652,8 +664,8 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
             <Button
               onPress={() => {
                 setIsUpdateProjectModalOpen(true);
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.gitSyncButtonClicked,
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.gitSyncButtonClicked,
                 });
               }}
               className="flex h-[25px] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"

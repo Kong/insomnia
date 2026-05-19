@@ -1,8 +1,9 @@
 import { Ajv, type ErrorObject } from 'ajv';
 import * as chai from 'chai';
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
-import { readCurlResponse } from 'insomnia/src/models/helpers/response-operations';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
+
+import { services } from '~/insomnia-data';
 
 import { Cookie, type CookieOptions } from './cookies';
 import { CookieList } from './cookies';
@@ -394,8 +395,7 @@ export async function readBodyFromPath(
   } else if (!response.bodyPath) {
     return '';
   }
-  const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
-  const readResponseResult = await nodejsReadCurlResponse({
+  const readResponseResult = await services.helpers.readCurlResponse({
     bodyPath: response.bodyPath,
     bodyCompression: response.bodyCompression,
   });

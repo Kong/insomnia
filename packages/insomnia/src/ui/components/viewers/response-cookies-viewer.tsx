@@ -1,7 +1,7 @@
 import React, { type FC, useState } from 'react';
 import { Cookie } from 'tough-cookie';
 
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
 
 interface Props {
@@ -64,7 +64,7 @@ export const ResponseCookiesViewer: FC<Props> = props => {
           className="pull-right btn btn--clicky"
           onClick={() => {
             setIsCookieModalOpen(true);
-            window.main.trackSegmentEvent({ event: SegmentEvent.responseCookiesManageCookiesClicked });
+            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.responseCookiesManageCookiesClicked });
           }}
         >
           Manage Cookies
