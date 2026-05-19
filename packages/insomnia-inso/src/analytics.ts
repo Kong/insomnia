@@ -1,7 +1,7 @@
 import os from 'node:os';
 
+import { Analytics } from '@segment/analytics-node';
 import { getSegmentWriteKey } from 'insomnia/src/common/constants';
-import { InsoEvent, InsomniaAnalytics } from 'insomnia-analytics';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { Settings } from '~/insomnia-data';
@@ -10,18 +10,15 @@ import packageJson from '../package.json';
 import neDbAdapter from './db/adapters/ne-db-adapter';
 import { getAppDataDir, getDefaultProductName } from './util';
 
-export { InsoEvent };
+export enum InsoEvent {
+  runTest = 'inso_run_test',
+  runCollection = 'inso_run_collection',
+  lintSpec = 'inso_lint_spec',
+  exportSpec = 'inso_export_spec',
+  script = 'inso_script',
+}
 
-const analytics = new InsomniaAnalytics({
-  writeKey: getSegmentWriteKey(),
-  app: {
-    appName: 'inso',
-    appVersion: process.env.VERSION || packageJson.version,
-    osVersion: () => os.release(),
-    platform: 'cli',
-  },
-});
-
+const analyticsClient = new Analytics({ writeKey: getSegmentWriteKey() });
 let deviceId: string | null = null;
 let localSettings: Settings | null = null;
 
@@ -57,13 +54,22 @@ const getDeviceId = async (): Promise<string> => {
   return deviceId;
 };
 
+const getOsName = (): string => {
+  switch (process.platform) {
+    case 'darwin': {
+      return 'mac';
+    }
+    case 'win32': {
+      return 'windows';
+    }
+    default: {
+      return process.platform;
+    }
+  }
+};
+
 export const trackInsoEvent = async (event: InsoEvent, properties?: Record<string, unknown>): Promise<void> => {
   if (process.env.NODE_ENV === 'test') {
-    return;
-  }
-
-  // new for v13 - provide a way to disable analytics
-  if (process.env.INSO_TELEMETRY_DISABLED) {
     return;
   }
 
@@ -74,10 +80,40 @@ export const trackInsoEvent = async (event: InsoEvent, properties?: Record<strin
 
   try {
     const anonymousId = await getDeviceId();
-    analytics.track({ event, anonymousId, properties });
-  } catch {}
+    const version = process.env.VERSION || packageJson.version;
+
+    analyticsClient.track(
+      {
+        event,
+        anonymousId,
+        properties: {
+          ...properties,
+          platform: 'cli',
+        },
+        context: {
+          app: {
+            name: 'inso',
+            version,
+          },
+          os: {
+            name: getOsName(),
+            version: os.release(),
+          },
+        },
+      },
+      () => {
+        // Silently fail
+      },
+    );
+  } catch {
+    // Silently fail
+  }
 };
 
 export const flushAnalytics = async (): Promise<void> => {
-  await analytics.closeAndFlush(5000);
+  try {
+    await analyticsClient.closeAndFlush({ timeout: 5000 });
+  } catch {
+    // Silently fail
+  }
 };

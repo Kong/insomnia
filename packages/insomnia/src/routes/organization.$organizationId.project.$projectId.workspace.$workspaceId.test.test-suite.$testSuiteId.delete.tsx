@@ -1,7 +1,7 @@
 import { href, redirect } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import { AnalyticsEvent } from '~/ui/analytics';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -16,7 +16,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   await services.unitTestSuite.remove(unitTestSuite);
 
-  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.testSuiteDelete });
+  window.main.trackSegmentEvent({ event: SegmentEvent.testSuiteDelete });
 
   return redirect(
     href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/test`, {

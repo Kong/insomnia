@@ -2,7 +2,7 @@ import { href, redirect } from 'react-router';
 
 import type { Project, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { AnalyticsEvent } from '~/ui/analytics';
+import { SegmentEvent } from '~/ui/analytics';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -52,8 +52,8 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
   await deleteWorkspaceFromLocal(workspace);
 
   if (workspace.scope === 'mock-server') {
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.mockDelete,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockDelete,
     });
   }
 

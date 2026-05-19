@@ -1,7 +1,7 @@
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
-import { AnalyticsEvent } from '../../analytics';
+import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 interface Props {
@@ -23,12 +23,7 @@ export const ProjectEmptyView: FC<Props> = ({
         <Button
           aria-label="Create request collection"
           className="flex w-full max-w-[180px] flex-col items-center justify-center gap-(--padding-xs) rounded-md border border-solid border-(--hl-sm) px-12 py-8 text-(--font-size-sm) shadow-xs transition-all duration-100 hover:bg-(--color-bg) sm:gap-(--padding-sm)"
-          onPress={() => {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.emptyStateSendRequestClicked,
-            });
-            onCreateRequestCollectionWithRequest();
-          }}
+          onPress={onCreateRequestCollectionWithRequest}
         >
           <Icon icon="plus" className="text-xl" />
           Send a request
@@ -36,12 +31,7 @@ export const ProjectEmptyView: FC<Props> = ({
         <Button
           aria-label="Create document"
           className="flex w-full max-w-[180px] flex-col items-center justify-center gap-(--padding-xs) rounded-md border border-solid border-(--hl-sm) px-12 py-8 text-(--font-size-sm) shadow-xs transition-all duration-100 hover:bg-(--color-bg) sm:gap-(--padding-sm)"
-          onPress={() => {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.emptyStateCreateDocumentClicked,
-            });
-            onCreateDesignDocument();
-          }}
+          onPress={onCreateDesignDocument}
         >
           <Icon icon="file" className="text-(--font-size-xl)" />
           Create document
@@ -50,8 +40,8 @@ export const ProjectEmptyView: FC<Props> = ({
           aria-label="Import"
           className="flex w-full max-w-[180px] flex-col items-center justify-center gap-(--padding-xs) rounded-md border border-solid border-(--hl-sm) px-12 py-8 text-(--font-size-sm) shadow-xs transition-all duration-100 hover:bg-(--color-bg) sm:gap-(--padding-sm)"
           onPress={() => {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.importStarted,
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.importStarted,
               properties: {
                 source: 'home-page',
               },

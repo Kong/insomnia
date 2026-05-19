@@ -3,7 +3,7 @@ import { useRevalidator } from 'react-router';
 
 import type { SyncResult } from '../../konnect/sync';
 import { syncKonnect } from '../../konnect/sync';
-import { AnalyticsEvent } from '../analytics';
+import { SegmentEvent } from '../analytics';
 
 const REVALIDATE_DEBOUNCE_MS = 500;
 
@@ -63,8 +63,8 @@ export function useKonnectSync(): UseKonnectSyncResult {
       error: !result.success && !cancelled ? (result.error ?? 'Sync failed') : null,
     });
 
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.kongKonnectSyncCompleted,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.kongKonnectSyncCompleted,
       properties: {
         success: result.success,
         cancelled,

@@ -2,7 +2,7 @@ import React, { type FC, Fragment } from 'react';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
-import { AnalyticsEvent } from '../../../../ui/analytics';
+import { SegmentEvent } from '../../../../ui/analytics';
 
 interface Props {
   onChange: (value: string) => void;
@@ -25,7 +25,7 @@ export const RawEditor: FC<Props> = ({ className, content, contentType, onChange
       mode={contentType}
       placeholder="..."
       onPrettify={() => {
-        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestBodyBeautifyClicked });
+        window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyBeautifyClicked });
       }}
     />
   </Fragment>

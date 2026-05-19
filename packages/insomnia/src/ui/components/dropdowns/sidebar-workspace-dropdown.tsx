@@ -37,7 +37,7 @@ import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import { AnalyticsEvent } from '../../../ui/analytics';
+import { SegmentEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -281,8 +281,8 @@ export const SidebarWorkspaceDropdown = ({
         name: 'Export',
         icon: 'file-export',
         action: () => {
-          window.main.trackAnalyticsEvent({
-            event: AnalyticsEvent.exportStarted,
+          window.main.trackSegmentEvent({
+            event: SegmentEvent.exportStarted,
             properties: { source: `${workspace.scope}-list` },
           });
           if (workspace.scope === 'mock-server') {

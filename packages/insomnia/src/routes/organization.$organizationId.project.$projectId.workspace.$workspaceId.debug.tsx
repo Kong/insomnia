@@ -58,7 +58,7 @@ import { useRequestNewActionFetcher } from '~/routes/organization.$organizationI
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
-import { AnalyticsEvent } from '~/ui/analytics';
+import { SegmentEvent } from '~/ui/analytics';
 import { DropdownHint } from '~/ui/components/base/dropdown/dropdown-hint';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
@@ -807,8 +807,8 @@ const Debug = () => {
                         setFilter(value);
 
                         if (value.trim() !== '') {
-                          window.main.trackAnalyticsEvent({
-                            event: AnalyticsEvent.filterCreatedRequests,
+                          window.main.trackSegmentEvent({
+                            event: SegmentEvent.filterCreatedRequests,
                           });
                         }
                       }}
@@ -829,8 +829,8 @@ const Debug = () => {
                       selectedKey={sortOrder}
                       onSelectionChange={order => {
                         if (order) {
-                          window.main.trackAnalyticsEvent({
-                            event: AnalyticsEvent.requestListSortClicked,
+                          window.main.trackSegmentEvent({
+                            event: SegmentEvent.requestListSortClicked,
                           });
                           setSearchParams({
                             ...Object.fromEntries(searchParams.entries()),
@@ -884,8 +884,8 @@ const Debug = () => {
                         defaultSelected={allExpanded}
                         onChange={() => {
                           setAllExpanded(!allExpanded);
-                          window.main.trackAnalyticsEvent({
-                            event: AnalyticsEvent.requestListExpandCollapseClicked,
+                          window.main.trackSegmentEvent({
+                            event: SegmentEvent.requestListExpandCollapseClicked,
                           });
                           toggleExpandAllFetcher.submit({
                             organizationId,

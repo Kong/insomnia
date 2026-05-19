@@ -11,7 +11,7 @@ import {
   useWorkspaceLoaderFetcher,
   type WorkspaceLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { AnalyticsEvent } from '../../analytics';
+import { SegmentEvent } from '../../analytics';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
 
@@ -358,8 +358,8 @@ export const ExportRequestsModal = ({
                 <Button
                   onPress={() => {
                     if (state?.treeRoot) {
-                      window.main.trackAnalyticsEvent({
-                        event: AnalyticsEvent.exportRequestsChosen,
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.exportRequestsChosen,
                         properties: {
                           totalRequests: state.treeRoot.totalRequests,
                           exported_requests: state.treeRoot.selectedRequests,

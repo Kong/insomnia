@@ -2,7 +2,7 @@ import { href } from 'react-router';
 
 import type { MockRoute } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { AnalyticsEvent } from '~/ui/analytics';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -47,8 +47,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     await services.mockRoute.update(mockRoute, patch);
 
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.mockRouteEdit,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.mockRouteEdit,
     });
 
     return null;

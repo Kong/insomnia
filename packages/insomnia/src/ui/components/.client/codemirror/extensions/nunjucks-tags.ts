@@ -137,7 +137,7 @@ async function _highlightNunjucksTags(
       el.setAttribute('draggable', 'true');
       el.dataset.error = 'off';
       el.dataset.template = tok.string;
-      el.replaceChildren(document.createElement('label'), document.createTextNode(tok.string));
+      el.innerHTML = '<label></label>' + tok.string;
       const mark = this.markText(start, end, {
         // @ts-expect-error not a known property of TextMarkerOptions
         __nunjucks: true,
@@ -295,7 +295,7 @@ async function _updateElementText(
           // @ts-expect-error -- TSCONVERSION
           const foundOption = firstArg.options.find(d => d.value === argData.value);
           const option = foundOption || firstArg.options[0];
-          innerHTML = `${tagDefinition.displayName} ⇒ ${option.displayName}`;
+          innerHTML = `${tagDefinition.displayName} &rArr; ${option.displayName}`;
         } else {
           innerHTML = tagDefinition.displayName || tagData.name;
         }
@@ -333,13 +333,9 @@ async function _updateElementText(
 
   if (dataError === 'on') {
     el.dataset.error = dataError;
-    const label = document.createElement('label');
-    const icon = document.createElement('i');
-    icon.className = 'fa fa-exclamation-triangle';
-    label.append(icon);
-    el.replaceChildren(label, document.createTextNode(cleanedStr));
+    el.innerHTML = '<label><i class="fa fa-exclamation-triangle"></i></label>' + cleanedStr;
   } else {
-    el.replaceChildren(document.createElement('label'), document.createTextNode(innerHTML));
+    el.innerHTML = '<label></label>' + innerHTML;
   }
 
   mark.changed();

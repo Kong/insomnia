@@ -42,7 +42,7 @@ import * as pluginStore from '../../../plugins/context/store';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockServerGenerateRequestCollectionActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
 import { invariant } from '../../../utils/invariant';
-import { AnalyticsEvent } from '../../analytics';
+import { SegmentEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -142,8 +142,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Import',
           icon: <Icon icon="file-import" />,
           action: () => {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.importStarted,
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.importStarted,
               properties: {
                 source: `scratchpad-${activeWorkspace.scope}-menu`,
               },
@@ -157,8 +157,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Export',
           icon: <Icon icon="file-export" />,
           action: () => {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.exportStarted,
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.exportStarted,
               properties: {
                 source: `scratchpad-${activeWorkspace.scope}-menu`,
               },
@@ -203,8 +203,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 name: 'From File',
                 icon: <Icon icon="file-import" />,
                 action: () => {
-                  window.main.trackAnalyticsEvent({
-                    event: AnalyticsEvent.importStarted,
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.importStarted,
                     properties: {
                       source: `${activeWorkspace.scope}-menu`,
                     },
@@ -271,8 +271,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Export',
           icon: <Icon icon="file-export" />,
           action: () => {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.exportStarted,
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.exportStarted,
               properties: {
                 source: `${activeWorkspace.scope}-menu`,
               },

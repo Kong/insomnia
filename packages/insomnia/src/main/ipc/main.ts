@@ -37,8 +37,8 @@ import type {
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginTemplateTag, RenderedRequest } from '../../templating/types';
-import type { AnalyticsEvent } from '../analytics';
-import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
+import type { SegmentEvent } from '../analytics';
+import { setCurrentOrganizationId, trackPageView, trackSegmentEvent } from '../analytics';
 import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
@@ -186,7 +186,7 @@ export interface RendererToMainBridgeAPI {
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
   sync: SyncBridgeAPI;
-  trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
+  trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
   showNunjucksContextMenu: (options: {
@@ -399,13 +399,10 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const folderPath = path.join(app.getPath('userData'), options.folder);
+    const dataPath = app.getPath('userData');
+    const folderPath = path.join(dataPath, options.folder);
     mkdirSync(folderPath, { recursive: true });
-    try {
-      return await readDir(_, { path: folderPath });
-    } catch {
-      return [];
-    }
+    return readDir(_, { path: folderPath });
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
@@ -416,12 +413,9 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn(
-    'trackAnalyticsEvent',
-    (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
-      trackAnalyticsEvent(options.event, options.properties);
-    },
-  );
+  ipcMainOn('trackSegmentEvent', (_, options: { event: SegmentEvent; properties?: Record<string, unknown> }): void => {
+    trackSegmentEvent(options.event, options.properties);
+  });
   ipcMainOn('trackPageView', (_, options: { name: string }): void => {
     trackPageView(options.name);
   });

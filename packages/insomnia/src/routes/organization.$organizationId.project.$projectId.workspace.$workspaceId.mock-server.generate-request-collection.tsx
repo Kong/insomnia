@@ -2,7 +2,7 @@ import { href, redirect } from 'react-router';
 
 import { getMockServiceBinURL } from '~/common/constants';
 import { services } from '~/insomnia-data';
-import { AnalyticsEvent } from '~/ui/analytics';
+import { SegmentEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -62,8 +62,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     });
   }
 
-  window.main.trackAnalyticsEvent({
-    event: AnalyticsEvent.generateCollectionFromMock,
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.generateCollectionFromMock,
     properties: {
       count_requests: mockRoutes.length,
     },

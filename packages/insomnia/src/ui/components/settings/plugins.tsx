@@ -394,7 +394,9 @@ export const Plugins: FC = () => {
                     patchSettings({ npmRegistryUrl: trimmedRegistryUrl });
                   }}
                 />
-                <FieldError className="text-xs text-(--color-danger)">{npmRegistryUrlError}</FieldError>
+                <FieldError className="text-xs text-(--color-danger)">
+                  {npmRegistryUrlError}
+                </FieldError>
               </TextField>
               {npmRegistryUrl && (
                 <Button
@@ -584,10 +586,11 @@ export const Plugins: FC = () => {
             or{' '}
             <Button
               className="text-(--color-surprise) underline"
-              onPress={async () => {
-                await window.main.readOrCreateDataDir({ folder: 'plugins' });
-                window.shell.showItemInFolder(window.path.resolve(window.app.getPath('userData'), 'plugins'));
-              }}
+              onPress={() =>
+                window.shell.showItemInFolder(
+                  window.path.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
+                )
+              }
             >
               Reveal Plugins Folder
             </Button>{' '}

@@ -35,7 +35,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
-import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
+import { PENDING_IMPORT_ATTRIBUTION_KEY, SegmentEvent, trackImportEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
@@ -200,11 +200,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       img-src
             blob:
             data:
-            *
-            insomnia://*
-      ;
-      frame-src
-            blob:
             *
             insomnia://*
       ;
@@ -391,10 +386,10 @@ const Root = () => {
         if (!userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
           window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
-          trackImportEvent(AnalyticsEvent.importLoginRequired);
+          trackImportEvent(SegmentEvent.importLoginRequired);
           return navigate(href('/auth/login'));
         }
-        trackImportEvent(AnalyticsEvent.importStarted, { source: 'import-url' });
+        trackImportEvent(SegmentEvent.importStarted, { source: 'import-url' });
 
         if (params.uri) {
           return setImportObject({
@@ -640,7 +635,7 @@ const Root = () => {
     if (pendingDeepLink && organizationId && organizationId !== models.organization.SCRATCHPAD_ORGANIZATION_ID) {
       window.sessionStorage.removeItem('pendingDeepLinkAfterAuthorize');
       window.sessionStorage.setItem('suppressWelcomeModals', 'true');
-      trackImportEvent(AnalyticsEvent.importResumedAfterLogin);
+      trackImportEvent(SegmentEvent.importResumedAfterLogin);
       window.main.openDeepLink(pendingDeepLink);
     }
   }, [organizationId]);

@@ -66,7 +66,7 @@ import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
 import { invariant } from '../utils/invariant';
-import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
+import { SegmentEvent, trackSegmentEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
 
 // Initialize Git Remote Providers on module load
@@ -153,7 +153,7 @@ export function getErrorMessage(error: unknown): string {
   // Non-Error objects
   return 'Unknown Error';
 }
-export function vcsEventProperties(type: 'git', action: VCSAction, error?: string) {
+export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?: string) {
   return { type, action, error };
 }
 
@@ -1097,8 +1097,8 @@ export const cloneGitRepoAction = async ({
     }
 
     if (!projectId) {
-      trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
-        ...vcsEventProperties('git', 'clone'),
+      trackSegmentEvent(SegmentEvent.vcsSyncStart, {
+        ...vcsSegmentEventProperties('git', 'clone'),
         provider,
         repoId: repoSettingsPatch._id,
       });
@@ -1230,8 +1230,8 @@ export const cloneGitRepoAction = async ({
       });
 
       await database.flushChanges(bufferId);
-      trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-        ...vcsEventProperties('git', 'clone'),
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone'),
         providerName,
         repoId: repoSettingsPatch._id,
       });
@@ -1245,8 +1245,8 @@ export const cloneGitRepoAction = async ({
     const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
-      ...vcsEventProperties('git', 'clone'),
+    trackSegmentEvent(SegmentEvent.vcsSyncStart, {
+      ...vcsSegmentEventProperties('git', 'clone'),
       provider,
       repoId: repoSettingsPatch._id,
     });
@@ -1304,8 +1304,8 @@ export const cloneGitRepoAction = async ({
       });
       await services.apiSpec.getOrCreateForParentId(workspace._id);
 
-      trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-        ...vcsEventProperties('git', 'clone', 'no directory found'),
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
         providerName: provider,
         repoId: repoSettingsPatch._id,
       });
@@ -1323,8 +1323,8 @@ export const cloneGitRepoAction = async ({
       const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
 
       if (workspaces.length === 0) {
-        trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-          ...vcsEventProperties('git', 'clone', 'no workspaces found'),
+        trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+          ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
           providerName: provider,
           repoId: repoSettingsPatch._id,
         });
@@ -1335,8 +1335,8 @@ export const cloneGitRepoAction = async ({
       }
 
       if (workspaces.length > 1) {
-        trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-          ...vcsEventProperties('git', 'clone', 'multiple workspaces found'),
+        trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+          ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'),
           providerName: provider,
           repoId: repoSettingsPatch._id,
         });
@@ -1424,8 +1424,8 @@ export const cloneGitRepoAction = async ({
 
     // Flush DB changes
     await database.flushChanges(bufferId);
-    trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-      ...vcsEventProperties('git', 'clone'),
+    trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+      ...vcsSegmentEventProperties('git', 'clone'),
       providerName: provider,
       repoId: repoSettingsPatch._id,
     });
@@ -1601,8 +1601,8 @@ export const commitToGitRepoAction = async ({
       providerName = credentials.provider;
     }
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'commit'),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'commit'),
       providerName,
       repoId: gitRepository._id,
     });
@@ -1730,8 +1730,8 @@ export const commitAndPushToGitRepoAction = async ({
       providerName = credentials.provider;
     }
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'commit'),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'commit'),
       providerName,
       repoId: repo._id,
     });
@@ -1770,8 +1770,8 @@ export const commitAndPushToGitRepoAction = async ({
   try {
     await GitVCS.push(repo.credentialsId);
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'push'),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'push'),
       providerName,
       repoId: repo._id,
     });
@@ -1804,8 +1804,8 @@ export const commitAndPushToGitRepoAction = async ({
     }
     const errorMessage = getErrorMessage(err);
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'push', errorMessage),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'push', errorMessage),
       providerName,
       repoId: repo._id,
     });
@@ -1846,8 +1846,8 @@ export const createNewGitBranchAction = async ({
       providerName = credentials.provider;
     }
     await GitVCS.checkout(branch);
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'create_branch'),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'create_branch'),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2021,8 +2021,8 @@ export const mergeGitBranch = async ({
     await repoFileWatcherRegistry.importAllFiles(gitRepoId);
     clearConflictSuppression(gitRepository._id);
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'merge_branch'),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'merge_branch'),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2050,8 +2050,8 @@ export const mergeGitBranch = async ({
       errorMessage = `${err.message}, ${err.data.response}`;
     }
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'merge_branch', errorMessage),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'merge_branch', errorMessage),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2086,8 +2086,8 @@ export const deleteGitBranchAction = async ({
       providerName = credentials.provider;
     }
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'delete_branch'),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'delete_branch'),
       providerName,
       repoId: repo._id,
     });
@@ -2163,8 +2163,8 @@ export const pushToGitRemoteAction = async ({
     const bufferId = await database.bufferChanges();
     await GitVCS.push(gitRepository.credentialsId);
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', force ? 'force_push' : 'push'),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2208,8 +2208,8 @@ export const pushToGitRemoteAction = async ({
     }
     const errorMessage = getErrorMessage(err);
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'push', errorMessage),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'push', errorMessage),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2277,8 +2277,8 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     await repoFileWatcherRegistry.importAllFiles(gitRepository._id);
     clearConflictSuppression(repoId);
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'pull'),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'pull'),
       providerName: credentials.provider,
       repoId: gitRepository._id,
     });
@@ -2330,8 +2330,8 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
       providerName = credentials.provider;
     }
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'pull', errorMessage),
+    trackSegmentEvent(SegmentEvent.vcsAction, {
+      ...vcsSegmentEventProperties('git', 'pull', errorMessage),
       providerName,
       repoId: gitRepository._id,
     });
@@ -2788,9 +2788,9 @@ async function completeSignInToGitProvider({
     }
 
     if (isEditing) {
-      trackAnalyticsEvent(AnalyticsEvent.gitAuthenticationUpdated, { provider });
+      trackSegmentEvent(SegmentEvent.gitAuthenticationUpdated, { provider });
     } else {
-      trackAnalyticsEvent(AnalyticsEvent.gitAuthenticationCompleted, { provider });
+      trackSegmentEvent(SegmentEvent.gitAuthenticationCompleted, { provider });
     }
 
     return {};

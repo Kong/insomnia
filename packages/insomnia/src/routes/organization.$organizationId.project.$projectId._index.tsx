@@ -37,7 +37,7 @@ import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organizatio
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
+import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
@@ -389,7 +389,7 @@ const Component = () => {
                   onChange={filter => {
                     setWorkspaceListFilter(filter);
                     if (filter.trim() !== '') {
-                      trackOnceDaily(AnalyticsEvent.homepageFiltered);
+                      trackOnceDaily(SegmentEvent.homepageFiltered);
                     }
                   }}
                 >
@@ -483,8 +483,8 @@ const Component = () => {
 
                 <Button
                   onPress={() => {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.importStarted,
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.importStarted,
                       properties: {
                         source: 'project',
                       },

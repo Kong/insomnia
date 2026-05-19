@@ -7,7 +7,7 @@ import * as reactUse from 'react-use';
 
 import { logout } from '~/account/session';
 import { Icon } from '~/basic-components/icon';
-import { DEFAULT_SIDEBAR_SIZE, isKonnectSyncEnabled } from '~/common/constants';
+import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import {
   CheckAllProjectSyncStatus,
   getAllLocalFiles,
@@ -186,10 +186,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
           collapsible
         >
           <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-            <ProjectNavigationSidebar
-              storageRules={storageRules}
-              konnectSyncEnabled={isKonnectSyncEnabled() && features.konnectSync.enabled}
-            />
+            <ProjectNavigationSidebar storageRules={storageRules} konnectSyncEnabled={features.konnectSync.enabled} />
             {isScratchPad && <ScratchPadTutorialPanel />}
             {!isLearningFeatureDismissed && learningFeature?.active && (
               <div className="flex shrink-0 flex-col gap-2 p-(--padding-sm)">

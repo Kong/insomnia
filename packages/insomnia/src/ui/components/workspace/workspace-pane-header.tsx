@@ -5,7 +5,7 @@ import { isNotNullOrUndefined } from '~/common/misc';
 import { type McpRequest, models } from '~/insomnia-data';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { AnalyticsEvent } from '~/ui/analytics';
+import { SegmentEvent } from '~/ui/analytics';
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -68,8 +68,8 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
               onOpenChange={isOpen => {
                 setIsEnvironmentPickerOpen(isOpen);
                 if (isOpen) {
-                  window.main.trackAnalyticsEvent({
-                    event: AnalyticsEvent.requestEnvironmentClicked,
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.requestEnvironmentClicked,
                   });
                 }
               }}
@@ -79,8 +79,8 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
               <Button
                 aria-label="Add Cookies"
                 onPress={() => {
-                  window.main.trackAnalyticsEvent({
-                    event: AnalyticsEvent.requestAddCookiesClicked,
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.requestAddCookiesClicked,
                   });
                   setIsCookieModalOpen(true);
                 }}
@@ -95,8 +95,8 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
             <Button
               aria-label="Add Certificates"
               onPress={() => {
-                window.main.trackAnalyticsEvent({
-                  event: AnalyticsEvent.requestAddCertificatesClicked,
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.requestAddCertificatesClicked,
                 });
                 setCertificatesModalOpen(true);
               }}

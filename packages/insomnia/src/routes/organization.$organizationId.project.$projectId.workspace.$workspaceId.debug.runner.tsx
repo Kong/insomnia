@@ -32,7 +32,7 @@ import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { sendActionImplementation } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
-import { AnalyticsEvent } from '~/ui/analytics';
+import { SegmentEvent } from '~/ui/analytics';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { HelpTooltip } from '~/ui/components/help-tooltip';
@@ -270,8 +270,8 @@ export const Runner: FC = () => {
     }
     setIsRunning(true);
 
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.collectionRunExecute,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.collectionRunExecute,
       properties: { plan: organizationData?.currentPlan?.type || 'scratchpad', iterations: iterationCount },
     });
 
