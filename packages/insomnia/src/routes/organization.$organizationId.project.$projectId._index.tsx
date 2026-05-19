@@ -159,6 +159,7 @@ const Component = () => {
     scope: WorkspaceScope;
     isOpen: boolean;
     redirect?: boolean;
+    source?: string;
   } | null>({
     scope: 'collection',
     isOpen: false,
@@ -250,12 +251,14 @@ const Component = () => {
       },
     }));
 
-  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
-  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
-  const createNewMockServer = () =>
-    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
-  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
-  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
+  const createNewCollection = (source: string) =>
+    setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source });
+  const createNewDocument = (source: string) => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source });
+  const createNewMockServer = (source: string) =>
+    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source });
+  const createNewGlobalEnvironment = (source: string) =>
+    setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source });
+  const createNewMcpClient = (source: string) => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source });
 
   const createNewCollectionWithRequest = () => {
     if (!activeProject) {
@@ -268,6 +271,7 @@ const Component = () => {
       name: 'My first collection',
       scope: 'collection',
       withRequest: true,
+      source: 'home-page',
     });
   };
 
