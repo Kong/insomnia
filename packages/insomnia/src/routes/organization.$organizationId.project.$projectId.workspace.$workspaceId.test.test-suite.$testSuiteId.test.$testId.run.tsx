@@ -5,7 +5,7 @@ import { database } from '~/common/database';
 import type { UnitTest } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -53,7 +53,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       href(
@@ -94,7 +94,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       href(

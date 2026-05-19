@@ -10,7 +10,7 @@ import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
 import { HeaderInviteButton } from '~/ui/components/header-invite-button';
@@ -232,7 +232,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     organizationId={organizationId}
                     organizations={organizations || []}
                     onSelect={id => {
-                      window.main.trackSegmentEvent({ event: SegmentEvent.organizationSwitched });
+                      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.organizationSwitched });
                       navigate(`/organization/${id}`);
                     }}
                     currentPlan={currentPlan}
@@ -297,8 +297,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       className="flex grow-0 items-center justify-center px-2 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs)"
                       onChange={flag => {
                         setIsMinimal(!flag);
-                        window.main.trackSegmentEvent({
-                          event: SegmentEvent.statusbarTopbarToggled,
+                        window.main.trackAnalyticsEvent({
+                          event: AnalyticsEvent.statusbarTopbarToggled,
                           properties: {
                             status: !flag ? 'minimal' : 'expanded',
                           },
@@ -359,8 +359,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                         onPress={() => {
-                          window.main.trackSegmentEvent({
-                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          window.main.trackAnalyticsEvent({
+                            event: AnalyticsEvent.statusbarOrphanedProjectsClicked,
                           });
                           showModal(SettingsModal, { tab: 'data' });
                         }}
@@ -375,8 +375,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                         onPress={() => {
-                          window.main.trackSegmentEvent({
-                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          window.main.trackAnalyticsEvent({
+                            event: AnalyticsEvent.statusbarOrphanedProjectsClicked,
                           });
                           showModal(SettingsModal, { tab: 'data' });
                         }}

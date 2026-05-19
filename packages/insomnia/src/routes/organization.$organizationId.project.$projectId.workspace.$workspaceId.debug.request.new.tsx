@@ -10,7 +10,7 @@ import {
 } from '~/common/constants';
 import type { Request, RequestBody, RequestParameter } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -126,8 +126,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 
   const certificates = await services.clientCertificate.findByParentId(workspaceId);
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.requestCreated,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.requestCreated,
     properties: {
       requestType,
       protocol: requestType,

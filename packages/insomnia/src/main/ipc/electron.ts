@@ -192,7 +192,7 @@ export type MainOnChannels =
   | 'socketIO.event.on'
   | 'startExecution'
   | 'trackPageView'
-  | 'trackSegmentEvent'
+  | 'trackAnalyticsEvent'
   | 'updateLatestStepName'
   | 'webSocket.close'
   | 'webSocket.closeAll'

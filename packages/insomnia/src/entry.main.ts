@@ -21,7 +21,7 @@ import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
 import { isMac } from './common/platform';
-import { SegmentEvent, trackSegmentEvent } from './main/analytics';
+import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerSyncHandlers } from './main/cloud-sync/ipc';
@@ -365,7 +365,7 @@ async function _trackStats() {
 
   const settings = await services.settings.get();
 
-  trackSegmentEvent(SegmentEvent.appStarted, {
+  trackAnalyticsEvent(AnalyticsEvent.appStarted, {
     localProjects,
     remoteProjects,
     createdRequests: stats.createdRequests,

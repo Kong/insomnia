@@ -51,7 +51,6 @@
     "shellwords": "^1.0.1"
   },
   "dependencies": {
-    "@segment/analytics-node": "^2.2.1",
     "@seald-io/nedb": "^4.1.1",
     "@stoplight/spectral-core": "^1.22.0",
     "@stoplight/spectral-formats": "^1.8.2",

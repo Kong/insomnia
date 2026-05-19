@@ -5,8 +5,9 @@ import { test } from '../../playwright/test';
 test('can send requests', async ({ page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+  const statusTag = page.getByTestId('response-pane').getByTestId('response-status-tag');
   const responseBody = page.getByTestId('response-pane');
+  const responsePreviewBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible');
 
   await insomnia.projectPage.importFixture('smoke-test-collection.yaml');
 
@@ -36,10 +37,10 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('"id": "1"');
+  await expect.soft(responsePreviewBody).toContainText('"id": "1"');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
-  await expect.soft(responseBody).toContainText('{"id":"1"}');
+  await expect.soft(responsePreviewBody).toContainText('{"id":"1"}');
 
   await insomnia.navigationSidebar.clickRequestOrFolder('connects to event stream and shows ping response');
   await expect
@@ -47,7 +48,7 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Connect' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await page.getByRole('tab', { name: 'Console' }).click();
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('Connected to 127.0.0.1');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Disconnect' }).click();
 
@@ -61,7 +62,7 @@ test('can send requests', async ({ page, insomnia }) => {
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
-  await expect.soft(responseBody).toContainText('a,b,c');
+  await expect.soft(responsePreviewBody).toContainText('a,b,c');
 
   await insomnia.navigationSidebar.clickRequestOrFolder('sends dummy.xml request and shows raw response');
   await expect
@@ -71,8 +72,8 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('xml version="1.0"');
-  await expect.soft(responseBody).toContainText('<LoginResult>');
+  await expect.soft(responsePreviewBody).toContainText('xml version="1.0"');
+  await expect.soft(responsePreviewBody).toContainText('<LoginResult>');
 
   await insomnia.navigationSidebar.clickRequestOrFolder('sends dummy.pdf request and shows rich response');
   await expect
@@ -82,13 +83,34 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await page.getByRole('tab', { name: 'Console' }).click();
+
+  const pdfIframe = page.getByTestId('ResponsePDFView');
+  await expect.soft(pdfIframe).toBeVisible();
+  await expect.soft(pdfIframe).toHaveAttribute('src', /^blob:/);
+
+  // find Electron/Chromium's built-in PDF viewer extension
+  await expect
+    .poll(() => page.frames().some(f => f.url().startsWith('chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai')), {
+      timeout: 5000,
+      message: 'Expected Chromium built-in PDF viewer extension frame to mount inside the PDF preview iframe',
+    })
+    .toBe(true);
+
+  await expect.soft(pdfIframe).toHaveScreenshot('dummy-pdf-preview.png', {
+    animations: 'disabled',
+    maxDiffPixelRatio: 0.15, // 15% discrepancy allowed for CI/environment differences
+    timeout: 5000,
+  });
+
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
   await page.locator('pre').filter({ hasText: '< Content-Type: application/pdf' }).click();
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Preview' }).click();
 
   await insomnia.navigationSidebar.clickRequestOrFolder('sends request with basic authentication');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('basic auth received');
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Preview' }).click();
+  await expect.soft(responsePreviewBody).toContainText('basic auth received');
 
   await insomnia.navigationSidebar.clickRequestOrFolder('sends request with cookie and get cookie in response');
   await expect
@@ -96,7 +118,7 @@ test('can send requests', async ({ page, insomnia }) => {
     .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await page.getByRole('tab', { name: 'Console' }).click();
+  await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('Set-Cookie: insomnia-test-cookie=value123');
 
   await insomnia.navigationSidebar.clickRequestOrFolder('delayed request');

@@ -7,7 +7,7 @@ import { AI_PLUGIN_NAME, isKonnectSyncEnabled } from '~/common/constants';
 import { models } from '~/insomnia-data';
 import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { KonnectSettings } from '~/ui/components/settings/konnect-settings';
@@ -105,8 +105,8 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           onSelectionChange={key => {
             setDefaultTabKey(key.toString());
 
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.preferencesViewed,
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.preferencesViewed,
               properties: { tab: key.toString() },
             });
           }}
@@ -260,8 +260,8 @@ SettingsModal.displayName = 'SettingsModal';
 export const showSettingsModal = (options?: { tab?: SettingsModalTabKey }) => {
   showModal(SettingsModal, options);
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.preferencesViewed,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.preferencesViewed,
     properties: { tab: options?.tab || 'general' },
   });
 };
