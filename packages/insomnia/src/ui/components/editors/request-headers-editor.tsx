@@ -2,11 +2,11 @@ import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import type { RequestHeader } from '~/insomnia-data';
-import { invariant } from '~/insomnia-data/common';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
+import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 

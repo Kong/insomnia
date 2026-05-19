@@ -1,7 +1,6 @@
 import React, { type FC, Fragment } from 'react';
 
-import { isMac, strings } from '~/insomnia-data/common';
-import { type HttpVersion, HttpVersions, UpdateChannel } from '~/insomnia-data/common';
+import { type HttpVersion, HttpVersions, isMac, strings, UpdateChannel } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 

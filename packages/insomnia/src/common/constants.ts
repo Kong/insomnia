@@ -106,7 +106,6 @@ export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomn
 
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
-export { getMockServiceURL };
 
 export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
   if (!mockServer.useInsomniaCloud) {

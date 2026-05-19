@@ -2,8 +2,6 @@ import { appendFile } from 'node:fs/promises';
 
 import * as _ from 'es-toolkit/compat';
 
-import { invariant } from '~/insomnia-data/common';
-
 import { initInsomniaObject, InsomniaObject } from '../../insomnia-scripting-environment/src/objects';
 import {
   getNewConsole,
@@ -14,6 +12,7 @@ import {
   type RequestContext,
 } from '../../insomnia-scripting-environment/src/objects';
 import { requireInterceptor } from './scripting/require-interceptor';
+import { invariant } from './utils/invariant';
 
 export const runScript = async ({
   script,

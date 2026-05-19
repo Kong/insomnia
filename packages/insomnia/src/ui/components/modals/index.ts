@@ -1,5 +1,4 @@
-import { invariant } from '~/insomnia-data/common';
-
+import { invariant } from '../../../utils/invariant';
 import type { ModalProps } from '../base/modal';
 import { ErrorModal, type ErrorModalOptions } from './error-modal';
 

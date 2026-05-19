@@ -24,7 +24,6 @@ import * as reactUse from 'react-use';
 
 import type { Request } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { invariant } from '~/insomnia-data/common';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
@@ -38,6 +37,7 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../../../network/network';
+import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
