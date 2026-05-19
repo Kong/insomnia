@@ -371,6 +371,7 @@ const main: Window['main'] = {
     hasResponseHooks: () => invokeWithNormalizedError('plugins.hasResponseHooks'),
     applyRequestHooks: (args: ApplyRequestHooksArgs) => invokeWithNormalizedError('plugins.applyRequestHooks', args),
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokeWithNormalizedError('plugins.applyResponseHooks', args),
+    getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },
   notifyPluginPromptResult: (id: string, value: string | null) =>
     ipcRenderer.send('plugin-ui-prompt-result', { id, value }),

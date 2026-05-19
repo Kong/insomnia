@@ -86,4 +86,23 @@ export interface PluginsBridgeAPI {
   hasResponseHooks: () => Promise<boolean>;
   applyRequestHooks: (args: ApplyRequestHooksArgs) => Promise<RenderedRequest>;
   applyResponseHooks: (args: ApplyResponseHooksArgs) => Promise<ResponsePatch>;
+  getBridgeMetrics: () => Promise<PluginBridgeMetrics>;
+}
+
+export interface PluginBridgeMethodMetrics {
+  ok: number;
+  error: number;
+  timeout: number;
+  totalDurationMs: number;
+  maxDurationMs: number;
+  avgDurationMs: number;
+}
+
+export interface PluginBridgeMetrics {
+  windowStartups: number;
+  windowCrashes: number;
+  windowStartupMsLast: number | null;
+  windowReady: boolean;
+  pendingInvocations: number;
+  perMethod: Record<string, PluginBridgeMethodMetrics>;
 }
