@@ -54,7 +54,6 @@ describe('generateId()', () => {
 });
 
 describe('filterHeaders()', () => {
-  // @ts-expect
   it('handles bad headers', () => {
     // @ts-expect-error
     expect(filterHeaders(null, null)).toEqual([]);
