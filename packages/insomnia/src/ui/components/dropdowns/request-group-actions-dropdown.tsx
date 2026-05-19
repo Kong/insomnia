@@ -79,6 +79,9 @@ export const RequestGroupActionsDropdown = ({
       requestType,
       parentId,
       req,
+      metrics: {
+        source: 'sidebar',
+      }
     });
 
   const onOpen = async () => {

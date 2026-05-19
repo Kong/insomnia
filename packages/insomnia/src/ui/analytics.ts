@@ -1,4 +1,4 @@
-import { AnalyticsEvent } from 'insomnia-analytics/events';
+import type { AnalyticsEvent } from 'insomnia-analytics/events';
 
 export { AnalyticsEvent } from 'insomnia-analytics/events';
 
@@ -48,12 +48,6 @@ export function trackImportEvent(event: AnalyticsEvent, properties: Record<strin
   });
 }
 
-export function makeRequestCreatedEvent(
-  requestType: 'HTTP' | 'Event Stream' | 'GraphQL' | 'gRPC' | 'WebSocket' | 'SocketIO',
-  source: 'tab-list' | 'sidebar',
-) {
-  return {
-    event: AnalyticsEvent.requestCreated,
-    properties: { requestType, source },
-  };
+export interface RequestCreatedMetricsProperties {
+  source: 'sidebar' | 'shortcut' | 'tab-list' | 'placeholder-request-pane' | 'add-request-to-collection-modal';
 }
