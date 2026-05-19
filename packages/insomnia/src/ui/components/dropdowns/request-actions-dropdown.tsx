@@ -16,7 +16,7 @@ import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { exportHarRequest } from '../../../common/har';
@@ -79,7 +79,7 @@ export const RequestActionsDropdown = ({
   const tabNavigate = useTabNavigate();
 
   const openInNewTab = async () => {
-    window.main.trackSegmentEvent({ event: SegmentEvent.requestOpenInNewTabClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestOpenInNewTabClicked });
     tabNavigate(
       {
         organization: organizationId,
@@ -103,7 +103,7 @@ export const RequestActionsDropdown = ({
     if (!request) {
       return;
     }
-    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuDuplicateClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuDuplicateClicked });
 
     showModal(PromptModal, {
       title: 'Duplicate Request',
@@ -143,8 +143,8 @@ export const RequestActionsDropdown = ({
 
   const generateCode = () => {
     if (isRequest(request)) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.generateCodeClicked,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.generateCodeClicked,
       });
 
       showModal(GenerateCodeModal, { request });
@@ -162,8 +162,8 @@ export const RequestActionsDropdown = ({
         window.clipboard.writeText(cmd);
       }
 
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.copyAsCurl,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.copyAsCurl,
       });
     } catch (err) {
       showModal(AlertModal, {
@@ -174,7 +174,7 @@ export const RequestActionsDropdown = ({
   };
 
   const togglePin = () => {
-    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuPinClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuPinClicked });
     patchRequestMeta(request._id, { pinned: !isPinned });
   };
 
@@ -281,7 +281,7 @@ export const RequestActionsDropdown = ({
           id: 'Rename',
           name: 'Rename',
           action: () => {
-            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuRenameClicked });
+            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuRenameClicked });
             onRename();
           },
           icon: 'edit',
@@ -299,7 +299,7 @@ export const RequestActionsDropdown = ({
           icon: 'gear',
           hint: hotKeyRegistry.request_showSettings,
           action: () => {
-            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuSettingsClicked });
+            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuSettingsClicked });
             setIsSettingsModalOpen(true);
           },
         },

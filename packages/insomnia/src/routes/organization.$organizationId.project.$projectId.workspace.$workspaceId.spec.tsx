@@ -27,14 +27,14 @@ import YAML from 'yaml';
 
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { debounce } from '~/common/misc';
+import { debounce, isNotNullOrUndefined } from '~/common/misc';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
@@ -403,8 +403,8 @@ const Component = ({ params }: Route.ComponentProps) => {
       name: 'Toggle preview',
       icon: <Icon className="w-3" icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
       action: () => {
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.designerPreviewToggled,
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.designerPreviewToggled,
           properties: {
             status: !isSpecPaneOpen ? 'open' : 'collapsed',
           },

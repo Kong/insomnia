@@ -34,7 +34,7 @@ import {
   type McpRequestLoaderData,
   useRequestLoaderData,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
+import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { McpActionsDropdown } from '~/ui/components/dropdowns/mcp-actions-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
@@ -378,7 +378,7 @@ export const McpPane = () => {
                   onChange={value => {
                     setFilter(value);
                     if (value) {
-                      trackOnceDaily(SegmentEvent.mcpListFiltered);
+                      trackOnceDaily(AnalyticsEvent.mcpListFiltered);
                     }
                   }}
                 >

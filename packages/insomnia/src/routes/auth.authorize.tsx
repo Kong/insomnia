@@ -4,7 +4,7 @@ import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
 import { validateVaultKey } from '~/ui/vault-key.client';
@@ -32,8 +32,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     };
   }
   console.log('Login successful');
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.loginSuccess,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.loginSuccess,
   });
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
   const userSession = await services.userSession.getOrCreate();

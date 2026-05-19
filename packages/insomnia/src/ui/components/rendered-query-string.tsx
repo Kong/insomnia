@@ -11,7 +11,7 @@ import type {
   WebSocketRequest,
 } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
@@ -141,8 +141,8 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         message: `Your URL is quite long, so only the first ${MAX_URL_LENGTH} characters were copied.`,
       });
     } else {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.requestUrlCopied,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.requestUrlCopied,
       });
     }
   }, [tooLong]);
