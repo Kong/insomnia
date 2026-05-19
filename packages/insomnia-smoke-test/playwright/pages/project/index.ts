@@ -3,6 +3,7 @@ import type { ElectronApplication, Page } from '@playwright/test';
 import { loadFixture } from '../../paths';
 import { mockSaveDialogForFile } from '../../utils';
 import { BasePage } from '../base-page';
+import { NavigationSidebar } from '../components/navigation-sidebar';
 import { WorkspaceListComponent } from './workspace-list';
 
 export type ProjectStorageType = 'local' | 'remote' | 'git';
@@ -25,12 +26,14 @@ const storageTypeNames: Record<ProjectStorageType, string> = {
 export class ProjectPage extends BasePage {
   /** The workspace list (files). */
   readonly workspaceList: WorkspaceListComponent;
+  readonly sidebar: NavigationSidebar;
   constructor(
     readonly page: Page,
     readonly app: ElectronApplication,
   ) {
     super(page);
     this.workspaceList = new WorkspaceListComponent(page);
+    this.sidebar = new NavigationSidebar(page);
   }
 
   /** The root app container. */
@@ -81,7 +84,7 @@ export class ProjectPage extends BasePage {
   }
 
   async createGitSyncProject(name = 'My Git Project'): Promise<void> {
-    await this.page.getByRole('button', { name: 'Create new Project' }).click();
+    await this.sidebar.clickNewProject();
     await this.page.getByRole('textbox', { name: 'Project name' }).click();
     await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
     await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
@@ -103,8 +106,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('option', { name: /Magic/ }).click();
     await this.page.getByRole('button', { name: /Magic/ }).click();
     await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
-    await this.page.getByText('Git Project').waitFor({ state: 'visible', timeout: 10_000 });
-    await this.page.getByText('Git Project').click();
+    await this.sidebar.selectProject(name);
   }
 
   // ===========================================================================
