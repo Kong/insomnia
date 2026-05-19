@@ -8,23 +8,23 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 
-import { getCurrentSessionId } from '~/account/session';
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import type { Project, RemoteProject, Stats } from '~/insomnia-data';
-import { database, initDatabase, initServices, services } from '~/insomnia-data';
+import { database, initDatabase, initServices, models, services } from '~/insomnia-data';
 import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
+import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
-import { runGitCredentialsMigration } from '~/sync/git/migrations';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
 import { isMac } from './common/platform';
-import { SegmentEvent, trackSegmentEvent } from './main/analytics';
+import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
+import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { registerGitServiceAPI } from './main/git-service';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
@@ -41,7 +41,7 @@ import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import * as models from './models/index';
+
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
@@ -94,6 +94,7 @@ app.on('ready', async () => {
   registerMcpHandlers();
   registerSecretStorageHandlers();
   registerElectronStorageHandlers();
+  registerSyncHandlers();
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
@@ -221,7 +222,7 @@ const _launchApp = async () => {
     }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
-  if (!process.env.PLAYWRIGHT) {
+  if (!process.env.PLAYWRIGHT_TEST) {
     // Deep linking logic - https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app
     const gotTheLock = app.requestSingleInstanceLock();
     if (!gotTheLock) {
@@ -254,15 +255,6 @@ const _launchApp = async () => {
           window.focus();
         } else {
           window = windowUtils.createWindowsAndReturnMain();
-        }
-        // Block imports when not logged in
-        const isImportDeeplink = url.includes('://app/import');
-        const isLoggedIn = (await getCurrentSessionId()) ? true : false;
-        const shouldShowLoginPrompt = isImportDeeplink && !isLoggedIn;
-        if (shouldShowLoginPrompt) {
-          const title = encodeURIComponent('You must be logged in to open this link');
-          const message = encodeURIComponent('Please log in and try again.');
-          return window.webContents.send('shell:open', `insomnia://app/alert?title=${title}&message=${message}`);
         }
         return window.webContents.send('shell:open', url);
       };
@@ -297,7 +289,7 @@ async function _createModelInstances() {
   await services.stats.get();
   await services.settings.getOrCreate();
   try {
-    const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchpadProject = await services.project.get(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
@@ -373,7 +365,7 @@ async function _trackStats() {
 
   const settings = await services.settings.get();
 
-  trackSegmentEvent(SegmentEvent.appStarted, {
+  trackAnalyticsEvent(AnalyticsEvent.appStarted, {
     localProjects,
     remoteProjects,
     createdRequests: stats.createdRequests,

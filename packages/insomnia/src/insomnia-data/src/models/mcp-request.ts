@@ -1,9 +1,8 @@
 import type { Root } from '@modelcontextprotocol/sdk/types.js';
 
-import type { RequestAuthentication, RequestHeader } from '~/insomnia-data';
-import type { BaseModel } from '~/models/types';
-
+import type { BaseModel } from './base-types';
 import type { EnvironmentKvPairData } from './environment';
+import type { RequestAuthentication, RequestHeader } from './request';
 
 export const name = 'MCP Request';
 export const type = 'McpRequest';

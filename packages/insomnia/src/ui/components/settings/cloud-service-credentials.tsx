@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
-import { type CloudProviderCredential, type CloudProviderName, models } from '~/insomnia-data';
+import type { CloudProviderCredential, CloudProviderName } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
 

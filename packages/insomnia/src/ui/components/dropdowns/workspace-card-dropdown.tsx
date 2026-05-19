@@ -21,7 +21,7 @@ import { getDocumentActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
 import * as pluginData from '../../../plugins/context/data';
 import * as pluginStore from '../../../plugins/context/store';
-import { SegmentEvent } from '../../analytics';
+import { AnalyticsEvent } from '../../analytics';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
@@ -178,8 +178,8 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                 label="Import"
                 icon="file-import"
                 onClick={() => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.importStarted,
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.importStarted,
                     properties: {
                       source: `${workspace.scope}-list`,
                     },
@@ -195,8 +195,8 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
               label="Export"
               icon="file-export"
               onClick={() => {
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.exportStarted,
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.exportStarted,
                   properties: {
                     source: `${workspace.scope}-list`,
                   },

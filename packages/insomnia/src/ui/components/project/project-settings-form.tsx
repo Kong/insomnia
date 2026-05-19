@@ -11,6 +11,8 @@ import {
   Select,
   SelectValue,
   TextField,
+  Tooltip,
+  TooltipTrigger,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -33,6 +35,7 @@ import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
+import { platform } from '../../../common/platform';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 
@@ -156,6 +159,16 @@ export const ProjectSettingsForm: FC<Props> = ({
     gitRepository?.credentialsId &&
     selectedProvider;
 
+  const showRepoPath =
+    storageType === 'git' &&
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID &&
+    Boolean(gitRepository?._id);
+
+  const repoPath = showRepoPath
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository!._id)
+    : '';
+
   const showGitRepoForm =
     storageType === 'git' &&
     ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
@@ -184,6 +197,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const showEmailSelector = showGitConnectionInfo && canFetchEmails;
   const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (canFetchEmails && selectedCredential && emailsFetcher.state === 'idle' && !emailsFetcher.data) {
@@ -199,13 +213,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     if (showGitConnectionInfo && gitRepository?.uri && gitRepository?._id && project?._id) {
       validateCredentialsFetcherLoad({ projectId: project._id });
     }
-  }, [
-    showGitConnectionInfo,
-    gitRepository?.uri,
-    gitRepository?._id,
-    project?._id,
-    validateCredentialsFetcherLoad,
-  ]);
+  }, [showGitConnectionInfo, gitRepository?.uri, gitRepository?._id, project?._id, validateCredentialsFetcherLoad]);
 
   const credentialsValidationErrors =
     validateCredentialsFetcher.data && 'errors' in validateCredentialsFetcher.data
@@ -304,6 +312,57 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </LearnMoreLink>
               }
             />
+          )}
+
+          {showRepoPath && (
+            <>
+              <div className="flex flex-col gap-1">
+                <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
+                  Path to local files
+                </Label>
+                <div className="text-xs text-(--hl-xl)">
+                  Can be used to manage file changes with git.{' '}
+                  <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
+                    Learn more ↗
+                  </a>
+                </div>
+                <div className="flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+                  <span className="min-w-0 flex-1 truncate" title={repoPath}>
+                    {repoPath}
+                  </span>
+                  <Button
+                    onPress={() => {
+                      const cmd =
+                        platform === 'win32'
+                          ? `cd "${repoPath.replace(/"/g, '\\"')}"`
+                          : `cd '${repoPath.replace(/'/g, "'\\''")}'`;
+                      window.clipboard.writeText(cmd);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+                    aria-label="Copy cd command for repository path"
+                  >
+                    <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
+                  </Button>
+                  <TooltipTrigger>
+                    <Button
+                      onPress={() => window.shell.openPath(repoPath)}
+                      className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+                      aria-label="Open in file system"
+                    >
+                      <Icon icon="folder-open" className="size-4" />
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+                    >
+                      Open in file system
+                    </Tooltip>
+                  </TooltipTrigger>
+                </div>
+              </div>
+            </>
           )}
 
           {showGitConnectionInfo && (

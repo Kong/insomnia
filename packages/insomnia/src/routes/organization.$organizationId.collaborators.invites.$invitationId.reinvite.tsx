@@ -10,7 +10,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, invitationId } = params;
 
   try {
-    const user = await services.userSession.getOrCreate();
+    const user = await services.userSession.get();
     const sessionId = user.id;
 
     const response = await reinvite({

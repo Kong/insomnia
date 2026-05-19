@@ -13,14 +13,17 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useFetchers,
   useNavigate,
   useParams,
+  useRevalidator,
   useRouteLoaderData,
 } from 'react-router';
+import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -32,7 +35,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
@@ -158,7 +161,7 @@ export const useRootLoaderData = () => {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
   const workspaceCount = await services.workspace.count();
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   const cloudCredentials = await services.cloudCredential.all();
 
   return {
@@ -197,6 +200,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       img-src
             blob:
             data:
+            *
+            insomnia://*
+      ;
+      frame-src
+            blob:
             *
             insomnia://*
       ;
@@ -321,6 +329,19 @@ const Root = () => {
   });
   const navigate = useNavigate();
 
+  const { revalidate } = useRevalidator();
+  const inflightFetchers = useFetchers();
+  const ifInSubmission = inflightFetchers.some(f => f.formMethod === 'POST');
+  const latestInSubmission = useLatest(ifInSubmission);
+
+  useEffect(() => {
+    return window.main.on('git.db-synced', () => {
+      if (!latestInSubmission.current) {
+        revalidate();
+      }
+    });
+  }, [latestInSubmission, revalidate]);
+
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
       // Get the url without params
@@ -352,12 +373,28 @@ const Root = () => {
       }
       // Supports params: uri, curl, origin
       if (urlWithoutParams === 'insomnia://app/import') {
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.importStarted,
-          properties: {
-            source: 'import-url',
-          },
-        });
+        // Clean up the flag set during deep-link replay so it never leaks
+        // into later modal evaluations within the same session.
+        window.sessionStorage.removeItem('suppressWelcomeModals');
+
+        const importSource = params.source?.trim() || undefined;
+        const importSourceUrl = params.sourceUrl?.trim() || undefined;
+        const hasAttribution = !!(importSource || importSourceUrl);
+        if (hasAttribution) {
+          window.sessionStorage.setItem(
+            PENDING_IMPORT_ATTRIBUTION_KEY,
+            JSON.stringify({ importSource, importSourceUrl }),
+          );
+        }
+
+        const userSession = await services.userSession.get();
+        if (!userSession.id) {
+          window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
+          window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
+          trackImportEvent(AnalyticsEvent.importLoginRequired);
+          return navigate(href('/auth/login'));
+        }
+        trackImportEvent(AnalyticsEvent.importStarted, { source: 'import-url' });
 
         if (params.uri) {
           return setImportObject({
@@ -479,7 +516,7 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://app/open/organization') {
         // if user is logged out, navigate to authorize instead
         // gracefully handle open org in app from browser
-        const userSession = await services.userSession.getOrCreate();
+        const userSession = await services.userSession.get();
         if (!userSession.id || userSession.id === '') {
           const url = new URL(getLoginUrl());
           window.main.openInBrowser(url.toString());
@@ -569,10 +606,10 @@ const Root = () => {
                 <div className="flex flex-col gap-1 text-left">
                   {errorDetailKeys.length > 0
                     ? errorDetailKeys.map(k => (
-                      <span key={k} className="whitespace-normal">
-                        {k}: {restParams[k]}
-                      </span>
-                    ))
+                        <span key={k} className="whitespace-normal">
+                          {k}: {restParams[k]}
+                        </span>
+                      ))
                     : 'Unknown error'}
                 </div>
               ),
@@ -592,6 +629,21 @@ const Root = () => {
     projectId,
     redirectToDefaultBrowserSubmit,
   ]);
+
+  // Replay a deep link that was queued before login (e.g. insomnia://app/import
+  // clicked while signed out).  We wait for organizationId so that the full
+  // redirect chain (org → project) has settled and the import modal can read
+  // route params.  For users with no projects yet the "-- New Project --"
+  // default in the import dialog is the correct behaviour.
+  useEffect(() => {
+    const pendingDeepLink = window.sessionStorage.getItem('pendingDeepLinkAfterAuthorize');
+    if (pendingDeepLink && organizationId && organizationId !== models.organization.SCRATCHPAD_ORGANIZATION_ID) {
+      window.sessionStorage.removeItem('pendingDeepLinkAfterAuthorize');
+      window.sessionStorage.setItem('suppressWelcomeModals', 'true');
+      trackImportEvent(AnalyticsEvent.importResumedAfterLogin);
+      window.main.openDeepLink(pendingDeepLink);
+    }
+  }, [organizationId]);
 
   return (
     <>

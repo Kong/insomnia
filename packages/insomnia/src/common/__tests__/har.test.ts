@@ -3,17 +3,16 @@ import path from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { Cookie, Request, Response } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
-import * as models from '../../models';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
 import { getRenderedRequestAndContext } from '../render';
 
 describe('export', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
-    await services.project.all();
+    await services.project.list();
     await services.settings.getOrCreate();
   });
 

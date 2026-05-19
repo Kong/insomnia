@@ -27,7 +27,7 @@ import {
   unsupportedMethodPrefix,
 } from '~/common/mcp-utils';
 import { generateId } from '~/common/misc';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type {
   CommonMcpOptions,
   McpClient,
@@ -40,7 +40,6 @@ import type {
   OpenMcpClientConnectionOptions,
 } from '~/main/mcp/types';
 import { insecureReadFile } from '~/main/secure-read-file';
-import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
 
 interface ConnectingState {

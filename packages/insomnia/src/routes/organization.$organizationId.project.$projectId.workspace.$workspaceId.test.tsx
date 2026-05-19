@@ -21,7 +21,7 @@ import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { database } from '~/common/database';
 import { isNotNullOrUndefined } from '~/common/misc';
 import type { UnitTestSuite } from '~/insomnia-data';
-import * as models from '~/models';
+import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useTestSuiteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.delete';
 import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';

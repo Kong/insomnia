@@ -64,6 +64,7 @@ export const ProjectModal = ({
                 </Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  data-test-id="project-modal-close-button"
                   onPress={close}
                 >
                   <Icon icon="x" />

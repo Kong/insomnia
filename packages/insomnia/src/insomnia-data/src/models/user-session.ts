@@ -1,5 +1,7 @@
 import type { AESMessage } from '~/account/crypt';
-import type { BaseModel } from '~/models/types';
+
+import type { BaseModel } from './base-types';
+
 export interface BaseUserSession {
   accountId: string;
   id: string;

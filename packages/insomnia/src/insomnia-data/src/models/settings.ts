@@ -1,7 +1,8 @@
 import { getAppDefaultDarkTheme, getAppDefaultLightTheme, getAppDefaultTheme } from '~/common/constants';
 import * as hotkeys from '~/common/hotkeys';
 import { HttpVersions, type Settings as BaseSettings, UpdateChannel } from '~/common/settings';
-import type { BaseModel } from '~/models/types';
+
+import type { BaseModel } from './base-types';
 
 export type Settings = BaseModel & BaseSettings;
 export const name = 'Settings';
@@ -15,7 +16,7 @@ export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme
 export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings => model.type === type;
 
 // force vertical layout for playwright tests to avoid horizontal scrolling issues
-const forceVerticalLayout = process.env.PLAYWRIGHT ? true : false;
+const forceVerticalLayout = process.env.PLAYWRIGHT_TEST ? true : false;
 
 export function init(): BaseSettings {
   return {
@@ -76,6 +77,11 @@ export function init(): BaseSettings {
     // The duration in mins for which the external vault secret is cached
     vaultSecretCacheDuration: 30,
     dataFolders: [],
+    scriptSandboxEnabled: true,
+    scriptStrictModeEnabled: true,
+    disabledSecurityRules: [],
+    disabledBlockedProperties: [],
+    disabledBlockedRoots: [],
     npmRegistryUrl: '',
   };
 }

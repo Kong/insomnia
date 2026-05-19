@@ -10,12 +10,12 @@ import type {
   SocketIORequest,
   WebSocketRequest,
 } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { models } from '~/insomnia-data';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
 import { SECURITY_SETTINGS_PATH_LABEL } from '../../common/misc';
-import * as models from '../../models';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
 import { RenderError } from '../../templating/render-error';
@@ -141,8 +141,8 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         message: `Your URL is quite long, so only the first ${MAX_URL_LENGTH} characters were copied.`,
       });
     } else {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.requestUrlCopied,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.requestUrlCopied,
       });
     }
   }, [tooLong]);

@@ -6,9 +6,7 @@ import { scopeToLabelMap } from '~/common/get-workspace-label';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort } from '~/common/sorting';
 import type { ApiSpec, GitRepository, MockServer, Project, WorkspaceMeta } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
-import { sortProjects } from '~/models/helpers/project';
+import { models, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 
@@ -115,14 +113,14 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, `Project was not found ${projectId}`);
   const organizationProjects =
     (await database.find<Project>(models.project.type, {
       parentId: organizationId,
     })) || [];
 
-  const projects = sortProjects(organizationProjects);
+  const projects = models.project.sortProjects(organizationProjects);
   const files = await getAllLocalFiles({ projectId });
 
   return {

@@ -1,16 +1,16 @@
 /**
  * Tests run against the in-memory NeDB initialized by setup-vitest.ts.
  * fetch is mocked per-test to return shaped Konnect API responses.
- * window.main is stubbed globally so trackSegmentEvent calls don't throw.
+ * window.main is stubbed globally so trackAnalyticsEvent calls don't throw.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { initDatabase, models, type Request,services as insoservices } from '~/insomnia-data';
+import { initDatabase, models, services as insoservices } from '~/insomnia-data';
 
+import { resetV4Counter } from '../../__mocks__/uuid';
 import { database as db } from '../../common/database';
 import { mainDatabase } from '../../main/database.main';
-import { resetV4Counter } from '../../models/__mocks__/uuid';
 import type { KonnectControlPlane, KonnectRoute, KonnectService } from '../api';
 import { syncKonnect } from '../sync';
 
@@ -28,6 +28,7 @@ function makeCp(overrides: Partial<KonnectControlPlane> = {}): KonnectControlPla
       cluster_type: 'CLUSTER_TYPE_HYBRID',
       control_plane_endpoint: 'https://abc123.us.cp0.konghq.com',
     },
+    proxy_urls: null,
     ...overrides,
   };
 }
@@ -100,13 +101,13 @@ const konnectRequests = (docs: any[]) => docs.filter((r: any) => r.konnectRouteK
 const konnectWorkspaces = (docs: any[]) => docs.filter((w: any) => w.konnectServiceId != null);
 const konnectProjects = (docs: any[]) => docs.filter((p: any) => p.konnectControlPlaneId != null);
 
-const trackSegmentEvent = vi.fn();
+const trackAnalyticsEvent = vi.fn();
 
 beforeEach(async () => {
   // Re-init with fresh in-memory NeDB buckets — clean slate for every test.
   await initDatabase(mainDatabase, { inMemoryOnly: true }, true);
   resetV4Counter();
-  vi.stubGlobal('window', { main: { trackSegmentEvent } });
+  vi.stubGlobal('window', { main: { trackAnalyticsEvent } });
 });
 
 afterEach(() => {

@@ -4,28 +4,37 @@ import nodePath from 'node:path';
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import { HttpVersions } from '../../common/settings';
 import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
-import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
-import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
-import * as models from '../../models';
-import { getBodyBuffer } from '../../models/helpers/response-operations';
+import { _getAwsAuthHeaders } from '../../network/parse-header-strings';
+import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
-import { getSetCookiesFromResponseHeaders } from '../network';
+import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network';
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
+describe('getAuthQueryParams', () => {
+  it('Creates a query param with key as parameter name and value as parameter value, when addTo is "queryParams"', async () => {
+    const authentication = {
+      type: 'apikey',
+      key: 'x-api-key',
+      value: 'test',
+      addTo: 'queryParams',
+    };
 
-describe('sendCurlAndWriteTimeline()', () => {
-  beforeEach(async () => {
-    await services.project.all();
+    const header = getAuthQueryParams(authentication);
+    expect(header).toEqual({
+      name: 'x-api-key',
+      value: 'test',
+    });
   });
-
+});
+describe('sendCurlAndWriteTimeline()', () => {
   it('sends a generic request', async () => {
     const workspace = await services.workspace.create();
     const settings = await services.settings.getOrCreate();
@@ -101,7 +110,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -180,7 +189,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -284,7 +293,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -349,7 +358,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -433,7 +442,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -498,7 +507,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -542,7 +551,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -585,7 +594,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -629,7 +638,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -734,7 +743,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -793,7 +802,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    expect(JSON.parse(String(await getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
+    expect(JSON.parse(String(await services.helpers.getResponseBodyBuffer(responseV1))).options.HTTP_VERSION).toBe(
+      'V1_0',
+    );
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
     expect(getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);

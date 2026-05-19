@@ -3,10 +3,10 @@ import { InitializeRequestSchema, type JSONRPCRequest } from '@modelcontextproto
 import { shellPath } from 'shell-path';
 import { parse } from 'shell-quote';
 
-import { type McpResponse, services } from '~/insomnia-data';
+import type { McpResponse } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { type ConnectionContext, writeTimeline } from '~/main/mcp/common';
 import type { OpenMcpStdioClientConnectionOptions } from '~/main/mcp/types';
-import * as models from '~/models';
 
 export const createStdioTransport = async (
   context: ConnectionContext,

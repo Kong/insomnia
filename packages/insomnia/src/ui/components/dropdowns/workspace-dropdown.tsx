@@ -25,6 +25,7 @@ import {
 import { href, useNavigate, useParams } from 'react-router';
 
 import type { Workspace } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
@@ -32,7 +33,6 @@ import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import * as models from '../../../models';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -42,7 +42,7 @@ import * as pluginStore from '../../../plugins/context/store';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockServerGenerateRequestCollectionActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
 import { invariant } from '../../../utils/invariant';
-import { SegmentEvent } from '../../analytics';
+import { AnalyticsEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -142,8 +142,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Import',
           icon: <Icon icon="file-import" />,
           action: () => {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.importStarted,
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.importStarted,
               properties: {
                 source: `scratchpad-${activeWorkspace.scope}-menu`,
               },
@@ -157,8 +157,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Export',
           icon: <Icon icon="file-export" />,
           action: () => {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.exportStarted,
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.exportStarted,
               properties: {
                 source: `scratchpad-${activeWorkspace.scope}-menu`,
               },
@@ -203,8 +203,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
                 name: 'From File',
                 icon: <Icon icon="file-import" />,
                 action: () => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.importStarted,
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.importStarted,
                     properties: {
                       source: `${activeWorkspace.scope}-menu`,
                     },
@@ -271,8 +271,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Export',
           icon: <Icon icon="file-export" />,
           action: () => {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.exportStarted,
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.exportStarted,
               properties: {
                 source: `${activeWorkspace.scope}-menu`,
               },

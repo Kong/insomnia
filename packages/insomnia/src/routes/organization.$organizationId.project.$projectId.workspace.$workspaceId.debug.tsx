@@ -41,10 +41,10 @@ import {
 import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
-import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
 import type {
+  ChangeBufferEvent,
   Environment,
   GrpcRequest,
   Project,
@@ -54,10 +54,8 @@ import type {
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
-import * as models from '~/models';
-import { isScratchpadOrganizationId } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import {
   type Child,
@@ -74,7 +72,7 @@ import Tutorial, {
   scratchPadTutorialList,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.tutorial.$panel';
 import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { DropdownHint } from '~/ui/components/base/dropdown/dropdown-hint';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
@@ -160,7 +158,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
 
-    const activeProject = await services.project.getById(projectId);
+    const activeProject = await services.project.get(projectId);
     if (!activeProject) {
       showResourceNotFoundToast(`Project not found: ${projectId}`);
       throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -850,8 +848,8 @@ const Debug = () => {
                   onOpenChange={isOpen => {
                     setIsEnvironmentPickerOpen(isOpen);
                     if (isOpen) {
-                      window.main.trackSegmentEvent({
-                        event: SegmentEvent.requestEnvironmentClicked,
+                      window.main.trackAnalyticsEvent({
+                        event: AnalyticsEvent.requestEnvironmentClicked,
                       });
                     }
                   }}
@@ -860,8 +858,8 @@ const Debug = () => {
               </div>
               <Button
                 onPress={() => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.requestAddCookiesClicked,
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.requestAddCookiesClicked,
                   });
                   setIsCookieModalOpen(true);
                 }}
@@ -875,8 +873,8 @@ const Debug = () => {
               </Button>
               <Button
                 onPress={() => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.requestAddCertificatesClicked,
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.requestAddCertificatesClicked,
                   });
                   setCertificatesModalOpen(true);
                 }}
@@ -903,8 +901,8 @@ const Debug = () => {
                   setFilter(value);
 
                   if (value.trim() !== '') {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.filterCreatedRequests,
+                    window.main.trackAnalyticsEvent({
+                      event: AnalyticsEvent.filterCreatedRequests,
                     });
                   }
                 }}
@@ -925,8 +923,8 @@ const Debug = () => {
                 selectedKey={sortOrder}
                 onSelectionChange={order => {
                   if (order) {
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.requestListSortClicked,
+                    window.main.trackAnalyticsEvent({
+                      event: AnalyticsEvent.requestListSortClicked,
                     });
                     setSearchParams({
                       ...Object.fromEntries(searchParams.entries()),
@@ -978,8 +976,8 @@ const Debug = () => {
                   defaultSelected={allExpanded}
                   onChange={() => {
                     setAllExpanded(!allExpanded);
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.requestListExpandCollapseClicked,
+                    window.main.trackAnalyticsEvent({
+                      event: AnalyticsEvent.requestListExpandCollapseClicked,
                     });
                     toggleExpandAllFetcher.submit({
                       organizationId,
@@ -1200,7 +1198,7 @@ const Debug = () => {
             </div>
           </div>
 
-          {isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
+          {models.organization.isScratchpadOrganizationId(organizationId) && <ScratchPadTutorialPanel />}
 
           <WorkspaceSyncDropdown />
           {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}

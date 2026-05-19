@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -16,11 +16,11 @@ import {
 import { useParams } from 'react-router';
 import { stringify } from 'yaml';
 
+import { models } from '~/insomnia-data';
 import { useInsomniaSyncCreateSnapshotActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.create-snapshot';
 import { useInsomniaSyncStageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.stage';
 import { useInsomniaSyncUnstageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';
 
-import { all } from '../../../models';
 import type { StageEntry, Status, StatusCandidate } from '../../../sync/types';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
@@ -80,7 +80,7 @@ function getPreviewItemName(previewDiffItem?: StageEntry & { document?: { type: 
 
 function getModelTypeById(id: string) {
   const idPrefix = id.split('_')[0];
-  const model = all().find(model => model.prefix === idPrefix);
+  const model = models.all().find(model => model.prefix === idPrefix);
 
   return model?.name || 'Unknown';
 }
@@ -176,7 +176,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className="grid h-full grid-cols-[300px_1fr] gap-2 divide-x divide-solid divide-(--hl-md) overflow-hidden">
+              <div className="grid h-full grid-cols-[350px_1fr] gap-4 divide-x divide-solid divide-(--hl-md) overflow-hidden">
                 <div className="flex flex-1 flex-col gap-4 overflow-hidden p-2">
                   <form
                     onSubmit={e => {

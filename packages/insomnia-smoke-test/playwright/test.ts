@@ -77,18 +77,17 @@ export const test = baseTest.extend<{
   insomnia: InsomniaApp;
 }>({
   app: async ({ playwright, trace, dataPath, userConfig }, use, testInfo) => {
-    invariant(testInfo.config.webServer?.url, 'Requires web server config');
-    const webServerUrl = testInfo.config.webServer.url;
+    const echoServer = 'http://localhost:4010';
 
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH: dataPath,
-      INSOMNIA_API_URL: webServerUrl,
-      INSOMNIA_APP_WEBSITE_URL: webServerUrl + '/website',
-      INSOMNIA_AI_URL: webServerUrl + '/ai',
-      INSOMNIA_GITHUB_REST_API_URL: webServerUrl + '/github-api/rest',
-      INSOMNIA_GITHUB_API_URL: webServerUrl + '/github-api/graphql',
-      INSOMNIA_GITLAB_API_URL: webServerUrl + '/gitlab-api',
-      INSOMNIA_UPDATES_URL: webServerUrl || 'https://updates.insomnia.rest',
+      INSOMNIA_API_URL: echoServer,
+      INSOMNIA_APP_WEBSITE_URL: echoServer + '/website',
+      INSOMNIA_AI_URL: echoServer + '/ai',
+      INSOMNIA_GITHUB_REST_API_URL: echoServer + '/github-api/rest',
+      INSOMNIA_GITHUB_API_URL: echoServer + '/github-api/graphql',
+      INSOMNIA_GITLAB_API_URL: echoServer + '/gitlab-api',
+      INSOMNIA_UPDATES_URL: echoServer || 'https://updates.insomnia.rest',
       INSOMNIA_MOCK_API_URL: 'https://mock-stage.insomnia.run',
       INSOMNIA_SKIP_ONBOARDING: String(userConfig.skipOnboarding),
       INSOMNIA_PUBLIC_KEY: userConfig.publicKey,
@@ -98,13 +97,14 @@ export const test = baseTest.extend<{
       INSOMNIA_VAULT_SRP_SECRET: userConfig.vaultSrpSecret || '',
       ...(userConfig.session ? { INSOMNIA_SESSION: JSON.stringify(userConfig.session) } : {}),
     };
+    const { ELECTRON_RUN_AS_NODE: _ignored, ...launchEnv } = process.env;
 
     const electronApp = await playwright._electron.launch({
       cwd,
       executablePath,
       args: bundleType() === 'package' ? ['--no-sandbox'] : ['--no-sandbox', mainPath],
       env: {
-        ...process.env,
+        ...launchEnv,
         ...options,
         PLAYWRIGHT: 'true',
       },

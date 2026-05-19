@@ -3,7 +3,7 @@ import * as reactUse from 'react-use';
 
 import type { ThemeSettings } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 
 import { type ColorScheme, getThemes } from '../../plugins';
 import { applyColorScheme, getColorScheme, type PluginTheme } from '../../plugins/misc';
@@ -55,8 +55,8 @@ export const useThemes = () => {
   // Activate the theme for the selected color scheme
   const activate = useCallback(
     async (themeName: string, colorScheme: ColorScheme) => {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.themeChanged,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.themeChanged,
         properties: { themeName, colorScheme },
       });
 

@@ -1,7 +1,6 @@
 import { href, redirect } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import * as requestOperations from '~/models/helpers/request-operations';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -11,7 +10,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const { organizationId, projectId, workspaceId, requestId } = params;
   const { name, parentId } = await request.json();
 
-  const req = await requestOperations.getById(requestId);
+  const req = await services.helpers.getRequestById(requestId);
   invariant(req, 'Request not found');
 
   if (parentId) {
@@ -19,7 +18,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     invariant(workspace, 'Workspace is required');
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     // Move to top of sort order
-    const newRequest = await requestOperations.duplicate(req, { name, parentId, metaSortKey: -1e9 });
+    const newRequest = await services.helpers.duplicateRequest(req, { name, parentId, metaSortKey: -1e9 });
     invariant(newRequest, 'Failed to duplicate request');
 
     services.stats.incrementCreatedRequests();
@@ -27,7 +26,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     return null;
   }
 
-  const newRequest = await requestOperations.duplicate(req, { name });
+  const newRequest = await services.helpers.duplicateRequest(req, { name });
   invariant(newRequest, 'Failed to duplicate request');
 
   services.stats.incrementCreatedRequests();

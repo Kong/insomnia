@@ -1,4 +1,4 @@
-import type { BaseModel } from '../models';
+import type { BaseModel } from '~/insomnia-data';
 
 export interface Team {
   id: string;
@@ -9,6 +9,14 @@ export interface BackendProject {
   id: string;
   name: string;
   rootDocumentId: string;
+}
+
+export interface BackendProjectWithTeams extends BackendProject {
+  teams: Team[];
+}
+
+export interface BackendProjectWithTeam extends BackendProject {
+  team: Team;
 }
 
 export type DocumentKey = string;

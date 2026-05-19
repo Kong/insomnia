@@ -20,8 +20,8 @@ import electron from 'electron';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
-import { services } from '~/insomnia-data';
-import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
+import { models, services } from '~/insomnia-data';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import {
   callTool,
   getPrompt,
@@ -69,7 +69,6 @@ import type {
   OpenMcpClientConnectionOptions,
   OpenMcpHTTPClientConnectionOptions,
 } from '~/main/mcp/types';
-import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
@@ -258,7 +257,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
   }
   const authDisabled = 'disabled' in mcpRequest.authentication && mcpRequest.authentication.disabled;
   const isFirstConnection = !mcpRequest.connected;
-  trackSegmentEvent(SegmentEvent.mcpClientConnected, {
+  trackAnalyticsEvent(AnalyticsEvent.mcpClientConnected, {
     transportType: connectionOptions.transportType,
     firstTime: isFirstConnection,
     ...(connectionOptions.transportType === models.mcpRequest.TRANSPORT_TYPES.HTTP
@@ -456,7 +455,7 @@ const closeMcpConnection = async (options: CommonMcpOptions) => {
     // Execute clear resource subscription in main process rather than UI to make sure closeAllMcpConnections method will clear subscriptions
     await services.mcpRequest.clearResourceSubscriptions(requestId);
   }
-  trackSegmentEvent(SegmentEvent.mcpClientDisconnected);
+  trackAnalyticsEvent(AnalyticsEvent.mcpClientDisconnected);
 };
 
 const closeAllMcpConnections = () => {

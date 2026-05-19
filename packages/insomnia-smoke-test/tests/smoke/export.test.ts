@@ -33,9 +33,8 @@ test.describe('Export', () => {
       await insomnia.preferencesPage.switchToPreferenceTab('Data');
       await insomnia.preferencesPage.dataTab.exportProjectData(tempDir, 'yaml');
       await waitForExportFiles(tempDir, 2);
-      await insomnia.preferencesPage.closePreferences();
       const exportedFiles = getExportedFiles(tempDir);
-      expect.soft(exportedFiles.length).toBe(2);
+      expect.soft(exportedFiles).toHaveLength(2);
       const fixtureMap: Record<string, string> = {
         'Collection-A': FIXTURE_FILES[0],
         'Collection-B': FIXTURE_FILES[1],
@@ -78,7 +77,7 @@ test.describe('Export', () => {
       await insomnia.preferencesPage.dataTab.exportAllData(tempDir);
       await insomnia.preferencesPage.closePreferences();
       const exportedFiles = getExportedFiles(tempDir).filter((file: string) => !file.includes('scratchpad'));
-      expect.soft(exportedFiles.length).toBe(2);
+      expect.soft(exportedFiles).toHaveLength(2);
       const fixtureMap: Record<string, string> = {
         'Collection-A': FIXTURE_FILES[0],
         'Collection-B': FIXTURE_FILES[1],
@@ -122,8 +121,6 @@ test.describe('Export', () => {
 
       await insomnia.preferencesPage.dataTab.exportProjectData(exportFilePath, 'har');
       await waitForExportFiles(tempDir, 1);
-
-      await insomnia.preferencesPage.closePreferences();
 
       const exportedContent = readExportedFile(exportFilePath);
 

@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { getSyncItems } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -15,8 +14,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const keys = data.keys;
   invariant(Array.isArray(keys), 'Keys are required');
   const { syncItems } = await getSyncItems({ workspaceId });
-  const vcs = VCSInstance();
-  const status = await vcs.status(syncItems);
+  const status = await window.main.sync.status(syncItems);
   // Staging needs to happen since it creates blobs for the files
   const itemsToUnstage = keys
     .map(key => {
@@ -29,7 +27,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     })
     .filter(isNotNullOrUndefined);
 
-  await vcs.unstage(itemsToUnstage);
+  await window.main.sync.unstage(itemsToUnstage);
 
   return null;
 }

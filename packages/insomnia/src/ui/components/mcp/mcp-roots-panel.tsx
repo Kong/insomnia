@@ -4,7 +4,7 @@ import { Button, Heading, ListBox, ListBoxItem, Toolbar } from 'react-aria-compo
 
 import type { McpRequest } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { useRequestPatcher } from '~/ui/hooks/use-request';
 
@@ -54,7 +54,7 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
           className="rounded-sm bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise)"
           onClick={() => {
             window.main.mcp.notification.rootListChange({ requestId });
-            window.main.trackSegmentEvent({ event: SegmentEvent.mcpRequestRootsNotifyClicked });
+            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpRequestRootsNotifyClicked });
           }}
           isDisabled={!isConnected}
         >

@@ -19,6 +19,7 @@ import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 import type {
   ApiSpec,
+  BaseModel,
   CookieJar,
   Environment,
   EnvironmentKvPairData,
@@ -38,11 +39,10 @@ import type {
   Workspace,
   WorkspaceScope,
 } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { maskVaultEnvironmentData } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 
-import * as models from '../models';
 import { database } from './database';
 import {
   type Insomnia_GRPCRequest,
@@ -62,7 +62,7 @@ import {
  * Type helper that adds the export type field to any BaseModel
  * This is used to ensure all exported models have the correct _type field for v5 format
  */
-type WithExportType<T extends models.BaseModel> = T & { _type: AllExportTypes };
+type WithExportType<T extends BaseModel> = T & { _type: AllExportTypes };
 
 /**
  * Maps request headers from internal format to v5 export format

@@ -1,8 +1,8 @@
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
-import { models } from '~/insomnia-data';
-import { getBodyBuffer, getTimeline } from '~/models/helpers/response-operations';
+import { models, services } from '~/insomnia-data';
+import { getBodyBuffer } from '~/models/helpers/response-operations';
 
 import { getPreviewModeName, LARGE_RESPONSE_MB, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
@@ -63,7 +63,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const timeline = getTimeline(activeResponse);
+    const timeline = await services.helpers.getResponseTimeline(activeResponse);
     const headers = timeline
       .filter(v => v.name === 'HeaderIn')
       .map(v => v.value)

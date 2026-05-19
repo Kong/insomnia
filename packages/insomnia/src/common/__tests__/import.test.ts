@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { parse } from 'yaml';
 
 import { EnvironmentKvPairDataType, EnvironmentType, services } from '~/insomnia-data';
@@ -170,6 +170,36 @@ describe('importRaw()', () => {
         text: '{\"email_id\": \"tem_123\"}',
       },
     });
+  });
+
+  it('should call syncNewWorkspaceIfNeeded after importing to a new workspace', async () => {
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
+
+    const projectToImportTo = await services.project.create();
+    const syncNewWorkspaceIfNeeded = vi.fn();
+
+    const scanResult = await importUtil.scanResources([
+      {
+        contentStr: content,
+      },
+    ]);
+
+    expect(scanResult[0].type?.id).toBe('curl');
+    expect(scanResult[0].errors.length).toBe(0);
+
+    await importUtil.importResourcesToProject({
+      projectId: projectToImportTo._id,
+      syncNewWorkspaceIfNeeded,
+    });
+
+    expect(syncNewWorkspaceIfNeeded).toHaveBeenCalledTimes(1);
+    expect(syncNewWorkspaceIfNeeded).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parentId: projectToImportTo._id,
+        scope: 'collection',
+      }),
+    );
   });
 
   it('should import a curl request to an existing workspace', async () => {

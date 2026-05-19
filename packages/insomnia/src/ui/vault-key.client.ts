@@ -12,13 +12,13 @@ export const vaultKeyParams = params[2048];
 export const saveVaultKey = async (accountId: string, vaultKey: string) => {
   // save encrypted vault key and vault salt to session
   const encryptedVaultKey = await window.main.secretStorage.encryptString(vaultKey);
-  await services.userSession.patch({ vaultKey: encryptedVaultKey });
+  await services.userSession.update({ vaultKey: encryptedVaultKey });
 
   await saveVaultKeyIfNecessary(accountId, vaultKey);
 };
 
 export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   const { accountId, id: sessionId } = userSession;
 
   const vaultSalt = await getRandomHex();
@@ -41,7 +41,7 @@ export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
       : resetVault({ sessionId, salt: vaultSalt, verifier }));
 
     // save encrypted vault key and vault salt to session
-    await services.userSession.patch({ vaultSalt: vaultSalt });
+    await services.userSession.update({ vaultSalt: vaultSalt });
     await saveVaultKey(accountId, base64encodedVaultKey);
     return {
       key: base64encodedVaultKey,

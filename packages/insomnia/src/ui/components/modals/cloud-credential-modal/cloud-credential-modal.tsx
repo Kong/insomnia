@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
-import { type CloudProviderCredential, models } from '~/insomnia-data';
+import type { CloudProviderCredential } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.update';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 

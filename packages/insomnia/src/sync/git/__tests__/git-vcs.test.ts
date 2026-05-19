@@ -659,4 +659,134 @@ First commit!
       expect(readmeContent).toBe('# Project\nRemote changes\n');
     });
   });
+
+  describe('getBranchTrackingRemote', () => {
+    it('returns null when no tracking remote is set', async () => {
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: 'test-remote-info',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      const remote = await GitVCS.getBranchTrackingRemote();
+      expect(remote).toBeNull();
+    });
+
+    it('returns the configured tracking remote', async () => {
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: 'test-tracking-remote',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      // Manually set tracking remote via git config
+      const branch = await GitVCS.getCurrentBranch();
+      await git.setConfig({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        path: `branch.${branch}.remote`,
+        value: 'upstream',
+      });
+
+      const remote = await GitVCS.getBranchTrackingRemote();
+      expect(remote).toBe('upstream');
+    });
+  });
+
+  describe('getBranchRemoteInfo', () => {
+    it('returns isOrigin true when no tracking remote is set', async () => {
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: 'test-branch-info-origin',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      const info = await GitVCS.getBranchRemoteInfo();
+      expect(info.trackingRemote).toBeNull();
+      expect(info.isOrigin).toBe(true);
+      expect(info.remoteUrl).toBeNull();
+    });
+
+    it('returns isOrigin true when tracking remote is origin', async () => {
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: 'test-branch-info-explicit-origin',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      const branch = await GitVCS.getCurrentBranch();
+      await git.setConfig({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        path: `branch.${branch}.remote`,
+        value: 'origin',
+      });
+
+      const info = await GitVCS.getBranchRemoteInfo();
+      expect(info.trackingRemote).toBe('origin');
+      expect(info.isOrigin).toBe(true);
+    });
+
+    it('returns isOrigin false when tracking a non-origin remote', async () => {
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(path.join(GIT_INSOMNIA_DIR, fooTxt), 'foo');
+
+      await GitVCS.init({
+        uri: '',
+        repoId: 'test-branch-info-non-origin',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      const branch = await GitVCS.getCurrentBranch();
+      await git.setConfig({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        path: `branch.${branch}.remote`,
+        value: 'upstream',
+      });
+      await git.setConfig({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        path: 'remote.upstream.url',
+        value: 'https://github.com/other/repo.git',
+      });
+
+      const info = await GitVCS.getBranchRemoteInfo();
+      expect(info.trackingRemote).toBe('upstream');
+      expect(info.isOrigin).toBe(false);
+      expect(info.remoteUrl).toBe('https://github.com/other/repo.git');
+    });
+  });
 });

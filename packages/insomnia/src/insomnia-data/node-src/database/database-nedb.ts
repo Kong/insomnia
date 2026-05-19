@@ -8,7 +8,9 @@ import NeDB from '@seald-io/nedb';
 
 import { generateId } from '~/common/misc';
 import type {
+  AllTypes,
   ApiSpec,
+  BaseModel,
   ChangeBufferEvent,
   ChangeListener,
   ChangeType,
@@ -24,9 +26,7 @@ import type {
   Workspace,
   WorkspaceMeta,
 } from '~/insomnia-data';
-import type { AllTypes, BaseModel } from '~/models';
-import { mustGetModel } from '~/models';
-import * as models from '~/models';
+import { models } from '~/insomnia-data';
 
 import { initModel } from './init-model';
 import { repairDatabase } from './repair-database';
@@ -109,7 +109,7 @@ export const createNedbDatabase = <O = initOptions>(
       const allDocs: { doc: BaseModel; parentId: string }[] = [];
 
       async function collectDescendants(doc: BaseModel): Promise<void> {
-        const model = mustGetModel(doc.type);
+        const model = models.mustGetModel(doc.type);
         idMapping.set(doc._id, generateId(model.prefix));
 
         const validChildTypes = (descendantMap[doc.type] ?? []).filter(t => models.canDuplicate(t));
@@ -326,6 +326,10 @@ export const createNedbDatabase = <O = initOptions>(
           ...defaultConfig,
           filename: fsPath.join(dbPath, 'insomnia.SocketIORequest.db'),
         }),
+        SocketIORequestMeta: new NeDB({
+          ...defaultConfig,
+          filename: fsPath.join(dbPath, 'insomnia.SocketIORequestMeta.db'),
+        }),
         SocketIOResponse: new NeDB({
           ...defaultConfig,
           filename: fsPath.join(dbPath, 'insomnia.SocketIOResponse.db'),
@@ -357,6 +361,10 @@ export const createNedbDatabase = <O = initOptions>(
         WebSocketRequest: new NeDB({
           ...defaultConfig,
           filename: fsPath.join(dbPath, 'insomnia.WebSocketRequest.db'),
+        }),
+        WebSocketRequestMeta: new NeDB({
+          ...defaultConfig,
+          filename: fsPath.join(dbPath, 'insomnia.WebSocketRequestMeta.db'),
         }),
         WebSocketResponse: new NeDB({
           ...defaultConfig,

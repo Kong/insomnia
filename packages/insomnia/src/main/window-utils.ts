@@ -188,7 +188,7 @@ export function createWindow(): ElectronBrowserWindow {
     backgroundColor: '#2C2C2C',
     fullscreen: fullscreen,
     fullscreenable: true,
-    title: getProductName(),
+    title: `${getProductName()} ${getAppVersion()}`,
     width: width || DEFAULT_WIDTH,
     height: height || DEFAULT_HEIGHT,
     minHeight: MINIMUM_HEIGHT,

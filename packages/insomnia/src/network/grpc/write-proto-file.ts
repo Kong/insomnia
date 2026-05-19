@@ -2,11 +2,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import type { ProtoDirectory, ProtoFile, Workspace } from '~/insomnia-data';
+import type { BaseModel, ProtoDirectory, ProtoFile, Workspace } from '~/insomnia-data';
+import { models } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
 
 const { isProtoDirectory } = models.protoDirectory;
 const { isProtoFile } = models.protoFile;

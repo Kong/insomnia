@@ -20,7 +20,10 @@ import iconv from 'iconv-lite';
 
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
-import { type Services, services } from '~/insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
+import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -33,9 +36,9 @@ import type {
 } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
-import type { PluginTemplateTag } from '../../templating/types';
-import type { SegmentEvent } from '../analytics';
-import { setCurrentOrganizationId, trackPageView, trackSegmentEvent } from '../analytics';
+import type { PluginTemplateTag, RenderedRequest } from '../../templating/types';
+import type { AnalyticsEvent } from '../analytics';
+import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
@@ -46,8 +49,10 @@ import { backup, restoreBackup } from '../backup';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
+import { getAuthHeader as getAuthHeaderInMain } from '../network/get-auth-header';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import type { McpBridgeAPI } from '../network/mcp';
+import { getOAuth2Token as getOAuth2TokenInMain } from '../network/o-auth-2/get-token';
 import {
   addExecutionStep,
   completeExecutionStep,
@@ -95,6 +100,17 @@ const writeResponseBodyToFile = async (
   _: unknown,
   options: { sourcePath: string; destinationPath: string; bodyCompression?: 'zip' | null },
 ) => {
+  // Validate sourcePath is within the expected responses directory to prevent a
+  // compromised renderer from using this handler to read arbitrary files on disk.
+  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
+  const allowedResponsesDir = path.join(userdataDirectory, 'responses');
+  const resolvedSource = path.resolve(options.sourcePath);
+  if (!resolvedSource.startsWith(allowedResponsesDir + path.sep) || !resolvedSource.endsWith('.response')) {
+    throw new Error(
+      'writeResponseBodyToFile: sourcePath is outside the allowed responses directory or does not end in .response',
+    );
+  }
+
   try {
     const dir = path.dirname(options.destinationPath);
     await fs.promises.mkdir(dir, { recursive: true });
@@ -132,6 +148,7 @@ export interface RendererToMainBridgeAPI {
   cancelAuthorizationInDefaultBrowser: typeof cancelAuthorizationInDefaultBrowser;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
+  initializeWorkspaceBackendProject: typeof initializeWorkspaceBackendProject;
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
@@ -140,6 +157,12 @@ export interface RendererToMainBridgeAPI {
     destinationPath: string;
     bodyCompression?: 'zip' | null;
   }) => Promise<string>;
+  getAuthHeader: (renderedRequest: RenderedRequest, url: string) => Promise<RequestHeader | undefined>;
+  getOAuth2Token: (
+    requestId: string,
+    authentication: AuthTypeOAuth2,
+    forceRefresh?: boolean,
+  ) => Promise<OAuth2Token | undefined>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -162,7 +185,8 @@ export interface RendererToMainBridgeAPI {
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
-  trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
+  sync: SyncBridgeAPI;
+  trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
   showNunjucksContextMenu: (options: {
@@ -212,6 +236,7 @@ export interface RendererToMainBridgeAPI {
     | { response: Awaited<ReturnType<GenerateMcpSamplingResponseFunction>>; error: undefined }
     | { response: undefined; error: string }
   >;
+  syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
 }
 
 export function registerMainHandlers() {
@@ -242,7 +267,13 @@ export function registerMainHandlers() {
     if (typeof fn !== 'function') {
       throw new TypeError(`Unknown service method: ${serviceName}.${methodName}`);
     }
-    return (fn as (...args: unknown[]) => unknown).call(service, ...args);
+    const result = await (fn as (...args: unknown[]) => unknown).call(service, ...args);
+    // Tag Buffer results before contextBridge serializes them as plain Uint8Array,
+    // so the preload can distinguish them from intentional Uint8Array returns.
+    if (Buffer.isBuffer(result)) {
+      return { __type: 'Buffer', data: Array.from(result as Buffer) };
+    }
+    return result;
   });
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);
@@ -278,6 +309,12 @@ export function registerMainHandlers() {
   ipcMainHandle('parseImport', async (_, ...args: Parameters<typeof convert>) => {
     return convert(...args);
   });
+  ipcMainHandle(
+    'initializeWorkspaceBackendProject',
+    async (_, options: Parameters<typeof initializeWorkspaceBackendProject>[0]) => {
+      return initializeWorkspaceBackendProject(options);
+    },
+  );
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Buffer }) => {
     try {
       const dir = path.dirname(options.path);
@@ -289,7 +326,12 @@ export function registerMainHandlers() {
     }
   });
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
-
+  ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
+    return getAuthHeaderInMain(renderedRequest, url);
+  });
+  ipcMainHandle('getOAuth2Token', (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
+    return getOAuth2TokenInMain(requestId, authentication, forceRefresh);
+  });
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
     return new Promise((resolve, reject) => {
@@ -357,10 +399,13 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const dataPath = app.getPath('userData');
-    const folderPath = path.join(dataPath, options.folder);
+    const folderPath = path.join(app.getPath('userData'), options.folder);
     mkdirSync(folderPath, { recursive: true });
-    return readDir(_, { path: folderPath });
+    try {
+      return await readDir(_, { path: folderPath });
+    } catch {
+      return [];
+    }
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
@@ -371,8 +416,8 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn('trackSegmentEvent', (_, options: { event: SegmentEvent; properties?: Record<string, unknown> }): void => {
-    trackSegmentEvent(options.event, options.properties);
+  ipcMainOn('trackAnalyticsEvent', (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
+    trackAnalyticsEvent(options.event, options.properties);
   });
   ipcMainOn('trackPageView', (_, options: { name: string }): void => {
     trackPageView(options.name);
@@ -395,6 +440,9 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
+  ipcMainHandle('syncNewWorkspaceIfNeeded', async (_, options: Parameters<typeof syncNewWorkspaceIfNeeded>[0]) => {
+    return syncNewWorkspaceIfNeeded(options);
+  });
 
   ipcMainHandle('getLocalStorageDataFromFileOrigin', async () => {
     const tmpDir = app.getPath('userData');

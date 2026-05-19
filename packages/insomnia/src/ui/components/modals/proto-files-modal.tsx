@@ -3,8 +3,7 @@ import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
 import type { ProtoDirectory, ProtoFile } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import * as models from '~/models';
+import { models, services } from '~/insomnia-data';
 
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
