@@ -43,7 +43,10 @@ import { isPrimaryClickModifier } from '~/ui/utils';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test';
-import { useWorkspaceLoaderData } from './organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
+} from './organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import TestSuiteComponent from './organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
@@ -279,8 +282,8 @@ const Component = () => {
       <PanelGroup
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
-        id="workspace-wrapper"
-        className="new-sidebar relative w-full flex-1 text-(--color-font)"
+        id={WORKSPACE_CONTENT_WRAPPER}
+        className="new-sidebar w-full flex-1 text-(--color-font)"
         direction="horizontal"
       >
         <Panel

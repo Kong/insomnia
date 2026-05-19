@@ -21,7 +21,10 @@ import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
 import { EnvironmentKvPairDataType, EnvironmentType, models, services } from '~/insomnia-data';
-import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
@@ -299,8 +302,8 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       <PanelGroup
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
-        id="workspace-wrapper"
-        className="new-sidebar relative w-full flex-1 text-(--color-font)"
+        id={WORKSPACE_CONTENT_WRAPPER}
+        className="new-sidebar w-full flex-1 text-(--color-font)"
         direction="horizontal"
       >
         <Panel

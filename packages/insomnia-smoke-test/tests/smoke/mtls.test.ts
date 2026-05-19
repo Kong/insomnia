@@ -5,7 +5,7 @@ import { expect } from '@playwright/test';
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can use client certificate for mTLS', async ({ app, page }) => {
+test('can use client certificate for mTLS', async ({ app, page, insomnia }) => {
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
@@ -28,7 +28,7 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.getByLabel('Request Collection').getByTestId('pet 2 with url var').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('pet 2 with url var');
 
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await page.getByText('Error: SSL peer certificate or SSH remote key was not OK').click();
@@ -71,16 +71,8 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Add Certificates' }).click();
   await page.locator('[data-test-id="client-certificate-toggle"]').click();
   await page.getByRole('button', { name: 'Done' }).click();
-  await page.getByLabel('Request Collection').getByTestId('pet 2').press('Enter');
-  await expect
-    .soft(
-      page
-        .getByLabel('Request Collection')
-        .getByTestId('pet 2')
-        .locator('[data-selected="true"]')
-        .first(),
-    )
-    .toBeVisible();
+  await insomnia.navigationSidebar.clickRequestOrFolder('pet 2');
+  await expect.soft(insomnia.navigationSidebar.requestRow('pet 2').first()).toBeVisible();
 
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect.soft(statusTag).toContainText('401 Unauthorized');

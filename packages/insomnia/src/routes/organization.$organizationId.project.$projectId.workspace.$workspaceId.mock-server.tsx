@@ -16,7 +16,10 @@ import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import type { MockRoute } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
-import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockRouteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -232,8 +235,8 @@ const Component = () => {
       <PanelGroup
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
-        id="workspace-wrapper"
-        className="new-sidebar relative w-full flex-1 text-(--color-font)"
+        id={WORKSPACE_CONTENT_WRAPPER}
+        className="new-sidebar w-full flex-1 text-(--color-font)"
         direction="horizontal"
       >
         <Panel
