@@ -99,8 +99,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   let rulesetContent = '';
   if (gitSyncRulesetPath) {
-    const { content } = await window.main.insecureReadFileWithEncoding({ path: gitSyncRulesetPath });
-    rulesetContent = content;
+    try {
+      rulesetContent = await window.main.insecureReadFile({ path: gitSyncRulesetPath });
+    } catch {
+      // no .spectral.yaml on disk yet
+    }
   } else {
     rulesetContent = apiSpec.rulesetContent || '';
   }
@@ -1107,6 +1110,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                         </Heading>
                         <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
                       </div>
+                      <div></div>
                       {rulesetContent && (
                         <CodeEditor
                           id="ruleset-viewer"
@@ -1188,7 +1192,8 @@ const Component = ({ params }: Route.ComponentProps) => {
                           )}
                         </span>
                         <Button className="underline" onPress={handleSelectSpectralFile}>
-                          {selectedRulesetPath ? '(Edit)' : '(Upload)'}
+                          {/* {selectedRulesetPath ? '(Edit)' : '(Upload)'} */}
+                          (Upload)
                         </Button>
                       </div>
                       <Tooltip
