@@ -393,6 +393,9 @@ export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: Req
   }
 };
 
+// This id is the wrapper element ID for workspace page content, representing the part of the workspace route component excluding tabs and breadcrumbs.
+export const WORKSPACE_CONTENT_WRAPPER = 'workspace-wrapper';
+
 const Component = () => {
   const navigate = useNavigate();
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -424,7 +427,7 @@ const Component = () => {
       return;
     }
 
-    setModalParent(document.getElementById('workspace-wrapper'));
+    setModalParent(document.getElementById(WORKSPACE_CONTENT_WRAPPER));
   }, [isIssueModalOpen, workspaceId]);
 
   return (

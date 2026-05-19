@@ -29,7 +29,10 @@ import { fuzzyMatchAll } from '~/common/misc';
 import type { McpRequest, McpServerPrimitiveTypes } from '~/insomnia-data';
 import type { McpEvent, McpMessageEvent } from '~/main/mcp/types';
 import { useRootLoaderData } from '~/root';
-import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   type McpRequestLoaderData,
   useRequestLoaderData,
@@ -363,8 +366,8 @@ export const McpPane = () => {
       <PanelGroup
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
-        id="workspace-wrapper"
-        className="new-sidebar relative min-h-0 w-full flex-1 text-(--color-font)"
+        id={WORKSPACE_CONTENT_WRAPPER}
+        className="new-sidebar min-h-0 w-full flex-1 text-(--color-font)"
         direction="horizontal"
       >
         <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>

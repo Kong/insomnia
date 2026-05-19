@@ -48,6 +48,7 @@ import { useRootLoaderData } from '~/root';
 import {
   type Child,
   useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
@@ -771,23 +772,25 @@ const Debug = () => {
   const tabNavigate = useTabNavigate();
 
   return (
-    <PanelGroup
-      ref={sidebarPanelRef}
-      autoSaveId="insomnia-sidebar"
-      id="wrapper"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
-      <Panel className="flex flex-col">
+    <div className="new-sidebar h-full w-full text-(--color-font)">
+      <div className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
         {!panel && !models.organization.isScratchpadOrganizationId(organizationId) && (
           <WorkspacePaneHeader hasSettings />
         )}
-        <PanelGroup autoSaveId="insomnia-panels" className="relative" id="workspace-wrapper" direction="horizontal">
-          {/* Design page has a collection view with legacy collection list */}
-          {isDesignWorkspace && (
-            <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
+      </div>
+      <PanelGroup
+        ref={sidebarPanelRef}
+        autoSaveId="insomnia-sidebar"
+        id={WORKSPACE_CONTENT_WRAPPER}
+        className="new-sidebar h-full w-full text-(--color-font)"
+        direction="horizontal"
+      >
+        {/* Design page has a collection view with legacy collection list */}
+        {isDesignWorkspace && (
+          <>
+            <Panel id="sidebar" order={1} className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
               <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
                 <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
                   {models.workspace.isDesign(activeWorkspace) && (
@@ -1132,8 +1135,10 @@ const Debug = () => {
                 )}
               </div>
             </Panel>
-          )}
-          <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
+            <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
+          </>
+        )}
+        <Panel order={2} className="flex flex-col">
           <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
             <Routes>
               <RouteComponent
@@ -1206,9 +1211,9 @@ const Debug = () => {
               <RouteComponent path="runner" element={<Runner />} />
             </Routes>
           </PanelGroup>
-        </PanelGroup>
-      </Panel>
-    </PanelGroup>
+        </Panel>
+      </PanelGroup>
+    </div>
   );
 };
 
