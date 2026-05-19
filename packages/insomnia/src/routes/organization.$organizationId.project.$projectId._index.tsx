@@ -287,19 +287,19 @@ const Component = () => {
       id: 'new-collection',
       name: 'Request collection',
       icon: 'bars',
-      action: createNewCollection,
+      action: () => createNewCollection('navbar'),
     },
     {
       id: 'new-document',
       name: 'Design document',
       icon: 'file',
-      action: createNewDocument,
+      action: () => createNewDocument('navbar'),
     },
     {
       id: 'new-mcp-client',
       name: 'MCP Client',
       icon: ['fac', 'mcp'] as unknown as IconProp,
-      action: createNewMcpClient,
+      action: () => createNewMcpClient('navbar'),
     },
     ...(canCreateMockServer
       ? [
@@ -307,7 +307,7 @@ const Component = () => {
             id: 'new-mock-server',
             name: 'Mock Server',
             icon: 'server' as IconName,
-            action: createNewMockServer,
+            action: () => createNewMockServer('navbar'),
           },
         ]
       : []),
@@ -315,7 +315,7 @@ const Component = () => {
       id: 'new-environment',
       name: 'Environment',
       icon: 'code',
-      action: createNewGlobalEnvironment,
+      action: () => createNewGlobalEnvironment('navbar'),
     },
   ];
 
@@ -712,6 +712,7 @@ const Component = () => {
               }
             }}
             redirectAfterCreate={newWorkspaceModalState.redirect}
+            source={newWorkspaceModalState.source}
             onOpenChange={isOpen => {
               setNewWorkspaceModalState({
                 scope: newWorkspaceModalState.scope,

@@ -51,11 +51,11 @@ import {
   WORKSPACE_CONTENT_WRAPPER,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
+import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -483,6 +483,7 @@ const Debug = () => {
     requestType: CreateRequestType;
     parentId: string;
     req?: Partial<Request>;
+    source?: string;
   }) =>
     createRequestFetcher.submit({
       organizationId,
@@ -493,7 +494,7 @@ const Debug = () => {
       req,
       metrics: {
         source: 'sidebar',
-      }
+      },
     });
 
   const reorderFetcher = useDebugReorderActionFetcher();

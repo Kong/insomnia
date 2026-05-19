@@ -8,10 +8,10 @@ import { services } from '~/insomnia-data';
 import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
-import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { toKebabCase } from '../../../common/misc';
@@ -81,7 +81,7 @@ export const RequestGroupActionsDropdown = ({
       req,
       metrics: {
         source: 'sidebar',
-      }
+      },
     });
 
   const onOpen = async () => {
