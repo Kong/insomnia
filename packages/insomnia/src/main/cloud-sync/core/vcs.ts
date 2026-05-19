@@ -17,6 +17,7 @@ import { generateId } from '../../../common/misc';
 import type {
   BackendProject,
   BackendProjectWithTeams,
+  BackendProjectWithTeamsAndTeamProjectId,
   Branch,
   DocumentKey,
   Head,
@@ -200,6 +201,43 @@ export class VCS {
       id: backend.id,
       name: backend.name,
       rootDocumentId: backend.rootDocumentId,
+      // A backend project is guaranteed to exist on exactly one team
+      team: backend.teams[0],
+    }));
+  }
+
+  async remoteBackendProjectsOfTeam({ teamId }: { teamId: string }) {
+    console.log(`[remoteBackendProjectsOfTeam] Fetching remote workspaces for teamId=${teamId}`);
+
+    const { projects } = await this._runGraphQL<{ projects: BackendProjectWithTeamsAndTeamProjectId[] }>(
+      `
+        query ($teamId: ID, $allProjects: Boolean) {
+          projects(teamId: $teamId, allProjects: $allProjects) {
+            id
+            name
+            rootDocumentId
+            teamProjectId
+            teams {
+              id
+              name
+            }
+          }
+        }
+      `,
+      {
+        teamId,
+        allProjects: true,
+      },
+      'projects',
+    );
+
+    console.log(`[remoteBackendProjectsOfTeam] Fetched ${projects.length} remote workspaces`);
+
+    return projects.map(backend => ({
+      id: backend.id,
+      name: backend.name,
+      rootDocumentId: backend.rootDocumentId,
+      teamProjectId: backend.teamProjectId,
       // A backend project is guaranteed to exist on exactly one team
       team: backend.teams[0],
     }));

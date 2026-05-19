@@ -8,11 +8,7 @@ import * as reactUse from 'react-use';
 import { Button as BasicButton } from '~/basic-components/button';
 import type { SortOrder } from '~/common/constants';
 import { fuzzyMatchAll } from '~/common/misc';
-import {
-  getAllRemoteBackendProjectsByProjectId,
-  getUnsyncedRemoteWorkspaces,
-  type InsomniaFile,
-} from '~/common/project';
+import { getAllRemoteBackendProjectsOfOrg, getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { RequestGroup, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
@@ -256,32 +252,48 @@ export const ProjectNavigationSidebar = ({
     const cloudSyncProjectIds = cloudSyncProjectIdsKey.split(',');
     const result = new Map<string, InsomniaFile[]>();
     isFetchingUnsyncedFilesRef.current = true;
+
+    // set up a map of remoteId to projectId for all cloud sync projects.
+    const remoteIdToProjectIdMap = new Map<string, string>();
     for (const projectId of cloudSyncProjectIds) {
-      try {
-        const targetProject = await services.project.get(projectId);
-        if (targetProject && 'remoteId' in targetProject && targetProject.remoteId) {
-          const files = await getAllRemoteBackendProjectsByProjectId({
-            teamProjectId: targetProject.remoteId,
-            organizationId,
+      const project = await services.project.get(projectId);
+      if (project && 'remoteId' in project && project.remoteId) {
+        remoteIdToProjectIdMap.set(project.remoteId, projectId);
+      }
+    }
+
+    try {
+      const files = await getAllRemoteBackendProjectsOfOrg({ organizationId });
+      const filesByProjectId = new Map<string, InsomniaFile[]>();
+      // group files by projectId
+      for (const file of files) {
+        const projectId = remoteIdToProjectIdMap.get(file.teamProjectId);
+        if (projectId) {
+          if (!filesByProjectId.has(projectId)) {
+            filesByProjectId.set(projectId, []);
+          }
+          filesByProjectId.get(projectId)?.push({
+            id: file.rootDocumentId,
+            name: file.name,
+            scope: 'unsynced',
+            label: 'Unsynced',
+            remoteId: file.id,
+            created: 0,
+            lastModifiedTimestamp: 0,
           });
-          result.set(
-            projectId,
-            files.map(f => ({
-              id: f.rootDocumentId,
-              name: f.name,
-              scope: 'unsynced',
-              label: 'Unsynced',
-              remoteId: f.id,
-              created: 0,
-              lastModifiedTimestamp: 0,
-            })),
-          );
         }
-      } catch (error) {
-        console.error(`Failed to fetch unsynced files for project ${projectId}`, error);
+      }
+
+      for (const [projectId, files] of filesByProjectId.entries()) {
+        result.set(projectId, files);
+      }
+    } catch (error) {
+      console.error(`Failed to fetch unsynced files for organization ${organizationId}`, error);
+      for (const projectId of cloudSyncProjectIds) {
         result.set(projectId, []);
       }
     }
+
     isFetchingUnsyncedFilesRef.current = false;
     return setUnsyncedFilesByProjectId(result);
   }, [organizationId, cloudSyncProjectIdsKey]);

@@ -329,6 +329,10 @@ export const getAllRemoteBackendProjectsByProjectId = async ({
   return window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId });
 };
 
+export const getAllRemoteBackendProjectsOfOrg = async ({ organizationId }: { organizationId: string }) => {
+  return window.main.sync.remoteBackendProjectsOfTeam({ teamId: organizationId });
+};
+
 export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspaces: Workspace[]) =>
   remoteFiles.filter(remoteFile => !workspaces.find(w => w._id === remoteFile.id));
 
