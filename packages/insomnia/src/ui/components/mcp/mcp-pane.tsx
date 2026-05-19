@@ -367,7 +367,7 @@ export const McpPane = () => {
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
         id={WORKSPACE_CONTENT_WRAPPER}
-        className="new-sidebar relative min-h-0 w-full flex-1 text-(--color-font)"
+        className="new-sidebar min-h-0 w-full flex-1 text-(--color-font)"
         direction="horizontal"
       >
         <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>

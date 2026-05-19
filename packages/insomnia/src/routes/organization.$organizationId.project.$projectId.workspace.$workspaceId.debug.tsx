@@ -784,7 +784,7 @@ const Debug = () => {
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
         id={WORKSPACE_CONTENT_WRAPPER}
-        className="new-sidebar relative h-full w-full text-(--color-font)"
+        className="new-sidebar h-full w-full text-(--color-font)"
         direction="horizontal"
       >
         {/* Design page has a collection view with legacy collection list */}

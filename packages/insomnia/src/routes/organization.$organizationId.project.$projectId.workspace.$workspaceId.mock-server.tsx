@@ -236,7 +236,7 @@ const Component = () => {
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
         id={WORKSPACE_CONTENT_WRAPPER}
-        className="new-sidebar relative w-full flex-1 text-(--color-font)"
+        className="new-sidebar w-full flex-1 text-(--color-font)"
         direction="horizontal"
       >
         <Panel

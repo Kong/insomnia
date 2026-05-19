@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import type React from 'react';
-import { useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { Overlay, useOverlay } from 'react-aria';
 import { Button, Dialog, Heading, Modal as RAModal, ModalOverlay } from 'react-aria-components';
 
@@ -13,7 +13,6 @@ interface Props {
   closable?: boolean;
   isDismissable?: boolean;
   className?: string;
-  // Custom parents must already establish a positioning context.
   parent?: HTMLElement | null;
   centered?: boolean;
 }
@@ -50,6 +49,34 @@ export const Modal: React.FC<React.PropsWithChildren<Props>> = ({
     },
     dialogRef,
   );
+
+  useLayoutEffect(() => {
+    if (!isOpen || !hasCustomParent || !parent || window.getComputedStyle(parent).position !== 'static') {
+      return;
+    }
+
+    // Multiple scoped modals can share a parent, so only restore its original
+    // positioning after the last modal using this fallback has closed.
+    const currentCount = Number(parent.dataset.insomniaModalParentCount || '0');
+    if (currentCount === 0) {
+      parent.dataset.insomniaModalParentOriginalPosition = parent.style.position;
+    }
+
+    parent.dataset.insomniaModalParentCount = String(currentCount + 1);
+    parent.style.position = 'relative';
+
+    return () => {
+      const nextCount = Math.max(0, Number(parent.dataset.insomniaModalParentCount || '1') - 1);
+      if (nextCount === 0) {
+        parent.style.position = parent.dataset.insomniaModalParentOriginalPosition || '';
+        delete parent.dataset.insomniaModalParentCount;
+        delete parent.dataset.insomniaModalParentOriginalPosition;
+        return;
+      }
+
+      parent.dataset.insomniaModalParentCount = String(nextCount);
+    };
+  }, [hasCustomParent, isOpen, parent]);
 
   const dialogContent = (
     <>
