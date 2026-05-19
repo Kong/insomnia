@@ -1,5 +1,20 @@
 # Plugin System POC Outline
 
+## Current PR review scope
+
+This branch contains some stacked prerequisite changes alongside the Phase 1a plugin bridge work.
+
+For review, focus primarily on:
+
+- `src/main/plugin-window.ts`
+- `src/entry.plugin-window.ts`
+- `src/entry.plugin-window-preload.ts`
+- `src/entry.preload.ts`
+- `src/plugins/*`
+- `packages/insomnia-smoke-test/tests/smoke/plugin-bridge.test.ts`
+
+Other changes in the branch are supporting or preparatory work and can be reviewed more lightly in the context of Phase 1a.
+
 ## Goal
 
 Design a new plugin system for the Electron app that supports:
@@ -312,6 +327,19 @@ type PluginCommand =
 
 Pass 1 does not need to finalize the full protocol, but it should prove at least one realistic command flow end-to-end.
 
+### Concrete migration example: `documentActions`
+
+One low-risk example for the eventual Phase 2 command model is `documentActions`.
+
+The flow would look like:
+
+1. the UI triggers `window.plugins.invokeRenderer(pluginName, 'documentAction.rename', { documentId })`
+2. the hidden plugin host executes the plugin function with a constrained context
+3. the plugin returns a structured command such as `{ type: 'update-document', documentId, patch: { name: 'New Name' } }`
+4. the host applies the command through the approved bridge and returns success metadata to the caller
+
+This is intentionally narrow, but it demonstrates that action-style plugins can move off direct model mutation without requiring Phase 1 to solve the full mutation protocol.
+
 ## How this works with Electron sandboxing
 
 If the app continues toward `contextIsolation: true`, the model becomes:
@@ -429,12 +457,12 @@ Phase 1a is a transport and hosting proof. Reviewers should read the deliverable
 
 **Not proven, still risky after Phase 1a**
 
-- *Action mutation semantics.* Request/workspace/document actions still mutate models through the renderer-side context object. The bridge serializes inputs and outputs, but no mutation contract is enforced. Side-effect ordering between an action's UI calls (`alert`/`prompt`) and its model writes is unchanged from the legacy runtime — and untested under the new transport.
-- *Template tags.* Listing and `runTemplateTagAction` are bridged, but Nunjucks rendering still executes in the existing template worker. Isolation of tag execution is unchanged in 1a.
-- *inso CLI compatibility.* inso does not use the bridge. Any divergence between app-side and CLI-side plugin behaviour is unaddressed here and only surfaces in Phase 1b when `process.type` guards are touched.
-- *True isolation.* The hidden window runs with `nodeIntegration: true` and `contextIsolation: false`. Plugins are still trusted with full Node access. Sandbox claims belong to Phase 1c (renderer hardening) and Phase 2 (plugin window hardening), not 1a.
-- *Final plugin API.* Plugin authors see no API change. The `rendererFunctions`/`mainFunctions`/permission shape from this document is design-only until Phase 2.
-- *Crash recovery.* `render-process-gone` increments a counter and rejects in-flight requests, but there is no auto-restart loop. A crashed plugin window will be recreated lazily on the next invocation; held subscriptions and warm caches are lost. Acceptable for 1a but worth validating in production telemetry before relying on it.
+- _Action mutation semantics._ Request/workspace/document actions still mutate models through the renderer-side context object. The bridge serializes inputs and outputs, but no mutation contract is enforced. Side-effect ordering between an action's UI calls (`alert`/`prompt`) and its model writes is unchanged from the legacy runtime — and untested under the new transport.
+- _Template tags._ Listing and `runTemplateTagAction` are bridged, but Nunjucks rendering still executes in the existing template worker. Isolation of tag execution is unchanged in 1a.
+- _inso CLI compatibility._ inso does not use the bridge. Any divergence between app-side and CLI-side plugin behaviour is unaddressed here and only surfaces in Phase 1b when `process.type` guards are touched.
+- _True isolation._ The hidden window runs with `nodeIntegration: true` and `contextIsolation: false`. Plugins are still trusted with full Node access. Sandbox claims belong to Phase 1c (renderer hardening) and Phase 2 (plugin window hardening), not 1a.
+- _Final plugin API._ Plugin authors see no API change. The `rendererFunctions`/`mainFunctions`/permission shape from this document is design-only until Phase 2.
+- _Crash recovery._ `render-process-gone` increments a counter and rejects in-flight requests, but there is no auto-restart loop. A crashed plugin window will be recreated lazily on the next invocation; held subscriptions and warm caches are lost. Acceptable for 1a but worth validating in production telemetry before relying on it.s
 
 ### Phase 1b: full plugin isolation in hidden window
 
