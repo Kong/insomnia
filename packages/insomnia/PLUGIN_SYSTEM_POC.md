@@ -10,7 +10,7 @@ Design a new plugin system for the Electron app that supports:
 
 The migration is split into phases to avoid breaking existing plugin behaviour:
 
-- **Phase 1a:** improve the legacy behaviour test baseline and route all plugin execution through an IPC bridge to a hidden BrowserWindow with `nodeIntegration: true`. No plugin code is moved yet — the renderer still loads plugins, but all invocations cross the bridge. *(current PR)*
+- **Phase 1a:** improve the legacy behaviour test baseline and route all plugin execution through an IPC bridge to a hidden BrowserWindow with `nodeIntegration: true`. No plugin code is moved yet — the renderer still loads plugins, but all invocations cross the bridge. _(current PR)_
 - **Phase 1b:** move all plugin code to run exclusively inside the hidden BrowserWindow. Plugin context modules (`plugins/context/`, `plugins/index.ts`) are removed from the main renderer bundle entirely. The renderer becomes a pure client of the bridge.
 - **Phase 1c:** disable `nodeIntegration` in the main BrowserWindow. Tackle the remaining renderer-side Node.js dependencies together: direct Electron imports, `fs` operations, `process.env` access, dynamic `require('electron')`, and `node:crypto`/`node:os` usage.
 - **Phase 2:** replace the hidden window's `nodeIntegration: true` runtime with a stricter sandbox (`contextIsolation: true`, capability-based permissions). Plugin authors migrate to the new API surface.
@@ -200,12 +200,12 @@ This is deliberately permissive. It matches the trust level plugins already have
 
 ### Why hidden BrowserWindow over alternatives for Phase 1
 
-| Option | Phase 1 suitability | Notes |
-|--------|-------------------|-------|
-| Hidden BrowserWindow (nodeIntegration: true) | Best | Full Node/Electron compat, easy IPC, matches current plugin expectations |
-| Worker | Poor | No Node builtins, breaks most existing plugins |
-| Utility process | Poor | No DOM, breaks renderer-oriented plugin APIs |
-| Second full window | Overkill | Hidden window achieves the same isolation with less overhead |
+| Option                                       | Phase 1 suitability | Notes                                                                    |
+| -------------------------------------------- | ------------------- | ------------------------------------------------------------------------ |
+| Hidden BrowserWindow (nodeIntegration: true) | Best                | Full Node/Electron compat, easy IPC, matches current plugin expectations |
+| Worker                                       | Poor                | No Node builtins, breaks most existing plugins                           |
+| Utility process                              | Poor                | No DOM, breaks renderer-oriented plugin APIs                             |
+| Second full window                           | Overkill            | Hidden window achieves the same isolation with less overhead             |
 
 ### Phase 2 configuration
 
@@ -414,6 +414,27 @@ This keeps the public renderer surface narrow and auditable.
 2. Hidden plugin window created and managed from main
 3. IPC bridge routing all renderer plugin invocations to the hidden window
 4. Zero behavioural regressions against baseline
+5. Bridge observability: per-invocation structured logs (`[plugin-bridge] invoke method=… outcome=… duration_ms=…`), startup timing (`window_ready startup_ms=…`), crash events (`window_crash reason=…`), and a snapshot accessor (`window.main.plugins.getBridgeMetrics()` → `plugins.getBridgeMetrics` IPC handler) exposing per-method `{ok, error, timeout, avgDurationMs, maxDurationMs}` and window counters
+
+#### What Phase 1a actually proves vs defers
+
+Phase 1a is a transport and hosting proof. Reviewers should read the deliverables narrowly:
+
+**Proven by Phase 1a**
+
+- The IPC bridge can carry every existing plugin capability shape (template tags, request/response hooks, request/group/workspace/document actions, bundled main actions, theme listing) end-to-end with serializable arguments and results
+- The hidden BrowserWindow lifecycle (creation deferred until main window loads, ready signalling, reload, teardown) is viable on darwin/win32/linux
+- Failure shapes from plugin code (sync throw, async reject with `Error`, async reject with non-`Error`) surface as rejections on the renderer side rather than as hangs or silent successes
+- Concurrent invocations are routed back to the correct caller (per-request `id` in `pluginRequests`)
+
+**Not proven, still risky after Phase 1a**
+
+- *Action mutation semantics.* Request/workspace/document actions still mutate models through the renderer-side context object. The bridge serializes inputs and outputs, but no mutation contract is enforced. Side-effect ordering between an action's UI calls (`alert`/`prompt`) and its model writes is unchanged from the legacy runtime — and untested under the new transport.
+- *Template tags.* Listing and `runTemplateTagAction` are bridged, but Nunjucks rendering still executes in the existing template worker. Isolation of tag execution is unchanged in 1a.
+- *inso CLI compatibility.* inso does not use the bridge. Any divergence between app-side and CLI-side plugin behaviour is unaddressed here and only surfaces in Phase 1b when `process.type` guards are touched.
+- *True isolation.* The hidden window runs with `nodeIntegration: true` and `contextIsolation: false`. Plugins are still trusted with full Node access. Sandbox claims belong to Phase 1c (renderer hardening) and Phase 2 (plugin window hardening), not 1a.
+- *Final plugin API.* Plugin authors see no API change. The `rendererFunctions`/`mainFunctions`/permission shape from this document is design-only until Phase 2.
+- *Crash recovery.* `render-process-gone` increments a counter and rejects in-flight requests, but there is no auto-restart loop. A crashed plugin window will be recreated lazily on the next invocation; held subscriptions and warm caches are lost. Acceptable for 1a but worth validating in production telemetry before relying on it.
 
 ### Phase 1b: full plugin isolation in hidden window
 
@@ -443,13 +464,13 @@ This keeps the public renderer surface narrow and auditable.
 
 #### What changes (grouped by effort)
 
-| Area | Files | Fix |
-|------|-------|-----|
-| Direct `import electron` in renderer | `routes/auth.clear-vault-key.tsx` | Replace `ipcRenderer.emit` with `window.main` equivalent |
-| `process.env` in renderer | `common/constants.ts`, `settings/plugins.tsx` | Expose `INSOMNIA_DATA_PATH` and `PORTABLE_EXECUTABLE_DIR` via preload |
-| `fs` in response/network/scripts | `models/helpers/response-operations.ts`, `script-executor.ts`, `network/grpc/write-proto-file.ts` | New IPC handlers in `src/main/ipc/`, exposed via preload |
-| Dynamic `require('electron')` | `network/network.ts` | Replace with static imports or `window.main` |
-| `node:crypto` / `node:os` | `sync/delta/diff.ts`, `sync/git/providers/gitlab.ts`, `templating/base-extension.ts` | Replace with Web Crypto API (`globalThis.crypto.subtle`) where possible; IPC bridge for remainder |
+| Area                                 | Files                                                                                             | Fix                                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Direct `import electron` in renderer | `routes/auth.clear-vault-key.tsx`                                                                 | Replace `ipcRenderer.emit` with `window.main` equivalent                                          |
+| `process.env` in renderer            | `common/constants.ts`, `settings/plugins.tsx`                                                     | Expose `INSOMNIA_DATA_PATH` and `PORTABLE_EXECUTABLE_DIR` via preload                             |
+| `fs` in response/network/scripts     | `models/helpers/response-operations.ts`, `script-executor.ts`, `network/grpc/write-proto-file.ts` | New IPC handlers in `src/main/ipc/`, exposed via preload                                          |
+| Dynamic `require('electron')`        | `network/network.ts`                                                                              | Replace with static imports or `window.main`                                                      |
+| `node:crypto` / `node:os`            | `sync/delta/diff.ts`, `sync/git/providers/gitlab.ts`, `templating/base-extension.ts`              | Replace with Web Crypto API (`globalThis.crypto.subtle`) where possible; IPC bridge for remainder |
 
 These changes should land together in one PR where practical, since they all share the same prerequisite (Phase 1b complete) and the same goal (nodeIntegration: false on the main window).
 
@@ -616,18 +637,18 @@ Recommended rules:
 
 ## Legacy feature mapping
 
-| Current feature           | Phase 1 treatment             | Phase 2 treatment               | Notes                                                            |
-| ------------------------- | ----------------------------- | ------------------------------- | ---------------------------------------------------------------- |
-| `themes`                  | moved to hidden window, works | declarative plugin metadata     | Keep data-only                                                   |
-| `documentActions`         | moved to hidden window, works | `rendererFunctions`             | Lower risk than other actions                                    |
-| `requestActions`          | moved to hidden window, works | `rendererFunctions`             | Needs DTO or mutation-patch wrapper in Phase 2                   |
-| `requestGroupActions`     | moved to hidden window, works | `rendererFunctions`             | Same as request actions                                          |
-| `workspaceActions`        | moved to hidden window, works | `rendererFunctions`             | Same as request actions                                          |
-| `unsafePluginMainActions` | moved to hidden window, works | `mainFunctions`                 | Best first migration candidate for privileged actions            |
-| plugin store APIs         | moved to hidden window, works | plugin bridge/context APIs      | Good fit for explicit capability APIs                            |
-| `requestHooks`            | moved to hidden window, works | deprecated / later redesign     | Do not force into Phase 2                                        |
-| `responseHooks`           | moved to hidden window, works | deprecated / later redesign     | Do not force into Phase 2                                        |
-| `templateTags`            | moved to hidden window, works | separate redesign track         | Keep separate from first two phases                              |
+| Current feature           | Phase 1 treatment             | Phase 2 treatment           | Notes                                                 |
+| ------------------------- | ----------------------------- | --------------------------- | ----------------------------------------------------- |
+| `themes`                  | moved to hidden window, works | declarative plugin metadata | Keep data-only                                        |
+| `documentActions`         | moved to hidden window, works | `rendererFunctions`         | Lower risk than other actions                         |
+| `requestActions`          | moved to hidden window, works | `rendererFunctions`         | Needs DTO or mutation-patch wrapper in Phase 2        |
+| `requestGroupActions`     | moved to hidden window, works | `rendererFunctions`         | Same as request actions                               |
+| `workspaceActions`        | moved to hidden window, works | `rendererFunctions`         | Same as request actions                               |
+| `unsafePluginMainActions` | moved to hidden window, works | `mainFunctions`             | Best first migration candidate for privileged actions |
+| plugin store APIs         | moved to hidden window, works | plugin bridge/context APIs  | Good fit for explicit capability APIs                 |
+| `requestHooks`            | moved to hidden window, works | deprecated / later redesign | Do not force into Phase 2                             |
+| `responseHooks`           | moved to hidden window, works | deprecated / later redesign | Do not force into Phase 2                             |
+| `templateTags`            | moved to hidden window, works | separate redesign track     | Keep separate from first two phases                   |
 
 ## Deprecation plan
 
@@ -668,17 +689,17 @@ Phase 1 must not break existing plugin behaviour. Before any structural changes 
 
 For each plugin export type, the baseline must cover:
 
-| Export type               | Invocation shape | Return value shape | Error behaviour |
-| ------------------------- | ---------------- | ------------------ | --------------- |
-| `templateTags`            | `render(context)` called with a mock tag context | rendered string | thrown errors propagate to the template engine as a render error |
-| `requestHooks`            | `hook(context)` called before request dispatch | void / mutates context | thrown errors abort the request with an error message |
-| `responseHooks`           | `hook(context)` called after response received | void / mutates context | thrown errors are logged; response is still returned |
-| `requestActions`          | menu item triggers `action(context)` | void | thrown errors shown as a notification |
-| `requestGroupActions`     | same as requestActions | void | same |
-| `workspaceActions`        | same as requestActions | void | same |
-| `documentActions`         | same as requestActions | void | same |
-| `unsafePluginMainActions` | invoked by name with args | serializable result | thrown errors returned as structured error to caller |
-| `themes`                  | queried by name for CSS vars | theme object | missing theme falls back to default |
+| Export type               | Invocation shape                                 | Return value shape     | Error behaviour                                                  |
+| ------------------------- | ------------------------------------------------ | ---------------------- | ---------------------------------------------------------------- |
+| `templateTags`            | `render(context)` called with a mock tag context | rendered string        | thrown errors propagate to the template engine as a render error |
+| `requestHooks`            | `hook(context)` called before request dispatch   | void / mutates context | thrown errors abort the request with an error message            |
+| `responseHooks`           | `hook(context)` called after response received   | void / mutates context | thrown errors are logged; response is still returned             |
+| `requestActions`          | menu item triggers `action(context)`             | void                   | thrown errors shown as a notification                            |
+| `requestGroupActions`     | same as requestActions                           | void                   | same                                                             |
+| `workspaceActions`        | same as requestActions                           | void                   | same                                                             |
+| `documentActions`         | same as requestActions                           | void                   | same                                                             |
+| `unsafePluginMainActions` | invoked by name with args                        | serializable result    | thrown errors returned as structured error to caller             |
+| `themes`                  | queried by name for CSS vars                     | theme object           | missing theme falls back to default                              |
 
 ### What to write
 
@@ -688,7 +709,7 @@ For each plugin export type, the baseline must cover:
    - synchronous throw
    - rejected promise
    - non-Error thrown value (e.g. a plain string)
-   
+
    Assert the error reaches the right handler and does not crash the app.
 
 3. **IPC contract snapshot** — once the baseline tests pass, document the exact IPC message shapes that Phase 1 will introduce for each export type. These become the acceptance criteria for the Phase 1 IPC bridge: if a message shape changes, the test must be updated intentionally, not silently.
@@ -780,23 +801,15 @@ Co-locate unit tests with the plugin execution code in `packages/insomnia/src/pl
 
 ### Phase 1
 
-**Phase 1a (current PR)**
-0. Write and pass legacy behaviour baseline tests. Do not proceed until green in CI.
+**Phase 1a (current PR)** 0. Write and pass legacy behaviour baseline tests. Do not proceed until green in CI.
+
 1. Create hidden plugin window in main; verify it can load a plugin module.
 2. Add IPC bridge; redirect all renderer plugin invocations through it.
 3. Run full test suite; confirm zero regressions.
 
-**Phase 1b**
-4. Remove plugin code from the renderer bundle entirely.
-5. Audit and preserve all `process.type === 'renderer'` guards for inso; add `window.__PLUGIN_WINDOW__` flag if disambiguation is needed.
-6. Run inso CLI smoke tests to confirm no regressions.
+**Phase 1b** 4. Remove plugin code from the renderer bundle entirely. 5. Audit and preserve all `process.type === 'renderer'` guards for inso; add `window.__PLUGIN_WINDOW__` flag if disambiguation is needed. 6. Run inso CLI smoke tests to confirm no regressions.
 
-**Phase 1c**
-7. Remove direct `import electron` and `require('electron')` from renderer.
-8. Expose required `process.env` vars via preload.
-9. Bridge `fs` operations in response/network/scripts via new IPC handlers.
-10. Replace `node:crypto`/`node:os` with Web Crypto or IPC bridges.
-11. Set `nodeIntegration: false` on the main BrowserWindow; run full test suite.
+**Phase 1c** 7. Remove direct `import electron` and `require('electron')` from renderer. 8. Expose required `process.env` vars via preload. 9. Bridge `fs` operations in response/network/scripts via new IPC handlers. 10. Replace `node:crypto`/`node:os` with Web Crypto or IPC bridges. 11. Set `nodeIntegration: false` on the main BrowserWindow; run full test suite.
 
 ### Phase 2
 
@@ -820,3 +833,51 @@ Co-locate unit tests with the plugin execution code in `packages/insomnia/src/pl
 **Phase 2 is where the new API surface lands.** The `rendererFunctions` / `mainFunctions` shapes, permission model, and settings UI belong in Phase 2. They should not block Phase 1 delivery.
 
 **Hook and templating features stay on the legacy path.** `requestHooks`, `responseHooks`, and `templateTags` move to the hidden window in Phase 1 (preserved, not redesigned), and remain on a separate redesign track after Phase 2 with explicit deprecation messaging.
+
+## What Remains to Disable nodeIntegration in the Renderer (Phase 2)
+
+## Blockers (must fix before flipping the switch)
+
+1. createPlugin uses Node.js fs/path directly in the renderer
+
+packages/insomnia/src/plugins/create.ts imports fs and path from Node and is called directly from two renderer entry points: the create-plugin modal and root.tsx (theme installation). This is the most straightforward fix — move the filesystem writes to an IPC handler  
+ in the main process and call it via window.main.
+
+2. Template tag extensions still run inside the renderer's Web Worker
+
+This is the largest remaining piece. Nunjucks rendering runs in a Web Worker (ui/worker/templating-handler.ts), but the plugin template tag extensions (base-extension-worker.ts) are instantiated and executed inside that worker, which lives inside the renderer process.
+The worker already has nodeIntegrationInWorker: false, so the web worker is sandboxed — but the template tag plugin code still lives on the renderer side of the fence. For nodeIntegration: false on the renderer, all plugin code (including template tags) needs to move
+out.
+
+The cleanest solution — and the one you're already thinking about — is to move the entire templating pipeline into the plugin window. Template tags and request/action plugins would then share the same Node.js process and DB proxy. The custom  
+ insomnia-templating-worker-database:// protocol (currently used by the web worker to reach the main process for DB calls, network requests, file reads, etc.) could be replaced entirely with the existing IPC database proxy. The renderer side becomes a thin caller:
+serialize the render context, send it over IPC, get back a rendered string.
+
+3. webviewTag: true on the main window
+
+response-web-view.tsx uses Electron's <webview> tag to render HTML response previews. The webviewTag: true setting in window-utils.ts:204 must remain until this is replaced. With contextIsolation: true the webview still functions, but it's a meaningful attack surface —
+a malicious API response could attempt to exploit the webview. The right long-term replacement is a sandboxed <iframe srcdoc> (no src, no allow attributes), which achieves the same preview without a privileged Electron component.
+
+---
+
+## Minor Cleanup (not blockers, but needed for correctness)
+
+- packages/insomnia/src/network/cancellation.ts:52 — the process.type === 'renderer' branch guard can be deleted once the renderer no longer has process in scope; the non-renderer branch there is unreachable from the renderer anyway.
+
+---
+
+## Suggested Phase 2 Work Order
+
+┌─────┬───────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐  
+ │ # │ Task │ Approach │
+├─────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤  
+ │ 1 │ Move createPlugin to main process │ Add IPC handler, replace fs/path calls with window.main.createPlugin(...) │
+├─────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤  
+ │ 2 │ Move templating pipeline to plugin window │ The plugin window replaces the web worker; renderer calls window.main.plugins.renderTemplate(context) over IPC; drop the insomnia-templating-worker-database:// protocol │  
+ ├─────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤  
+ │ 3 │ Replace <webview> with sandboxed <iframe> │ Removes the last reason for webviewTag: true │  
+ ├─────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤  
+ │ 4 │ Flip the switch │ Set nodeIntegration: false, contextIsolation: true on the main renderer window │  
+ └─────┴───────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+The templating migration (item 2) is the most work but also the most architecturally coherent outcome — all plugin code (actions, hooks, template tags) runs in one place with one shared DB proxy, one Node.js context, and one IPC boundary back to the renderer.
