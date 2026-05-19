@@ -3,16 +3,15 @@ import zlib from 'node:zlib';
 
 import deepEqual from 'deep-equal';
 
-import {
-  database as db,
-  type GrpcRequest,
-  type McpRequest,
-  models,
-  type Request,
-  type RequestVersion,
-  type SocketIORequest,
-  type WebSocketRequest,
+import type {
+  GrpcRequest,
+  McpRequest,
+  Request,
+  RequestVersion,
+  SocketIORequest,
+  WebSocketRequest,
 } from '~/insomnia-data';
+import { database, database as db, models } from '~/insomnia-data';
 
 import * as requestHelpers from './helpers/request-operations';
 
@@ -71,8 +70,8 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
   }
 
   const parentId = request._id;
-  const latestRequestVersion = await db.findOne<RequestVersion>(
-    'RequestVersion',
+  const latestRequestVersion = await database.findOne<RequestVersion>(
+    type,
     {
       parentId,
     },
