@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
 import { models } from '~/insomnia-data';
+import { invariant } from '~/insomnia-data/common';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -20,7 +21,6 @@ import {
   type ImportSourceType,
   type ScanResult,
 } from '../../../../common/import';
-import { invariant } from '../../../../utils/invariant';
 import {
   AnalyticsEvent,
   importAttributionKey,

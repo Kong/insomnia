@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { models } from '~/insomnia-data';
+import { strings } from '~/insomnia-data/common';
 
 import { getWorkspaceLabel } from '../get-workspace-label';
-import { strings } from '../strings';
 
 describe('getWorkspaceLabel', () => {
   it('should return document label', () => {

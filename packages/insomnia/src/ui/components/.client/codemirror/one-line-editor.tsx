@@ -8,8 +8,8 @@ import * as reactUse from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import { isMac } from '~/common/platform';
-import type { KeyCombination } from '~/common/settings';
+import type { KeyCombination } from '~/insomnia-data/common';
+import { isMac } from '~/insomnia-data/common';
 import { getTemplateTags } from '~/plugins';
 import { useRootLoaderData } from '~/root';
 import { getTagDefinitions } from '~/templating/index';

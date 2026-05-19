@@ -18,6 +18,7 @@ import type {
   RequestGroup,
   RequestHeader,
   RequestParameter,
+  RequestTestResult,
   Settings,
   SocketIORequest,
   UserUploadEnvironment,
@@ -25,13 +26,10 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { EnvironmentType, models, services } from '~/insomnia-data';
+import { invariant, serializeNDJSON } from '~/insomnia-data/common';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
-import type {
-  ExecutionOption,
-  RequestContext,
-  RequestTestResult,
-} from '../../../insomnia-scripting-environment/src/objects';
+import type { ExecutionOption, RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
@@ -49,8 +47,6 @@ import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { invariant } from '../utils/invariant';
-import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';

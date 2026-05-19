@@ -4,13 +4,12 @@ import path from 'node:path';
 import electron from 'electron';
 
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { database as db, models, services } from '~/insomnia-data';
+import type { PluginConfigMap } from '~/insomnia-data/common';
 import { fetchFromTemplateWorkerDatabase } from '~/templating/base-extension-worker';
 
 import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
-import { database as db } from '../common/database';
-import type { PluginConfigMap } from '../common/settings';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';

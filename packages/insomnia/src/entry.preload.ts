@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from '~/insomnia-data';
+import { invariant } from '~/insomnia-data/common';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
@@ -18,7 +19,6 @@ import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import type { RenderedRequest } from './templating/types';
-import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 const webSocket: WebSocketBridgeAPI = {

@@ -1,10 +1,9 @@
 import classnames from 'classnames';
 import React, { forwardRef, type KeyboardEvent, useImperativeHandle, useRef, useState } from 'react';
 
-import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
-import { keyboardKeys } from '../../../common/keyboard-keys';
-import type { KeyCombination } from '../../../common/settings';
-import type { KeyboardShortcut } from '../../../common/settings';
+import type { KeyboardShortcut, KeyCombination } from '~/insomnia-data/common';
+import { constructKeyCombinationDisplay, isModifierKeyCode, keyboardKeys } from '~/insomnia-data/common';
+
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';

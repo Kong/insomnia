@@ -67,11 +67,12 @@ export type { RequestGroup } from './request-group';
 export type { RequestGroupMeta } from './request-group-meta';
 export type { RequestAccordionKeys, RequestMeta } from './request-meta';
 export type { RequestVersion } from './request-version';
-export type { Compression, Response, ResponseHeader } from './response';
+export type { Compression, Response, ResponseHeader, ResponseTimelineEntry } from './response';
 export type { McpRequest, McpTransportType, McpServerPrimitiveTypes } from './mcp-request';
 export type { McpPayload } from './mcp-payload';
 export type { McpResponse } from './mcp-response';
 export type {
+  RequestTestResult,
   RunnerTestResult,
   BaseRunnerTestResult,
   RunnerResultPerRequest,

@@ -25,8 +25,8 @@ const generalRestrictedImportPatterns = [
   },
   // Only allow ~/insomnia-data and ~/insomnia-data/node
   {
-    regex: '^~/insomnia-data/(?!node($|/)).+',
-    message: "Only '~/insomnia-data' and '~/insomnia-data/node' are allowed",
+    regex: '^~/insomnia-data/(?!node($|/)|common($|/)).+',
+    message: "Only '~/insomnia-data', '~/insomnia-data/node' and '~/insomnia-data/common' are allowed",
   },
 ];
 const rendererNodeMigrationOffenders = [

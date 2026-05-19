@@ -1,8 +1,8 @@
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
+import type { SettingsOfType } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 
-import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { HelpTooltip } from '../help-tooltip';
 interface Props<T> {

@@ -3,11 +3,10 @@ import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
 import type { BaseModel, Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { database, models, services } from '~/insomnia-data';
+import { strings } from '~/insomnia-data/common';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
-import { database } from '../../../common/database';
-import { strings } from '../../../common/strings';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

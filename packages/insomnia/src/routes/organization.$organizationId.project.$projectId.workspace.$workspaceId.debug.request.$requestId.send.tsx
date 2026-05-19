@@ -9,6 +9,7 @@ import type {
   Request,
   RequestGroup,
   RequestMeta,
+  RequestTestResult,
   ResponseInfo,
   RunnerResultPerRequestPerIteration,
   UserUploadEnvironment,
@@ -32,7 +33,6 @@ import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
-import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 
 export interface SendActionParams {
@@ -356,10 +356,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
         if (activeRequest) {
           const [requestAndAncestors, clientCertificates] = await Promise.all([
-            db.withAncestors<Request | RequestGroup>(
-              activeRequest as Request,
-              [models.request.type, models.requestGroup.type],
-            ),
+            db.withAncestors<Request | RequestGroup>(activeRequest as Request, [
+              models.request.type,
+              models.requestGroup.type,
+            ]),
             services.clientCertificate.findByParentId(workspaceId),
           ]);
           const docsWithScripts = requestAndAncestors.filter(

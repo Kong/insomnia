@@ -1,8 +1,8 @@
 import Color from 'color';
 
 import type { ThemeSettings } from '~/insomnia-data';
+import { getAppDefaultTheme } from '~/insomnia-data/common';
 
-import { getAppDefaultTheme } from '../common/constants';
 import type { Theme } from './index';
 import { type ColorScheme, getThemes } from './index';
 

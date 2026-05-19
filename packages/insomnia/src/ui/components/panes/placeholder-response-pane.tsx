@@ -1,9 +1,9 @@
 import React, { type FC, type PropsWithChildren } from 'react';
 
+import type { KeyboardShortcut } from '~/insomnia-data/common';
+import { keyboardShortcutDescriptions } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 
-import { keyboardShortcutDescriptions } from '../../../common/hotkeys';
-import type { KeyboardShortcut } from '../../../common/settings';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 

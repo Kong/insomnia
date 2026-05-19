@@ -21,6 +21,7 @@ import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
 import type { GitCredentials, GitRepository, Project, ProviderEmail } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
+import { platform } from '~/insomnia-data/common';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitValidateCredentialsFetcher } from '~/routes/git.validate-credentials';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
@@ -35,7 +36,6 @@ import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
-import { platform } from '../../../common/platform';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
 

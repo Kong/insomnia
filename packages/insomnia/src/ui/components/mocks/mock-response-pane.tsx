@@ -5,18 +5,18 @@ import * as reactUse from 'react-use';
 
 import type { MockRoute, MockServer, Response } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { useRootLoaderData } from '~/root';
-import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
-import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
-
 import {
   getMockServiceURL,
   getPreviewModeName,
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODES,
   type PreviewMode,
-} from '../../../common/constants';
+} from '~/insomnia-data/common';
+import { useRootLoaderData } from '~/root';
+import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
+import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+
 import { exportHarCurrentRequest } from '../../../common/har';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { cancelRequestById } from '../../../network/cancellation';

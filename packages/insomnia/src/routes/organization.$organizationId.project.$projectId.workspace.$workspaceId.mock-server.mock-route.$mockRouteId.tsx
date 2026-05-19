@@ -12,13 +12,13 @@ import {
   CONTENT_TYPE_YAML,
   contentTypesMap,
   getMockServiceBinURL,
-  getMockServiceURL,
   RESPONSE_CODE_REASONS,
 } from '~/common/constants';
 import { database as db } from '~/common/database';
 import { getResponseCookiesFromHeaders } from '~/common/har';
 import type { MockRoute, MockServer, Request, RequestHeader, Response } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import { getMockServiceURL } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';

@@ -1,8 +1,6 @@
 import fuzzysort from 'fuzzysort';
-import { v4 as uuidv4 } from 'uuid';
 
 import { DEBOUNCE_MILLIS } from './constants';
-export { compressObject, decompressObject } from './compression';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -81,19 +79,7 @@ export function getContentDispositionHeader<T extends Header>(headers: T[]): T |
   return matches.length ? matches[0] : null;
 }
 
-/**
- * Generate an ID of the format "<MODEL_NAME>_<TIMESTAMP><RANDOM>"
- * @param prefix
- * @returns {string}
- */
-export function generateId(prefix?: string) {
-  const id = uuidv4().replace(/-/g, '');
-
-  if (prefix) {
-    return `${prefix}_${id}`;
-  }
-  return id;
-}
+export { generateId } from '~/insomnia-data/common';
 
 export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
   return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
@@ -250,7 +236,7 @@ export function unescapeForwardSlash(str: string): string {
   });
 }
 
-export const SECURITY_SETTINGS_PATH_LABEL = "Insomnia Preferences → General → Security";
+export const SECURITY_SETTINGS_PATH_LABEL = 'Insomnia Preferences → General → Security';
 
 export function cannotAccessPathError(accessingPath: string): string {
   return process.type === 'renderer' || process.type === 'browser'

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { filterClientCertificates } from 'insomnia/src/network/certificate';
 
-import type { ClientCertificate, RequestHeader, Settings } from '~/insomnia-data';
+import type { ClientCertificate, RequestHeader, RequestTestResult, Settings } from '~/insomnia-data';
 
 import { toPreRequestAuth } from './auth';
 import { getExistingConsole } from './console';
@@ -16,7 +16,7 @@ import { RequestInfo } from './request-info';
 import type { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
-import { type RequestTestResult, skip, test, type TestHandler } from './test';
+import { skip, test, type TestHandler } from './test';
 import { toUrlObject } from './urls';
 import { checkIfUrlIncludesTag } from './utils';
 

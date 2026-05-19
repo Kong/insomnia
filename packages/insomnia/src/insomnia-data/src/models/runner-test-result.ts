@@ -1,4 +1,3 @@
-import type { RequestTestResult } from '../../../../../insomnia-scripting-environment/src/objects';
 import type { BaseModel } from './base-types';
 
 export const name = 'Runner Test Result';
@@ -10,6 +9,17 @@ export const prefix = 'rtr';
 export const canDuplicate = false;
 
 export const canSync = false;
+
+export type TestStatus = 'passed' | 'failed' | 'skipped';
+export type TestCategory = 'unknown' | 'pre-request' | 'after-response';
+
+export interface RequestTestResult {
+  testCase: string;
+  status: TestStatus;
+  executionTime: number; // milliseconds
+  errorMessage?: string;
+  category: TestCategory;
+}
 
 export interface RunnerResultPerRequest {
   results: RequestTestResult[];

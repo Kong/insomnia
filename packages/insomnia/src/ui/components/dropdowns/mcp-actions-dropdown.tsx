@@ -4,8 +4,8 @@ import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, P
 
 import type { McpServerData } from '~/common/mcp-utils';
 import type { McpRequest, McpServerPrimitiveTypes } from '~/insomnia-data';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import { Icon } from '../icon';
 import type { PrimitiveTypeItem } from '../mcp/types';
 

@@ -1,6 +1,9 @@
-import { CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders } from '~/common/constants';
 import type { Request } from '~/insomnia-data';
-import { deconstructQueryStringToParams } from '~/utils/url/querystring';
+import {
+  CONTENT_TYPE_FORM_URLENCODED,
+  deconstructQueryStringToParams,
+  getContentTypeFromHeaders,
+} from '~/insomnia-data/common';
 
 export function migrate(doc: Request): Request {
   try {

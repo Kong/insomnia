@@ -1,8 +1,8 @@
 import { href } from 'react-router';
 
+import { invariant } from '~/insomnia-data/common';
 import { createFetcherSubmitHook } from '~/utils/router';
 
-import { invariant } from '../utils/invariant';
 import type { Route } from './+types/git.branch.delete';
 
 interface DeleteGitBranchData {

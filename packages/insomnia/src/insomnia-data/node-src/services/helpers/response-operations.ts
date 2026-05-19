@@ -1,10 +1,16 @@
 import fs from 'node:fs';
 import zlib from 'node:zlib';
 
-import type { Compression, McpResponse, Response, SocketIOResponse, WebSocketResponse } from '~/insomnia-data';
+import type {
+  Compression,
+  McpResponse,
+  Response,
+  ResponseTimelineEntry,
+  SocketIOResponse,
+  WebSocketResponse,
+} from '~/insomnia-data';
 import { database as db, models } from '~/insomnia-data';
-import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
-import { deserializeNDJSON } from '~/utils/ndjson';
+import { deserializeNDJSON } from '~/insomnia-data/common';
 
 import * as settingsService from '../settings';
 

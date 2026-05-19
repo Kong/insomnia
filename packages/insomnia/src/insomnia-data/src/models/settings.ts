@@ -1,6 +1,12 @@
-import { getAppDefaultDarkTheme, getAppDefaultLightTheme, getAppDefaultTheme } from '~/common/constants';
-import * as hotkeys from '~/common/hotkeys';
-import { HttpVersions, type Settings as BaseSettings, UpdateChannel } from '~/common/settings';
+import {
+  getAppDefaultDarkTheme,
+  getAppDefaultLightTheme,
+  getAppDefaultTheme,
+  HttpVersions,
+  newDefaultRegistry,
+  type Settings as BaseSettings,
+  UpdateChannel,
+} from '~/insomnia-data/common';
 
 import type { BaseModel } from './base-types';
 
@@ -46,7 +52,7 @@ export function init(): BaseSettings {
     fontVariantLigatures: false,
     forceVerticalLayout,
     hasKonnectPat: false,
-    hotKeyRegistry: hotkeys.newDefaultRegistry(),
+    hotKeyRegistry: newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',
     lightTheme: getAppDefaultLightTheme(),

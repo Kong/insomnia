@@ -26,13 +26,14 @@ import { href, useNavigate, useParams } from 'react-router';
 
 import type { Workspace } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
+import { invariant } from '~/insomnia-data/common';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginApp from '../../../plugins/context/app';
@@ -41,7 +42,6 @@ import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockServerGenerateRequestCollectionActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
-import { invariant } from '../../../utils/invariant';
 import { AnalyticsEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
