@@ -12,7 +12,6 @@ const reqGroupBuilder = createBuilder(requestGroupModelSchema);
 
 describe('render tests', () => {
   beforeEach(async () => {
-    await services.project.all();
     await services.settings.getOrCreate();
     envBuilder.reset();
     reqGroupBuilder.reset();

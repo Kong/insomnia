@@ -6,7 +6,7 @@ import { createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction({ request }: ActionFunctionArgs) {
   const { vaultKey, saveVaultKey: saveVaultKeyLocally = false } = await request.json();
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   const { vaultSalt, accountId } = userSession;
 
   if (!vaultSalt) {

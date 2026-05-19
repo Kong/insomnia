@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
 import { services } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -22,7 +22,7 @@ expect(response1.status).to.equal(200);`,
     name,
   });
 
-  window.main.trackSegmentEvent({ event: SegmentEvent.unitTestCreate });
+  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestCreate });
 
   return null;
 }

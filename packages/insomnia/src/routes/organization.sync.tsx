@@ -5,7 +5,7 @@ import { createFetcherSubmitHook } from '~/utils/router';
 import type { Route } from './+types/organization.sync';
 
 export async function clientAction(_args: Route.ClientActionArgs) {
-  const { id: sessionId, accountId } = await services.userSession.getOrCreate();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (sessionId) {
     await syncOrganizations(sessionId, accountId);

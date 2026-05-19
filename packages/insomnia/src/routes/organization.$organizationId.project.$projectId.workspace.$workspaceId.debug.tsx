@@ -58,7 +58,7 @@ import { useRequestNewActionFetcher } from '~/routes/organization.$organizationI
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { DropdownHint } from '~/ui/components/base/dropdown/dropdown-hint';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
@@ -138,7 +138,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   if (!params.requestId && !params.requestGroupId) {
     const { projectId, workspaceId, organizationId } = params;
 
-    const activeProject = await services.project.getById(projectId);
+    const activeProject = await services.project.get(projectId);
     if (!activeProject) {
       showResourceNotFoundToast(`Project not found: ${projectId}`);
       throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -807,8 +807,8 @@ const Debug = () => {
                         setFilter(value);
 
                         if (value.trim() !== '') {
-                          window.main.trackSegmentEvent({
-                            event: SegmentEvent.filterCreatedRequests,
+                          window.main.trackAnalyticsEvent({
+                            event: AnalyticsEvent.filterCreatedRequests,
                           });
                         }
                       }}
@@ -829,8 +829,8 @@ const Debug = () => {
                       selectedKey={sortOrder}
                       onSelectionChange={order => {
                         if (order) {
-                          window.main.trackSegmentEvent({
-                            event: SegmentEvent.requestListSortClicked,
+                          window.main.trackAnalyticsEvent({
+                            event: AnalyticsEvent.requestListSortClicked,
                           });
                           setSearchParams({
                             ...Object.fromEntries(searchParams.entries()),
@@ -884,8 +884,8 @@ const Debug = () => {
                         defaultSelected={allExpanded}
                         onChange={() => {
                           setAllExpanded(!allExpanded);
-                          window.main.trackSegmentEvent({
-                            event: SegmentEvent.requestListExpandCollapseClicked,
+                          window.main.trackAnalyticsEvent({
+                            event: AnalyticsEvent.requestListExpandCollapseClicked,
                           });
                           toggleExpandAllFetcher.submit({
                             organizationId,

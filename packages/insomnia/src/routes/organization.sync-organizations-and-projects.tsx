@@ -23,7 +23,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       projectId,
       asyncTaskList = [],
     } = (await request.json()) as SyncOrgsAndProjectsActionRequest;
-    const { id: sessionId, accountId } = await services.userSession.getOrCreate();
+    const { id: sessionId, accountId } = await services.userSession.get();
 
     const taskPromiseList = [];
     if (asyncTaskList.includes(AsyncTask.SyncOrganization)) {

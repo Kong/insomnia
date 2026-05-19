@@ -11,7 +11,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { METHOD_SUBSCRIBE_RESOURCE, METHOD_UNSUBSCRIBE_RESOURCE } from '~/common/mcp-utils';
-import { SegmentEvent, trackSegmentEvent } from '~/main/analytics';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import { getActiveMcpClient, getReadyActiveMcpConnectionContext, writeEventLogAndNotify } from '~/main/mcp/common';
 import type { CommonMcpOptions, McpMessageEventWithoutBase } from '~/main/mcp/types';
 
@@ -29,7 +29,7 @@ export const callTool = async (options: CommonMcpOptions & CallToolRequest['para
   const mcpClient = getActiveMcpClient(requestId);
   if (mcpClient) {
     const response = await mcpClient.callTool(params, CompatibilityCallToolResultSchema);
-    trackSegmentEvent(SegmentEvent.mcpToolCalled);
+    trackAnalyticsEvent(AnalyticsEvent.mcpToolCalled);
     return response.content;
   }
   return null;
@@ -49,7 +49,7 @@ export const getPrompt = async (options: CommonMcpOptions & GetPromptRequest['pa
   const mcpClient = getActiveMcpClient(options.requestId);
   if (mcpClient) {
     const prompt = await mcpClient.getPrompt(params);
-    trackSegmentEvent(SegmentEvent.mcpPromptCalled);
+    trackAnalyticsEvent(AnalyticsEvent.mcpPromptCalled);
     return prompt;
   }
   return null;
@@ -80,7 +80,7 @@ export const readResource = async (options: CommonMcpOptions & ReadResourceReque
   const mcpClient = getActiveMcpClient(requestId);
   if (mcpClient) {
     const resource = await mcpClient.readResource(params);
-    trackSegmentEvent(SegmentEvent.mcpResourceRead);
+    trackAnalyticsEvent(AnalyticsEvent.mcpResourceRead);
     return resource;
   }
   return null;

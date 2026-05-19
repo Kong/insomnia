@@ -61,7 +61,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(organizationId, 'Organization ID is required');
 
   if (!models.project.isScratchpadProject({ _id: projectId })) {
-    const { id: sessionId } = await services.userSession.getOrCreate();
+    const { id: sessionId } = await services.userSession.get();
 
     if (!sessionId) {
       await logout();
@@ -69,7 +69,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     }
   }
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
 
   if (!project) {
     return redirect(href('/organization/:organizationId', { organizationId }));

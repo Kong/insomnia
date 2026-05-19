@@ -6,12 +6,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { getContentDispositionHeader } from '~/common/misc';
 import type {
   Environment,
+  Request,
+  RequestGroup,
   RequestMeta,
   ResponseInfo,
   RunnerResultPerRequestPerIteration,
   UserUploadEnvironment,
 } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { database as db, models, services } from '~/insomnia-data';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import {
@@ -25,7 +27,7 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
-import { type ImportAttribution, importAttributionKey, SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent, type ImportAttribution, importAttributionKey } from '~/ui/analytics';
 import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -356,8 +358,22 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         const activeRequest = await services.request.getById(requestId);
 
         if (activeRequest) {
-          window.main.trackSegmentEvent({
-            event: SegmentEvent.requestExecuted,
+          const [requestAndAncestors, clientCertificates] = await Promise.all([
+            db.withAncestors<Request | RequestGroup>(activeRequest as Request, [
+              models.request.type,
+              models.requestGroup.type,
+            ]),
+            services.clientCertificate.findByParentId(workspaceId),
+          ]);
+          const docsWithScripts = requestAndAncestors.filter(
+            (doc): doc is Request | RequestGroup =>
+              models.request.isRequest(doc) || models.requestGroup.isRequestGroup(doc),
+          );
+          const allPreScripts = docsWithScripts.map(doc => doc.preRequestScript).filter((s): s is string => !!s);
+          const allPostScripts = docsWithScripts.map(doc => doc.afterResponseScript).filter((s): s is string => !!s);
+
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.requestExecuted,
             properties: {
               project_id: projectId,
               collection_id: workspaceId,
@@ -371,6 +387,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               count_headers: response.headers.length,
               count_cookies: response.headers.find(h => h.name === 'set-cookie')?.value.split(',').length || 0,
               count_tests: response.requestTestResults?.length || 0,
+              has_prescript: allPreScripts.length > 0,
+              has_postscript: allPostScripts.length > 0,
+              count_prescript_lines: allPreScripts.reduce((sum, s) => sum + s.split('\n').length, 0),
+              count_postscript_lines: allPostScripts.reduce((sum, s) => sum + s.split('\n').length, 0),
+              count_query_parameters: activeRequest.parameters?.length ?? 0,
+              count_path_parameters: activeRequest.pathParameters?.length ?? 0,
+              has_docs: !!activeRequest.description,
+              count_certificates: clientCertificates.length,
             },
           });
 
@@ -379,8 +403,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           if (jsonImportAttribution) {
             try {
               const importAttribution = JSON.parse(jsonImportAttribution) as ImportAttribution;
-              window.main.trackSegmentEvent({
-                event: SegmentEvent.importedRequestFirstSend,
+              window.main.trackAnalyticsEvent({
+                event: AnalyticsEvent.importedRequestFirstSend,
                 properties: {
                   ...importAttribution,
                   protocol: activeRequest.type,

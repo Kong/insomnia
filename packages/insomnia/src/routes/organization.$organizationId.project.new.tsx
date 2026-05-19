@@ -6,7 +6,7 @@ import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
 import type { Project } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -53,7 +53,7 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
 };
 
 const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
-  const user = await services.userSession.getOrCreate();
+  const user = await services.userSession.get();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
 
@@ -141,8 +141,8 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     }
   }
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.projectCreated,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.projectCreated,
     properties: {
       storage: newProjectData.storageType,
       git_provider,

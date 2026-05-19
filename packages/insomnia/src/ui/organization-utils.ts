@@ -1,12 +1,4 @@
-import {
-  createTeamProject,
-  fetchTeamProjects,
-  getCurrentPlan,
-  getOrganizations,
-  getUserProfile,
-  isApiError,
-  type Organization,
-} from 'insomnia-api';
+import { createTeamProject, fetchTeamProjects, getCurrentPlan, getUserProfile, isApiError } from 'insomnia-api';
 
 import { projectLock } from '~/common/project';
 import type { Project, Workspace } from '~/insomnia-data';
@@ -24,37 +16,6 @@ import {
 } from '../sync/vcs/migrate-projects-into-organization';
 export { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 
-export function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
-  const home = organizations.find(
-    organization =>
-      models.organization.isPersonalOrganization(organization) &&
-      models.organization.isOwnerOfOrganization({
-        organization,
-        accountId,
-      }),
-  );
-  const myOrgs = organizations
-    .filter(
-      organization =>
-        !models.organization.isPersonalOrganization(organization) &&
-        models.organization.isOwnerOfOrganization({
-          organization,
-          accountId,
-        }),
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-  const notMyOrgs = organizations
-    .filter(
-      organization =>
-        !models.organization.isOwnerOfOrganization({
-          organization,
-          accountId,
-        }),
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-  return [...(home ? [home] : []), ...myOrgs, ...notMyOrgs];
-}
-
 export async function syncCurrentPlan(sessionId: string, accountId: string) {
   const [currentPlanResult] = await Promise.allSettled([getCurrentPlan({ sessionId })]);
   if (currentPlanResult.status === 'fulfilled' && currentPlanResult.value) {
@@ -66,21 +27,19 @@ export async function syncCurrentPlan(sessionId: string, accountId: string) {
 
 export async function syncOrganizations(sessionId: string, accountId: string) {
   try {
-    const [organizationsResult, user, currentPlan] = await Promise.all([
-      getOrganizations({ sessionId }),
+    const [organizations, user, currentPlan] = await Promise.all([
+      services.organization.list(),
       getUserProfile({ sessionId }),
       getCurrentPlan({ sessionId }),
     ]);
 
-    invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
+    invariant(organizations, 'Failed to load organizations');
     invariant(user && user.id, 'Failed to load user');
     invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
 
-    const { organizations } = organizationsResult;
-
     invariant(accountId, 'Account ID is not defined');
 
-    localStorage.setItem(`${accountId}:organizations`, JSON.stringify(sortOrganizations(accountId, organizations)));
+    localStorage.setItem(`${accountId}:organizations`, JSON.stringify(organizations));
     localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
     localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
   } catch (error) {
@@ -186,7 +145,7 @@ interface TeamProject {
 }
 
 async function getAllTeamProjects(organizationId: string) {
-  const { id: sessionId } = await services.userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.get();
   if (!sessionId) {
     return [];
   }
@@ -264,7 +223,7 @@ async function syncTeamProjects({
 }
 
 export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
-  const user = await services.userSession.getOrCreate();
+  const user = await services.userSession.get();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
   if (Array.isArray(teamProjects) && user.id && !models.organization.isScratchpadOrganizationId(organizationId)) {

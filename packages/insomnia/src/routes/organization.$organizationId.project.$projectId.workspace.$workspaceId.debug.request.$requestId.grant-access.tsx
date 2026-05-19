@@ -19,7 +19,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     return;
   }
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found for request');
   if (accessLevel === 'project') {
     await services.project.update(project, { mcpStdioAccess: true });
