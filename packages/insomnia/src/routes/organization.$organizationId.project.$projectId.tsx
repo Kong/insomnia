@@ -97,7 +97,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const activeProjectGitRepository =
     project && models.project.isGitProject(project)
-      ? await services.gitRepository.getById(project.gitRepositoryId || '')
+      ? await services.gitRepository.getById(models.project.getEffectiveRepoId(project) || '')
       : undefined;
 
   return {
