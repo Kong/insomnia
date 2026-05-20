@@ -88,21 +88,21 @@ function ensureIpcListeners() {
     console.log(`[plugin-bridge] window_ready startup_ms=${startupMs}`);
   });
 
-  ipcMain.on('plugin-ui-alert', (event, options: Record<string, unknown>) => {
+  ipcMain.on('plugins.uiAlert', (event, options: Record<string, unknown>) => {
     if (event.sender !== pluginWindow?.webContents) {
       return;
     }
-    getMainWindow()?.webContents.send('plugin-ui-alert', options);
+    getMainWindow()?.webContents.send('plugins.uiAlert', options);
   });
 
-  ipcMain.on('plugin-ui-dialog', (event, options: Record<string, unknown>) => {
+  ipcMain.on('plugins.uiDialog', (event, options: Record<string, unknown>) => {
     if (event.sender !== pluginWindow?.webContents) {
       return;
     }
-    getMainWindow()?.webContents.send('plugin-ui-dialog', options);
+    getMainWindow()?.webContents.send('plugins.uiDialog', options);
   });
 
-  ipcMain.handle('plugin-ui-prompt', async (event, options: Record<string, unknown>) => {
+  ipcMain.handle('plugins.uiPrompt', async (event, options: Record<string, unknown>) => {
     if (event.sender !== pluginWindow?.webContents) {
       return null;
     }
@@ -120,11 +120,15 @@ function ensureIpcListeners() {
         clearTimeout(timeout);
         resolve(value);
       });
-      mainWindow.webContents.send('plugin-ui-prompt', id, options);
+      mainWindow.webContents.send('plugins.uiPrompt', id, options);
     });
   });
 
-  ipcMain.on('plugin-ui-prompt-result', (_event, { id, value }: { id: string; value: string | null }) => {
+  ipcMain.on('plugins.uiPromptResult', (event, { id, value }: { id: string; value: string | null }) => {
+    const mainWindow = getMainWindow();
+    if (!mainWindow || event.sender !== mainWindow.webContents) {
+      return;
+    }
     const resolve = promptPendingRequests.get(id);
     if (!resolve) {
       return;

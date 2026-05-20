@@ -45,7 +45,8 @@ export type PluginInvokeMethod =
   | 'hasRequestHooks'
   | 'hasResponseHooks'
   | 'applyRequestHooks'
-  | 'applyResponseHooks';
+  | 'applyResponseHooks'
+  | 'getBridgeMetrics';
 
 function serializePlugin(p: Plugin) {
   return {

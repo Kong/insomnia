@@ -27,15 +27,15 @@ window.main.on('show-toast', (_, options: { content: RAToastContent; options?: {
   showToast(options.content, options.options);
 });
 
-window.main.on('plugin-ui-alert', (_, options: Record<string, any>) => {
+window.main.on('plugins.uiAlert', (_, options: Record<string, any>) => {
   window.showAlert?.(options);
 });
 
-window.main.on('plugin-ui-dialog', (_, options: Record<string, any>) => {
+window.main.on('plugins.uiDialog', (_, options: Record<string, any>) => {
   window.showWrapper?.(options);
 });
 
-window.main.on('plugin-ui-prompt', (_, id: string, options: Record<string, any>) => {
+window.main.on('plugins.uiPrompt', (_, id: string, options: Record<string, any>) => {
   window.showPrompt?.({
     ...options,
     onComplete: (value: string) => {

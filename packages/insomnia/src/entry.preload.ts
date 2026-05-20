@@ -379,10 +379,10 @@ const main: Window['main'] = {
     hasResponseHooks: () => invokePluginBridgeMethod('hasResponseHooks'),
     applyRequestHooks: (args: ApplyRequestHooksArgs) => invokePluginBridgeMethod('applyRequestHooks', args),
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
-    getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
+    getBridgeMetrics: () => invokePluginBridgeMethod('getBridgeMetrics'),
   },
   notifyPluginPromptResult: (id: string, value: string | null) =>
-    ipcRenderer.send('plugin-ui-prompt-result', { id, value }),
+    ipcRenderer.send('plugins.uiPromptResult', { id, value }),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

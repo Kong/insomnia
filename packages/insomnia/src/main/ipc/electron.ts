@@ -132,7 +132,7 @@ export type HandleChannels =
   | 'plugins.getThemes'
   | 'plugins.getWorkspaceActions'
   | 'plugins.reloadPlugins'
-  | 'plugin-ui-prompt'
+  | 'plugins.uiPrompt'
   | 'openPath'
   | 'parseImport'
   | 'readCurlResponse'
@@ -217,15 +217,15 @@ export type MainOnChannels =
   | 'sync.cancelConflict'
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
-  | 'plugin-ui-prompt-result'
+  | 'plugins.uiPromptResult'
   | 'writeText';
 
 export type RendererOnChannels =
   | 'contextMenuCommand'
   | 'db.changes'
-  | 'plugin-ui-alert'
-  | 'plugin-ui-dialog'
-  | 'plugin-ui-prompt'
+  | 'plugins.uiAlert'
+  | 'plugins.uiDialog'
+  | 'plugins.uiPrompt'
   | 'grpc.data'
   | 'grpc.end'
   | 'grpc.error'
