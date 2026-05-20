@@ -14,8 +14,7 @@ export function getContentTypeFromHeaders(headers: any[], defaultValue: string |
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.
 const ENV = 'env';
-
-const env = process[ENV];
+const env: Record<string, string | undefined> = typeof process !== 'undefined' ? process[ENV] : {};
 
 export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.run';
 

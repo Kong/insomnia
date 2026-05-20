@@ -82,7 +82,7 @@ export type {
 export type { Project, LocalProject, RemoteProject, GitProject } from './project';
 export type { Settings, ThemeSettings } from './settings';
 export type { Stats } from './stats';
-export type { UserSession } from './user-session';
+export type { UserSession, AESMessage } from './user-session';
 export type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from './grpc-request';
 export type { GrpcRequestMeta } from './grpc-request-meta';
 export type { Workspace, WorkspaceScope } from './workspace';
