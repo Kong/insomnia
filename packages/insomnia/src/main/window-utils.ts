@@ -23,6 +23,7 @@ import { invariant } from '../utils/invariant';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
+import { createPluginWindow, destroyPluginWindow } from './plugin-window';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -785,5 +786,12 @@ export function createWindowsAndReturnMain() {
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }
+  // Create the plugin window after the main window finishes its initial load so
+  // that Playwright's firstWindow() always returns the main app window. Creating
+  // it on did-finish-load still parses the 12 MB bundle well before any user
+  // plugin call would occur.
+  mainWindow.webContents.once('did-finish-load', () => createPluginWindow());
   return mainWindow;
 }
+
+export { destroyPluginWindow };

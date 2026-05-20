@@ -15,6 +15,15 @@
 - **No unsolicited formatting.** Rely on ESLint/Prettier. Do not reformat existing code.
 - **Strict scoping.** Only modify code directly related to the prompt. Do not refactor adjacent code unless asked.
 
+## Command Output
+Prefer quiet command variants to minimise output volume:
+- `git log --oneline -20` not `git log`
+- `git diff --stat` not `git diff`
+- `npm test --silent` not `npm test`
+- `tsc --noEmit 2>&1 | head -50` for type-check failures
+- Use the `Read` tool with `limit` rather than `cat` on large files
+- Use `Grep` with `head_limit` rather than unrestricted searches
+
 ## Validation Commands
 Run from repo root before considering work complete:
 
@@ -72,3 +81,47 @@ Organization
 ## Sensitive Data
 - **Vault system (AES-GCM):** For environment secrets (`EnvironmentKvPairDataType.SECRET`).
 - **Electron safeStorage:** Platform-native encryption (`window.main.secretStorage`).
+## cx — Semantic Code Navigation
+
+Prefer cx over reading files. Escalate: overview → symbols → definition/references → Read tool.
+
+### Quick reference
+
+```
+cx overview PATH                                    file or directory table of contents
+cx overview DIR --full                              directory overview with signatures
+cx symbols [--kind K] [--name GLOB] [--file PATH]   search symbols project-wide
+cx symbols --kinds [--file PATH]                     list distinct kinds with counts
+cx definition --name NAME [--from PATH] [--kind K]  get a function/type body
+cx references --name NAME [--file PATH] [--unique]   find all usages (--unique: one per caller)
+cx lang list                                         show supported languages
+cx lang add LANG [LANG...]                           install language grammars
+```
+
+Aliases: `cx o`, `cx s`, `cx d`, `cx r`
+
+Kinds: fn, struct, enum, trait, type, const, class, interface, module, event
+
+### Key patterns
+
+- Start with `cx overview .`, drill into subdirectories — cheaper than ls + reading files
+- `cx definition --name X` gives exact text for Edit tool's `old_string` without reading the whole file
+- `cx references --name X --unique` shows one row per caller — use before refactoring to check blast radius
+- After context compression, use `cx overview` / `cx definition` to re-orient — don't re-read full files
+- Check signatures for `pub`/`export` to identify public API without reading the file
+
+### Pagination
+
+Default limits: definition 3, symbols 100, references 50. When truncated, stderr shows:
+
+```
+cx: 3/32 definitions for "X" | --from PATH to narrow | --offset 3 for more | --all
+```
+
+`--offset N` pages forward, `--all` bypasses, `--limit N` overrides. Narrowing with `--from`/`--file`/`--kind` is usually better than paging.
+
+JSON: paginated → `{total, offset, limit, results: [...]}`, non-paginated → bare array.
+
+### Missing grammars
+
+If cx reports a missing grammar, install with `cx lang add <lang>`. Run `cx lang list` to see what's installed.

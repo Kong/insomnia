@@ -5,7 +5,6 @@ import { useParams } from 'react-router';
 
 import { AI_PLUGIN_NAME, isKonnectSyncEnabled } from '~/common/constants';
 import { models } from '~/insomnia-data';
-import { getBundlePlugins } from '~/plugins';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
@@ -14,6 +13,7 @@ import { KonnectSettings } from '~/ui/components/settings/konnect-settings';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -46,7 +46,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
 
   useEffect(() => {
     const checkFeatures = async () => {
-      const plugins = await getBundlePlugins();
+      const plugins = await pluginsBridge.getBundlePlugins();
       const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
       setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
 

@@ -25,6 +25,7 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { EnvironmentType, models, services } from '~/insomnia-data';
+import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
@@ -1068,62 +1069,102 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
 };
 
-async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, renderedContext: Record<string, any>) {
+export async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, renderedContext: Record<string, any>) {
   const newRenderedRequest = clone(renderedRequest);
 
-  for (const { plugin, hook } of await plugins.getRequestHooks()) {
-    const context = {
-      ...(pluginApp.init() as Record<string, any>),
-      ...pluginData.init(renderedContext.getProjectId()),
-      ...(pluginStore.init(plugin) as Record<string, any>),
-      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginNetwork.init() as Record<string, any>),
-    };
-
-    try {
-      await hook(context);
-    } catch (err) {
-      err.plugin = plugin;
-      throw err;
+  // Apply built-in default-headers hook in the renderer (no IPC needed)
+  const { request: reqCtx } = pluginRequest.init(newRenderedRequest, renderedContext);
+  const defaultHeaders = reqCtx.getEnvironmentVariable('DEFAULT_HEADERS');
+  if (defaultHeaders && typeof defaultHeaders === 'object' && !Array.isArray(defaultHeaders)) {
+    for (const name of Object.keys(defaultHeaders)) {
+      const value = (defaultHeaders as Record<string, any>)[name];
+      if (reqCtx.hasHeader(name)) {
+        console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
+      } else if (value === 'null') {
+        reqCtx.removeHeader(name);
+        console.log(`[header] Remove default header ${name}`);
+      } else {
+        reqCtx.setHeader(name, value);
+        console.log(`[header] Set default header ${name}: ${value}`);
+      }
     }
   }
 
-  return newRenderedRequest;
+  if (process.type !== 'renderer') {
+    for (const { plugin, hook } of await plugins.getRequestHooks()) {
+      const context = {
+        ...(pluginApp.init() as Record<string, any>),
+        ...pluginData.init(renderedContext.getProjectId()),
+        ...(pluginStore.init(plugin) as Record<string, any>),
+        ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
+        ...(pluginNetwork.init() as Record<string, any>),
+      };
+      try {
+        await hook(context);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        (error as any).plugin = plugin;
+        throw error;
+      }
+    }
+    return newRenderedRequest;
+  }
+
+  if (!await pluginsBridge.hasRequestHooks()) {
+    return newRenderedRequest;
+  }
+
+  return pluginsBridge.applyRequestHooks({
+    renderedRequest: newRenderedRequest,
+    projectId: renderedContext.getProjectId(),
+    environment: renderedContext,
+  });
 }
 
-async function _applyResponsePluginHooks(
+export async function _applyResponsePluginHooks(
   response: ResponsePatch,
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<ResponsePatch> {
   try {
-    const newResponse = clone(response);
-    const newRequest = clone(renderedRequest);
-
-    for (const { plugin, hook } of await plugins.getResponseHooks()) {
-      const context = {
-        ...(pluginApp.init() as Record<string, any>),
-        ...pluginData.init(renderedContext.getProjectId()),
-        ...(pluginStore.init(plugin) as Record<string, any>),
-        ...(pluginResponse.init(newResponse) as Record<string, any>),
-        ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
-        ...(pluginNetwork.init() as Record<string, any>),
-      };
-
-      try {
-        await hook(context);
-      } catch (err) {
-        err.plugin = plugin;
-        throw err;
+    if (process.type !== 'renderer') {
+      const newResponse = clone(response);
+      const newRequest = clone(renderedRequest);
+      for (const { plugin, hook } of await plugins.getResponseHooks()) {
+        const context = {
+          ...(pluginApp.init() as Record<string, any>),
+          ...pluginData.init(renderedContext.getProjectId()),
+          ...(pluginStore.init(plugin) as Record<string, any>),
+          ...(pluginResponse.init(newResponse) as Record<string, any>),
+          ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
+          ...(pluginNetwork.init() as Record<string, any>),
+        };
+        try {
+          await hook(context);
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          (error as any).plugin = plugin;
+          throw error;
+        }
       }
+      return newResponse;
     }
 
-    return newResponse;
+    if (!await pluginsBridge.hasResponseHooks()) {
+      return response;
+    }
+
+    return await pluginsBridge.applyResponseHooks({
+      response,
+      renderedRequest,
+      projectId: renderedContext.getProjectId(),
+      environment: renderedContext,
+    });
   } catch (err) {
     console.log('[plugin] Response hook failed', err, response);
     return {
       url: renderedRequest.url,
-      error: `[plugin] Response hook failed plugin=${err.plugin?.name} err=${err.message}`,
+      error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
       elapsedTime: 0, // 0 because this path is hit during plugin calls
       statusMessage: 'Error',
       settingSendCookies: renderedRequest.settingSendCookies,
