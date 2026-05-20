@@ -1,4 +1,4 @@
-import { database } from '~/common/database';
+import { database, type Operation } from '~/common/database';
 import type {
   ApiSpec,
   Environment,
@@ -6,6 +6,7 @@ import type {
   McpRequest,
   MockRoute,
   MockServer,
+  ProjectLintRuleset,
   Request,
   RequestGroup,
   SocketIORequest,
@@ -45,6 +46,21 @@ export const remoteBranchesCache: Record<string, string[]> = {};
 export const remoteCompareCache: Record<string, Compare> = {};
 export const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
 
+/**
+ * ProjectLintRuleset is parented to the project, whose _id is not stable across machines,
+ * so its parentId is normalized to null in sync transit. Re-parent any ProjectLintRuleset
+ * in a pulled delta to the local project before the delta is applied to the database.
+ */
+export function reparentSyncDelta(delta: Operation, projectId: string): Operation {
+  delta.upsert?.forEach(doc => {
+    if (doc.type === 'ProjectLintRuleset') {
+      doc.parentId = projectId;
+    }
+  });
+
+  return delta;
+}
+
 export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   const syncItemsList: (
     | Workspace
@@ -60,6 +76,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     | UnitTest
     | MockServer
     | MockRoute
+    | ProjectLintRuleset
   )[] = [];
   const activeWorkspace = await services.workspace.getById(workspaceId);
   invariant(activeWorkspace, 'Workspace could not be found');
@@ -122,6 +139,12 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   const subEnvironments = (await services.environment.findByParentId(baseEnvironment._id)).sort(
     (e1, e2) => e1.metaSortKey - e2.metaSortKey,
   );
+
+  const projectLintRuleset = await services.projectLintRuleset.getByParentId(activeWorkspace.parentId);
+  if (projectLintRuleset) {
+    syncItemsList.push(projectLintRuleset);
+  }
+
   allRequests.map(r => syncItemsList.push(r));
   tests.map(t => syncItemsList.push(t));
   testSuites.map(t => syncItemsList.push(t));

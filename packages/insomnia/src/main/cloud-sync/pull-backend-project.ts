@@ -59,6 +59,11 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
       doc.parentId = remoteProject._id;
       workspaceId = doc._id;
     }
+    // ProjectLintRuleset is parented to the project, whose _id is not stable across machines,
+    // so its parentId is normalized to null in sync transit. Re-parent it to the local project.
+    if (models.projectLintRuleset.isProjectLintRuleset(doc)) {
+      doc.parentId = remoteProject._id;
+    }
     const allModelType = models.types();
     if (allModelType.includes(doc.type)) {
       await database.update(doc);

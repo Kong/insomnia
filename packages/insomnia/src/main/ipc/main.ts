@@ -363,7 +363,8 @@ export function registerMainHandlers() {
     }
   });
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
-    const { documentContent, rulesetPath } = options;
+    const { documentContent } = options;
+    let { rulesetPath } = options;
 
     //defensive validation for ruleset file before spawning the spectral lint worker
     if (rulesetPath) {
@@ -374,7 +375,12 @@ export function registerMainHandlers() {
           return { error: `Invalid Spectral ruleset: ${validation.error}` };
         }
       } catch (err) {
-        return { error: `Failed to read ruleset file: ${err instanceof Error ? err.message : String(err)}` };
+        // Fall back to the default OAS ruleset instead of erroring when a user deletes their custom ruleset
+        if (err && err.code === 'ENOENT') {
+          rulesetPath = '';
+        } else {
+          return { error: `Failed to read ruleset file: ${err instanceof Error ? err.message : String(err)}` };
+        }
       }
     }
 
@@ -477,9 +483,12 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn('trackAnalyticsEvent', (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
-    trackAnalyticsEvent(options.event, options.properties);
-  });
+  ipcMainOn(
+    'trackAnalyticsEvent',
+    (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
+      trackAnalyticsEvent(options.event, options.properties);
+    },
+  );
   ipcMainOn('trackPageView', (_, options: { name: string }): void => {
     trackPageView(options.name);
   });

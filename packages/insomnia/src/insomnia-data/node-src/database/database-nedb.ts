@@ -22,6 +22,7 @@ import type {
   GitRepository,
   IDatabase,
   Operation,
+  ProjectLintRuleset,
   Query,
   Workspace,
   WorkspaceMeta,
@@ -277,6 +278,10 @@ export const createNedbDatabase = <O = initOptions>(
         Project: new NeDB({
           ...defaultConfig,
           filename: fsPath.join(dbPath, 'insomnia.Project.db'),
+        }),
+        ProjectLintRuleset: new NeDB<ProjectLintRuleset>({
+          ...defaultConfig,
+          filename: fsPath.join(dbPath, 'insomnia.ProjectLintRuleset.db'),
         }),
         ProtoDirectory: new NeDB({
           ...defaultConfig,

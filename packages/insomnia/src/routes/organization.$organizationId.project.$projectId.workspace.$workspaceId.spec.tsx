@@ -63,6 +63,8 @@ import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
+import { useUpdateProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.update-ruleset';
+import { useDeleteProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete-ruleset';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
@@ -105,7 +107,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       // no .spectral.yaml on disk yet
     }
   } else {
-    rulesetContent = apiSpec.rulesetContent || '';
+    const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
+    rulesetContent = projectLintRuleset?.rulesetContent || '';
   }
 
   let parsedSpec: OpenAPIV3.Document | undefined;
@@ -206,6 +209,8 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const editor = useRef<CodeEditorHandle>(null);
   const { submit: updateApiSpec } = useSpecUpdateActionFetcher();
+  const { submit: updateProjectRuleset } = useUpdateProjectRulesetActionFetcher();
+  const { submit: deleteProjectRuleset } = useDeleteProjectRulesetActionFetcher();
   const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
   const gitVersion = useGitVCSVersion();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
@@ -215,12 +220,11 @@ const Component = ({ params }: Route.ComponentProps) => {
   // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
   // For git sync projects, write .spectral.yaml directly to the git working directory so it
   // appears in the staging modal and can be committed/pushed/pulled like any other file.
-  // For cloud/local projects, write to a per-workspace scratch path — rulesetContent in NeDB handles syncing.
+  // For cloud/local projects, write to a per-project scratch path — rulesetContent in NeDB handles syncing.
   const rulesetWritePath = useMemo(
     () =>
-      gitSyncRulesetPath ||
-      window.path.join(window.app.getPath('userData'), `workspaces/${workspaceId}/.spectral.yaml`),
-    [gitSyncRulesetPath, workspaceId],
+      gitSyncRulesetPath || window.path.join(window.app.getPath('userData'), `projects/${projectId}/.spectral.yaml`),
+    [gitSyncRulesetPath, projectId],
   );
 
   const { components, info, servers, paths } = parsedSpec || {};
@@ -479,17 +483,13 @@ const Component = ({ params }: Route.ComponentProps) => {
       return;
     }
 
+    await updateProjectRuleset({ organizationId, projectId, rulesetContent: content });
     await window.main.writeFile({ path: rulesetWritePath, content });
 
-    // We do not write rulesetContent to NeDB for git sync projects because it would
-    // be serialized into insomnia.{workspaceId}.yaml, creating a duplicate representation.
-    // Instead, .spectral.yaml is written directly to the git working directory and
-    // tracked by git like any other file — committed, pushed, and pulled normally.
     if (gitSyncRulesetPath) {
       revalidator.revalidate();
-    } else {
-      updateApiSpec({ organizationId, projectId, workspaceId, rulesetContent: content });
     }
+
     setSelectedRulesetPath(rulesetWritePath);
   };
 
@@ -503,9 +503,10 @@ const Component = ({ params }: Route.ComponentProps) => {
       noText: 'Cancel',
       onDone: async (confirmed: boolean) => {
         if (confirmed) {
-          if (!gitSyncRulesetPath) {
-            updateApiSpec({ organizationId, projectId, workspaceId, rulesetContent: null });
-          }
+          await deleteProjectRuleset({
+            organizationId,
+            projectId,
+          });
           await window.main.deleteFile({ path: rulesetWritePath });
           if (gitSyncRulesetPath) {
             revalidator.revalidate();

@@ -2,14 +2,14 @@ import { href } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
-import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
+import { getSyncItems, remoteCompareCache, reparentSyncDelta } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.delete';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
-  const { workspaceId } = params;
+  const { projectId, workspaceId } = params;
 
   const formData = await request.formData();
 
@@ -21,9 +21,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   try {
     await window.main.sync.fork(branchName);
     // Checkout new branch
-    const delta = await window.main.sync.checkout(syncItems, branchName);
+    const delta = (await window.main.sync.checkout(syncItems, branchName)) as Operation;
     // This is to synchronize the local database with the branch changes
-    await database.batchModifyDocs(delta as Operation);
+    await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
     delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while merging branch.';
