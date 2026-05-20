@@ -51,7 +51,7 @@ import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { SegmentEvent, trackOnceDaily } from '~/ui/analytics';
+import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
@@ -253,7 +253,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
 
 async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
   try {
-    const project = await services.project.getById(projectId);
+    const project = await services.project.get(projectId);
 
     const remoteId = project?.remoteId;
     if (!remoteId) {
@@ -359,7 +359,7 @@ const CheckAllProjectSyncStatus = async (projects: Project[]) => {
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
-  const { id: sessionId } = await services.userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.get();
   const fallbackLearningFeature = {
     active: false,
     title: '',
@@ -389,7 +389,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
   invariant(projectId, 'projectId parameter is required');
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   console.log('[project loader] Loading project:', project?.name, projectId);
   const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),
@@ -970,7 +970,7 @@ const Component = () => {
                       onChange={filter => {
                         setWorkspaceListFilter(filter);
                         if (filter.trim() !== '') {
-                          trackOnceDaily(SegmentEvent.homepageFiltered);
+                          trackOnceDaily(AnalyticsEvent.homepageFiltered);
                         }
                       }}
                     >
@@ -1066,8 +1066,8 @@ const Component = () => {
 
                     <Button
                       onPress={() => {
-                        window.main.trackSegmentEvent({
-                          event: SegmentEvent.importStarted,
+                        window.main.trackAnalyticsEvent({
+                          event: AnalyticsEvent.importStarted,
                           properties: {
                             source: 'project',
                           },

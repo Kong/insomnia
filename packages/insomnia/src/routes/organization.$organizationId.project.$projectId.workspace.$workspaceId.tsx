@@ -87,7 +87,7 @@ const workspaceFileIssueModalText = {
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const activeProject = await services.project.getById(projectId);
+  const activeProject = await services.project.get(projectId);
   if (!activeProject) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -280,7 +280,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     return collection;
   }
 
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   const isLoggedInIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
   let vcsVersion = null;
   if (isLoggedInIsCloudProjectAndIsNotGitRepo) {

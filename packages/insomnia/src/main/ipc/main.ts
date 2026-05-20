@@ -38,9 +38,10 @@ import type {
 } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
-import type { PluginTemplateTag, RenderedRequest } from '../../templating/types';
-import type { SegmentEvent } from '../analytics';
-import { setCurrentOrganizationId, trackPageView, trackSegmentEvent } from '../analytics';
+import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
+import type { RenderedRequest } from '../../templating/types';
+import type { AnalyticsEvent } from '../analytics';
+import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
@@ -65,6 +66,7 @@ import {
 } from '../network/request-timing';
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
+import { registerPluginIpcHandlers } from '../plugin-window';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
@@ -189,13 +191,13 @@ export interface RendererToMainBridgeAPI {
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
   sync: SyncBridgeAPI;
-  trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
+  trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
   showNunjucksContextMenu: (options: {
     key: string;
     nunjucksTag?: { template: string; range: MarkerRange };
-    pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+    pluginTemplateTags?: { templateTag: Record<string, unknown> }[];
   }) => void;
   showContextMenu: (options: {
     key: string;
@@ -241,6 +243,8 @@ export interface RendererToMainBridgeAPI {
     | { response: undefined; error: string }
   >;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
+  plugins: PluginsBridgeAPI;
+  notifyPluginPromptResult: (id: string, value: string | null) => void;
 }
 
 export function registerMainHandlers() {
@@ -456,10 +460,13 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const dataPath = app.getPath('userData');
-    const folderPath = path.join(dataPath, options.folder);
+    const folderPath = path.join(app.getPath('userData'), options.folder);
     mkdirSync(folderPath, { recursive: true });
-    return readDir(_, { path: folderPath });
+    try {
+      return await readDir(_, { path: folderPath });
+    } catch {
+      return [];
+    }
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
@@ -470,8 +477,8 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn('trackSegmentEvent', (_, options: { event: SegmentEvent; properties?: Record<string, unknown> }): void => {
-    trackSegmentEvent(options.event, options.properties);
+  ipcMainOn('trackAnalyticsEvent', (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
+    trackAnalyticsEvent(options.event, options.properties);
   });
   ipcMainOn('trackPageView', (_, options: { name: string }): void => {
     trackPageView(options.name);
@@ -718,4 +725,6 @@ export function registerMainHandlers() {
       });
     });
   });
+
+  registerPluginIpcHandlers();
 }

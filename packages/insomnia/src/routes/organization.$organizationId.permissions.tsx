@@ -26,7 +26,7 @@ export const fallbackBilling = Object.freeze<Billing>({
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId } = params;
-  const { id: sessionId, accountId } = await services.userSession.getOrCreate();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (models.organization.isScratchpadOrganizationId(organizationId)) {
     return {

@@ -21,7 +21,7 @@ import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
 import { isMac } from './common/platform';
-import { SegmentEvent, trackSegmentEvent } from './main/analytics';
+import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerSyncHandlers } from './main/cloud-sync/ipc';
@@ -289,7 +289,7 @@ async function _createModelInstances() {
   await services.stats.get();
   await services.settings.getOrCreate();
   try {
-    const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchpadProject = await services.project.get(models.project.SCRATCHPAD_PROJECT_ID);
     const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
@@ -365,7 +365,7 @@ async function _trackStats() {
 
   const settings = await services.settings.get();
 
-  trackSegmentEvent(SegmentEvent.appStarted, {
+  trackAnalyticsEvent(AnalyticsEvent.appStarted, {
     localProjects,
     remoteProjects,
     createdRequests: stats.createdRequests,

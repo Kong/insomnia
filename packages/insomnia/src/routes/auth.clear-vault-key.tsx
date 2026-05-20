@@ -10,7 +10,7 @@ import type { Route } from './+types/auth.clear-vault-key';
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const { organizations = [], sessionId: resetVaultClientSessionId } = await request.json();
 
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   const { id: sessionId } = userSession;
   const { salt: newVaultSalt } =
     (await getVault({ sessionId }).catch(error => {
@@ -21,7 +21,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     // remove all secret environment variables
     await services.environment.removeAllSecrets(organizations);
     // Update vault salt and delete vault key from session
-    await services.userSession.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
+    await services.userSession.update({ vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification
     electron.ipcRenderer.emit('show-toast', null, {
       content: {

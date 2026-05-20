@@ -113,7 +113,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, `Project was not found ${projectId}`);
   const organizationProjects =
     (await database.find<Project>(models.project.type, {

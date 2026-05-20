@@ -3,41 +3,23 @@ import { database as db, models } from '~/insomnia-data';
 
 const { type } = models.userSession;
 
-export async function all() {
-  let userList = await db.find<UserSession>(type);
-
-  if (userList?.length === 0) {
-    userList = [await getOrCreate()];
-  }
-
-  return userList;
-}
-
-async function create() {
-  const user = await db.docCreate<UserSession>(type);
-  return user;
-}
-
-export async function update(user: UserSession, patch: Partial<UserSession>) {
-  const updatedUser = await db.docUpdate<UserSession>(user, patch);
-  return updatedUser;
-}
-
-export async function patch(patch: Partial<UserSession>) {
-  const user = await getOrCreate();
-  const updatedUser = await db.docUpdate<UserSession>(user, patch);
-  return updatedUser;
-}
-
-export async function getOrCreate() {
+export async function get() {
   const result = await db.findOne<UserSession>(type);
 
   if (!result) {
-    return await create();
+    const user = await db.docCreate<UserSession>(type);
+    return user;
   }
   return result;
 }
 
-export async function get() {
-  return getOrCreate();
+export async function update(patch: Partial<UserSession>) {
+  const user = await get();
+  const updatedUser = await db.docUpdate<UserSession>(user, patch);
+  return updatedUser;
+}
+
+export async function remove() {
+  const user = await get();
+  await db.remove(user);
 }

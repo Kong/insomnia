@@ -10,7 +10,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { projectId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
   const formData = await request.formData();

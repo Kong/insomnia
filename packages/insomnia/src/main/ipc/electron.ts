@@ -14,7 +14,6 @@ import { fnOrString } from '../../common/misc';
 import {
   type NunjucksParsedTagArg,
   type NunjucksTagContextMenuAction,
-  type PluginTemplateTag,
 } from '../../templating/types';
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
@@ -121,6 +120,20 @@ export type HandleChannels =
   | 'multipartBufferToArray'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'plugins.executeAction'
+  | 'plugins.getBundlePlugins'
+  | 'plugins.executePluginMainAction'
+  | 'plugins.getTemplateTags'
+  | 'plugins.runTemplateTagAction'
+  | 'plugins.getActivePlugins'
+  | 'plugins.getDocumentActions'
+  | 'plugins.getPlugins'
+  | 'plugins.getRequestActions'
+  | 'plugins.getRequestGroupActions'
+  | 'plugins.getThemes'
+  | 'plugins.getWorkspaceActions'
+  | 'plugins.reloadPlugins'
+  | 'plugin-ui-prompt'
   | 'openPath'
   | 'parseImport'
   | 'readCurlResponse'
@@ -181,6 +194,8 @@ export type MainOnChannels =
   | 'path.resolve'
   | 'readText'
   | 'restart'
+  | 'plugin-invoke-result'
+  | 'plugin-window-ready'
   | 'set-hidden-window-busy-status'
   | 'setMenuBarVisibility'
   | 'show-nunjucks-context-menu'
@@ -194,7 +209,7 @@ export type MainOnChannels =
   | 'socketIO.event.on'
   | 'startExecution'
   | 'trackPageView'
-  | 'trackSegmentEvent'
+  | 'trackAnalyticsEvent'
   | 'updateLatestStepName'
   | 'webSocket.close'
   | 'webSocket.closeAll'
@@ -204,11 +219,15 @@ export type MainOnChannels =
   | 'sync.cancelConflict'
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
+  | 'plugin-ui-prompt-result'
   | 'writeText';
 
 export type RendererOnChannels =
   | 'contextMenuCommand'
   | 'db.changes'
+  | 'plugin-ui-alert'
+  | 'plugin-ui-dialog'
+  | 'plugin-ui-prompt'
   | 'grpc.data'
   | 'grpc.end'
   | 'grpc.error'
@@ -242,6 +261,16 @@ export const ipcMainOnce = (
   listener: (event: IpcMainEvent, ...args: any[]) => Promise<void> | any,
 ) => ipcMain.once(channel, listener);
 
+interface ContextMenuTag {
+  templateTag: {
+    name: string;
+    displayName: string | (() => string);
+    args?: NunjucksParsedTagArg[];
+    needsEnterprisePlan?: boolean;
+  };
+}
+
+
 const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   if (arg.defaultValue === undefined) {
     return "''";
@@ -260,7 +289,7 @@ export function registerElectronHandlers() {
       options: {
         key: string;
         nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords>;
-        pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+        pluginTemplateTags?: { templateTag: Record<string, unknown> }[];
       },
     ) => {
       const { key, nunjucksTag, pluginTemplateTags = [] } = options;
@@ -305,7 +334,7 @@ export function registerElectronHandlers() {
               },
               { type: 'separator' },
             ];
-        const localTemplate: MenuItemConstructorOptions[] = [...localTemplateTags, ...pluginTemplateTags]
+        const localTemplate: MenuItemConstructorOptions[] = ([...localTemplateTags, ...pluginTemplateTags] as ContextMenuTag[])
           // sort alphabetically
           .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
           .map(l => {
@@ -332,7 +361,7 @@ export function registerElectronHandlers() {
                     submenu: actions?.options?.map(action => ({
                       label: fnOrString(action.displayName),
                       click: () => {
-                        const additionalTagFields = additionalArgs.length
+                        const additionalTagFields = additionalArgs?.length
                           ? ', ' + additionalArgs.map(getTemplateValue).join(', ')
                           : '';
                         const displayName = action.displayName;

@@ -12,22 +12,18 @@ import type {
   WebSocketRequest,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { RequestAction } from '../../../plugins';
-import { getRequestActions } from '../../../plugins';
-import * as pluginApp from '../../../plugins/context/app';
-import * as pluginData from '../../../plugins/context/data';
-import * as pluginNetwork from '../../../plugins/context/network';
-import * as pluginStore from '../../../plugins/context/store';
+import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
@@ -64,7 +60,7 @@ export const RequestActionsDropdown = ({
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
-  const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
+  const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -77,7 +73,7 @@ export const RequestActionsDropdown = ({
   const tabNavigate = useTabNavigate();
 
   const openInNewTab = async () => {
-    window.main.trackSegmentEvent({ event: SegmentEvent.requestOpenInNewTabClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestOpenInNewTabClicked });
     tabNavigate(
       {
         organization: organizationId,
@@ -93,7 +89,7 @@ export const RequestActionsDropdown = ({
   };
 
   const onOpen = useCallback(async () => {
-    const actionPlugins = await getRequestActions();
+    const actionPlugins = await plugins.getRequestActions();
     setActionPlugins(actionPlugins);
   }, []);
 
@@ -101,7 +97,7 @@ export const RequestActionsDropdown = ({
     if (!request) {
       return;
     }
-    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuDuplicateClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuDuplicateClicked });
 
     showModal(PromptModal, {
       title: 'Duplicate Request',
@@ -120,16 +116,14 @@ export const RequestActionsDropdown = ({
     });
   };
 
-  const handlePluginClick = async ({ plugin, action }: RequestAction) => {
+  const handlePluginClick = async ({ pluginName, label }: SerializableActionMeta) => {
     try {
-      const context = {
-        ...pluginApp.init(),
-        ...pluginData.init(activeProject._id),
-        ...pluginStore.init(plugin),
-        ...pluginNetwork.init(),
-      };
-      await action(context, {
-        request,
+      await plugins.executeAction({
+        type: 'request',
+        pluginName,
+        label,
+        projectId: activeProject._id,
+        domainData: { request },
       });
     } catch (error) {
       showError({
@@ -141,8 +135,8 @@ export const RequestActionsDropdown = ({
 
   const generateCode = () => {
     if (isRequest(request)) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.generateCodeClicked,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.generateCodeClicked,
       });
 
       showModal(GenerateCodeModal, { request });
@@ -160,8 +154,8 @@ export const RequestActionsDropdown = ({
         window.clipboard.writeText(cmd);
       }
 
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.copyAsCurl,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.copyAsCurl,
       });
     } catch (err) {
       showModal(AlertModal, {
@@ -172,7 +166,7 @@ export const RequestActionsDropdown = ({
   };
 
   const togglePin = () => {
-    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuPinClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuPinClicked });
     patchRequestMeta(request._id, { pinned: !isPinned });
   };
 
@@ -279,7 +273,7 @@ export const RequestActionsDropdown = ({
           id: 'Rename',
           name: 'Rename',
           action: () => {
-            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuRenameClicked });
+            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuRenameClicked });
             onRename();
           },
           icon: 'edit',
@@ -297,7 +291,7 @@ export const RequestActionsDropdown = ({
           icon: 'gear',
           hint: hotKeyRegistry.request_showSettings,
           action: () => {
-            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuSettingsClicked });
+            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuSettingsClicked });
             setIsSettingsModalOpen(true);
           },
         },

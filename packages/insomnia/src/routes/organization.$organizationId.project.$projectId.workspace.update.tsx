@@ -2,7 +2,7 @@ import { href } from 'react-router';
 
 import { models, services } from '~/insomnia-data';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -53,8 +53,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       url: mockServerUrl,
     });
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.mockEdit,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.mockEdit,
     });
   }
 
@@ -62,7 +62,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   await services.workspace.update(workspace, patch);
 
-  const project = await services.project.getById(workspace.parentId);
+  const project = await services.project.get(workspace.parentId);
   invariant(project, 'Project not found');
   if (models.project.isGitProject(project)) {
     const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);

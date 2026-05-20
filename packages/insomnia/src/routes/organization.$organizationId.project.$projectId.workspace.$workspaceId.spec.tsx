@@ -38,7 +38,7 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
@@ -67,7 +67,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));
@@ -534,8 +534,8 @@ const Component = ({ params }: Route.ComponentProps) => {
       name: 'Toggle preview',
       icon: <Icon className="w-3" icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
       action: () => {
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.designerPreviewToggled,
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.designerPreviewToggled,
           properties: {
             status: !isSpecPaneOpen ? 'open' : 'collapsed',
           },
@@ -671,8 +671,8 @@ const Component = ({ params }: Route.ComponentProps) => {
             {isGenerateMockServersWithAIEnabled && (
               <Button
                 onPress={() => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.designerGenerateMockClicked,
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.designerGenerateMockClicked,
                   });
                   setNewMockServerModalOpen(true);
                 }}
@@ -689,8 +689,8 @@ const Component = ({ params }: Route.ComponentProps) => {
               className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               onChange={value => {
                 setIsSpecPaneOpen(value);
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.designerPreviewToggled,
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.designerPreviewToggled,
                   properties: {
                     status: !value ? 'open' : 'collapsed',
                   },

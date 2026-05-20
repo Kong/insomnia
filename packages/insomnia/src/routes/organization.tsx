@@ -21,7 +21,7 @@ import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
@@ -41,7 +41,6 @@ import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { sortOrganizations } from '~/ui/organization-utils';
 import { AsyncTask, getInitialRouteForOrganization } from '~/utils/router';
 
 import type { Route } from './+types/organization';
@@ -53,13 +52,13 @@ export interface OrganizationLoaderData {
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id, accountId } = await services.userSession.getOrCreate();
+  const { id, accountId } = await services.userSession.get();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     const user = JSON.parse(localStorage.getItem(`${accountId}:user`) || '{}') as User;
     const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan;
     return {
-      organizations: sortOrganizations(accountId, organizations),
+      organizations,
       user,
       currentPlan,
     };
@@ -417,8 +416,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     className="h-[10px] w-[10px] grow-0 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     onChange={value => {
                       setIsOrganizationSidebarOpen(value);
-                      window.main.trackSegmentEvent({
-                        event: SegmentEvent.statusbarLeftbarToggled,
+                      window.main.trackAnalyticsEvent({
+                        event: AnalyticsEvent.statusbarLeftbarToggled,
                         properties: {
                           status: value ? 'open' : 'collapsed',
                         },
@@ -461,8 +460,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     className="h-[10px] w-[10px] grow-0 rotate-90 gap-2 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     onChange={flag => {
                       setIsMinimal(!flag);
-                      window.main.trackSegmentEvent({
-                        event: SegmentEvent.statusbarTopbarToggled,
+                      window.main.trackAnalyticsEvent({
+                        event: AnalyticsEvent.statusbarTopbarToggled,
                         properties: {
                           status: !flag ? 'minimal' : 'expanded',
                         },
@@ -525,8 +524,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                         onPress={() => {
-                          window.main.trackSegmentEvent({
-                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          window.main.trackAnalyticsEvent({
+                            event: AnalyticsEvent.statusbarOrphanedProjectsClicked,
                           });
                           showModal(SettingsModal, { tab: 'data' });
                         }}
@@ -541,8 +540,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       <Button
                         className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                         onPress={() => {
-                          window.main.trackSegmentEvent({
-                            event: SegmentEvent.statusbarOrphanedProjectsClicked,
+                          window.main.trackAnalyticsEvent({
+                            event: AnalyticsEvent.statusbarOrphanedProjectsClicked,
                           });
                           showModal(SettingsModal, { tab: 'data' });
                         }}

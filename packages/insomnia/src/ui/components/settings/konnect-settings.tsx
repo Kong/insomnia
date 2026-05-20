@@ -3,7 +3,7 @@ import { Button } from 'react-aria-components';
 
 import { validatePat } from '~/konnect/api';
 import { useRootLoaderData } from '~/root';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 
@@ -28,7 +28,7 @@ export const KonnectSettings = () => {
       await window.main.secretStorage.setSecret('konnectPat', trimmed);
       patchSettings({ hasKonnectPat: true });
       setPat('');
-      window.main.trackSegmentEvent({ event: SegmentEvent.kongKonnectPatValidated });
+      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.kongKonnectPatValidated });
     } else {
       setValidationError(result.error ?? 'PAT is invalid or could not connect to Konnect.');
     }

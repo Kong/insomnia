@@ -2,7 +2,7 @@ import { href, redirect } from 'react-router';
 
 import { getMockServiceBinURL } from '~/common/constants';
 import { services } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -11,7 +11,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
   const workspace = await services.workspace.getById(workspaceId);
@@ -62,8 +62,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     });
   }
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.generateCollectionFromMock,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.generateCollectionFromMock,
     properties: {
       count_requests: mockRoutes.length,
     },

@@ -1,6 +1,6 @@
 import { useRootLoaderData } from '~/root';
 
-import * as plugins from '../../plugins';
+import { plugins } from '../../plugins/renderer-bridge';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
 import { SettingsModal } from '../components/modals/settings-modal';

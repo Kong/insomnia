@@ -32,7 +32,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
-  const { id: sessionId } = await services.userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.get();
 
   if (!sessionId) {
     await logout();

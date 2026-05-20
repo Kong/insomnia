@@ -4,7 +4,7 @@ import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { services } from '~/insomnia-data';
 import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import { useRootLoaderData } from '~/root';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -147,8 +147,8 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
         className="flex h-full w-full flex-1 flex-col"
         onSelectionChange={key => {
           if (key === 'mock-response') {
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.responseToMockClicked,
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.responseToMockClicked,
               properties: {
                 source: 'Response Pane Tab',
               },
@@ -248,7 +248,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <ResponseHeadersViewer
               headers={activeResponse.headers}
               onCopyAll={() => {
-                window.main.trackSegmentEvent({ event: SegmentEvent.responseHeadersCopyAllClicked });
+                window.main.trackAnalyticsEvent({ event: AnalyticsEvent.responseHeadersCopyAllClicked });
               }}
             />
           </ErrorBoundary>

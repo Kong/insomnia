@@ -10,7 +10,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
 
   if (!project) {
     return redirect(href('/organization/:organizationId', { organizationId }));
