@@ -144,11 +144,11 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     <TextField
                       name="fileName"
                       isRequired
-                      validate={fileName => {
+                      validate={inputValue => {
                         if (
                           selectedFolderChildren
                             .filter(name => name !== fileName)
-                            .includes(safeToUseInsomniaFileNameWithExt(fileName))
+                            .includes(safeToUseInsomniaFileNameWithExt(inputValue))
                         ) {
                           return 'A file with the same name already exists in the selected folder';
                         }
