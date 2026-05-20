@@ -85,10 +85,10 @@ export const useProjectNavigationSidebarNavigation = ({
         !models.workspace.isWorkspace(resources.resource) &&
         models.workspace.isCollection(resources.workspace)
       ) {
-        const requestGroupIds = (await database.withAncestors(resources.resource))
+        const requestGroups = (await database.withAncestors(resources.resource, [models.requestGroup.type]))
           .reverse()
-          .filter(models.requestGroup.isRequestGroup)
-          .map(requestGroup => requestGroup._id);
+          .filter(models.requestGroup.isRequestGroup);
+        const requestGroupIds = requestGroups.map(requestGroup => requestGroup._id);
 
         if (cancelled) {
           return;

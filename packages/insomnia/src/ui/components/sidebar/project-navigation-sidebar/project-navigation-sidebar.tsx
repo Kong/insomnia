@@ -549,7 +549,11 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       if (!projectNavigationSidebarFilter) {
         const expandedIds = expandedProjectAndWorkspaceIds || [];
         const newExpandedIds = Array.from(new Set([...expandedIds, ...projectOrWorkspaceIds]));
-        setExpandedProjectAndWorkspaceIds(newExpandedIds);
+        // Avoid updating state if there is no change in expanded ids to prevent unnecessary re-render
+        const hasNewIds = newExpandedIds.some(id => !expandedIds.includes(id));
+        if (hasNewIds) {
+          setExpandedProjectAndWorkspaceIds(newExpandedIds);
+        }
       }
     },
     [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
@@ -568,7 +572,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       const requestGroupMetas = await Promise.all(
         requestGroupIds.map(requestGroupId => services.requestGroupMeta.getByParentId(requestGroupId)),
       );
-
+      // Update the collapsed state of the toggled request groups.
       const nextStates = requestGroupIds.map((requestGroupId, index) => {
         const requestGroupMeta = requestGroupMetas[index];
         return {
@@ -582,7 +586,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
           services.requestGroupMeta.updateOrCreateForParentId(requestGroupId, { collapsed }),
         ),
       );
-
+      // Update the collapsed state in the cache.
       cachedCollectionChildrenAndMetaRef.current.forEach(workspaceData => {
         workspaceData.requestGroupMetas.forEach(requestGroupMeta => {
           const nextState = nextStates.find(({ requestGroupId }) => requestGroupId === requestGroupMeta.parentId);
@@ -652,7 +656,13 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
               } else if (matchedToggledChild) {
                 return {
                   ...item,
-                  hidden: matchedToggledChild.parentIsCollapsed,
+                  hidden:
+                    matchedToggledChild.parentIsCollapsed ||
+                    // If the parent folder is toggled to be expanded, the empty folder node should still be hidden if its parent request group is collapsed.
+                    cachedCollectionChildrenAndMetaRef.current
+                      .get(workspace._id)
+                      ?.requestGroupMetas.find(rgm => rgm.parentId === matchedToggledChild.id)?.collapsed ||
+                    false,
                 };
               }
             }
