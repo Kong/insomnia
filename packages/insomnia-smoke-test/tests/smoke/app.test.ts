@@ -12,14 +12,12 @@ test('can send requests', async ({ page, insomnia }) => {
   await insomnia.projectPage.importFixture('smoke-test-collection.yaml');
 
   await insomnia.navigationSidebar.openWorkspaceActionsDropdown('Smoke tests');
-  // await page.getByTestId('workspace-context-dropdown').click();
   await page.getByRole('menuitemradio', { name: 'Export' }).click();
   await page.getByRole('button', { name: 'Export' }).click();
   await page.getByText('Which format would you like to export as?').click();
   await insomnia.pressEscape();
 
   await insomnia.navigationSidebar.openWorkspaceActionsDropdown('Smoke tests');
-  // await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
   await page.locator('.CodeMirror textarea').fill('curl --request GET --url http://127.0.0.1:4010/echo');
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -30,7 +28,6 @@ test('can send requests', async ({ page, insomnia }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
 
-  // await page.getByLabel('Request Collection').getByTestId('send JSON request').press('Enter');
   await insomnia.navigationSidebar.clickRequestOrFolder('send JSON request');
   await expect
     .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/pets/1`))

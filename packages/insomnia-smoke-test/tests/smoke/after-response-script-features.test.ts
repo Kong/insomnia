@@ -14,7 +14,7 @@ test.describe('after-response script features tests', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
     // import collection with after-response scripts
     const text = await loadFixture('after-response-collection.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);

@@ -45,7 +45,7 @@ test.describe('Global Environments', () => {
     // Create new document
     await page.getByRole('button', { name: 'Create document', exact: true }).click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Create in project').click();
     await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();

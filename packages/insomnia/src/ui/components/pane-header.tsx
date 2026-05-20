@@ -29,13 +29,13 @@ export const PaneHeader = ({ breadcrumbs, rightSlot, className = '' }: PaneHeade
             return (
               <Breadcrumb
                 key={crumb.id}
+                data-testid={`workspace-breadcrumb-level-${index}`}
                 className="flex min-w-0 items-center gap-1 text-(--color-font) outline-hidden select-none data-focused:outline-hidden"
               >
                 {crumb.icon}
                 {crumb.to && !isLast ? (
                   <NavLink
                     to={crumb.to}
-                    data-testid={`workspace-breadcrumb-level-${index}`}
                     className="truncate rounded-xs px-1 py-0.5 font-normal text-(--color-font) opacity-[0.7] ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                   >
                     {crumb.label}

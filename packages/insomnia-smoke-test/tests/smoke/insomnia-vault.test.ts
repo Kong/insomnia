@@ -88,7 +88,8 @@ test.describe('Check vault used in environment', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByTestId('project').click();
+    // go back
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     // create new global private environment
     await page.getByLabel('Create in project').click();
@@ -128,11 +129,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
 
     // go back
-    await page
-      .locator('[data-icon="chevron-left"]')
-      .filter({ has: page.locator(':visible') })
-      .first()
-      .click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     // import requests
     const requestColText = await loadFixture('vault-collection.yaml');

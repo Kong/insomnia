@@ -54,7 +54,7 @@ test.describe('Dashboard', () => {
     await page.getByRole('button', { name: 'Create document', exact: true }).click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
 
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     // Rename document
     await page.getByLabel('Files').getByLabel('My Design Document').getByRole('button').click();

@@ -519,7 +519,7 @@ test.describe('pre-request features tests', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     await page.getByLabel('Pre-request Scripts', { exact: true }).click();
     // go to request collection

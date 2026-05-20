@@ -96,8 +96,19 @@ export class NavigationSidebar {
 
   async openWorkspaceActionsDropdown(workspaceName: string): Promise<void> {
     const workspaceRow = this.workspaceRow(workspaceName);
-    await workspaceRow.hover();
-    await workspaceRow.getByLabel('SideBar Workspace Actions').click();
+    const actionsButton = workspaceRow.getByLabel('SideBar Workspace Actions');
+    // Sometimes the dropdown button can be a bit tricky to click if the hover state isn't properly triggered, so we'll add some retries here to make it more robust
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await workspaceRow.hover();
+      if (attempt > 0) {
+        console.log(`Retrying to open workspace actions dropdown for "${workspaceName}", attempt ${attempt + 1}`);
+      }
+      try {
+        await actionsButton.waitFor({ state: 'visible', timeout: 1000 });
+        break;
+      } catch {}
+    }
+    await actionsButton.click();
   }
 
   async selectWorkspaceDropdownOption({
@@ -150,14 +161,36 @@ export class NavigationSidebar {
 
   async openRequestActionsDropdown(requestName: string, workspaceName?: string): Promise<void> {
     const requestRow = this.requestRow(requestName, workspaceName);
-    await requestRow.hover();
-    await requestRow.getByLabel('Request Actions').click();
+    const actionsButton = requestRow.getByLabel('Request Actions');
+    // Sometimes the dropdown button can be a bit tricky to click if the hover state isn't properly triggered, so we'll add some retries here to make it more robust
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await requestRow.hover();
+      if (attempt > 0) {
+        console.log(`Retrying to open request actions dropdown for "${requestName}", attempt ${attempt + 1}`);
+      }
+      try {
+        await actionsButton.waitFor({ state: 'visible', timeout: 1000 });
+        break;
+      } catch {}
+    }
+    await actionsButton.click();
   }
 
   async openRequestGroupActionsDropdown(requestName: string, workspaceName?: string): Promise<void> {
     const requestRow = this.requestRow(requestName, workspaceName);
-    await requestRow.click();
-    await requestRow.getByLabel('Request Group Actions').click();
+    const actionsButton = requestRow.getByLabel('Request Group Actions');
+    // Sometimes the dropdown button can be a bit tricky to click if the hover state isn't properly triggered, so we'll add some retries here to make it more robust
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await requestRow.hover();
+      if (attempt > 0) {
+        console.log(`Retrying to open request group actions dropdown for "${requestName}", attempt ${attempt + 1}`);
+      }
+      try {
+        await actionsButton.waitFor({ state: 'visible', timeout: 1000 });
+        break;
+      } catch {}
+    }
+    await actionsButton.click();
   }
 
   async selectRequestDropdownOption({
