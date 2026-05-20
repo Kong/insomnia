@@ -36,6 +36,7 @@ interface NewWorkspaceData {
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   try {
+    const redirectAfterCreate = new URL(request.url).searchParams.get('redirectAfterCreate') !== 'false';
     const workspaceData = (await request.json()) as NewWorkspaceData;
     const project = await services.project.get(projectId);
 
@@ -214,6 +215,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestCreated, properties: { requestType: 'HTTP' } });
 
+      if (!redirectAfterCreate) {
+        return {
+          workspaceId: workspace._id,
+          requestId: activeRequestId,
+        };
+      }
+
       return redirect(
         href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
           organizationId,
@@ -222,6 +230,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           requestId: activeRequestId,
         }),
       );
+    }
+
+    if (!redirectAfterCreate) {
+      return {
+        workspaceId: workspace._id,
+      };
     }
 
     return redirect(
@@ -245,14 +259,22 @@ export const useWorkspaceNewActionFetcher = createFetcherSubmitHook(
     ({
       organizationId,
       projectId,
+      redirectAfterCreate,
       ...workspaceData
-    }: NewWorkspaceData & { organizationId: string; projectId: string }) => {
+    }: NewWorkspaceData & { organizationId: string; projectId: string; redirectAfterCreate?: boolean }) => {
+      const action = href('/organization/:organizationId/project/:projectId/workspace/new', {
+        organizationId,
+        projectId,
+      });
+      const query = new URLSearchParams();
+
+      if (redirectAfterCreate !== undefined) {
+        query.set('redirectAfterCreate', String(redirectAfterCreate));
+      }
+
       return submit(JSON.stringify(workspaceData), {
         method: 'POST',
-        action: href('/organization/:organizationId/project/:projectId/workspace/new', {
-          organizationId,
-          projectId,
-        }),
+        action: query.size ? `${action}?${query.toString()}` : action,
         encType: 'application/json',
       });
     },

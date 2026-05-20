@@ -23,7 +23,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const { requestType, parentId, req } = (await request.json()) as {
     requestType: CreateRequestType;
     parentId?: string;
-    req?: Request;
+    req?: Partial<Request>;
   };
 
   const settings = await services.settings.getOrCreate();
@@ -45,6 +45,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
         parentId: parentId || workspaceId,
         method: METHOD_GET,
         name: 'New Request',
+        url: req?.url || '',
         headers: defaultHeaders,
       })
     )._id;
