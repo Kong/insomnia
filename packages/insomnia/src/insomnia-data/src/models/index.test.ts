@@ -13,7 +13,7 @@ const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);
 
 describe('isGrpcRequest', () => {
-  const supported: AllTypes[] = [models.grpcRequest.type] ;
+  const supported: AllTypes[] = [models.grpcRequest.type];
   const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
@@ -47,7 +47,7 @@ describe('isGrpcRequestId', () => {
 });
 
 describe('isRequest', () => {
-  const supported: AllTypes[] = [models.request.type] ;
+  const supported: AllTypes[] = [models.request.type];
   const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
