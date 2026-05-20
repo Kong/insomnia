@@ -3,7 +3,7 @@ import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
-import type { ApiSpec, WorkspaceMeta } from '~/insomnia-data';
+import type { WorkspaceMeta } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -21,35 +21,6 @@ interface UpdateProjectInputData {
   ref?: string;
   connectRepositoryLater?: boolean;
   selectedAuthorEmail?: string | null;
-}
-
-async function migrateGitRulesetToApiSpecs(projectId: string, gitRepositoryId: string) {
-  const spectralPath = window.path.join(
-    window.app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}/.spectral.yaml`,
-  );
-  let content: string | undefined;
-  try {
-    content = await window.main.insecureReadFile({ path: spectralPath });
-  } catch {
-    // no .spectral.yaml on disk — nothing to migrate
-  }
-  if (!content) {
-    return;
-  }
-  const designWorkspaces = (await services.workspace.findByParentId(projectId)).filter(w => w.scope === 'design');
-  const apiSpecs = await database.find<ApiSpec>(models.apiSpec.type, {
-    parentId: { $in: designWorkspaces.map(w => w._id) },
-  });
-  const apiSpecMap = new Map(apiSpecs.map(spec => [spec.parentId, spec]));
-  const bufferId = await database.bufferChanges();
-  for (const workspace of designWorkspaces) {
-    const apiSpec = apiSpecMap.get(workspace._id);
-    if (apiSpec) {
-      await services.apiSpec.update(apiSpec, { rulesetContent: content });
-    }
-  }
-  await database.flushChanges(bufferId);
 }
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
@@ -197,10 +168,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         if (models.project.isConnectedGitProject(project)) {
           const gitRepository = await services.gitRepository.getById(models.project.getEffectiveRepoId(project) || '');
 
-          if (gitRepository) {
-            await migrateGitRulesetToApiSpecs(project._id, gitRepository._id);
-            await services.gitRepository.remove(gitRepository);
-          }
+          gitRepository && (await services.gitRepository.remove(gitRepository));
         }
 
         await services.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
@@ -372,10 +340,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const effectiveId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
       const gitRepository = effectiveId ? await services.gitRepository.getById(effectiveId) : null;
 
-      if (gitRepository) {
-        await migrateGitRulesetToApiSpecs(project._id, gitRepository._id);
-        await services.gitRepository.remove(gitRepository);
-      }
+      gitRepository && (await services.gitRepository.remove(gitRepository));
       await services.project.update(project, { name, gitRepositoryId: null });
 
       reportGitProjectCount(organizationId, sessionId);
