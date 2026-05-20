@@ -13,8 +13,6 @@ test.describe('Cookie editor', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   });
 
-  // has issue?
-
   test('create and send a cookie', async ({ page, insomnia }) => {
     // Open cookie editor
     await page.getByRole('button', { name: 'Cookies' }).click();

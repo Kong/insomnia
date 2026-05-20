@@ -51,7 +51,6 @@ test('can make websocket connection', async ({ app, page, insomnia }) => {
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('WebSocket connection established');
 
-  // TODO FIX ME THIS IS A BUG
   const webSocketActiveConnections = page.getByTestId('WebSocketSpinner__Connected');
 
   // Basic auth, Bearer auth, and Redirect connections are displayed as open

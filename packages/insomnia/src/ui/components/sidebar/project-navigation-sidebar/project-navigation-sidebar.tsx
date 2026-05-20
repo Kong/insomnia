@@ -222,10 +222,9 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       } catch (error) {
         console.error(`Failed to fetch unsynced files for project ${projectId}`, error);
         result.set(projectId, []);
-      } finally {
-        isFetchingUnsyncedFilesRef.current = false;
       }
     }
+    isFetchingUnsyncedFilesRef.current = false;
     return setUnsyncedFilesByProjectId(result);
   }, [organizationId, cloudSyncProjectIdsKey]);
 

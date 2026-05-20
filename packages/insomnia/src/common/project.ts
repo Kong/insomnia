@@ -97,7 +97,7 @@ export const checkSingleProjectSyncStatus = async (projectId: string) => {
   return workspaceMetas.some(item => item.hasUncommittedChanges || item.hasUnpushedChanges);
 };
 
-export const CheckAllProjectSyncStatus = async (projects: Project[]) => {
+export const checkAllProjectSyncStatus = async (projects: Project[]) => {
   const taskList = projects.map(project => checkSingleProjectSyncStatus(project._id));
   const res = await Promise.all(taskList);
   const obj: Record<string, boolean> = {};
@@ -287,8 +287,9 @@ export async function getProjectsWithGitRepositories({
     parentId: organizationId,
   });
 
-  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
-
+  const gitRepositoryIds = projects
+    .map(p => (models.project.isConnectedGitProject(p) ? models.project.getEffectiveRepoId(p) : null))
+    .filter(isNotNullOrUndefined);
   const gitRepositories = await database.find<GitRepository>('GitRepository', {
     _id: {
       $in: gitRepositoryIds,
@@ -296,7 +297,10 @@ export async function getProjectsWithGitRepositories({
   });
 
   return projects.map(project => {
-    const gitRepository = gitRepositories.find(gr => gr._id === project.gitRepositoryId);
+    const effectiveId = models.project.isConnectedGitProject(project)
+      ? models.project.getEffectiveRepoId(project)
+      : null;
+    const gitRepository = gitRepositories.find(gr => gr._id === effectiveId);
     return {
       ...project,
       gitRepository,

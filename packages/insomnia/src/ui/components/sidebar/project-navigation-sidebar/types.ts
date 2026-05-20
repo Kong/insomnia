@@ -37,7 +37,7 @@ export interface WorkspaceFlatItem extends BaseFlatItem<Workspace> {
   project: ProjectWithPresence;
 }
 
-//unsynced workspace in clod sync project
+// Unsynced workspace in cloud sync project
 type UnsyncedWorkspaceDoc = InsomniaFile & { _id: string };
 export type UnsyncedWorkspaceFlatItem = Omit<BaseFlatItem<any>, 'doc'> &
   Pick<WorkspaceFlatItem, 'project'> & {

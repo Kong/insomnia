@@ -51,7 +51,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
 
   const caStatus = !isMcp
     ? null
-    : (activeRequest as McpRequest).sslValidation === false
+    : ((activeRequest as McpRequest) || {})?.sslValidation === false
       ? 'warning'
       : caCertificate?.path && !caCertificate.disabled
         ? 'success'

@@ -31,7 +31,7 @@ export const UnsyncedWorkspaceNode = ({ item }: { item: UnsyncedWorkspaceFlatIte
         title: 'Failed to fetch remote workspace',
         icon: 'star',
         status: 'error',
-        description: `There was an error communicating with the AI service. Please try again. ${error}`,
+        description: `Failed to fetch remote workspace: ${error}`,
       });
     }
   }, [pullRemoteFileFetcher.data, pullRemoteFileFetcher.state, item.doc.name]);

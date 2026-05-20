@@ -9,7 +9,7 @@ import { logout } from '~/account/session';
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import {
-  CheckAllProjectSyncStatus,
+  checkAllProjectSyncStatus,
   getAllLocalFiles,
   getAllRemoteFiles,
   getProjectsWithGitRepositories,
@@ -82,7 +82,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     cta: '',
     url: '',
   };
-  console.log('[project loader] Loading project:', project?.name, projectId);
 
   const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),
@@ -93,7 +92,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
-  const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
+  const projectsSyncStatusPromise = checkAllProjectSyncStatus(projects);
 
   const activeProjectGitRepository =
     project && models.project.isGitProject(project)
@@ -138,15 +137,16 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const [isSidebarCollapsed] = reactUse.useLocalStorage('project-navigation-collapsed', false);
-  const isSidebarCollapsedRef = useRef(isSidebarCollapsed);
 
   useEffect(() => {
-    if (isSidebarCollapsedRef.current) {
+    if (isSidebarCollapsed) {
       sidebarPanelRef.current?.collapse();
     } else {
       sidebarPanelRef.current?.expand();
     }
+  }, [isSidebarCollapsed]);
 
+  useEffect(() => {
     return uiEventBus.on(TOGGLE_PROJECT_SIDEBAR, (collapsed: boolean) => {
       if (collapsed) {
         sidebarPanelRef.current?.collapse();
