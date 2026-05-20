@@ -1190,9 +1190,24 @@ const Component = ({ params }: Route.ComponentProps) => {
                             'Default OAS Ruleset'
                           )}
                         </span>
-                        <Button className="underline" onPress={handleSelectSpectralFile}>
-                          {selectedRulesetPath ? '(Edit)' : '(Upload)'}
-                        </Button>
+                        {selectedRulesetPath ? (
+                          <TooltipTrigger delay={0}>
+                            <Button onPress={handleUnselectSpectralFile}>
+                              <Icon icon="xmark" />
+                            </Button>
+                            <Tooltip
+                              placement="top end"
+                              offset={8}
+                              className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                            >
+                              <p>Clear custom ruleset and use default OAS ruleset</p>
+                            </Tooltip>
+                          </TooltipTrigger>
+                        ) : (
+                          <Button onPress={handleSelectSpectralFile}>
+                            <Icon icon="upload" />
+                          </Button>
+                        )}
                       </div>
                       <Tooltip
                         placement="top end"
@@ -1203,7 +1218,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                           {selectedRulesetPath ? (
                             <Fragment>
                               <p className="mb-2">Using ruleset from</p>
-                              <code className="p-0 wrap-break-word">{selectedRulesetPath}</code>
+                              <code className="block p-0 break-all whitespace-pre-wrap">{selectedRulesetPath}</code>
                             </Fragment>
                           ) : (
                             <Fragment>
@@ -1222,20 +1237,6 @@ const Component = ({ params }: Route.ComponentProps) => {
                         </div>
                       </Tooltip>
                     </TooltipTrigger>
-                    {!!selectedRulesetPath && (
-                      <TooltipTrigger delay={0}>
-                        <Button onPress={handleUnselectSpectralFile}>
-                          <Icon icon="xmark" />
-                        </Button>
-                        <Tooltip
-                          placement="top end"
-                          offset={8}
-                          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                        >
-                          <p>Clear custom ruleset and use default OAS ruleset</p>
-                        </Tooltip>
-                      </TooltipTrigger>
-                    )}
                     <span className="flex-1" />
                     <div className="flex items-center gap-2">
                       {lintErrors.length > 0 && (
