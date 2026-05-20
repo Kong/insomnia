@@ -324,6 +324,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
   const isGitSyncDropdownDisabled = isSyncing || isPulling || isPushing;
 
   const isSynced = Boolean(gitRepository?.uri && gitRepoDataFetcher.data && !('errors' in gitRepoDataFetcher.data));
+  const isLoadingGitRepo = Boolean(gitRepository?.uri && !gitRepoDataFetcher.data);
 
   const { branches, branch: currentBranch } =
     gitRepoDataFetcher.data && 'branches' in gitRepoDataFetcher.data
@@ -655,7 +656,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
           </Button>
         </div>
       )}
-      {!isSynced ? (
+      {isLoadingGitRepo ? (
+        <div className="flex h-(--line-height-sm) w-full items-center gap-2 px-(--padding-md) text-sm text-(--color-font) opacity-60">
+          <Icon icon={icon} className="size-4" />
+          <Separator orientation="vertical" className="h-4 border border-solid border-(--hl-sm) bg-(--color-bg)" />
+          <Icon icon="spinner" className="w-3 animate-spin" />
+          <span className="truncate">Connecting...</span>
+        </div>
+      ) : !isSynced ? (
         <div className="flex h-(--line-height-sm) w-full items-center gap-2 px-(--padding-md) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-100 aria-pressed:bg-(--hl-sm)">
           <Icon icon={icon} className="size-4" />
           <Separator orientation="vertical" className="h-4 border border-solid border-(--hl-sm) bg-(--color-bg)" />
