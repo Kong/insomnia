@@ -1,7 +1,7 @@
 import { useRootLoaderData } from '~/root';
 
-import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { plugins } from '../../plugins/renderer-bridge';
+import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
 import { SettingsModal } from '../components/modals/settings-modal';
 import { useSettingsPatcher } from './use-request';

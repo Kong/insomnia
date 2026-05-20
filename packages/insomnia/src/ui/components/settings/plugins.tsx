@@ -17,6 +17,7 @@ import { useRootLoaderData } from '~/root';
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import type { SerializablePlugin } from '../../../plugins/bridge-types';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { reload } from '../../../templating/index';
 import { validatePluginName } from '../../../utils/plugin';
 import { useSettingsPatcher } from '../../hooks/use-request';
@@ -25,7 +26,6 @@ import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
-import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { CreatePluginModal } from './create-plugin-modal';
 
 const getNpmRegistryUrlValidationError = (url: string): string | null => {

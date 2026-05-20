@@ -13,6 +13,7 @@ import { KonnectSettings } from '~/ui/components/settings/konnect-settings';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -24,7 +25,6 @@ import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { TextSetting } from '../settings/text-setting';
 import { ThemePanel } from '../settings/theme-panel';
-import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { showModal } from './index';
 
 export interface SettingsModalHandle {

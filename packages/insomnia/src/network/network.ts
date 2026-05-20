@@ -25,6 +25,7 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { EnvironmentType, models, services } from '~/insomnia-data';
+import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
@@ -46,7 +47,6 @@ import * as pluginRequest from '../plugins/context/request';
 import * as pluginResponse from '../plugins/context/response';
 import * as pluginStore from '../plugins/context/store';
 import * as plugins from '../plugins/index';
-import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';

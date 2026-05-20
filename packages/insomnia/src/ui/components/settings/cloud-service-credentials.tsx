@@ -7,11 +7,11 @@ import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { usePlanData } from '../../hooks/use-plan';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
-import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { CloudCredentialModal } from '../modals/cloud-credential-modal/cloud-credential-modal';
 import { SvgIcon } from '../svg-icon';
 import { Tooltip } from '../tooltip';
