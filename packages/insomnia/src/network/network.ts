@@ -19,6 +19,7 @@ import type {
   RequestHeader,
   RequestParameter,
   RequestTestResult,
+  ResponseTimelineEntry,
   Settings,
   SocketIORequest,
   UserUploadEnvironment,
@@ -36,7 +37,7 @@ import { database as db } from '../common/database';
 import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeaders } from '../common/misc';
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
-import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promise';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginData from '../plugins/context/data';
 import * as pluginNetwork from '../plugins/context/network';

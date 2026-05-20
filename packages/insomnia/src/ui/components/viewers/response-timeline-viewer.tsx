@@ -1,8 +1,7 @@
 import React, { type FC, useEffect, useRef } from 'react';
 
+import type { ResponseTimelineEntry } from '~/insomnia-data';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
-
-import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 
 interface Props {
   timeline: ResponseTimelineEntry[];

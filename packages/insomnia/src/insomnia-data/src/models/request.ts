@@ -13,11 +13,10 @@
  *
  */
 
-import { OperationTypeNode } from 'graphql';
+import { getOperationAST, OperationTypeNode, parse } from 'graphql';
 
-import type { OAuth1SignatureMethod } from '~/common/constants';
-import { METHOD_GET } from '~/common/constants';
-import { getOperationType } from '~/utils/graph-ql';
+import type { OAuth1SignatureMethod } from '~/insomnia-data/common';
+import { CONTENT_TYPE_GRAPHQL, METHOD_GET } from '~/insomnia-data/common';
 
 import type { BaseModel } from './base-types';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';
@@ -303,6 +302,26 @@ export const isRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
 export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream';
+
+export function getOperationType(request: Request) {
+  if (request.body?.mimeType === CONTENT_TYPE_GRAPHQL) {
+    let documentAST;
+    let requestBody;
+    try {
+      requestBody = JSON.parse(request.body.text || '');
+      documentAST = parse(requestBody?.query || '');
+    } catch {
+      documentAST = null;
+    }
+    if (documentAST) {
+      const operationAST = getOperationAST(documentAST, requestBody?.operationName);
+      if (operationAST) {
+        return operationAST.operation;
+      }
+    }
+  }
+  return;
+}
 export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION;
 

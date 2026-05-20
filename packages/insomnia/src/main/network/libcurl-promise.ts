@@ -21,7 +21,7 @@ import { isValid } from 'date-fns';
 import electron from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { ClientCertificate, RequestHeader, ResponseHeader } from '~/insomnia-data';
+import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from '~/insomnia-data';
 
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
@@ -66,12 +66,6 @@ interface SettingsUsedHere {
   httpsProxy: string;
   noProxy: string;
   dataFolders: string[];
-}
-
-export interface ResponseTimelineEntry {
-  name: keyof typeof CurlInfoDebug;
-  timestamp: number;
-  value: string;
 }
 
 export interface CurlRequestOutput {

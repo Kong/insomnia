@@ -3,7 +3,7 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import type { MockRoute, MockServer, Response } from '~/insomnia-data';
+import type { MockRoute, MockServer, Response, ResponseTimelineEntry } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import {
   getMockServiceURL,
@@ -18,7 +18,6 @@ import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.pr
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { exportHarCurrentRequest } from '../../../common/har';
-import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
