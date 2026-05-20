@@ -5,18 +5,13 @@ import * as reactUse from 'react-use';
 
 import type { MockRoute, MockServer, Response, ResponseTimelineEntry } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import {
-  getMockServiceURL,
-  getPreviewModeName,
-  PREVIEW_MODE_FRIENDLY,
-  PREVIEW_MODES,
-  type PreviewMode,
-} from '~/insomnia-data/common';
+import { getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, type PreviewMode } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
+import { getMockServiceURL } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';

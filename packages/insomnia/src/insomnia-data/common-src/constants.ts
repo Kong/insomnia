@@ -12,12 +12,6 @@ export function getContentTypeFromHeaders(headers: any[], defaultValue: string |
   return header ? header.value : defaultValue;
 }
 
-// Vite is filtering out process.env variables that are not prefixed with VITE_.
-const ENV = 'env';
-const env: Record<string, string | undefined> = typeof process !== 'undefined' ? process[ENV] : {};
-
-export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.run';
-
 export type OAuth1SignatureMethod = 'HMAC-SHA1' | 'RSA-SHA1' | 'HMAC-SHA256' | 'PLAINTEXT';
 export const SIGNATURE_METHOD_HMAC_SHA1: OAuth1SignatureMethod = 'HMAC-SHA1';
 export const SIGNATURE_METHOD_HMAC_SHA256: OAuth1SignatureMethod = 'HMAC-SHA256';
