@@ -1176,9 +1176,9 @@ const Component = ({ params }: Route.ComponentProps) => {
                   className={`flex ${isLintPaneOpen ? '' : 'h-(--line-height-sm)'} box-border flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden`}
                 >
                   <div className="flex flex-wrap items-center gap-2 p-(--padding-sm)">
-                    <TooltipTrigger>
+                    <TooltipTrigger delay={0}>
                       <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-                      <div className="ml-2 inline-flex items-center gap-2">
+                      <div className="inline-flex items-center gap-2">
                         <span className="mr-[2px]">
                           {selectedRulesetPath ? (
                             <>
@@ -1202,7 +1202,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                         <div>
                           {selectedRulesetPath ? (
                             <Fragment>
-                              <p>Using ruleset from</p>
+                              <p className="mb-2">Using ruleset from</p>
                               <code className="p-0 wrap-break-word">{selectedRulesetPath}</code>
                             </Fragment>
                           ) : (
@@ -1223,7 +1223,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       </Tooltip>
                     </TooltipTrigger>
                     {!!selectedRulesetPath && (
-                      <TooltipTrigger>
+                      <TooltipTrigger delay={0}>
                         <Button onPress={handleUnselectSpectralFile}>
                           <Icon icon="xmark" />
                         </Button>
