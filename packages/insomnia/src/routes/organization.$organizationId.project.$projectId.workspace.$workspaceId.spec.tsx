@@ -1179,7 +1179,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                     <TooltipTrigger delay={0}>
                       <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
                       <div className="inline-flex items-center gap-2">
-                        <span className="mr-[2px]">
+                        <span>
                           {selectedRulesetPath ? (
                             <>
                               <Button className="underline" onPress={() => setIsViewRulesetModalOpen(true)}>
@@ -1192,7 +1192,10 @@ const Component = ({ params }: Route.ComponentProps) => {
                         </span>
                         {selectedRulesetPath ? (
                           <TooltipTrigger delay={0}>
-                            <Button onPress={handleUnselectSpectralFile}>
+                            <Button
+                              onPress={handleUnselectSpectralFile}
+                              className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                            >
                               <Icon icon="xmark" />
                             </Button>
                             <Tooltip
@@ -1204,7 +1207,10 @@ const Component = ({ params }: Route.ComponentProps) => {
                             </Tooltip>
                           </TooltipTrigger>
                         ) : (
-                          <Button onPress={handleSelectSpectralFile}>
+                          <Button
+                            onPress={handleSelectSpectralFile}
+                            className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                          >
                             <Icon icon="upload" />
                           </Button>
                         )}
