@@ -21,6 +21,7 @@ import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
 import { isMac } from '~/common/platform';
 import type { KeyCombination } from '~/common/settings';
+import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { getTagDefinitions } from '~/templating/index';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
@@ -745,7 +746,7 @@ export const CodeEditor = memo(
               return;
             }
             event.preventDefault();
-            const pluginTemplateTags = await window.main.plugins.getTemplateTags();
+            const pluginTemplateTags = await plugins.getTemplateTags();
             const target = event.target as HTMLElement;
             // right click on nunjucks tag
             if (target?.classList?.contains('nunjucks-tag')) {

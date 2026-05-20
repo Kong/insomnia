@@ -34,6 +34,7 @@ import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { SerializableActionMeta } from '../../../plugins/bridge-types';
+import { plugins } from '../../../plugins/renderer-bridge';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockServerGenerateRequestCollectionActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
 import { invariant } from '../../../utils/invariant';
@@ -86,7 +87,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
         const docs = await db.getWithDescendants(workspace, [models.request.type]);
         const requests = docs.filter(models.request.isRequest).filter(doc => !doc.isPrivate);
         const requestGroups = docs.filter(models.requestGroup.isRequestGroup);
-        await window.main.plugins.executeAction({
+        await plugins.executeAction({
           type: 'workspace',
           pluginName,
           label,
@@ -105,7 +106,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
   );
 
   const handleDropdownOpen = useCallback(async () => {
-    const actionPlugins = await window.main.plugins.getWorkspaceActions();
+    const actionPlugins = await plugins.getWorkspaceActions();
     setActionPlugins(actionPlugins);
   }, []);
 

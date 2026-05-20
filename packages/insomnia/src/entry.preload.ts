@@ -25,22 +25,16 @@ import type {
   PluginsBridgeAPI,
   RunTemplateTagActionArgs,
 } from './plugins/bridge-types';
-import { invokePluginMethod, type PluginInvokeMethod } from './plugins/invoke-method';
+import type { PluginInvokeMethod } from './plugins/invoke-method';
 import type { RenderedRequest } from './templating/types';
 import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
-// Phase 1a rollback switch: keep legacy in-renderer execution available for the whole app session.
-const pluginBridgeEnabled = process.env.INSOMNIA_ENABLE_PLUGIN_BRIDGE !== 'false';
 
 type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI
   ? Awaited<ReturnType<PluginsBridgeAPI[T]>>
   : never;
 
 const invokePluginBridgeMethod = <T extends PluginInvokeMethod>(method: T, args?: unknown): Promise<PluginMethodResult<T>> => {
-  if (!pluginBridgeEnabled) {
-    return invokePluginMethod(method, args) as Promise<PluginMethodResult<T>>;
-  }
-
   return invokeWithNormalizedError(`plugins.${method}`, args) as Promise<PluginMethodResult<T>>;
 };
 

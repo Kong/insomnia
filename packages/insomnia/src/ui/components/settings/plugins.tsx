@@ -25,6 +25,7 @@ import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { CreatePluginModal } from './create-plugin-modal';
 
 const getNpmRegistryUrlValidationError = (url: string): string | null => {
@@ -106,8 +107,8 @@ export const Plugins: FC = () => {
 
   async function handleReloadPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
-    await window.main.plugins.reloadPlugins();
-    const allPlugins = (await window.main.plugins.getPlugins()) as SerializablePlugin[];
+    await pluginsBridge.reloadPlugins();
+    const allPlugins = (await pluginsBridge.getPlugins()) as SerializablePlugin[];
     const plugins = allPlugins.filter(
       // Filter out pre-bundled plugins
       p => p.directory,

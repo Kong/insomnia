@@ -46,6 +46,7 @@ import * as pluginRequest from '../plugins/context/request';
 import * as pluginResponse from '../plugins/context/response';
 import * as pluginStore from '../plugins/context/store';
 import * as plugins from '../plugins/index';
+import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -1109,11 +1110,11 @@ export async function _applyRequestPluginHooks(renderedRequest: RenderedRequest,
     return newRenderedRequest;
   }
 
-  if (!await window.main.plugins.hasRequestHooks()) {
+  if (!await pluginsBridge.hasRequestHooks()) {
     return newRenderedRequest;
   }
 
-  return window.main.plugins.applyRequestHooks({
+  return pluginsBridge.applyRequestHooks({
     renderedRequest: newRenderedRequest,
     projectId: renderedContext.getProjectId(),
     environment: renderedContext,
@@ -1149,11 +1150,11 @@ export async function _applyResponsePluginHooks(
       return newResponse;
     }
 
-    if (!await window.main.plugins.hasResponseHooks()) {
+    if (!await pluginsBridge.hasResponseHooks()) {
       return response;
     }
 
-    return await window.main.plugins.applyResponseHooks({
+    return await pluginsBridge.applyResponseHooks({
       response,
       renderedRequest,
       projectId: renderedContext.getProjectId(),

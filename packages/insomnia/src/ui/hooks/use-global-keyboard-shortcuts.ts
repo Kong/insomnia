@@ -1,6 +1,7 @@
 import { useRootLoaderData } from '~/root';
 
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
+import { plugins } from '../../plugins/renderer-bridge';
 import { showModal } from '../components/modals';
 import { SettingsModal } from '../components/modals/settings-modal';
 import { useSettingsPatcher } from './use-request';
@@ -10,7 +11,7 @@ export const useGlobalKeyboardShortcuts = () => {
   const patchSettings = useSettingsPatcher();
 
   useDocBodyKeyboardShortcuts({
-    plugin_reload: () => window.main.plugins.reloadPlugins(),
+    plugin_reload: () => plugins.reloadPlugins(),
     // TODO: move this to workspace route
     environment_showVariableSourceAndValue: () =>
       patchSettings({ showVariableSourceAndValue: !settings.showVariableSourceAndValue }),

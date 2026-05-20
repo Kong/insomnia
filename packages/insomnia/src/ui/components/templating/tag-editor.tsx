@@ -14,6 +14,7 @@ import { delay, fnOrString, SECURITY_SETTINGS_PATH_LABEL } from '../../../common
 import { metaSortKeySort } from '../../../common/sorting';
 import * as templating from '../../../templating';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
+import { plugins } from '../../../plugins/renderer-bridge';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -566,10 +567,10 @@ export const TagEditor: FC<Props> = props => {
                   className="btn btn--clicky btn--largest"
                   type="button"
                   onClick={async () => {
-                    const bridgeTags = await window.main.plugins.getTemplateTags();
+                    const bridgeTags = await plugins.getTemplateTags();
                     const bridgeTag = bridgeTags.find(t => t.templateTag.name === state.activeTagData?.name);
                     if (bridgeTag) {
-                      await window.main.plugins.runTemplateTagAction({
+                      await plugins.runTemplateTagAction({
                         pluginName: bridgeTag.pluginName,
                         tagName: bridgeTag.templateTag.name as string,
                         actionName: action.name,

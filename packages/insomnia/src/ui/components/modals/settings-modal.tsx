@@ -24,6 +24,7 @@ import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { TextSetting } from '../settings/text-setting';
 import { ThemePanel } from '../settings/theme-panel';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { showModal } from './index';
 
 export interface SettingsModalHandle {
@@ -45,7 +46,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
 
   useEffect(() => {
     const checkFeatures = async () => {
-      const plugins = await window.main.plugins.getBundlePlugins();
+      const plugins = await pluginsBridge.getBundlePlugins();
       const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
       setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
 

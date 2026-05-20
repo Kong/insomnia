@@ -12,6 +12,7 @@ import type {
   WebSocketRequest,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -88,7 +89,7 @@ export const RequestActionsDropdown = ({
   };
 
   const onOpen = useCallback(async () => {
-    const actionPlugins = await window.main.plugins.getRequestActions();
+    const actionPlugins = await plugins.getRequestActions();
     setActionPlugins(actionPlugins);
   }, []);
 
@@ -117,7 +118,7 @@ export const RequestActionsDropdown = ({
 
   const handlePluginClick = async ({ pluginName, label }: SerializableActionMeta) => {
     try {
-      await window.main.plugins.executeAction({
+      await plugins.executeAction({
         type: 'request',
         pluginName,
         label,

@@ -7,6 +7,7 @@ import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credential
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
+import { plugins } from '../../../../plugins/renderer-bridge';
 import { Icon } from '../../icon';
 import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
@@ -65,7 +66,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       const parsedURL = new URL(manulInputUrl);
       const code = parsedURL.searchParams.get('code');
       if (code && typeof code === 'string') {
-        const authResult = await window.main.plugins.executePluginMainAction({
+        const authResult = await plugins.executePluginMainAction({
           pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
           actionName: 'exchangeCode',
           params: { provider: 'azure', code },

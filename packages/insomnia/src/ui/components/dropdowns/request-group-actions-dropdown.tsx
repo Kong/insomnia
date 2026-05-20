@@ -5,6 +5,7 @@ import { useParams } from 'react-router';
 
 import type { Request, RequestGroup } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
+import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
@@ -73,7 +74,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
     });
 
   const onOpen = async () => {
-    const actionPlugins = await window.main.plugins.getRequestGroupActions();
+    const actionPlugins = await plugins.getRequestGroupActions();
     setActionPlugins(actionPlugins);
   };
 
@@ -120,7 +121,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
     try {
       const requests = await services.request.findByParentId(requestGroup._id);
       requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
-      await window.main.plugins.executeAction({
+      await plugins.executeAction({
         type: 'requestGroup',
         pluginName,
         label,

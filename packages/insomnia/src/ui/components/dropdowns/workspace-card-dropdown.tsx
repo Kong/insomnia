@@ -17,6 +17,7 @@ import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { SerializableDocumentActionMeta } from '../../../plugins/bridge-types';
+import { plugins } from '../../../plugins/renderer-bridge';
 import { AnalyticsEvent } from '../../analytics';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -45,7 +46,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
   const refresh = useCallback(async () => {
     // Only load document plugins if the scope is design, for now
     if (workspace.scope === models.workspace.WorkspaceScopeKeys.design) {
-      setActionPlugins(await window.main.plugins.getDocumentActions());
+      setActionPlugins(await plugins.getDocumentActions());
     }
   }, [workspace.scope]);
 
@@ -54,7 +55,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
       startLoading(p.label);
 
       try {
-        await window.main.plugins.executeAction({
+        await plugins.executeAction({
           type: 'document',
           pluginName: p.pluginName,
           label: p.label,

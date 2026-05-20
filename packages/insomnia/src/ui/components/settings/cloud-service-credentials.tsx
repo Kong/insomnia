@@ -11,6 +11,7 @@ import { usePlanData } from '../../hooks/use-plan';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { CloudCredentialModal } from '../modals/cloud-credential-modal/cloud-credential-modal';
 import { SvgIcon } from '../svg-icon';
 import { Tooltip } from '../tooltip';
@@ -62,7 +63,7 @@ export const CloudServiceCredentialList = () => {
   const deleteCredentialFetcher = useDeleteCloudCredentialActionFetcher();
   useEffect(() => {
     const checkVaultPlugin = async () => {
-      const plugins = await window.main.plugins.getBundlePlugins();
+      const plugins = await pluginsBridge.getBundlePlugins();
       const vaultPlugin = plugins.find(p => p.name === EXTERNAL_VAULT_PLUGIN_NAME);
       setIsVaultPluginInstalled(!!vaultPlugin);
     };
@@ -96,7 +97,7 @@ export const CloudServiceCredentialList = () => {
 
   const handleCreateCloudServiceCredential = async (key: CloudProviderName) => {
     if (key === 'azure') {
-      const { authUrl, error } = (await window.main.plugins.executePluginMainAction({
+      const { authUrl, error } = (await pluginsBridge.executePluginMainAction({
         pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
         actionName: 'openAuthUrl',
         params: { provider: 'azure' },
@@ -245,7 +246,7 @@ export const CloudServiceCredentialList = () => {
           <button
             className="pointer mb-(--padding-sm) ml-(--padding-sm) flex h-(--line-height-xs) w-32 items-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
             onClick={async () =>
-              await window.main.plugins.executePluginMainAction({
+              await pluginsBridge.executePluginMainAction({
                 pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
                 actionName: 'clearCache',
               })
