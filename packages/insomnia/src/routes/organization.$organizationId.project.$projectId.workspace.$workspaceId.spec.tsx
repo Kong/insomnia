@@ -99,17 +99,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
     : '';
 
-  let rulesetContent = '';
-  if (gitSyncRulesetPath) {
-    try {
-      rulesetContent = await window.main.insecureReadFile({ path: gitSyncRulesetPath });
-    } catch {
-      // no .spectral.yaml on disk yet
-    }
-  } else {
-    const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
-    rulesetContent = projectLintRuleset?.rulesetContent || '';
-  }
+  // The ProjectLintRuleset record is the source of truth for both git and cloud projects.
+  // For git, the RepoFileWatcher keeps .spectral.yaml in sync with this record.
+  const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
+  const rulesetContent = projectLintRuleset?.rulesetContent || '';
 
   let parsedSpec: OpenAPIV3.Document | undefined;
 
@@ -218,13 +211,12 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [selectedRulesetPath, setSelectedRulesetPath] = useState<string>('');
 
   // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
-  // For git sync projects, write .spectral.yaml directly to the git working directory so it
-  // appears in the staging modal and can be committed/pushed/pulled like any other file.
-  // For cloud/local projects, write to a per-project scratch path — rulesetContent in NeDB handles syncing.
+  // Cloud/local projects have no RepoFileWatcher, so rulesetContent from NeDB is mirrored
+  // to this per-project scratch path. Git projects lint against gitSyncRulesetPath, which
+  // the RepoFileWatcher keeps in sync with the record.
   const rulesetWritePath = useMemo(
-    () =>
-      gitSyncRulesetPath || window.path.join(window.app.getPath('userData'), `projects/${projectId}/.spectral.yaml`),
-    [gitSyncRulesetPath, projectId],
+    () => window.path.join(window.app.getPath('userData'), `projects/${projectId}/.spectral.yaml`),
+    [projectId],
   );
 
   const { components, info, servers, paths } = parsedSpec || {};
@@ -484,13 +476,16 @@ const Component = ({ params }: Route.ComponentProps) => {
     }
 
     await updateProjectRuleset({ organizationId, projectId, rulesetContent: content });
-    await window.main.writeFile({ path: rulesetWritePath, content });
 
     if (gitSyncRulesetPath) {
+      // git: the RepoFileWatcher mirrors the record to .spectral.yaml in the working dir
       revalidator.revalidate();
+    } else {
+      // cloud/local: no watcher — mirror to the scratch path so Spectral can lint
+      await window.main.writeFile({ path: rulesetWritePath, content });
     }
 
-    setSelectedRulesetPath(rulesetWritePath);
+    setSelectedRulesetPath(gitSyncRulesetPath || rulesetWritePath);
   };
 
   const handleUnselectSpectralFile = async () => {
@@ -507,9 +502,11 @@ const Component = ({ params }: Route.ComponentProps) => {
             organizationId,
             projectId,
           });
-          await window.main.deleteFile({ path: rulesetWritePath });
           if (gitSyncRulesetPath) {
+            // git: the RepoFileWatcher removes .spectral.yaml from the working dir
             revalidator.revalidate();
+          } else {
+            await window.main.deleteFile({ path: rulesetWritePath });
           }
           setSelectedRulesetPath('');
         }
