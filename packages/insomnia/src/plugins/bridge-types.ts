@@ -1,5 +1,5 @@
 import type { ResponsePatch } from '../main/network/libcurl-promise';
-import type { BaseRenderContext, RenderedRequest,RenderPurpose } from '../templating/types';
+import type { BaseRenderContext, RenderedRequest, RenderPurpose } from '../templating/types';
 import type { PluginTheme } from './misc';
 
 export interface SerializablePlugin {

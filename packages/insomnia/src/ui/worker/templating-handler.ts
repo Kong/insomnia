@@ -5,8 +5,13 @@ import { extractUndefinedVariableKey, RenderError } from '../../templating/rende
 import type { RenderInputType } from '../../templating/types';
 
 function serializeRenderContext(context: RenderInputType['context']): RenderTemplateArgs['context'] {
+  // Omit function-valued properties: Electron IPC uses structured clone which cannot serialize functions.
+  // Functions on BaseRenderContext (getMeta, getKeysContext, etc.) are captured into serializedFunctions instead.
+  const dataEntries = Object.entries(context).filter(([, v]) => typeof v !== 'function');
+  const dataContext = Object.fromEntries(dataEntries);
+
   return {
-    ...context,
+    ...dataContext,
     serializedFunctions: {
       requestId: context.getMeta().requestId,
       workspaceId: context.getMeta().workspaceId,
@@ -27,9 +32,9 @@ function normalizeRenderError(error: unknown, input: string, context: RenderTemp
   const errorDetails = source as RenderError;
 
   renderError.path = errorDetails.path || '';
-  renderError.location = errorDetails.location;
+  renderError.location = errorDetails.location ?? { line: 1, column: 1 };
   renderError.type = errorDetails.type || 'render';
-  renderError.reason = errorDetails.reason;
+  renderError.reason = errorDetails.reason ?? 'error';
 
   if (errorDetails.extraInfo) {
     renderError.extraInfo = errorDetails.extraInfo;
@@ -47,7 +52,7 @@ function normalizeRenderError(error: unknown, input: string, context: RenderTemp
   return renderError;
 }
 
-export async function renderInWorker({
+export async function renderViaPluginBridge({
   input,
   context,
   path,

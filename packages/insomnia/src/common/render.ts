@@ -293,7 +293,7 @@ export async function render<T>(
         // template tags stay off the visible renderer while preserving worker-based execution semantics.
         const renderFork =
           process.type === 'renderer'
-            ? (await import('../ui/worker/templating-handler')).renderInWorker
+            ? (await import('../ui/worker/templating-handler')).renderViaPluginBridge
             : renderInThisProcess;
 
         // @ts-expect-error -- TSCONVERSION
