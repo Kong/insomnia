@@ -436,29 +436,12 @@ export async function executePluginMainAction({
   context?: Record<string, any>;
   params?: Record<string, any>;
 }): Promise<any> {
-  const settings = await services.settings.get();
-  // Execute the plugin action directly in renderer process when allow elevated access.
-  if (settings.pluginsAllowElevatedAccess) {
-    const bundlePlugins = await getBundlePlugins();
-    const plugin = bundlePlugins.find(p => p.name === pluginName);
-    if (!plugin) {
-      throw new Error(`Plugin ${pluginName} not found`);
-    }
-    const action = plugin.module.unsafePluginMainActions?.find(p => p.name === actionName);
-    if (!action) {
-      throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
-    }
-    const commonContext = getPluginCommonContext({ plugin });
-    return action.action({ ...commonContext, ...context }, params);
-  }
-  // Use the template worker database to execute the plugin action in main process
-  const result = await fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginMainAction', {
+  return fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginMainAction', {
     pluginName,
     actionName,
     context,
     params,
   });
-  return result;
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {

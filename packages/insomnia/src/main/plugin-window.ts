@@ -202,6 +202,7 @@ export function createPluginWindow() {
     webPreferences: {
       contextIsolation: false,
       nodeIntegration: true,
+      nodeIntegrationInWorker: false,
       preload: path.join(__dirname, 'entry.plugin-window-preload.min.js'),
       backgroundThrottling: false,
       devTools: process.env.NODE_ENV === 'development',

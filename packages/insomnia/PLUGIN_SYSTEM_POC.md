@@ -882,11 +882,11 @@ Co-locate unit tests with the plugin execution code in `packages/insomnia/src/pl
 packages/insomnia/src/plugins/create.ts imports fs and path from Node and is called directly from two renderer entry points: the create-plugin modal and root.tsx (theme installation). This is the most straightforward fix — move the filesystem writes to an IPC handler  
  in the main process and call it via window.main.
 
-2. Template tag extensions now run in the plugin window
+2. Template tag extensions now run in a plugin-window-owned Web Worker
 
-Restricted templating no longer spins up a renderer-owned Web Worker. Instead, the renderer serializes the render context and calls `window.main.plugins.renderTemplate(...)`, which executes the shared Nunjucks pipeline inside the plugin window.
+Restricted templating no longer spins up a renderer-owned Web Worker. Instead, the renderer serializes the render context and calls `window.main.plugins.renderTemplate(...)`, and the hidden plugin window forwards that work into its own Web Worker with `nodeIntegrationInWorker: false`.
 
-That means template tags now live on the same side of the process boundary as the other plugin surfaces (actions, hooks, bundled main actions) and can reuse the existing plugin window IPC/database proxy. The renderer side is now just a thin caller that sends the render input over IPC and receives the rendered string back.
+That keeps template execution worker-based while still moving it entirely off the visible renderer. Template tags now live on the same side of the process boundary as the other plugin surfaces (actions, hooks, bundled main actions) and can reuse the existing IPC/database proxy, while `unsafePluginMainActions` continue to execute in Electron main.
 
 3. webviewTag: true on the main window
 

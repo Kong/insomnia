@@ -289,18 +289,12 @@ export async function render<T>(
       }
 
       try {
-        // Some plugins may, at the moment, require unique and intrusive access. Templates exposed by these
-        // plugins will not function correctly when rendering in a separate process or thread. The user can
-        // explicitly configure rendering to happen on the same thread/process as the rest of the app, in
-        // which case it's okay to render locally.
-
-        const settings = await services.settings.get();
-        const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
-        const currentProcessIsRendererAndPluginsAreRestricted =
-          process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
-        const renderFork = currentProcessIsRendererAndPluginsAreRestricted
-          ? (await import('../ui/worker/templating-handler')).renderInWorker
-          : renderInThisProcess;
+        // In the main app renderer, template execution is delegated to the hidden plugin window worker so
+        // template tags stay off the visible renderer while preserving worker-based execution semantics.
+        const renderFork =
+          process.type === 'renderer'
+            ? (await import('../ui/worker/templating-handler')).renderInWorker
+            : renderInThisProcess;
 
         // @ts-expect-error -- TSCONVERSION
         input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });

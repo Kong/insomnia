@@ -87,6 +87,17 @@ export default async function build(options: Options) {
     },
   };
 
+  const pluginWindowTemplatingWorkerBuildOptions: BuildOptions = {
+    entryPoints: ['./src/entry.plugin-window-templating-worker.ts'],
+    outfile: path.join(outdir, 'entry.plugin-window-templating-worker.min.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'browser',
+    sourcemap: true,
+    format: 'esm',
+    define: env,
+  };
+
   const pluginWindowPreloadBuildOptions: BuildOptions = {
     entryPoints: ['./src/entry.plugin-window-preload.ts'],
     outfile: path.join(outdir, 'entry.plugin-window-preload.min.js'),
@@ -157,8 +168,8 @@ export default async function build(options: Options) {
         });
         build.onEnd(() => {
           buildCount++;
-          // first build after main/preload/hiddenWindows/pluginWindows is built
-          if (buildCount === 6) {
+          // first build after main/preload/hiddenWindows/pluginWindows/plugin workers is built
+          if (buildCount === 7) {
             console.log('[Dev Build] Build complete, start Electron');
             startElectron();
           } else if (buildCount > 6) {
@@ -190,6 +201,10 @@ export default async function build(options: Options) {
       ...pluginWindowBuildOptions,
       plugins: [restartElectronPlugin('plugin-window')],
     });
+    const pluginWindowTemplatingWorkerContext = await esbuild.context({
+      ...pluginWindowTemplatingWorkerBuildOptions,
+      plugins: [restartElectronPlugin('plugin-window-templating-worker')],
+    });
     const pluginWindowPreloadContext = await esbuild.context({
       ...pluginWindowPreloadBuildOptions,
       plugins: [restartElectronPlugin('plugin-window-preload')],
@@ -214,16 +229,34 @@ export default async function build(options: Options) {
     const mainWatch = await mainContext.watch();
     const hiddenWindowPreloadWatch = await hiddenPreloadContext.watch();
     const pluginWindowWatch = await pluginWindowContext.watch();
+    const pluginWindowTemplatingWorkerWatch = await pluginWindowTemplatingWorkerContext.watch();
     const pluginWindowPreloadWatch = await pluginWindowPreloadContext.watch();
-    return Promise.all([preloadWatch, hiddenWindowPreloadWatch, mainWatch, hiddenWindowWatch, pluginWindowWatch, pluginWindowPreloadWatch]);
+    return Promise.all([
+      preloadWatch,
+      hiddenWindowPreloadWatch,
+      mainWatch,
+      hiddenWindowWatch,
+      pluginWindowWatch,
+      pluginWindowTemplatingWorkerWatch,
+      pluginWindowPreloadWatch,
+    ]);
   }
   const preload = esbuild.build(preloadBuildOptions);
   const hiddenBrowserWindow = esbuild.build(hiddenBrowserWindowBuildOptions);
   const hiddenBrowserWindowPreload = esbuild.build(hiddenBrowserWindowPreloadBuildOptions);
   const pluginWindow = esbuild.build(pluginWindowBuildOptions);
+  const pluginWindowTemplatingWorker = esbuild.build(pluginWindowTemplatingWorkerBuildOptions);
   const pluginWindowPreload = esbuild.build(pluginWindowPreloadBuildOptions);
   const main = esbuild.build(mainBuildOptions);
-  return Promise.all([main, preload, hiddenBrowserWindow, hiddenBrowserWindowPreload, pluginWindow, pluginWindowPreload]).catch(err => {
+  return Promise.all([
+    main,
+    preload,
+    hiddenBrowserWindow,
+    hiddenBrowserWindowPreload,
+    pluginWindow,
+    pluginWindowTemplatingWorker,
+    pluginWindowPreload,
+  ]).catch(err => {
     console.error('[Build] Build failed:', err);
   });
 }
