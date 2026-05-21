@@ -152,6 +152,7 @@ class RepoFileWatcher {
     //     requests on the old app during a downgrade), write fresh YAML to
     //     disk BEFORE importing so those edits are not silently overwritten.
     await watcher.flushNewerDbWorkspacesToDisk();
+    await watcher.flushNewerDbRulesetToDisk();
 
     // 2. Import all YAML files into the DB so it reflects disk state.
     //    This populates lastSyncMtime + lastWrittenHash as a side-effect,
@@ -302,6 +303,50 @@ class RepoFileWatcher {
         }
       }),
     );
+  }
+
+  /**
+   * If the DB's ProjectLintRuleset record was modified more recently than the
+   * on-disk `.spectral.yaml`, write the record to disk before the initial
+   * `importAllFiles` scan.
+   *
+   * Without this, converting a cloud/local project to Git against a repo that
+   * already contains a `.spectral.yaml` would let `importAllFiles` silently
+   * overwrite the user's existing ruleset with the repo's file.
+   *
+   * Mirrors {@link flushNewerDbWorkspacesToDisk}: if the file does not exist,
+   * nothing is written here — a later `flushProjectLintRulesetToDisk` seeds it.
+   */
+  private async flushNewerDbRulesetToDisk(): Promise<void> {
+    const ruleset = await services.projectLintRuleset.getByParentId(this.projectId);
+    if (!ruleset) {
+      return;
+    }
+
+    const absPath = path.normalize(path.join(this.repoDir, '.spectral.yaml'));
+
+    let fileMtime = 0;
+    try {
+      const stat = await fs.promises.stat(absPath);
+      fileMtime = stat.mtimeMs;
+    } catch {
+      // File doesn't exist yet — flushProjectLintRulesetToDisk will create it.
+      return;
+    }
+
+    if (ruleset.modified <= fileMtime) {
+      return; // disk is up-to-date
+    }
+
+    try {
+      await fs.promises.writeFile(absPath, ruleset.rulesetContent, 'utf8');
+      const hash = contentHash(ruleset.rulesetContent);
+      this.lastWrittenHash.set(absPath, hash);
+      const newStat = await fs.promises.stat(absPath);
+      this.lastSyncMtime.set(absPath, newStat.mtimeMs);
+    } catch (err) {
+      console.warn('[repo-file-watcher] flushNewerDbRulesetToDisk error:', err);
+    }
   }
 
   /**
