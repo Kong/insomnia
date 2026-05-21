@@ -1,4 +1,6 @@
+import type * as Fs from 'node:fs';
 import type { Readable } from 'node:stream';
+import type * as Zlib from 'node:zlib';
 
 import type { Compression, ResponseHeader } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
@@ -60,10 +62,8 @@ export function init(response?: MaybeResponse) {
           if (!response?.bodyPath) {
             return null;
           }
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          const fs = require('node:fs') as typeof import('node:fs');
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          const zlib = require('node:zlib') as typeof import('node:zlib');
+          const fs = require('node:fs') as typeof Fs;
+          const zlib = require('node:zlib') as typeof Zlib;
           try {
             fs.statSync(response?.bodyPath);
           } catch (err) {
@@ -85,8 +85,7 @@ export function init(response?: MaybeResponse) {
           throw new Error('Could not set body without existing body path');
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const fs = require('node:fs') as typeof import('node:fs');
+        const fs = require('node:fs') as typeof Fs;
         fs.writeFileSync(response.bodyPath, body);
         response.bytesContent = body.length;
       },

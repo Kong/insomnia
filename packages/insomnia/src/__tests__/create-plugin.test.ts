@@ -28,12 +28,9 @@ describe('createPlugin', () => {
       expect.stringContaining('"name": "insomnia-plugin-demo"'),
       { flag: 'wx' },
     );
-    expect(writeFile).toHaveBeenNthCalledWith(
-      2,
-      '/mock/user/data/plugins/insomnia-plugin-demo/main.js',
-      '// starter',
-      { flag: 'wx' },
-    );
+    expect(writeFile).toHaveBeenNthCalledWith(2, '/mock/user/data/plugins/insomnia-plugin-demo/main.js', '// starter', {
+      flag: 'wx',
+    });
   });
 
   it('normalizes filesystem failures to the existing user-facing error', async () => {
