@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
 console.log('[lint-process] Lint worker started');
+import dns from 'node:dns/promises';
 import fs from 'node:fs';
 
 import Spectral from '@stoplight/spectral-core';
@@ -13,6 +14,7 @@ process.on('uncaughtException', error => {
   console.error(error);
 });
 
+// Note: This is duplicated in inso's lint-specification.ts. Remember to mirror changes there as well.
 function isPrivateOrLoopbackHost(hostname) {
   if (hostname === 'localhost' || hostname.endsWith('.localhost')) {
     return true;
@@ -24,6 +26,7 @@ function isPrivateOrLoopbackHost(hostname) {
   return ipaddr.process(host).range() !== 'unicast';
 }
 
+// Note: This is duplicated in inso's lint-specification.ts. Remember to mirror changes there as well.
 function isSafeRefUrl(href) {
   let url;
   try {
@@ -37,12 +40,24 @@ function isSafeRefUrl(href) {
   return Boolean(url.hostname) && !isPrivateOrLoopbackHost(url.hostname.toLowerCase());
 }
 
+// Note: This is duplicated in inso's lint-specification.ts. Remember to mirror changes there as well.
+async function assertResolvesToPublicHost(hostname) {
+  const records = await dns.lookup(hostname, { all: true });
+  for (const { address } of records) {
+    if (isPrivateOrLoopbackHost(address.toLowerCase())) {
+      throw new Error(`Refused to resolve $ref — host "${hostname}" resolves to a private or loopback address.`);
+    }
+  }
+}
+
+// Note: This is duplicated in inso's lint-specification.ts. Remember to mirror changes there as well.
 const safeHttpResolver = {
   async resolve(ref) {
     const href = ref.href();
     if (!isSafeRefUrl(href)) {
       throw new Error(`Refused to resolve $ref "${href}" — only https URLs to public hosts are allowed.`);
     }
+    await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
     const response = await fetch(href);
     if (!response.ok) {
       throw new Error(`Failed to fetch $ref "${href}": ${response.status} ${response.statusText}`);
@@ -51,12 +66,24 @@ const safeHttpResolver = {
   },
 };
 
+// Note: This is duplicated in inso's lint-specification.ts. Remember to mirror changes there as well.
 const safeResolver = new Resolver({
   resolvers: {
     http: safeHttpResolver,
     https: safeHttpResolver,
   },
 });
+
+// Hardened fetch for remote ruleset "extends" loading.
+// Note: This is duplicated in inso's lint-specification.ts. Remember to mirror changes there as well.
+async function safeFetch(url, init) {
+  const href = String(url);
+  if (!isSafeRefUrl(href)) {
+    throw new Error(`Refused to fetch "${href}" — only https URLs to public hosts are allowed.`);
+  }
+  await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
+  return spectralRuntime.fetch(href, init);
+}
 
 process.parentPort.on('message', async ({ data: { documentContent, rulesetPath } }) => {
   let hasValidCustomRuleset = false;
@@ -68,8 +95,7 @@ process.parentPort.on('message', async ({ data: { documentContent, rulesetPath }
   }
   try {
     const spectral = new Spectral.Spectral({ resolver: safeResolver });
-    const { fetch } = spectralRuntime;
-    const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch }) : oas;
+    const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch: safeFetch }) : oas;
     spectral.setRuleset(ruleset);
     console.log('[lint-process] Ruleset loaded:', rulesetPath || 'default OAS ruleset');
     const diagnostics = await spectral.run(documentContent);

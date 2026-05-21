@@ -2,16 +2,81 @@ import type { RulesetDefinition } from '@stoplight/spectral-core';
 import { Spectral } from '@stoplight/spectral-core';
 
 const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
+import dns from 'node:dns/promises';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { oas } from '@stoplight/spectral-rulesets';
+import spectralRuntime from '@stoplight/spectral-runtime';
 import { DiagnosticSeverity } from '@stoplight/types';
-import { safeRefResolver } from 'insomnia/src/common/safe-ref-resolver';
-import { validateSpectralRuleset } from 'insomnia/src/common/spectral-ruleset-validator';
+import { isPrivateOrLoopbackHost, validateSpectralRuleset } from 'insomnia/src/common/spectral-ruleset-validator';
 
 import { InsoError } from '../errors';
 import { logger } from '../logger';
+
+// Protect against SSRF attacks in spec $ref resolution.
+// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
+function isSafeRefUrl(href: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== 'https:') {
+    return false;
+  }
+  return Boolean(url.hostname) && !isPrivateOrLoopbackHost(url.hostname.toLowerCase());
+}
+
+// Block hosts that resolve to private/loopback addresses (e.g. *.localtest.me → 127.0.0.1),
+// which the static isSafeRefUrl check cannot catch since it only inspects the literal hostname.
+// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
+async function assertResolvesToPublicHost(hostname: string): Promise<void> {
+  const records = await dns.lookup(hostname, { all: true });
+  for (const { address } of records) {
+    if (isPrivateOrLoopbackHost(address.toLowerCase())) {
+      throw new Error(`Failed to resolve $ref — host "${hostname}" resolves to a private or loopback address.`);
+    }
+  }
+}
+
+// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
+const safeHttpResolver = {
+  async resolve(ref: { href: () => string }): Promise<string> {
+    const href = ref.href();
+    if (!isSafeRefUrl(href)) {
+      throw new Error(`Failed to resolve $ref "${href}" — only https URLs to public hosts are allowed.`);
+    }
+    await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
+    const response = await fetch(href);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch $ref "${href}": ${response.status} ${response.statusText}`);
+    }
+    return response.text();
+  },
+};
+
+// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
+export const safeRefResolver = new Resolver({
+  resolvers: {
+    http: safeHttpResolver,
+    https: safeHttpResolver,
+  },
+});
+
+// Hardened fetch for remote ruleset "extends" loading.
+// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
+export async function safeFetch(url: string | URL, init?: RequestInit): Promise<Response> {
+  const href = String(url);
+  if (!isSafeRefUrl(href)) {
+    throw new Error(`Failed to fetch "${href}" — only https URLs to public hosts are allowed.`);
+  }
+  await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
+  return spectralRuntime.fetch(href, init);
+}
+
 export const getRuleSetFileFromFolderByFilename = async (filePath: string) => {
   try {
     const filesInSpecFolder = await fs.promises.readdir(path.dirname(filePath));
@@ -44,7 +109,7 @@ export async function lintSpecification({
         logger.fatal(`Invalid Spectral ruleset: ${validation.error}`);
         return { isValid: false };
       }
-      ruleset = await bundleAndLoadRuleset(rulesetFileName, { fs });
+      ruleset = await bundleAndLoadRuleset(rulesetFileName, { fs, fetch: safeFetch });
     }
   } catch (error) {
     logger.fatal(error.message);
