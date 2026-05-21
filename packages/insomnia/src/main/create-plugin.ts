@@ -31,6 +31,9 @@ export async function createPlugin(pluginName: string, mainJs: string) {
     );
     await writeFile(mainJsPath, mainJs, { flag: 'wx' });
   } catch (err: any) {
+    if (err.code === 'EEXIST') {
+      throw new Error('Plugin already exists');
+    }
     console.error('Failed to create plugin files:', err);
     throw new Error('Plugin creation failed. Please try again.');
   }

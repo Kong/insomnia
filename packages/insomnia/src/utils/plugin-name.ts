@@ -1,10 +1,9 @@
-// Allow only safe characters (alphanumeric, dashes, underscores, dots)
-// Disallow any path traversal (../), shell metacharacters, etc.
-const safePattern = /^[a-zA-Z0-9_\-\.]+$/;
+// Allow only lowercase alphanumeric and dashes — matches npm package name conventions
+const safePattern = /^[a-z0-9\-]+$/;
 
 // TODO (pavkout): Remove this when we stop supporting scoped package names
 // For scoped names
-const scopedSafePattern = /^@[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+$/;
+const scopedSafePattern = /^@[a-z0-9\-]+\/[a-z0-9\-]+$/;
 
 // Pattern for common shell metacharacters
 const unsafeShellPattern = /[|;&$`\\]/;
@@ -99,7 +98,7 @@ export function validatePluginName(pluginName: string, allowScopedPackageNames =
   }
 
   if (!pluginName.startsWith('insomnia-plugin-') && !allowScopedPackageNames) {
-    return 'Plugin name must not start with "insomnia-plugin-"';
+    return 'Plugin name must start with "insomnia-plugin-"';
   }
 
   return null;
