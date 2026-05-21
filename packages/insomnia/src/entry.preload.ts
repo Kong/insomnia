@@ -22,7 +22,6 @@ import type {
   ApplyResponseHooksArgs,
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
-  PluginBridgeMetrics,
   PluginsBridgeAPI,
   RunTemplateTagActionArgs,
 } from './plugins/bridge-types';
@@ -35,7 +34,10 @@ type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsB
   ? Awaited<ReturnType<PluginsBridgeAPI[T]>>
   : never;
 
-const invokePluginBridgeMethod = <T extends PluginInvokeMethod>(method: T, args?: unknown): Promise<PluginMethodResult<T>> => {
+const invokePluginBridgeMethod = <T extends PluginInvokeMethod>(
+  method: T,
+  args?: unknown,
+): Promise<PluginMethodResult<T>> => {
   return invokeWithNormalizedError(`plugins.${method}`, args) as Promise<PluginMethodResult<T>>;
 };
 
@@ -375,12 +377,13 @@ const main: Window['main'] = {
     getTemplateTags: () => invokePluginBridgeMethod('getTemplateTags'),
     runTemplateTagAction: (args: RunTemplateTagActionArgs) => invokePluginBridgeMethod('runTemplateTagAction', args),
     getBundlePlugins: () => invokePluginBridgeMethod('getBundlePlugins'),
-    executePluginMainAction: (args: ExecutePluginMainActionArgs) => invokePluginBridgeMethod('executePluginMainAction', args),
+    executePluginMainAction: (args: ExecutePluginMainActionArgs) =>
+      invokePluginBridgeMethod('executePluginMainAction', args),
     hasRequestHooks: () => invokePluginBridgeMethod('hasRequestHooks'),
     hasResponseHooks: () => invokePluginBridgeMethod('hasResponseHooks'),
     applyRequestHooks: (args: ApplyRequestHooksArgs) => invokePluginBridgeMethod('applyRequestHooks', args),
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
-    getBridgeMetrics: () => ipcRenderer.invoke('plugins.getBridgeMetrics') as Promise<PluginBridgeMetrics>,
+    getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },
   notifyPluginPromptResult: (id: string, value: string | null) =>
     ipcRenderer.send('plugins.uiPromptResult', { id, value }),
