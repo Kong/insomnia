@@ -368,6 +368,17 @@ export function registerMainHandlers() {
 
     //defensive validation for ruleset file before spawning the spectral lint worker
     if (rulesetPath) {
+      // Contain rulesetPath within userData/ to prevent the renderer from passing an
+      // arbitrary path (e.g. /etc/passwd, ~/.ssh/id_rsa) into the file read below.
+      const userDataDir = path.resolve(app.getPath('userData'));
+      const resolvedRulesetPath = path.resolve(rulesetPath);
+      const relativeToUserData = path.relative(userDataDir, resolvedRulesetPath);
+      const isInsideUserData = relativeToUserData !== '' && !relativeToUserData.startsWith('..') && !path.isAbsolute(relativeToUserData);
+      if (!isInsideUserData || path.basename(resolvedRulesetPath) !== '.spectral.yaml') {
+        return { error: 'Invalid ruleset path' };
+      }
+      rulesetPath = resolvedRulesetPath;
+
       try {
         const rulesetContent = await fs.promises.readFile(rulesetPath, { encoding: 'utf8' });
         const validation = validateSpectralRuleset(rulesetContent);

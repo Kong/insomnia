@@ -22,7 +22,11 @@ type Ruleset = Record<string, unknown> & {
 // - Excessively deep nesting of extends (e.g. A extends B extends C extends D extends E extends F)
 // - Cycles in extends (e.g. A extends B extends A)
 // - Extends that point to non-YAML files (e.g. A extends B.txt)
-function assertAllowed(absolute: string, visited: Set<string>, depth: number): void {
+// - Extends that escape the root directory of the originally-selected ruleset
+//   (e.g. extends: '../../../etc/secret.yaml'). Without this, a malicious or
+//   shared ruleset could exfiltrate arbitrary .yaml files on the user's disk
+//   via the bundled output returned to the renderer.
+function assertAllowed(absolute: string, visited: Set<string>, depth: number, rootDir: string): void {
   if (depth > MAX_EXTENDS_DEPTH) {
     throw new Error(`"extends" nested too deeply (max ${MAX_EXTENDS_DEPTH}) at ${absolute}`);
   }
@@ -31,6 +35,10 @@ function assertAllowed(absolute: string, visited: Set<string>, depth: number): v
   }
   if (!ALLOWED_EXTENSIONS.includes(path.extname(absolute).toLowerCase())) {
     throw new Error(`"extends" target must be a .yaml or .yml file: ${absolute}`);
+  }
+  const rel = path.relative(rootDir, absolute);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+    throw new Error(`"extends" target must stay within the ruleset's root directory: ${absolute}`);
   }
 }
 
@@ -62,9 +70,9 @@ function mergeInto(target: Ruleset, source: Ruleset): void {
 // Recursively resolves local-file "extends" entries, returning a singular ruleset whose "extends"
 // contains only built-in spectral identifiers and remote URLs. Rules are merged such that the parent overrides
 // its extends, and among multiple extends entries the later ones override earlier. (ref: https://docs.stoplight.io/docs/spectral/83527ef2dd8c0-extending-rulesets)
-async function flattenRuleset(filePath: string, visited: Set<string>, depth: number): Promise<Ruleset> {
+async function flattenRuleset(filePath: string, visited: Set<string>, depth: number, rootDir: string): Promise<Ruleset> {
   const absolute = path.resolve(filePath);
-  assertAllowed(absolute, visited, depth);
+  assertAllowed(absolute, visited, depth, rootDir);
 
   const ruleset = await readRuleset(absolute);
   const baseDir = path.dirname(absolute);
@@ -95,7 +103,7 @@ async function flattenRuleset(filePath: string, visited: Set<string>, depth: num
       continue;
     }
     // Local file paths are recursively loaded and flattened.
-    const childRuleset = await flattenRuleset(path.resolve(baseDir, entry), nextVisited, depth + 1);
+    const childRuleset = await flattenRuleset(path.resolve(baseDir, entry), nextVisited, depth + 1, rootDir);
     if (childRuleset.extends) {
       remainingExtends.push(...childRuleset.extends);
     }
@@ -129,6 +137,7 @@ async function flattenRuleset(filePath: string, visited: Set<string>, depth: num
 }
 
 export async function bundleSpectralRuleset(sourcePath: string): Promise<string> {
-  const flattenedRuleset = await flattenRuleset(sourcePath, new Set(), 0);
+  const rootDir = path.dirname(path.resolve(sourcePath));
+  const flattenedRuleset = await flattenRuleset(sourcePath, new Set(), 0, rootDir);
   return YAML.stringify(flattenedRuleset);
 }
