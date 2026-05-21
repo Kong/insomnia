@@ -146,7 +146,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     <TextField
                       name="fileName"
                       isRequired
-                      value={fileNameValue}
+                      value={safeToUseInsomniaFileName(fileNameValue || '')}
                       onChange={setFileNameValue}
                       validate={inputValue => {
                         if (
@@ -170,7 +170,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                             className="w-full outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
                           />
                           <span className="pointer-events-none truncate opacity-0 [grid-area:input]">
-                            {fileNameValue || (workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name')}
+                            {safeToUseInsomniaFileName(fileNameValue) || (workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name')}
                           </span>
                           <span className="text-(--hl) [grid-area:extension]">.yaml</span>
                         </div>
