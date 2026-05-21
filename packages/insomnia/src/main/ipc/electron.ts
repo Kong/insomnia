@@ -11,10 +11,7 @@ import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'ele
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 
 import { fnOrString } from '../../common/misc';
-import {
-  type NunjucksParsedTagArg,
-  type NunjucksTagContextMenuAction,
-} from '../../templating/types';
+import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
 
@@ -192,8 +189,8 @@ export type MainOnChannels =
   | 'path.resolve'
   | 'readText'
   | 'restart'
-  | 'plugin-invoke-result'
-  | 'plugin-window-ready'
+  | 'plugins.invokeResult'
+  | 'plugins.windowReady'
   | 'set-hidden-window-busy-status'
   | 'setMenuBarVisibility'
   | 'show-nunjucks-context-menu'
@@ -268,7 +265,6 @@ interface ContextMenuTag {
   };
 }
 
-
 const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   if (arg.defaultValue === undefined) {
     return "''";
@@ -332,7 +328,9 @@ export function registerElectronHandlers() {
               },
               { type: 'separator' },
             ];
-        const localTemplate: MenuItemConstructorOptions[] = ([...localTemplateTags, ...pluginTemplateTags] as ContextMenuTag[])
+        const localTemplate: MenuItemConstructorOptions[] = (
+          [...localTemplateTags, ...pluginTemplateTags] as ContextMenuTag[]
+        )
           // sort alphabetically
           .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
           .map(l => {
