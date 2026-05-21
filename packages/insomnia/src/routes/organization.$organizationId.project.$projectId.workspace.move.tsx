@@ -51,14 +51,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       },
       syncNewWorkspaceIfNeeded,
     });
-
-    return redirect(
-      `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
-        organizationId: newOrgId,
-        projectId: newProjectId,
-        workspaceId: newWorkspace._id,
-      })}/${models.workspace.scopeToActivity(newWorkspace.scope)}`,
-    );
+    return {
+      organizationId: newOrgId,
+      projectId: newProjectId,
+      workspaceId: newWorkspace._id,
+      workspaceScope: newWorkspace.scope,
+    };
   } catch (error) {
     return {
       error: 'Failed to duplicate workspace: ' + (error instanceof Error ? error.message : String(error)),

@@ -212,6 +212,7 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
 
   return (
     <div className={ROW_CLASS} style={{ paddingLeft }} data-testid={`empty-node-${kind}`}>
+      <Button slot="drag" className="hidden" />
       <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
       {kind !== 'emptyProject' && <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />}
       {kind === 'emptyFolder' &&
@@ -222,13 +223,15 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
             style={{ left: `${i + 1.5}em` }}
           />
         ))}
-      <span className="ml-3 min-w-0 flex-1 truncate text-xs">{getLabel()}</span>
+      <span className={`${kind === 'emptyFolder' ? 'ml-7' : 'ml-3'} min-w-0 flex-1 truncate text-sm`}>
+        {getLabel()}
+      </span>
       <MenuTrigger>
         <Button
           aria-label={`Create in ${getAriaLabel()}`}
-          className="flex items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          className="flex items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xxs) p-1.5 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
-          <Icon icon="plus-circle" /> <span className="hidden md:block">Create</span>
+          <Icon icon="plus" /> <span className="hidden md:block">Create</span>
         </Button>
         <Popover className="flex min-w-max flex-col overflow-y-hidden">
           <Menu

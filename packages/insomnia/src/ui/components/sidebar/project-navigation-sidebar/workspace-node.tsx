@@ -16,8 +16,9 @@ import { type WorkspaceFlatItem } from './types';
 
 interface WorkspaceNodeProps {
   item: WorkspaceFlatItem;
-  sortOrder: SortOrder;
   onToggle: (workspaceId: string) => void;
+
+  sortOrder: SortOrder;
   onSortOrderChange: (newSortOrder: SortOrder) => void;
 }
 
@@ -35,6 +36,7 @@ export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: 
     >
       <span className={ACTIVE_BORDER_CLASS} />
       <span className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`} style={{ left: '1.5em' }} />
+      <Button slot="drag" className="hidden" />
       <Button
         aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${workspaceName}`}
         onPress={() => isCollection && onToggle(workspaceId)}

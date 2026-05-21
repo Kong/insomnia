@@ -152,13 +152,16 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
 
   const content = (
     <>
-      <Button
-        aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${doc.name}`}
-        onPress={() => isFolder && onToggleFolder([doc._id], workspace)}
-        className={TOGGLE_BTN_CLASS}
-      >
-        {isFolder ? <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} /> : null}
-      </Button>
+      <Button slot="drag" className="hidden" />
+      {!isPinnedRequest && (
+        <Button
+          aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${doc.name}`}
+          onPress={() => isFolder && onToggleFolder([doc._id], workspace)}
+          className={TOGGLE_BTN_CLASS}
+        >
+          {isFolder ? <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} /> : null}
+        </Button>
+      )}
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left transition-colors">
         {isFolder ? <Icon icon="folder" className={ICON_CLASS} /> : <MethodBadge doc={doc} />}
         <EditableInput
@@ -273,7 +276,7 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
       <span className={ACTIVE_BORDER_CLASS} />
       {isPinnedRequest ? (
         <div
-          className={`ml-2 flex h-full min-w-0 flex-1 items-center overflow-hidden border-x border-solid border-(--hl-md) bg-(--hl-xs) pr-2 group-hover:bg-(--hl-sm) group-focus:bg-(--hl-sm) ${isLastPinned ? 'border-b' : ''}`}
+          className={`ml-2 flex min-w-0 flex-1 items-center self-stretch overflow-hidden border-x border-solid border-(--hl-md) bg-(--hl-xs) pr-2 group-hover:bg-(--hl-sm) group-focus:bg-(--hl-sm) ${isLastPinned ? 'rounded-b-sm border-b' : ''}`}
         >
           {content}
         </div>
@@ -290,11 +293,12 @@ export const PinnedHeaderNode = () => {
       className={`${ROW_CLASS} group h-full! pl-12 group-hover:bg-transparent!`}
       data-testid="pinned-requests-header"
     >
+      <Button slot="drag" className="hidden" />
       <span className={`${GUIDE_LINE_CSS} left-6 group-hover/tree:bg-(--hl-sm)`} />
       <span className={`${GUIDE_LINE_CSS} left-10 group-hover/tree:bg-(--hl-sm)`} />
-      <div className="ml-2 flex h-full w-full items-center border border-b-0 border-solid border-(--hl-md) bg-(--hl-xs) p-1 text-(--hl)">
+      <div className="ml-2 flex w-full items-center self-stretch rounded-t-sm border border-b-0 border-solid border-(--hl-md) bg-(--hl-xs) px-2 pt-1 text-(--hl)">
         <Icon icon="thumb-tack" className="h-4 w-4 shrink-0" />
-        <span className="ml-1 text-xs">Pinned</span>
+        <span className="ml-1 text-base">Pinned</span>
       </div>
     </div>
   );
