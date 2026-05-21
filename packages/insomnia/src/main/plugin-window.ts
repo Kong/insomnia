@@ -269,7 +269,7 @@ export async function invokeInPluginWindow(method: string, args?: unknown): Prom
       },
     });
 
-    pluginWindow!.webContents.send('plugin-invoke', { id, method, args });
+    pluginWindow!.webContents.send('plugins.invoke', { id, method, args });
   });
 }
 

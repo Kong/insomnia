@@ -12,7 +12,7 @@ interface PluginInvokeMessage {
   args: unknown;
 }
 
-ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvokeMessage) => {
+ipcRenderer.on('plugins.invoke', async (_event, { id, method, args }: PluginInvokeMessage) => {
   try {
     const result = await invokePluginMethod(method, args);
     ipcRenderer.send('plugins.invokeResult', { id, result });
