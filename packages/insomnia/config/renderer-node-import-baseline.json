@@ -37,22 +37,6 @@
       "builtin": "url"
     },
     {
-      "importer": "src/plugins/context/response.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/plugins/context/response.ts",
-      "builtin": "zlib"
-    },
-    {
-      "importer": "src/plugins/create.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/plugins/create.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/plugins/index.ts",
       "builtin": "fs"
     },
@@ -83,14 +67,6 @@
     {
       "importer": "src/templating/base-extension.ts",
       "builtin": "os"
-    },
-    {
-      "importer": "src/utils/plugin.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/utils/plugin.ts",
-      "builtin": "path"
     }
   ]
 }
