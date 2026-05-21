@@ -29,8 +29,11 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
+import { selectFileOrFolder } from '~/common/select-file-or-folder';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
+import { useDeleteProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete-ruleset';
+import { useUpdateProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.update-ruleset';
 import {
   useWorkspaceLoaderData,
   WORKSPACE_CONTENT_WRAPPER,
@@ -60,9 +63,6 @@ import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
-import { useUpdateProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.update-ruleset';
-import { useDeleteProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete-ruleset';
-import { selectFileOrFolder } from '~/common/select-file-or-folder';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;

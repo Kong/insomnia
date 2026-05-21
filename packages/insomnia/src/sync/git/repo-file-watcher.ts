@@ -42,6 +42,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { BrowserWindow } from 'electron';
+import YAML from 'yaml';
 
 import type { Workspace, WorkspaceMeta } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
@@ -51,7 +52,6 @@ import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { SyncQueue } from './sync-queue';
-import YAML from 'yaml';
 
 const POLL_INTERVAL_MS = 10_000;
 const DEBOUNCE_MS = 300;

@@ -84,7 +84,7 @@ async function flattenRuleset(filePath: string, visited: Set<string>, depth: num
   //   - include them later in the final "extends" array
   for (const entry of toArray(ruleset.extends)) {
     if (Array.isArray(entry)) {
-      throw new Error(
+      throw new TypeError(
         `Failed to process "extends" entry ${JSON.stringify(entry)}: tuple format (e.g. [path, severity]) is not supported. Use a plain string instead.`,
       );
     }
