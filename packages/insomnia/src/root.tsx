@@ -543,7 +543,7 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
-          const authResult = await window.main.plugins.executePluginMainAction({
+          const authResult = await plugins.executePluginMainAction({
             pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
             actionName: 'exchangeCode',
             params: { provider: 'azure', code },

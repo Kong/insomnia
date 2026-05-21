@@ -22,6 +22,7 @@ import type {
   ApplyResponseHooksArgs,
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
+  PluginBridgeMetrics,
   PluginsBridgeAPI,
   RunTemplateTagActionArgs,
 } from './plugins/bridge-types';
@@ -379,7 +380,7 @@ const main: Window['main'] = {
     hasResponseHooks: () => invokePluginBridgeMethod('hasResponseHooks'),
     applyRequestHooks: (args: ApplyRequestHooksArgs) => invokePluginBridgeMethod('applyRequestHooks', args),
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
-    getBridgeMetrics: () => invokePluginBridgeMethod('getBridgeMetrics'),
+    getBridgeMetrics: () => ipcRenderer.invoke('plugins.getBridgeMetrics') as Promise<PluginBridgeMetrics>,
   },
   notifyPluginPromptResult: (id: string, value: string | null) =>
     ipcRenderer.send('plugins.uiPromptResult', { id, value }),
