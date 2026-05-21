@@ -84,6 +84,15 @@ const timelineFileStreams = new Map<string, fs.WriteStream>();
 const getEventNotificationChannel = (responseId: string) =>
   `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
 
+const sendToOpenWindows = (channel: string, ...args: unknown[]) => {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) {
+      continue;
+    }
+    window.webContents.send(channel, ...args);
+  }
+};
+
 const writeEventLogAndNotify = ({
   requestId,
   data,
@@ -94,17 +103,17 @@ const writeEventLogAndNotify = ({
   clearRequestIdMap?: boolean;
 }) => {
   eventLogFileStreams.get(requestId)?.write(data, () => {
+    const resId = requestIdToResponseIdMap.get(requestId);
+    if (!resId) {
+      return;
+    }
+
     // notify all renderers of new event has been received
-    for (const window of BrowserWindow.getAllWindows()) {
-      const resId = requestIdToResponseIdMap.get(requestId);
-      if (resId) {
-        const notifyChannel = getEventNotificationChannel(resId);
-        notifyChannel && window.webContents.send(notifyChannel);
-        if (clearRequestIdMap) {
-          // clean up maps after last event has been written to file
-          requestIdToResponseIdMap.delete(requestId);
-        }
-      }
+    const notifyChannel = getEventNotificationChannel(resId);
+    sendToOpenWindows(notifyChannel);
+    if (clearRequestIdMap) {
+      // clean up maps after last event has been written to file
+      requestIdToResponseIdMap.delete(requestId);
     }
   });
 };
@@ -397,9 +406,7 @@ const openWebSocketConnection = async (
         ?.write(
           JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
 
       if (options.initialPayload) {
         sendPayload(ws, { requestId: options.requestId, payload: options.initialPayload });
@@ -435,9 +442,7 @@ const openWebSocketConnection = async (
 
       const message = `Closing connection with code ${code}`;
       deleteRequestMaps(request._id, message, closeEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
     });
 
     ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
@@ -453,9 +458,7 @@ const openWebSocketConnection = async (
       };
 
       deleteRequestMaps(request._id, message, errorEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
       if (error.code) {
         createErrorResponse(
           responseId,

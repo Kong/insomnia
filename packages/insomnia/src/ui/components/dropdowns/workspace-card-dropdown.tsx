@@ -16,11 +16,8 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { DocumentAction } from '../../../plugins';
-import { getDocumentActions } from '../../../plugins';
-import * as pluginApp from '../../../plugins/context/app';
-import * as pluginData from '../../../plugins/context/data';
-import * as pluginStore from '../../../plugins/context/store';
+import type { SerializableDocumentActionMeta } from '../../../plugins/bridge-types';
+import { plugins } from '../../../plugins/renderer-bridge';
 import { AnalyticsEvent } from '../../analytics';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -43,27 +40,28 @@ interface Props {
 }
 
 const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
-  const [actionPlugins, setActionPlugins] = useState<DocumentAction[]>([]);
+  const [actionPlugins, setActionPlugins] = useState<SerializableDocumentActionMeta[]>([]);
   const { startLoading, stopLoading, isLoading } = useLoadingRecord();
 
   const refresh = useCallback(async () => {
     // Only load document plugins if the scope is design, for now
     if (workspace.scope === models.workspace.WorkspaceScopeKeys.design) {
-      setActionPlugins(await getDocumentActions());
+      setActionPlugins(await plugins.getDocumentActions());
     }
   }, [workspace.scope]);
 
   const handleClick = useCallback(
-    async (p: DocumentAction) => {
+    async (p: SerializableDocumentActionMeta) => {
       startLoading(p.label);
 
       try {
-        const context = {
-          ...pluginApp.init(),
-          ...pluginData.init(project._id),
-          ...pluginStore.init(p.plugin),
-        };
-        await p.action(context, parseApiSpec(apiSpec?.contents || ''));
+        await plugins.executeAction({
+          type: 'document',
+          pluginName: p.pluginName,
+          label: p.label,
+          projectId: project._id,
+          domainData: parseApiSpec(apiSpec?.contents || ''),
+        });
       } catch (err) {
         showError({
           title: 'Document Action Failed',
@@ -79,7 +77,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
   const renderPluginDropdownItems: any = useCallback(
     () =>
       actionPlugins.map(p => (
-        <DropdownItem key={`${p.plugin.name}:${p.label}`} aria-label={p.label}>
+        <DropdownItem key={`${p.pluginName}:${p.label}`} aria-label={p.label}>
           <ItemContent
             icon={isLoading(p.label) ? 'refresh fa-spin' : undefined}
             label={p.label}

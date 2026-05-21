@@ -3,7 +3,7 @@ import { href } from 'react-router';
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import type { CloudProviderCredential } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { executePluginMainAction } from '~/plugins';
+import { plugins } from '~/plugins/renderer-bridge';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -17,12 +17,12 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   invariant(name && typeof name === 'string', 'Name is required');
   invariant(provider, 'Cloud Provider name is required');
   invariant(credentials, 'Credentials are required');
-  const authenticateResponse = await executePluginMainAction({
+  const authenticateResponse = await plugins.executePluginMainAction({
     pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
     actionName: 'authenticate',
     params: { provider, credentials },
   });
-  const { success, error, result } = authenticateResponse;
+  const { success, error, result } = authenticateResponse as any;
   if (error) {
     return {
       error: `${error.errorMessage}`,

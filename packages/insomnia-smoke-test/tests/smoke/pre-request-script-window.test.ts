@@ -1,7 +1,17 @@
-import { expect } from '@playwright/test';
+import { type ElectronApplication, expect } from '@playwright/test';
 
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
+
+const findWindowByTitle = async (app: ElectronApplication, title: string) => {
+  for (const window of await app.windows()) {
+    if ((await window.title().catch(() => '')) === title) {
+      return window;
+    }
+  }
+
+  throw new Error(`Window with title "${title}" not found`);
+};
 
 test.describe('test hidden window handling', () => {
   test('can cancel pre-request script', async ({ app, page }) => {
@@ -64,8 +74,7 @@ test.describe('test hidden window handling', () => {
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByRole('tab', { name: 'Preview' }).click();
 
-    const windows = await app.windows();
-    const hiddenWindow = windows[1];
+    const hiddenWindow = await findWindowByTitle(app, 'Hidden Browser Window');
     hiddenWindow.close();
 
     await page.getByTestId('settings-button').click();
