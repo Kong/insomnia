@@ -125,7 +125,7 @@ test.describe('Environment Editor', () => {
 
     await page.getByRole('tab', { name: 'Console' }).click();
     // check new environment value
-    await expect(page.getByText('kvstring')).toBeVisible();
+    await expect.soft(page.getByText('kvstring')).toBeVisible();
     await page.getByText('kvstring').click();
     await page.getByText('kvAnotherStr').click();
     await page.getByText('12345').click();
