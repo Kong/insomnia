@@ -167,9 +167,9 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                         <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-2 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                           <Input
                             placeholder={workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name'}
-                            className="w-full min-w-[3ch] outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
+                            className="w-full outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
                           />
-                          <span className="-z-10 w-min truncate opacity-0 [grid-area:input]">
+                          <span className="pointer-events-none truncate opacity-0 [grid-area:input]">
                             {fileNameValue || (workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name')}
                           </span>
                           <span className="text-(--hl) [grid-area:extension]">.yaml</span>

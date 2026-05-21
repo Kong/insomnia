@@ -270,9 +270,9 @@ export const NewWorkspaceModal = ({
                         <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                           <Input
                             placeholder={workspaceData.name ? safeToUseInsomniaFileName(workspaceData.name) : 'name'}
-                            className="w-full min-w-[3ch] outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
+                            className="w-full outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
                           />
-                          <span className="-z-10 w-min truncate opacity-0 [grid-area:input]">
+                          <span className="pointer-events-none w-min truncate opacity-0 [grid-area:input]">
                             {safeToUseInsomniaFileName(workspaceData.fileName || workspaceData.name || 'name')}
                           </span>
                           <span className="text-(--hl) [grid-area:extension]">.yaml</span>
