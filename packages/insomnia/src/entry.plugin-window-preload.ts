@@ -1,5 +1,8 @@
 import { ipcRenderer } from 'electron';
 
+import { invokeWithNormalizedError } from './main/ipc/invoke';
+import type { RendererToMainBridgeAPI } from './main/ipc/main';
+
 // Provide window.app so plugin-loading code (which checks process.type === 'renderer')
 // can resolve the userData path without needing the main renderer's full preload.
 window.app = {
@@ -7,6 +10,13 @@ window.app = {
   getAppPath: () => ipcRenderer.sendSync('getAppPath') as string,
   process: { platform: process.platform as NodeJS.Platform },
 };
+
+window.main = {
+  secureReadFile: (options: { path: string }) => invokeWithNormalizedError('secureReadFile', options),
+  openInBrowser: (url: string) => ipcRenderer.send('openInBrowser', url),
+  curlRequest: (options: Parameters<RendererToMainBridgeAPI['curlRequest']>[0]) =>
+    invokeWithNormalizedError('curlRequest', options),
+} as Pick<RendererToMainBridgeAPI, 'secureReadFile' | 'openInBrowser' | 'curlRequest'> as RendererToMainBridgeAPI;
 
 // Bridge plugin UI calls to the main renderer window via IPC.
 // The plugin window has no visible DOM; these methods forward to the main renderer.
@@ -35,6 +45,10 @@ window.dialog = {
 
 window.clipboard = {
   readText: () => ipcRenderer.sendSync('readText') as string,
-  writeText: (text: string) => { ipcRenderer.send('writeText', text); },
-  clear: () => { ipcRenderer.send('clear'); },
+  writeText: (text: string) => {
+    ipcRenderer.send('writeText', text);
+  },
+  clear: () => {
+    ipcRenderer.send('clear');
+  },
 };

@@ -3,8 +3,8 @@ import type { CloudProviderCredential, Request, RequestGroup, Response, Workspac
 import packageJson from '../../package.json';
 import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
+import * as templating from './index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
-import * as templating from './worker';
 
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {

@@ -14,6 +14,28 @@ let cachedHasRequestHooks: boolean | null = null;
 let cachedHasResponseHooks: boolean | null = null;
 const promptPendingRequests = new Map<string, (value: string | null) => void>();
 
+function normalizeInvocationError(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return new Error(String(error));
+  }
+
+  if (error instanceof Error) {
+    return error;
+  }
+
+  const normalized = new Error('message' in error && typeof error.message === 'string' ? error.message : String(error));
+
+  if ('name' in error && typeof error.name === 'string') {
+    normalized.name = error.name;
+  }
+  if ('stack' in error && typeof error.stack === 'string') {
+    normalized.stack = error.stack;
+  }
+
+  Object.assign(normalized, error);
+  return normalized;
+}
+
 // Bridge observability counters.  Kept in-memory and exposed via the
 // `plugins.getBridgeMetrics` IPC handler so devs / smoke tests / support
 // dumps can read the live state without scraping logs.
@@ -142,7 +164,7 @@ function ensureIpcListeners() {
 
   ipcMain.on(
     'plugins.invokeResult',
-    (event, { id, result, error }: { id: string; result?: unknown; error?: string }) => {
+    (event, { id, result, error }: { id: string; result?: unknown; error?: unknown }) => {
       if (event.sender !== pluginWindow?.webContents) {
         return;
       }
@@ -154,7 +176,7 @@ function ensureIpcListeners() {
       const duration = Date.now() - pending.startedAt;
       if (error) {
         recordInvocation(pending.method, 'error', duration);
-        pending.reject(new Error(error));
+        pending.reject(normalizeInvocationError(error));
       } else {
         recordInvocation(pending.method, 'ok', duration);
         pending.resolve(result);
@@ -302,6 +324,7 @@ export function registerPluginIpcHandlers() {
   ipcMain.handle('plugins.executeAction', (_event, args) => invokeInPluginWindow('executeAction', args));
   ipcMain.handle('plugins.getTemplateTags', () => invokeInPluginWindow('getTemplateTags'));
   ipcMain.handle('plugins.runTemplateTagAction', (_event, args) => invokeInPluginWindow('runTemplateTagAction', args));
+  ipcMain.handle('plugins.renderTemplate', (_event, args) => invokeInPluginWindow('renderTemplate', args));
   ipcMain.handle('plugins.getBundlePlugins', () => invokeInPluginWindow('getBundlePlugins'));
   ipcMain.handle('plugins.executePluginMainAction', (_event, args) =>
     invokeInPluginWindow('executePluginMainAction', args),

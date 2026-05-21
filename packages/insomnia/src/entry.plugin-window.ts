@@ -12,6 +12,19 @@ interface PluginInvokeMessage {
   args: unknown;
 }
 
+function serializeInvocationError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return { message: String(error) };
+  }
+
+  return {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+    ...Object.fromEntries(Object.entries(error)),
+  };
+}
+
 ipcRenderer.on('plugins.invoke', async (_event, { id, method, args }: PluginInvokeMessage) => {
   try {
     const result = await invokePluginMethod(method, args);
@@ -19,7 +32,7 @@ ipcRenderer.on('plugins.invoke', async (_event, { id, method, args }: PluginInvo
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error(`[plugin-window] Error in ${(error as any)?.method ?? method}: ${errMsg}`);
-    ipcRenderer.send('plugins.invokeResult', { id, error: errMsg });
+    ipcRenderer.send('plugins.invokeResult', { id, error: serializeInvocationError(error) });
   }
 });
 

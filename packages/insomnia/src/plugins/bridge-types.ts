@@ -1,5 +1,5 @@
 import type { ResponsePatch } from '../main/network/libcurl-promise';
-import type { RenderedRequest } from '../templating/types';
+import type { BaseRenderContext, RenderedRequest,RenderPurpose } from '../templating/types';
 import type { PluginTheme } from './misc';
 
 export interface SerializablePlugin {
@@ -36,6 +36,29 @@ export interface RunTemplateTagActionArgs {
   pluginName: string;
   tagName: string;
   actionName: string;
+}
+
+export interface SerializedRenderContextFunctions {
+  requestId?: string;
+  workspaceId?: string;
+  environmentId?: string;
+  extraInfo?: ReturnType<BaseRenderContext['getExtraInfo']>;
+  globalEnvironmentId?: string;
+  keysContext: ReturnType<BaseRenderContext['getKeysContext']>;
+  projectId?: string;
+  purpose?: RenderPurpose;
+  settings?: Record<string, unknown>;
+}
+
+export type SerializedRenderContext = Record<string, any> & {
+  serializedFunctions: SerializedRenderContextFunctions;
+};
+
+export interface RenderTemplateArgs {
+  input: string;
+  context: SerializedRenderContext;
+  path: string;
+  ignoreUndefinedEnvVariable: boolean;
 }
 
 export type PluginActionType = 'request' | 'requestGroup' | 'workspace' | 'document';
@@ -80,6 +103,7 @@ export interface PluginsBridgeAPI {
   executeAction: (args: ExecutePluginActionArgs) => Promise<void>;
   getTemplateTags: () => Promise<SerializableTemplateTagMeta[]>;
   runTemplateTagAction: (args: RunTemplateTagActionArgs) => Promise<void>;
+  renderTemplate: (args: RenderTemplateArgs) => Promise<string>;
   getBundlePlugins: () => Promise<SerializablePlugin[]>;
   executePluginMainAction: (args: ExecutePluginMainActionArgs) => Promise<unknown>;
   hasRequestHooks: () => Promise<boolean>;

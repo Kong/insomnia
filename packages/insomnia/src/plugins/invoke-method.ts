@@ -1,8 +1,10 @@
+import * as templating from '../templating';
 import type {
   ApplyRequestHooksArgs,
   ApplyResponseHooksArgs,
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
+  RenderTemplateArgs,
   RunTemplateTagActionArgs,
 } from './bridge-types';
 import * as pluginApp from './context/app';
@@ -40,12 +42,32 @@ export type PluginInvokeMethod =
   | 'executeAction'
   | 'getTemplateTags'
   | 'runTemplateTagAction'
+  | 'renderTemplate'
   | 'getBundlePlugins'
   | 'executePluginMainAction'
   | 'hasRequestHooks'
   | 'hasResponseHooks'
   | 'applyRequestHooks'
   | 'applyResponseHooks';
+
+function rehydrateRenderContext(context: RenderTemplateArgs['context']) {
+  const { serializedFunctions, ...renderContext } = context;
+
+  return {
+    ...renderContext,
+    getMeta: () => ({
+      requestId: serializedFunctions.requestId,
+      workspaceId: serializedFunctions.workspaceId,
+    }),
+    getEnvironmentId: () => serializedFunctions.environmentId,
+    getExtraInfo: () => serializedFunctions.extraInfo,
+    getGlobalEnvironmentId: () => serializedFunctions.globalEnvironmentId,
+    getKeysContext: () => serializedFunctions.keysContext,
+    getProjectId: () => serializedFunctions.projectId,
+    getPurpose: () => serializedFunctions.purpose,
+    getSettings: () => serializedFunctions.settings,
+  };
+}
 
 function serializePlugin(p: Plugin) {
   return {
@@ -76,6 +98,7 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
 
     case 'reloadPlugins': {
       await reloadPlugins();
+      templating.reload();
       return null;
     }
 
@@ -172,6 +195,15 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
       }
       await action.run(pluginStore.init(tag.plugin));
       return null;
+    }
+
+    case 'renderTemplate': {
+      const { input, context, path, ignoreUndefinedEnvVariable } = args as RenderTemplateArgs;
+      return templating.render(input, {
+        context: rehydrateRenderContext(context),
+        path,
+        ignoreUndefinedEnvVariable,
+      });
     }
 
     case 'hasRequestHooks': {

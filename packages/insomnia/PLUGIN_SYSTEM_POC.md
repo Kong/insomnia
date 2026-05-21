@@ -882,15 +882,11 @@ Co-locate unit tests with the plugin execution code in `packages/insomnia/src/pl
 packages/insomnia/src/plugins/create.ts imports fs and path from Node and is called directly from two renderer entry points: the create-plugin modal and root.tsx (theme installation). This is the most straightforward fix — move the filesystem writes to an IPC handler  
  in the main process and call it via window.main.
 
-2. Template tag extensions still run inside the renderer's Web Worker
+2. Template tag extensions now run in the plugin window
 
-This is the largest remaining piece. Nunjucks rendering runs in a Web Worker (ui/worker/templating-handler.ts), but the plugin template tag extensions (base-extension-worker.ts) are instantiated and executed inside that worker, which lives inside the renderer process.
-The worker already has nodeIntegrationInWorker: false, so the web worker is sandboxed — but the template tag plugin code still lives on the renderer side of the fence. For nodeIntegration: false on the renderer, all plugin code (including template tags) needs to move
-out.
+Restricted templating no longer spins up a renderer-owned Web Worker. Instead, the renderer serializes the render context and calls `window.main.plugins.renderTemplate(...)`, which executes the shared Nunjucks pipeline inside the plugin window.
 
-The cleanest solution — and the one you're already thinking about — is to move the entire templating pipeline into the plugin window. Template tags and request/action plugins would then share the same Node.js process and DB proxy. The custom  
- insomnia-templating-worker-database:// protocol (currently used by the web worker to reach the main process for DB calls, network requests, file reads, etc.) could be replaced entirely with the existing IPC database proxy. The renderer side becomes a thin caller:
-serialize the render context, send it over IPC, get back a rendered string.
+That means template tags now live on the same side of the process boundary as the other plugin surfaces (actions, hooks, bundled main actions) and can reuse the existing plugin window IPC/database proxy. The renderer side is now just a thin caller that sends the render input over IPC and receives the rendered string back.
 
 3. webviewTag: true on the main window
 
@@ -912,7 +908,7 @@ a malicious API response could attempt to exploit the webview. The right long-te
 ├─────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤  
  │ 1 │ Move createPlugin to main process │ Add IPC handler, replace fs/path calls with window.main.createPlugin(...) │
 ├─────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤  
- │ 2 │ Move templating pipeline to plugin window │ The plugin window replaces the web worker; renderer calls window.main.plugins.renderTemplate(context) over IPC; drop the insomnia-templating-worker-database:// protocol │  
+ │ 2 │ Move templating pipeline to plugin window │ Completed — restricted rendering now calls window.main.plugins.renderTemplate(context) over IPC and template tags execute in the plugin window │  
  ├─────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤  
  │ 3 │ Replace <webview> with sandboxed <iframe> │ Removes the last reason for webviewTag: true │  
  ├─────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤  

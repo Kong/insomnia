@@ -12,7 +12,7 @@ function call<M extends keyof Omit<PluginsBridgeAPI, 'getBridgeMetrics'>>(
   args?: Parameters<PluginsBridgeAPI[M]>[0],
 ): ReturnType<PluginsBridgeAPI[M]> {
   if (bridgeEnabled) {
-    const fn = (window.main.plugins[method] as (...a: any[]) => any);
+    const fn = window.main.plugins[method] as (...a: any[]) => any;
     return fn(args) as ReturnType<PluginsBridgeAPI[M]>;
   }
   return invokePluginMethod(method as any, args) as ReturnType<PluginsBridgeAPI[M]>;
@@ -39,6 +39,7 @@ export const plugins: PluginsBridgeAPI = {
   executeAction: args => call('executeAction', args),
   getTemplateTags: () => call('getTemplateTags'),
   runTemplateTagAction: args => call('runTemplateTagAction', args),
+  renderTemplate: args => call('renderTemplate', args),
   getBundlePlugins: () => call('getBundlePlugins'),
   executePluginMainAction: args => call('executePluginMainAction', args),
   hasRequestHooks: () => call('hasRequestHooks'),
@@ -46,7 +47,5 @@ export const plugins: PluginsBridgeAPI = {
   applyRequestHooks: args => call('applyRequestHooks', args),
   applyResponseHooks: args => call('applyResponseHooks', args),
   getBridgeMetrics: () =>
-    bridgeEnabled
-      ? window.main.plugins.getBridgeMetrics()
-      : Promise.resolve(emptyBridgeMetrics),
+    bridgeEnabled ? window.main.plugins.getBridgeMetrics() : Promise.resolve(emptyBridgeMetrics),
 };

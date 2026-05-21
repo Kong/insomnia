@@ -23,6 +23,7 @@ import type {
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
   PluginsBridgeAPI,
+  RenderTemplateArgs,
   RunTemplateTagActionArgs,
 } from './plugins/bridge-types';
 import type { PluginInvokeMethod } from './plugins/invoke-method';
@@ -376,6 +377,7 @@ const main: Window['main'] = {
     executeAction: (args: ExecutePluginActionArgs) => invokePluginBridgeMethod('executeAction', args),
     getTemplateTags: () => invokePluginBridgeMethod('getTemplateTags'),
     runTemplateTagAction: (args: RunTemplateTagActionArgs) => invokePluginBridgeMethod('runTemplateTagAction', args),
+    renderTemplate: (args: RenderTemplateArgs) => invokePluginBridgeMethod('renderTemplate', args),
     getBundlePlugins: () => invokePluginBridgeMethod('getBundlePlugins'),
     executePluginMainAction: (args: ExecutePluginMainActionArgs) =>
       invokePluginBridgeMethod('executePluginMainAction', args),
