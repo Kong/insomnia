@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { models, services } from '~/insomnia-data';
 
@@ -36,6 +36,18 @@ describe('getAuthQueryParams', () => {
   });
 });
 describe('sendCurlAndWriteTimeline()', () => {
+  beforeEach(() => {
+    vi.stubGlobal('window', {
+      main: {
+        timeline: {
+          getPath: (responseId: string) => `/tmp/${responseId}.timeline`,
+          appendToFile: vi.fn().mockResolvedValue(null),
+        },
+        getAuthHeader: vi.fn(),
+      },
+    });
+  });
+
   it('sends a generic request', async () => {
     const workspace = await services.workspace.create();
     const settings = await services.settings.getOrCreate();

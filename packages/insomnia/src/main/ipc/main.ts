@@ -138,7 +138,13 @@ const writeResponseBodyToFile = async (
 
 const getTimelinePath = (responseId: string) => {
   const userdataDirectory = process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
-  return path.join(userdataDirectory, 'responses', responseId + '.timeline');
+  const base = path.resolve(userdataDirectory, 'responses');
+  const target = path.resolve(base, responseId + '.timeline');
+  const relative = path.relative(base, target);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('Invalid response ID');
+  }
+  return target;
 };
 
 const appendToTimeline = async (
