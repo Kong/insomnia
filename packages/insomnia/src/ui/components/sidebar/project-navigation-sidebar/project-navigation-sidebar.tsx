@@ -5,6 +5,7 @@ import { Button, GridList, GridListItem, Input, SearchField } from 'react-aria-c
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { Button as BasicButton } from '~/basic-components/button';
 import type { SortOrder } from '~/common/constants';
 import { fuzzyMatchAll } from '~/common/misc';
 import {
@@ -22,14 +23,17 @@ import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
+import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
+import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useUserService } from '~/ui/hooks/use-user-service';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
@@ -92,7 +96,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     requestId?: string;
     requestGroupId?: string;
   };
-  const { userSession } = useRootLoaderData()!;
+  const { userSession, settings } = useRootLoaderData()!;
   const projectLoaderData = useProjectLoaderData()!;
   const { projects, projectsSyncStatusPromise } = projectLoaderData;
   const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(
@@ -701,212 +705,242 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       ? [selectedItemId]
       : [];
 
+  const { isPaidEnterprise } = useUserService();
+  const { hasKonnectPat } = settings;
+  const showKonnectSyncIntro = isPaidEnterprise && !isProjectTabActive && !hasKonnectPat;
+  const [showKonnectConfigModal, setShowKonnectConfigModal] = useState(false);
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      <div className="flex shrink-0 border-b border-solid border-b-(--hl-md)">
-        {!isScratchPad &&
-          ['projects', 'konnect'].map(tabName => (
-            <button
-              key={tabName}
-              className={`border-b-2 border-solid px-4 py-2 text-xs ${activeTab === tabName ? 'border-(--color-surprise) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
-              data-testid={`sidebar-tab-${tabName}`}
-              onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
-            >
-              {tabName === 'projects' ? (
-                `Projects (${nonKonnectProjects.length})`
-              ) : (
-                <span className="flex items-center gap-1">
-                  <KongLogo />
-                  Konnect ({konnectProjects.length})
-                </span>
-              )}
-            </button>
-          ))}
-      </div>
-      <div className="flex justify-between gap-1 p-(--padding-sm)">
-        <SearchField
-          aria-label="Projects filter"
-          className="group relative flex-1"
-          value={isProjectTabActive ? filterInputValue : konnectFilter}
-          isDisabled={projects.length === 0}
-          onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
-        >
-          <Input
-            placeholder="Filter"
-            className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-          />
-          <div className="absolute top-0 right-0 flex h-full items-center px-2">
-            <Button
-              aria-label="Clear search"
-              className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="close" />
-            </Button>
-          </div>
-        </SearchField>
-        {isProjectTabActive ? (
-          !isScratchPad && (
-            <Button
-              aria-label="Create new Project"
-              onPress={() => setIsNewProjectModalOpen(true)}
-              isDisabled={projects.length === 0}
-              className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="plus" className="h-2.5 w-2.5" />
-              <span>New Project</span>
-            </Button>
-          )
-        ) : syncing ? (
-          <Button
-            aria-label="Cancel sync"
-            onPress={cancelSync}
-            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          >
-            Cancel
-            <Icon icon="stop-circle" />
-          </Button>
-        ) : (
-          <Button
-            aria-label="Sync Konnect"
-            onPress={handleSync}
-            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          >
-            Sync
-            <Icon icon="refresh" />
-          </Button>
-        )}
-      </div>
-
-      {!isProjectTabActive && syncing && <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>}
-      {!isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
-
-      <div
-        ref={parentRef}
-        className="group/tree flex-1 overflow-y-auto py-(--padding-sm)"
-        data-testid="project-navigation-tree-container"
-      >
-        <GridList
-          aria-label="Project Navigation Tree"
-          items={virtualizer.getVirtualItems()}
-          style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
-          className="outline-hidden"
-          selectedKeys={selectedKeys}
-          selectionMode="single"
-          dragAndDropHooks={sidebarDragAndDropHooks}
-        >
-          {virtualItem => {
-            const item = visibleFlatItems[virtualItem.index];
-            if (!item) return null;
-
-            return (
-              <GridListItem
-                // Prefix pinned-request to the key and id to ensure pinned items have a different key and id from non-pinned items with the same doc._id
-                key={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${virtualItem.key}`}
-                id={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`}
-                textValue={item.doc.name || item.kind}
-                onAuxClick={e => {
-                  if (e.button === 1 && item.kind === 'collectionChild') {
-                    e.preventDefault();
-                    tabNavigate(
-                      {
-                        organization: organizationId,
-                        project: item.project,
-                        workspace: item.workspace,
-                        item: item.doc,
-                      },
-                      { withTab: true, shouldNavigate: true, searchParams },
-                    );
-                  }
-                }}
-                onPress={async e => {
-                  const docId = item.doc._id;
-                  if (item.kind === 'project') {
-                    if (routeInfo?.resourceId === docId) {
-                      toggleProjectOrWorkspace(docId);
-                    } else {
-                      !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched });
-                      !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
-                    }
-                  } else if (item.kind === 'workspace') {
-                    if (routeInfo?.resourceId === docId && routeInfo?.routeId !== 'runner') {
-                      toggleProjectOrWorkspace(docId);
-                    } else {
-                      tabNavigate(
-                        {
-                          organization: organizationId,
-                          project: item.project,
-                          workspace: item.doc,
-                          item: item.doc,
-                        },
-                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
-                      );
-                    }
-                  } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
-                    if (
-                      routeInfo?.resourceId === docId &&
-                      models.requestGroup.isRequestGroupId(docId) &&
-                      routeInfo?.routeId !== 'runner'
-                    ) {
-                      toggleRequestGroups([docId], item.workspace);
-                    } else {
-                      tabNavigate(
-                        {
-                          organization: organizationId,
-                          project: item.project,
-                          workspace: item.workspace,
-                          item: item.doc,
-                        },
-                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
-                      );
-                    }
-                  }
-                }}
-                className="group outline-hidden select-none"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: `${virtualItem.size}px`,
-                  transform: `translateY(${virtualItem.start}px)`,
-                }}
+      {!isScratchPad &&
+        (isPaidEnterprise ? (
+          <div className="flex shrink-0 border-b border-solid border-b-(--hl-md)">
+            {['projects', 'konnect'].map(tabName => (
+              <button
+                key={tabName}
+                className={`px-4 py-2 text-xs ${activeTab === tabName ? 'bg-(--hl-sm) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
+                data-testid={`sidebar-tab-${tabName}`}
+                onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
               >
-                {item.kind === 'project' && (
-                  <ProjectNode item={item} onToggle={toggleProjectOrWorkspace} storageRules={storageRules} />
+                {tabName === 'projects' ? (
+                  `Projects (${nonKonnectProjects.length})`
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <KongLogo />
+                    Konnect ({konnectProjects.length})
+                  </span>
                 )}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="px-(--padding-sm) pt-(--padding-sm)">PROJECTS ({nonKonnectProjects.length})</div>
+        ))}
+      {showKonnectSyncIntro ? (
+        <KonnectSyncIntro onConfigure={() => setShowKonnectConfigModal(true)} />
+      ) : (
+        <>
+          <div className="flex justify-between gap-1 p-(--padding-sm)">
+            <SearchField
+              aria-label="Projects filter"
+              className="group relative flex-1"
+              value={isProjectTabActive ? filterInputValue : konnectFilter}
+              isDisabled={projects.length === 0}
+              onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
+            >
+              <Input
+                placeholder="Filter"
+                className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+              />
+              <div className="absolute top-0 right-0 flex h-full items-center px-2">
+                <Button
+                  aria-label="Clear search"
+                  className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="close" />
+                </Button>
+              </div>
+            </SearchField>
+            {isProjectTabActive ? (
+              !isScratchPad && (
+                <BasicButton
+                  aria-label="Create new Project"
+                  onPress={() => setIsNewProjectModalOpen(true)}
+                  isDisabled={projects.length === 0}
+                  className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="plus" className="h-2.5 w-2.5" />
+                  <span>New Project</span>
+                </BasicButton>
+              )
+            ) : (
+              <div className="flex items-center gap-1">
+                {syncing ? (
+                  <Button
+                    aria-label="Cancel sync"
+                    onPress={cancelSync}
+                    className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                  >
+                    Cancel
+                    <Icon icon="stop-circle" />
+                  </Button>
+                ) : (
+                  <Button
+                    aria-label="Sync Konnect"
+                    onPress={handleSync}
+                    className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                  >
+                    <Icon icon="refresh" />
+                    Sync
+                  </Button>
+                )}
+                <Button
+                  aria-label="Konnect settings"
+                  onPress={() => setShowKonnectConfigModal(true)}
+                  className="flex aspect-square h-full items-center justify-center rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                >
+                  <Icon icon="gear" />
+                </Button>
+              </div>
+            )}
+          </div>
 
-                {item.kind === 'workspace' && (
-                  <WorkspaceNode
-                    item={item}
-                    onToggle={toggleProjectOrWorkspace}
-                    sortOrder={collectionSortOrders[item.doc._id] || 'type-manual'}
-                    onSortOrderChange={newSortOder => {
-                      if (item.doc.scope === 'collection') {
-                        setCollectionSortOrders(prev => {
-                          const newCollectionSortOrders = { ...prev, [item.doc._id]: newSortOder };
-                          return newCollectionSortOrders;
-                        });
+          {!isProjectTabActive && syncing && (
+            <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>
+          )}
+          {!isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
+
+          <div
+            ref={parentRef}
+            className="group/tree flex-1 overflow-y-auto py-(--padding-sm)"
+            data-testid="project-navigation-tree-container"
+          >
+            <GridList
+              aria-label="Project Navigation Tree"
+              items={virtualizer.getVirtualItems()}
+              style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
+              className="outline-hidden"
+              selectedKeys={selectedKeys}
+              selectionMode="single"
+              dragAndDropHooks={sidebarDragAndDropHooks}
+            >
+              {virtualItem => {
+                const item = visibleFlatItems[virtualItem.index];
+                if (!item) return null;
+
+                return (
+                  <GridListItem
+                    // Prefix pinned-request to the key and id to ensure pinned items have a different key and id from non-pinned items with the same doc._id
+                    key={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${virtualItem.key}`}
+                    id={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`}
+                    textValue={item.doc.name || item.kind}
+                    onAuxClick={e => {
+                      if (e.button === 1 && item.kind === 'collectionChild') {
+                        e.preventDefault();
+                        tabNavigate(
+                          {
+                            organization: organizationId,
+                            project: item.project,
+                            workspace: item.workspace,
+                            item: item.doc,
+                          },
+                          { withTab: true, shouldNavigate: true, searchParams },
+                        );
                       }
                     }}
-                  />
-                )}
+                    onPress={async e => {
+                      const docId = item.doc._id;
+                      if (item.kind === 'project') {
+                        if (routeInfo?.resourceId === docId) {
+                          toggleProjectOrWorkspace(docId);
+                        } else {
+                          !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched });
+                          !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
+                        }
+                      } else if (item.kind === 'workspace') {
+                        if (routeInfo?.resourceId === docId && routeInfo?.routeId !== 'runner') {
+                          toggleProjectOrWorkspace(docId);
+                        } else {
+                          tabNavigate(
+                            {
+                              organization: organizationId,
+                              project: item.project,
+                              workspace: item.doc,
+                              item: item.doc,
+                            },
+                            { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                          );
+                        }
+                      } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
+                        if (
+                          routeInfo?.resourceId === docId &&
+                          models.requestGroup.isRequestGroupId(docId) &&
+                          routeInfo?.routeId !== 'runner'
+                        ) {
+                          toggleRequestGroups([docId], item.workspace);
+                        } else {
+                          tabNavigate(
+                            {
+                              organization: organizationId,
+                              project: item.project,
+                              workspace: item.workspace,
+                              item: item.doc,
+                            },
+                            { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                          );
+                        }
+                      }
+                    }}
+                    className="group outline-hidden select-none"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualItem.size}px`,
+                      transform: `translateY(${virtualItem.start}px)`,
+                    }}
+                  >
+                    {item.kind === 'project' && (
+                      <ProjectNode item={item} onToggle={toggleProjectOrWorkspace} storageRules={storageRules} />
+                    )}
 
-                {item.kind === 'pinnedHeader' && <PinnedHeaderNode />}
+                    {item.kind === 'workspace' && (
+                      <WorkspaceNode
+                        item={item}
+                        onToggle={toggleProjectOrWorkspace}
+                        sortOrder={collectionSortOrders[item.doc._id] || 'type-manual'}
+                        onSortOrderChange={newSortOder => {
+                          if (item.doc.scope === 'collection') {
+                            setCollectionSortOrders(prev => {
+                              const newCollectionSortOrders = { ...prev, [item.doc._id]: newSortOder };
+                              return newCollectionSortOrders;
+                            });
+                          }
+                        }}
+                      />
+                    )}
 
-                {item.kind === 'collectionChild' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
+                    {item.kind === 'pinnedHeader' && <PinnedHeaderNode />}
 
-                {item.kind === 'pinnedRequest' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
+                    {item.kind === 'collectionChild' && (
+                      <RequestNode item={item} onToggleFolder={toggleRequestGroups} />
+                    )}
 
-                {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
+                    {item.kind === 'pinnedRequest' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
 
-                {item.kind === 'emptyProject' || item.kind === 'emptyCollection' || item.kind === 'emptyFolder' ? (
-                  <EmptyNode item={item} storageRules={storageRules} />
-                ) : null}
-              </GridListItem>
-            );
-          }}
-        </GridList>
-      </div>
+                    {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
+
+                    {item.kind === 'emptyProject' || item.kind === 'emptyCollection' || item.kind === 'emptyFolder' ? (
+                      <EmptyNode item={item} storageRules={storageRules} />
+                    ) : null}
+                  </GridListItem>
+                );
+              }}
+            </GridList>
+          </div>
+        </>
+      )}
 
       {isNewProjectModalOpen && (
         <ProjectModal
@@ -915,6 +949,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
           storageRules={storageRules}
         />
       )}
+      {showKonnectConfigModal && <KonnectSettingsModal onClose={() => setShowKonnectConfigModal(false)} />}
     </div>
   );
 };
