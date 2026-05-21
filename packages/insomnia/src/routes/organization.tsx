@@ -212,6 +212,13 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
 
   const [isMinimal, setIsMinimal] = reactUse.useLocalStorage('isMinimal', false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = reactUse.useLocalStorage('project-navigation-collapsed', false);
+
+  useEffect(() => {
+    return window.main.on('toggle-sidebar', () => {
+      setIsSidebarCollapsed(collapsed => !collapsed);
+    });
+  }, [setIsSidebarCollapsed]);
+
   return (
     <InsomniaEventStreamProvider>
       <InsomniaTabProvider>

@@ -348,7 +348,7 @@ export const SidebarWorkspaceDropdown = ({
                       <MenuItem
                         key={item.id}
                         id={item.id}
-                        className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold${item.className ? ` ${item.className}` : ''}`}
+                        className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold ${item.className ? ` ${item.className}` : ''}`}
                         aria-label={item.name}
                       >
                         <Icon icon={item.icon} className="h-4 w-3" />
@@ -358,7 +358,7 @@ export const SidebarWorkspaceDropdown = ({
                     ) : (
                       <SubmenuTrigger>
                         <MenuItem
-                          className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold${item.className ? ` ${item.className}` : ''}`}
+                          className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold ${item.className ? ` ${item.className}` : ''}`}
                           aria-label={item.name}
                         >
                           <Icon icon={item.icon} className="h-4 w-3" />

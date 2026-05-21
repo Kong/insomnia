@@ -16,6 +16,7 @@ import {
 } from '~/common/project';
 import { models, services } from '~/insomnia-data';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import { ProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
@@ -142,6 +143,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
 
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
 
+  const toggleSidebar = () => {
+    const isCollapsed = sidebarPanelRef.current?.isCollapsed();
+    uiEventBus.emit(TOGGLE_PROJECT_SIDEBAR, !isCollapsed);
+  };
+
   useEffect(() => {
     if (isSidebarCollapsed) {
       sidebarPanelRef.current?.collapse();
@@ -151,14 +157,27 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   }, [isSidebarCollapsed]);
 
   useEffect(() => {
-    return uiEventBus.on(TOGGLE_PROJECT_SIDEBAR, (collapsed: boolean) => {
+    // Listen to both UI event bus and main process ipc message to toggle sidebar.
+    // UI event bus is emitted from route organization.tsx in toggle sidebar button.
+    // Main process ipc message is emitted from electron menu when user click the toggle sidebar menu item.
+    const unsubscribeUIEventBus = uiEventBus.on(TOGGLE_PROJECT_SIDEBAR, (collapsed: boolean) => {
       if (collapsed) {
         sidebarPanelRef.current?.collapse();
       } else {
         sidebarPanelRef.current?.expand();
       }
     });
+    const removeListener = window.main.on('toggle-sidebar', toggleSidebar);
+
+    return () => {
+      unsubscribeUIEventBus();
+      removeListener();
+    };
   }, []);
+
+  useDocBodyKeyboardShortcuts({
+    sidebar_toggle: toggleSidebar,
+  });
 
   const { features } = useOrganizationPermissions();
 

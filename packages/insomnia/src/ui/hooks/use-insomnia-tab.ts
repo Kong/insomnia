@@ -1,5 +1,5 @@
 import type { Organization } from 'insomnia-api';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 
 import type { Project, Request, Workspace } from '~/insomnia-data';
@@ -256,6 +256,8 @@ const getNavigationTabId = async (routeInfo?: InsomniaNavigationRouteInfo | null
 export const useTabNavigate = () => {
   const navigate = useNavigate();
   const { addTab } = useInsomniaTabContext();
+  // Prevents stale navigation when clicks arrive faster than buildTabFromResource resolves.
+  const navigationCounterRef = useRef(0);
   const tabNavigate = useCallback(
     async (
       {
@@ -278,6 +280,7 @@ export const useTabNavigate = () => {
     ) => {
       const { shouldNavigate = false, withTab = false, asRunner = false, searchParams } = options;
       const organizationId = typeof organization === 'string' ? organization : organization.id;
+      const navigationId = ++navigationCounterRef.current;
 
       const tab = asRunner
         ? buildRunnerTab({
@@ -301,6 +304,9 @@ export const useTabNavigate = () => {
             },
             withTab,
           );
+
+      // Skip if this navigation is outdated by a newer one
+      if (navigationId !== navigationCounterRef.current) return;
       if (!tab) return;
 
       if (withTab) {

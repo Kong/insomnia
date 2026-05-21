@@ -2,7 +2,7 @@ import type { StorageRules } from 'insomnia-api';
 import { Button } from 'react-aria-components';
 
 import { models } from '~/insomnia-data';
-import { ProjectDropdown } from '~/ui/components/dropdowns/project-dropdown';
+import { ProjectDropdown, type WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 
 import { AvatarGroup } from '../../avatar';
 import { Icon } from '../../icon';
@@ -13,9 +13,11 @@ interface ProjectNodeProps {
   item: ProjectFlatItem;
   storageRules: StorageRules;
   onToggle: (projectId: string) => void;
+  sortOrder: WorkspaceSortOrder;
+  onSortOrderChange: (newSortOrder: WorkspaceSortOrder) => void;
 }
 
-export const ProjectNode = ({ item, storageRules, onToggle }: ProjectNodeProps) => {
+export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrderChange }: ProjectNodeProps) => {
   const { doc, collapsed, organizationId } = item;
   const { name: projectName, presence, _id: projectId } = doc;
   return (
@@ -43,7 +45,13 @@ export const ProjectNode = ({ item, storageRules, onToggle }: ProjectNodeProps) 
       </div>
       {presence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={presence} />}
       {projectId !== models.project.SCRATCHPAD_PROJECT_ID && (
-        <ProjectDropdown organizationId={organizationId} project={doc} storageRules={storageRules} />
+        <ProjectDropdown
+          organizationId={organizationId}
+          project={doc}
+          storageRules={storageRules}
+          sortOrder={sortOrder}
+          onSortOrderChange={onSortOrderChange}
+        />
       )}
     </div>
   );
