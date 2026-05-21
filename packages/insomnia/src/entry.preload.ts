@@ -289,6 +289,9 @@ const main: Window['main'] = {
     forceRefresh?: boolean,
   ): Promise<OAuth2Token | undefined> =>
     invokeWithNormalizedError('getOAuth2Token', requestId, authentication, forceRefresh),
+  getNodeOS: () => invokeWithNormalizedError('getNodeOS'),
+  decodeBuffer: options => invokeWithNormalizedError('decodeBuffer', options),
+  md5Hash: options => invokeWithNormalizedError('md5Hash', options),
   insecureReadFile: options => invokeWithNormalizedError('insecureReadFile', options),
   insecureReadFileWithEncoding: options => invokeWithNormalizedError('insecureReadFileWithEncoding', options),
   secureReadFile: options => invokeWithNormalizedError('secureReadFile', options),

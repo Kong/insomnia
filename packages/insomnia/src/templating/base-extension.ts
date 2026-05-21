@@ -1,9 +1,3 @@
-import type { BinaryToTextEncoding } from 'node:crypto';
-import crypto from 'node:crypto';
-import os from 'node:os';
-
-import iconv from 'iconv-lite';
-
 import { jarFromCookies } from '~/common/cookies';
 import type { Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
@@ -107,21 +101,10 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
-        nodeOS: async () => {
-          return {
-            arch: os.arch(),
-            platform: os.platform(),
-            release: os.release(),
-            cpus: os.cpus(),
-            hostname: os.hostname(),
-            freemem: os.freemem(),
-            userInfo: os.userInfo(),
-          };
-        },
+        nodeOS: async () => window.main.getNodeOS(),
         readFile: async (path: string) => window.main.secureReadFile({ path }),
-        decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
-        encode: async (input: string, encoding: BinaryToTextEncoding) =>
-          crypto.createHash('md5').update(input).digest(encoding),
+        decode: async (buffer: Buffer, encoding = 'utf8') => window.main.decodeBuffer({ buffer, encoding }),
+        encode: async (input: string, encoding) => window.main.md5Hash({ input, encoding }),
         render: (str: string) =>
           templating.render(str, {
             context: renderContext,

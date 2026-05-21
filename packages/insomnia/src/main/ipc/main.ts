@@ -1,3 +1,4 @@
+import crypto, { type BinaryToTextEncoding } from 'node:crypto';
 import fs, { mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -165,6 +166,17 @@ export interface RendererToMainBridgeAPI {
     authentication: AuthTypeOAuth2,
     forceRefresh?: boolean,
   ) => Promise<OAuth2Token | undefined>;
+  getNodeOS: () => Promise<{
+    arch: string;
+    cpus: ReturnType<typeof os.cpus>;
+    freemem: number;
+    hostname: string;
+    platform: NodeJS.Platform;
+    release: string;
+    userInfo: ReturnType<typeof os.userInfo>;
+  }>;
+  decodeBuffer: (options: { buffer: Buffer; encoding?: string }) => Promise<string>;
+  md5Hash: (options: { input: string; encoding: BinaryToTextEncoding }) => Promise<string>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -335,6 +347,23 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('getOAuth2Token', (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
     return getOAuth2TokenInMain(requestId, authentication, forceRefresh);
+  });
+  ipcMainHandle('getNodeOS', async () => {
+    return {
+      arch: os.arch(),
+      platform: os.platform(),
+      release: os.release(),
+      cpus: os.cpus(),
+      hostname: os.hostname(),
+      freemem: os.freemem(),
+      userInfo: os.userInfo(),
+    };
+  });
+  ipcMainHandle('decodeBuffer', async (_, options: { buffer: Buffer; encoding?: string }) => {
+    return iconv.decode(options.buffer, options.encoding || 'utf8');
+  });
+  ipcMainHandle('md5Hash', async (_, options: { input: string; encoding: BinaryToTextEncoding }) => {
+    return crypto.createHash('md5').update(options.input).digest(options.encoding);
   });
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;

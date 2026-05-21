@@ -12,11 +12,18 @@ window.app = {
 };
 
 window.main = {
+  getNodeOS: () => invokeWithNormalizedError('getNodeOS'),
+  decodeBuffer: (options: { buffer: Buffer; encoding?: string }) => invokeWithNormalizedError('decodeBuffer', options),
+  md5Hash: (options: { input: string; encoding: Parameters<RendererToMainBridgeAPI['md5Hash']>[0]['encoding'] }) =>
+    invokeWithNormalizedError('md5Hash', options),
   secureReadFile: (options: { path: string }) => invokeWithNormalizedError('secureReadFile', options),
   openInBrowser: (url: string) => ipcRenderer.send('openInBrowser', url),
   curlRequest: (options: Parameters<RendererToMainBridgeAPI['curlRequest']>[0]) =>
     invokeWithNormalizedError('curlRequest', options),
-} as Pick<RendererToMainBridgeAPI, 'secureReadFile' | 'openInBrowser' | 'curlRequest'> as RendererToMainBridgeAPI;
+} as Pick<
+  RendererToMainBridgeAPI,
+  'getNodeOS' | 'decodeBuffer' | 'md5Hash' | 'secureReadFile' | 'openInBrowser' | 'curlRequest'
+> as RendererToMainBridgeAPI;
 
 // Bridge plugin UI calls to the main renderer window via IPC.
 // The plugin window has no visible DOM; these methods forward to the main renderer.
