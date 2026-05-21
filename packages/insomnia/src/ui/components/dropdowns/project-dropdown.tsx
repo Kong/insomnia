@@ -1,11 +1,25 @@
-import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
-import { Button, Menu, MenuItem, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
+import {
+  Button,
+  Collection,
+  Header,
+  Menu,
+  MenuItem,
+  MenuSection,
+  MenuTrigger,
+  Popover,
+  Tooltip,
+  TooltipTrigger,
+} from 'react-aria-components';
+import { useParams } from 'react-router';
+import * as reactUse from 'react-use';
 
-import type { GitRepository, Project } from '~/insomnia-data';
+import type { GitRepository, Project, WorkspaceScope } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
+import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -22,12 +36,21 @@ interface Props {
 interface ProjectActionItem {
   id: string;
   name: string;
-  icon: IconName;
+  icon: IconProp;
   action: (projectId: string, projectName: string) => void;
 }
 
 export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
+  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
+    scope: WorkspaceScope;
+    isOpen: boolean;
+  } | null>({
+    scope: 'collection',
+    isOpen: false,
+  });
+  const { workspaceId } = useParams() as { workspaceId?: string };
+
   const deleteProjectFetcher = useProjectDeleteActionFetcher();
 
   const isRemoteProjectInconsistent = models.project.isRemoteProject(project) && !storageRules.enableCloudSync;
@@ -35,6 +58,14 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
     !models.project.isRemoteProject(project) && !models.project.isGitProject(project) && !storageRules.enableLocalVault;
   const isGitProjectInconsistent = models.project.isGitProject(project) && !storageRules.enableGitSync;
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitProjectInconsistent;
+
+  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
+  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
+  const canCreateMockServer = project?._id;
+  const createNewMockServer = () =>
+    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
+  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
+  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
 
   const projectActionList: ProjectActionItem[] = [
     {
@@ -73,6 +104,63 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
     },
   ];
 
+  const createInProjectActionList: ProjectActionItem[] = [
+    {
+      id: 'new-collection',
+      name: 'Request collection',
+      icon: 'bars',
+      action: createNewCollection,
+    },
+    {
+      id: 'new-document',
+      name: 'Design document',
+      icon: 'file',
+      action: createNewDocument,
+    },
+    {
+      id: 'new-mcp-client',
+      name: 'MCP Client',
+      icon: ['fac', 'mcp'] as unknown as IconProp,
+      action: createNewMcpClient,
+    },
+    ...(canCreateMockServer
+      ? [
+          {
+            id: 'new-mock-server',
+            name: 'Mock Server',
+            icon: 'server' as IconName,
+            action: createNewMockServer,
+          },
+        ]
+      : []),
+    {
+      id: 'new-environment',
+      name: 'Environment',
+      icon: 'code',
+      action: createNewGlobalEnvironment,
+    },
+  ];
+
+  const projectDropdownActions: {
+    name: string;
+    id: string;
+    icon: IconProp;
+    items: ProjectActionItem[];
+  }[] = [
+    {
+      name: 'CREATE',
+      id: 'create in project',
+      icon: 'plus',
+      items: createInProjectActionList,
+    },
+    {
+      name: 'ACTIONS',
+      id: 'project actions',
+      icon: 'gear',
+      items: projectActionList,
+    },
+  ];
+
   useEffect(() => {
     if (deleteProjectFetcher.data && deleteProjectFetcher.data.error && deleteProjectFetcher.state === 'idle') {
       showModal(AlertModal, {
@@ -81,6 +169,14 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
       });
     }
   }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
+
+  reactUse.useUpdateEffect(() => {
+    if (workspaceId && newWorkspaceModalState?.isOpen) {
+      // Close the new workspace modal if a workspace is already active.
+      // Use this because createNewWorkspace action will navigate to the newly create workspace page
+      setNewWorkspaceModalState(prev => prev && { ...prev, isOpen: false });
+    }
+  }, [workspaceId]);
 
   return (
     <Fragment>
@@ -111,28 +207,40 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
           aria-label="Project Actions"
           className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
         >
-          <Icon icon="caret-down" />
+          <Icon icon="ellipsis" />
         </Button>
         <Popover className="flex min-w-max flex-col overflow-y-hidden">
           <Menu
             aria-label="Project Actions Menu"
             selectionMode="single"
             onAction={key => {
-              projectActionList.find(({ id }) => key === id)?.action(project._id, project.name);
+              projectDropdownActions
+                .find(i => i.items.find(a => a.id === key))
+                ?.items.find(a => a.id === key)
+                ?.action(project._id, project.name);
             }}
-            items={projectActionList}
+            items={projectDropdownActions}
             className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
           >
-            {item => (
-              <MenuItem
-                key={item.id}
-                id={item.id}
-                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                aria-label={item.name}
-              >
-                <Icon icon={item.icon} />
-                <span>{item.name}</span>
-              </MenuItem>
+            {section => (
+              <MenuSection className="flex flex-1 flex-col">
+                <Header className="flex items-center gap-2 py-1 pl-2 text-xs text-(--hl) uppercase">
+                  <Icon icon={section.icon} /> <span>{section.name}</span>
+                </Header>
+                <Collection items={section.items}>
+                  {item => (
+                    <MenuItem
+                      key={item.id}
+                      id={item.id}
+                      className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                      aria-label={item.name}
+                    >
+                      <Icon icon={item.icon} />
+                      <span>{item.name}</span>
+                    </MenuItem>
+                  )}
+                </Collection>
+              </MenuSection>
             )}
           </Menu>
         </Popover>
@@ -144,6 +252,20 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
           gitRepository={project.gitRepository}
           isOpen={isProjectSettingsModalOpen}
           onOpenChange={setIsProjectSettingsModalOpen}
+        />
+      )}
+      {newWorkspaceModalState?.isOpen && (
+        <NewWorkspaceModal
+          isOpen
+          project={project}
+          storageRules={storageRules}
+          scope={newWorkspaceModalState.scope}
+          onOpenChange={isOpen => {
+            setNewWorkspaceModalState({
+              scope: newWorkspaceModalState.scope,
+              isOpen,
+            });
+          }}
         />
       )}
     </Fragment>

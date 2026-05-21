@@ -14,7 +14,7 @@ test('Preferences through keyboard shortcut', async ({ page }) => {
 });
 
 // Quick reproduction for Kong/insomnia#5664 and INS-2267
-test('Check filter responses by environment preference', async ({ app, page }) => {
+test('Check filter responses by environment preference', async ({ app, page, insomnia }) => {
   const text = await loadFixture('simple.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
   await page.getByLabel('Import').click();
@@ -23,7 +23,7 @@ test('Check filter responses by environment preference', async ({ app, page }) =
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   // Send a request
-  await page.getByLabel('Request Collection').getByTestId('example http').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('example http');
   await page.click('[data-testid="request-pane"] button:has-text("Send")');
   await page.click('text=Console');
   await page.locator('text=HTTP/1.1 200 OK').click();
@@ -40,7 +40,7 @@ test('Check filter responses by environment preference', async ({ app, page }) =
   await page.locator('text=HTTP/1.1 200 OK').click();
 });
 
-test('Enable http and https proxies', async ({ app, page }) => {
+test('Enable http and https proxies', async ({ app, page, insomnia }) => {
   const responsePane = page.getByTestId('response-pane');
 
   await page.getByTestId('settings-button').click();
@@ -62,7 +62,7 @@ test('Enable http and https proxies', async ({ app, page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   // send the request and check timeline
-  await page.getByLabel('Request Collection').getByTestId('proxyEnabled').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('proxyEnabled');
   await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
   await page.click('text=Console');
   await expect.soft(responsePane).toContainText('Trying 127.0.0.1:1111'); // updated proxy

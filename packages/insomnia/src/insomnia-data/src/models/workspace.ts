@@ -33,6 +33,7 @@ export type Workspace = BaseModel & BaseWorkspace;
 export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => model.type === type;
 
 export const optionalKeys = ['konnectServiceId'];
+export const isWorkspaceId = (id?: string | null) => id?.startsWith(prefix + '_');
 
 export const isDesign = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.design;
 

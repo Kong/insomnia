@@ -3,7 +3,7 @@ import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { Request, RequestGroup } from '~/insomnia-data';
+import type { Project, Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
@@ -16,7 +16,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { SerializableActionMeta } from '../../../plugins/bridge-types';
-import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import type { CreateRequestType } from '../../hooks/use-request';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -29,13 +28,22 @@ import { RequestGroupSettingsModal } from '../modals/request-group-settings-moda
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
   isOpen: boolean;
-  triggerRef: React.RefObject<HTMLDivElement>;
+  triggerRef?: React.RefObject<HTMLDivElement>;
+  activeProject: Project;
+  activeWorkspace: Workspace;
   onOpenChange: (isOpen: boolean) => void;
   onRename: () => void;
 }
 
-export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, onOpenChange, onRename }: Props) => {
-  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
+export const RequestGroupActionsDropdown = ({
+  requestGroup,
+  triggerRef,
+  isOpen,
+  onOpenChange,
+  onRename,
+  activeProject,
+  activeWorkspace,
+}: Props) => {
   const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
@@ -49,10 +57,10 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
 
   const tabNavigate = useTabNavigate();
 
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const workspaceId = activeWorkspace._id;
+  const projectId = activeProject._id;
+  const { organizationId } = useParams() as {
     organizationId: string;
-    projectId: string;
-    workspaceId: string;
   };
 
   const createRequest = ({
@@ -356,16 +364,11 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
         <Button
           data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
           aria-label="Request Group Actions"
-          className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-hover:flex group-focus:flex hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:flex aria-pressed:bg-(--hl-sm) data-focused:flex"
+          className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
         >
-          <Icon icon="caret-down" />
+          <Icon icon="ellipsis" />
         </Button>
-        <Popover
-          className="flex min-w-max flex-col overflow-y-hidden"
-          triggerRef={triggerRef}
-          placement="bottom end"
-          offset={5}
-        >
+        <Popover className="flex min-w-max flex-col overflow-y-hidden" triggerRef={triggerRef}>
           <Menu
             aria-label="Request Group Actions Menu"
             selectionMode="single"

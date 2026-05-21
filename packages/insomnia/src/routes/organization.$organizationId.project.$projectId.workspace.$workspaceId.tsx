@@ -1,3 +1,4 @@
+import { useLayoutEffect, useState } from 'react';
 import { href, Outlet, redirect, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { Button } from '~/basic-components/button';
@@ -392,6 +393,9 @@ export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: Req
   }
 };
 
+// This id is the wrapper element ID for workspace page content, representing the part of the workspace route component excluding tabs and breadcrumbs.
+export const WORKSPACE_CONTENT_WRAPPER = 'workspace-wrapper';
+
 const Component = () => {
   const navigate = useNavigate();
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -401,6 +405,7 @@ const Component = () => {
   };
   const { issuesByWorkspaceId, conflictsSuppressed } = useGitFileIssues();
   const currentIssue = issuesByWorkspaceId[workspaceId];
+  const [modalParent, setModalParent] = useState<HTMLElement | null>(null);
 
   const handleBackToList = () => {
     navigate(
@@ -416,10 +421,24 @@ const Component = () => {
     currentIssue && modalText && !(currentIssue.kind === 'conflict' && conflictsSuppressed),
   );
 
+  useLayoutEffect(() => {
+    if (!isIssueModalOpen) {
+      setModalParent(null);
+      return;
+    }
+
+    setModalParent(document.getElementById(WORKSPACE_CONTENT_WRAPPER));
+  }, [isIssueModalOpen, workspaceId]);
+
   return (
     <div className="h-full w-full overflow-hidden" data-testid="workspace-page">
       <Outlet />
-      <Modal isOpen={isIssueModalOpen} onClose={handleBackToList} className="w-[min(44rem,calc(100vw-2rem))] max-w-3xl">
+      <Modal
+        parent={modalParent}
+        isOpen={isIssueModalOpen}
+        onClose={handleBackToList}
+        className="relative w-[min(44rem,calc(100vw-2rem))] max-w-3xl"
+      >
         {modalText ? (
           <div className="flex flex-col items-center gap-6 px-4 pt-4 pb-2 text-center">
             <Icon icon="lock" className="text-6xl text-(--hl)" />

@@ -11,16 +11,16 @@ window.app = {
 // Bridge plugin UI calls to the main renderer window via IPC.
 // The plugin window has no visible DOM; these methods forward to the main renderer.
 window.showAlert = (options?: Record<string, any>) => {
-  ipcRenderer.send('plugin-ui-alert', options ?? {});
+  ipcRenderer.send('plugins.uiAlert', options ?? {});
 };
 
 window.showWrapper = (options?: Record<string, any>) => {
-  ipcRenderer.send('plugin-ui-dialog', options ?? {});
+  ipcRenderer.send('plugins.uiDialog', options ?? {});
 };
 
 window.showPrompt = (options?: Record<string, any>) => {
   const { onComplete, onHide, ...serializableOptions } = options ?? {};
-  ipcRenderer.invoke('plugin-ui-prompt', serializableOptions).then((value: string | null) => {
+  ipcRenderer.invoke('plugins.uiPrompt', serializableOptions).then((value: string | null) => {
     if (value !== null && value !== undefined) {
       onComplete?.(value);
     }

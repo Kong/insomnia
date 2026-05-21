@@ -6,7 +6,7 @@ const echoServer: PlaywrightTestConfig['webServer'] = {
   name: 'Echo server',
   command: 'npm run serve',
   url: 'http://localhost:4010',
-  timeout: 15 * 1000,
+  timeout: 20 * 1000,
   reuseExistingServer: !process.env.CI,
   stdout: 'pipe',
   stderr: 'pipe',

@@ -209,11 +209,11 @@ test.describe('pre-request features tests', () => {
     };
   });
 
-  test('run test cases', async ({ page }) => {
+  test('run test cases', async ({ page, insomnia }) => {
     for (const tc of testCases) {
       console.log(`Running test case: ${tc.name}`);
 
-      await page.getByLabel('Request Collection').getByTestId(tc.name).press('Enter');
+      await insomnia.navigationSidebar.clickRequestOrFolder(tc.name);
 
       await page.getByTestId('request-pane').getByLabel('Params').click();
       await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -232,7 +232,7 @@ test.describe('pre-request features tests', () => {
     }
   });
 
-  test('send request with content type', async ({ page }) => {
+  test('send request with content type', async ({ page, insomnia }) => {
     await page.getByTestId('settings-button').click();
     await page.getByTestId('dataFolders').click();
     await page.getByTestId('dataFolders').fill(process.cwd());
@@ -241,7 +241,7 @@ test.describe('pre-request features tests', () => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
 
-    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('echo pre-request script result');
 
     // set request body
     await page.getByRole('tab', { name: 'Body' }).click();
@@ -376,7 +376,7 @@ test.describe('pre-request features tests', () => {
       );
   });
 
-  test('insomnia.request / update proxy configuration', async ({ page }) => {
+  test('insomnia.request / update proxy configuration', async ({ page, insomnia }) => {
     const responsePane = page.getByTestId('response-pane');
 
     // update proxy configuration
@@ -391,7 +391,7 @@ test.describe('pre-request features tests', () => {
     await page.locator('[name="noProxy"]').fill('http://a.com,https://b.com');
     await page.locator('.app').press('Escape');
 
-    await page.getByLabel('Request Collection').getByTestId('test proxies manipulation').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('test proxies manipulation');
     await page.getByRole('tab', { name: 'Body' }).click();
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -402,7 +402,7 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
   });
 
-  test('update clientCertificate if request url contains tag', async ({ page }) => {
+  test('update clientCertificate if request url contains tag', async ({ page, insomnia }) => {
     const responsePane = page.getByTestId('response-pane');
     const fixturePath = getFixturePath('certificates');
 
@@ -418,7 +418,7 @@ test.describe('pre-request features tests', () => {
     await page.locator('.app').press('Escape');
 
     // update proxy configuration
-    await page.locator('text=Add Certificates').click();
+    await page.getByRole('button', { name: 'Add Certificates' }).click();
     await page.locator('text=Add client certificate').click();
     await page.locator('[name="host"]').fill('127.0.0.1:4010');
     await page.locator('[data-key="pfx"]').click();
@@ -430,11 +430,7 @@ test.describe('pre-request features tests', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Add certificate' }).click();
     await page.getByRole('button', { name: 'Done' }).click();
 
-    await page
-      .getByLabel('Request Collection')
-      .getByTestId('test certificate manipulation with tagged url')
-      .press('Enter');
-
+    await insomnia.navigationSidebar.clickRequestOrFolder('test certificate manipulation with tagged url');
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     // verify
@@ -443,9 +439,9 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('Adding SSL KEY certificate');
   });
 
-  test('insomnia.request / update clientCertificate', async ({ page }) => {
+  test('insomnia.request / update clientCertificate', async ({ page, insomnia }) => {
     const responsePane = page.getByTestId('response-pane');
-    await page.getByLabel('Request Collection').getByTestId('test certificate manipulation').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('test certificate manipulation');
 
     await page.getByTestId('settings-button').click();
     await page.getByTestId('dataFolders').fill('invalid');
@@ -461,8 +457,8 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('Adding SSL KEY certificate');
   });
 
-  test('insomnia.test and insomnia.expect can work together', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByTestId('insomnia.test').press('Enter');
+  test('insomnia.test and insomnia.expect can work together', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('insomnia.test');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -479,9 +475,9 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('PASShappy tests');
   });
 
-  test('environment and baseEnvironment can be persisted', async ({ app, page }) => {
+  test('environment and baseEnvironment can be persisted', async ({ app, page, insomnia }) => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.getByLabel('Request Collection').getByTestId('persist environment').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('persist environment');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -515,7 +511,7 @@ test.describe('pre-request features tests', () => {
     // close modal and go back
     await page.locator('.app').press('Escape');
     await page.locator('.app').press('Escape');
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
     // import global environment
     const globalEnvText = await loadFixture('script-global-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), globalEnvText);
@@ -523,16 +519,14 @@ test.describe('pre-request features tests', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     await page.getByLabel('Pre-request Scripts', { exact: true }).click();
     // go to request collection
-    await page
-      .getByLabel('Request Collection')
-      .getByTestId('persist global environment')
-      .click({
-        modifiers: ['ControlOrMeta'],
-      });
+    await insomnia.navigationSidebar.requestRow('persist global environment').click({
+      modifiers: ['ControlOrMeta'],
+    });
+
     // activate global environment
     await page.getByLabel('Manage Environments').click();
     await page.getByPlaceholder('Choose a global environment').click();
@@ -585,9 +579,9 @@ test.describe('pre-request features tests', () => {
     });
   });
 
-  test('kv pair environment can be updated', async ({ page }) => {
+  test('kv pair environment can be updated', async ({ page, insomnia }) => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.getByLabel('Request Collection').getByTestId('update kv pair environment').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('update kv pair environment');
     // switch to table view environment
     await page.getByLabel('Manage Environments').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
@@ -609,8 +603,8 @@ test.describe('pre-request features tests', () => {
     await page.getByText('http://url-from-script').click();
   });
 
-  test('query params should be transformed correctly', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByTestId('testQueryParams').press('Enter');
+  test('query params should be transformed correctly', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('testQueryParams');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
@@ -642,8 +636,8 @@ test.describe('unhappy paths', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   });
 
-  test('custom errors are returned', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+  test('custom errors are returned', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('echo pre-request script result');
 
     // enter script
     await page.getByRole('tab', { name: 'Scripts' }).click();
@@ -696,8 +690,8 @@ test.describe('sandbox features', () => {
   });
 
   // Blocked Roots / Scopes group: 'this' is blocked.
-  test('blocked roots / scopes group', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+  test('blocked roots / scopes group', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('echo pre-request script result');
 
     await page.getByRole('tab', { name: 'Scripts' }).click();
     const editor = page.getByTestId('CodeEditor').getByRole('textbox');
@@ -734,8 +728,8 @@ test.describe('sandbox features', () => {
   });
 
   // Blocked Properties / Prototype Mutation group: 'prototype' is blocked.
-  test('blocked properties / prototype mutation group', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+  test('blocked properties / prototype mutation group', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('echo pre-request script result');
 
     // enter script that accesses Object.prototype.
     await page.getByRole('tab', { name: 'Scripts' }).click();
@@ -773,8 +767,8 @@ test.describe('sandbox features', () => {
   });
 
   // Mask Rules / Runtime APIs group: 'Function' is masked to undefined at runtime.
-  test('Mask Rules / Runtime APIs group.', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+  test('Mask Rules / Runtime APIs group.', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('echo pre-request script result');
 
     // enter script that uses the Function constructor, only masked at runtime.
     await page.getByRole('tab', { name: 'Scripts' }).click();
@@ -805,8 +799,8 @@ test.describe('sandbox features', () => {
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200 OK');
   });
 
-  test('Layered security / unblocked properties resolve undefined', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByTestId('echo pre-request script result').press('Enter');
+  test('Layered security / unblocked properties resolve undefined', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.clickRequestOrFolder('echo pre-request script result');
 
     // enter script that accesses a property on 'process'.
     await page.getByRole('tab', { name: 'Scripts' }).click();

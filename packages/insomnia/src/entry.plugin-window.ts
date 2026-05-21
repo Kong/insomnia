@@ -1,10 +1,10 @@
 import { ipcRenderer } from 'electron';
 
 import { initDatabase, initServices } from '~/insomnia-data';
-import { servicesNodeImpl } from '~/insomnia-data/node';
 
 import { pluginWindowDatabase } from './main/database.plugin-window';
 import { invokePluginMethod } from './plugins/invoke-method';
+import { servicesProxy } from './ui/renderer-services-proxy';
 
 interface PluginInvokeMessage {
   id: string;
@@ -12,14 +12,14 @@ interface PluginInvokeMessage {
   args: unknown;
 }
 
-ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvokeMessage) => {
+ipcRenderer.on('plugins.invoke', async (_event, { id, method, args }: PluginInvokeMessage) => {
   try {
     const result = await invokePluginMethod(method, args);
-    ipcRenderer.send('plugin-invoke-result', { id, result });
+    ipcRenderer.send('plugins.invokeResult', { id, result });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error(`[plugin-window] Error in ${(error as any)?.method ?? method}: ${errMsg}`);
-    ipcRenderer.send('plugin-invoke-result', { id, error: errMsg });
+    ipcRenderer.send('plugins.invokeResult', { id, error: errMsg });
   }
 });
 
@@ -28,8 +28,8 @@ ipcRenderer.on('plugin-invoke', async (_event, { id, method, args }: PluginInvok
 (async () => {
   try {
     await initDatabase(pluginWindowDatabase);
-    initServices(servicesNodeImpl);
-    ipcRenderer.send('plugin-window-ready');
+    initServices(servicesProxy);
+    ipcRenderer.send('plugins.windowReady');
   } catch (err) {
     console.error('[plugin-window] Initialization failed:', err);
   }
