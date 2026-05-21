@@ -8,15 +8,15 @@ export function getByParentId(projectId: string) {
 }
 
 export async function upsert(projectId: string, patch: Partial<ProjectLintRuleset> = {}) {
-  const spec = await db.findOne<ProjectLintRuleset>(type, {
+  const existing = await db.findOne<ProjectLintRuleset>(type, {
     parentId: projectId,
   });
 
-  if (!spec) {
+  if (!existing) {
     return db.docCreate<ProjectLintRuleset>(type, { ...patch, parentId: projectId });
   }
 
-  return spec;
+  return db.docUpdate(existing, patch);
 }
 
 export function remove(projectId: string) {
