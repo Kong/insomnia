@@ -290,6 +290,15 @@ const Debug = () => {
   const reloadRequests = (requestIds: string[]) => {
     setGrpcStates(state => state.map(s => (requestIds.includes(s.requestId) ? { ...s, methods: [] } : s)));
   };
+  useEffect(() => {
+    setGrpcStates(prev => {
+      const existingIds = new Set(prev.map(s => s.requestId));
+      const newEntries = grpcRequests
+        .filter(r => !existingIds.has(r._id))
+        .map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE }));
+      return newEntries.length ? [...prev, ...newEntries] : prev;
+    });
+  }, [grpcRequests]);
   useEffect(
     () =>
       window.main.on('grpc.start', (_, id) => {
