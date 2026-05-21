@@ -117,13 +117,15 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Modal Submit' }).click({ delay: 200 });
 
     // Open request
-    await page.getByRole('button', { name: 'Close', exact: true }).click();
+    // Delay the click to let debounce finish
+    await page.getByRole('button', { name: 'Close', exact: true }).click({ delay: 200 });
     await page.getByLabel('Manage collection environments').press('Escape');
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
 
     await page.getByRole('tab', { name: 'Console' }).click();
     // check new environment value
+    await expect(page.getByText('kvstring')).toBeVisible();
     await page.getByText('kvstring').click();
     await page.getByText('kvAnotherStr').click();
     await page.getByText('12345').click();
