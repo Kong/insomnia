@@ -19,7 +19,7 @@ import { docsPlugins } from '../../../common/documentation';
 import type { SerializablePlugin } from '../../../plugins/bridge-types';
 import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { reload } from '../../../templating/index';
-import { validatePluginName } from '../../../utils/plugin';
+import { validatePluginName } from '../../../utils/plugin-name';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';

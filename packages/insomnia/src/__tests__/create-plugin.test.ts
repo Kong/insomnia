@@ -1,0 +1,46 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('node:fs/promises', () => ({
+  mkdir: vi.fn(),
+  writeFile: vi.fn(),
+}));
+
+vi.mock('../utils/plugin', () => ({
+  getSafePluginDir: vi.fn(() => '/mock/user/data/plugins/insomnia-plugin-demo'),
+}));
+
+import { createPlugin } from '../main/create-plugin';
+
+describe('createPlugin', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('creates the plugin directory and starter files', async () => {
+    await createPlugin('insomnia-plugin-demo', '// starter');
+
+    expect(mkdir).toHaveBeenCalledWith('/mock/user/data/plugins/insomnia-plugin-demo', { recursive: true });
+    expect(writeFile).toHaveBeenNthCalledWith(
+      1,
+      '/mock/user/data/plugins/insomnia-plugin-demo/package.json',
+      expect.stringContaining('"name": "insomnia-plugin-demo"'),
+      { flag: 'wx' },
+    );
+    expect(writeFile).toHaveBeenNthCalledWith(
+      2,
+      '/mock/user/data/plugins/insomnia-plugin-demo/main.js',
+      '// starter',
+      { flag: 'wx' },
+    );
+  });
+
+  it('normalizes filesystem failures to the existing user-facing error', async () => {
+    vi.mocked(writeFile).mockRejectedValueOnce(new Error('disk full'));
+
+    await expect(createPlugin('insomnia-plugin-demo', '// starter')).rejects.toThrow(
+      'Plugin creation failed. Please try again.',
+    );
+  });
+});

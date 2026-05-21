@@ -10,7 +10,7 @@ import { services } from '~/insomnia-data';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';
-import { validatePluginName } from '../utils/plugin';
+import { validatePluginName } from '../utils/plugin-name';
 
 // Promisified version of execFile to use async/await
 export const execFilePromise = promisify(execFile);
