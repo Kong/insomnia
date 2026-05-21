@@ -11,10 +11,7 @@ import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'ele
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 
 import { fnOrString } from '../../common/misc';
-import {
-  type NunjucksParsedTagArg,
-  type NunjucksTagContextMenuAction,
-} from '../../templating/types';
+import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
 
@@ -119,20 +116,25 @@ export type HandleChannels =
   | 'multipartBufferToArray'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'plugins.applyRequestHooks'
+  | 'plugins.applyResponseHooks'
   | 'plugins.executeAction'
-  | 'plugins.getBundlePlugins'
   | 'plugins.executePluginMainAction'
-  | 'plugins.getTemplateTags'
-  | 'plugins.runTemplateTagAction'
   | 'plugins.getActivePlugins'
+  | 'plugins.getBridgeMetrics'
+  | 'plugins.getBundlePlugins'
   | 'plugins.getDocumentActions'
   | 'plugins.getPlugins'
   | 'plugins.getRequestActions'
   | 'plugins.getRequestGroupActions'
+  | 'plugins.getTemplateTags'
   | 'plugins.getThemes'
   | 'plugins.getWorkspaceActions'
+  | 'plugins.hasRequestHooks'
+  | 'plugins.hasResponseHooks'
   | 'plugins.reloadPlugins'
-  | 'plugin-ui-prompt'
+  | 'plugins.runTemplateTagAction'
+  | 'plugins.uiPrompt'
   | 'openPath'
   | 'parseImport'
   | 'readCurlResponse'
@@ -192,8 +194,8 @@ export type MainOnChannels =
   | 'path.resolve'
   | 'readText'
   | 'restart'
-  | 'plugin-invoke-result'
-  | 'plugin-window-ready'
+  | 'plugins.invokeResult'
+  | 'plugins.windowReady'
   | 'set-hidden-window-busy-status'
   | 'setMenuBarVisibility'
   | 'show-nunjucks-context-menu'
@@ -217,15 +219,15 @@ export type MainOnChannels =
   | 'sync.cancelConflict'
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
-  | 'plugin-ui-prompt-result'
+  | 'plugins.uiPromptResult'
   | 'writeText';
 
 export type RendererOnChannels =
   | 'contextMenuCommand'
   | 'db.changes'
-  | 'plugin-ui-alert'
-  | 'plugin-ui-dialog'
-  | 'plugin-ui-prompt'
+  | 'plugins.uiAlert'
+  | 'plugins.uiDialog'
+  | 'plugins.uiPrompt'
   | 'grpc.data'
   | 'grpc.end'
   | 'grpc.error'
@@ -267,7 +269,6 @@ interface ContextMenuTag {
     needsEnterprisePlan?: boolean;
   };
 }
-
 
 const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   if (arg.defaultValue === undefined) {
@@ -332,7 +333,9 @@ export function registerElectronHandlers() {
               },
               { type: 'separator' },
             ];
-        const localTemplate: MenuItemConstructorOptions[] = ([...localTemplateTags, ...pluginTemplateTags] as ContextMenuTag[])
+        const localTemplate: MenuItemConstructorOptions[] = (
+          [...localTemplateTags, ...pluginTemplateTags] as ContextMenuTag[]
+        )
           // sort alphabetically
           .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
           .map(l => {

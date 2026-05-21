@@ -24,7 +24,6 @@ import { useLatest } from 'react-use';
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { executePluginMainAction } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
 import { plugins } from '~/plugins/renderer-bridge';
@@ -544,11 +543,11 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
-          const authResult = await executePluginMainAction({
+          const authResult = await plugins.executePluginMainAction({
             pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
             actionName: 'exchangeCode',
             params: { provider: 'azure', code },
-          });
+          }) as any;
           const { success, result, error } = authResult;
           if (success) {
             const { account, uniqueId } = result!;
