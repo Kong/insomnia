@@ -1,30 +1,24 @@
-import React, { type FC, useEffect, useRef } from 'react';
+import React, { type FC } from 'react';
 
 interface Props {
   body: string;
   url: string;
-  webpreferences: string;
+  disableHtmlPreviewJs: boolean;
 }
-export const ResponseWebView: FC<Props> = ({ webpreferences, body, url }) => {
-  const webviewRef = useRef<Electron.WebviewTag>(null);
 
-  useEffect(() => {
-    const webview = webviewRef.current;
-    const handleDOMReady = () => {
-      if (webview) {
-        webview.removeEventListener('dom-ready', handleDOMReady);
-        const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
-        webview.loadURL(`data:text/html; charset=utf-8,${encodeURIComponent(bodyWithBase)}`);
-      }
-    };
-    if (webview) {
-      webview.addEventListener('dom-ready', handleDOMReady);
-    }
-    return () => {
-      if (webview) {
-        webview.removeEventListener('dom-ready', handleDOMReady);
-      }
-    };
-  }, [body, url]);
-  return <webview data-testid="ResponseWebView" ref={webviewRef} src="about:blank" webpreferences={webpreferences} />;
+export const getResponsePreviewHtml = (body: string, url: string) => body.replace('<head>', `<head><base href="${url}">`);
+
+export const getResponsePreviewSandbox = (disableHtmlPreviewJs: boolean) =>
+  disableHtmlPreviewJs ? '' : 'allow-scripts';
+
+export const ResponseWebView: FC<Props> = ({ body, disableHtmlPreviewJs, url }) => {
+  return (
+    <iframe
+      className="h-full w-full border-0"
+      data-testid="ResponseWebView"
+      sandbox={getResponsePreviewSandbox(disableHtmlPreviewJs)}
+      srcDoc={getResponsePreviewHtml(body, url)}
+      title="HTML response preview"
+    />
+  );
 };

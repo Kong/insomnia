@@ -205,7 +205,6 @@ export function createWindow(): ElectronBrowserWindow {
     webPreferences: {
       preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
-      webviewTag: true,
       disableBlinkFeatures: 'Auxclick',
       // Security-critical flags (nodeIntegration/contextIsolation). Pinned by window-security.test.ts.
       // Spread last so nothing below can override them. Do not weaken — see ./window-security.
