@@ -33,12 +33,8 @@ import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { WorkspaceAction } from '../../../plugins';
-import { getWorkspaceActions } from '../../../plugins';
-import * as pluginApp from '../../../plugins/context/app';
-import * as pluginData from '../../../plugins/context/data';
-import * as pluginNetwork from '../../../plugins/context/network';
-import * as pluginStore from '../../../plugins/context/store';
+import type { SerializableActionMeta } from '../../../plugins/bridge-types';
+import { plugins } from '../../../plugins/renderer-bridge';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockServerGenerateRequestCollectionActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
 import { invariant } from '../../../utils/invariant';
@@ -70,7 +66,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
   const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const [isDeleteRemoteWorkspaceModalOpen, setIsDeleteRemoteWorkspaceModalOpen] = useState(false);
   const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
-  const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
+  const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
   const generateCollectionFetcher = useMockServerGenerateRequestCollectionActionFetcher();
@@ -85,23 +81,18 @@ export const WorkspaceDropdown: FC<{}> = () => {
   });
 
   const handlePluginClick = useCallback(
-    async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
+    async ({ pluginName, label }: SerializableActionMeta, workspace: Workspace) => {
       setLoadingActions({ ...loadingActions, [label]: true });
       try {
-        const context = {
-          ...(pluginApp.init() as Record<string, any>),
-          ...pluginData.init(activeProject._id),
-          ...(pluginStore.init(plugin) as Record<string, any>),
-          ...(pluginNetwork.init() as Record<string, any>),
-        };
-
         const docs = await db.getWithDescendants(workspace, [models.request.type]);
         const requests = docs.filter(models.request.isRequest).filter(doc => !doc.isPrivate);
         const requestGroups = docs.filter(models.requestGroup.isRequestGroup);
-        await action(context, {
-          requestGroups,
-          requests,
-          workspace,
+        await plugins.executeAction({
+          type: 'workspace',
+          pluginName,
+          label,
+          projectId: activeProject._id,
+          domainData: { workspace, requests, requestGroups },
         });
       } catch (err) {
         showError({
@@ -115,7 +106,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
   );
 
   const handleDropdownOpen = useCallback(async () => {
-    const actionPlugins = await getWorkspaceActions();
+    const actionPlugins = await plugins.getWorkspaceActions();
     setActionPlugins(actionPlugins);
   }, []);
 

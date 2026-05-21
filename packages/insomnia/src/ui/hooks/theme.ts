@@ -5,8 +5,9 @@ import type { ThemeSettings } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 
-import { type ColorScheme, getThemes } from '../../plugins';
+import { type ColorScheme } from '../../plugins';
 import { applyColorScheme, getColorScheme, type PluginTheme } from '../../plugins/misc';
+import { plugins } from '../../plugins/renderer-bridge';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
@@ -16,7 +17,7 @@ export const useThemes = () => {
   const [themes, setThemes] = useState<PluginTheme[]>([]);
 
   reactUse.useAsync(async () => {
-    const pluginThemes = await getThemes();
+    const pluginThemes = await plugins.getThemes();
     setThemes(pluginThemes.map(({ theme }) => theme));
   }, [pluginConfig]);
 

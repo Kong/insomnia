@@ -12,6 +12,7 @@ import type {
   WebSocketRequest,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -22,12 +23,7 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { RequestAction } from '../../../plugins';
-import { getRequestActions } from '../../../plugins';
-import * as pluginApp from '../../../plugins/context/app';
-import * as pluginData from '../../../plugins/context/data';
-import * as pluginNetwork from '../../../plugins/context/network';
-import * as pluginStore from '../../../plugins/context/store';
+import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
@@ -64,7 +60,7 @@ export const RequestActionsDropdown = ({
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
-  const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
+  const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -93,7 +89,7 @@ export const RequestActionsDropdown = ({
   };
 
   const onOpen = useCallback(async () => {
-    const actionPlugins = await getRequestActions();
+    const actionPlugins = await plugins.getRequestActions();
     setActionPlugins(actionPlugins);
   }, []);
 
@@ -120,16 +116,14 @@ export const RequestActionsDropdown = ({
     });
   };
 
-  const handlePluginClick = async ({ plugin, action }: RequestAction) => {
+  const handlePluginClick = async ({ pluginName, label }: SerializableActionMeta) => {
     try {
-      const context = {
-        ...pluginApp.init(),
-        ...pluginData.init(activeProject._id),
-        ...pluginStore.init(plugin),
-        ...pluginNetwork.init(),
-      };
-      await action(context, {
-        request,
+      await plugins.executeAction({
+        type: 'request',
+        pluginName,
+        label,
+        projectId: activeProject._id,
+        domainData: { request },
       });
     } catch (error) {
       showError({

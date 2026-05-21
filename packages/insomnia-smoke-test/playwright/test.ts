@@ -153,6 +153,8 @@ export const test = baseTest.extend<{
     await electronApp.close();
   },
   page: async ({ app }, use) => {
+    // The plugin window is created after the main window's did-finish-load, so
+    // firstWindow() always returns the main app window.
     const page = await app.firstWindow({ timeout: 60_000 });
 
     await page.waitForLoadState();

@@ -1,8 +1,8 @@
 import { services } from '~/insomnia-data';
 import { type RAToastContent, showToast } from '~/ui/components/toast-notification';
 
-import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';
+import { plugins } from '../plugins/renderer-bridge';
 import * as templating from '../templating';
 import { showModal } from './components/modals';
 import { SettingsModal } from './components/modals/settings-modal';
@@ -25,4 +25,22 @@ window.main.on('toggle-preferences-shortcuts', () => {
 
 window.main.on('show-toast', (_, options: { content: RAToastContent; options?: { timeout?: number } }) => {
   showToast(options.content, options.options);
+});
+
+window.main.on('plugin-ui-alert', (_, options: Record<string, any>) => {
+  window.showAlert?.(options);
+});
+
+window.main.on('plugin-ui-dialog', (_, options: Record<string, any>) => {
+  window.showWrapper?.(options);
+});
+
+window.main.on('plugin-ui-prompt', (_, id: string, options: Record<string, any>) => {
+  window.showPrompt?.({
+    ...options,
+    onComplete: (value: string) => {
+      window.main.notifyPluginPromptResult(id, value);
+    },
+    onHide: () => {},
+  });
 });

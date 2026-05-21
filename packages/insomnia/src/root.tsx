@@ -24,9 +24,10 @@ import { useLatest } from 'react-use';
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { executePluginMainAction, reloadPlugins } from '~/plugins';
+import { executePluginMainAction } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
+import { plugins } from '~/plugins/renderer-bridge';
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
@@ -482,7 +483,7 @@ const Root = () => {
               await services.settings.update(settings, {
                 theme: parsedTheme.name,
               });
-              await reloadPlugins();
+              await plugins.reloadPlugins();
               await setTheme(parsedTheme.name);
               showModal(SettingsModal, { tab: 'themes' });
             }
