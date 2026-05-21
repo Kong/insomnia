@@ -136,6 +136,27 @@ const writeResponseBodyToFile = async (
   }
 };
 
+const getTimelinePath = (responseId: string) => {
+  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
+  return path.join(userdataDirectory, 'responses', responseId + '.timeline');
+};
+
+const appendToTimeline = async (
+  _: unknown,
+  options: { timelinePath: string; data: string },
+) => {
+  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
+  const allowedResponsesDir = path.join(userdataDirectory, 'responses');
+  const resolvedPath = path.resolve(options.timelinePath);
+  if (!resolvedPath.startsWith(allowedResponsesDir + path.sep) || !resolvedPath.endsWith('.timeline')) {
+    throw new Error(
+      'appendToTimeline: timelinePath is outside the allowed responses directory or does not end in .timeline',
+    );
+  }
+  await fs.promises.mkdir(path.dirname(resolvedPath), { recursive: true });
+  await fs.promises.appendFile(resolvedPath, options.data);
+};
+
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -243,6 +264,10 @@ export interface RendererToMainBridgeAPI {
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
   notifyPluginPromptResult: (id: string, value: string | null) => void;
+  timeline: {
+    getPath: (responseId: string) => string;
+    appendToFile: (options: { timelinePath: string; data: string }) => Promise<void>;
+  };
 }
 
 export function registerMainHandlers() {
@@ -676,6 +701,11 @@ export function registerMainHandlers() {
       });
     });
   });
+
+  ipcMainOn('timeline.getPath', (event, responseId: string) => {
+    event.returnValue = getTimelinePath(responseId);
+  });
+  ipcMainHandle('timeline.appendToFile', appendToTimeline);
 
   registerPluginIpcHandlers();
 }
