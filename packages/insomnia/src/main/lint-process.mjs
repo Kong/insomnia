@@ -7,7 +7,6 @@ import Spectral from '@stoplight/spectral-core';
 import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
-import spectralRuntime from '@stoplight/spectral-runtime';
 import ipaddr from 'ipaddr.js';
 
 process.on('uncaughtException', error => {
@@ -74,16 +73,6 @@ const safeResolver = new Resolver({
   },
 });
 
-// Hardened fetch for remote ruleset "extends" loading.
-// Note: This is duplicated in inso's lint-specification.ts. Remember to mirror changes there as well.
-async function safeFetch(url, init) {
-  const href = String(url);
-  if (!isSafeRefUrl(href)) {
-    throw new Error(`Failed to fetch "${href}". Only https URLs to public hosts are allowed.`);
-  }
-  await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
-  return spectralRuntime.fetch(href, init);
-}
 
 process.parentPort.on('message', async ({ data: { documentContent, rulesetPath } }) => {
   let hasValidCustomRuleset = false;
@@ -95,7 +84,7 @@ process.parentPort.on('message', async ({ data: { documentContent, rulesetPath }
   }
   try {
     const spectral = new Spectral.Spectral({ resolver: safeResolver });
-    const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch: safeFetch }) : oas;
+    const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs }) : oas;
     spectral.setRuleset(ruleset);
     console.log('[lint-process] Ruleset loaded:', rulesetPath || 'default OAS ruleset');
     const diagnostics = await spectral.run(documentContent);

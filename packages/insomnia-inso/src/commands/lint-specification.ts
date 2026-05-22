@@ -4,12 +4,13 @@ import { Spectral } from '@stoplight/spectral-core';
 const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
 import dns from 'node:dns/promises';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { oas } from '@stoplight/spectral-rulesets';
-import spectralRuntime from '@stoplight/spectral-runtime';
 import { DiagnosticSeverity } from '@stoplight/types';
+import { bundleSpectralRuleset } from 'insomnia/src/common/bundle-spectral-ruleset';
 import { isPrivateOrLoopbackHost } from 'insomnia/src/common/private-host';
 import { validateSpectralRuleset } from 'insomnia/src/common/spectral-ruleset-validator';
 
@@ -59,7 +60,6 @@ const safeHttpResolver = {
   },
 };
 
-// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
 export const safeRefResolver = new Resolver({
   resolvers: {
     http: safeHttpResolver,
@@ -67,16 +67,6 @@ export const safeRefResolver = new Resolver({
   },
 });
 
-// Hardened fetch for remote ruleset "extends" loading.
-// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
-export async function safeFetch(url: string | URL, init?: RequestInit): Promise<Response> {
-  const href = String(url);
-  if (!isSafeRefUrl(href)) {
-    throw new Error(`Failed to fetch "${href}". Only https URLs to public hosts are allowed.`);
-  }
-  await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
-  return spectralRuntime.fetch(href, init);
-}
 
 export const getRuleSetFileFromFolderByFilename = async (filePath: string) => {
   try {
@@ -104,13 +94,25 @@ export async function lintSpecification({
   let ruleset = oas;
   try {
     if (rulesetFileName) {
-      const rulesetContent = await fs.promises.readFile(rulesetFileName, 'utf8');
-      const validation = validateSpectralRuleset(rulesetContent);
+      // Flatten all local and remote extends through our SSRF-safe code before any
+      // content reaches Spectral. This ensures remote "functions" and other disallowed
+      // keys are caught by validateSpectralRuleset before execution.
+      const bundledContent = await bundleSpectralRuleset(rulesetFileName, { resolveRemote: true });
+      const validation = validateSpectralRuleset(bundledContent);
       if (!validation.isValid) {
         logger.fatal(`Invalid Spectral ruleset: ${validation.error}`);
         return { isValid: false };
       }
-      ruleset = await bundleAndLoadRuleset(rulesetFileName, { fs, fetch: safeFetch });
+      // bundleAndLoadRuleset requires a file path, so write the pre-validated bundle to
+      // a uniquely-named temp directory and clean it up immediately after loading.
+      const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'spectral-'));
+      try {
+        const tempPath = path.join(tempDir, '.spectral.yaml');
+        await fs.promises.writeFile(tempPath, bundledContent, { encoding: 'utf8' });
+        ruleset = await bundleAndLoadRuleset(tempPath, { fs });
+      } finally {
+        await fs.promises.rm(tempDir, { recursive: true, force: true });
+      }
     }
   } catch (error) {
     logger.fatal(error.message);

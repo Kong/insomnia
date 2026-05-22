@@ -352,7 +352,7 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('bundleSpectralRuleset', async (_, options: { sourcePath: string }) => {
     try {
-      const content = await bundleSpectralRuleset(options.sourcePath);
+      const content = await bundleSpectralRuleset(options.sourcePath, { resolveRemote: true });
       const validation = validateSpectralRuleset(content);
       if (!validation.isValid) {
         return { error: `Invalid Spectral ruleset: ${validation.error}` };
