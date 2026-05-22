@@ -1,8 +1,8 @@
 import path from 'node:path';
 
-import { beforeEach, describe, expect, it, type MockedFunction, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type MockedFunction, vi } from 'vitest';
 
-// Mock fs so no real files are needed.
+// Mock fs and dns so no real files or DNS lookups are needed.
 vi.mock('node:fs', () => ({
   default: {
     promises: {
@@ -10,7 +10,13 @@ vi.mock('node:fs', () => ({
     },
   },
 }));
+vi.mock('node:dns/promises', () => ({
+  default: {
+    lookup: vi.fn(),
+  },
+}));
 
+import dns from 'node:dns/promises';
 import fs from 'node:fs';
 
 import { bundleSpectralRuleset } from '../bundle-spectral-ruleset';
@@ -22,8 +28,41 @@ function abs(fakePath: string) {
   return path.resolve(fakePath);
 }
 
+// Stub dns.lookup({ all: true }) to return the given addresses.
+function mockResolvedAddresses(addresses: string[]) {
+  vi.mocked(dns.lookup).mockResolvedValue(
+    addresses.map(address => ({ address, family: address.includes(':') ? 6 : 4 })) as any,
+  );
+}
+
+// Builds a fake fetch Response carrying a remote ruleset body.
+function rulesetResponse(body: string, init?: { ok?: boolean; status?: number; statusText?: string }) {
+  return {
+    ok: init?.ok ?? true,
+    status: init?.status ?? 200,
+    statusText: init?.statusText ?? 'OK',
+    text: async () => body,
+  } as unknown as Response;
+}
+
+const VALID_RULE = `
+  remote-rule:
+    given: "$.paths"
+    severity: warn
+    then:
+      function: truthy
+`;
+
 beforeEach(() => {
   mockReadFile.mockReset();
+  vi.mocked(dns.lookup).mockReset();
+  // Default: any hostname resolves to a public address unless a test overrides this.
+  mockResolvedAddresses(['93.184.216.34']);
+  vi.stubGlobal('fetch', vi.fn());
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe('bundleSpectralRuleset', () => {
@@ -42,25 +81,6 @@ rules:
     const result = await bundleSpectralRuleset('/fake/ruleset.yaml');
     expect(result).toContain('my-rule');
     expect(result).not.toContain('extends');
-  });
-
-  it('passes through remote URL extends unchanged', async () => {
-    mockReadFile.mockResolvedValueOnce(
-      `
-extends:
-  - "https://example.com/ruleset.yaml"
-rules:
-  my-rule:
-    given: "$.info"
-    severity: warn
-    then:
-      function: truthy
-`,
-    );
-
-    const result = await bundleSpectralRuleset('/fake/ruleset.yaml');
-    expect(result).toContain('https://example.com/ruleset.yaml');
-    expect(result).toContain('my-rule');
   });
 
   it('passes through spectral built-in identifier extends unchanged', async () => {
@@ -214,7 +234,7 @@ extends:
     await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('must be an object at the top level');
   });
 
-  it('deduplicates remote extends from multiple child files', async () => {
+  it('deduplicates spectral identifiers from multiple child files', async () => {
     const parentPath = '/fake/parent.yaml';
     const childAPath = '/fake/childA.yaml';
     const childBPath = '/fake/childB.yaml';
@@ -235,5 +255,128 @@ extends:
     const result = await bundleSpectralRuleset(parentPath);
     const matches = (result.match(/spectral:oas/g) ?? []).length;
     expect(matches).toBe(1);
+  });
+
+  describe('remote URL extends', () => {
+    it('fetches, validates and flattens a remote ruleset into the output', async () => {
+      mockReadFile.mockResolvedValueOnce(
+        `
+extends:
+  - "https://example.com/remote.yaml"
+rules:
+  local-rule:
+    given: "$.info"
+    severity: warn
+    then:
+      function: truthy
+`,
+      );
+      vi.mocked(fetch).mockResolvedValue(rulesetResponse(`rules:${VALID_RULE}`));
+
+      const result = await bundleSpectralRuleset('/fake/ruleset.yaml');
+      expect(result).toContain('local-rule');
+      expect(result).toContain('remote-rule');
+      // The remote URL is resolved away — nothing remote is left to fetch at lint time.
+      expect(result).not.toContain('https://example.com');
+    });
+
+    it('rejects a remote ruleset that declares custom functions (RCE vector)', async () => {
+      mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://example.com/exec.yaml"\n`);
+      vi.mocked(fetch).mockResolvedValue(
+        rulesetResponse(
+          `
+functions:
+  - exec
+rules:
+  env-check:
+    given: "$"
+    then:
+      function: exec
+`,
+        ),
+      );
+
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('is not allowed');
+    });
+
+    it('carries through a spectral identifier declared by a remote ruleset', async () => {
+      mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://example.com/remote.yaml"\n`);
+      vi.mocked(fetch).mockResolvedValue(
+        rulesetResponse(`extends:\n  - "spectral:oas"\nrules:${VALID_RULE}`),
+      );
+
+      const result = await bundleSpectralRuleset('/fake/ruleset.yaml');
+      expect(result).toContain('spectral:oas');
+      expect(result).toContain('remote-rule');
+    });
+
+    it('recursively flattens nested remote extends', async () => {
+      mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://example.com/a.yaml"\n`);
+      vi.mocked(fetch).mockImplementation(async (input: any) => {
+        const href = String(input);
+        if (href === 'https://example.com/a.yaml') {
+          return rulesetResponse(
+            `
+extends:
+  - "./b.yaml"
+rules:
+  a-rule:
+    given: "$.info"
+    severity: warn
+    then:
+      function: truthy
+`,
+          );
+        }
+        if (href === 'https://example.com/b.yaml') {
+          return rulesetResponse(
+            `
+rules:
+  b-rule:
+    given: "$.paths"
+    severity: warn
+    then:
+      function: truthy
+`,
+          );
+        }
+        throw new Error(`Unexpected fetch call: ${href}`);
+      });
+
+      const result = await bundleSpectralRuleset('/fake/ruleset.yaml');
+      expect(result).toContain('a-rule');
+      expect(result).toContain('b-rule');
+    });
+
+    it('rejects a non-https remote extends without fetching', async () => {
+      mockReadFile.mockResolvedValueOnce(`extends:\n  - "http://example.com/remote.yaml"\n`);
+
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('must use https');
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('rejects a remote extends pointing at a loopback host without fetching', async () => {
+      mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://localhost/remote.yaml"\n`);
+
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('disallowed host');
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('rejects a remote host that resolves to a loopback address without fetching', async () => {
+      mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://app.localtest.me/remote.yaml"\n`);
+      mockResolvedAddresses(['127.0.0.1']);
+
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow(
+        'private or loopback address',
+      );
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('throws when a remote ruleset cannot be fetched', async () => {
+      mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://example.com/missing.yaml"\n`);
+      vi.mocked(fetch).mockResolvedValue(rulesetResponse('', { ok: false, status: 404, statusText: 'Not Found' }));
+
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('Failed to fetch remote');
+    });
   });
 });
