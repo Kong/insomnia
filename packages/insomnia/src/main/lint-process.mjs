@@ -45,7 +45,7 @@ async function assertResolvesToPublicHost(hostname) {
   const records = await dns.lookup(hostname, { all: true });
   for (const { address } of records) {
     if (isPrivateOrLoopbackHost(address.toLowerCase())) {
-      throw new Error(`Refused to resolve $ref — host "${hostname}" resolves to a private or loopback address.`);
+      throw new Error(`Failed to resolve host. "${hostname}" resolves to a private or loopback address.`);
     }
   }
 }
@@ -55,12 +55,12 @@ const safeHttpResolver = {
   async resolve(ref) {
     const href = ref.href();
     if (!isSafeRefUrl(href)) {
-      throw new Error(`Refused to resolve $ref "${href}" — only https URLs to public hosts are allowed.`);
+      throw new Error(`Failed to fetch "${href}". Only https URLs to public hosts are allowed.`);
     }
     await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
     const response = await fetch(href);
     if (!response.ok) {
-      throw new Error(`Failed to fetch $ref "${href}": ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch "${href}": ${response.status} ${response.statusText}`);
     }
     return response.text();
   },
@@ -79,7 +79,7 @@ const safeResolver = new Resolver({
 async function safeFetch(url, init) {
   const href = String(url);
   if (!isSafeRefUrl(href)) {
-    throw new Error(`Refused to fetch "${href}" — only https URLs to public hosts are allowed.`);
+    throw new Error(`Failed to fetch "${href}". Only https URLs to public hosts are allowed.`);
   }
   await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
   return spectralRuntime.fetch(href, init);
