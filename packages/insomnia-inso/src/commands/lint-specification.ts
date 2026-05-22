@@ -10,7 +10,8 @@ import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { oas } from '@stoplight/spectral-rulesets';
 import spectralRuntime from '@stoplight/spectral-runtime';
 import { DiagnosticSeverity } from '@stoplight/types';
-import { isPrivateOrLoopbackHost, validateSpectralRuleset } from 'insomnia/src/common/spectral-ruleset-validator';
+import { isPrivateOrLoopbackHost } from 'insomnia/src/common/private-host';
+import { validateSpectralRuleset } from 'insomnia/src/common/spectral-ruleset-validator';
 
 import { InsoError } from '../errors';
 import { logger } from '../logger';

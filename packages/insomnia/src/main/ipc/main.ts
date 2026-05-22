@@ -18,12 +18,12 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
+import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import { validateSpectralRuleset } from '~/common/spectral-ruleset-validator';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
-import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import { convert } from '~/main/importers/convert';
@@ -373,7 +373,8 @@ export function registerMainHandlers() {
       const userDataDir = path.resolve(app.getPath('userData'));
       const resolvedRulesetPath = path.resolve(rulesetPath);
       const relativeToUserData = path.relative(userDataDir, resolvedRulesetPath);
-      const isInsideUserData = relativeToUserData !== '' && !relativeToUserData.startsWith('..') && !path.isAbsolute(relativeToUserData);
+      const isInsideUserData =
+        relativeToUserData !== '' && !relativeToUserData.startsWith('..') && !path.isAbsolute(relativeToUserData);
       if (!isInsideUserData || path.basename(resolvedRulesetPath) !== '.spectral.yaml') {
         return { error: 'Invalid ruleset path' };
       }

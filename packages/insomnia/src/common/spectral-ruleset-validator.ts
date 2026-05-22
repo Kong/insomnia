@@ -1,4 +1,3 @@
-import ipaddr from 'ipaddr.js';
 import YAML from 'yaml';
 
 export type SpectralRulesetValidationResult = { isValid: true } | { isValid: false; error: string };
@@ -8,7 +7,7 @@ export type SpectralRulesetValidationResult = { isValid: true } | { isValid: fal
 const ALLOWED_TOP_LEVEL_PROPERTIES = ['rules', 'extends'];
 
 // These are the only built-in Spectral identities we allow in the extends property.
-const ALLOWED_EXTENDS_IDENTIFIERS = ['spectral:oas', 'spectral:asyncapi', 'spectral:arazzo'];
+export const ALLOWED_EXTENDS_IDENTIFIERS = ['spectral:oas', 'spectral:asyncapi', 'spectral:arazzo'];
 
 // These are the only built-in Spectral functions we allow in ruleset "then" clauses
 const ALLOWED_BUILTIN_FUNCTIONS = [
@@ -31,9 +30,6 @@ const ALLOWED_BUILTIN_FUNCTIONS = [
 // For security reasons we do not allow rulesets to contain certain tokens that could be used for JavaScript prototype pollution when used in certain Spectral properties (e.g. "field").
 const PROTOTYPE_POLLUTION_TOKENS = ['__proto__', 'prototype', 'constructor'];
 
-// For security reasons we only allow extends URLs with certain safe schemes and hosts.
-const SAFE_URL_SCHEMES = ['https:'];
-
 // Check if path is absolute file path (e.g. /foo/bar.yaml, C:\foo\bar.yaml, \\server\share\file.yaml)
 function isAbsoluteFilePath(value: string): boolean {
   return value.startsWith('/') || value.startsWith('\\\\') || /^[A-Za-z]:[\\/]/.test(value);
@@ -51,27 +47,14 @@ export function toArray<T>(value: T | T[] | undefined): T[] {
   return Array.isArray(value) ? value : [value]; // handles both array and single value cases for extends in a given ruleset
 }
 
-// Given our support for remote extends, we need to protect against the possibility of SSRF attacks. We block any hostname that is a loopback or private network address, as well as "localhost".
-// Note: The logic in this function is duplicated in the main process's Spectral linting handler (lint-process.mjs) to protect against SSRF via $ref resolution in spec files.
-// If logic is changed here, mirror it there.
-export function isPrivateOrLoopbackHost(hostname: string): boolean {
-  if (hostname === 'localhost' || hostname.endsWith('.localhost')) {
-    return true;
-  }
-  const host = hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;
-  if (!ipaddr.isValid(host)) {
-    return false;
-  }
-  return ipaddr.process(host).range() !== 'unicast';
-}
-
 function containsPrototypePollution(value: string): boolean {
   return PROTOTYPE_POLLUTION_TOKENS.some(token => value.includes(token));
 }
 
+// Guards a rule's "documentationUrl"
 function isSafeUrl(value: string): boolean {
   try {
-    return SAFE_URL_SCHEMES.includes(new URL(value).protocol);
+    return new URL(value).protocol === 'https:';
   } catch {
     return false;
   }
@@ -98,36 +81,16 @@ function validateThen(ruleName: string, then: Record<string, unknown>): string |
   return null;
 }
 
+// Structural check only: each "extends" entry must be a plain string. Whether an entry is a valid
+// identifier, local path, or remote URL — and whether a remote URL is safe to fetch (SSRF) — is
+// decided when the ruleset is bundled (see common/bundle-spectral-ruleset.ts).
 function validateExtends(value: unknown): string | null {
   for (const entry of toArray(value)) {
     if (Array.isArray(entry)) {
       return `"extends" entry ${JSON.stringify(entry)} uses tuple format (e.g. [path, severity]) which is not supported. Use a plain string instead.`;
     }
-
-    const path = entry;
-    if (typeof path !== 'string') {
+    if (typeof entry !== 'string') {
       return '"extends" entries must be strings.';
-    }
-
-    // allow built in identifier and local file paths without further validation
-    if (ALLOWED_EXTENDS_IDENTIFIERS.includes(path) || isLocalFilePath(path)) {
-      continue;
-    }
-
-    // validate remote URLs
-    let url: URL;
-    try {
-      url = new URL(path);
-    } catch {
-      return `"extends" entry "${path}" is not a recognized Spectral identifier or a valid URL.`;
-    }
-
-    if (!SAFE_URL_SCHEMES.includes(url.protocol)) {
-      return `"extends" entry "${path}" must use https (got "${url.protocol}").`;
-    }
-
-    if (!url.hostname || isPrivateOrLoopbackHost(url.hostname.toLocaleLowerCase())) {
-      return `"extends" entry "${path}" targets a disallowed host`;
     }
   }
   return null;

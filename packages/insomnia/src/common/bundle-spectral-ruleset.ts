@@ -70,7 +70,12 @@ function mergeInto(target: Ruleset, source: Ruleset): void {
 // Recursively resolves local-file "extends" entries, returning a singular ruleset whose "extends"
 // contains only built-in spectral identifiers and remote URLs. Rules are merged such that the parent overrides
 // its extends, and among multiple extends entries the later ones override earlier. (ref: https://docs.stoplight.io/docs/spectral/83527ef2dd8c0-extending-rulesets)
-async function flattenRuleset(filePath: string, visited: Set<string>, depth: number, rootDir: string): Promise<Ruleset> {
+async function flattenRuleset(
+  filePath: string,
+  visited: Set<string>,
+  depth: number,
+  rootDir: string,
+): Promise<Ruleset> {
   const absolute = path.resolve(filePath);
   assertAllowed(absolute, visited, depth, rootDir);
 
