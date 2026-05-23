@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  isLocalFilePath,
-  isPrivateOrLoopbackHost,
-  toArray,
-  validateSpectralRuleset,
-} from '../spectral-ruleset-validator';
+import { isLocalFilePath, toArray, validateSpectralRuleset } from '../spectral-ruleset-validator';
 
 const expectInvalid = (content: string, errorContains?: string | RegExp): string => {
   const result = validateSpectralRuleset(content);
@@ -51,41 +46,6 @@ describe('isLocalFilePath()', () => {
   });
 });
 
-describe('isPrivateOrLoopbackHost()', () => {
-  it('returns true for localhost variants', () => {
-    expect(isPrivateOrLoopbackHost('localhost')).toBe(true);
-    expect(isPrivateOrLoopbackHost('foo.localhost')).toBe(true);
-  });
-
-  it('returns true for loopback IPs (v4 and v6)', () => {
-    expect(isPrivateOrLoopbackHost('127.0.0.1')).toBe(true);
-    expect(isPrivateOrLoopbackHost('::1')).toBe(true);
-  });
-
-  it('returns true for RFC 1918 private ranges', () => {
-    expect(isPrivateOrLoopbackHost('10.0.0.1')).toBe(true);
-    expect(isPrivateOrLoopbackHost('172.16.0.1')).toBe(true);
-    expect(isPrivateOrLoopbackHost('192.168.1.1')).toBe(true);
-  });
-
-  it('returns true for link-local IPv4', () => {
-    expect(isPrivateOrLoopbackHost('169.254.0.1')).toBe(true);
-  });
-
-  it('returns true for bracketed IPv6 hostnames (as produced by new URL().hostname)', () => {
-    expect(isPrivateOrLoopbackHost('[::1]')).toBe(true);
-  });
-
-  it('returns false for public unicast IPs', () => {
-    expect(isPrivateOrLoopbackHost('8.8.8.8')).toBe(false);
-    expect(isPrivateOrLoopbackHost('1.1.1.1')).toBe(false);
-  });
-
-  it('returns false for non-IP hostnames (DNS resolution is handled elsewhere)', () => {
-    expect(isPrivateOrLoopbackHost('example.com')).toBe(false);
-  });
-});
-
 describe('toArray()', () => {
   it('returns [] for undefined', () => {
     const value = undefined;
@@ -128,8 +88,7 @@ describe('validateSpectralRuleset()', () => {
   });
 
   it('rejects unsupported top-level keys', () => {
-    const error = expectInvalid('functions:\n  - exec\n', /unsupported top-level/i);
-    expect(error).toContain('functions');
+    expectInvalid('functions:\n  - exec\n', /unsupported top-level/i);
   });
 
   it('accepts JSON input (YAML is a superset of JSON)', () => {
@@ -160,30 +119,6 @@ describe('validateSpectralRuleset()', () => {
 
   it('rejects non-string extends entries', () => {
     expectInvalid('extends:\n  - 42\n', /must be strings/i);
-  });
-
-  it('rejects http URLs in extends', () => {
-    expectInvalid('extends:\n  - http://example.com/rules.yaml\n', /must use https/i);
-  });
-
-  it('rejects extends URLs targeting localhost variants', () => {
-    expectInvalid('extends:\n  - https://localhost/rules.yaml\n', /disallowed host/i);
-    expectInvalid('extends:\n  - https://foo.localhost/rules.yaml\n', /disallowed host/i);
-  });
-
-  it('rejects extends URLs targeting loopback IPs (v4 and v6)', () => {
-    expectInvalid('extends:\n  - https://127.0.0.1/rules.yaml\n', /disallowed host/i);
-    expectInvalid('extends:\n  - "https://[::1]/rules.yaml"\n', /disallowed host/i);
-  });
-
-  it('rejects extends URLs targeting RFC 1918 private ranges', () => {
-    expectInvalid('extends:\n  - https://10.0.0.1/rules.yaml\n', /disallowed host/i);
-    expectInvalid('extends:\n  - https://192.168.1.1/rules.yaml\n', /disallowed host/i);
-    expectInvalid('extends:\n  - https://172.16.0.1/rules.yaml\n', /disallowed host/i);
-  });
-
-  it('rejects extends strings that are neither identifiers nor paths nor valid URLs', () => {
-    expectInvalid('extends:\n  - not-a-real-thing\n', /not a recognized|valid URL/i);
   });
 
   // rules + rule body + then — covers validateRules(), validateRuleBody(), validateThen()

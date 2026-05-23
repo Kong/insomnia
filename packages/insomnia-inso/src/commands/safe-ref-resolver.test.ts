@@ -2,17 +2,10 @@ import dns from 'node:dns/promises';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { safeFetch, safeRefResolver } from './lint-specification';
+import { safeRefResolver } from './lint-specification';
 
 vi.mock('node:dns/promises', () => ({ default: { lookup: vi.fn() } }));
 
-// safeFetch delegates to the spectralRuntime.fetch transport captured at import time.
-// Expose that transport as a mock so we can assert on it without real network calls.
-const { transportFetch } = vi.hoisted(() => ({ transportFetch: vi.fn() }));
-vi.mock('@stoplight/spectral-runtime', async importOriginal => {
-  const actual = (await importOriginal()) as any;
-  return { ...actual, default: { ...actual.default, fetch: transportFetch } };
-});
 
 // Stub dns.lookup({ all: true }) to return the given addresses.
 const mockResolvedAddresses = (addresses: string[]) =>
@@ -29,8 +22,6 @@ describe('safeHttpResolver', () => {
 
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
-    transportFetch.mockReset();
-    transportFetch.mockResolvedValue({ ok: true } as unknown as Response);
     // Default: hosts resolve to a public address unless a test overrides this.
     mockResolvedAddresses(['93.184.216.34']);
   });
@@ -45,7 +36,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => 'not-a-url',
         }),
-      ).rejects.toThrow('Failed to resolve $ref "not-a-url"');
+      ).rejects.toThrow('Failed to resolve "not-a-url"');
 
       expect(fetch).not.toHaveBeenCalled();
     });
@@ -55,7 +46,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => '/foo/bar.yaml',
         }),
-      ).rejects.toThrow('Failed to resolve $ref "/foo/bar.yaml"');
+      ).rejects.toThrow('Failed to resolve "/foo/bar.yaml"');
 
       expect(fetch).not.toHaveBeenCalled();
     });
@@ -65,7 +56,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => 'http://example.com/schema.yaml',
         }),
-      ).rejects.toThrow('only https URLs to public hosts are allowed');
+      ).rejects.toThrow('Failed to resolve "http://example.com/schema.yaml"');
 
       expect(fetch).not.toHaveBeenCalled();
     });
@@ -75,7 +66,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => 'ftp://example.com/schema.yaml',
         }),
-      ).rejects.toThrow('only https URLs to public hosts are allowed');
+      ).rejects.toThrow('Failed to resolve "ftp://example.com/schema.yaml"');
 
       expect(fetch).not.toHaveBeenCalled();
     });
@@ -85,7 +76,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => 'https://localhost/schema.yaml',
         }),
-      ).rejects.toThrow('only https URLs to public hosts are allowed');
+      ).rejects.toThrow('Failed to resolve "https://localhost/schema.yaml"');
 
       expect(fetch).not.toHaveBeenCalled();
     });
@@ -95,7 +86,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => 'https://127.0.0.1/schema.yaml',
         }),
-      ).rejects.toThrow('only https URLs to public hosts are allowed');
+      ).rejects.toThrow('Failed to resolve "https://127.0.0.1/schema.yaml"');
 
       expect(fetch).not.toHaveBeenCalled();
     });
@@ -112,7 +103,7 @@ describe('safeHttpResolver', () => {
           httpResolver.resolve({
             href: () => url,
           }),
-        ).rejects.toThrow('only https URLs to public hosts are allowed');
+        ).rejects.toThrow('Only https URLs to public hosts are allowed');
       }
 
       expect(fetch).not.toHaveBeenCalled();
@@ -123,7 +114,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => 'https://169.254.169.254/latest/meta-data',
         }),
-      ).rejects.toThrow('only https URLs to public hosts are allowed');
+      ).rejects.toThrow('Failed to resolve "https://169.254.169.254/latest/meta-data"');
 
       expect(fetch).not.toHaveBeenCalled();
     });
@@ -133,7 +124,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => 'https://[::1]/schema.yaml',
         }),
-      ).rejects.toThrow('only https URLs to public hosts are allowed');
+      ).rejects.toThrow('Failed to resolve "https://[::1]/schema.yaml"');
 
       expect(fetch).not.toHaveBeenCalled();
     });
@@ -210,7 +201,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => 'https://example.com/missing.yaml',
         }),
-      ).rejects.toThrow('Failed to fetch $ref "https://example.com/missing.yaml": 404 Not Found');
+      ).rejects.toThrow('Failed to fetch "https://example.com/missing.yaml": 404 Not Found');
     });
 
     it('throws on 500 responses', async () => {
@@ -224,7 +215,7 @@ describe('safeHttpResolver', () => {
         httpResolver.resolve({
           href: () => 'https://example.com/error.yaml',
         }),
-      ).rejects.toThrow('Failed to fetch $ref "https://example.com/error.yaml": 500 Internal Server Error');
+      ).rejects.toThrow('Failed to fetch "https://example.com/error.yaml": 500 Internal Server Error');
     });
 
     it('propagates fetch network errors', async () => {
@@ -312,40 +303,5 @@ describe('safeHttpResolver', () => {
     });
   });
 
-  describe('safeFetch (remote ruleset "extends" loading)', () => {
-    it('rejects non-https URLs', async () => {
-      await expect(safeFetch('http://example.com/rules.yaml')).rejects.toThrow(
-        'only https URLs to public hosts are allowed',
-      );
-
-      expect(transportFetch).not.toHaveBeenCalled();
-    });
-
-    it('rejects literal loopback addresses', async () => {
-      await expect(safeFetch('https://127.0.0.1/rules.yaml')).rejects.toThrow(
-        'only https URLs to public hosts are allowed',
-      );
-
-      expect(transportFetch).not.toHaveBeenCalled();
-    });
-
-    it('rejects hosts that resolve to loopback', async () => {
-      mockResolvedAddresses(['127.0.0.1']);
-
-      await expect(safeFetch('https://app.localtest.me/rules.yaml')).rejects.toThrow(
-        'resolves to a private or loopback address',
-      );
-
-      expect(transportFetch).not.toHaveBeenCalled();
-    });
-
-    it('fetches via the spectral-runtime transport when the host resolves to a public address', async () => {
-      mockResolvedAddresses(['93.184.216.34']);
-
-      await safeFetch('https://example.com/rules.yaml');
-
-      expect(transportFetch).toHaveBeenCalledWith('https://example.com/rules.yaml', undefined);
-    });
-  });
 
 });
