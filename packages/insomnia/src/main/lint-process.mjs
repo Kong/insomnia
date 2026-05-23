@@ -7,6 +7,7 @@ import Spectral from '@stoplight/spectral-core';
 import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
+import spectralRuntime from '@stoplight/spectral-runtime';
 import ipaddr from 'ipaddr.js';
 
 process.on('uncaughtException', error => {
@@ -43,7 +44,7 @@ function isSafeRefUrl(href) {
 async function assertResolvesToPublicHost(hostname) {
   const records = await dns.lookup(hostname, { all: true });
   for (const { address } of records) {
-    if (isPrivateOrLoopbackHost(address.toLowerCase())) {
+    if (isPrivateOrLoopbackHost(address)) {
       throw new Error(`Failed to resolve host. "${hostname}" resolves to a private or loopback address.`);
     }
   }
@@ -73,7 +74,6 @@ const safeResolver = new Resolver({
   },
 });
 
-
 process.parentPort.on('message', async ({ data: { documentContent, rulesetPath } }) => {
   let hasValidCustomRuleset = false;
   if (rulesetPath) {
@@ -84,7 +84,8 @@ process.parentPort.on('message', async ({ data: { documentContent, rulesetPath }
   }
   try {
     const spectral = new Spectral.Spectral({ resolver: safeResolver });
-    const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs }) : oas;
+    const { fetch } = spectralRuntime;
+    const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch }) : oas;
     spectral.setRuleset(ruleset);
     console.log('[lint-process] Ruleset loaded:', rulesetPath || 'default OAS ruleset');
     const diagnostics = await spectral.run(documentContent);

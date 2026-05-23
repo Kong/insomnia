@@ -21,7 +21,6 @@ import iconv from 'iconv-lite';
 import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
-import { validateSpectralRuleset } from '~/common/spectral-ruleset-validator';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
@@ -352,11 +351,7 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('bundleSpectralRuleset', async (_, options: { sourcePath: string }) => {
     try {
-      const content = await bundleSpectralRuleset(options.sourcePath, { resolveRemote: true });
-      const validation = validateSpectralRuleset(content);
-      if (!validation.isValid) {
-        return { error: `Invalid Spectral ruleset: ${validation.error}` };
-      }
+      const content = await bundleSpectralRuleset(options.sourcePath);
       return { content };
     } catch (err) {
       return { error: err instanceof Error ? err.message : String(err) };
@@ -381,17 +376,16 @@ export function registerMainHandlers() {
       rulesetPath = resolvedRulesetPath;
 
       try {
-        const rulesetContent = await fs.promises.readFile(rulesetPath, { encoding: 'utf8' });
-        const validation = validateSpectralRuleset(rulesetContent);
-        if (!validation.isValid) {
-          return { error: `Invalid Spectral ruleset: ${validation.error}` };
-        }
+        // Validate the ruleset (flattens local extends, checks remote URLs for SSRF and
+        // disallowed keys such as "functions") before passing the path to the lint worker.
+        // Result is discarded — validation only; the original file is not modified.
+        await bundleSpectralRuleset(rulesetPath);
       } catch (err) {
-        // Fall back to the default OAS ruleset instead of erroring when a user deletes their custom ruleset
-        if (err && err.code === 'ENOENT') {
+        // Fall back to the default OAS ruleset
+        if (err && (err as NodeJS.ErrnoException).code === 'ENOENT') {
           rulesetPath = '';
         } else {
-          return { error: `Failed to read ruleset file: ${err instanceof Error ? err.message : String(err)}` };
+          return { error: err instanceof Error ? err.message : String(err) };
         }
       }
     }
