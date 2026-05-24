@@ -393,5 +393,31 @@ rules:
 
       await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('Failed to fetch remote');
     });
+
+    it('rejects a nested http:// extends inside a remote ruleset (recursive SSRF check)', async () => {
+      // Local ruleset extends a valid https remote...
+      mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://example.com/base.yaml"\n`);
+      // ...but that remote itself extends an http:// localhost URL.
+      vi.mocked(fetch).mockResolvedValueOnce(
+        rulesetResponse(`extends:\n  - "http://localhost:8000/exec.yaml"\n`),
+      );
+
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow(
+        'Remote "extends" URL must use https:',
+      );
+    });
+
+    it('rejects a functions: key inside a nested remote ruleset', async () => {
+      // Local ruleset extends a valid https remote...
+      mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://example.com/base.yaml"\n`);
+      // ...but that remote contains a functions: key (the RCE vector).
+      vi.mocked(fetch).mockResolvedValueOnce(
+        rulesetResponse(`functions:\n  - exec\nrules:\n  env-check:\n    given: "$"\n    then:\n      function: exec\n`),
+      );
+
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow(
+        'failed validation',
+      );
+    });
   });
 });
