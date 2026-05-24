@@ -21,7 +21,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, redirect, useLoaderData, useRevalidator } from 'react-router';
+import { href, redirect, useLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
@@ -194,7 +194,6 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const { apiSpec, gitSyncRulesetPath, isConnectedGitProject, parsedSpec, rulesetContent } =
     useLoaderData<typeof clientLoader>();
-  const revalidator = useRevalidator();
 
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
@@ -231,7 +230,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           rulesetPath,
         });
         if (cancelled) {
-          return;
+          return [];
         }
         if (error) {
           console.log('Handled error detected while linting:', error);
@@ -239,7 +238,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             title: 'Linting Error',
             message: `An error occurred while linting the OpenAPI specification: ${error}`,
           });
-          throw error;
+          return [];
         }
         const lintResult = diagnostics?.map(({ severity, code, message, range }) => {
           return {
@@ -261,7 +260,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           title: 'Linting Error',
           message: `An error occurred while linting the OpenAPI specification: ${error}`,
         });
-        throw error;
+        return [];
       }
     });
   };
@@ -463,7 +462,7 @@ const Component = ({ params }: Route.ComponentProps) => {
       return;
     }
 
-    // We have to flatten the rules within each extends local path because we can only have one ruleset file on disk for Spectral to consume and to sync to cloud/git projects.
+    // We bundle the ruleset to resolve any extended rulesets and to validate the content
     const { content, error } = await window.main.bundleSpectralRuleset({ sourcePath: filePath });
     if (error || !content) {
       showError({
@@ -474,15 +473,11 @@ const Component = ({ params }: Route.ComponentProps) => {
     }
 
     await updateProjectRuleset({ organizationId, projectId, rulesetContent: content });
-
-    if (gitSyncRulesetPath) {
-      // git: the RepoFileWatcher mirrors the record to .spectral.yaml in the working dir
-      revalidator.revalidate();
-    } else {
-      // cloud/local: no watcher — mirror to the scratch path so Spectral can lint
+    if (!gitSyncRulesetPath) {
+      // cloud/local: no RepoFileWatcher — write the file to disk so Spectral can lint against it.
+      // git projects: the RepoFileWatcher mirrors the ProjectLintRuleset record to .spectral.yaml automatically.
       await window.main.writeFile({ path: rulesetWritePath, content });
     }
-
     setSelectedRulesetPath(gitSyncRulesetPath || rulesetWritePath);
   };
 
@@ -500,10 +495,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             organizationId,
             projectId,
           });
-          if (gitSyncRulesetPath) {
-            // git: the RepoFileWatcher removes .spectral.yaml from the working dir
-            revalidator.revalidate();
-          } else {
+          if (!gitSyncRulesetPath) {
             await window.main.deleteFile({ path: rulesetWritePath });
           }
           setSelectedRulesetPath('');
