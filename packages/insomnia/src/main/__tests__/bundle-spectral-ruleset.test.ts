@@ -105,7 +105,7 @@ rules:
     const parentPath = '/fake/parent.yaml';
     const childPath = '/fake/child.yaml';
 
-    mockReadFile.mockImplementation(async (filePath) => {
+    mockReadFile.mockImplementation(async filePath => {
       if (filePath === abs(parentPath)) {
         return `
 extends:
@@ -141,7 +141,7 @@ rules:
     const parentPath = '/fake/parent.yaml';
     const childPath = '/fake/child.yaml';
 
-    mockReadFile.mockImplementation(async (filePath) => {
+    mockReadFile.mockImplementation(async filePath => {
       if (filePath === abs(parentPath)) {
         return `
 extends:
@@ -177,7 +177,7 @@ rules:
     const aPath = '/fake/a.yaml';
     const bPath = '/fake/b.yaml';
 
-    mockReadFile.mockImplementation(async (filePath) => {
+    mockReadFile.mockImplementation(async filePath => {
       if (filePath === abs(aPath)) {
         return `extends:\n  - "./b.yaml"\n`;
       }
@@ -198,7 +198,7 @@ rules:
       files[abs(`/fake/depth${i}.yaml`)] = next;
     }
 
-    mockReadFile.mockImplementation(async (filePath) => {
+    mockReadFile.mockImplementation(async filePath => {
       if (files[filePath]) {
         return files[filePath];
       }
@@ -255,7 +255,7 @@ rules:
     const childAPath = '/fake/childA.yaml';
     const childBPath = '/fake/childB.yaml';
 
-    mockReadFile.mockImplementation(async (filePath) => {
+    mockReadFile.mockImplementation(async filePath => {
       if (filePath === abs(parentPath)) {
         return `extends:\n  - "./childA.yaml"\n  - "./childB.yaml"\n`;
       }
@@ -373,7 +373,9 @@ rules:
     it('rejects an extends entry that is not a valid identifier, path, or URL', async () => {
       mockReadFile.mockResolvedValueOnce(`extends:\n  - "not-a-real-thing"\n`);
 
-      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow(/not a valid spectral identifier|valid URL/i);
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow(
+        /not a valid spectral identifier|valid URL/i,
+      );
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -381,9 +383,7 @@ rules:
       mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://app.localtest.me/remote.yaml"\n`);
       mockResolvedAddresses(['127.0.0.1']);
 
-      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow(
-        'private or loopback address',
-      );
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('private or loopback address');
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -398,13 +398,9 @@ rules:
       // Local ruleset extends a valid https remote...
       mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://example.com/base.yaml"\n`);
       // ...but that remote itself extends an http:// localhost URL.
-      vi.mocked(fetch).mockResolvedValueOnce(
-        rulesetResponse(`extends:\n  - "http://localhost:8000/exec.yaml"\n`),
-      );
+      vi.mocked(fetch).mockResolvedValueOnce(rulesetResponse(`extends:\n  - "http://localhost:8000/exec.yaml"\n`));
 
-      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow(
-        'Remote "extends" URL must use https:',
-      );
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('Remote "extends" URL must use https:');
     });
 
     it('rejects a functions: key inside a nested remote ruleset', async () => {
@@ -412,12 +408,12 @@ rules:
       mockReadFile.mockResolvedValueOnce(`extends:\n  - "https://example.com/base.yaml"\n`);
       // ...but that remote contains a functions: key (the RCE vector).
       vi.mocked(fetch).mockResolvedValueOnce(
-        rulesetResponse(`functions:\n  - exec\nrules:\n  env-check:\n    given: "$"\n    then:\n      function: exec\n`),
+        rulesetResponse(
+          `functions:\n  - exec\nrules:\n  env-check:\n    given: "$"\n    then:\n      function: exec\n`,
+        ),
       );
 
-      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow(
-        'failed validation',
-      );
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('failed validation');
     });
   });
 });
