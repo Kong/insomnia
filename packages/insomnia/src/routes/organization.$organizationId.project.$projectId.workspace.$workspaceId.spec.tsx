@@ -1067,7 +1067,11 @@ const Component = ({ params }: Route.ComponentProps) => {
                           <Heading slot="title" className="mb-[14px] text-[22px] leading-[34px]">
                             Existing Ruleset Contents
                           </Heading>
-                          <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
+                          <Button
+                            aria-label="Close ruleset content viewer"
+                            onPress={close}
+                            className="fa fa-times absolute top-0 right-0 text-xl"
+                          />
                         </div>
                         {rulesetContent && (
                           <CodeEditor
@@ -1130,7 +1134,11 @@ const Component = ({ params }: Route.ComponentProps) => {
                           <span>
                             {selectedRulesetPath ? (
                               <>
-                                <Button className="underline" onPress={() => setIsViewRulesetModalOpen(true)}>
+                                <Button
+                                  aria-label="View selected ruleset content"
+                                  className="underline"
+                                  onPress={() => setIsViewRulesetModalOpen(true)}
+                                >
                                   Custom Ruleset
                                 </Button>
                               </>
@@ -1141,6 +1149,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                           {selectedRulesetPath ? (
                             <TooltipTrigger delay={0}>
                               <Button
+                                aria-label="Remove custom ruleset"
                                 onPress={handleUnselectSpectralFile}
                                 className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                               >
@@ -1156,6 +1165,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                             </TooltipTrigger>
                           ) : (
                             <Button
+                              aria-label="Upload custom ruleset"
                               onPress={handleSelectSpectralFile}
                               className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                             >
