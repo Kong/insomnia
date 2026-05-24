@@ -6,7 +6,7 @@ export const type = 'ProjectLintRuleset';
 
 export const prefix = 'plr';
 
-export const canDuplicate = true;
+export const canDuplicate = false;
 
 export const canSync = true;
 
