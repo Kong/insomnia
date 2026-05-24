@@ -33,7 +33,6 @@ function isSafeRefUrl(href: string): boolean {
 }
 
 // Block hosts that resolve to private/loopback addresses (e.g. *.localtest.me → 127.0.0.1),
-// which the static isSafeRefUrl check cannot catch since it only inspects the literal hostname.
 // Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
 async function assertResolvesToPublicHost(hostname: string): Promise<void> {
   const records = await dns.lookup(hostname, { all: true });
@@ -52,7 +51,7 @@ const safeHttpResolver = {
       throw new Error(`Failed to resolve "${href}". Only https URLs to public hosts are allowed.`);
     }
     await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
-    const response = await fetch(href);
+    const response = await fetch(href, { redirect: 'error' });
     if (!response.ok) {
       throw new Error(`Failed to fetch "${href}": ${response.status} ${response.statusText}`);
     }
