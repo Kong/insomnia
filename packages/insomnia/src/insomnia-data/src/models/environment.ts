@@ -50,6 +50,8 @@ export type Environment = BaseModel & BaseEnvironment;
 // This is a representation of the data taken from a csv or json file AKA iterationData
 export type UserUploadEnvironment = Pick<Environment, 'data' | 'dataPropertyOrder' | 'name'>;
 
+export const isEnvironmentId = (id?: string | null) => id?.startsWith(`${prefix}_`);
+
 export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => model.type === type;
 
 export function init() {

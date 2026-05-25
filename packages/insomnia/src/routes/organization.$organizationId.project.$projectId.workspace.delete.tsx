@@ -3,6 +3,7 @@ import { href, redirect } from 'react-router';
 import type { Project, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { AnalyticsEvent } from '~/ui/analytics';
+import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -19,6 +20,8 @@ async function deleteCloudSyncWorkspace(workspace: Workspace, project: Project, 
       await (localOnly
         ? window.main.sync.removeBackendProjectsForRoot(workspace._id)
         : window.main.sync.archiveProject());
+      // Emit cloud sync file change event when cloud sync workspace is deleted to refresh the remote projects list cache
+      uiEventBus.emit(CLOUD_SYNC_FILE_CHANGE);
     } catch (err) {
       return {
         error:

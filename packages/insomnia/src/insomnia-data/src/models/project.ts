@@ -136,7 +136,7 @@ export function isDefaultOrganizationProject(project: Project) {
   return project.remoteId?.startsWith('proj_team') || project.remoteId?.startsWith('proj_org');
 }
 
-export const sortProjects = (projects: Project[]) => [
+export const sortProjects = <T extends Project>(projects: T[]) => [
   ...projects.filter(project => isDefaultOrganizationProject(project)).sort((a, b) => a.name.localeCompare(b.name)),
   ...projects.filter(project => !isDefaultOrganizationProject(project)).sort((a, b) => a.name.localeCompare(b.name)),
 ];

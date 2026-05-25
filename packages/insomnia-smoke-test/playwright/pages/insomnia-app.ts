@@ -1,6 +1,7 @@
 import type { ElectronApplication, Page } from '@playwright/test';
 
 import { ExportModal } from './components/export-modal';
+import { NavigationSidebar } from './components/navigation-sidebar';
 import { StatusbarComponent } from './components/statusbar';
 import { PreferencesPage } from './preferences';
 import { ProjectPage } from './project';
@@ -26,13 +27,13 @@ import { WorkspacePage } from './workspace';
  *
  * ```
  * InsomniaApp (root)
- * ├── .statusbar         -> StatusbarComponent (convenience shortcut)
- * ├── .projectPage       -> ProjectPage
- * │   ├── .sidebar      -> ProjectSidebarComponent
- * │   └── .workspaceList -> WorkspaceListComponent
- * ├── .workspacePage     -> WorkspacePage
- * └── .preferencesPage   -> PreferencesPage
- *     └── .dataTab       -> PreferencesDataTab
+ * ├── .statusbar           -> StatusbarComponent (footer, always visible)
+ * ├── .navigationSidebar   -> NavigationSidebar (left-side tree, always visible)
+ * ├── .projectPage         -> ProjectPage
+ * │   └── .workspaceList  -> WorkspaceListComponent
+ * ├── .workspacePage       -> WorkspacePage
+ * └── .preferencesPage     -> PreferencesPage
+ *     └── .dataTab         -> PreferencesDataTab
  * ```
  */
 export class InsomniaApp {
@@ -45,6 +46,9 @@ export class InsomniaApp {
 
   // global export modal
   readonly exportModal: ExportModal;
+
+  /** Project navigation sidebar — always visible (except login). */
+  readonly navigationSidebar: NavigationSidebar;
 
   // ===========================================================================
   // Page objects
@@ -66,6 +70,7 @@ export class InsomniaApp {
     // Shared components
     this.statusbar = new StatusbarComponent(page);
     this.exportModal = new ExportModal(page);
+    this.navigationSidebar = new NavigationSidebar(page);
 
     // Pages
     this.projectPage = new ProjectPage(page, app);

@@ -36,7 +36,6 @@ interface Props {
   apiSpec?: ApiSpec;
   mockServer?: MockServer;
   project: Project;
-  projects: Project[];
 }
 
 const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {

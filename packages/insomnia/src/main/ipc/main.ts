@@ -420,9 +420,12 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn('trackAnalyticsEvent', (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
-    trackAnalyticsEvent(options.event, options.properties);
-  });
+  ipcMainOn(
+    'trackAnalyticsEvent',
+    (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
+      trackAnalyticsEvent(options.event, options.properties);
+    },
+  );
   ipcMainOn('trackPageView', (_, options: { name: string }): void => {
     trackPageView(options.name);
   });

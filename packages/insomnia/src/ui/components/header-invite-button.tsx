@@ -119,7 +119,7 @@ const MissingSomeoneModal = ({ isOpen, onClose }: any) => {
     onClose?.();
   };
   return (
-    <Modal title="Missing someone?" isOpen={isOpen} onClose={handleClose} isDismissable>
+    <Modal title="Missing someone?" isOpen={isOpen} onClose={handleClose} isDismissable centered>
       <p className="mt-8">
         You're on a paid plan, so please contact your company's Insomnia admins to get anyone added to this account.
       </p>

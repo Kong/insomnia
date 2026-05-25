@@ -6,7 +6,7 @@ test.describe('design document operations', () => {
     await page.locator('body').click();
     await page.getByPlaceholder('Enter a name for your Design Document').fill('jurassic park');
     await page.getByPlaceholder('Enter a name for your Design Document').press('Enter');
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Files').getByLabel('jurassic park').click();
   });
 

@@ -3,8 +3,6 @@ import CodeMirror from 'codemirror';
 import type { OpenAPIV3 } from 'openapi-types';
 import { Fragment, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   GridList,
   GridListItem,
@@ -20,17 +18,20 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, NavLink, redirect, useLoaderData } from 'react-router';
+import { href, redirect, useLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
 
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import { debounce, isNotNullOrUndefined } from '~/common/misc';
+import { debounce } from '~/common/misc';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
-import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
@@ -38,9 +39,6 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
-import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
-import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
-import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showError } from '~/ui/components/modals';
@@ -51,7 +49,7 @@ import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast, showToast } from '~/ui/components/toast-notification';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
+import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
@@ -155,12 +153,12 @@ const lintOptions = {
 
 const Component = ({ params }: Route.ComponentProps) => {
   const { organizationId, projectId, workspaceId } = params;
-  const { activeProject, activeCookieJar, caCertificate, clientCertificates, vcsVersion } = useWorkspaceLoaderData()!;
+  const { activeProject, vcsVersion } = useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
-  const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
+  const [_isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
 
@@ -463,653 +461,606 @@ const Component = ({ params }: Route.ComponentProps) => {
   }, [settings.forceVerticalLayout, direction]);
 
   return (
-    <PanelGroup
-      ref={sidebarPanelRef}
-      autoSaveId="insomnia-sidebar"
-      id="wrapper"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
-      <Panel
-        id="sidebar"
-        className="sidebar theme--sidebar"
-        defaultSize={DEFAULT_SIDEBAR_SIZE}
-        maxSize={40}
-        minSize={10}
-        collapsible
+    <div className="flex h-full flex-col">
+      <OrganizationTabList />
+      <WorkspacePaneHeader hasSettings={false} />
+      <PanelGroup
+        ref={sidebarPanelRef}
+        autoSaveId="insomnia-sidebar"
+        id={WORKSPACE_CONTENT_WRAPPER}
+        className="new-sidebar w-full flex-1 text-(--color-font)"
+        direction="horizontal"
       >
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-          <div className="flex w-full flex-col items-start">
-            <Breadcrumbs
-              className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-(--padding-sm) font-bold`}
-            >
-              <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-                <NavLink
-                  data-testid="project"
-                  className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
-                  to={`/organization/${organizationId}/project/${activeProject._id}`}
-                >
-                  <Icon className="text-xs" icon="chevron-left" />
-                </NavLink>
-                <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
-              </Breadcrumb>
-              <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-                <WorkspaceDropdown />
-              </Breadcrumb>
-            </Breadcrumbs>
-          </div>
-          <DocumentTab
-            organizationId={organizationId}
-            projectId={projectId}
-            workspaceId={workspaceId}
-            className="border-b border-solid border-(--hl-sm)"
-          />
-          <div className="flex w-full flex-col items-start gap-2 p-(--padding-sm)">
-            <div className="flex w-full items-center justify-between gap-2">
-              <EnvironmentPicker
-                isOpen={isEnvironmentPickerOpen}
-                onOpenChange={setIsEnvironmentPickerOpen}
-                onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
-              />
-            </div>
-            <Button
-              onPress={() => setIsCookieModalOpen(true)}
-              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="cookie-bite" className="w-5 shrink-0" />
-              <span className="truncate">
-                {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
-                {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
-              </span>
-            </Button>
-            <Button
-              onPress={() => setCertificatesModalOpen(true)}
-              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="file-contract" className="w-5 shrink-0" />
-              <span className="truncate">
-                {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
-                {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
-                  .length > 0
-                  ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
-                  : ''}
-              </span>
-            </Button>
-          </div>
-          <div className="flex shrink-0 items-center gap-2 p-(--padding-sm)">
-            <Heading className="text-(--hl) uppercase">Spec</Heading>
-            <span className="flex-1" />
-            {isGenerateMockServersWithAIEnabled && (
-              <Button
-                onPress={() => {
-                  window.main.trackAnalyticsEvent({
-                    event: AnalyticsEvent.designerGenerateMockClicked,
-                  });
-                  setNewMockServerModalOpen(true);
-                }}
-                isDisabled={!apiSpec.contents}
-                className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
-              >
-                <Icon icon="server" className="w-5 shrink-0" />
-                <span className="truncate">Generate Mock</span>
-              </Button>
-            )}
-            <ToggleButton
-              aria-label="Toggle preview"
-              isSelected={isSpecPaneOpen}
-              className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              onChange={value => {
-                setIsSpecPaneOpen(value);
-                window.main.trackAnalyticsEvent({
-                  event: AnalyticsEvent.designerPreviewToggled,
-                  properties: {
-                    status: !value ? 'open' : 'collapsed',
-                  },
-                });
-              }}
-            >
-              {({ isSelected }) => (
-                <>
-                  <Icon icon={isSelected ? 'eye' : 'eye-slash'} />
-                  <span>Preview</span>
-                </>
-              )}
-            </ToggleButton>
-            <MenuTrigger>
-              <Button
-                aria-label="Spec actions"
-                className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              >
-                <Icon icon="gear" />
-              </Button>
-              <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                <Menu
-                  aria-label="Spec actions menu"
-                  selectionMode="single"
-                  disabledKeys={disabledKeys}
-                  onAction={key => {
-                    const item = specActionList.find(item => item.id === key);
-                    if (item) {
-                      item.action();
-                    }
-                  }}
-                  items={specActionList}
-                  className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
-                >
-                  {item => (
-                    <MenuItem
-                      className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
-                      aria-label={item.name}
-                    >
-                      {item.icon}
-                      <span>{item.name}</span>
-                    </MenuItem>
-                  )}
-                </Menu>
-              </Popover>
-            </MenuTrigger>
-          </div>
-          <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto">
-            {/* Info */}
-            {info && (
-              <div className="divide-y divide-solid divide-(--hl-md)">
-                <Button
-                  className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
-                  onPress={() => {
-                    expandedKeys.includes('info')
-                      ? setExpandedKeys(expandedKeys.filter(key => key !== 'info'))
-                      : setExpandedKeys([...expandedKeys, 'info']);
-                  }}
-                >
-                  <span className="truncate">Info</span>
-                  <Icon icon={expandedKeys.includes('info') ? 'minus' : 'plus'} className="text-xs" />
-                </Button>
-                {/* Info */}
-                {expandedKeys.includes('info') && (
-                  <ListBox onAction={key => navigateToPath(key.toString())}>
-                    <ListBoxItem
-                      className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                      id="info.title"
-                    >
-                      <span className="truncate">Title: {info.title}</span>
-                    </ListBoxItem>
-                    <ListBoxItem
-                      className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                      id="info.description"
-                    >
-                      <span className="truncate">Description: {info.description}</span>
-                    </ListBoxItem>
-                    <ListBoxItem
-                      className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                      id="info.version"
-                    >
-                      <span className="truncate">Version: {info.version}</span>
-                    </ListBoxItem>
-                    <ListBoxItem
-                      className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                      id="info.license"
-                    >
-                      <span className="truncate">License: {info.license?.name}</span>
-                    </ListBoxItem>
-                  </ListBox>
-                )}
-              </div>
-            )}
-            {/* Servers */}
-            {servers && (
-              <div className="divide-y divide-solid divide-(--hl-md)">
-                <div>
-                  <Button
-                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
-                    onPress={() => {
-                      expandedKeys.includes('servers')
-                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'servers'))
-                        : setExpandedKeys([...expandedKeys, 'servers']);
-                    }}
-                  >
-                    <span className="truncate">Servers</span>
-                    <Icon icon={expandedKeys.includes('servers') ? 'minus' : 'plus'} className="text-xs" />
-                  </Button>
-                </div>
-                {expandedKeys.includes('servers') && (
-                  <ListBox
-                    items={servers.map((server, index) => ({
-                      path: index,
-                      ...server,
-                    }))}
-                    onAction={key => navigateToPath(key.toString())}
-                  >
-                    {item => (
-                      <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`servers.${item.path}`}
-                      >
-                        {item.url}
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                )}
-              </div>
-            )}
-            {/* Paths */}
-            {paths && (
-              <div className="divide-y divide-solid divide-(--hl-md)">
-                <div>
-                  <Button
-                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
-                    onPress={() => {
-                      expandedKeys.includes('paths')
-                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'paths'))
-                        : setExpandedKeys([...expandedKeys, 'paths']);
-                    }}
-                  >
-                    <span className="truncate">Paths</span>
-                    <Icon icon={expandedKeys.includes('paths') ? 'minus' : 'plus'} className="text-xs" />
-                  </Button>
-                </div>
-                {expandedKeys.includes('paths') && (
-                  <GridList
-                    items={Object.entries(paths).map(([path, item]) => ({
-                      ...item,
-                      id: path,
-                      path,
-                    }))}
-                    onAction={key => navigateToPath(key.toString())}
-                  >
-                    {item => (
-                      <GridListItem className="group outline-hidden select-none" id={`paths.${item.path}`}>
-                        <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
-                          <span className="truncate">{item.path}</span>
-                          <span className="flex-1" />
-                          {getMethodsFromOpenApiPathItem(item).map(method => (
-                            <Button
-                              key={method}
-                              onPress={() => navigateToPath(`paths.${item.path}.${method}`)}
-                              className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
-                            >
-                              {formatMethodName(method.toUpperCase())}
-                            </Button>
-                          ))}
-                        </div>
-                      </GridListItem>
-                    )}
-                  </GridList>
-                )}
-              </div>
-            )}
-            {/* RequestBodies */}
-            {requestBodies && (
-              <div className="divide-y divide-solid divide-(--hl-md)">
-                <div>
-                  <Button
-                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
-                    onPress={() => {
-                      expandedKeys.includes('requestBodies')
-                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'requestBodies'))
-                        : setExpandedKeys([...expandedKeys, 'requestBodies']);
-                    }}
-                  >
-                    <span className="truncate">Request bodies</span>
-                    <Icon icon={expandedKeys.includes('requestBodies') ? 'minus' : 'plus'} className="text-xs" />
-                  </Button>
-                </div>
-                {expandedKeys.includes('requestBodies') && (
-                  <ListBox
-                    items={Object.entries(requestBodies).map(([path, item]) => ({
-                      ...item,
-                      id: path,
-                      path,
-                    }))}
-                    onAction={key => navigateToPath(key.toString())}
-                  >
-                    {item => (
-                      <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.requestBodies.${item.path}`}
-                      >
-                        <span className="truncate">{item.path}</span>
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                )}
-              </div>
-            )}
-            {/* Responses */}
-            {responses && (
-              <div className="divide-y divide-solid divide-(--hl-md)">
-                <div>
-                  <Button
-                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
-                    onPress={() => {
-                      expandedKeys.includes('responses')
-                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'responses'))
-                        : setExpandedKeys([...expandedKeys, 'responses']);
-                    }}
-                  >
-                    <span className="truncate">Responses</span>
-                    <Icon icon={expandedKeys.includes('responses') ? 'minus' : 'plus'} className="text-xs" />
-                  </Button>
-                </div>
-                {expandedKeys.includes('responses') && (
-                  <ListBox
-                    items={Object.entries(responses).map(([path, item]) => ({
-                      ...item,
-                      id: path,
-                      path,
-                    }))}
-                    onAction={key => navigateToPath(key.toString())}
-                  >
-                    {item => (
-                      <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.responses.${item.path}`}
-                      >
-                        <span className="truncate">{item.path}</span>
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                )}
-              </div>
-            )}
-            {/* Parameters */}
-            {parameters && (
-              <div className="divide-y divide-solid divide-(--hl-md)">
-                <div>
-                  <Button
-                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
-                    onPress={() => {
-                      expandedKeys.includes('parameters')
-                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'parameters'))
-                        : setExpandedKeys([...expandedKeys, 'parameters']);
-                    }}
-                  >
-                    <span className="truncate">Parameters</span>
-                    <Icon icon={expandedKeys.includes('parameters') ? 'minus' : 'plus'} className="text-xs" />
-                  </Button>
-                </div>
-                {expandedKeys.includes('parameters') && (
-                  <ListBox
-                    items={Object.entries(parameters).map(([path, item]) => ({
-                      ...item,
-                      id: path,
-                      path,
-                    }))}
-                    onAction={key => navigateToPath(key.toString())}
-                  >
-                    {item => (
-                      <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.parameters.${item.path}`}
-                      >
-                        <span className="truncate">{item.path}</span>
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                )}
-              </div>
-            )}
-            {/* Headers */}
-            {headers && (
-              <div className="divide-y divide-solid divide-(--hl-md)">
-                <div>
-                  <Button
-                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
-                    onPress={() => {
-                      expandedKeys.includes('headers')
-                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'headers'))
-                        : setExpandedKeys([...expandedKeys, 'headers']);
-                    }}
-                  >
-                    <span className="truncate">Headers</span>
-                    <Icon icon={expandedKeys.includes('headers') ? 'minus' : 'plus'} className="text-xs" />
-                  </Button>
-                </div>
-                {expandedKeys.includes('headers') && (
-                  <ListBox
-                    items={Object.entries(headers).map(([path, item]) => ({
-                      ...item,
-                      id: path,
-                      path,
-                    }))}
-                    onAction={key => navigateToPath(key.toString())}
-                  >
-                    {item => (
-                      <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.headers.${item.path}`}
-                      >
-                        <span className="truncate">{item.path}</span>
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                )}
-              </div>
-            )}
-            {/* Schemas */}
-            {schemas && (
-              <div className="divide-y divide-solid divide-(--hl-md)">
-                <div>
-                  <Button
-                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
-                    onPress={() => {
-                      expandedKeys.includes('schemas')
-                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'schemas'))
-                        : setExpandedKeys([...expandedKeys, 'schemas']);
-                    }}
-                  >
-                    <span className="truncate">Schemas</span>
-                    <Icon icon={expandedKeys.includes('schemas') ? 'minus' : 'plus'} className="text-xs" />
-                  </Button>
-                </div>
-                {expandedKeys.includes('schemas') && (
-                  <ListBox
-                    items={Object.entries(schemas).map(([path, item]) => ({
-                      ...item,
-                      id: path,
-                      path,
-                    }))}
-                    onAction={key => navigateToPath(key.toString())}
-                  >
-                    {item => (
-                      <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.schemas.${item.path}`}
-                      >
-                        <span className="truncate">{item.path}</span>
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                )}
-              </div>
-            )}
-            {/* Security */}
-            {securitySchemes && (
-              <div className="divide-y divide-solid divide-(--hl-md)">
-                <div>
-                  <Button
-                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
-                    onPress={() => {
-                      expandedKeys.includes('security')
-                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'security'))
-                        : setExpandedKeys([...expandedKeys, 'security']);
-                    }}
-                  >
-                    <span className="truncate">Security</span>
-                    <Icon icon={expandedKeys.includes('security') ? 'minus' : 'plus'} className="text-xs" />
-                  </Button>
-                </div>
-                {expandedKeys.includes('security') && (
-                  <ListBox
-                    items={Object.entries(securitySchemes).map(([path, item]) => ({
-                      ...item,
-                      id: path,
-                      path,
-                    }))}
-                    onAction={key => navigateToPath(key.toString())}
-                  >
-                    {item => (
-                      <ListBoxItem
-                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.securitySchemes.${item.path}`}
-                      >
-                        <span className="truncate">{item.path}</span>
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                )}
-              </div>
-            )}
-          </div>
-          <WorkspaceSyncDropdown />
-          {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
-          {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
-          {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
-          {isNewMockServerModalOpen && (
-            <NewWorkspaceModal
-              isOpen={isNewMockServerModalOpen}
-              project={activeProject}
-              storageRules={storageRules}
-              scope="mock-server"
-              sourceApiSpec={apiSpec}
-              onOpenChange={setNewMockServerModalOpen}
+        <Panel
+          id="sidebar"
+          className="sidebar theme--sidebar"
+          defaultSize={DEFAULT_SIDEBAR_SIZE}
+          maxSize={40}
+          minSize={10}
+          collapsible
+        >
+          <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+            <DocumentTab
+              organizationId={organizationId}
+              projectId={projectId}
+              workspaceId={workspaceId}
+              className="border-b border-solid border-(--hl-sm)"
             />
-          )}
-        </div>
-      </Panel>
-      <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-      <Panel className="flex flex-col">
-        <OrganizationTabList />
-        <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-          <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
-            <div className="flex h-full w-full flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-              <div className="relative flex flex-1 shrink-0 basis-1/2 overflow-hidden">
-                <CodeEditor
-                  id="spec-editor"
-                  key={uniquenessKey}
-                  showPrettifyButton
-                  ref={editor}
-                  lintOptions={lintOptions}
-                  // only set the openapi mode if there are contents
-                  mode={apiSpec.contents ? 'openapi' : undefined}
-                  defaultValue={apiSpec.contents || ''}
-                  onChange={onCodeEditorChange}
-                  uniquenessKey={uniquenessKey}
-                />
-                {apiSpec.contents ? null : (
-                  <DesignEmptyState
-                    onImport={value => {
-                      updateApiSpec({
-                        organizationId,
-                        projectId,
-                        workspaceId,
-                        contents: value,
-                        fromTemplate: true,
-                      });
-                    }}
-                  />
-                )}
-              </div>
-              {apiSpec.contents ? (
-                <div
-                  className={`flex ${isLintPaneOpen ? '' : 'h-(--line-height-sm)'} box-border flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden`}
+            <div className="flex shrink-0 items-center gap-2 p-(--padding-sm)">
+              <Heading className="text-(--hl) uppercase">Spec</Heading>
+              <span className="flex-1" />
+              {isGenerateMockServersWithAIEnabled && (
+                <Button
+                  onPress={() => {
+                    window.main.trackAnalyticsEvent({
+                      event: AnalyticsEvent.designerGenerateMockClicked,
+                    });
+                    setNewMockServerModalOpen(true);
+                  }}
+                  isDisabled={!apiSpec.contents}
+                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                 >
-                  <div className="flex items-center gap-2 p-(--padding-sm)">
-                    <TooltipTrigger>
-                      <Button className="flex cursor-pointer items-center gap-2 select-none">
-                        <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-                        Ruleset
-                      </Button>
-                      <Tooltip
-                        placement="top end"
-                        offset={8}
-                        className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                  <Icon icon="server" className="w-5 shrink-0" />
+                  <span className="truncate">Generate Mock</span>
+                </Button>
+              )}
+              <ToggleButton
+                aria-label="Toggle preview"
+                isSelected={isSpecPaneOpen}
+                className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                onChange={value => {
+                  setIsSpecPaneOpen(value);
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.designerPreviewToggled,
+                    properties: {
+                      status: !value ? 'open' : 'collapsed',
+                    },
+                  });
+                }}
+              >
+                {({ isSelected }) => (
+                  <>
+                    <Icon icon={isSelected ? 'eye' : 'eye-slash'} />
+                    <span>Preview</span>
+                  </>
+                )}
+              </ToggleButton>
+              <MenuTrigger>
+                <Button
+                  aria-label="Spec actions"
+                  className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="gear" />
+                </Button>
+                <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                  <Menu
+                    aria-label="Spec actions menu"
+                    selectionMode="single"
+                    disabledKeys={disabledKeys}
+                    onAction={key => {
+                      const item = specActionList.find(item => item.id === key);
+                      if (item) {
+                        item.action();
+                      }
+                    }}
+                    items={specActionList}
+                    className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                  >
+                    {item => (
+                      <MenuItem
+                        className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
+                        aria-label={item.name}
                       >
-                        <div>
-                          {rulesetPath ? (
-                            <Fragment>
-                              <p>Using ruleset from</p>
-                              <code className="p-0 wrap-break-word">{rulesetPath}</code>
-                            </Fragment>
-                          ) : (
-                            <Fragment>
-                              <p>Using default OAS ruleset.</p>
-                              <p>
-                                To use a custom ruleset add a <code className="p-0">.spectral.yaml</code> file to the
-                                root of your git repository
-                              </p>
-                            </Fragment>
-                          )}
-                        </div>
-                      </Tooltip>
-                    </TooltipTrigger>
-                    {lintErrors.length > 0 && (
-                      <div className="flex items-center gap-2 select-none">
-                        <Icon icon="circle-xmark" className="text-(--color-danger)" />
-                        {lintErrors.length}
-                      </div>
+                        {item.icon}
+                        <span>{item.name}</span>
+                      </MenuItem>
                     )}
-                    {lintWarnings.length > 0 && (
-                      <div className="flex items-center gap-2 select-none">
-                        <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
-                        {lintWarnings.length}
-                      </div>
-                    )}
-                    {apiSpec.contents && (
-                      <div className="flex items-center gap-2 select-none">
-                        {lintMessages.length === 0 && <Icon icon="check-square" className="text-(--color-success)" />}
-                        {lintMessages.length === 0 ? 'No lint problems' : 'Lint problems detected'}
-                      </div>
-                    )}
-                    <span className="flex-1" />
-                    {lintMessages.length > 0 && (
-                      <Button aria-label="Toggle lint panel" onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
-                        <Icon icon={isLintPaneOpen ? 'chevron-down' : 'chevron-up'} />
-                      </Button>
-                    )}
-                  </div>
-                  {isLintPaneOpen && (
-                    <ListBox
-                      className="flex-1 overflow-y-auto select-none"
-                      onAction={index => {
-                        const listIndex = Number.parseInt(index.toString(), 10);
-                        const lintMessage = lintMessages[listIndex];
-                        handleScrollToLintMessage(lintMessage);
+                  </Menu>
+                </Popover>
+              </MenuTrigger>
+            </div>
+            <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto">
+              {/* Info */}
+              {info && (
+                <div className="divide-y divide-solid divide-(--hl-md)">
+                  <Button
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    onPress={() => {
+                      expandedKeys.includes('info')
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'info'))
+                        : setExpandedKeys([...expandedKeys, 'info']);
+                    }}
+                  >
+                    <span className="truncate">Info</span>
+                    <Icon icon={expandedKeys.includes('info') ? 'minus' : 'plus'} className="text-xs" />
+                  </Button>
+                  {/* Info */}
+                  {expandedKeys.includes('info') && (
+                    <ListBox onAction={key => navigateToPath(key.toString())}>
+                      <ListBoxItem
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        id="info.title"
+                      >
+                        <span className="truncate">Title: {info.title}</span>
+                      </ListBoxItem>
+                      <ListBoxItem
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        id="info.description"
+                      >
+                        <span className="truncate">Description: {info.description}</span>
+                      </ListBoxItem>
+                      <ListBoxItem
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        id="info.version"
+                      >
+                        <span className="truncate">Version: {info.version}</span>
+                      </ListBoxItem>
+                      <ListBoxItem
+                        className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                        id="info.license"
+                      >
+                        <span className="truncate">License: {info.license?.name}</span>
+                      </ListBoxItem>
+                    </ListBox>
+                  )}
+                </div>
+              )}
+              {/* Servers */}
+              {servers && (
+                <div className="divide-y divide-solid divide-(--hl-md)">
+                  <div>
+                    <Button
+                      className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                      onPress={() => {
+                        expandedKeys.includes('servers')
+                          ? setExpandedKeys(expandedKeys.filter(key => key !== 'servers'))
+                          : setExpandedKeys([...expandedKeys, 'servers']);
                       }}
-                      items={lintMessages.map((message, index) => ({
-                        ...message,
-                        id: index,
-                        value: message,
+                    >
+                      <span className="truncate">Servers</span>
+                      <Icon icon={expandedKeys.includes('servers') ? 'minus' : 'plus'} className="text-xs" />
+                    </Button>
+                  </div>
+                  {expandedKeys.includes('servers') && (
+                    <ListBox
+                      items={servers.map((server, index) => ({
+                        path: index,
+                        ...server,
                       }))}
+                      onAction={key => navigateToPath(key.toString())}
                     >
                       {item => (
-                        <ListBoxItem className="flex items-center gap-2 p-(--padding-sm) text-xs outline-hidden transition-colors even:bg-(--hl-xs) focus-within:bg-(--hl-md) data-focused:bg-(--hl-md)">
-                          <Icon
-                            className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
-                            icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
-                          />
-                          <span className="truncate">{item.message}</span>
-                          <span className="shrink-0 text-(--hl-lg)">[Ln {item.line}]</span>
+                        <ListBoxItem
+                          className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                          id={`servers.${item.path}`}
+                        >
+                          {item.url}
                         </ListBoxItem>
                       )}
                     </ListBox>
                   )}
                 </div>
-              ) : null}
+              )}
+              {/* Paths */}
+              {paths && (
+                <div className="divide-y divide-solid divide-(--hl-md)">
+                  <div>
+                    <Button
+                      className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                      onPress={() => {
+                        expandedKeys.includes('paths')
+                          ? setExpandedKeys(expandedKeys.filter(key => key !== 'paths'))
+                          : setExpandedKeys([...expandedKeys, 'paths']);
+                      }}
+                    >
+                      <span className="truncate">Paths</span>
+                      <Icon icon={expandedKeys.includes('paths') ? 'minus' : 'plus'} className="text-xs" />
+                    </Button>
+                  </div>
+                  {expandedKeys.includes('paths') && (
+                    <GridList
+                      items={Object.entries(paths).map(([path, item]) => ({
+                        ...item,
+                        id: path,
+                        path,
+                      }))}
+                      onAction={key => navigateToPath(key.toString())}
+                    >
+                      {item => (
+                        <GridListItem className="group outline-hidden select-none" id={`paths.${item.path}`}>
+                          <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
+                            <span className="truncate">{item.path}</span>
+                            <span className="flex-1" />
+                            {getMethodsFromOpenApiPathItem(item).map(method => (
+                              <Button
+                                key={method}
+                                onPress={() => navigateToPath(`paths.${item.path}.${method}`)}
+                                className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
+                              >
+                                {formatMethodName(method.toUpperCase())}
+                              </Button>
+                            ))}
+                          </div>
+                        </GridListItem>
+                      )}
+                    </GridList>
+                  )}
+                </div>
+              )}
+              {/* RequestBodies */}
+              {requestBodies && (
+                <div className="divide-y divide-solid divide-(--hl-md)">
+                  <div>
+                    <Button
+                      className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                      onPress={() => {
+                        expandedKeys.includes('requestBodies')
+                          ? setExpandedKeys(expandedKeys.filter(key => key !== 'requestBodies'))
+                          : setExpandedKeys([...expandedKeys, 'requestBodies']);
+                      }}
+                    >
+                      <span className="truncate">Request bodies</span>
+                      <Icon icon={expandedKeys.includes('requestBodies') ? 'minus' : 'plus'} className="text-xs" />
+                    </Button>
+                  </div>
+                  {expandedKeys.includes('requestBodies') && (
+                    <ListBox
+                      items={Object.entries(requestBodies).map(([path, item]) => ({
+                        ...item,
+                        id: path,
+                        path,
+                      }))}
+                      onAction={key => navigateToPath(key.toString())}
+                    >
+                      {item => (
+                        <ListBoxItem
+                          className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                          id={`components.requestBodies.${item.path}`}
+                        >
+                          <span className="truncate">{item.path}</span>
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
+                  )}
+                </div>
+              )}
+              {/* Responses */}
+              {responses && (
+                <div className="divide-y divide-solid divide-(--hl-md)">
+                  <div>
+                    <Button
+                      className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                      onPress={() => {
+                        expandedKeys.includes('responses')
+                          ? setExpandedKeys(expandedKeys.filter(key => key !== 'responses'))
+                          : setExpandedKeys([...expandedKeys, 'responses']);
+                      }}
+                    >
+                      <span className="truncate">Responses</span>
+                      <Icon icon={expandedKeys.includes('responses') ? 'minus' : 'plus'} className="text-xs" />
+                    </Button>
+                  </div>
+                  {expandedKeys.includes('responses') && (
+                    <ListBox
+                      items={Object.entries(responses).map(([path, item]) => ({
+                        ...item,
+                        id: path,
+                        path,
+                      }))}
+                      onAction={key => navigateToPath(key.toString())}
+                    >
+                      {item => (
+                        <ListBoxItem
+                          className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                          id={`components.responses.${item.path}`}
+                        >
+                          <span className="truncate">{item.path}</span>
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
+                  )}
+                </div>
+              )}
+              {/* Parameters */}
+              {parameters && (
+                <div className="divide-y divide-solid divide-(--hl-md)">
+                  <div>
+                    <Button
+                      className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                      onPress={() => {
+                        expandedKeys.includes('parameters')
+                          ? setExpandedKeys(expandedKeys.filter(key => key !== 'parameters'))
+                          : setExpandedKeys([...expandedKeys, 'parameters']);
+                      }}
+                    >
+                      <span className="truncate">Parameters</span>
+                      <Icon icon={expandedKeys.includes('parameters') ? 'minus' : 'plus'} className="text-xs" />
+                    </Button>
+                  </div>
+                  {expandedKeys.includes('parameters') && (
+                    <ListBox
+                      items={Object.entries(parameters).map(([path, item]) => ({
+                        ...item,
+                        id: path,
+                        path,
+                      }))}
+                      onAction={key => navigateToPath(key.toString())}
+                    >
+                      {item => (
+                        <ListBoxItem
+                          className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                          id={`components.parameters.${item.path}`}
+                        >
+                          <span className="truncate">{item.path}</span>
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
+                  )}
+                </div>
+              )}
+              {/* Headers */}
+              {headers && (
+                <div className="divide-y divide-solid divide-(--hl-md)">
+                  <div>
+                    <Button
+                      className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                      onPress={() => {
+                        expandedKeys.includes('headers')
+                          ? setExpandedKeys(expandedKeys.filter(key => key !== 'headers'))
+                          : setExpandedKeys([...expandedKeys, 'headers']);
+                      }}
+                    >
+                      <span className="truncate">Headers</span>
+                      <Icon icon={expandedKeys.includes('headers') ? 'minus' : 'plus'} className="text-xs" />
+                    </Button>
+                  </div>
+                  {expandedKeys.includes('headers') && (
+                    <ListBox
+                      items={Object.entries(headers).map(([path, item]) => ({
+                        ...item,
+                        id: path,
+                        path,
+                      }))}
+                      onAction={key => navigateToPath(key.toString())}
+                    >
+                      {item => (
+                        <ListBoxItem
+                          className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                          id={`components.headers.${item.path}`}
+                        >
+                          <span className="truncate">{item.path}</span>
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
+                  )}
+                </div>
+              )}
+              {/* Schemas */}
+              {schemas && (
+                <div className="divide-y divide-solid divide-(--hl-md)">
+                  <div>
+                    <Button
+                      className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                      onPress={() => {
+                        expandedKeys.includes('schemas')
+                          ? setExpandedKeys(expandedKeys.filter(key => key !== 'schemas'))
+                          : setExpandedKeys([...expandedKeys, 'schemas']);
+                      }}
+                    >
+                      <span className="truncate">Schemas</span>
+                      <Icon icon={expandedKeys.includes('schemas') ? 'minus' : 'plus'} className="text-xs" />
+                    </Button>
+                  </div>
+                  {expandedKeys.includes('schemas') && (
+                    <ListBox
+                      items={Object.entries(schemas).map(([path, item]) => ({
+                        ...item,
+                        id: path,
+                        path,
+                      }))}
+                      onAction={key => navigateToPath(key.toString())}
+                    >
+                      {item => (
+                        <ListBoxItem
+                          className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                          id={`components.schemas.${item.path}`}
+                        >
+                          <span className="truncate">{item.path}</span>
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
+                  )}
+                </div>
+              )}
+              {/* Security */}
+              {securitySchemes && (
+                <div className="divide-y divide-solid divide-(--hl-md)">
+                  <div>
+                    <Button
+                      className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                      onPress={() => {
+                        expandedKeys.includes('security')
+                          ? setExpandedKeys(expandedKeys.filter(key => key !== 'security'))
+                          : setExpandedKeys([...expandedKeys, 'security']);
+                      }}
+                    >
+                      <span className="truncate">Security</span>
+                      <Icon icon={expandedKeys.includes('security') ? 'minus' : 'plus'} className="text-xs" />
+                    </Button>
+                  </div>
+                  {expandedKeys.includes('security') && (
+                    <ListBox
+                      items={Object.entries(securitySchemes).map(([path, item]) => ({
+                        ...item,
+                        id: path,
+                        path,
+                      }))}
+                      onAction={key => navigateToPath(key.toString())}
+                    >
+                      {item => (
+                        <ListBoxItem
+                          className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
+                          id={`components.securitySchemes.${item.path}`}
+                        >
+                          <span className="truncate">{item.path}</span>
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
+                  )}
+                </div>
+              )}
             </div>
-          </Panel>
-          {isSpecPaneOpen && (
-            <>
-              <PanelResizeHandle
-                className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
+            {isEnvironmentModalOpen && (
+              <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />
+            )}
+            {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
+            {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
+            {isNewMockServerModalOpen && (
+              <NewWorkspaceModal
+                isOpen={isNewMockServerModalOpen}
+                project={activeProject}
+                storageRules={storageRules}
+                scope="mock-server"
+                sourceApiSpec={apiSpec}
+                onOpenChange={setNewMockServerModalOpen}
               />
-              <Panel id="pane-two" minSize={10} className="pane-two theme--pane">
-                <SwaggerUIDiv text={apiSpec.contents} />
-              </Panel>
-            </>
-          )}
-        </PanelGroup>
-      </Panel>
-    </PanelGroup>
+            )}
+          </div>
+        </Panel>
+        <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
+        <Panel className="flex flex-col">
+          <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
+            <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
+              <div className="flex h-full w-full flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+                <div className="relative flex flex-1 shrink-0 basis-1/2 overflow-hidden">
+                  <CodeEditor
+                    id="spec-editor"
+                    key={uniquenessKey}
+                    showPrettifyButton
+                    ref={editor}
+                    lintOptions={lintOptions}
+                    // only set the openapi mode if there are contents
+                    mode={apiSpec.contents ? 'openapi' : undefined}
+                    defaultValue={apiSpec.contents || ''}
+                    onChange={onCodeEditorChange}
+                    uniquenessKey={uniquenessKey}
+                  />
+                  {apiSpec.contents ? null : (
+                    <DesignEmptyState
+                      onImport={value => {
+                        updateApiSpec({
+                          organizationId,
+                          projectId,
+                          workspaceId,
+                          contents: value,
+                          fromTemplate: true,
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+                {apiSpec.contents ? (
+                  <div
+                    className={`flex ${isLintPaneOpen ? '' : 'h-(--line-height-sm)'} box-border flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden`}
+                  >
+                    <div className="flex items-center gap-2 p-(--padding-sm)">
+                      <TooltipTrigger>
+                        <Button className="flex cursor-pointer items-center gap-2 select-none">
+                          <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
+                          Ruleset
+                        </Button>
+                        <Tooltip
+                          placement="top end"
+                          offset={8}
+                          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                        >
+                          <div>
+                            {rulesetPath ? (
+                              <Fragment>
+                                <p>Using ruleset from</p>
+                                <code className="p-0 wrap-break-word">{rulesetPath}</code>
+                              </Fragment>
+                            ) : (
+                              <Fragment>
+                                <p>Using default OAS ruleset.</p>
+                                <p>
+                                  To use a custom ruleset add a <code className="p-0">.spectral.yaml</code> file to the
+                                  root of your git repository
+                                </p>
+                              </Fragment>
+                            )}
+                          </div>
+                        </Tooltip>
+                      </TooltipTrigger>
+                      {lintErrors.length > 0 && (
+                        <div className="flex items-center gap-2 select-none">
+                          <Icon icon="circle-xmark" className="text-(--color-danger)" />
+                          {lintErrors.length}
+                        </div>
+                      )}
+                      {lintWarnings.length > 0 && (
+                        <div className="flex items-center gap-2 select-none">
+                          <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
+                          {lintWarnings.length}
+                        </div>
+                      )}
+                      {apiSpec.contents && (
+                        <div className="flex items-center gap-2 select-none">
+                          {lintMessages.length === 0 && <Icon icon="check-square" className="text-(--color-success)" />}
+                          {lintMessages.length === 0 ? 'No lint problems' : 'Lint problems detected'}
+                        </div>
+                      )}
+                      <span className="flex-1" />
+                      {lintMessages.length > 0 && (
+                        <Button aria-label="Toggle lint panel" onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
+                          <Icon icon={isLintPaneOpen ? 'chevron-down' : 'chevron-up'} />
+                        </Button>
+                      )}
+                    </div>
+                    {isLintPaneOpen && (
+                      <ListBox
+                        className="flex-1 overflow-y-auto select-none"
+                        onAction={index => {
+                          const listIndex = Number.parseInt(index.toString(), 10);
+                          const lintMessage = lintMessages[listIndex];
+                          handleScrollToLintMessage(lintMessage);
+                        }}
+                        items={lintMessages.map((message, index) => ({
+                          ...message,
+                          id: index,
+                          value: message,
+                        }))}
+                      >
+                        {item => (
+                          <ListBoxItem className="flex items-center gap-2 p-(--padding-sm) text-xs outline-hidden transition-colors even:bg-(--hl-xs) focus-within:bg-(--hl-md) data-focused:bg-(--hl-md)">
+                            <Icon
+                              className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
+                              icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
+                            />
+                            <span className="truncate">{item.message}</span>
+                            <span className="shrink-0 text-(--hl-lg)">[Ln {item.line}]</span>
+                          </ListBoxItem>
+                        )}
+                      </ListBox>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            </Panel>
+            {isSpecPaneOpen && (
+              <>
+                <PanelResizeHandle
+                  className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
+                />
+                <Panel id="pane-two" minSize={10} className="pane-two theme--pane">
+                  <SwaggerUIDiv text={apiSpec.contents} />
+                </Panel>
+              </>
+            )}
+          </PanelGroup>
+        </Panel>
+      </PanelGroup>
+    </div>
   );
 };
 
