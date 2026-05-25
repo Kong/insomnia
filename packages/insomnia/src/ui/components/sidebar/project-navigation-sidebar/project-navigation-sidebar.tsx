@@ -21,7 +21,6 @@ import { useProjectLoaderData } from '~/routes/organization.$organizationId.proj
 import { AnalyticsEvent } from '~/ui/analytics';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
-import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
@@ -55,36 +54,6 @@ interface ProjectNavigationSidebarProps {
   storageRules: StorageRules;
   activeNodeId?: string;
   konnectSyncEnabled: boolean;
-}
-
-function showSkippedRoutesModal(result: SyncResult | null) {
-  if (!result?.success || !result.skippedRoutes.length) {
-    return;
-  }
-  const byService = new Map<string, string[]>();
-  for (const { serviceName, routeName, reason } of result.skippedRoutes) {
-    const list = byService.get(serviceName) ?? [];
-    list.push(`${routeName} — ${reason}`);
-    byService.set(serviceName, list);
-  }
-  showModal(AlertModal, {
-    title: 'Skipped Routes',
-    message: (
-      <div>
-        <p>{result.skippedRoutes.length} route(s) were skipped because they cannot be represented in Insomnia:</p>
-        {[...byService.entries()].map(([service, routes]) => (
-          <div key={service} style={{ margin: '8px 0' }}>
-            <strong>{service}</strong>
-            <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-              {routes.map(r => (
-                <li key={r}>{r}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    ),
-  });
 }
 
 export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: ProjectNavigationSidebarProps) => {
@@ -239,7 +208,9 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
 
     const runAndNotify = async () => {
       const result = await startSync(organizationId);
-      showSkippedRoutesModal(result);
+      setLastSyncResult(result ?? null);
+      setShowSyncDetails(false);
+      setCopiedReason(null);
     };
 
     const isResync = konnectProjects.length > 0;
@@ -709,6 +680,18 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   const { hasKonnectPat } = settings;
   const showKonnectSyncIntro = isPaidEnterprise && !isProjectTabActive && !hasKonnectPat;
   const [showKonnectConfigModal, setShowKonnectConfigModal] = useState(false);
+  const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
+  const [showSyncDetails, setShowSyncDetails] = useState(false);
+  const [copiedReason, setCopiedReason] = useState<string | null>(null);
+  const skippedRoutesByReason = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const { routeName, reason, serviceName } of lastSyncResult?.skippedRoutes ?? []) {
+      const list = map.get(reason) ?? [];
+      list.push(`${routeName} — ${serviceName}`);
+      map.set(reason, list);
+    }
+    return map;
+  }, [lastSyncResult]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
@@ -939,6 +922,108 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
               }}
             </GridList>
           </div>
+
+          {!isProjectTabActive && lastSyncResult && (
+            <div
+              className={`m-2 flex items-start justify-between gap-2 rounded-sm p-3 text-xs ${
+                !lastSyncResult.success
+                  ? 'bg-[rgba(58,18,8,1)]'
+                  : lastSyncResult.skippedRoutes.length > 0
+                    ? 'bg-[rgba(250,173,20,0.15)]'
+                    : 'bg-[rgba(82,196,26,0.15)]'
+              }`}
+            >
+              <div className="flex min-w-0 items-start gap-3">
+                <Icon
+                  icon={
+                    lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0
+                      ? 'circle-check'
+                      : 'exclamation-triangle'
+                  }
+                  className={lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0 ? 'mt-1.5' : 'mt-1'}
+                />
+                <div className="min-w-0">
+                  <p className="font-semibold text-(--color-font)">
+                    {lastSyncResult.success
+                      ? lastSyncResult.skippedRoutes.length > 0
+                        ? 'Sync complete, with warnings'
+                        : 'Sync complete'
+                      : 'Sync failed'}
+                  </p>
+                  <p className="mt-0.5 text-(--hl)">
+                    {!lastSyncResult.success
+                      ? lastSyncResult.error
+                      : lastSyncResult.routes.created === 0 &&
+                          lastSyncResult.routes.updated === 0 &&
+                          lastSyncResult.routes.deleted === 0 &&
+                          lastSyncResult.routes.skipped === 0
+                        ? 'Already up-to-date with Konnect.'
+                        : [
+                            lastSyncResult.routes.created > 0 && `${lastSyncResult.routes.created} request(s) added`,
+                            lastSyncResult.routes.updated > 0 && `${lastSyncResult.routes.updated} request(s) updated`,
+                            lastSyncResult.routes.deleted > 0 && `${lastSyncResult.routes.deleted} request(s) deleted`,
+                            lastSyncResult.routes.skipped > 0 && `${lastSyncResult.routes.skipped} route(s) skipped`,
+                          ]
+                            .filter(Boolean)
+                            .join(', ') + '.'}
+                  </p>
+                  {lastSyncResult.success && lastSyncResult.skippedRoutes.length > 0 && (
+                    <>
+                      <button
+                        className="mt-1 flex items-center gap-1 text-(--hl) hover:text-(--color-font)"
+                        onClick={() => setShowSyncDetails(prev => !prev)}
+                      >
+                        <Icon icon={showSyncDetails ? 'chevron-down' : 'chevron-right'} className="h-2.5 w-2.5" />
+                        {showSyncDetails ? 'Hide details' : 'Show details'}
+                      </button>
+                      {showSyncDetails && (
+                        <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
+                          {[...skippedRoutesByReason.entries()].map(([reason, routes]) => {
+                            const MAX_SHOW = 5;
+                            const visible = routes.slice(0, MAX_SHOW);
+                            const extra = routes.length - MAX_SHOW;
+                            return (
+                              <div key={reason}>
+                                <p className="text-(--hl)">{reason} for the following routes:</p>
+                                <ul className="mt-1 space-y-0.5 pl-3">
+                                  {visible.map(r => (
+                                    <li key={r} className="list-disc text-(--color-font)">
+                                      {r}
+                                    </li>
+                                  ))}
+                                </ul>
+                                {extra > 0 && (
+                                  <div className="mt-1 flex items-center gap-2 pl-3 text-(--hl)">
+                                    <span>+ {extra} more</span>
+                                    <button
+                                      className="underline hover:text-(--color-font)"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(routes.join('\n'));
+                                        setCopiedReason(reason);
+                                        setTimeout(() => setCopiedReason(null), 2000);
+                                      }}
+                                    >
+                                      {copiedReason === reason ? 'Copied' : 'Copy full list'}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+              <button
+                className="-mt-2 shrink-0 text-xl text-(--hl) hover:text-(--color-font)"
+                onClick={() => setLastSyncResult(null)}
+              >
+                <Icon icon="close" />
+              </button>
+            </div>
+          )}
         </>
       )}
 
