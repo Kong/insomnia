@@ -1,4 +1,4 @@
-interface IQueryStringOptions {
+export interface IQueryStringOptions {
   // Option to distinguish between parameters with(&foo=) and without(&foo) equal signs. Both are converted to empty string by default.
   strictNullHandling?: boolean;
   // Option to encode parameters, default to true, necessary to disable for request.settingEncodeUrl = false
