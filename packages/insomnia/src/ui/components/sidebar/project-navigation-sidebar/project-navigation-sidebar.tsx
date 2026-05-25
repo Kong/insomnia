@@ -754,7 +754,7 @@ export const ProjectNavigationSidebar = ({
         ]}
         activeTab={activeTab}
         onTabChange={tab => setActiveTab(tab)}
-        filterValue={isProjectTabActive ? filterInputValue : (konnectFilter ?? '')}
+        filterValue={isProjectTabActive ? filterInputValue : konnectFilter || ''}
         onFilterChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
         isFilterDisabled={false}
         actionButton={isProjectTabActive ? projectsActionButton : konnectActionButton}
@@ -765,7 +765,7 @@ export const ProjectNavigationSidebar = ({
 
       <div
         ref={parentRef}
-        className="group/tree flex-1 overflow-y-auto py-(--padding-sm)"
+        className="group/tree flex-1 overflow-y-auto pb-(--padding-sm)"
         data-testid="project-navigation-tree-container"
       >
         <GridList
@@ -912,7 +912,7 @@ export const EmptyProjectNavigationSidebar = ({
         onTabChange={() => {}}
         filterValue=""
         onFilterChange={() => {}}
-        isFilterDisabled={true}
+        isFilterDisabled
         actionButton={
           !isScratchPad ? (
             <Button
