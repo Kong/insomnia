@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('Command palette - can switch between requests and workspaces', async ({ app, page }) => {
+test('Command palette - can switch between requests and workspaces', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   // Import a document
@@ -14,7 +14,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByTestId('project').click();
+  await page.getByTestId('workspace-breadcrumb-level-0').click();
 
   // Import a collection
   const text = await loadFixture('smoke-test-collection.yaml');
@@ -25,10 +25,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page
-    .getByTestId('sends request with cookie and get cookie in response')
-    .getByText('GET', { exact: true })
-    .click();
+  await insomnia.navigationSidebar.clickRequestOrFolder('sends request with cookie and get cookie in response');
   await page.getByTestId('OneLineEditor').getByText('http://127.0.0.1:4010/cookies').click();
   await page.locator('body').press(process.platform === 'darwin' ? 'Meta+p' : 'Control+p');
   await page.getByPlaceholder('Search and switch between').fill('send js');
@@ -45,6 +42,6 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.getByPlaceholder('Search and switch between').press('ArrowUp');
   await page.getByPlaceholder('Search and switch between').press('Enter');
   await expect
-    .soft(page.getByTestId('workspace-context-dropdown').locator('span'))
+    .soft(page.getByTestId('workspace-breadcrumb-level-1').locator('span'))
     .toContainText('E2E testing specification - swagger 2 1.0.0');
 });

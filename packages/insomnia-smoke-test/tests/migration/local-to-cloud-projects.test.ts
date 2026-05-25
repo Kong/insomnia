@@ -36,7 +36,7 @@ testWithLegacyDatabase('Run data migration to version 8', async ({ page, userCon
   // The collection is moved to a local project
   await page.getByLabel('Git Sync').isVisible();
   await page.getByText('Get list of rockets').click();
-  await page.getByTestId('project').click();
+  await page.getByTestId('workspace-breadcrumb-level-0').click();
 
   // @TODO Re-enable this test
   // // Open migrated local migrated collection that should have Git Sync - TODO - Fix this

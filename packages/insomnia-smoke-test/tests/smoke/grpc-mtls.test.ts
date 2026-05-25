@@ -5,7 +5,7 @@ import { expect } from '@playwright/test';
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can send gRPC requests using mTLS requests (with reflection)', async ({ app, page }) => {
+test('can send gRPC requests using mTLS requests (with reflection)', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
@@ -20,7 +20,7 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.getByLabel('Request Collection').getByTestId('grpcs').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('grpcs');
   await expect.soft(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();
 
   // add root CA and client certificate

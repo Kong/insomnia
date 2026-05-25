@@ -1,21 +1,8 @@
 import type { Organization } from 'insomnia-api';
-import { useCallback, useEffect, useMemo } from 'react';
-import { href, matchPath, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 
-import { database } from '~/common/database';
-import type {
-  GrpcRequest,
-  McpRequest,
-  MockRoute,
-  MockServer,
-  Project,
-  Request,
-  RequestGroup,
-  SocketIORequest,
-  UnitTestSuite,
-  WebSocketRequest,
-  Workspace,
-} from '~/insomnia-data';
+import type { Project, Request, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
@@ -23,6 +10,13 @@ import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import type { BaseTab, TabType } from '../components/tabs/tab';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
+import {
+  buildResourceUrl,
+  type InsomniaNavigationRouteInfo,
+  type NavigationResource,
+  type NavigationResources,
+  useInsomniaNavigation,
+} from './use-insomnia-navigation';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
@@ -31,17 +25,7 @@ interface InsomniaTabProps {
   organizationId: string;
 }
 
-type TabResource =
-  | Request
-  | GrpcRequest
-  | WebSocketRequest
-  | SocketIORequest
-  | McpRequest
-  | RequestGroup
-  | MockServer
-  | MockRoute
-  | Workspace
-  | UnitTestSuite;
+type TabResource = Exclude<NavigationResource, Project | undefined>;
 
 interface AddTabParams {
   resource: TabResource;
@@ -87,123 +71,12 @@ function inferTabType(resource: TabResource): TabType | null {
   }
   return null;
 }
-
-export const TAB_ROUTER_PATH = {
-  folder: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId',
-  request: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
-  environment: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment',
-  mockServer: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server',
-  runner: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner',
-  document: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec',
-  mockRoute:
-    '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
-  testSuite: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId',
-  test: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test',
-  collection: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug',
-} as const;
-
-const TAB_ROUTE_MATCH_END: Partial<Record<TabType, boolean>> = {
-  testSuite: false,
-};
-
-const buildSearchString = (searchParams: URLSearchParams) => {
-  const search = searchParams.toString();
-  return search ? `?${search}` : '';
-};
-
-// Build tab URL based on type and params
-const buildTabUrl = (
-  type: TabType,
-  {
-    organizationId,
-    projectId,
-    workspaceId,
-    resourceId,
-    searchParams,
-    withTab,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    resourceId: string;
-    searchParams?: URLSearchParams;
-    withTab?: boolean;
-  },
-): string => {
-  const url = (() => {
-    switch (type) {
-      case 'request': {
-        return href(TAB_ROUTER_PATH.request, {
-          organizationId,
-          projectId,
-          workspaceId,
-          requestId: resourceId,
-        });
-      }
-      case 'folder': {
-        return href(TAB_ROUTER_PATH.folder, {
-          organizationId,
-          projectId,
-          workspaceId,
-          requestGroupId: resourceId,
-        });
-      }
-      case 'collection': {
-        return href(TAB_ROUTER_PATH.collection, { organizationId, projectId, workspaceId });
-      }
-      case 'document': {
-        return href(TAB_ROUTER_PATH.document, { organizationId, projectId, workspaceId });
-      }
-      case 'environment': {
-        return href(TAB_ROUTER_PATH.environment, { organizationId, projectId, workspaceId });
-      }
-      case 'mockServer': {
-        return href(TAB_ROUTER_PATH.mockServer, { organizationId, projectId, workspaceId });
-      }
-      case 'mockRoute': {
-        return href(TAB_ROUTER_PATH.mockRoute, {
-          organizationId,
-          projectId,
-          workspaceId,
-          mockRouteId: resourceId,
-        });
-      }
-      case 'test': {
-        return href(TAB_ROUTER_PATH.test, { organizationId, projectId, workspaceId });
-      }
-      case 'testSuite': {
-        return href(TAB_ROUTER_PATH.testSuite, {
-          organizationId,
-          projectId,
-          workspaceId,
-          testSuiteId: resourceId,
-        });
-      }
-      case 'runner': {
-        return href(TAB_ROUTER_PATH.runner, { organizationId, projectId, workspaceId });
-      }
-      default: {
-        return href(TAB_ROUTER_PATH.collection, { organizationId, projectId, workspaceId });
-      }
-    }
-  })();
-
-  const newSearchParams = new URLSearchParams(searchParams);
-  // Ensure we do not skip to active request when opening a permanent collection tab
-  if (type === 'collection' && withTab) {
-    newSearchParams.set('doNotSkipToActiveRequest', 'true');
-  }
-
-  const search = buildSearchString(newSearchParams);
-  return `${url}${search}`;
-};
-
 export const buildRunnerTabId = (workspaceId: string, folderId?: string | null) => {
   return folderId ? `runner_${folderId}` : `runner_${workspaceId}`;
 };
 
 // Note: runner tab is a special case that doesn't directly correspond to a single resource
-export const buildRunnerTab = ({
+const buildRunnerTab = ({
   organizationId,
   projectId,
   workspaceId,
@@ -220,16 +93,13 @@ export const buildRunnerTab = ({
   folderId?: string | null;
   searchParams?: URLSearchParams;
 }): BaseTab => {
+  const nextSearchParams = new URLSearchParams(searchParams);
   if (folderId) {
-    searchParams.set('folder', folderId);
+    nextSearchParams.set('folder', folderId);
   }
-  const url = buildTabUrl('runner', {
-    organizationId,
-    projectId,
-    workspaceId,
-    resourceId: folderId || workspaceId,
-    searchParams,
-  });
+  const url = `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner${
+    nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : ''
+  }`;
   return {
     type: 'runner',
     id: buildRunnerTabId(workspaceId, folderId),
@@ -243,18 +113,52 @@ export const buildRunnerTab = ({
   };
 };
 
-export const buildTabFromResource = async (params: AddTabParams, withTab?: boolean): Promise<BaseTab | null> => {
+const buildTabUrlFromResource = ({
+  resource,
+  organizationId,
+  projectId,
+  workspaceId,
+  searchParams,
+  withTab,
+}: {
+  resource: TabResource;
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
+  searchParams?: URLSearchParams;
+  withTab?: boolean;
+}) => {
+  const type = inferTabType(resource);
+  if (!type) {
+    return '';
+  }
+
+  const nextSearchParams = new URLSearchParams(searchParams);
+  if (type === 'collection' && withTab) {
+    nextSearchParams.set('doNotSkipToActiveRequest', 'true');
+  }
+
+  return buildResourceUrl({
+    organizationId,
+    projectId,
+    workspaceId,
+    resource,
+    searchParams: nextSearchParams,
+  });
+};
+
+const buildTabFromResource = async (params: AddTabParams, withTab?: boolean): Promise<BaseTab | null> => {
   const { resource, organizationId, projectId, workspaceId, projectName, workspaceName, searchParams } = params;
   const effectiveWorkspaceId = workspaceId ?? resource._id;
   const type = inferTabType(resource);
 
   if (!type) return null;
 
-  const url = buildTabUrl(type, {
+  const url = buildTabUrlFromResource({
+    resource,
     organizationId,
     projectId,
     workspaceId: effectiveWorkspaceId,
-    resourceId: resource._id,
     searchParams,
     withTab,
   });
@@ -282,11 +186,11 @@ export const buildTabFromResource = async (params: AddTabParams, withTab?: boole
     baseTab.id = mcpRequestData._id;
     baseTab.type = 'request';
     baseTab.tag = 'mcp';
-    baseTab.url = buildTabUrl('request', {
+    baseTab.url = buildTabUrlFromResource({
+      resource: mcpRequestData,
       organizationId,
       projectId,
       workspaceId: effectiveWorkspaceId,
-      resourceId: mcpRequestData._id,
     });
   }
 
@@ -306,6 +210,47 @@ export const buildTabFromResource = async (params: AddTabParams, withTab?: boole
   }
 
   return baseTab;
+};
+
+const buildTabFromNavigation = async (
+  routeInfo: InsomniaNavigationRouteInfo,
+  getNavigationResources: () => Promise<NavigationResources>,
+): Promise<BaseTab | null> => {
+  const { project, workspace, resource } = await getNavigationResources();
+
+  if (!project || !workspace || !resource || models.project.isProject(resource)) {
+    return null;
+  }
+
+  if (routeInfo.routeId === 'runner') {
+    return buildRunnerTab({
+      organizationId: routeInfo.organizationId,
+      projectId: project._id,
+      workspaceId: workspace._id,
+      projectName: project.name,
+      workspaceName: workspace.name,
+      folderId: routeInfo.searchParams.get('folder'),
+    });
+  }
+
+  return await buildTabFromResource({
+    resource,
+    organizationId: routeInfo.organizationId,
+    projectId: project._id,
+    workspaceId: workspace._id,
+    projectName: project.name,
+    workspaceName: workspace.name,
+  });
+};
+
+const getNavigationTabId = async (routeInfo?: InsomniaNavigationRouteInfo | null) => {
+  if (!routeInfo || !routeInfo.workspaceId || !routeInfo.resourceId) {
+    return null;
+  }
+
+  return routeInfo.routeId === 'runner'
+    ? buildRunnerTabId(routeInfo.workspaceId, routeInfo.searchParams.get('folder'))
+    : routeInfo.resourceId;
 };
 
 export const useTabNavigate = () => {
@@ -370,165 +315,22 @@ export const useTabNavigate = () => {
   return tabNavigate;
 };
 
-// Determine tab type from current URL path
-const getTabType = (pathname: string): TabType | null => {
-  const tabTypes = Object.keys(TAB_ROUTER_PATH) as TabType[];
-  for (const type of tabTypes) {
-    const ifMatch = matchPath(
-      {
-        path: TAB_ROUTER_PATH[type],
-        end: TAB_ROUTE_MATCH_END[type] ?? true,
-      },
-      pathname,
-    );
-    if (ifMatch) {
-      return type;
-    }
-  }
-  return null;
-};
-
-const extractTabInfoFromUrl = (pathname: string, searchParams: URLSearchParams) => {
-  const tabType = getTabType(pathname);
-  if (!tabType) return null;
-
-  const match = matchPath(
-    {
-      path: TAB_ROUTER_PATH[tabType],
-      end: TAB_ROUTE_MATCH_END[tabType] ?? true,
-    },
-    pathname,
-  );
-  if (!match) return null;
-
-  const { params } = match;
-  if (!params.organizationId || !params.projectId || !params.workspaceId) return null;
-
-  const id = (() => {
-    switch (tabType) {
-      case 'runner': {
-        return buildRunnerTabId(params.workspaceId, searchParams.get('folder'));
-      }
-      case 'collection':
-      case 'environment':
-      case 'mockServer':
-      case 'test':
-      case 'document': {
-        return params.workspaceId;
-      }
-      case 'folder': {
-        return params.requestGroupId;
-      }
-      case 'request': {
-        return params.requestId;
-      }
-      case 'mockRoute': {
-        return params.mockRouteId;
-      }
-      case 'testSuite': {
-        return params.testSuiteId;
-      }
-      default: {
-        return null;
-      }
-    }
-  })();
-  if (!id) return null;
-
-  return {
-    id,
-    organizationId: params.organizationId,
-    projectId: params.projectId,
-    workspaceId: params.workspaceId,
-    tabType,
-  };
-};
-
-// Build tab info from URL (used for temporary tabs when navigating to a route without an existing tab)
-const buildTabFromUrl = async (pathname: string, searchParams: URLSearchParams): Promise<BaseTab | null> => {
-  const tabInfo = extractTabInfoFromUrl(pathname, searchParams);
-  if (!tabInfo) return null;
-
-  const { id, tabType, organizationId, projectId, workspaceId } = tabInfo;
-
-  const project = await database.findOne('Project', { _id: projectId });
-  const workspace = await database.findOne('Workspace', { _id: workspaceId });
-  if (!project || !workspace) return null;
-
-  const resource = await (async () => {
-    switch (tabType) {
-      case 'request': {
-        return await services.helpers.getRequestById(id);
-      }
-      case 'folder': {
-        return await database.findOne('RequestGroup', { _id: id });
-      }
-      case 'environment':
-      case 'mockServer':
-      case 'document':
-      case 'collection':
-      case 'test': {
-        return await database.findOne('Workspace', { _id: id });
-      }
-      case 'runner': {
-        return await database.findOne('Workspace', { _id: workspaceId });
-      }
-      case 'mockRoute': {
-        return await database.findOne('MockRoute', { _id: id });
-      }
-      case 'testSuite': {
-        return await database.findOne('UnitTestSuite', { _id: id });
-      }
-      default: {
-        return null;
-      }
-    }
-  })();
-  if (!resource) return null;
-
-  return tabType === 'runner'
-    ? buildRunnerTab({
-        organizationId,
-        projectId,
-        workspaceId,
-        projectName: project.name,
-        workspaceName: workspace.name,
-        folderId: searchParams.get('folder'),
-      })
-    : await buildTabFromResource({
-        resource: resource as TabResource,
-        organizationId,
-        projectId,
-        workspaceId,
-        projectName: project.name,
-        workspaceName: workspace.name,
-      });
-};
-
-/**
- * Hook to sync active tab status with the current route.
- */
 export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
   const { appTabsRef, changeActiveTab, closeTabById, addTemporaryTab } = useInsomniaTabContext();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
-
-  const tabInfoFromUrl = useMemo(
-    () => extractTabInfoFromUrl(location.pathname, searchParams),
-    [location.pathname, searchParams],
-  );
+  const { routeInfo, getNavigationResources } = useInsomniaNavigation();
 
   // Sync active tab with current route (only activates existing tabs, or creates/updates temporary tab if no match)
   useEffect(() => {
     const currentOrgTab = appTabsRef?.current?.[organizationId];
     const currentTabList = currentOrgTab?.tabList;
     const currentActiveTabId = currentOrgTab?.activeTabId;
-    const matchingTab = (tabInfoFromUrl && currentTabList?.find(tab => tab.id === tabInfoFromUrl.id)) || null;
 
     (async () => {
-      if (!matchingTab) {
-        // If no existing tab for this route, create/update the temporary tab
-        const newTemporaryTab = await buildTabFromUrl(location.pathname, searchParams);
+      const routeTabId = await getNavigationTabId(routeInfo);
+      const matchingTab = (routeTabId && currentTabList?.find(tab => tab.id === routeTabId)) || null;
+
+      if (!matchingTab && routeInfo) {
+        const newTemporaryTab = await buildTabFromNavigation(routeInfo, getNavigationResources);
 
         if (newTemporaryTab) {
           addTemporaryTab(newTemporaryTab, { setActive: true });
@@ -537,11 +339,10 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
       }
 
       if (currentActiveTabId !== matchingTab?.id) {
-        // If there's an existing tab for this route, make it active
         changeActiveTab(matchingTab?.id ?? '');
       }
     })();
-  }, [addTemporaryTab, appTabsRef, changeActiveTab, location.pathname, tabInfoFromUrl, organizationId, searchParams]);
+  }, [addTemporaryTab, appTabsRef, changeActiveTab, getNavigationResources, organizationId, routeInfo]);
 
   // Keyboard shortcut to close current tab
   useDocBodyKeyboardShortcuts({

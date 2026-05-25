@@ -4,7 +4,7 @@ import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('Environment Editor', () => {
-  test('manage environment', async ({ page, app }) => {
+  test('manage environment', async ({ page, app, insomnia }) => {
     const text = await loadFixture('environments.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
     await page.getByLabel('Import').click();
@@ -24,7 +24,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('option', { name: 'New Environment' }).press('Escape');
 
     // Send a request check variables defaulted to base env since new env is empty
-    await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
 
     await page.getByRole('tab', { name: 'Console' }).click();
@@ -49,7 +49,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('option', { name: 'Gandalf' }).press('Escape');
 
     // Send a request check variables defaulted to base env since new env is empty
-    await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     // await page.waitForTimeout(60000);
     await page.getByRole('button', { name: 'Send' }).click();
 
@@ -72,7 +72,7 @@ test.describe('Environment Editor', () => {
     // Delay the click to let debounce finish
     await dialog.getByRole('button', { name: 'Close' }).click({ delay: 200 });
     await page.getByLabel('Manage collection environments').press('Escape');
-    await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
 
     //Switch to table view and edit environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
@@ -119,7 +119,7 @@ test.describe('Environment Editor', () => {
     // Open request
     await page.getByRole('button', { name: 'Close', exact: true }).click();
     await page.getByLabel('Manage collection environments').press('Escape');
-    await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
 
     await page.getByRole('tab', { name: 'Console' }).click();

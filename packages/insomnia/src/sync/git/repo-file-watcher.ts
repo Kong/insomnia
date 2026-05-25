@@ -726,12 +726,7 @@ class RepoFileWatcher {
         return;
       }
 
-      console.warn(
-        '[repo-file-watcher] Failed to remove workspace file from disk:',
-        workspaceId,
-        normalisedPath,
-        err,
-      );
+      console.warn('[repo-file-watcher] Failed to remove workspace file from disk:', workspaceId, normalisedPath, err);
     }
   }
 

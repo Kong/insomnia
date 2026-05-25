@@ -386,7 +386,6 @@ const Root = () => {
             JSON.stringify({ importSource, importSourceUrl }),
           );
         }
-
         const userSession = await services.userSession.get();
         if (!userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);

@@ -20,12 +20,35 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const { id, targetId, dropPosition, metaSortKey } = await request.json();
   invariant(typeof id === 'string', 'ID is required');
   invariant(typeof targetId === 'string', 'Target ID is required');
-  invariant(typeof dropPosition === 'string', 'Drop position is required');
-  invariant(typeof metaSortKey === 'number', 'MetaSortKey position is required');
 
   if (id === targetId) {
     return null;
   }
+  if (models.workspace.isWorkspaceId(id)) {
+    const item = await services.workspace.getById(id);
+    const targetItem = await services.project.get(targetId);
+    invariant(item, 'Drag item not found');
+    invariant(targetItem, 'Target item not found');
+    await services.workspace.update(item, {
+      parentId: targetItem._id,
+    });
+    return null;
+  }
+
+  invariant(typeof metaSortKey === 'number', 'MetaSortKey position is required');
+  if (models.workspace.isWorkspaceId(targetId)) {
+    const targetItem = await services.workspace.getById(targetId);
+    const item = await getCollectionItem(id);
+    invariant(item, 'Drag item not found');
+    invariant(targetItem, 'Target item not found');
+    const parentId = targetItem._id;
+    await (isRequestGroup(item)
+      ? services.requestGroup.update(item, { parentId, metaSortKey })
+      : services.helpers.updateRequest(item, { parentId, metaSortKey }));
+    return null;
+  }
+
+  invariant(typeof dropPosition === 'string', 'Drop position is required');
 
   const item = await getCollectionItem(id);
   const targetItem = await getCollectionItem(targetId);
@@ -50,12 +73,18 @@ export const useDebugReorderActionFetcher = createFetcherSubmitHook(
       organizationId: string;
       projectId: string;
       workspaceId: string;
-      params: {
-        id: string;
-        targetId: string;
-        dropPosition: string;
-        metaSortKey: number;
-      };
+      params:
+        | {
+            id: string;
+            targetId: string;
+            dropPosition: string;
+            metaSortKey: number;
+          }
+        | {
+            type: 'move-workspace';
+            id: string;
+            targetId: string;
+          };
     }) => {
       return submit(JSON.stringify(params), {
         method: 'POST',

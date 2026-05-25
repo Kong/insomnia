@@ -2,8 +2,6 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import cn from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   GridList,
   GridListItem,
@@ -14,7 +12,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
@@ -31,16 +29,16 @@ import { fuzzyMatchAll } from '~/common/misc';
 import type { McpRequest, McpServerPrimitiveTypes } from '~/insomnia-data';
 import type { McpEvent, McpMessageEvent } from '~/main/mcp/types';
 import { useRootLoaderData } from '~/root';
-import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   type McpRequestLoaderData,
   useRequestLoaderData,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { McpActionsDropdown } from '~/ui/components/dropdowns/mcp-actions-dropdown';
-import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
-import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
-import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -53,11 +51,9 @@ import {
   type ResourceTemplateItem,
   type ToolItem,
 } from '~/ui/components/mcp/types';
-import { MCPCertificatesModal } from '~/ui/components/modals/mcp-certificates-modal';
-import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
+import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
@@ -67,16 +63,11 @@ const emptyServerData: McpServerData = {
 };
 
 export const McpPane = () => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
-    projectId: string;
+  const { workspaceId } = useParams() as {
     workspaceId: string;
   };
   const { activeRequest, activeResponse, activeRequestMeta } = useRequestLoaderData()! as McpRequestLoaderData;
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
-  const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
-  const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
-  const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
   const { settings } = useRootLoaderData()!;
@@ -88,7 +79,7 @@ export const McpPane = () => {
   const [requestPaneActiveTab, setRequestPaneActiveTab] = useState<RequestPaneTabs>('params');
   const patchRequest = useRequestPatcher();
   const requestId = activeRequest._id;
-  const { activeEnvironment, caCertificate } = useWorkspaceLoaderData()!;
+  const { activeEnvironment } = useWorkspaceLoaderData()!;
   const readyState = useMcpReadyState({ requestId });
   const parentRef = useRef<HTMLDivElement>(null);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
@@ -366,217 +357,157 @@ export const McpPane = () => {
 
   useDocBodyKeyboardShortcuts({
     sidebar_toggle: toggleSidebar,
-    environment_showEditor: () => setEnvironmentModalOpen(true),
-    environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
   });
 
-  const caStatus =
-    activeRequest.sslValidation === false
-      ? 'warning'
-      : caCertificate?.path && !caCertificate.disabled
-        ? 'success'
-        : 'default';
-
   return (
-    <PanelGroup
-      ref={sidebarPanelRef}
-      autoSaveId="insomnia-sidebar"
-      id="wrapper"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
-      <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-          <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
-            <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
-              <Breadcrumbs className="m-0 flex h-(--line-height-sm) w-full list-none items-center gap-2 px-(--padding-sm) font-bold">
-                <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-                  <NavLink
-                    data-testid="project"
-                    className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
-                    to={`/organization/${organizationId}/project/${projectId}`}
-                  >
-                    <Icon className="text-xs" icon="chevron-left" />
-                  </NavLink>
-                  <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
-                </Breadcrumb>
-                <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-                  <WorkspaceDropdown />
-                </Breadcrumb>
-              </Breadcrumbs>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-start gap-2 p-(--padding-sm)">
-            <div className="flex items-center justify-between gap-2">
-              <EnvironmentPicker
-                isOpen={isEnvironmentPickerOpen}
-                onOpenChange={setIsEnvironmentPickerOpen}
-                onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
-              />
-            </div>
-            <Button
-              onPress={() => setCertificatesModalOpen(true)}
-              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="file-contract" className="w-5 shrink-0" />
-              <span className="inline-flex items-center gap-2 truncate">
-                Manage Certificates
-                {caStatus !== 'default' && (
-                  <Icon
-                    icon="circle"
-                    className={`${
-                      {
-                        success: 'text-(--color-success)',
-                        warning: 'text-(--color-warning)',
-                      }[caStatus]
-                    } h-2 w-2`}
-                  />
-                )}
-              </span>
-            </Button>
-          </div>
-
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex justify-between gap-1 p-(--padding-sm)">
-              <SearchField
-                aria-label="Server Capability filter"
-                className="group relative flex-1"
-                value={filter ?? ''}
-                onChange={value => {
-                  setFilter(value);
-                  if (value) {
-                    trackOnceDaily(AnalyticsEvent.mcpListFiltered);
-                  }
-                }}
-              >
-                <Input
-                  placeholder="Filter"
-                  className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-                />
-                <div className="absolute top-0 right-0 flex h-full items-center px-2">
-                  <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
-                    <Icon icon="close" />
-                  </Button>
-                </div>
-              </SearchField>
-              <TooltipTrigger>
-                <ToggleButton
-                  aria-label="Expand All/Collapse all"
-                  defaultSelected={allExpanded}
-                  onChange={() => {
-                    const newState = !allExpanded;
-                    if (newState) {
-                      setCollapsedPrimitives([]);
-                    } else {
-                      setCollapsedPrimitives(['tools', 'resources', 'prompts']);
+    <div className="flex h-full flex-col">
+      <OrganizationTabList currentPage="mcp" />
+      <WorkspacePaneHeader hasSettings />
+      <PanelGroup
+        ref={sidebarPanelRef}
+        autoSaveId="insomnia-sidebar"
+        id={WORKSPACE_CONTENT_WRAPPER}
+        className="new-sidebar min-h-0 w-full flex-1 text-(--color-font)"
+        direction="horizontal"
+      >
+        <Panel id="sidebar" className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
+          <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <div className="flex justify-between gap-1 p-(--padding-sm)">
+                <SearchField
+                  aria-label="Server Capability filter"
+                  className="group relative flex-1"
+                  value={filter ?? ''}
+                  onChange={value => {
+                    setFilter(value);
+                    if (value) {
+                      trackOnceDaily(AnalyticsEvent.mcpListFiltered);
                     }
-                    setAllExpanded(newState);
-                    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpListExpandCollapseClicked });
                   }}
-                  className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                 >
-                  {({ isSelected }) => (
-                    <Icon
-                      icon={isSelected ? 'down-left-and-up-right-to-center' : 'up-right-and-down-left-from-center'}
-                    />
-                  )}
-                </ToggleButton>
-                <Tooltip
-                  offset={8}
-                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                >
-                  <span>{allExpanded ? 'Collapse all' : 'Expand all'}</span>
-                </Tooltip>
-              </TooltipTrigger>
-            </div>
-
-            <div className="flex-1 overflow-y-auto" ref={parentRef}>
-              <GridList
-                id="sidebar-mcp-gridlist"
-                style={{ height: virtualizer.getTotalSize() }}
-                items={virtualizer.getVirtualItems()}
-                className="relative"
-                aria-label="Mcp Server Capabilities"
-                onAction={key => {
-                  const id = key.toString();
-                  if (id.startsWith('root_')) {
-                    // Click on primitive type item
-                    const primitiveType = id.split('root_')[1] as McpServerPrimitiveTypes;
-                    setCollapsedPrimitives(prev => {
-                      if (prev.includes(primitiveType)) {
-                        return prev.filter(p => p !== primitiveType);
+                  <Input
+                    placeholder="Filter"
+                    className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+                  />
+                  <div className="absolute top-0 right-0 flex h-full items-center px-2">
+                    <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
+                      <Icon icon="close" />
+                    </Button>
+                  </div>
+                </SearchField>
+                <TooltipTrigger>
+                  <ToggleButton
+                    aria-label="Expand All/Collapse all"
+                    defaultSelected={allExpanded}
+                    onChange={() => {
+                      const newState = !allExpanded;
+                      if (newState) {
+                        setCollapsedPrimitives([]);
+                      } else {
+                        setCollapsedPrimitives(['tools', 'resources', 'prompts']);
                       }
-                      return [...prev, primitiveType];
-                    });
-                  } else {
-                    // Click a specified primitive
-                    const [, type, name] = id.match(/^([^_]+)_(.+)$/) || [];
-                    const item = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
-                    requestMetaPatcher(requestId, { activeMcpPrimitive: id });
-                    setSelectedPrimitiveItem(item as PrimitiveSubItem);
-                    setRequestPaneActiveTab('params');
-                  }
-                }}
-              >
-                {virtualItem => {
-                  const item = visibleCollection[virtualItem.index];
-                  const isSelected =
-                    selectedPrimitiveItem?.type === item.type && selectedPrimitiveItem?.name === item.name;
-                  return (
-                    <CollectionGridListItem
-                      activeRequest={activeRequest}
-                      item={item}
-                      collapsedPrimitives={collapsedPrimitives}
-                      onUpdatePrimitiveNextCursor={updatePrimitiveNextCursor}
-                      onRefreshPrimitive={updatePrimitiveData}
-                      onLoadMorePrimitive={loadMorePrimitiveData}
-                      allowSubscribeResources={allowSubscribeResources}
-                      subscribeResources={subscribeResources || []}
-                      handleSubscribe={handleSubscribe}
-                      style={{
-                        height: `${virtualItem.size}px`,
-                        transform: `translateY(${virtualItem.start}px)`,
-                      }}
-                      isSelected={isSelected}
-                    />
-                  );
-                }}
-              </GridList>
+                      setAllExpanded(newState);
+                      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpListExpandCollapseClicked });
+                    }}
+                    className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                  >
+                    {({ isSelected }) => (
+                      <Icon
+                        icon={isSelected ? 'down-left-and-up-right-to-center' : 'up-right-and-down-left-from-center'}
+                      />
+                    )}
+                  </ToggleButton>
+                  <Tooltip
+                    offset={8}
+                    className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                  >
+                    <span>{allExpanded ? 'Collapse all' : 'Expand all'}</span>
+                  </Tooltip>
+                </TooltipTrigger>
+              </div>
+
+              <div className="flex-1 overflow-y-auto" ref={parentRef}>
+                <GridList
+                  id="sidebar-mcp-gridlist"
+                  style={{ height: virtualizer.getTotalSize() }}
+                  items={virtualizer.getVirtualItems()}
+                  className="relative"
+                  aria-label="Mcp Server Capabilities"
+                  onAction={key => {
+                    const id = key.toString();
+                    if (id.startsWith('root_')) {
+                      // Click on primitive type item
+                      const primitiveType = id.split('root_')[1] as McpServerPrimitiveTypes;
+                      setCollapsedPrimitives(prev => {
+                        if (prev.includes(primitiveType)) {
+                          return prev.filter(p => p !== primitiveType);
+                        }
+                        return [...prev, primitiveType];
+                      });
+                    } else {
+                      // Click a specified primitive
+                      const [, type, name] = id.match(/^([^_]+)_(.+)$/) || [];
+                      const item = visibleCollection.find(i => i.itemLevel === 1 && i.type === type && i.name === name);
+                      requestMetaPatcher(requestId, { activeMcpPrimitive: id });
+                      setSelectedPrimitiveItem(item as PrimitiveSubItem);
+                      setRequestPaneActiveTab('params');
+                    }
+                  }}
+                >
+                  {virtualItem => {
+                    const item = visibleCollection[virtualItem.index];
+                    const isSelected =
+                      selectedPrimitiveItem?.type === item.type && selectedPrimitiveItem?.name === item.name;
+                    return (
+                      <CollectionGridListItem
+                        activeRequest={activeRequest}
+                        item={item}
+                        collapsedPrimitives={collapsedPrimitives}
+                        onUpdatePrimitiveNextCursor={updatePrimitiveNextCursor}
+                        onRefreshPrimitive={updatePrimitiveData}
+                        onLoadMorePrimitive={loadMorePrimitiveData}
+                        allowSubscribeResources={allowSubscribeResources}
+                        subscribeResources={subscribeResources || []}
+                        handleSubscribe={handleSubscribe}
+                        style={{
+                          height: `${virtualItem.size}px`,
+                          transform: `translateY(${virtualItem.start}px)`,
+                        }}
+                        isSelected={isSelected}
+                      />
+                    );
+                  }}
+                </GridList>
+              </div>
             </div>
           </div>
-          <WorkspaceSyncDropdown />
-
-          {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
-          {isCertificatesModalOpen && <MCPCertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
-        </div>
-      </Panel>
-      <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-      <Panel className="flex flex-col">
-        <OrganizationTabList currentPage="mcp" />
-        <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
-          <Panel id="mcp-request-pane" order={1} minSize={10} className="pane-one theme--pane">
-            <McpRequestPane
-              selectedPrimitiveItem={
-                selectedPrimitiveItem?.itemLevel === 1 ? (selectedPrimitiveItem as PrimitiveSubItem) : null
-              }
-              environment={activeEnvironment}
-              readyState={readyState}
-              activeTab={requestPaneActiveTab}
-              onTabChange={setRequestPaneActiveTab}
+        </Panel>
+        <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
+        <Panel className="flex flex-col">
+          <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
+            <Panel id="mcp-request-pane" order={1} minSize={10} className="pane-one theme--pane">
+              <McpRequestPane
+                selectedPrimitiveItem={
+                  selectedPrimitiveItem?.itemLevel === 1 ? (selectedPrimitiveItem as PrimitiveSubItem) : null
+                }
+                environment={activeEnvironment}
+                readyState={readyState}
+                activeTab={requestPaneActiveTab}
+                onTabChange={setRequestPaneActiveTab}
+              />
+            </Panel>
+            <PanelResizeHandle
+              className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
             />
-          </Panel>
-          <PanelResizeHandle
-            className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
-          />
-          <Panel id="mcp-response-pane" order={2} minSize={10} className="pane-two theme--pane">
-            <ErrorBoundary showAlert>
-              <RealtimeResponsePane />
-            </ErrorBoundary>
-          </Panel>
-        </PanelGroup>
-      </Panel>
-    </PanelGroup>
+            <Panel id="mcp-response-pane" order={2} minSize={10} className="pane-two theme--pane">
+              <ErrorBoundary showAlert>
+                <RealtimeResponsePane />
+              </ErrorBoundary>
+            </Panel>
+          </PanelGroup>
+        </Panel>
+      </PanelGroup>
+    </div>
   );
 };
 
