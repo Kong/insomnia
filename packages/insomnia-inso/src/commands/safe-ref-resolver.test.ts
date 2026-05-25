@@ -6,12 +6,11 @@ import { safeRefResolver } from './lint-specification';
 
 vi.mock('node:dns/promises', () => ({ default: { lookup: vi.fn() } }));
 
-
 // Stub dns.lookup({ all: true }) to return the given addresses.
 const mockResolvedAddresses = (addresses: string[]) =>
-  vi.mocked(dns.lookup).mockResolvedValue(
-    addresses.map(address => ({ address, family: address.includes(':') ? 6 : 4 })) as any,
-  );
+  vi
+    .mocked(dns.lookup)
+    .mockResolvedValue(addresses.map(address => ({ address, family: address.includes(':') ? 6 : 4 })) as any);
 
 function getHttpResolver() {
   return (safeRefResolver as any).resolvers.http;
@@ -142,7 +141,7 @@ describe('safeHttpResolver', () => {
       expect(result).toBe('openapi: 3.1.0');
 
       expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch).toHaveBeenCalledWith('https://example.com/schema.yaml');
+      expect(fetch).toHaveBeenCalledWith('https://example.com/schema.yaml', { redirect: 'error' });
     });
 
     it('allows HTTPS URLs with ports', async () => {
@@ -302,6 +301,4 @@ describe('safeHttpResolver', () => {
       ).resolves.toBe('openapi: 3.1.0');
     });
   });
-
-
 });
