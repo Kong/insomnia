@@ -61,19 +61,28 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(projectId, 'Project ID is required');
   invariant(organizationId, 'Organization ID is required');
 
-  if (!models.project.isScratchpadProject({ _id: projectId })) {
-    const { id: sessionId } = await services.userSession.get();
+  const userSession = await services.userSession.get();
+  const { id: sessionId, accountId } = userSession;
 
-    if (!sessionId) {
-      await logout();
-      throw redirect(href('/auth/login'));
-    }
+  if (!models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
+    await logout();
+    throw redirect(href('/auth/login'));
   }
 
   const project = await services.project.get(projectId);
 
   if (!project) {
     return redirect(href('/organization/:organizationId', { organizationId }));
+  }
+
+  const organization = await services.organization.get(organizationId);
+
+  if (accountId && organization && models.organization.isPersonalOrganization(organization)) {
+    const firstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
+
+    if (!window.localStorage.getItem(firstPersonalOrgLandingKey)) {
+      window.localStorage.setItem(firstPersonalOrgLandingKey, 'true');
+    }
   }
 
   const fallbackLearningFeature = {

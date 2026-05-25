@@ -143,13 +143,7 @@ const Component = () => {
     userSession.accountId &&
     models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && models.organization.isPersonalOrganization(organization);
-  const greetingName =
-    [userSession.firstName, userSession.lastName]
-      .map(name => name.trim())
-      .filter(Boolean)
-      .join(' ') ||
-    userSession.email.split('@')[0] ||
-    'there';
+  const greetingName = userSession.firstName || userSession.email.split('@')[0] || 'there';
   const collectionItems = useMemo(
     () =>
       localFiles
