@@ -9,7 +9,12 @@ import { test } from '../../playwright/test';
 const PLUGIN_NAME = 'insomnia-plugin-bridge-test';
 const ACTION_LABEL = 'Bridge Test Action';
 
-test('Plugin bridge routes requestAction execution through hidden BrowserWindow', async ({ page, app, dataPath }) => {
+test('Plugin bridge routes requestAction execution through hidden BrowserWindow', async ({
+  page,
+  app,
+  dataPath,
+  insomnia,
+}) => {
   // Write a minimal plugin with a requestAction to the data-path plugins directory.
   const pluginDir = path.join(dataPath, 'plugins', PLUGIN_NAME);
   fs.mkdirSync(pluginDir, { recursive: true });
@@ -38,9 +43,8 @@ test('Plugin bridge routes requestAction execution through hidden BrowserWindow'
 
   // Open the request actions dropdown for 'example http'.
   // onOpen calls window.main.plugins.getRequestActions() through the bridge.
-  const requestRow = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
-  await requestRow.click();
-  await requestRow.getByLabel('Request Actions').click();
+  await insomnia.navigationSidebar.clickRequestOrFolder('example http');
+  await insomnia.navigationSidebar.openRequestActionsDropdown('example http');
 
   // The plugin action must appear in the dropdown, proving end-to-end bridge execution.
   await expect.soft(page.getByRole('menuitemradio', { name: ACTION_LABEL })).toBeVisible();
