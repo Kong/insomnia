@@ -894,12 +894,7 @@ export const ProjectNavigationSidebar = ({
   );
 };
 
-export const EmptyProjectNavigationSidebar = ({
-  onCreateProject,
-}: {
-  onCreateProject: () => void;
-  storageRules?: StorageRules;
-}) => {
+export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreateProject: () => void }) => {
   const { organizationId } = useParams() as { organizationId: string };
   const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
 

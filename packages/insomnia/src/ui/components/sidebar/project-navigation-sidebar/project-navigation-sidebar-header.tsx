@@ -30,6 +30,7 @@ export const SidebarHeader = ({
       {!isScratchPad &&
         tabs.map(({ name, label }) => (
           <button
+            type="button"
             key={name}
             className={`border-b-2 border-solid px-4 py-2 text-xs ${activeTab === name ? 'border-(--color-surprise) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
             data-testid={`sidebar-tab-${name}`}

@@ -84,10 +84,7 @@ const Component = () => {
             collapsible
           >
             <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-              <EmptyProjectNavigationSidebar
-                storageRules={storageRules}
-                onCreateProject={() => setIsNewProjectModalOpen(true)}
-              />
+              <EmptyProjectNavigationSidebar onCreateProject={() => setIsNewProjectModalOpen(true)} />
             </div>
           </Panel>
           <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
