@@ -1,7 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, GridList, GridListItem, Input, SearchField } from 'react-aria-components';
+import { Button, GridList, GridListItem } from 'react-aria-components';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -108,7 +108,6 @@ export const ProjectNavigationSidebar = ({
   const [searchParams, _setSearchParams] = useSearchParams();
   const tabNavigate = useTabNavigate();
 
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [collectionSortOrders, setCollectionSortOrders] = useState<Record<string, SortOrder>>({});
   const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
   const [projectNavigationSidebarFilter, setProjectNavigationSidebarFilter] = reactUse.useLocalStorage(
