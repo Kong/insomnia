@@ -11,7 +11,7 @@ import {
   updateBackendConfig,
 } from '../llm-config-service';
 
-vi.mock('~/insomnia-data', async importOriginal => {
+vi.mock('~/insomnia-data', async () => {
   return {
     services: {
       pluginData: {
