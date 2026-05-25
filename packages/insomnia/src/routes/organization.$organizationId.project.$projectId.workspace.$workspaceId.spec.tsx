@@ -1179,14 +1179,16 @@ const Component = ({ params }: Route.ComponentProps) => {
                             ) : (
                               <Fragment>
                                 <p>
-                                  Using default OAS ruleset. Upload a custom Spectral ruleset.
+                                  Upload a custom Spectral ruleset
                                   {isConnectedGitProject && (
                                     <span>
                                       {' '}
-                                      Alternatively, add a <code className="p-0">.spectral.yaml</code> file to the root
-                                      of your connected git repository.
+                                      or add a <code className="p-0">.spectral.yaml</code> file to the root of your
+                                      connected git repository
                                     </span>
                                   )}
+                                  . Any local files referenced via <code className="p-0">extends</code> will be bundled
+                                  into a single ruleset on upload.
                                 </p>
                               </Fragment>
                             )}
