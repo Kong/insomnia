@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isLocalFilePath, toArray, validateSpectralRuleset } from '../spectral-ruleset-validator';
+import { toArray, validateSpectralRuleset } from '../spectral-ruleset-validator';
 
 const expectInvalid = (content: string, errorContains?: string | RegExp): string => {
   const result = validateSpectralRuleset(content);
@@ -21,30 +21,6 @@ const ruleWith = (body: string): string =>
     .map(l => (l ? `    ${l}` : l))
     .join('\n')}`;
 
-describe('isLocalFilePath()', () => {
-  it('returns true for explicit relative prefixes', () => {
-    expect(isLocalFilePath('./foo.yaml')).toBe(true);
-    expect(isLocalFilePath('../foo.yaml')).toBe(true);
-    expect(isLocalFilePath('../../shared/foo.yaml')).toBe(true);
-  });
-
-  it('returns true for POSIX absolute paths', () => {
-    expect(isLocalFilePath('/etc/spectral/rules.yaml')).toBe(true);
-  });
-
-  it('returns false for bare filenames', () => {
-    expect(isLocalFilePath('foo.yaml')).toBe(false);
-  });
-
-  it('returns false for URLs', () => {
-    expect(isLocalFilePath('https://example.com/rules.yaml')).toBe(false);
-    expect(isLocalFilePath('http://example.com/rules.yaml')).toBe(false);
-  });
-
-  it('returns false for built-in Spectral identifiers', () => {
-    expect(isLocalFilePath('spectral:oas')).toBe(false);
-  });
-});
 
 describe('toArray()', () => {
   it('returns [] for undefined', () => {

@@ -30,15 +30,6 @@ const ALLOWED_BUILTIN_FUNCTIONS = [
 // For security reasons we do not allow rulesets to contain certain tokens that could be used for JavaScript prototype pollution when used in certain Spectral properties (e.g. "field").
 const PROTOTYPE_POLLUTION_TOKENS = ['__proto__', 'prototype', 'constructor'];
 
-// Check if path is absolute file path (e.g. /foo/bar.yaml, C:\foo\bar.yaml, \\server\share\file.yaml)
-function isAbsoluteFilePath(value: string): boolean {
-  return value.startsWith('/') || value.startsWith('\\\\') || /^[A-Za-z]:[\\/]/.test(value);
-}
-
-export function isLocalFilePath(value: string): boolean {
-  return value.startsWith('./') || value.startsWith('../') || isAbsoluteFilePath(value);
-}
-
 export function toArray<T>(value: T | T[] | undefined): T[] {
   //no extends key in the ruleset
   if (value === undefined) {

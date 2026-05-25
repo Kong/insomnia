@@ -5,12 +5,7 @@ import path from 'node:path';
 import YAML from 'yaml';
 
 import { isPrivateOrLoopbackHost } from './private-host';
-import {
-  ALLOWED_EXTENDS_IDENTIFIERS,
-  isLocalFilePath,
-  toArray,
-  validateSpectralRuleset,
-} from './spectral-ruleset-validator';
+import { ALLOWED_EXTENDS_IDENTIFIERS, toArray, validateSpectralRuleset } from './spectral-ruleset-validator';
 
 const MAX_EXTENDS_DEPTH = 5;
 
@@ -196,7 +191,7 @@ async function flattenRuleset(
     }
     // Remote URL extends — validate upfront (SSRF + content checks), then preserve the URL
     // in "extends" for Spectral to fetch fresh at lint time via spectralRuntime.fetch.
-    if (!isLocalFilePath(entry)) {
+    if (!entry.startsWith('./') && !entry.startsWith('../') && !path.isAbsolute(entry)) {
       await validateRemoteExtends(parseRemoteExtendsUrl(entry), nextVisited, depth + 1);
       remainingExtends.push(entry);
       continue;
