@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { generateId } from '../../../common/misc';
 import * as models from './';
+import type { AllTypes } from './types';
 
 const { isProtoDirectory } = models.protoDirectory;
 const { isProtoFile } = models.protoFile;
@@ -12,7 +13,7 @@ const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);
 
 describe('isGrpcRequest', () => {
-  const supported = [models.grpcRequest.type];
+  const supported: AllTypes[] = [models.grpcRequest.type];
   const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
@@ -46,7 +47,7 @@ describe('isGrpcRequestId', () => {
 });
 
 describe('isRequest', () => {
-  const supported = [models.request.type];
+  const supported: AllTypes[] = [models.request.type];
   const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
@@ -67,7 +68,7 @@ describe('isRequest', () => {
 });
 
 describe('isRequestGroup', () => {
-  const supported = [models.requestGroup.type];
+  const supported: AllTypes[] = [models.requestGroup.type];
   const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
@@ -88,7 +89,7 @@ describe('isRequestGroup', () => {
 });
 
 describe('isProtoFile', () => {
-  const supported = [models.protoFile.type];
+  const supported: AllTypes[] = [models.protoFile.type];
   const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
@@ -109,7 +110,7 @@ describe('isProtoFile', () => {
 });
 
 describe('isProtoDirectory', () => {
-  const supported = [models.protoDirectory.type];
+  const supported: AllTypes[] = [models.protoDirectory.type];
   const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
@@ -130,7 +131,7 @@ describe('isProtoDirectory', () => {
 });
 
 describe('isWorkspace', () => {
-  const supported = [models.workspace.type];
+  const supported: AllTypes[] = [models.workspace.type];
   const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {

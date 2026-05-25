@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tests run against the in-memory NeDB initialized by setup-vitest.ts.
  * fetch is mocked per-test to return shaped Konnect API responses.

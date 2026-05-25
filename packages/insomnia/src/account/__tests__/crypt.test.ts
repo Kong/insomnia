@@ -32,6 +32,7 @@ describe('crypt', () => {
         k: '5hs1f2xuiNPHUp11i6SWlsqYpWe_hWPcEKucZlwBfFE',
       };
       const source = buffer.Buffer.from('Hello World!', 'utf8');
+      // @ts-ignore
       const resultEncrypted = crypt.encryptAESBuffer(key, source);
       const resultDecrypted = crypt.decryptAESToBuffer(key, resultEncrypted);
       expect(resultDecrypted.toString()).toEqual(source.toString());

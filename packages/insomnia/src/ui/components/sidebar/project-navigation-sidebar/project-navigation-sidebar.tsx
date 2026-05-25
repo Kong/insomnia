@@ -21,6 +21,7 @@ import { useProjectLoaderData } from '~/routes/organization.$organizationId.proj
 import { AnalyticsEvent } from '~/ui/analytics';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
@@ -922,7 +923,6 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
               }}
             </GridList>
           </div>
-
           {!isProjectTabActive && lastSyncResult && (
             <div
               className={`m-2 flex items-start justify-between gap-2 rounded-sm p-3 text-xs ${

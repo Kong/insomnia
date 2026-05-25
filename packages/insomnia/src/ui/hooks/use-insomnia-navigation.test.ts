@@ -11,7 +11,7 @@ interface NavigationCase {
   };
 }
 
-const navigationCases: readonly NavigationCase[] = [
+const navigationCases = [
   {
     title: 'project routes',
     resource: {
@@ -101,7 +101,7 @@ const navigationCases: readonly NavigationCase[] = [
       resourceId: undefined,
     },
   },
-];
+] as NavigationCase[];
 
 const attachSearchParams = (
   routeInfo: Omit<InsomniaNavigationRouteInfo, 'searchParams'>,

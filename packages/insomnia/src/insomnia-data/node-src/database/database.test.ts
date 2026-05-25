@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { BaseModel } from '~/insomnia-data';

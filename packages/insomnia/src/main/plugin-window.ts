@@ -5,7 +5,10 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 
 let pluginWindow: BrowserWindow | null = null;
 let windowReady = false;
-const pendingRequests = new Map<string, { resolve: (v: unknown) => void; reject: (e: Error) => void; method: string; startedAt: number }>();
+const pendingRequests = new Map<
+  string,
+  { resolve: (v: unknown) => void; reject: (e: Error) => void; method: string; startedAt: number }
+>();
 
 let cachedHasRequestHooks: boolean | null = null;
 let cachedHasResponseHooks: boolean | null = null;
@@ -77,7 +80,7 @@ function ensureIpcListeners() {
   }
   ipcListenersRegistered = true;
 
-  ipcMain.on('plugin-window-ready', event => {
+  ipcMain.on('plugins.windowReady', event => {
     if (event.sender !== pluginWindow?.webContents) {
       return;
     }
@@ -88,21 +91,21 @@ function ensureIpcListeners() {
     console.log(`[plugin-bridge] window_ready startup_ms=${startupMs}`);
   });
 
-  ipcMain.on('plugin-ui-alert', (event, options: Record<string, unknown>) => {
+  ipcMain.on('plugins.uiAlert', (event, options: Record<string, unknown>) => {
     if (event.sender !== pluginWindow?.webContents) {
       return;
     }
-    getMainWindow()?.webContents.send('plugin-ui-alert', options);
+    getMainWindow()?.webContents.send('plugins.uiAlert', options);
   });
 
-  ipcMain.on('plugin-ui-dialog', (event, options: Record<string, unknown>) => {
+  ipcMain.on('plugins.uiDialog', (event, options: Record<string, unknown>) => {
     if (event.sender !== pluginWindow?.webContents) {
       return;
     }
-    getMainWindow()?.webContents.send('plugin-ui-dialog', options);
+    getMainWindow()?.webContents.send('plugins.uiDialog', options);
   });
 
-  ipcMain.handle('plugin-ui-prompt', async (event, options: Record<string, unknown>) => {
+  ipcMain.handle('plugins.uiPrompt', async (event, options: Record<string, unknown>) => {
     if (event.sender !== pluginWindow?.webContents) {
       return null;
     }
@@ -120,11 +123,15 @@ function ensureIpcListeners() {
         clearTimeout(timeout);
         resolve(value);
       });
-      mainWindow.webContents.send('plugin-ui-prompt', id, options);
+      mainWindow.webContents.send('plugins.uiPrompt', id, options);
     });
   });
 
-  ipcMain.on('plugin-ui-prompt-result', (_event, { id, value }: { id: string; value: string | null }) => {
+  ipcMain.on('plugins.uiPromptResult', (event, { id, value }: { id: string; value: string | null }) => {
+    const mainWindow = getMainWindow();
+    if (!mainWindow || event.sender !== mainWindow.webContents) {
+      return;
+    }
     const resolve = promptPendingRequests.get(id);
     if (!resolve) {
       return;
@@ -133,24 +140,27 @@ function ensureIpcListeners() {
     resolve(value);
   });
 
-  ipcMain.on('plugin-invoke-result', (event, { id, result, error }: { id: string; result?: unknown; error?: string }) => {
-    if (event.sender !== pluginWindow?.webContents) {
-      return;
-    }
-    const pending = pendingRequests.get(id);
-    if (!pending) {
-      return;
-    }
-    pendingRequests.delete(id);
-    const duration = Date.now() - pending.startedAt;
-    if (error) {
-      recordInvocation(pending.method, 'error', duration);
-      pending.reject(new Error(error));
-    } else {
-      recordInvocation(pending.method, 'ok', duration);
-      pending.resolve(result);
-    }
-  });
+  ipcMain.on(
+    'plugins.invokeResult',
+    (event, { id, result, error }: { id: string; result?: unknown; error?: string }) => {
+      if (event.sender !== pluginWindow?.webContents) {
+        return;
+      }
+      const pending = pendingRequests.get(id);
+      if (!pending) {
+        return;
+      }
+      pendingRequests.delete(id);
+      const duration = Date.now() - pending.startedAt;
+      if (error) {
+        recordInvocation(pending.method, 'error', duration);
+        pending.reject(new Error(error));
+      } else {
+        recordInvocation(pending.method, 'ok', duration);
+        pending.resolve(result);
+      }
+    },
+  );
 }
 
 export function getPluginWindow() {
@@ -259,7 +269,7 @@ export async function invokeInPluginWindow(method: string, args?: unknown): Prom
       },
     });
 
-    pluginWindow!.webContents.send('plugin-invoke', { id, method, args });
+    pluginWindow!.webContents.send('plugins.invoke', { id, method, args });
   });
 }
 
@@ -293,16 +303,18 @@ export function registerPluginIpcHandlers() {
   ipcMain.handle('plugins.getTemplateTags', () => invokeInPluginWindow('getTemplateTags'));
   ipcMain.handle('plugins.runTemplateTagAction', (_event, args) => invokeInPluginWindow('runTemplateTagAction', args));
   ipcMain.handle('plugins.getBundlePlugins', () => invokeInPluginWindow('getBundlePlugins'));
-  ipcMain.handle('plugins.executePluginMainAction', (_event, args) => invokeInPluginWindow('executePluginMainAction', args));
+  ipcMain.handle('plugins.executePluginMainAction', (_event, args) =>
+    invokeInPluginWindow('executePluginMainAction', args),
+  );
   ipcMain.handle('plugins.hasRequestHooks', async () => {
     if (cachedHasRequestHooks === null) {
-      cachedHasRequestHooks = await invokeInPluginWindow('hasRequestHooks') as boolean;
+      cachedHasRequestHooks = (await invokeInPluginWindow('hasRequestHooks')) as boolean;
     }
     return cachedHasRequestHooks;
   });
   ipcMain.handle('plugins.hasResponseHooks', async () => {
     if (cachedHasResponseHooks === null) {
-      cachedHasResponseHooks = await invokeInPluginWindow('hasResponseHooks') as boolean;
+      cachedHasResponseHooks = (await invokeInPluginWindow('hasResponseHooks')) as boolean;
     }
     return cachedHasResponseHooks;
   });
