@@ -267,7 +267,7 @@ export const NewWorkspaceModal = ({
                       <Label className="group relative flex flex-col gap-2 overflow-hidden">
                         <span className="text-sm text-(--hl)">File name</span>
 
-                        <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
+                        <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-2 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                           <Input
                             placeholder={workspaceData.name ? safeToUseInsomniaFileName(workspaceData.name) : 'name'}
                             className="w-full outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
