@@ -1,3 +1,4 @@
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
@@ -5,8 +6,10 @@ import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
 import type { Request } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
+import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
 import { Tooltip } from '~/ui/components/tooltip';
 import { setDefaultProtocol } from '~/utils/url/protocol';
@@ -14,6 +17,7 @@ import { setDefaultProtocol } from '~/utils/url/protocol';
 import { Icon } from './icon';
 
 const CURL_COMMAND_PATTERN = /^\s*\$?\s*curl(?:\s|$)/i;
+const NOTION_MCP_SERVER_URL = 'https://mcp.notion.com/mcp';
 
 const parseCurlImportError = (error: unknown) => {
   const rawMessage = error instanceof Error ? error.message : String(error);
@@ -53,6 +57,14 @@ interface CollectionItem {
   label: string;
 }
 
+interface QuickStartItem {
+  id: string;
+  label: string;
+  icon: JSX.Element;
+  badge?: string;
+  onClick: () => void | Promise<void>;
+}
+
 interface FirstRequestCreationProps {
   greetingName: string;
   collectionItems: CollectionItem[];
@@ -74,6 +86,7 @@ export const FirstRequestCreation = ({
   };
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const createRequestFetcher = useRequestNewActionFetcher();
+  const createWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [requestInput, setRequestInput] = useState('');
   const [curlParseError, setCurlParseError] = useState(false);
@@ -164,15 +177,133 @@ export const FirstRequestCreation = ({
     setSelectOpen(false);
   }, [selectedCollectionId]);
 
+  const handleCreateNotionMcpWorkspace = () => {
+    createWorkspaceFetcher.submit({
+      organizationId,
+      projectId,
+      name: 'Notion MCP Server',
+      scope: 'mcp',
+      mcpServerUrl: NOTION_MCP_SERVER_URL,
+    });
+  };
+
+  const handleCreatePokemonRequest = () => {
+    if (!selectedCollectionId) {
+      showToast({
+        icon: 'circle-exclamation',
+        title: 'Create a collection first',
+        description: 'Choose a destination collection before creating your request.',
+        status: 'warning',
+      });
+      return;
+    }
+
+    createRequestFetcher.submit({
+      organizationId,
+      projectId,
+      workspaceId: selectedCollectionId,
+      parentId: selectedCollectionId,
+      requestType: 'HTTP',
+      req: {
+        url: 'https://pokeapi.co/api/v2/pokemon/ditto',
+        name: 'List a pokeman',
+      },
+    });
+  };
+
+  const handleCreateGithubLookupRequest = async () => {
+    if (!selectedCollectionId) {
+      showToast({
+        icon: 'circle-exclamation',
+        title: 'Create a collection first',
+        description: 'Choose a destination collection before creating your request.',
+        status: 'warning',
+      });
+      return;
+    }
+
+    const graphqlQuery = `
+      query {
+        viewer {
+          repositories(first: 100, privacy: PUBLIC, affiliations: [OWNER]) {
+            nodes {
+              name
+              description
+              url
+              stargazerCount
+            }
+          }
+        }
+      }
+    `;
+
+    const githubGraphqlLookupCurl = `curl --request POST \
+  --url https://api.github.com/graphql \
+  --header 'Authorization: Bearer replace with your own token' \
+  --header 'Content-Type: application/json' \
+  --header 'User-Agent: insomnia/12.5.1-alpha.0' \
+  --data '{"query":"${graphqlQuery}"}'`;
+
+    try {
+      const req = await parseCurlRequest(githubGraphqlLookupCurl);
+      createRequestFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId: selectedCollectionId,
+        parentId: selectedCollectionId,
+        requestType: 'GraphQL',
+        req: {
+          ...req,
+          name: 'Lookup GitHub repository',
+        },
+      });
+    } catch (error) {
+      showToast({
+        icon: 'circle-exclamation',
+        title: error instanceof Error ? error.message : 'Unable to create GitHub lookup request',
+        status: 'error',
+      });
+    }
+  };
+
+  const quickStartItems: QuickStartItem[] = [
+    {
+      id: 'mcp-server',
+      label: 'Notion MCP Server',
+      icon: <Icon icon={['fac', 'mcp'] as unknown as IconProp} />,
+      onClick: handleCreateNotionMcpWorkspace,
+    },
+    {
+      id: 'pokemon',
+      label: 'List a pokemon',
+      icon: (
+        <span
+          aria-label="Tab Tag"
+          className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-surprise-rgb),0.5)] text-[0.65rem] text-(--color-font-surprise)`}
+        >
+          GET
+        </span>
+      ),
+      badge: 'GET',
+      onClick: handleCreatePokemonRequest,
+    },
+    {
+      id: 'github-lookup',
+      label: 'Lookup GitHub repository',
+      icon: <SvgIcon icon="graphql" />,
+      onClick: handleCreateGithubLookupRequest,
+    },
+  ];
+
   return (
     <>
-      <div className="w-full overflow-hidden rounded-sm bg-[radial-gradient(100%_100.41%_at_100%_99.92%,#4C4C4C_0%,rgba(3,3,3,0)_100%),radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#4C4C4C_0%,rgba(3,3,3,0)_100%)] p-px">
-        <div className="flex h-90 w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-6 pb-5">
+      <div className="w-full rounded-sm bg-[radial-gradient(100%_100.41%_at_100%_99.92%,#4C4C4C_0%,rgba(3,3,3,0)_100%),radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#4C4C4C_0%,rgba(3,3,3,0)_100%)] p-px">
+        <div className="flex w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-6 pb-5">
           <h2 className="text-center text-2xl leading-none font-semibold">Welcome, {greetingName}!</h2>
           <p className="mt-2.5 text-center text-sm">
             We have a sneaking suspicion that you came here to send a request, so let’s get started!
           </p>
-          <div className="mt-8 w-full max-w-135">
+          <div className="mt-8 w-[50%] min-w-100">
             <div className="flex aspect-540/127 flex-col overflow-hidden rounded-lg border border-[#3F3F46] bg-[#18181B] shadow-[0_0_0_4px_#0044F433]">
               <div className="flex-1 px-4 pt-3 pb-2">
                 <textarea
@@ -251,6 +382,17 @@ export const FirstRequestCreation = ({
             {curlParseError && (
               <div className="mt-2 text-xs text-[#FF5631]">Invalid cURL. Verify your input and try again.</div>
             )}
+            <div className="my-6">
+              <p className="text-xs font-semibold">Not sure where to start?</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {quickStartItems.map(item => (
+                  <Button key={item.id} variant="outlined" size="md" onPress={item.onClick}>
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

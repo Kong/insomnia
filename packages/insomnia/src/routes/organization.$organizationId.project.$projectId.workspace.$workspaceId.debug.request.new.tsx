@@ -44,7 +44,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       await services.request.create({
         parentId: parentId || workspaceId,
         method: METHOD_GET,
-        name: 'New Request',
+        name: req?.name || 'New Request',
         url: req?.url || '',
         headers: defaultHeaders,
       })
@@ -66,9 +66,11 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
         headers: [...defaultHeaders, { name: 'Content-Type', value: CONTENT_TYPE_JSON }],
         body: {
           mimeType: CONTENT_TYPE_GRAPHQL,
-          text: '',
+          text: req?.body?.text || '',
         },
-        name: 'New Request',
+        name: req?.name || 'New Request',
+        url: req?.url || '',
+        authentication: req?.authentication,
       })
     )._id;
   }

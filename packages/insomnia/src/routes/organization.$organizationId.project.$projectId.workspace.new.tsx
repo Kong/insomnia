@@ -18,6 +18,7 @@ import { mockRouteToHar } from './organization.$organizationId.project.$projectI
 interface NewWorkspaceData {
   name: string;
   scope: WorkspaceScope;
+  mcpServerUrl?: string;
   folderPath?: string;
   mockServerType?: 'self-hosted' | 'cloud';
   mockServerUrl?: string;
@@ -139,7 +140,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       await services.mcpRequest.create({
         parentId: workspace._id,
         transportType: 'streamable-http',
-        url: '',
+        url: workspaceData.mcpServerUrl?.trim() || '',
         name: 'MCP Client',
         headers: defaultHeaders,
         description: '',
