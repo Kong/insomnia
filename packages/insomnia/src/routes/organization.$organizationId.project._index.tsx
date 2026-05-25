@@ -9,7 +9,6 @@ import { models, services } from '~/insomnia-data';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
-import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
@@ -64,7 +63,6 @@ const Component = () => {
   return (
     <ErrorBoundary>
       <>
-        <OrganizationTabList showActiveStatus={false} />
         <NoProjectView storageRules={storageRules} />
       </>
     </ErrorBoundary>
