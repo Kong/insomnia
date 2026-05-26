@@ -1,17 +1,31 @@
+import { getOrganizationFeatures, type FeatureList } from 'insomnia-api';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Switch } from 'react-aria-components';
+import { useParams } from 'react-router';
 
 import type { AIFeatureNames, LLMBackend, LLMConfig } from '~/main/llm-config-service';
+import { models } from '~/insomnia-data';
+import { fallbackFeatures } from '~/routes/organization.$organizationId.permissions';
+import { useRootLoaderData } from '~/root';
 import { Badge } from '~/ui/components/base/badge';
 import { Claude } from '~/ui/components/settings/llms/claude';
 import { Gemini } from '~/ui/components/settings/llms/gemini';
 import { GGUF } from '~/ui/components/settings/llms/gguf';
 import { OpenAI } from '~/ui/components/settings/llms/openai';
 import { Url } from '~/ui/components/settings/llms/url';
-import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 
 export const AISettings = () => {
-  const { features } = useOrganizationPermissions();
+  const { organizationId } = useParams() as { organizationId?: string };
+  const { userSession } = useRootLoaderData()!;
+  const [features, setFeatures] = useState<FeatureList>(fallbackFeatures);
+
+  useEffect(() => {
+    if (organizationId && userSession.id && !models.organization.isScratchpadOrganizationId(organizationId)) {
+      getOrganizationFeatures({ organizationId, sessionId: userSession.id })
+        .then(res => setFeatures(res?.features || fallbackFeatures))
+        .catch(() => setFeatures(fallbackFeatures));
+    }
+  }, [organizationId, userSession.id]);
   const [currentLLM, setCurrentLLM] = useState<LLMConfig | null>(null);
   const [selectedBackend, setSelectedBackend] = useState<LLMBackend>('gguf');
   const [configuredLLMs, setConfiguredLLMs] = useState<LLMConfig[]>([]);
