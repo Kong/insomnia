@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import nodePath from 'node:path';
 
 import * as commander from 'commander';
+import { LogLevels } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { Confirm } from 'enquirer';
@@ -37,8 +38,6 @@ import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 import type { Database } from './db/types';
 import { InsoError } from './errors';
-import { LogLevels } from 'consola';
-
 import { BasicReporter, logger } from './logger';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
 import { generateDocumentation } from './scripts/docs';
