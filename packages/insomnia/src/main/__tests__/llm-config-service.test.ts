@@ -92,6 +92,25 @@ describe('llm-config-service', () => {
       expect(config.model).toBe('test-model');
     });
 
+    it('should parse numeric URL backend options from storage', async () => {
+      vi.mocked(services.pluginData.all).mockResolvedValue([
+        mockPluginData('url.model', 'gpt-4.1-mini'),
+        mockPluginData('url.maxTokens', '4096'),
+        mockPluginData('url.temperature', '0.7'),
+        mockPluginData('url.topP', '0.95'),
+      ]);
+
+      const config = await getBackendConfig('url');
+
+      expect(config).toEqual({
+        backend: 'url',
+        model: 'gpt-4.1-mini',
+        maxTokens: 4096,
+        temperature: 0.7,
+        topP: 0.95,
+      });
+    });
+
     it('should return empty config for unconfigured backend', async () => {
       vi.mocked(services.pluginData.all).mockResolvedValue([]);
 
@@ -129,6 +148,18 @@ describe('llm-config-service', () => {
         'url.baseURL',
         'https://custom-llm.com',
       );
+    });
+
+    it('should save numeric URL backend options to storage', async () => {
+      await updateBackendConfig('url', {
+        maxTokens: 4096,
+        temperature: 0.7,
+        topP: 0.95,
+      });
+
+      expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.maxTokens', '4096');
+      expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.temperature', '0.7');
+      expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.topP', '0.95');
     });
 
     it('should handle partial config updates', async () => {

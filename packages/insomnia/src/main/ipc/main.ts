@@ -797,14 +797,17 @@ export function registerMainHandlers() {
         reject({ error: err.toString() });
       });
       const { systemPrompt, messages, modelConfig: modelConfigFromSamplingRequest } = input;
+      const mergedModelConfig = !modelConfig
+        ? modelConfigFromSamplingRequest
+        : {
+            ...modelConfig,
+            ...modelConfigFromSamplingRequest,
+          };
 
       process.postMessage({
         messages,
         systemPrompt,
-        modelConfig: {
-          ...modelConfig,
-          ...modelConfigFromSamplingRequest,
-        },
+        modelConfig: mergedModelConfig,
         aiPluginName: AI_PLUGIN_NAME,
       });
     });

@@ -118,7 +118,7 @@ export const AISettings = () => {
             <span className="group relative inline-flex h-6 w-11">
               <Switch
                 isSelected={aiFeatures.aiMockServers && isMockServerEnabledByOrg}
-                onChange={(enabled) => toggleAIFeature('aiMockServers', enabled)}
+                onChange={enabled => toggleAIFeature('aiMockServers', enabled)}
                 isDisabled={isMockServerFeatureDisabled}
                 className="group flex items-center gap-2"
               >
@@ -144,7 +144,7 @@ export const AISettings = () => {
             <span className="group relative inline-flex h-6 w-11">
               <Switch
                 isSelected={aiFeatures.aiCommitMessages && isCommitMessagesEnabledByOrg}
-                onChange={(enabled) => toggleAIFeature('aiCommitMessages', enabled)}
+                onChange={enabled => toggleAIFeature('aiCommitMessages', enabled)}
                 isDisabled={isCommitMessagesFeatureDisabled}
                 className="group flex items-center gap-2"
               >
@@ -170,7 +170,7 @@ export const AISettings = () => {
             <span className="group relative inline-flex h-6 w-11">
               <Switch
                 isSelected={aiFeatures.aiMcpClient && isMcpClientEnabledByOrg}
-                onChange={(enabled) => toggleAIFeature('aiMcpClient', enabled)}
+                onChange={enabled => toggleAIFeature('aiMcpClient', enabled)}
                 isDisabled={isMcpClientFeatureDisabled}
                 className="group flex items-center gap-2"
               >
