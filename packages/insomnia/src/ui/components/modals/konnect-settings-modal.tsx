@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
+import { database } from '~/common/database';
+import { services } from '~/insomnia-data';
 import { validatePat } from '~/konnect/api';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -8,41 +10,85 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 
-export const KonnectSettingsModal = ({ onClose }: { onClose: () => void }) => {
+export const KonnectSettingsModal = ({
+  onClose,
+  syncKonnectProjectsAndNotifyRef,
+}: {
+  onClose: () => void;
+  syncKonnectProjectsAndNotifyRef: React.MutableRefObject<() => Promise<void>>;
+}) => {
   const { settings } = useRootLoaderData()!;
   const patchSettings = useSettingsPatcher();
 
   const [pat, setPat] = useState('');
+  const [isPatVisible, setIsPatVisible] = useState(false);
+  // 'idle' | 'validating' | 'valid' | 'invalid'
   const [status, setStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
   const [validationError, setValidationError] = useState<string | null>(null);
+  // Controls whether the disconnect confirmation screen is shown
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
+  // Validate the given PAT against the Konnect API and update status/error state accordingly.
+  const validateAndSetStatus = async (trimmed: string) => {
+    setStatus('validating');
+    setValidationError(null);
+    const result = await validatePat(trimmed);
+    setStatus(result.valid ? 'valid' : 'invalid');
+    if (!result.valid) {
+      setValidationError(result.error ?? 'Invalid PAT. Check your input and try again.');
+    }
+    return result;
+  };
+
+  // On mount: if a PAT is already stored, load it from secure storage and validate it.
+  useEffect(() => {
+    if (settings.hasKonnectPat) {
+      window.main.secretStorage.getSecret('konnectPat').then(secret => {
+        if (secret) {
+          setPat(secret);
+          validateAndSetStatus(secret);
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Validate the PAT, persist it to secure storage, and trigger an initial sync.
   const handleConnect = async () => {
     const trimmed = pat.trim();
     if (!trimmed) {
       return;
     }
-    setStatus('validating');
-    setValidationError(null);
-    const result = await validatePat(trimmed);
-    setStatus(result.valid ? 'valid' : 'invalid');
+    const result = await validateAndSetStatus(trimmed);
     if (result.valid) {
       await window.main.secretStorage.setSecret('konnectPat', trimmed);
       patchSettings({ hasKonnectPat: true });
-      setPat('');
       window.main.trackAnalyticsEvent({ event: AnalyticsEvent.kongKonnectPatValidated });
-    } else {
-      setValidationError(result.error ?? 'Invalid PAT. Check your input and try again.');
+      syncKonnectProjectsAndNotifyRef.current();
     }
   };
 
+  // Delete all Konnect-synced projects from the local DB, remove the stored PAT, and close the modal.
   const handleDisconnect = async () => {
-    await window.main.secretStorage.deleteSecret('konnectPat');
-    patchSettings({ hasKonnectPat: false });
-    setPat('');
-    setStatus('idle');
-    setValidationError(null);
+    setIsDisconnecting(true);
+    try {
+      const allProjects = await services.project.list();
+      const konnectProjects = allProjects.filter(p => p.konnectControlPlaneId != null);
+      const bufferId = await database.bufferChanges();
+      for (const project of konnectProjects) {
+        await services.project.remove(project);
+      }
+      await database.flushChanges(bufferId);
+      await window.main.secretStorage.deleteSecret('konnectPat');
+      patchSettings({ hasKonnectPat: false });
+      onClose();
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
 
+  // A connected state means the PAT is saved and has not been found invalid.
   const isConnected = settings.hasKonnectPat && status !== 'invalid';
 
   return (
@@ -56,13 +102,13 @@ export const KonnectSettingsModal = ({ onClose }: { onClose: () => void }) => {
       }}
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
-      <Modal className="flex w-full max-w-lg flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
+      <Modal className="flex w-full max-w-3xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
         <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex h-full flex-1 flex-col gap-4">
               <div className="flex items-center justify-between gap-2">
                 <Heading slot="title" className="text-lg font-bold">
-                  Kong Konnect settings
+                  {showDisconnectConfirm ? 'Disconnect Kong Konnect?' : 'Kong Konnect settings'}
                 </Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
@@ -72,67 +118,102 @@ export const KonnectSettingsModal = ({ onClose }: { onClose: () => void }) => {
                 </Button>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <label className="text-sm font-semibold" htmlFor="konnect-modal-pat">
-                  Personal Access Token
-                </label>
-                <p className="text-sm text-(--hl)">
-                  Enter a Personal Access Token (PAT) to sync your Konnect control planes into Insomnia projects.
-                </p>
-                <button
-                  className="w-fit text-sm text-(--color-font) underline hover:opacity-80"
-                  onClick={() => window.main.openInBrowser('https://cloud.konghq.com/global/account/tokens')}
-                >
-                  Generate new PAT <Icon icon="arrow-up-right-from-square" className="text-xs" />
-                </button>
-
-                <input
-                  id="konnect-modal-pat"
-                  type="password"
-                  className="rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1.5 text-(--color-font) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-                  placeholder={
-                    isConnected
-                      ? 'Enter new PAT to replace existing'
-                      : 'e.g. kpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-                  }
-                  value={pat}
-                  onChange={e => {
-                    setPat(e.target.value);
-                    if (status !== 'idle') {
-                      setStatus('idle');
-                      setValidationError(null);
-                    }
-                  }}
-                  autoComplete="off"
-                />
-
-                {status === 'invalid' && (
-                  <p className="text-sm text-(--color-danger)">
-                    {validationError ?? 'Invalid PAT. Check your input and try again.'}
+              {showDisconnectConfirm ? (
+                <>
+                  <p className="text-sm text-(--hl)">
+                    Disconnecting will remove your Personal Access Token and deletes related project data. This action
+                    cannot be undone. Are you sure?
                   </p>
-                )}
-                {(status === 'valid' || (isConnected && status === 'idle')) && (
-                  <p className="text-sm text-(--color-success)">Connected</p>
-                )}
-              </div>
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <Button
+                      className="rounded-xs border border-solid border-(--hl-sm) px-4 py-2 text-sm text-(--color-font) hover:bg-(--hl-xs)"
+                      onPress={() => setShowDisconnectConfirm(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="rounded-xs bg-(--color-danger) px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                      isDisabled={isDisconnecting}
+                      onPress={handleDisconnect}
+                    >
+                      {isDisconnecting ? <Icon icon="spinner" className="animate-spin" /> : 'Disconnect & delete data'}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-3">
+                    <label className="text-sm font-semibold" htmlFor="konnect-modal-pat">
+                      Personal Access Token
+                    </label>
+                    <p className="text-sm text-(--hl)">
+                      Enter a Personal Access Token (PAT) to sync your Konnect control planes into Insomnia projects.
+                    </p>
+                    <button
+                      className="w-fit text-sm text-(--color-font) underline hover:opacity-80"
+                      onClick={() => window.main.openInBrowser('https://cloud.konghq.com/global/account/tokens')}
+                    >
+                      Generate new PAT <Icon icon="arrow-up-right-from-square" className="text-xs" />
+                    </button>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  className="disabled:forbid-pointer-events rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs) disabled:cursor-not-allowed disabled:opacity-50"
-                  isDisabled={!pat.trim() || status === 'validating'}
-                  onPress={handleConnect}
-                >
-                  {status === 'validating' ? <Icon icon="spinner" className="animate-spin" /> : 'Connect & Sync'}
-                </Button>
-                {isConnected && (
-                  <Button
-                    className="rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm font-semibold text-(--color-font) hover:bg-(--hl-xs)"
-                    onPress={handleDisconnect}
-                  >
-                    Disconnect
-                  </Button>
-                )}
-              </div>
+                    <div className="relative">
+                      <input
+                        id="konnect-modal-pat"
+                        type={isPatVisible ? 'text' : 'password'}
+                        className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1.5 pr-8 text-(--color-font) focus:border-(--hl-lg) focus:outline-hidden"
+                        placeholder={
+                          isConnected
+                            ? 'Enter new PAT to replace existing'
+                            : 'e.g. kpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+                        }
+                        value={pat}
+                        onChange={e => {
+                          setPat(e.target.value);
+                          if (status !== 'idle') {
+                            setStatus('idle');
+                            setValidationError(null);
+                          }
+                        }}
+                        autoComplete="off"
+                      />
+                      <Button
+                        aria-label={isPatVisible ? 'Hide PAT' : 'Show PAT'}
+                        className="absolute top-1/2 right-2 -translate-y-1/2 text-sm text-(--hl) hover:text-(--color-font)"
+                        onPress={() => setIsPatVisible(v => !v)}
+                      >
+                        <Icon icon={isPatVisible ? 'eye-slash' : 'eye'} />
+                      </Button>
+                    </div>
+
+                    {status === 'invalid' && (
+                      <p className="text-sm text-(--color-danger)">
+                        {validationError ?? 'Invalid PAT. Check your input and try again.'}
+                      </p>
+                    )}
+                    {(status === 'valid' || (isConnected && status === 'idle')) && (
+                      <p className="text-sm text-(--color-success)">Connected</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      className="disabled:forbid-pointer-events rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs) disabled:cursor-not-allowed disabled:opacity-50"
+                      isDisabled={!pat.trim() || status === 'validating'}
+                      onPress={handleConnect}
+                    >
+                      {status === 'validating' ? <Icon icon="spinner" className="animate-spin" /> : 'Connect & Sync'}
+                    </Button>
+                    {isConnected && (
+                      <Button
+                        className="rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm font-semibold text-(--color-font) hover:bg-(--hl-xs)"
+                        onPress={() => setShowDisconnectConfirm(true)}
+                      >
+                        Disconnect
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </Dialog>

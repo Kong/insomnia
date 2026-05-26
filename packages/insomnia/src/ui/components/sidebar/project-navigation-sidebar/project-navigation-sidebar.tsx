@@ -21,7 +21,6 @@ import { useProjectLoaderData } from '~/routes/organization.$organizationId.proj
 import { AnalyticsEvent } from '~/ui/analytics';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
-import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
@@ -33,7 +32,7 @@ import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
-import { useUserService } from '~/ui/hooks/use-user-service';
+import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
@@ -103,7 +102,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   );
   const activeTab = !konnectSyncEnabled ? 'projects' : (storedTab ?? 'projects');
   const isProjectTabActive = activeTab === 'projects';
-  const { syncing, progress, error: syncError, startSync, cancelSync } = useKonnectSync();
+  const { syncing, progress, startSync, cancelSync } = useKonnectSync();
 
   const nonKonnectProjects = projects.filter(p => !p.konnectControlPlaneId);
   const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
@@ -122,6 +121,8 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   const cachedCollectionChildrenAndMetaRef = useRef<Map<string, AllRequestsAndMetaInWorkspace>>(new Map());
   // ref to track whether we are currently fetching unsynced files for cloud sync projects to avoid duplicate requests
   const isFetchingUnsyncedFilesRef = useRef(false);
+
+  const syncKonnectProjectsAndNotifyRef = useRef<() => Promise<void>>(async () => {});
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
@@ -202,50 +203,66 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
     return setUnsyncedFilesByProjectId(result);
   }, [organizationId, cloudSyncProjectIdsKey]);
 
+  const syncKonnectProjectsAndNotify = async () => {
+    const result = await startSync(organizationId);
+    setLastSyncResult(result ?? null);
+    setShowSyncDetails(false);
+    setCopiedReason(null);
+  };
+  syncKonnectProjectsAndNotifyRef.current = syncKonnectProjectsAndNotify;
+
   const handleSync = async () => {
     if (!konnectSyncEnabled) {
       return;
     }
 
-    const runAndNotify = async () => {
-      const result = await startSync(organizationId);
-      setLastSyncResult(result ?? null);
-      setShowSyncDetails(false);
-      setCopiedReason(null);
-    };
-
     const isResync = konnectProjects.length > 0;
     if (isResync) {
       showModal(AskModal, {
-        title: 'Re-sync Konnect',
+        title: 'Sync updates from Konnect',
         message: (
-          <div>
-            <p>Re-syncing will make the following changes:</p>
-            <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-              <li>
-                <strong>Reset</strong> — request method, URL, name, and Konnect-managed headers
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <KongLogo width={20} height={20} />
+                <span className="text-sm font-medium">Konnect</span>
+              </div>
+              <span className="text-(--hl)">→</span>
+              <div className="flex items-center gap-1">
+                <img src={insomniaLogo} alt="Insomnia" className="h-5 w-5" />
+                <span className="text-sm font-medium">Insomnia</span>
+              </div>
+            </div>
+            <p className="text-sm text-(--hl)">
+              Sync the latest changes from your Konnect organization into Insomnia. This will:
+            </p>
+            <ul className="flex flex-col gap-1 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-font)" />
+                Keep your local custom changes (never pushed to Konnect)
               </li>
-              <li>
-                <strong>Delete</strong> — requests added manually or no longer in Konnect
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-font)" />
+                Update existing resources to match Konnect
               </li>
-              <li>
-                <strong>Preserve</strong> — body, auth, query params, scripts, description, and user-added headers
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-font)" />
+                Remove collections or environments tied to control planes, services, or routes deleted in Konnect
               </li>
             </ul>
-            <p>This cannot be undone. Continue?</p>
           </div>
         ),
-        yesText: 'Re-sync',
+        yesText: 'Sync Now',
         noText: 'Cancel',
-        color: 'warning',
+        color: 'surprise',
         onDone: async (confirmed: boolean) => {
           if (confirmed) {
-            await runAndNotify();
+            await syncKonnectProjectsAndNotify();
           }
         },
       });
     } else {
-      await runAndNotify();
+      await syncKonnectProjectsAndNotify();
     }
   };
 
@@ -677,9 +694,8 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       ? [selectedItemId]
       : [];
 
-  const { isPaidEnterprise } = useUserService();
   const { hasKonnectPat } = settings;
-  const showKonnectSyncIntro = isPaidEnterprise && !isProjectTabActive && !hasKonnectPat;
+  const showKonnectSyncIntro = konnectSyncEnabled && !isProjectTabActive && !hasKonnectPat;
   const [showKonnectConfigModal, setShowKonnectConfigModal] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
   const [showSyncDetails, setShowSyncDetails] = useState(false);
@@ -697,7 +713,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
       {!isScratchPad &&
-        (isPaidEnterprise ? (
+        (konnectSyncEnabled ? (
           <div className="flex shrink-0 border-b border-solid border-b-(--hl-md)">
             {['projects', 'konnect'].map(tabName => (
               <button
@@ -792,7 +808,6 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
           {!isProjectTabActive && syncing && (
             <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>
           )}
-          {!isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
 
           <div
             ref={parentRef}
@@ -1034,7 +1049,12 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
           storageRules={storageRules}
         />
       )}
-      {showKonnectConfigModal && <KonnectSettingsModal onClose={() => setShowKonnectConfigModal(false)} />}
+      {showKonnectConfigModal && (
+        <KonnectSettingsModal
+          onClose={() => setShowKonnectConfigModal(false)}
+          syncKonnectProjectsAndNotifyRef={syncKonnectProjectsAndNotifyRef}
+        />
+      )}
     </div>
   );
 };
