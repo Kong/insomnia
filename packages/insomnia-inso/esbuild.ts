@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { analyzeMetafile, build, type BuildOptions, context } from 'esbuild';
 
@@ -18,6 +19,7 @@ const config: BuildOptions = {
   tsconfig: 'tsconfig.json',
   alias: {
     electron: '../insomnia/send-request/electron',
+    '~/network/network-adapter': path.resolve(__dirname, '../insomnia/src/network/network-adapter.node'),
   },
   plugins: [
     // taken from https://github.com/tjx666/awesome-vscode-extension-boilerplate/blob/main/scripts/esbuild.ts
