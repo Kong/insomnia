@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -5,6 +6,10 @@ import { getSafePluginDir } from '../utils/plugin';
 
 export async function createPlugin(pluginName: string, mainJs: string) {
   const pluginDir = getSafePluginDir(pluginName);
+
+  if (existsSync(pluginDir)) {
+    throw new Error('Plugin already exists');
+  }
 
   try {
     const packagePath = path.resolve(pluginDir, 'package.json');

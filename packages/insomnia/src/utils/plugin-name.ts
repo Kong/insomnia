@@ -1,9 +1,10 @@
-// Allow only lowercase alphanumeric and dashes — matches npm package name conventions
-const safePattern = /^[a-z0-9\-]+$/;
+// Allow only safe characters (alphanumeric, dashes, underscores, dots)
+// Disallow any path traversal (../), shell metacharacters, etc.
+const safePattern = /^[a-zA-Z0-9_\-\.]+$/;
 
 // TODO (pavkout): Remove this when we stop supporting scoped package names
 // For scoped names
-const scopedSafePattern = /^@[a-z0-9\-]+\/[a-z0-9\-]+$/;
+const scopedSafePattern = /^@[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+$/;
 
 // Pattern for common shell metacharacters
 const unsafeShellPattern = /[|;&$`\\]/;
@@ -93,7 +94,7 @@ export function validatePluginName(pluginName: string, allowScopedPackageNames =
   // Reject plugin names like "con", "prn", "aux", "nul" and ".."
   const reserved = ['con', 'prn', 'aux', 'nul'];
 
-  if (reserved.includes(pluginName.toLowerCase())) {
+  if (reserved.includes(pluginNameWithoutPrefix.toLowerCase())) {
     return 'Plugin name is not allowed';
   }
 
