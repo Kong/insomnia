@@ -395,6 +395,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               count_path_parameters: activeRequest.pathParameters?.length ?? 0,
               has_docs: !!activeRequest.description,
               count_certificates: clientCertificates.length,
+              request_type: activeRequest.type,
             },
           });
 
