@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import nodePath from 'node:path';
-
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
@@ -71,6 +68,8 @@ const getTimelinePath = async (responseId: string): Promise<string> => {
   }
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const electron = require('electron') as { app: { getPath: (name: string) => string } };
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const nodePath = require('node:path') as typeof import('node:path');
   const dataDir = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
   return nodePath.join(dataDir, 'responses', responseId + '.timeline');
 };
@@ -1176,6 +1175,7 @@ export const defaultSendActionRuntime = {
   appendTimeline: async (timelinePath: string, logs: string[]) => {
     await (typeof window !== 'undefined'
       ? window.main.timeline.appendToFile({ timelinePath, data: logs.join('\n') })
-      : fs.promises.appendFile(timelinePath, logs.join('\n')));
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      : (require('node:fs') as typeof import('node:fs')).promises.appendFile(timelinePath, logs.join('\n')));
   },
 };
