@@ -1,5 +1,7 @@
 import clone from 'clone';
+import fs from 'node:fs';
 import orderedJSON from 'json-order';
+import nodePath from 'node:path';
 
 import type {
   CaCertificate,
@@ -59,6 +61,18 @@ import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
+
+// In the renderer process window is defined and we delegate to the IPC bridge.
+// In inso (pure Node.js) window is undefined — electron is aliased to a shim.
+const getTimelinePath = async (responseId: string): Promise<string> => {
+  if (typeof window !== 'undefined') {
+    return window.main.timeline.getPath(responseId);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const electron = require('electron') as { app: { getPath: (name: string) => string } };
+  const dataDir = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
+  return nodePath.join(dataDir, 'responses', responseId + '.timeline');
+};
 
 export interface SendActionRuntime {
   appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
@@ -152,7 +166,7 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
-  const timelinePath = await window.main.timeline.getPath(responseId);
+  const timelinePath = await getTimelinePath(responseId);
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -215,7 +229,7 @@ export const fetchRequestData = async (
   const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const timelinePath = await window.main.timeline.getPath(responseId);
+  const timelinePath = await getTimelinePath(responseId);
 
   return {
     request,
@@ -254,7 +268,7 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const timelinePath = await window.main.timeline.getPath(responseId);
+  const timelinePath = await getTimelinePath(responseId);
 
   return {
     environment,
@@ -650,10 +664,12 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       parentFolders: output.parentFolders,
     };
   } catch (err) {
-    await window.main.timeline.appendToFile({
-      timelinePath,
-      data: serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
-    });
+    if (typeof window !== 'undefined') {
+      await window.main.timeline.appendToFile({
+        timelinePath,
+        data: serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
+      });
+    }
     // stack trace is ignored as it is always from preload
     const errMessage = err.message ? err.message : err;
     return { error: errMessage };
@@ -1157,6 +1173,10 @@ export async function _applyResponsePluginHooks(
 }
 export const defaultSendActionRuntime = {
   appendTimeline: async (timelinePath: string, logs: string[]) => {
-    await window.main.timeline.appendToFile({ timelinePath, data: logs.join('\n') });
+    if (typeof window !== 'undefined') {
+      await window.main.timeline.appendToFile({ timelinePath, data: logs.join('\n') });
+    } else {
+      await fs.promises.appendFile(timelinePath, logs.join('\n'));
+    }
   },
 };
