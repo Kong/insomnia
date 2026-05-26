@@ -44,6 +44,7 @@ const rendererNodeRestrictionIgnores = [
   'packages/insomnia/src/common/__tests__/**/*.{ts,tsx}',
   'packages/insomnia/src/common/send-request.ts',
   'packages/insomnia/src/common/bundle-spectral-ruleset.ts',
+  'packages/insomnia/src/common/private-host.ts',
 ];
 
 export default defineConfig([
