@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button, Dialog, Heading, Input, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
 
 import { docsPlugins } from '../../../common/documentation';
-import { createPlugin } from '../../../plugins/create';
 import { Icon } from '../icon';
 
 interface Props {
@@ -90,15 +89,15 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                     const nameWithoutPrefix = name.replace(/^insomnia-plugin-/, '');
 
                     try {
-                      await createPlugin(
-                        `insomnia-plugin-${nameWithoutPrefix}`,
-                        [
+                      await window.main.createPlugin({
+                        pluginName: `insomnia-plugin-${nameWithoutPrefix}`,
+                        mainJs: [
                           '// For help writing plugins, visit the documentation to get started:',
                           `// ${docsPlugins}`,
                           '',
                           '// TODO: Add plugin code here...',
                         ].join('\n'),
-                      );
+                      });
 
                       onComplete();
                     } catch (err) {

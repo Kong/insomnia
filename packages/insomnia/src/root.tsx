@@ -24,7 +24,6 @@ import { useLatest } from 'react-use';
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
@@ -527,7 +526,7 @@ const Root = () => {
           onDone: async (isYes: boolean) => {
             if (isYes) {
               const mainJsContent = `module.exports.themes = [${JSON.stringify(parsedTheme, null, 2)}];`;
-              await createPlugin(`theme-${parsedTheme.name}`, mainJsContent);
+              await window.main.createPlugin({ pluginName: `theme-${parsedTheme.name}`, mainJs: mainJsContent });
               const settings = await services.settings.get();
               await services.settings.update(settings, {
                 theme: parsedTheme.name,
