@@ -65,6 +65,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   ) => {
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
     const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
@@ -296,23 +298,26 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
     useEffect(() => {
       const fn = misc.debounce((doc: CodeMirror.Editor) => {
-        if (onChange) {
-          onChange(doc.getValue() || '');
+        if (onChangeRef.current) {
+          onChangeRef.current(doc.getValue() || '');
         }
       }, DEBOUNCE_MILLIS);
-      codeMirror.current?.on('changes', fn);
-      return () => codeMirror.current?.off('changes', fn);
-    }, [onChange]);
-
-    useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
-        if (onChange) {
-          onChange(doc.getValue() || '');
+        // Cancel the pending debounce so a stale fire can't overwrite state after blur
+        fn.cancel();
+        if (onChangeRef.current) {
+          onChangeRef.current(doc.getValue() || '');
         }
       };
+      codeMirror.current?.on('changes', fn);
       codeMirror.current?.on('blur', flushOnBlur);
-      return () => codeMirror.current?.off('blur', flushOnBlur);
-    }, [onChange]);
+      return () => {
+        fn.cancel();
+        codeMirror.current?.off('changes', fn);
+        codeMirror.current?.off('blur', flushOnBlur);
+      };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
       const unsubscribe = window.main.on(

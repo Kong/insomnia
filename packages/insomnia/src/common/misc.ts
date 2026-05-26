@@ -109,6 +109,7 @@ export const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), waitFor);
   };
+  debounced.cancel = () => clearTimeout(timeout);
 
   return debounced;
 };
