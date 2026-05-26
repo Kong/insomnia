@@ -1,5 +1,7 @@
 import clone from 'clone';
+import fs from 'node:fs';
 import orderedJSON from 'json-order';
+import nodePath from 'node:path';
 
 import type {
   CaCertificate,
@@ -651,10 +653,19 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       parentFolders: output.parentFolders,
     };
   } catch (err) {
+<<<<<<< HEAD
     await appendToTimelineOnError(
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
     );
+=======
+    if (typeof window !== 'undefined') {
+      await window.main.timeline.appendToFile({
+        timelinePath,
+        data: serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
+      });
+    }
+>>>>>>> 6f948aad0 (fix: restore Node.js-safe fallbacks in network.ts for inso CLI)
     // stack trace is ignored as it is always from preload
     const errMessage = err.message ? err.message : err;
     return { error: errMessage };
@@ -1087,7 +1098,18 @@ export async function _applyResponsePluginHooks(
     };
   }
 }
+<<<<<<< HEAD
 
 export const defaultSendActionRuntime: SendActionRuntime = {
   appendTimeline: appendTimelineLines,
+=======
+export const defaultSendActionRuntime = {
+  appendTimeline: async (timelinePath: string, logs: string[]) => {
+    if (typeof window !== 'undefined') {
+      await window.main.timeline.appendToFile({ timelinePath, data: logs.join('\n') });
+    } else {
+      await fs.promises.appendFile(timelinePath, logs.join('\n'));
+    }
+  },
+>>>>>>> 6f948aad0 (fix: restore Node.js-safe fallbacks in network.ts for inso CLI)
 };
