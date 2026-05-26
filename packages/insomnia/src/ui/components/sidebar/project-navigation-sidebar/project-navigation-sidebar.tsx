@@ -54,9 +54,14 @@ interface ProjectNavigationSidebarProps {
   storageRules: StorageRules;
   activeNodeId?: string;
   konnectSyncEnabled: boolean;
+  onCreateProject: () => void;
 }
 
-export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: ProjectNavigationSidebarProps) => {
+export const ProjectNavigationSidebar = ({
+  storageRules,
+  konnectSyncEnabled,
+  onCreateProject,
+}: ProjectNavigationSidebarProps) => {
   const navigate = useNavigate();
   const { organizationId, projectId: activeProjectId } = useParams() as {
     organizationId: string;
@@ -76,7 +81,6 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   const [searchParams, _setSearchParams] = useSearchParams();
   const tabNavigate = useTabNavigate();
 
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [collectionSortOrders, setCollectionSortOrders] = useState<Record<string, SortOrder>>({});
   const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
   const [projectNavigationSidebarFilter, setProjectNavigationSidebarFilter] = reactUse.useLocalStorage(
@@ -765,7 +769,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
               !isScratchPad && (
                 <BasicButton
                   aria-label="Create new Project"
-                  onPress={() => setIsNewProjectModalOpen(true)}
+                  onPress={onCreateProject}
                   isDisabled={projects.length === 0}
                   className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
@@ -811,7 +815,7 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
 
           <div
             ref={parentRef}
-            className="group/tree flex-1 overflow-y-auto py-(--padding-sm)"
+            className="group/tree flex-1 overflow-y-auto pb-(--padding-sm)"
             data-testid="project-navigation-tree-container"
           >
             <GridList
@@ -1042,19 +1046,55 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
         </>
       )}
 
-      {isNewProjectModalOpen && (
-        <ProjectModal
-          isOpen={isNewProjectModalOpen}
-          onOpenChange={setIsNewProjectModalOpen}
-          storageRules={storageRules}
-        />
-      )}
       {showKonnectConfigModal && (
         <KonnectSettingsModal
           onClose={() => setShowKonnectConfigModal(false)}
           syncKonnectProjectsAndNotifyRef={syncKonnectProjectsAndNotifyRef}
         />
       )}
+    </div>
+  );
+};
+
+export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreateProject: () => void }) => {
+  const { organizationId } = useParams() as { organizationId: string };
+  const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
+
+  return (
+    <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
+      <div className="px-(--padding-sm) pt-(--padding-sm)">PROJECTS</div>
+      <div className="flex justify-between gap-1 p-(--padding-sm)">
+        <SearchField
+          aria-label="Projects filter"
+          className="group relative flex-1"
+          value=""
+          isDisabled
+          onChange={() => {}}
+        >
+          <Input
+            placeholder="Filter"
+            className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+          />
+          <div className="absolute top-0 right-0 flex h-full items-center px-2">
+            <Button
+              aria-label="Clear search"
+              className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            >
+              <Icon icon="close" />
+            </Button>
+          </div>
+        </SearchField>
+        {!isScratchPad && (
+          <BasicButton
+            aria-label="Create new Project"
+            onPress={onCreateProject}
+            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          >
+            <Icon icon="plus" className="h-2.5 w-2.5" />
+            <span>New Project</span>
+          </BasicButton>
+        )}
+      </div>
     </div>
   );
 };
