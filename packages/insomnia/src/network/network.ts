@@ -1,7 +1,8 @@
-import clone from 'clone';
 import fs from 'node:fs';
-import orderedJSON from 'json-order';
 import nodePath from 'node:path';
+
+import clone from 'clone';
+import orderedJSON from 'json-order';
 
 import type {
   CaCertificate,
@@ -1173,10 +1174,8 @@ export async function _applyResponsePluginHooks(
 }
 export const defaultSendActionRuntime = {
   appendTimeline: async (timelinePath: string, logs: string[]) => {
-    if (typeof window !== 'undefined') {
-      await window.main.timeline.appendToFile({ timelinePath, data: logs.join('\n') });
-    } else {
-      await fs.promises.appendFile(timelinePath, logs.join('\n'));
-    }
+    await (typeof window !== 'undefined'
+      ? window.main.timeline.appendToFile({ timelinePath, data: logs.join('\n') })
+      : fs.promises.appendFile(timelinePath, logs.join('\n')));
   },
 };
