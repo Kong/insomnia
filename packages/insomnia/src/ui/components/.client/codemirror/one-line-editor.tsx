@@ -305,6 +305,16 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [onChange]);
 
     useEffect(() => {
+      const flushOnBlur = (doc: CodeMirror.Editor) => {
+        if (onChange) {
+          onChange(doc.getValue() || '');
+        }
+      };
+      codeMirror.current?.on('blur', flushOnBlur);
+      return () => codeMirror.current?.off('blur', flushOnBlur);
+    }, [onChange]);
+
+    useEffect(() => {
       const unsubscribe = window.main.on(
         'nunjucks-context-menu-command',
         (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {

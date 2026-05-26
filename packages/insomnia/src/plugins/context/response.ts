@@ -1,6 +1,4 @@
-import fs from 'node:fs';
 import type { Readable } from 'node:stream';
-import zlib from 'node:zlib';
 
 import type { Compression, ResponseHeader } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
@@ -62,6 +60,8 @@ export function init(response?: MaybeResponse) {
           if (!response?.bodyPath) {
             return null;
           }
+          const fs = require('node:fs');
+          const zlib = require('node:zlib');
           try {
             fs.statSync(response?.bodyPath);
           } catch (err) {
@@ -83,6 +83,7 @@ export function init(response?: MaybeResponse) {
           throw new Error('Could not set body without existing body path');
         }
 
+        const fs = require('node:fs');
         fs.writeFileSync(response.bodyPath, body);
         response.bytesContent = body.length;
       },

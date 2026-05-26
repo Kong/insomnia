@@ -26,6 +26,7 @@ export type HandleChannels =
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
+  | 'createPlugin'
   | 'curlRequest'
   | 'database.caCertificate.create'
   | 'services.invoke'

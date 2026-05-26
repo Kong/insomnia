@@ -17,14 +17,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/models/helpers/response-operations.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/models/helpers/response-operations.ts",
-      "builtin": "zlib"
-    },
-    {
       "importer": "src/network/network.ts",
       "builtin": "fs"
     },
@@ -33,24 +25,12 @@
       "builtin": "path"
     },
     {
-      "importer": "src/network/url-matches-cert-host.ts",
-      "builtin": "url"
-    },
-    {
       "importer": "src/plugins/context/response.ts",
       "builtin": "fs"
     },
     {
       "importer": "src/plugins/context/response.ts",
       "builtin": "zlib"
-    },
-    {
-      "importer": "src/plugins/create.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/plugins/create.ts",
-      "builtin": "path"
     },
     {
       "importer": "src/plugins/index.ts",
@@ -83,14 +63,6 @@
     {
       "importer": "src/templating/base-extension.ts",
       "builtin": "os"
-    },
-    {
-      "importer": "src/utils/plugin.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/utils/plugin.ts",
-      "builtin": "path"
     }
   ]
 }
