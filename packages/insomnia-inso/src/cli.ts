@@ -37,7 +37,9 @@ import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 import type { Database } from './db/types';
 import { InsoError } from './errors';
-import { BasicReporter, logger, LogLevel } from './logger';
+import { LogLevels } from 'consola';
+
+import { BasicReporter, logger } from './logger';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
 import { generateDocumentation } from './scripts/docs';
 import { getAppDataDir, getDefaultProductName } from './util';
@@ -296,7 +298,7 @@ export const go = (args?: string[]) => {
       ...commandOptions,
       configFileContent: __configFile,
     };
-    logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
+    logger.level = options.verbose ? LogLevels.verbose : LogLevels.info;
     options.ci && logger.setReporters([new BasicReporter()]);
     options.printOptions && logger.log('Loaded options', options, '\n');
 
