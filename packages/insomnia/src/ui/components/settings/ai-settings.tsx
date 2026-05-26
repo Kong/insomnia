@@ -20,11 +20,15 @@ export const AISettings = () => {
   const [features, setFeatures] = useState<FeatureList>(fallbackFeatures);
 
   useEffect(() => {
-    if (organizationId && userSession.id && !models.organization.isScratchpadOrganizationId(organizationId)) {
-      getOrganizationFeatures({ organizationId, sessionId: userSession.id })
-        .then(res => setFeatures(res?.features || fallbackFeatures))
-        .catch(() => setFeatures(fallbackFeatures));
+    if (!organizationId || !userSession.id || models.organization.isScratchpadOrganizationId(organizationId)) {
+      setFeatures(fallbackFeatures);
+      return;
     }
+    let cancelled = false;
+    getOrganizationFeatures({ organizationId, sessionId: userSession.id })
+      .then(res => { if (!cancelled) { setFeatures(res?.features || fallbackFeatures); } })
+      .catch(() => { if (!cancelled) { setFeatures(fallbackFeatures); } });
+    return () => { cancelled = true; };
   }, [organizationId, userSession.id]);
   const [currentLLM, setCurrentLLM] = useState<LLMConfig | null>(null);
   const [selectedBackend, setSelectedBackend] = useState<LLMBackend>('gguf');
