@@ -26,13 +26,13 @@ export const SidebarHeader = ({
   actionButton,
 }: SidebarHeaderProps) => (
   <>
-    <div className="flex shrink-0 border-b border-solid border-b-(--hl-md)">
+    <div className="flex h-[41px] shrink-0 border-b border-solid border-b-(--hl-md)">
       {!isScratchPad &&
         tabs.map(({ name, label }) => (
           <button
             type="button"
             key={name}
-            className={`border-b-2 border-solid px-4 py-2 text-xs ${activeTab === name ? 'border-(--color-surprise) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
+            className={`px-3 py-1 ${activeTab === name ? 'bg-(--hl-xs) text-(--color-font)' : 'text-(--hl) hover:bg-(--hl-sm) hover:text-(--color-font)'}`}
             data-testid={`sidebar-tab-${name}`}
             onClick={() => onTabChange(name)}
           >
