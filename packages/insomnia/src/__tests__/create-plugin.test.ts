@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:fs', () => ({
   existsSync: vi.fn(() => false),
@@ -22,8 +22,20 @@ vi.mock('electron', () => ({
 import { createPlugin } from '../main/create-plugin';
 
 describe('createPlugin', () => {
+  let originalDataPath: string | undefined;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    originalDataPath = process.env['INSOMNIA_DATA_PATH'];
+    process.env['INSOMNIA_DATA_PATH'] = '/mock/user/data';
+  });
+
+  afterEach(() => {
+    if (originalDataPath === undefined) {
+      delete process.env['INSOMNIA_DATA_PATH'];
+    } else {
+      process.env['INSOMNIA_DATA_PATH'] = originalDataPath;
+    }
   });
 
   it('creates the plugin directory and starter files', async () => {

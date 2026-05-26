@@ -6,6 +6,18 @@ import electron from 'electron';
 
 import { validatePluginName } from '../utils/plugin-name';
 
+function stripPathTraversal(name: string, maxIterations = 20): string {
+  let result = name;
+  for (let i = 0; i < maxIterations; i++) {
+    const next = result.replace(/\.\.(\/|\\)/g, '');
+    if (next === result) {
+      return result;
+    }
+    result = next;
+  }
+  throw new Error('Invalid plugin name: path traversal detected');
+}
+
 // Validates a user-provided filename to prevent OS command injection.
 export function getSafePluginDir(pluginName: string): string {
   const validationError = validatePluginName(pluginName);
@@ -14,14 +26,7 @@ export function getSafePluginDir(pluginName: string): string {
     throw new Error(validationError);
   }
 
-  // Sanitize moduleName to remove any unexpected characters or sequences
-  // Remove '../' or path traversal attempts (repeat until stable)
-  let sanitizedModuleName = pluginName;
-  let previousModuleName: string;
-  do {
-    previousModuleName = sanitizedModuleName;
-    sanitizedModuleName = sanitizedModuleName.replace(/\.\.(\/|\\)/g, '');
-  } while (sanitizedModuleName !== previousModuleName);
+  const sanitizedModuleName = stripPathTraversal(pluginName);
 
   // Get base directory
   const baseDir = path.resolve(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'plugins');
