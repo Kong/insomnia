@@ -26,7 +26,7 @@ export const SidebarHeader = ({
   actionButton,
 }: SidebarHeaderProps) => (
   <>
-    <div className="flex h-[41px] shrink-0 border-b border-solid border-b-(--hl-md)">
+    <div className="flex h-12 shrink-0 border-b border-solid border-b-(--hl-md)">
       {!isScratchPad &&
         tabs.map(({ name, label }) => (
           <button
