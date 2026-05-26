@@ -1,12 +1,12 @@
-import { getOrganizationFeatures, type FeatureList } from 'insomnia-api';
+import { type FeatureList, getOrganizationFeatures } from 'insomnia-api';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Switch } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { AIFeatureNames, LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { models } from '~/insomnia-data';
-import { fallbackFeatures } from '~/routes/organization.$organizationId.permissions';
+import type { AIFeatureNames, LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { useRootLoaderData } from '~/root';
+import { fallbackFeatures } from '~/routes/organization.$organizationId.permissions';
 import { Badge } from '~/ui/components/base/badge';
 import { Claude } from '~/ui/components/settings/llms/claude';
 import { Gemini } from '~/ui/components/settings/llms/gemini';
@@ -132,7 +132,7 @@ export const AISettings = () => {
             <span className="group relative inline-flex h-6 w-11">
               <Switch
                 isSelected={aiFeatures.aiMockServers && isMockServerEnabledByOrg}
-                onChange={(enabled) => toggleAIFeature('aiMockServers', enabled)}
+                onChange={enabled => toggleAIFeature('aiMockServers', enabled)}
                 isDisabled={isMockServerFeatureDisabled}
                 className="group flex items-center gap-2"
               >
@@ -158,7 +158,7 @@ export const AISettings = () => {
             <span className="group relative inline-flex h-6 w-11">
               <Switch
                 isSelected={aiFeatures.aiCommitMessages && isCommitMessagesEnabledByOrg}
-                onChange={(enabled) => toggleAIFeature('aiCommitMessages', enabled)}
+                onChange={enabled => toggleAIFeature('aiCommitMessages', enabled)}
                 isDisabled={isCommitMessagesFeatureDisabled}
                 className="group flex items-center gap-2"
               >
@@ -184,7 +184,7 @@ export const AISettings = () => {
             <span className="group relative inline-flex h-6 w-11">
               <Switch
                 isSelected={aiFeatures.aiMcpClient && isMcpClientEnabledByOrg}
-                onChange={(enabled) => toggleAIFeature('aiMcpClient', enabled)}
+                onChange={enabled => toggleAIFeature('aiMcpClient', enabled)}
                 isDisabled={isMcpClientFeatureDisabled}
                 className="group flex items-center gap-2"
               >
