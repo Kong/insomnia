@@ -47,6 +47,7 @@ import {
 } from '../authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '../authorize-user-in-window';
 import { backup, restoreBackup } from '../backup';
+import { createPlugin } from '../create-plugin';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
@@ -205,6 +206,7 @@ export interface RendererToMainBridgeAPI {
     documentContent: string;
     rulesetPath: string;
   }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
+  createPlugin: (options: { pluginName: string; mainJs: string }) => Promise<void>;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -261,6 +263,9 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return services.caCertificate.create(options);
+  });
+  ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
+    return createPlugin(options.pluginName, options.mainJs);
   });
   ipcMainHandle('services.invoke', async (_, serviceName: string, methodName: string, ...args: unknown[]) => {
     const service = services[serviceName as keyof Services];
