@@ -1,14 +1,23 @@
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('node:fs', () => ({
+  existsSync: vi.fn(() => false),
+}));
 
 vi.mock('node:fs/promises', () => ({
   mkdir: vi.fn(),
   writeFile: vi.fn(),
 }));
 
-vi.mock('../utils/plugin', () => ({
-  getSafePluginDir: vi.fn(() => '/mock/user/data/plugins/insomnia-plugin-demo'),
+vi.mock('electron', () => ({
+  default: {
+    app: {
+      getPath: vi.fn(() => '/mock/user/data'),
+    },
+  },
 }));
 
 import { createPlugin } from '../main/create-plugin';
