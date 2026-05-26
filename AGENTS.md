@@ -33,7 +33,7 @@ npm run type-check    # TypeScript check all workspaces
 npm test              # Tests all workspaces (or: npm test -w packages/insomnia)
 ```
 
-For faster, scope-limited validation during iteration, use the `/quick-check` skill (`.claude/skills/quick-check/SKILL.md`). It selects the narrowest lint/type-check/test command for the affected workspace and only escalates to repo-wide checks when necessary.
+Before pushing, run `/quick-check` (`.claude/skills/quick-check/SKILL.md`) to validate your changes. It selects the narrowest lint/type-check/test command for the affected workspace, so it's fast enough to run every time — only escalating to repo-wide checks when the change crosses workspace boundaries.
 
 ## Repository Structure
 `packages/`
