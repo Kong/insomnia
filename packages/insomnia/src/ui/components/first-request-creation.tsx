@@ -344,7 +344,7 @@ export const FirstRequestCreation = ({
                     items={collectionItems}
                     selectedKey={selectedCollectionId}
                     onSelectionChange={key => onSelectedCollectionChange(key ? String(key) : null)}
-                    title="Import destination"
+                    title="Where should we put your request?"
                     emptyState="You have no collections, so a new one will be created for you by default."
                     footer={
                       <Button onPress={onCreateCollection} size="sm">
