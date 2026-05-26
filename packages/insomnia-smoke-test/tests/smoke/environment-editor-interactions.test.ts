@@ -110,7 +110,6 @@ test.describe('Environment Editor', () => {
     // wait for modal to show
     await expect.soft(page.getByRole('dialog').getByTestId('CodeEditor')).toBeVisible();
     const bodyEditor = page.getByRole('dialog').getByTestId('CodeEditor').getByRole('textbox');
-    // move cursor right and input json string
     await bodyEditor.focus();
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.type('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
