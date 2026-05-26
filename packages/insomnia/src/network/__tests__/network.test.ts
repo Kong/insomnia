@@ -11,7 +11,8 @@ import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import { HttpVersions } from '../../common/settings';
-import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
+import { getAuthHeader } from '../../main/network/get-auth-header';
+import { _parseHeaders, curlRequest, getHttpVersion } from '../../main/network/libcurl-promise';
 import { _getAwsAuthHeaders } from '../../network/parse-header-strings';
 import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
@@ -43,7 +44,9 @@ describe('sendCurlAndWriteTimeline()', () => {
           getPath: (responseId: string) => Promise.resolve(`/tmp/${responseId}.timeline`),
           appendToFile: vi.fn().mockResolvedValue(null),
         },
-        getAuthHeader: vi.fn(),
+        getAuthHeader,
+        curlRequest,
+        cancelCurlRequest: vi.fn(),
       },
     });
   });

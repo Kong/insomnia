@@ -51,9 +51,16 @@ export default defineConfig(({ mode }) => {
       include: ['codemirror-graphql/utils/SchemaReference', '@stoplight/spectral-core', 'isomorphic-git'],
     },
     resolve: {
-      alias: {
-        '~': path.resolve(__dirname, './src'),
-      },
+      alias: [
+        {
+          find: '~/network/network-adapter',
+          replacement: path.resolve(__dirname, './src/network/network-adapter.renderer'),
+        },
+        {
+          find: '~',
+          replacement: path.resolve(__dirname, './src'),
+        },
+      ],
     },
     plugins: [
       // Allows us to import modules that will be resolved by Node's require() function.
