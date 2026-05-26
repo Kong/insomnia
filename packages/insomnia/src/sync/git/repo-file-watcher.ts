@@ -306,9 +306,9 @@ class RepoFileWatcher {
   }
 
   /**
-   * If the DB's ProjectLintRuleset record was modified more recently than the
-   * on-disk `.spectral.yaml`, write the record to disk before the initial
-   * `importAllFiles` scan.
+   * If the DB's ProjectLintRuleset record differs from the on-disk
+   * `.spectral.yaml`, write the record to disk before the initial
+   * `importAllFiles` scan so the DB content wins.
    *
    * Without this, converting a cloud/local project to Git against a repo that
    * already contains a `.spectral.yaml` would let `importAllFiles` silently
@@ -325,17 +325,16 @@ class RepoFileWatcher {
 
     const absPath = path.normalize(path.join(this.repoDir, '.spectral.yaml'));
 
-    let fileMtime = 0;
+    let diskContent: string;
     try {
-      const stat = await fs.promises.stat(absPath);
-      fileMtime = stat.mtimeMs;
+      diskContent = await fs.promises.readFile(absPath, 'utf8');
     } catch {
       // File doesn't exist yet — flushProjectLintRulesetToDisk will create it.
       return;
     }
 
-    if (ruleset.modified <= fileMtime) {
-      return; // disk is up-to-date
+    if (contentHash(diskContent) === contentHash(ruleset.rulesetContent)) {
+      return; // content is identical, nothing to do
     }
 
     try {
