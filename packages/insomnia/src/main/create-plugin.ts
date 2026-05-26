@@ -15,8 +15,13 @@ export function getSafePluginDir(pluginName: string): string {
   }
 
   // Sanitize moduleName to remove any unexpected characters or sequences
-  // Remove '../' or path traversal attempts
-  const sanitizedModuleName = pluginName.replace(/\.\.(\/|\\)/g, '');
+  // Remove '../' or path traversal attempts (repeat until stable)
+  let sanitizedModuleName = pluginName;
+  let previousModuleName: string;
+  do {
+    previousModuleName = sanitizedModuleName;
+    sanitizedModuleName = sanitizedModuleName.replace(/\.\.(\/|\\)/g, '');
+  } while (sanitizedModuleName !== previousModuleName);
 
   // Get base directory
   const baseDir = path.resolve(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'plugins');
