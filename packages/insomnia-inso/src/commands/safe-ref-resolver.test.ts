@@ -21,6 +21,7 @@ describe('safeHttpResolver', () => {
 
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
+    vi.spyOn(AbortSignal, 'timeout');
     // Default: hosts resolve to a public address unless a test overrides this.
     mockResolvedAddresses(['93.184.216.34']);
   });
@@ -141,7 +142,11 @@ describe('safeHttpResolver', () => {
       expect(result).toBe('openapi: 3.1.0');
 
       expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch).toHaveBeenCalledWith('https://example.com/schema.yaml', { redirect: 'error' });
+      expect(AbortSignal.timeout).toHaveBeenCalledWith(10_000);
+      expect(fetch).toHaveBeenCalledWith('https://example.com/schema.yaml', {
+        redirect: 'error',
+        signal: expect.any(AbortSignal),
+      });
     });
 
     it('allows HTTPS URLs with ports', async () => {
