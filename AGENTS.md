@@ -33,6 +33,8 @@ npm run type-check    # TypeScript check all workspaces
 npm test              # Tests all workspaces (or: npm test -w packages/insomnia)
 ```
 
+For faster, scope-limited validation during iteration, use the `/quick-check` skill (`.claude/skills/quick-check/SKILL.md`). It selects the narrowest lint/type-check/test command for the affected workspace and only escalates to repo-wide checks when necessary.
+
 ## Repository Structure
 `packages/`
   `insomnia/`                ← Main Electron app
