@@ -745,7 +745,7 @@ export const ProjectNavigationSidebar = ({
           {
             name: 'konnect',
             label: (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-2">
                 <KongLogo />
                 Konnect ({konnectProjects.length})
               </span>
