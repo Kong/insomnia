@@ -152,7 +152,7 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
-  const timelinePath = window.main.timeline.getPath(responseId);
+  const timelinePath = await window.main.timeline.getPath(responseId);
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -215,7 +215,7 @@ export const fetchRequestData = async (
   const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const timelinePath = window.main.timeline.getPath(responseId);
+  const timelinePath = await window.main.timeline.getPath(responseId);
 
   return {
     request,
@@ -254,7 +254,7 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const timelinePath = window.main.timeline.getPath(responseId);
+  const timelinePath = await window.main.timeline.getPath(responseId);
 
   return {
     environment,

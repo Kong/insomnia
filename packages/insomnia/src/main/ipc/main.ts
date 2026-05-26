@@ -136,9 +136,13 @@ const writeResponseBodyToFile = async (
   }
 };
 
-const getTimelinePath = (responseId: string) => {
-  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
-  const base = path.resolve(userdataDirectory, 'responses');
+const getResponsesDir = () =>
+  path.join(process.env.INSOMNIA_DATA_PATH || app.getPath('userData'), 'responses');
+
+const responsesDirCreated = new Set<string>();
+
+const getTimelinePath = (_: unknown, responseId: string) => {
+  const base = path.resolve(getResponsesDir());
   const target = path.resolve(base, responseId + '.timeline');
   const relative = path.relative(base, target);
   if (relative.startsWith('..') || path.isAbsolute(relative)) {
@@ -151,15 +155,18 @@ const appendToTimeline = async (
   _: unknown,
   options: { timelinePath: string; data: string },
 ) => {
-  const userdataDirectory = process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
-  const allowedResponsesDir = path.join(userdataDirectory, 'responses');
+  const allowedResponsesDir = getResponsesDir();
   const resolvedPath = path.resolve(options.timelinePath);
-  if (!resolvedPath.startsWith(allowedResponsesDir + path.sep) || !resolvedPath.endsWith('.timeline')) {
+  if (!resolvedPath.startsWith(path.resolve(allowedResponsesDir) + path.sep) || !resolvedPath.endsWith('.timeline')) {
     throw new Error(
       'appendToTimeline: timelinePath is outside the allowed responses directory or does not end in .timeline',
     );
   }
-  await fs.promises.mkdir(path.dirname(resolvedPath), { recursive: true });
+  const dir = path.dirname(resolvedPath);
+  if (!responsesDirCreated.has(dir)) {
+    await fs.promises.mkdir(dir, { recursive: true });
+    responsesDirCreated.add(dir);
+  }
   await fs.promises.appendFile(resolvedPath, options.data);
 };
 
@@ -271,7 +278,7 @@ export interface RendererToMainBridgeAPI {
   plugins: PluginsBridgeAPI;
   notifyPluginPromptResult: (id: string, value: string | null) => void;
   timeline: {
-    getPath: (responseId: string) => string;
+    getPath: (responseId: string) => Promise<string>;
     appendToFile: (options: { timelinePath: string; data: string }) => Promise<void>;
   };
 }
@@ -708,9 +715,7 @@ export function registerMainHandlers() {
     });
   });
 
-  ipcMainOn('timeline.getPath', (event, responseId: string) => {
-    event.returnValue = getTimelinePath(responseId);
-  });
+  ipcMainHandle('timeline.getPath', getTimelinePath);
   ipcMainHandle('timeline.appendToFile', appendToTimeline);
 
   registerPluginIpcHandlers();

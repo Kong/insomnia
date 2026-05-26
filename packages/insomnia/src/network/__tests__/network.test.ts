@@ -40,7 +40,7 @@ describe('sendCurlAndWriteTimeline()', () => {
     vi.stubGlobal('window', {
       main: {
         timeline: {
-          getPath: (responseId: string) => `/tmp/${responseId}.timeline`,
+          getPath: (responseId: string) => Promise.resolve(`/tmp/${responseId}.timeline`),
           appendToFile: vi.fn().mockResolvedValue(null),
         },
         getAuthHeader: vi.fn(),
