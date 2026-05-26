@@ -472,6 +472,15 @@ const Component = ({ params }: Route.ComponentProps) => {
       return;
     }
 
+    const RULESET_MAX_BYTES = 1 * 1024 * 1024; // 1 MB
+    if (Buffer.byteLength(content, 'utf8') > RULESET_MAX_BYTES) {
+      showError({
+        title: 'Ruleset Too Large',
+        message: 'The selected ruleset exceeds the maximum allowed size of 1 MB.',
+      });
+      return;
+    }
+
     await updateProjectRuleset({ organizationId, projectId, rulesetContent: content });
     if (!gitSyncRulesetPath) {
       // cloud/local: no RepoFileWatcher — write the file to disk so Spectral can lint against it.
