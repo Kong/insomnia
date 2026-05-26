@@ -12,9 +12,33 @@ interface Props {
   override?: string | null;
   fullNames?: boolean;
 }
+
+interface RequestBadgeProps {
+  label: string;
+  colorKey?: string;
+}
+
 function removeVowels(str: string) {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
+
+const requestBadgeClassNames: Record<string, string> = {
+  GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
+  POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
+  HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+  OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+  DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
+  PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
+  PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+  WS: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+  IO: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+  gRPC: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+  MCP: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+};
+
+export const getRequestBadgeClassName = (badge: string) => {
+  return requestBadgeClassNames[badge] || 'bg-(--hl-md) text-(--color-font)';
+};
 
 export const getMethodShortHand = (doc: Request) => {
   if (isEventStreamRequest(doc)) {
@@ -66,6 +90,18 @@ export const getRequestMethodShortHand = (
 
   return '';
 };
+
+export const RequestBadge: FC<RequestBadgeProps> = memo(({ label, colorKey }) => {
+  return (
+    <span
+      className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${getRequestBadgeClassName(colorKey || label)}`}
+    >
+      {label}
+    </span>
+  );
+});
+
+RequestBadge.displayName = 'RequestBadge';
 
 export const MethodTag: FC<Props> = memo(({ method, override, fullNames }) => {
   let methodName = method;

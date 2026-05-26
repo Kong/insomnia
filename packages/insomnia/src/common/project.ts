@@ -4,12 +4,18 @@ import { isNotNullOrUndefined } from '~/common/misc';
 import { descendingNumberSort } from '~/common/sorting';
 import {
   type ApiSpec,
+  type BaseModel,
+  type ChangeBufferEvent,
   database,
   type GitRepository,
+  type GrpcRequest,
   type MockServer,
   models,
   type Project,
+  type Request,
   services,
+  type SocketIORequest,
+  type WebSocketRequest,
   type Workspace,
   type WorkspaceMeta,
   type WorkspaceScope,
@@ -86,6 +92,105 @@ const lockGenerator = () => {
 // otherwise they may interfere with each other, which may cause duplicate projects or other inconsistencies.
 // TODO: move all project operations to this file to ensure they are properly wrapped with locks
 export const projectLock = lockGenerator();
+
+export interface RecentProjectRequest {
+  requestId: string;
+  workspaceId: string;
+  name: string;
+  badgeLabel: string;
+  requestMethod: string;
+}
+
+type TrackableRecentRequest = Request | GrpcRequest | WebSocketRequest | SocketIORequest;
+
+// Keep a small buffer beyond the 3 visible items so Jump back in stays populated after deletions.
+const MAX_RECENT_PROJECT_REQUESTS = 5;
+const EMPTY_RECENT_PROJECT_REQUESTS: RecentProjectRequest[] = [];
+const recentRequestsByProjectId = new Map<string, RecentProjectRequest[]>();
+let hasAttachedDbChangesListener = false;
+
+const isTrackableRecentRequest = (doc: Pick<BaseModel, 'type'>): doc is TrackableRecentRequest => {
+  return (
+    models.request.isRequest(doc) ||
+    models.grpcRequest.isGrpcRequest(doc) ||
+    models.webSocketRequest.isWebSocketRequest(doc) ||
+    models.socketIORequest.isSocketIORequest(doc)
+  );
+};
+
+const removeRecentRequestFromAllProjects = (requestId: string) => {
+  for (const [projectId, requests] of recentRequestsByProjectId.entries()) {
+    const nextRequests = requests.filter(request => request.requestId !== requestId);
+
+    if (nextRequests.length === requests.length) {
+      continue;
+    }
+
+    if (nextRequests.length === 0) {
+      recentRequestsByProjectId.delete(projectId);
+      continue;
+    }
+
+    recentRequestsByProjectId.set(projectId, nextRequests);
+  }
+};
+
+const ensureDbChangesListener = () => {
+  if (hasAttachedDbChangesListener || typeof window === 'undefined' || !window.main?.on) {
+    return;
+  }
+
+  window.main.on('db.changes', (_event, changes: ChangeBufferEvent[]) => {
+    for (const [event, doc] of changes) {
+      if (event === 'remove' && isTrackableRecentRequest(doc)) {
+        removeRecentRequestFromAllProjects(doc._id);
+      }
+    }
+  });
+
+  hasAttachedDbChangesListener = true;
+};
+
+export const recordProjectRecentRequest = ({
+  projectId,
+  requestId,
+  workspaceId,
+  name,
+  badgeLabel,
+  requestMethod,
+}: {
+  projectId: string;
+  requestId: string;
+  workspaceId: string;
+  name: string;
+  badgeLabel: string;
+  requestMethod: string;
+}) => {
+  ensureDbChangesListener();
+
+  const existingRequests = recentRequestsByProjectId.get(projectId) ?? EMPTY_RECENT_PROJECT_REQUESTS;
+  const normalizedName = name.trim() || 'Untitled request';
+  const nextRequests = [
+    {
+      requestId,
+      workspaceId,
+      name: normalizedName,
+      badgeLabel,
+      requestMethod,
+    },
+    ...existingRequests.filter(request => request.requestId !== requestId),
+  ].slice(0, MAX_RECENT_PROJECT_REQUESTS);
+
+  recentRequestsByProjectId.set(projectId, nextRequests);
+};
+
+export const getProjectRecentRequests = (projectId?: string) => {
+  if (!projectId) {
+    return EMPTY_RECENT_PROJECT_REQUESTS;
+  }
+
+  return recentRequestsByProjectId.get(projectId) ?? EMPTY_RECENT_PROJECT_REQUESTS;
+};
 
 export const checkSingleProjectSyncStatus = async (projectId: string) => {
   const projectWorkspaces = await services.workspace.findByParentId(projectId);

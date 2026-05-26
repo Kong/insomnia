@@ -1,15 +1,17 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
+import { getProjectRecentRequests } from '~/common/project';
 import type { Request } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
+import { RequestBadge } from '~/ui/components/tags/method-tag';
 import { showToast } from '~/ui/components/toast-notification';
 import { Tooltip } from '~/ui/components/tooltip';
 import { setDefaultProtocol } from '~/utils/url/protocol';
@@ -80,6 +82,7 @@ export const FirstRequestCreation = ({
   onSelectedCollectionChange,
   onCreateCollection,
 }: FirstRequestCreationProps) => {
+  const navigate = useNavigate();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -94,6 +97,9 @@ export const FirstRequestCreation = ({
   const trimmedInput = requestInput.trim();
   const isCreatingRequest = createRequestFetcher.state !== 'idle';
   const selectedCollection = collectionItems.find(collection => collection.id === selectedCollectionId) ?? null;
+  const recentRequests = getProjectRecentRequests(projectId);
+  const displayedRecentRequests = recentRequests.slice(0, 3);
+  const shouldShowJumpBackIn = recentRequests.length >= 3;
 
   const handleInputEnter = (event: ReactKeyboardEvent<HTMLTextAreaElement> | KeyboardEvent) => {
     event.preventDefault();
@@ -276,14 +282,7 @@ export const FirstRequestCreation = ({
     {
       id: 'pokemon',
       label: 'List a pokemon',
-      icon: (
-        <span
-          aria-label="Tab Tag"
-          className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-surprise-rgb),0.5)] text-[0.65rem] text-(--color-font-surprise)`}
-        >
-          GET
-        </span>
-      ),
+      icon: <RequestBadge label="GET" colorKey="GET" />,
       badge: 'GET',
       onClick: handleCreatePokemonRequest,
     },
@@ -299,9 +298,13 @@ export const FirstRequestCreation = ({
     <>
       <div className="w-full rounded-sm bg-[radial-gradient(100%_100.41%_at_100%_99.92%,#4C4C4C_0%,rgba(3,3,3,0)_100%),radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#4C4C4C_0%,rgba(3,3,3,0)_100%)] p-px">
         <div className="flex w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-6 pb-5">
-          <h2 className="text-center text-2xl leading-none font-semibold">Welcome, {greetingName}!</h2>
+          <h2 className="text-center text-2xl leading-none font-semibold">
+            {shouldShowJumpBackIn ? `Welcome back, ${greetingName}!` : `Welcome, ${greetingName}!`}
+          </h2>
           <p className="mt-2.5 text-center text-sm">
-            We have a sneaking suspicion that you came here to send a request, so let’s get started!
+            {shouldShowJumpBackIn
+              ? `Today is a new day, we’re rooting for you!`
+              : `We have a sneaking suspicion that you came here to send a request, so let’s get started!`}
           </p>
           <div className="mt-8 w-[50%] min-w-100">
             <div className="flex aspect-540/127 flex-col overflow-hidden rounded-lg border border-[#3F3F46] bg-[#18181B] shadow-[0_0_0_4px_#0044F433]">
@@ -382,15 +385,34 @@ export const FirstRequestCreation = ({
             {curlParseError && (
               <div className="mt-2 text-xs text-[#FF5631]">Invalid cURL. Verify your input and try again.</div>
             )}
-            <div className="my-6">
-              <p className="text-xs font-semibold">Not sure where to start?</p>
+            {/* example for create request */}
+            <div className="my-6 px-4">
+              <p className="text-xs font-semibold text-(--hl)">
+                {shouldShowJumpBackIn ? 'Jump back in' : 'Not sure where to start?'}
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {quickStartItems.map(item => (
-                  <Button key={item.id} variant="outlined" size="md" onPress={item.onClick}>
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </Button>
-                ))}
+                {shouldShowJumpBackIn
+                  ? displayedRecentRequests.map(request => (
+                      <Button
+                        key={request.requestId}
+                        variant="outlined"
+                        size="md"
+                        onPress={() => {
+                          navigate(
+                            `/organization/${organizationId}/project/${projectId}/workspace/${request.workspaceId}/debug/request/${request.requestId}`,
+                          );
+                        }}
+                      >
+                        <RequestBadge label={request.badgeLabel} colorKey={request.requestMethod} />
+                        <span className="max-w-[18rem] truncate">{request.name}</span>
+                      </Button>
+                    ))
+                  : quickStartItems.map(item => (
+                      <Button key={item.id} variant="outlined" size="md" onPress={item.onClick}>
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </Button>
+                    ))}
               </div>
             </div>
           </div>
