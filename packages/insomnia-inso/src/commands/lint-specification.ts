@@ -51,7 +51,7 @@ const safeHttpResolver = {
       throw new Error(`Failed to resolve "${href}". Only https URLs to public hosts are allowed.`);
     }
     await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
-    const response = await fetch(href, { redirect: 'error' });
+    const response = await fetch(href, { redirect: 'error', signal: AbortSignal.timeout(10_000) });
     if (!response.ok) {
       throw new Error(`Failed to fetch "${href}": ${response.status} ${response.statusText}`);
     }

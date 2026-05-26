@@ -201,7 +201,7 @@ async function flattenRuleset(
     if (childRuleset.extends) {
       remainingExtends.push(...childRuleset.extends);
     }
-    mergeInto(flattenedRuleset, childRuleset); // child takes precedence over parent
+    mergeInto(flattenedRuleset, childRuleset); // later extends entries override earlier ones
   }
 
   // Apply the current file's own rules on top; if parent and child define the same rule, the parent wins.

@@ -100,6 +100,18 @@ const readDir = async (_: unknown, options: { path: string }) => {
   }
 };
 
+const resolveSafeRulesetPath = (rulesetPath: string): string | null => {
+  const userDataDir = path.resolve(app.getPath('userData'));
+  const resolved = path.resolve(rulesetPath);
+  const rel = path.relative(userDataDir, resolved);
+  const insideUserData = rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+  if (!insideUserData || path.basename(resolved) !== '.spectral.yaml') {
+    return null;
+  }
+
+  return resolved;
+};
+
 const writeResponseBodyToFile = async (
   _: unknown,
   options: { sourcePath: string; destinationPath: string; bodyCompression?: 'zip' | null },
@@ -156,7 +168,7 @@ export interface RendererToMainBridgeAPI {
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
-  deleteFile: (options: { path: string }) => Promise<void>;
+  deleteRulesetFile: (options: { path: string }) => Promise<void>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
     destinationPath: string;
@@ -337,14 +349,18 @@ export function registerMainHandlers() {
       throw new Error(err);
     }
   });
-  ipcMainHandle('deleteFile', async (_, options: { path: string }) => {
+  ipcMainHandle('deleteRulesetFile', async (_, options: { path: string }) => {
+    const safePath = resolveSafeRulesetPath(options.path);
+    if (!safePath) {
+      throw new Error('Invalid ruleset path');
+    }
     try {
-      await fs.promises.unlink(options.path);
+      await fs.promises.unlink(safePath);
     } catch (err) {
       if (err?.code === 'ENOENT') {
         return;
       }
-      throw new Error(err);
+      throw err instanceof Error ? err : new Error(String(err));
     }
   });
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
@@ -368,17 +384,11 @@ export function registerMainHandlers() {
 
     //defensive validation for ruleset file before spawning the spectral lint worker
     if (rulesetPath) {
-      // Contain rulesetPath within userData/ to prevent the renderer from passing an
-      // arbitrary path (e.g. /etc/passwd, ~/.ssh/id_rsa) into the file read below.
-      const userDataDir = path.resolve(app.getPath('userData'));
-      const resolvedRulesetPath = path.resolve(rulesetPath);
-      const relativeToUserData = path.relative(userDataDir, resolvedRulesetPath);
-      const isInsideUserData =
-        relativeToUserData !== '' && !relativeToUserData.startsWith('..') && !path.isAbsolute(relativeToUserData);
-      if (!isInsideUserData || path.basename(resolvedRulesetPath) !== '.spectral.yaml') {
+      const safePath = resolveSafeRulesetPath(rulesetPath);
+      if (!safePath) {
         return { error: 'Invalid ruleset path' };
       }
-      rulesetPath = resolvedRulesetPath;
+      rulesetPath = safePath;
 
       try {
         // Validate the ruleset (flattens local extends, checks remote URLs for SSRF and

@@ -300,7 +300,7 @@ const Component = ({ params }: Route.ComponentProps) => {
         }
       } else {
         // No ruleset content, ensure file is deleted
-        await window.main.deleteFile({ path: rulesetWritePath });
+        await window.main.deleteRulesetFile({ path: rulesetWritePath });
         setSelectedRulesetPath('');
       }
     };
@@ -496,7 +496,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             projectId,
           });
           if (!gitSyncRulesetPath) {
-            await window.main.deleteFile({ path: rulesetWritePath });
+            await window.main.deleteRulesetFile({ path: rulesetWritePath });
           }
           setSelectedRulesetPath('');
         }
