@@ -112,8 +112,8 @@ test.describe('Environment Editor', () => {
     const bodyEditor = page.getByRole('dialog').getByTestId('CodeEditor').getByRole('textbox');
     // move cursor right and input json string
     await bodyEditor.focus();
-    await bodyEditor.press('ArrowRight');
-    await bodyEditor.fill('"anotherString":"kvAnotherStr","anotherNumber": 12345');
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.type('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
     // Submit and wait for the JSON modal to close before proceeding
     await page.getByRole('button', { name: 'Modal Submit' }).click();
     await expect.soft(page.getByRole('dialog', { name: 'Modal' })).toBeHidden();
