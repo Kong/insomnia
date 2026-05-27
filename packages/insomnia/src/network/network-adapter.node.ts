@@ -39,8 +39,7 @@ export const appendTimelineLines = (timelinePath: string, logs: string[]): Promi
 export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHeader | undefined> =>
   getAuthHeaderFromMain(r, u);
 
-export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> =>
-  curlRequest(options);
+export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> => curlRequest(options);
 
 export const runScript = (options: {
   script: string;
@@ -68,6 +67,33 @@ export async function applyRequestHooks(
       throw error;
     }
   }
+  return newRenderedRequest;
+}
+
+export async function applyHarRequestHooks(
+  renderedRequest: RenderedRequest,
+  renderedContext: Record<string, any>,
+): Promise<RenderedRequest> {
+  const pluginIndex = require('../plugins/index');
+  let newRenderedRequest = renderedRequest;
+
+  for (const { plugin, hook } of await pluginIndex.getRequestHooks()) {
+    newRenderedRequest = clone(newRenderedRequest);
+    const context = {
+      ...(pluginApp.init() as Record<string, any>),
+      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
+      ...(pluginStore.init(plugin) as Record<string, any>),
+    };
+
+    try {
+      await hook(context);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      (error as any).plugin = plugin;
+      throw error;
+    }
+  }
+
   return newRenderedRequest;
 }
 

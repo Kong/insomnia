@@ -57,3 +57,5 @@ export type GenerateMcpSamplingResponseFunction = (parameters: {
   messages: MultiTurnMessage[];
   modelConfig: Pick<ModelConfig, 'maxTokens' | 'temperature'>;
 }) => Promise<{ content: string; modelConfig: ModelConfig }>;
+
+export type ColorScheme = 'default' | 'light' | 'dark';

@@ -17,22 +17,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/plugins/context/response.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/plugins/context/response.ts",
-      "builtin": "zlib"
-    },
-    {
-      "importer": "src/plugins/index.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/plugins/index.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/script-executor.ts",
       "builtin": "fs/promises"
     },

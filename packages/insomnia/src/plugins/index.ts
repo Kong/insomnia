@@ -1,5 +1,5 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import type nodeFs from 'node:fs';
+import type nodePath from 'node:path';
 
 import electron from 'electron';
 
@@ -17,6 +17,7 @@ import * as pluginStore from '../plugins/context/store';
 import type { PluginTemplateTag, RenderPurpose } from '../templating/types';
 import type { PluginTheme } from './misc';
 import themes from './themes';
+export type { ColorScheme } from './types';
 
 export interface Plugin {
   name: string;
@@ -107,7 +108,40 @@ export type Theme = { plugin: Plugin } & {
   theme: PluginTheme;
 };
 
-export type ColorScheme = 'default' | 'light' | 'dark';
+const getNodeRequire = () => {
+  return (
+    global.require ??
+    (
+      globalThis as typeof globalThis & {
+        require?: NodeJS.Require;
+      }
+    ).require
+  );
+};
+
+const getBuiltinModule = <T>(id: string) => {
+  return (
+    process as NodeJS.Process & {
+      getBuiltinModule?: (module: string) => T | undefined;
+    }
+  ).getBuiltinModule?.(id);
+};
+
+const resolveNodeModule = <T>(name: string, nodeName: string) => {
+  const resolved = getBuiltinModule<T>(nodeName) || getBuiltinModule<T>(name) || getNodeRequire()?.(nodeName);
+  if (!resolved) {
+    throw new Error(`Node module ${nodeName} is not available`);
+  }
+  return resolved;
+};
+
+const getFs = () => {
+  return resolveNodeModule<typeof nodeFs>('fs', 'node:fs');
+};
+
+const getPath = () => {
+  return resolveNodeModule<typeof nodePath>('path', 'node:path');
+};
 
 let plugins: Plugin[] | null | undefined = null;
 
@@ -120,11 +154,14 @@ export async function init() {
 }
 
 async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: string[], allConfigs: PluginConfigMap) {
+  const fs = getFs();
+  const path = getPath();
+
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
       continue;
     }
-    const folders = (await fs.promises.readdir(p)).filter(f => f.startsWith('insomnia-plugin-'));
+    const folders = ((await fs.promises.readdir(p)) as string[]).filter(f => f.startsWith('insomnia-plugin-'));
     folders.length && console.log('[plugin] Loading', folders.map(f => f.replace('insomnia-plugin-', '')).join(', '));
 
     for (const filename of fs.readdirSync(p)) {
@@ -197,6 +234,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
   }
 
   if (!plugins) {
+    const path = getPath();
     const settings = await services.settings.get();
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
@@ -233,6 +271,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 }
 
 export function getBundlePluginMap() {
+  const path = getPath();
   const appBundlePlugins = getAppBundlePlugins();
   const bundlePluginMap: Record<string, Plugin> = {};
   appBundlePlugins.forEach(({ name: pluginName }) => {

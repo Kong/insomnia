@@ -3,8 +3,7 @@ import Color from 'color';
 import type { ThemeSettings } from '~/insomnia-data';
 
 import { getAppDefaultTheme } from '../common/constants';
-import type { Theme } from './index';
-import { type ColorScheme, getThemes } from './index';
+import type { ColorScheme } from './types';
 
 export type HexColor = `#${string}`;
 export type RGBColor = `rgb(${string})`;
@@ -331,7 +330,7 @@ export async function setTheme(themeName: string) {
     return;
   }
 
-  const themes: Theme[] = await getThemes();
+  const themes = await window.main.plugins.getThemes();
   let selectedTheme = themes.find(t => t.theme.name === themeName);
 
   if (!selectedTheme) {
