@@ -52,7 +52,6 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
       },
     },
