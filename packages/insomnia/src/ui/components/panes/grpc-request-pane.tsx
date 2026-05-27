@@ -198,7 +198,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         });
         window.main.trackAnalyticsEvent({
           event: AnalyticsEvent.requestExecuted,
-          properties: { request_type: activeRequest.type },
+          properties: { request_type: 'gRPC' },
         });
         setGrpcState({
           ...grpcState,
