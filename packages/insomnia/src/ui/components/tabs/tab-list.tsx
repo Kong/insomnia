@@ -372,7 +372,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   if (!tabList.length) return null;
 
   return (
-    <div className="box-content flex h-12 bg-(--color-bg)">
+    <div className="box-content flex h-(--line-height-xs) bg-(--color-bg)">
       <Button
         onPress={scrollLeft}
         isDisabled={leftScrollDisable}
@@ -392,7 +392,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           disallowEmptySelection
           selectionMode="single"
           selectionBehavior="replace"
-          className="flex h-12 w-fit"
+          className="flex h-(--line-height-xs) w-fit"
           dragAndDropHooks={dragAndDropHooks}
           items={tabList}
           dependencies={[issuesByWorkspaceId]}

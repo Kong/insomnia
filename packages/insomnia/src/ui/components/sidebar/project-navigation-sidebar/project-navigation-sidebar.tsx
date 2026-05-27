@@ -1,7 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, GridList, GridListItem, Input, SearchField } from 'react-aria-components';
+import { Button, GridList, GridListItem, Input, SearchField, Tab, TabList, Tabs } from 'react-aria-components';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -55,6 +55,88 @@ interface ProjectNavigationSidebarProps {
   konnectSyncEnabled: boolean;
   onCreateProject: () => void;
 }
+
+const SidebarSearchField = ({
+  value,
+  isDisabled,
+  onChange,
+}: {
+  value: string;
+  isDisabled: boolean;
+  onChange: (value: string) => void;
+}) => (
+  <SearchField
+    aria-label="Projects filter"
+    className="group relative flex-1"
+    value={value}
+    isDisabled={isDisabled}
+    onChange={onChange}
+  >
+    <Input
+      placeholder="Filter"
+      className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+    />
+    <div className="absolute top-0 right-0 flex h-full items-center px-2">
+      <Button
+        aria-label="Clear search"
+        className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+      >
+        <Icon icon="close" />
+      </Button>
+    </div>
+  </SearchField>
+);
+
+const SideBarTabList = ({
+  konnectSyncEnabled,
+  isScratchPad,
+  nonKonnectProjectLength,
+  konnectProjectsLength,
+}: {
+  konnectSyncEnabled: boolean;
+  isScratchPad: boolean;
+  nonKonnectProjectLength: number;
+  konnectProjectsLength: number;
+}) => {
+  return (
+    <TabList
+      aria-label="Sidebar navigation"
+      className="flex h-(--line-height-xs) w-full shrink-0 border-b border-solid border-b-(--hl-md)"
+    >
+      <Tab
+        id="projects"
+        className="flex h-full shrink-0 cursor-pointer items-center justify-between px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+        data-testid="sidebar-tab-projects"
+      >
+        {isScratchPad ? 'Projects' : `Projects (${nonKonnectProjectLength})`}
+      </Tab>
+      {konnectSyncEnabled && !isScratchPad && (
+        <Tab
+          id="konnect"
+          className="flex h-full shrink-0 cursor-pointer items-center justify-between px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+          data-testid="sidebar-tab-konnect"
+        >
+          <span className="flex items-center gap-1">
+            <KongLogo />
+            Konnect ({konnectProjectsLength})
+          </span>
+        </Tab>
+      )}
+    </TabList>
+  );
+};
+
+const NewProjectButton = ({ onPress, isDisabled }: { onPress: () => void; isDisabled?: boolean }) => (
+  <BasicButton
+    aria-label="Create new Project"
+    onPress={onPress}
+    isDisabled={isDisabled}
+    className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+  >
+    <Icon icon="plus" className="h-2.5 w-2.5" />
+    <span>New Project</span>
+  </BasicButton>
+);
 
 export const ProjectNavigationSidebar = ({
   storageRules,
@@ -715,67 +797,26 @@ export const ProjectNavigationSidebar = ({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      {!isScratchPad &&
-        (konnectSyncEnabled ? (
-          <div className="flex h-12 shrink-0 border-b border-solid border-b-(--hl-md)">
-            {['projects', 'konnect'].map(tabName => (
-              <button
-                key={tabName}
-                className={`px-3 py-1 text-xs ${activeTab === tabName ? 'bg-(--hl-xs) text-(--color-font)' : 'text-(--hl) hover:bg-(--hl-sm) hover:text-(--color-font)'}`}
-                data-testid={`sidebar-tab-${tabName}`}
-                onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
-              >
-                {tabName === 'projects' ? (
-                  `Projects (${nonKonnectProjects.length})`
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <KongLogo />
-                    Konnect ({konnectProjects.length})
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="px-(--padding-sm) pt-(--padding-sm)">PROJECTS ({nonKonnectProjects.length})</div>
-        ))}
+      <Tabs selectedKey={activeTab} onSelectionChange={key => setActiveTab(key as 'projects' | 'konnect')}>
+        <SideBarTabList
+          konnectSyncEnabled={konnectSyncEnabled}
+          isScratchPad={isScratchPad}
+          nonKonnectProjectLength={nonKonnectProjects.length}
+          konnectProjectsLength={konnectProjects.length}
+        />
+      </Tabs>
       {showKonnectSyncIntro ? (
         <KonnectSyncIntro onConfigure={() => setShowKonnectConfigModal(true)} />
       ) : (
         <>
           <div className="flex justify-between gap-1 p-(--padding-sm)">
-            <SearchField
-              aria-label="Projects filter"
-              className="group relative flex-1"
-              value={isProjectTabActive ? filterInputValue : konnectFilter}
+            <SidebarSearchField
+              value={isProjectTabActive ? filterInputValue : (konnectFilter ?? '')}
               isDisabled={projects.length === 0}
               onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
-            >
-              <Input
-                placeholder="Filter"
-                className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-              />
-              <div className="absolute top-0 right-0 flex h-full items-center px-2">
-                <Button
-                  aria-label="Clear search"
-                  className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="close" />
-                </Button>
-              </div>
-            </SearchField>
+            />
             {isProjectTabActive ? (
-              !isScratchPad && (
-                <BasicButton
-                  aria-label="Create new Project"
-                  onPress={onCreateProject}
-                  isDisabled={projects.length === 0}
-                  className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="plus" className="h-2.5 w-2.5" />
-                  <span>New Project</span>
-                </BasicButton>
-              )
+              !isScratchPad && <NewProjectButton onPress={onCreateProject} isDisabled={projects.length === 0} />
             ) : (
               <div className="flex items-center gap-1">
                 {syncing ? (
@@ -1061,38 +1102,17 @@ export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreatePro
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      <div className="px-(--padding-sm) pt-(--padding-sm)">PROJECTS</div>
+      <Tabs>
+        <SideBarTabList
+          konnectSyncEnabled={false}
+          isScratchPad={isScratchPad}
+          nonKonnectProjectLength={0}
+          konnectProjectsLength={0}
+        />
+      </Tabs>
       <div className="flex justify-between gap-1 p-(--padding-sm)">
-        <SearchField
-          aria-label="Projects filter"
-          className="group relative flex-1"
-          value=""
-          isDisabled
-          onChange={() => {}}
-        >
-          <Input
-            placeholder="Filter"
-            className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-          />
-          <div className="absolute top-0 right-0 flex h-full items-center px-2">
-            <Button
-              aria-label="Clear search"
-              className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="close" />
-            </Button>
-          </div>
-        </SearchField>
-        {!isScratchPad && (
-          <BasicButton
-            aria-label="Create new Project"
-            onPress={onCreateProject}
-            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          >
-            <Icon icon="plus" className="h-2.5 w-2.5" />
-            <span>New Project</span>
-          </BasicButton>
-        )}
+        <SidebarSearchField value="" isDisabled onChange={() => {}} />
+        {!isScratchPad && <NewProjectButton onPress={onCreateProject} />}
       </div>
     </div>
   );
