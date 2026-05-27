@@ -212,7 +212,7 @@ export const FirstRequestCreation = ({
       requestType: 'HTTP',
       req: {
         url: 'https://pokeapi.co/api/v2/pokemon/ditto',
-        name: 'List a pokeman',
+        name: 'List a pokemon',
       },
     });
   };
