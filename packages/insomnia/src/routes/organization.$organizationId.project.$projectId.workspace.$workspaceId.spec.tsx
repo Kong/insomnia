@@ -491,7 +491,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.uploadLintRulesetClicked,
       properties: {
-        projectType: models.project.isGitProject(activeProject)
+        project_type: models.project.isGitProject(activeProject)
           ? 'git'
           : models.project.isRemoteProject(activeProject)
             ? 'remote'
