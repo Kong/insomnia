@@ -14,6 +14,7 @@ import { SvgIcon } from '~/ui/components/svg-icon';
 import { RequestBadge } from '~/ui/components/tags/method-tag';
 import { showToast } from '~/ui/components/toast-notification';
 import { Tooltip } from '~/ui/components/tooltip';
+import { useIsLightTheme } from '~/ui/hooks/theme';
 import { setDefaultProtocol } from '~/utils/url/protocol';
 
 import { Icon } from './icon';
@@ -281,10 +282,18 @@ export const FirstRequestCreation = ({
     },
   ];
 
+  const isLightTheme = useIsLightTheme();
+  const wrapperClassName = isLightTheme
+    ? 'w-full rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#999999_0%,#DDDDDD_100%),radial-gradient(100%_100.41%_at_100%_99.92%,#999999_0%,#DDDDDD_100%)] p-px'
+    : 'w-full rounded-sm bg-[radial-gradient(100%_100.41%_at_100%_99.92%,#4C4C4C_0%,rgba(3,3,3,0)_100%),radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#4C4C4C_0%,rgba(3,3,3,0)_100%)] p-px';
+  const wrapperSurfaceClassName = isLightTheme
+    ? 'flex w-full flex-col items-center rounded-[inherit] bg-[#FFFFFF] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(96,48,191,0.2)_100%] px-6 pt-6 pb-5'
+    : 'flex w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-6 pb-5';
+
   return (
     <>
-      <div className="w-full rounded-sm bg-[radial-gradient(100%_100.41%_at_100%_99.92%,#4C4C4C_0%,rgba(3,3,3,0)_100%),radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#4C4C4C_0%,rgba(3,3,3,0)_100%)] p-px">
-        <div className="flex w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-6 pb-5">
+      <div className={wrapperClassName}>
+        <div className={wrapperSurfaceClassName}>
           <h2 className="text-center text-2xl leading-none font-semibold">
             {shouldShowJumpBackIn ? `Welcome back, ${greetingName}!` : `Welcome, ${greetingName}!`}
           </h2>
@@ -294,13 +303,13 @@ export const FirstRequestCreation = ({
               : `We have a sneaking suspicion that you came here to send a request, so let’s get started!`}
           </p>
           <div className="mt-8 w-[50%] min-w-100">
-            <div className="flex aspect-540/127 flex-col overflow-hidden rounded-lg border border-[#3F3F46] bg-[#18181B] shadow-[0_0_0_4px_#0044F433]">
+            <div className="flex aspect-540/127 flex-col overflow-hidden rounded-lg border border-[#3F3F46] bg-(--color-bg) shadow-[0_0_0_4px_#0044F433]">
               <div className="flex-1 px-4 pt-3 pb-2">
                 <textarea
                   ref={inputRef}
                   autoFocus
                   aria-label="Request endpoint or cURL input"
-                  className="h-full w-full flex-1 resize-none font-mono text-xs"
+                  className="h-full w-full flex-1 resize-none text-xs"
                   placeholder="Enter an endpoint URL or paste cURL, or ⌘N for a new blank request"
                   value={requestInput}
                   onChange={event => {

@@ -275,7 +275,7 @@ export const useWorkspaceNewActionFetcher = createFetcherSubmitHook(
 
       return submit(JSON.stringify(workspaceData), {
         method: 'POST',
-        action: query.size ? `${action}?${query.toString()}` : action,
+        action: query.toString() ? `${action}?${query.toString()}` : action,
         encType: 'application/json',
       });
     },
