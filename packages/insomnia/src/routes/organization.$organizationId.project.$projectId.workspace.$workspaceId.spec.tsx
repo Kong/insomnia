@@ -487,6 +487,18 @@ const Component = ({ params }: Route.ComponentProps) => {
       // git projects: the RepoFileWatcher mirrors the ProjectLintRuleset record to .spectral.yaml automatically.
       await window.main.writeFile({ path: rulesetWritePath, content });
     }
+
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.uploadLintRulesetClicked,
+      properties: {
+        projectType: models.project.isGitProject(activeProject)
+          ? 'git'
+          : models.project.isRemoteProject(activeProject)
+            ? 'remote'
+            : 'local',
+      },
+    });
+
     setSelectedRulesetPath(gitSyncRulesetPath || rulesetWritePath);
   };
 
