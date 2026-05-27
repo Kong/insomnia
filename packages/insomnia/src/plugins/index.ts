@@ -6,7 +6,7 @@ import electron from 'electron';
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from '~/insomnia-data';
 import { database as db, models, services } from '~/insomnia-data';
 import type { PluginConfigMap } from '~/insomnia-data/common';
-import { fetchFromTemplateWorkerDatabase } from '~/templating/base-extension-worker';
+import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
 
 import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
