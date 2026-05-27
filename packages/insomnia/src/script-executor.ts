@@ -125,6 +125,6 @@ async function appendScriptLogs(timelinePath: string, data: string) {
     return window.main.timeline.appendToFile({ timelinePath, data });
   }
 
-  const { appendFile } = require('node:fs/promises') as typeof import('node:fs/promises');
+  const { appendFile } = require('node:fs/promises');
   return appendFile(timelinePath, data);
 }
