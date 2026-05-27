@@ -106,6 +106,9 @@ export default async function build(options: Options) {
     sourcemap: true,
     format: 'cjs',
     define: env,
+    alias: {
+      '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.node'),
+    },
     external: [
       'electron',
       '@getinsomnia/node-libcurl',
