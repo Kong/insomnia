@@ -105,7 +105,7 @@ const SideBarTabList = ({
     >
       <Tab
         id="projects"
-        className="flex h-full shrink-0 cursor-pointer items-center justify-between px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+        className={`flex h-full shrink-0 items-center justify-between px-2 py-1 text-sm text-(--hl) outline-hidden transition-colors duration-300 select-none ${konnectSyncEnabled ? 'cursor-pointer hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)' : 'text-(--color-font)!'}`}
         data-testid="sidebar-tab-projects"
       >
         {isScratchPad ? 'Projects' : `Projects (${nonKonnectProjectLength})`}
