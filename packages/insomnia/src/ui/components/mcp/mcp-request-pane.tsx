@@ -50,6 +50,23 @@ const PaneReadOnlyBanner = () => {
   );
 };
 
+const ModifyHostHeaderBanner = () => {
+  return (
+    <div
+      style={{
+        paddingTop: 'var(--padding-md)',
+        paddingLeft: 'var(--padding-md)',
+        paddingRight: 'var(--padding-md)',
+      }}
+    >
+      <p className="notice warning no-margin-top no-margin-bottom">
+        You are adding a new <strong>Host</strong> header which will override the default behavior. Remove or disable
+        the new header to return to default behavior.
+      </p>
+    </div>
+  );
+};
+
 interface Props {
   environment: Environment | null;
   readyState: McpReadyState;
@@ -94,7 +111,9 @@ export const McpRequestPane: FC<Props> = ({
   const requestId = activeRequest._id;
   const isStdio = activeRequest.transportType === 'stdio';
 
-  const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyHttpPairs.length;
+  const activeRequestHeaders = activeRequest.headers.filter(h => !h.disabled);
+  const headersCount = activeRequestHeaders.length + readOnlyHttpPairs.length;
+  const isModifyingHostHeader = activeRequestHeaders.some(h => h.name.toLowerCase() === 'host');
   const patchRequest = useRequestPatcher();
   const mcpPayloadPatcher = useRequestPayloadPatcher();
   const latestPayloadPatcherRef = useLatest(mcpPayloadPatcher);
@@ -397,6 +416,7 @@ export const McpRequestPane: FC<Props> = ({
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
           {!isDisconnected && <PaneReadOnlyBanner />}
+          {isDisconnected && isModifyingHostHeader && <ModifyHostHeaderBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
             headers={activeRequest.headers}

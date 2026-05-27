@@ -24,12 +24,6 @@ Object.defineProperty(globalThis, 'window', {
   configurable: true,
 });
 
-Object.defineProperty(process, 'type', {
-  value: 'renderer',
-  writable: true,
-  configurable: true,
-});
-
 import { _applyRequestPluginHooks, _applyResponsePluginHooks } from '../network';
 
 const mockRenderedRequest = {

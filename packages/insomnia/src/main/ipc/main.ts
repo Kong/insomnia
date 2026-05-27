@@ -136,6 +136,40 @@ const writeResponseBodyToFile = async (
   }
 };
 
+const getResponsesDir = () =>
+  path.join(process.env.INSOMNIA_DATA_PATH || app.getPath('userData'), 'responses');
+
+const responsesDirCreated = new Set<string>();
+
+const getTimelinePath = (_: unknown, responseId: string) => {
+  const base = path.resolve(getResponsesDir());
+  const target = path.resolve(base, responseId + '.timeline');
+  const relative = path.relative(base, target);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('Invalid response ID');
+  }
+  return target;
+};
+
+const appendToTimeline = async (
+  _: unknown,
+  options: { timelinePath: string; data: string },
+) => {
+  const allowedResponsesDir = getResponsesDir();
+  const resolvedPath = path.resolve(options.timelinePath);
+  if (!resolvedPath.startsWith(path.resolve(allowedResponsesDir) + path.sep) || !resolvedPath.endsWith('.timeline')) {
+    throw new Error(
+      'appendToTimeline: timelinePath is outside the allowed responses directory or does not end in .timeline',
+    );
+  }
+  const dir = path.dirname(resolvedPath);
+  if (!responsesDirCreated.has(dir)) {
+    await fs.promises.mkdir(dir, { recursive: true });
+    responsesDirCreated.add(dir);
+  }
+  await fs.promises.appendFile(resolvedPath, options.data);
+};
+
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -243,6 +277,10 @@ export interface RendererToMainBridgeAPI {
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
   notifyPluginPromptResult: (id: string, value: string | null) => void;
+  timeline: {
+    getPath: (responseId: string) => Promise<string>;
+    appendToFile: (options: { timelinePath: string; data: string }) => Promise<void>;
+  };
 }
 
 export function registerMainHandlers() {
@@ -676,6 +714,9 @@ export function registerMainHandlers() {
       });
     });
   });
+
+  ipcMainHandle('timeline.getPath', getTimelinePath);
+  ipcMainHandle('timeline.appendToFile', appendToTimeline);
 
   registerPluginIpcHandlers();
 }

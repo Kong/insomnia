@@ -11,6 +11,7 @@ export default defineConfig({
     },
     exclude: ['src/routes/**.*.tsx', '.react-router', 'node_modules'],
     alias: {
+      '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
       '~': path.resolve(__dirname, './src'),
       'electron/main': 'electron',
     },
