@@ -385,7 +385,6 @@ export const FirstRequestCreation = ({
             {curlParseError && (
               <div className="mt-2 text-xs text-[#FF5631]">Invalid cURL. Verify your input and try again.</div>
             )}
-            {/* example for create request */}
             <div className="my-6 px-4">
               <p className="text-xs font-semibold text-(--hl)">
                 {shouldShowJumpBackIn ? 'Jump back in' : 'Not sure where to start?'}
