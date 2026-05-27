@@ -1,11 +1,14 @@
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { CurlRequestOptions } from '../main/network/libcurl-promise';
-import { runScript as nodejsRunScript } from '../script-executor';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
+const isRendererProcess = (process as any).type === 'renderer';
 
 export async function cancelRequestById(requestId: string) {
-  window.main.completeExecutionStep({ requestId });
+  if (isRendererProcess) {
+    window.main.completeExecutionStep({ requestId });
+  }
+
   const cancel = cancelRequestFunctionMap.get(requestId);
   if (cancel) {
     return cancel();
@@ -38,8 +41,11 @@ export const cancellableExecution = async (options: { id: string; fn: Promise<an
 };
 
 export const cancellableRunScript = async (options: { script: string; context: RequestContext }) => {
-  const request = options.context.request;
-  const requestId = request._id;
+  if (!isRendererProcess) {
+    throw new Error('cancellableRunScript is only available in the renderer process');
+  }
+
+  const requestId = options.context.request._id;
   const controller = new AbortController();
   const cancelRequest = () => {
     // TODO: implement cancelPreRequestScript on hiddenBrowserWindow side?
@@ -49,7 +55,7 @@ export const cancellableRunScript = async (options: { script: string; context: R
   try {
     const result = await cancellablePromise({
       signal: controller.signal,
-      fn: process.type === 'renderer' ? window.main.hiddenBrowserWindow.runScript(options) : nodejsRunScript(options),
+      fn: window.main.hiddenBrowserWindow.runScript(options),
     });
 
     return result;
@@ -65,6 +71,10 @@ export const cancellableRunScript = async (options: { script: string; context: R
 };
 
 export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions) => {
+  if (!isRendererProcess) {
+    throw new Error('cancellableCurlRequest is only available in the renderer process');
+  }
+
   const requestId = requestOptions.requestId;
   const controller = new AbortController();
   const cancelRequest = () => {

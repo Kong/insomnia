@@ -54,13 +54,15 @@ import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
-import { cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
+
+const runScriptInNode = (options: { script: string; context: RequestContext }) =>
+  require('../script-executor').runScript(options) as Promise<RequestContext>;
 
 
 export interface SendActionRuntime {
@@ -519,7 +521,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
   }
 
   try {
-    const fn = process.type === 'renderer' ? runScriptConcurrently : cancellableRunScript;
+    const fn = process.type === 'renderer' ? runScriptConcurrently : runScriptInNode;
     const output = await fn({
       script,
       context: {

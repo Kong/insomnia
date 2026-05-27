@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { interceptorRules } from '../interceptor-rules';
 import { requireInterceptor } from '../require-interceptor';
 import { defaultSecurityPolicy } from '../sandbox';
-import { interceptorRules, maskRules } from '../script-security-policy';
+import { maskRules } from '../script-security-policy';
 
 // Build the mask map once — shared across all tests.
 const { names, values } = defaultSecurityPolicy.buildMaskScope();
