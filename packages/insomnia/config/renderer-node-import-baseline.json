@@ -25,6 +25,14 @@
       "builtin": "zlib"
     },
     {
+      "importer": "src/plugins/index.ts",
+      "builtin": "fs"
+    },
+    {
+      "importer": "src/plugins/index.ts",
+      "builtin": "path"
+    },
+    {
       "importer": "src/script-executor.ts",
       "builtin": "fs/promises"
     },
