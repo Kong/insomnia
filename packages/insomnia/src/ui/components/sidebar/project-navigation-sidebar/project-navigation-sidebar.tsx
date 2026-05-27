@@ -23,7 +23,6 @@ import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
-import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
@@ -718,18 +717,18 @@ export const ProjectNavigationSidebar = ({
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
       {!isScratchPad &&
         (konnectSyncEnabled ? (
-          <div className="flex shrink-0 border-b border-solid border-b-(--hl-md)">
+          <div className="flex h-12 shrink-0 border-b border-solid border-b-(--hl-md)">
             {['projects', 'konnect'].map(tabName => (
               <button
                 key={tabName}
-                className={`px-4 py-2 text-xs ${activeTab === tabName ? 'bg-(--hl-sm) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
+                className={`px-3 py-1 text-xs ${activeTab === tabName ? 'bg-(--hl-xs) text-(--color-font)' : 'text-(--hl) hover:bg-(--hl-sm) hover:text-(--color-font)'}`}
                 data-testid={`sidebar-tab-${tabName}`}
                 onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
               >
                 {tabName === 'projects' ? (
                   `Projects (${nonKonnectProjects.length})`
                 ) : (
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-2">
                     <KongLogo />
                     Konnect ({konnectProjects.length})
                   </span>
