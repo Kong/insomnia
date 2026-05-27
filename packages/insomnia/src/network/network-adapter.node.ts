@@ -19,7 +19,13 @@ import * as pluginStore from '../plugins/context/store';
 export const getTimelinePath = async (responseId: string): Promise<string> => {
   const electron = require('electron') as { app: { getPath: (name: string) => string } };
   const dataDir = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
-  return nodePath.join(dataDir, 'responses', responseId + '.timeline');
+  const base = nodePath.resolve(dataDir, 'responses');
+  const target = nodePath.resolve(base, responseId + '.timeline');
+  const relative = nodePath.relative(base, target);
+  if (relative.startsWith('..') || nodePath.isAbsolute(relative)) {
+    throw new Error('Invalid response ID');
+  }
+  return target;
 };
 
 export const appendToTimelineOnError = (timelinePath: string, data: string): Promise<void> =>
