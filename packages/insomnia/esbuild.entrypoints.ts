@@ -105,10 +105,9 @@ export default async function build(options: Options) {
     platform: 'node',
     sourcemap: true,
     format: 'cjs',
-    define: {
-      ...env,
-      // Electron main = "browser"
-      'process.type': '"browser"',
+    define: env,
+    alias: {
+      '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.node'),
     },
     external: [
       'electron',
@@ -219,14 +218,7 @@ export default async function build(options: Options) {
     const hiddenWindowPreloadWatch = await hiddenPreloadContext.watch();
     const pluginWindowWatch = await pluginWindowContext.watch();
     const pluginWindowPreloadWatch = await pluginWindowPreloadContext.watch();
-    return Promise.all([
-      preloadWatch,
-      hiddenWindowPreloadWatch,
-      mainWatch,
-      hiddenWindowWatch,
-      pluginWindowWatch,
-      pluginWindowPreloadWatch,
-    ]);
+    return Promise.all([preloadWatch, hiddenWindowPreloadWatch, mainWatch, hiddenWindowWatch, pluginWindowWatch, pluginWindowPreloadWatch]);
   }
   const preload = esbuild.build(preloadBuildOptions);
   const hiddenBrowserWindow = esbuild.build(hiddenBrowserWindowBuildOptions);
@@ -234,14 +226,7 @@ export default async function build(options: Options) {
   const pluginWindow = esbuild.build(pluginWindowBuildOptions);
   const pluginWindowPreload = esbuild.build(pluginWindowPreloadBuildOptions);
   const main = esbuild.build(mainBuildOptions);
-  return Promise.all([
-    main,
-    preload,
-    hiddenBrowserWindow,
-    hiddenBrowserWindowPreload,
-    pluginWindow,
-    pluginWindowPreload,
-  ]).catch(err => {
+  return Promise.all([main, preload, hiddenBrowserWindow, hiddenBrowserWindowPreload, pluginWindow, pluginWindowPreload]).catch(err => {
     console.error('[Build] Build failed:', err);
   });
 }
