@@ -228,28 +228,15 @@ export const FirstRequestCreation = ({
       return;
     }
 
-    const graphqlQuery = `
-      query {
-        viewer {
-          repositories(first: 100, privacy: PUBLIC, affiliations: [OWNER]) {
-            nodes {
-              name
-              description
-              url
-              stargazerCount
-            }
-          }
-        }
-      }
-    `;
+    const graphqlQuery =
+      'query { viewer { repositories(first: 100, privacy: PUBLIC, affiliations: [OWNER]) { nodes { name description url stargazerCount } } } }';
 
     const githubGraphqlLookupCurl = `curl --request POST \
   --url https://api.github.com/graphql \
   --header 'Authorization: Bearer replace with your own token' \
   --header 'Content-Type: application/json' \
   --header 'User-Agent: insomnia/12.5.1-alpha.0' \
-  --data '{"query":"${graphqlQuery}"}'`;
-
+  --data '${JSON.stringify({ query: graphqlQuery })}'`;
     try {
       const req = await parseCurlRequest(githubGraphqlLookupCurl);
       createRequestFetcher.submit({
