@@ -54,6 +54,12 @@ export interface ApplyRequestHooksArgs {
   environment: Record<string, any>;
 }
 
+export interface ApplyHarRequestHooksArgs {
+  renderedRequest: RenderedRequest;
+  projectId: string;
+  environment: Record<string, any>;
+}
+
 export interface ApplyResponseHooksArgs {
   response: ResponsePatch;
   renderedRequest: RenderedRequest;
@@ -85,6 +91,7 @@ export interface PluginsBridgeAPI {
   hasRequestHooks: () => Promise<boolean>;
   hasResponseHooks: () => Promise<boolean>;
   applyRequestHooks: (args: ApplyRequestHooksArgs) => Promise<RenderedRequest>;
+  applyHarRequestHooks: (args: ApplyHarRequestHooksArgs) => Promise<RenderedRequest>;
   applyResponseHooks: (args: ApplyResponseHooksArgs) => Promise<ResponsePatch>;
   getBridgeMetrics: () => Promise<PluginBridgeMetrics>;
 }

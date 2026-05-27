@@ -5,7 +5,7 @@ vi.mock('../context/app', () => ({ init: vi.fn().mockReturnValue({ app: {} }) })
 vi.mock('../context/data', () => ({ init: vi.fn().mockReturnValue({ data: {} }) }));
 vi.mock('../context/store', () => ({ init: vi.fn().mockReturnValue({ store: {} }) }));
 vi.mock('../context/network', () => ({ init: vi.fn().mockReturnValue({ network: {} }) }));
-vi.mock('../context/request', () => ({ init: vi.fn().mockReturnValue({ request: {} }) }));
+vi.mock('../context/request', () => ({ init: vi.fn().mockImplementation(request => ({ request })) }));
 vi.mock('../context/response', () => ({ init: vi.fn().mockReturnValue({ response: {} }) }));
 vi.mock('~/insomnia-data', () => ({
   services: {
@@ -78,5 +78,50 @@ describe('invokePluginMethod', () => {
         environment: {},
       }),
     ).rejects.toThrow('[plugin=test-plugin] boom');
+  });
+
+  it('does not mutate the original rendered request when applying request hooks', async () => {
+    const hook = vi.fn().mockImplementation(({ request }) => {
+      request.headers.push({ name: 'X-Test', value: '1' });
+    });
+    _testOnlySetPlugins([makePlugin({ module: { requestHooks: [hook] } })]);
+    const renderedRequest = { url: 'https://example.com', headers: [] } as any;
+
+    await expect(
+      invokePluginMethod('applyRequestHooks', {
+        renderedRequest,
+        projectId: 'proj_1',
+        environment: {},
+      }),
+    ).resolves.toMatchObject({
+      url: 'https://example.com',
+      headers: [{ name: 'X-Test', value: '1' }],
+    });
+
+    expect(renderedRequest.headers).toEqual([]);
+  });
+
+  it('applies HAR request hooks without data or network context', async () => {
+    const hook = vi.fn().mockImplementation(({ request }) => {
+      request.headers = [{ name: 'X-Test', value: '1' }];
+    });
+    _testOnlySetPlugins([makePlugin({ module: { requestHooks: [hook] } })]);
+
+    await expect(
+      invokePluginMethod('applyHarRequestHooks', {
+        renderedRequest: { url: 'https://example.com', headers: [] } as any,
+        projectId: 'proj_1',
+        environment: {},
+      }),
+    ).resolves.toMatchObject({
+      url: 'https://example.com',
+      headers: [{ name: 'X-Test', value: '1' }],
+    });
+
+    expect(hook).toHaveBeenCalledWith(
+      expect.objectContaining({ app: {}, request: expect.any(Object), store: {} }),
+    );
+    expect(hook).not.toHaveBeenCalledWith(expect.objectContaining({ data: expect.anything() }));
+    expect(hook).not.toHaveBeenCalledWith(expect.objectContaining({ network: expect.anything() }));
   });
 });

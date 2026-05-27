@@ -41,8 +41,18 @@ export async function applyRequestHooks(
 
 export const applyHarRequestHooks = async (
   renderedRequest: RenderedRequest,
-  _renderedContext: Record<string, any>,
-): Promise<RenderedRequest> => renderedRequest;
+  renderedContext: Record<string, any>,
+): Promise<RenderedRequest> => {
+  if (!(await pluginsBridge.hasRequestHooks())) {
+    return renderedRequest;
+  }
+
+  return pluginsBridge.applyHarRequestHooks({
+    renderedRequest,
+    projectId: renderedContext.getProjectId(),
+    environment: renderedContext,
+  });
+};
 
 export async function applyResponseHooks(
   response: ResponsePatch,

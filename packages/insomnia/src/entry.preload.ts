@@ -18,6 +18,7 @@ import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import type {
+  ApplyHarRequestHooksArgs,
   ApplyRequestHooksArgs,
   ApplyResponseHooksArgs,
   ExecutePluginActionArgs,
@@ -383,6 +384,7 @@ const main: Window['main'] = {
     hasRequestHooks: () => invokePluginBridgeMethod('hasRequestHooks'),
     hasResponseHooks: () => invokePluginBridgeMethod('hasResponseHooks'),
     applyRequestHooks: (args: ApplyRequestHooksArgs) => invokePluginBridgeMethod('applyRequestHooks', args),
+    applyHarRequestHooks: (args: ApplyHarRequestHooksArgs) => invokePluginBridgeMethod('applyHarRequestHooks', args),
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
     getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },

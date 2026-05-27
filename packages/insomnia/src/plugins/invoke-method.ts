@@ -1,10 +1,12 @@
 import type {
+  ApplyHarRequestHooksArgs,
   ApplyRequestHooksArgs,
   ApplyResponseHooksArgs,
   ExecutePluginActionArgs,
   ExecutePluginMainActionArgs,
   RunTemplateTagActionArgs,
 } from './bridge-types';
+import clone from 'clone';
 import * as pluginApp from './context/app';
 import * as pluginData from './context/data';
 import * as pluginNetwork from './context/network';
@@ -45,6 +47,7 @@ export type PluginInvokeMethod =
   | 'hasRequestHooks'
   | 'hasResponseHooks'
   | 'applyRequestHooks'
+  | 'applyHarRequestHooks'
   | 'applyResponseHooks';
 
 function serializePlugin(p: Plugin) {
@@ -186,16 +189,40 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
 
     case 'applyRequestHooks': {
       const { renderedRequest, projectId, environment } = args as ApplyRequestHooksArgs;
-      const newRenderedRequest = { ...renderedRequest };
       const renderedContext = { ...environment, getProjectId: () => projectId };
+      let newRenderedRequest = renderedRequest;
 
       for (const { plugin, hook } of await getRequestHooks()) {
+        newRenderedRequest = clone(newRenderedRequest);
         const context = {
           ...pluginApp.init(),
           ...pluginData.init(projectId),
           ...(pluginStore.init(plugin) as Record<string, any>),
           ...(pluginRequest.init(newRenderedRequest as any, renderedContext) as Record<string, any>),
           ...(pluginNetwork.init() as Record<string, any>),
+        };
+        try {
+          await hook(context);
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          throw new Error(`[plugin=${plugin.name}] ${error.message}`);
+        }
+      }
+
+      return newRenderedRequest;
+    }
+
+    case 'applyHarRequestHooks': {
+      const { renderedRequest, projectId, environment } = args as ApplyHarRequestHooksArgs;
+      const renderedContext = { ...environment, getProjectId: () => projectId };
+      let newRenderedRequest = renderedRequest;
+
+      for (const { plugin, hook } of await getRequestHooks()) {
+        newRenderedRequest = clone(newRenderedRequest);
+        const context = {
+          ...pluginApp.init(),
+          ...(pluginRequest.init(newRenderedRequest as any, renderedContext) as Record<string, any>),
+          ...(pluginStore.init(plugin) as Record<string, any>),
         };
         try {
           await hook(context);
