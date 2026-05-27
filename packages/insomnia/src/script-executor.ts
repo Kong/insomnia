@@ -9,6 +9,7 @@ import {
   mergeSettings,
   type RequestContext,
 } from '../../insomnia-scripting-environment/src/objects';
+import { appendToTimelineOnError } from './network/network-adapter';
 import { requireInterceptor } from './scripting/require-interceptor';
 import { invariant } from './utils/invariant';
 
@@ -65,10 +66,7 @@ export const runScript = async ({
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
-  await window.main.timeline.appendToFile({
-    timelinePath: context.timelinePath,
-    data: scriptConsole.dumpLogs(),
-  });
+  await appendToTimelineOnError(context.timelinePath, scriptConsole.dumpLogs());
 
   // console.log('mutatedInsomniaObject', mutatedContextObject);
   // console.log('context', context);
