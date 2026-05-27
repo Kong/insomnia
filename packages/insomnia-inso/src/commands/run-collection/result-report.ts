@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import nodePath from 'node:path';
 
-import type { Consola } from 'consola';
+import type { ConsolaInstance } from 'consola';
 import { pick } from 'es-toolkit';
 
 import type {
@@ -65,7 +65,7 @@ export class RunCollectionResultReport {
       outputFilePath: string;
       includeFullData?: 'redact' | 'plaintext';
     },
-    private logger: Consola,
+    private logger: ConsolaInstance,
     init?: Partial<ReportData>,
   ) {
     Object.assign(this, init);

@@ -164,6 +164,8 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
+  | 'timeline.appendToFile'
+  | 'timeline.getPath'
   | 'writeFile'
   | 'deleteRulesetFile'
   | 'writeResponseBodyToFile';
