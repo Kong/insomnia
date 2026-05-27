@@ -60,8 +60,8 @@ const ModifyHostHeaderBanner = () => {
       }}
     >
       <p className="notice warning no-margin-top no-margin-bottom">
-        You are adding a new <strong>Host</strong> header which will override the default behavior. Uncheck or delete
-        the extra host restores automatic calculation from the URL.
+        You are adding a new <strong>Host</strong> header which will override the default behavior. Remove or disable
+        the new header to return to default behavior.
       </p>
     </div>
   );
