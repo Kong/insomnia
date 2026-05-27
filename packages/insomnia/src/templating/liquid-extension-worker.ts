@@ -6,8 +6,8 @@ import type { CloudProviderCredential, Request, RequestGroup, Response, Workspac
 import packageJson from '../../package.json';
 import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
-import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
 import { tokenizeArgs } from './tokenize-args';
+import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
 import * as templating from './worker';
 
 export function decodeEncodingWorker<T>(value: T) {
