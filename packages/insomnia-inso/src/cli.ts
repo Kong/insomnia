@@ -38,11 +38,6 @@ import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 import type { Database } from './db/types';
 import { InsoError } from './errors';
-<<<<<<< Updated upstream
-=======
-import { LogLevels } from 'consola';
-
->>>>>>> Stashed changes
 import { BasicReporter, logger } from './logger';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
 import { generateDocumentation } from './scripts/docs';

@@ -55,33 +55,33 @@ npm -v
 ## Repository Structure
 
 `packages/`
-`insomnia/` ← Main Electron app
-`src/`
-`common/` ← Shared utils, settings types
-`models/` ← Data model definitions
-`insomnia-data/` ← Model defaults, init(), NeDB db implementation, business logic
-`routes/` ← React Router files (clientLoader/clientAction)
-`ui/` ← React components, hooks, `insomnia-fetch.ts`
-`main/` ← Electron IPC handlers, `preload.ts`
-`account/` ← Auth, session, encryption
-`sync/` ← Git/VCS sync
-`network/` ← Request execution engine
-`templating/` ← Nunjucks rendering (Web Worker)
-`insomnia-api/` ← Cloud API client
-`insomnia-inso/` ← CLI tool
-`insomnia-testing/` ← Test framework
+  `insomnia/`                ← Main Electron app
+    `src/`
+      `common/`              ← Shared utils, settings types
+      `models/`              ← Data model definitions
+      `insomnia-data/`       ← Model defaults, init(), NeDB db implementation, business logic
+      `routes/`              ← React Router files (clientLoader/clientAction)
+      `ui/`                  ← React components, hooks, `insomnia-fetch.ts`
+      `main/`                ← Electron IPC handlers, `preload.ts`
+      `account/`             ← Auth, session, encryption
+      `sync/`                ← Git/VCS sync
+      `network/`             ← Request execution engine
+      `templating/`          ← Nunjucks rendering (Web Worker)
+  `insomnia-api/`            ← Cloud API client
+  `insomnia-inso/`           ← CLI tool
+  `insomnia-testing/`        ← Test framework
 
 ## Data Model Hierarchy
 
 Organization
-→ Project (local | remote/cloud | git-backed)
-→ Workspace (scope: 'collection' | 'design')
-→ Base Environment (auto-created: use `models.environment.getOrCreateForParentId(workspaceId)`)
-→ Sub-Environments
-→ Cookie Jar (auto-created)
-→ Request Group (folders)
-→ Request (HTTP, GraphQL, gRPC, WebSocket, Socket.IO)
-→ Request (can be direct child of workspace)
+  → Project (local | remote/cloud | git-backed)
+    → Workspace (scope: 'collection' | 'design')
+      → Base Environment (auto-created: use `models.environment.getOrCreateForParentId(workspaceId)`)
+        → Sub-Environments
+      → Cookie Jar (auto-created)
+      → Request Group (folders)
+        → Request (HTTP, GraphQL, gRPC, WebSocket, Socket.IO)
+      → Request (can be direct child of workspace)
 **Note:** A Workspace with `scope: 'collection'` IS the collection.
 
 ## Key Patterns
