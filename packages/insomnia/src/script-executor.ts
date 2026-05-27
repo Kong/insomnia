@@ -1,5 +1,3 @@
-import { appendFile } from 'node:fs/promises';
-
 import * as _ from 'es-toolkit/compat';
 
 import { initInsomniaObject, InsomniaObject } from '../../insomnia-scripting-environment/src/objects';
@@ -67,7 +65,10 @@ export const runScript = async ({
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
-  await appendFile(context.timelinePath, scriptConsole.dumpLogs());
+  await window.main.timeline.appendToFile({
+    timelinePath: context.timelinePath,
+    data: scriptConsole.dumpLogs(),
+  });
 
   // console.log('mutatedInsomniaObject', mutatedContextObject);
   // console.log('context', context);
