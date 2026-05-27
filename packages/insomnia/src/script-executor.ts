@@ -9,7 +9,6 @@ import {
   mergeSettings,
   type RequestContext,
 } from '../../insomnia-scripting-environment/src/objects';
-import { appendToTimelineOnError } from './network/network-adapter';
 import { requireInterceptor } from './scripting/require-interceptor';
 import { invariant } from './utils/invariant';
 
@@ -66,7 +65,7 @@ export const runScript = async ({
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
-  await appendToTimelineOnError(context.timelinePath, scriptConsole.dumpLogs());
+  await appendScriptLogs(context.timelinePath, scriptConsole.dumpLogs());
 
   // console.log('mutatedInsomniaObject', mutatedContextObject);
   // console.log('context', context);
@@ -119,4 +118,13 @@ function proxiedSetTimeout(callback: () => void, ms?: number | undefined) {
     callback();
     resolveHdl(null);
   }, ms);
+}
+
+async function appendScriptLogs(timelinePath: string, data: string) {
+  if (process.type === 'renderer') {
+    return window.main.timeline.appendToFile({ timelinePath, data });
+  }
+
+  const { appendFile } = require('node:fs/promises') as typeof import('node:fs/promises');
+  return appendFile(timelinePath, data);
 }
