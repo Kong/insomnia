@@ -93,7 +93,7 @@ export const validateThemeName = (name: string) => {
   return validName;
 };
 
-export const containsNunjucks = (data: string) => data.includes('{{') && data.includes('}}');
+export const containsTemplateSyntax = (data: string) => data.includes('{{') && data.includes('}}');
 const getChildValue = (theme: any, path: string[]) => {
   return path.reduce((acc, v: string) => {
     try {
@@ -114,7 +114,7 @@ export const validateTheme = (pluginTheme: PluginTheme) => {
       return;
     }
 
-    if (typeof data === 'string' && containsNunjucks(data)) {
+    if (typeof data === 'string' && containsTemplateSyntax(data)) {
       console.error(
         `[plugin] Nunjucks values in plugin themes are no longer valid. The plugin ${pluginTheme.displayName} (${pluginTheme.name}) has an invalid value, "${data}" at the path $.theme.${keyPath.join('.')}`,
       );

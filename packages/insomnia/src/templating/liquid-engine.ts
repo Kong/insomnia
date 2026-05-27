@@ -33,8 +33,10 @@ export function buildLiquidEngine(opts: {
     strictFilters: false,
     // Match Nunjucks JS truthiness: '', 0, [] are falsy
     jsTruthy: true,
-    // Allow prototype-chain access on context objects
-    ownPropertyOnly: false,
+    // Restrict property access to own properties only — prevents prototype-chain traversal
+    // (e.g. {{ constructor }} or {{ __proto__ }}) from leaking context internals.
+    // Render contexts are plain objects so no legitimate template needs inherited properties.
+    ownPropertyOnly: true,
   });
 
   // No-op globals to maintain backwards compat with Nunjucks builtins

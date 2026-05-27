@@ -60,10 +60,10 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     );
 
     const generateConnectParams = useCallback(async () => {
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
+      // Render any Liquid template tags in the url/headers/authentication settings/cookies
 
       const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
+      // Render any Liquid template tags in the url/headers/authentication settings/cookies
       const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
         request,
         environmentId,

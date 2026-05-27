@@ -53,7 +53,7 @@ export function normalizeToDotAndBracketNotation(prefix: string) {
 
 
 /**
- * Parse a Nunjucks tag string into a usable object
+ * Parse a Liquid template tag string into a usable object
  * @param {string} tagStr - the template string for the tag
  */
 export function tokenizeTag(tagStr: string) {
@@ -69,7 +69,7 @@ export function tokenizeTag(tagStr: string) {
   return parsedTag;
 }
 
-/** Convert a tokenized tag back into a Nunjucks string */
+/** Convert a tokenized tag back into a Liquid template string */
 export function unTokenizeTag(tagData: NunjucksParsedTag) {
   const args: string[] = [];
 
@@ -91,7 +91,7 @@ export function unTokenizeTag(tagData: NunjucksParsedTag) {
   return `{% ${tagData.name} ${argsStr} %}`;
 }
 
-/** Get the default Nunjucks string for an extension */
+/** Get the default Liquid template string for an extension */
 export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
   const stringArgs: string[] = (args || []).map(argDefinition => {
     if (argDefinition.type === 'enum') {

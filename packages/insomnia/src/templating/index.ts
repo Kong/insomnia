@@ -28,10 +28,10 @@ export function render(
     ignoreUndefinedEnvVariable?: boolean;
   } = {},
 ) {
-  const hasNunjucksInterpolationSymbols = text.includes('{{') && text.includes('}}');
-  const hasNunjucksCustomTagSymbols = text.includes('{%') && text.includes('%}');
-  const hasNunjucksCommentSymbols = text.includes('{#') && text.includes('#}');
-  if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols && !hasNunjucksCommentSymbols) {
+  const hasTemplateInterpolationSymbols = text.includes('{{') && text.includes('}}');
+  const hasTemplateTagSymbols = text.includes('{%') && text.includes('%}');
+  const hasTemplateCommentSymbols = text.includes('{#') && text.includes('#}');
+  if (!hasTemplateInterpolationSymbols && !hasTemplateTagSymbols && !hasTemplateCommentSymbols) {
     return text;
   }
   const context = config.context || {};
@@ -57,7 +57,7 @@ export function render(
       clearTimeout(id);
       console.warn('[templating] Error rendering template', err);
       const newError = translateLiquidError(err, text, templatingContext, path);
-      if (hasNunjucksInterpolationSymbols && newError.reason === 'undefined') {
+      if (hasTemplateInterpolationSymbols && newError.reason === 'undefined') {
         newError.extraInfo = {
           subType: 'environmentVariable',
           undefinedEnvironmentVariables: extractUndefinedVariableKey(text, templatingContext),

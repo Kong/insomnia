@@ -38,7 +38,7 @@ async function validator(text: string): Promise<ValidationError[]> {
     }
   };
 
-  // Render any Nunjucks templates before attempting to parse
+  // Render any Liquid templates before attempting to parse
   try {
     const renderedText: string | null = await render(text, {});
     if (renderedText) {

@@ -83,7 +83,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
     init();
   }, [request._id]);
 
-  // NOTE: Nunjucks interpolation can throw errors
+  // NOTE: Liquid template interpolation can throw errors
   const interpolateOpenAndSend = async (payload: string) => {
     try {
       const renderedMessage = await tryToInterpolateRequestOrShowRenderErrorModal({ request, environmentId, payload });
