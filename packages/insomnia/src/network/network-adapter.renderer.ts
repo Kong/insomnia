@@ -2,8 +2,10 @@ import type { RequestHeader } from '~/insomnia-data';
 import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
 import type { RenderedRequest } from '~/templating/types';
 
+import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { CurlRequestOptions, ResponsePatch } from '../main/network/libcurl-promise';
 import { cancellableCurlRequest } from './cancellation';
+import { runScriptConcurrently } from './concurrency';
 
 export const getTimelinePath = (responseId: string): Promise<string> =>
   window.main.timeline.getPath(responseId);
@@ -19,6 +21,11 @@ export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHea
 
 export const executeCurlRequest = (options: CurlRequestOptions) =>
   cancellableCurlRequest(options);
+
+export const runScript = (options: {
+  script: string;
+  context: RequestContext;
+}): Promise<RequestContext | { error: string }> => runScriptConcurrently(options);
 
 export async function applyRequestHooks(
   newRenderedRequest: RenderedRequest,

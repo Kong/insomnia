@@ -33,10 +33,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/script-executor.ts",
-      "builtin": "fs/promises"
-    },
-    {
       "importer": "src/scripting/require-interceptor.ts",
       "builtin": "buffer"
     },
