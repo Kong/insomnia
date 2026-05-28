@@ -86,7 +86,7 @@ test.describe('multiple-tab feature test', () => {
     await expect.soft(insomnia.navigationSidebar.requestRow('New Request', 'My first collection')).toBeVisible();
 
     // close tab after delete a request
-    await page.getByTestId('workspace-breadcrumb-level-0').click();
+    await insomnia.navigationSidebar.selectProject('Personal Workspace');
     await page.getByLabel('Create in project').click();
     await page.getByText('Request collection').click();
     await page.getByPlaceholder('Enter a name for your Request Collection').fill('Delete request test collection');
