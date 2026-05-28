@@ -8,12 +8,12 @@ import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import { initDatabase, initServices, services } from '~/insomnia-data';
+import { plugins } from '~/plugins/renderer-bridge';
 import { database as clientDatabase } from '~/ui/database.client';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { init as initPlugins } from './plugins';
 import { applyColorScheme } from './plugins/misc';
 import { registerSyncMergeConflictListener } from './sync/vcs/insomnia-sync';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
@@ -40,7 +40,7 @@ delete window._dataServices;
 
 configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));
 
-await initPlugins();
+await plugins.reloadPlugins();
 
 await migrateFromLocalStorage();
 registerSyncMergeConflictListener();

@@ -1,5 +1,4 @@
 import type { PluginBridgeMetrics, PluginsBridgeAPI } from './bridge-types';
-import { invokePluginMethod } from './invoke-method';
 
 // Phase 1a rollback switch: set INSOMNIA_ENABLE_PLUGIN_BRIDGE=false to fall
 // back to running plugins directly in the renderer (legacy behaviour).
@@ -7,15 +6,17 @@ import { invokePluginMethod } from './invoke-method';
 // plugin-system deps it pulls in don't inflate the preload.
 const bridgeEnabled = process.env.INSOMNIA_ENABLE_PLUGIN_BRIDGE !== 'false';
 
-function call<M extends keyof Omit<PluginsBridgeAPI, 'getBridgeMetrics'>>(
+async function call<M extends keyof Omit<PluginsBridgeAPI, 'getBridgeMetrics'>>(
   method: M,
   args?: Parameters<PluginsBridgeAPI[M]>[0],
-): ReturnType<PluginsBridgeAPI[M]> {
+): Promise<Awaited<ReturnType<PluginsBridgeAPI[M]>>> {
   if (bridgeEnabled) {
     const fn = (window.main.plugins[method] as (...a: any[]) => any);
-    return fn(args) as ReturnType<PluginsBridgeAPI[M]>;
+    return fn(args) as Promise<Awaited<ReturnType<PluginsBridgeAPI[M]>>>;
   }
-  return invokePluginMethod(method as any, args) as ReturnType<PluginsBridgeAPI[M]>;
+
+  const { invokePluginMethod } = await import('./invoke-method');
+  return invokePluginMethod(method as any, args) as Promise<Awaited<ReturnType<PluginsBridgeAPI[M]>>>;
 }
 
 const emptyBridgeMetrics: PluginBridgeMetrics = {

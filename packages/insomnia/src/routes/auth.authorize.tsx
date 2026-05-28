@@ -1,5 +1,5 @@
 import { getVault } from 'insomnia-api';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
@@ -75,7 +75,12 @@ export const useAuthorizeActionFetcher = createFetcherSubmitHook(
 );
 
 const Component = () => {
-  const url = getLoginUrl();
+  const [url, setUrl] = useState('');
+
+  useEffect(() => {
+    void getLoginUrl().then(setUrl);
+  }, []);
+
   const copyUrl = () => {
     window.clipboard.writeText(url);
   };
