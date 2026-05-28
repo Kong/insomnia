@@ -1,5 +1,5 @@
 import type { Tag } from 'liquidjs';
-import { Liquid } from 'liquidjs';
+import { Liquid, Tag as LiquidTag } from 'liquidjs';
 
 import type { Plugin } from '../plugins/index';
 import type { PluginTemplateTag } from './types';
@@ -39,6 +39,17 @@ export function buildLiquidEngine(opts: {
     renderLimit: 10_000,
     memoryLimit: 10_000_000,
   });
+
+  // Block built-in file-loading tags — file access must go through the `file` template tag
+  // which routes through window.main.secureReadFile (path allowlist).
+  class BlockedFileTag extends LiquidTag {
+    render(): void {
+      throw new Error('{% include %}, {% render %}, and {% layout %} are disabled. Use the File template tag to read files.');
+    }
+  }
+  engine.registerTag('include', BlockedFileTag);
+  engine.registerTag('render', BlockedFileTag);
+  engine.registerTag('layout', BlockedFileTag);
 
   // No-op globals to maintain backwards compat with Nunjucks builtins
   engine.registerFilter('debug', (v: unknown) => v);
