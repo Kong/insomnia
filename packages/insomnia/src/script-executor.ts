@@ -28,7 +28,7 @@ export const runScript = async ({
 
   const evalInterceptor = (script: string) => {
     invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
-    const result = eval(script);
+    const result = eval?.(script);
     return result;
   };
 
