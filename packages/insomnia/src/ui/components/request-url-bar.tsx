@@ -42,7 +42,6 @@ import { GenerateCodeModal } from './modals/generate-code-modal';
 import { InputVaultKeyModal } from './modals/input-vault-key-modal';
 import { PromptModal } from './modals/prompt-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
-import { getRequestMethodShortHand } from './tags/method-tag';
 
 const { isRequestGroup } = models.requestGroup;
 const { isEventStreamRequest, isGraphqlSubscriptionRequest } = models.request;
@@ -224,9 +223,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 projectId,
                 requestId,
                 workspaceId: activeWorkspace._id,
-                name: activeRequest.name,
-                badgeLabel: getRequestMethodShortHand(activeRequest),
-                requestMethod: activeRequest.method,
               });
           };
           startListening();
@@ -238,9 +234,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             projectId,
             requestId,
             workspaceId: activeWorkspace._id,
-            name: activeRequest.name,
-            badgeLabel: getRequestMethodShortHand(activeRequest),
-            requestMethod: activeRequest.method,
           });
 
           send({

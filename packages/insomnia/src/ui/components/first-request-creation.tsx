@@ -4,21 +4,20 @@ import { useNavigate, useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
-import { getProjectRecentRequests } from '~/common/project';
+import { getProjectRecentRequests, type RecentProjectRequest } from '~/common/project';
 import type { Request } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
-import { RequestBadge } from '~/ui/components/tags/method-tag';
 import { showToast } from '~/ui/components/toast-notification';
 import { Tooltip } from '~/ui/components/tooltip';
+import { getBadgeClassName, ResourceIcon } from '~/ui/components/workspace/resource-icon';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { setDefaultProtocol } from '~/utils/url/protocol';
 
 import { Icon } from './icon';
-
 const CURL_COMMAND_PATTERN = /^\s*\$?\s*curl(?:\s|$)/i;
 const NOTION_MCP_SERVER_URL = 'https://mcp.notion.com/mcp';
 
@@ -93,13 +92,12 @@ export const FirstRequestCreation = ({
   const createWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [requestInput, setRequestInput] = useState('');
+  const [recentRequests, setRecentRequests] = useState<RecentProjectRequest[]>([]);
   const [curlParseError, setCurlParseError] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
   const trimmedInput = requestInput.trim();
   const isCreatingRequest = createRequestFetcher.state !== 'idle';
   const selectedCollection = collectionItems.find(collection => collection.id === selectedCollectionId) ?? null;
-  const recentRequests = getProjectRecentRequests(projectId);
-  const displayedRecentRequests = recentRequests.slice(0, 3);
   const shouldShowJumpBackIn = recentRequests.length >= 3;
 
   const handleInputEnter = (event: ReactKeyboardEvent<HTMLTextAreaElement> | KeyboardEvent) => {
@@ -183,6 +181,26 @@ export const FirstRequestCreation = ({
   useEffect(() => {
     setSelectOpen(false);
   }, [selectedCollectionId]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadRecentRequests = async () => {
+      const nextRecentRequests = await getProjectRecentRequests(projectId);
+
+      if (!isActive) {
+        return;
+      }
+
+      setRecentRequests(nextRecentRequests);
+    };
+
+    loadRecentRequests();
+
+    return () => {
+      isActive = false;
+    };
+  }, [projectId]);
 
   const handleCreateNotionMcpWorkspace = () => {
     createWorkspaceFetcher.submit({
@@ -270,7 +288,7 @@ export const FirstRequestCreation = ({
     {
       id: 'pokemon',
       label: 'List a pokemon',
-      icon: <RequestBadge label="GET" colorKey="GET" />,
+      icon: <span className={getBadgeClassName('GET')}>GET</span>,
       badge: 'GET',
       onClick: handleCreatePokemonRequest,
     },
@@ -387,19 +405,19 @@ export const FirstRequestCreation = ({
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {shouldShowJumpBackIn
-                  ? displayedRecentRequests.map(request => (
+                  ? recentRequests.map(recentRequest => (
                       <Button
-                        key={request.requestId}
+                        key={recentRequest.request._id}
                         variant="outlined"
                         size="md"
                         onPress={() => {
                           navigate(
-                            `/organization/${organizationId}/project/${projectId}/workspace/${request.workspaceId}/debug/request/${request.requestId}`,
+                            `/organization/${organizationId}/project/${projectId}/workspace/${recentRequest.workspaceId}/debug/request/${recentRequest.request._id}`,
                           );
                         }}
                       >
-                        <RequestBadge label={request.badgeLabel} colorKey={request.requestMethod} />
-                        <span className="max-w-[18rem] truncate">{request.name}</span>
+                        <ResourceIcon resource={recentRequest.request} />
+                        <span className="max-w-[18rem] truncate">{recentRequest.request.name}</span>
                       </Button>
                     ))
                   : quickStartItems.map(item => (

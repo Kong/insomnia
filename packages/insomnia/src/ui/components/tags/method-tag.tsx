@@ -13,11 +13,6 @@ interface Props {
   fullNames?: boolean;
 }
 
-interface RequestBadgeProps {
-  label: string;
-  colorKey?: string;
-}
-
 function removeVowels(str: string) {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
@@ -90,18 +85,6 @@ export const getRequestMethodShortHand = (
 
   return '';
 };
-
-export const RequestBadge: FC<RequestBadgeProps> = memo(({ label, colorKey }) => {
-  return (
-    <span
-      className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${getRequestBadgeClassName(colorKey || label)}`}
-    >
-      {label}
-    </span>
-  );
-});
-
-RequestBadge.displayName = 'RequestBadge';
 
 export const MethodTag: FC<Props> = memo(({ method, override, fullNames }) => {
   let methodName = method;

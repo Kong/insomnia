@@ -2,7 +2,10 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 import { Icon } from '~/basic-components/icon';
 import { models } from '~/insomnia-data';
-import { getMethodShortHand, RequestBadge } from '~/ui/components/tags/method-tag';
+import { getMethodShortHand, getRequestBadgeClassName } from '~/ui/components/tags/method-tag';
+
+export const getBadgeClassName = (colorKey: string) =>
+  `flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${getRequestBadgeClassName(colorKey)}`;
 
 export function ResourceIcon({ resource }: { resource: any }) {
   const isProject = models.project.isProject(resource);
@@ -35,10 +38,12 @@ export function ResourceIcon({ resource }: { resource: any }) {
   }
   return (
     <>
-      {models.request.isRequest(resource) && <RequestBadge label={getMethodShortHand(resource)} colorKey={resource.method} />}
-      {models.webSocketRequest.isWebSocketRequest(resource) && <RequestBadge label="WS" colorKey="WS" />}
-      {models.socketIORequest.isSocketIORequest(resource) && <RequestBadge label="IO" colorKey="IO" />}
-      {models.grpcRequest.isGrpcRequest(resource) && <RequestBadge label="gRPC" colorKey="gRPC" />}
+      {models.request.isRequest(resource) && (
+        <span className={getBadgeClassName(resource.method)}>{getMethodShortHand(resource)}</span>
+      )}
+      {models.webSocketRequest.isWebSocketRequest(resource) && <span className={getBadgeClassName('WS')}>WS</span>}
+      {models.socketIORequest.isSocketIORequest(resource) && <span className={getBadgeClassName('IO')}>IO</span>}
+      {models.grpcRequest.isGrpcRequest(resource) && <span className={getBadgeClassName('gRPC')}>gRPC</span>}
     </>
   );
 }

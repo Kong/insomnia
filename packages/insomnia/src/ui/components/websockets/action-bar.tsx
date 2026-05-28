@@ -124,23 +124,10 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
           projectId,
           requestId: request._id,
           workspaceId,
-          name: request.name,
-          badgeLabel: request.type === 'WebSocketRequest' ? 'WS' : 'IO',
-          requestMethod: request.type === 'WebSocketRequest' ? 'WS' : 'IO',
         });
         connect(connectParams);
       }
-    }, [
-      connect,
-      generateConnectParams,
-      isOpen,
-      projectId,
-      request._id,
-      request.name,
-      request.type,
-      updateTabById,
-      workspaceId,
-    ]);
+    }, [connect, generateConnectParams, isOpen, projectId, request._id, request.type, updateTabById, workspaceId]);
 
     const setUrl = useCallback(
       (url: string) => {

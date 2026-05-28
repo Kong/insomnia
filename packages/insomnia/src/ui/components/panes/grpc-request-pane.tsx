@@ -169,9 +169,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           projectId,
           requestId,
           workspaceId,
-          name: activeRequest.name,
-          badgeLabel: 'gRPC',
-          requestMethod: 'gRPC',
         });
 
         window.main.grpc.start({
