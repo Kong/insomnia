@@ -19,8 +19,8 @@ import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-edito
 import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
-import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault-crypto';
 import { base64decode } from '../../../../utils/vault';
+import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault-crypto';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import { showModal } from '../../modals';
