@@ -7,7 +7,8 @@ import {
   type RequestContext,
   waitForAllTestsDone,
 } from '../../../insomnia-scripting-environment/src/objects';
-import { blockedPropertyRules, blockedRootRules, interceptorRules, maskRules, type ThreatRule } from './script-security-policy';
+import { interceptorRules } from './interceptor-rules';
+import { blockedPropertyRules, blockedRootRules, maskRules, type ThreatRule } from './script-security-policy';
 
 // Frozen, pre-bound references to the bridge lifecycle methods 
 export interface BridgeOps {
