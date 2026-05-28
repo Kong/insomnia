@@ -93,10 +93,11 @@ describe('absorbKey', () => {
     expect(session.encPrivateKey).toEqual(MOCK_ENC_PRIVATE_KEY);
   });
 
-  it('triggers loginStateChange after storing session', async () => {
+  it('triggers loginStateChange with true after storing session', async () => {
     await absorbKey(SESSION_ID, RAW_KEY);
 
     expect(getWindowMain().loginStateChange).toHaveBeenCalledOnce();
+    expect(getWindowMain().loginStateChange).toHaveBeenCalledWith(true);
   });
 
   it('falls back to current session id when none is provided', async () => {
@@ -189,7 +190,7 @@ describe('logout', () => {
     expect(insomniaApi.logout).toHaveBeenCalledWith({ sessionId: SESSION_ID });
   });
 
-  it('triggers loginStateChange', async () => {
+  it('triggers loginStateChange with false', async () => {
     await setSessionData(
       SESSION_ID,
       'acct',
@@ -204,6 +205,7 @@ describe('logout', () => {
     await logout();
 
     expect(getWindowMain().loginStateChange).toHaveBeenCalledOnce();
+    expect(getWindowMain().loginStateChange).toHaveBeenCalledWith(false);
   });
 
   it('does not throw if the API call fails', async () => {
