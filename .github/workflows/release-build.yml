@@ -128,7 +128,7 @@ jobs:
       # smctl will be used in the next step for signing
       - name: Setup Software Trust Manager
         if: runner.os == 'Windows'
-        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1.0.0
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
         env:
@@ -168,7 +168,7 @@ jobs:
       # this installs smctl as well
       - name: Code-sign unpacked .exe (Windows only)
         if: runner.os == 'Windows'
-        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1.0.0
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
           # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
@@ -246,7 +246,7 @@ jobs:
 
       - name: Code-sign inso exe (Windows only)
         if: runner.os == 'Windows'
-        uses: digicert/code-signing-software-trust-action@9b30180369343eb1ce0dcbebb933cfa3e17b6cc8 # v1.0.0
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
           # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
