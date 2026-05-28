@@ -45,11 +45,11 @@
       "builtin": "util"
     },
     {
-      "importer": "src/templating/base-extension.ts",
+      "importer": "src/templating/liquid-extension.ts",
       "builtin": "crypto"
     },
     {
-      "importer": "src/templating/base-extension.ts",
+      "importer": "src/templating/liquid-extension.ts",
       "builtin": "os"
     }
   ]
