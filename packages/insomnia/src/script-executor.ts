@@ -125,7 +125,6 @@ async function appendScriptLogs(timelinePath: string, data: string) {
     return window.main.timeline.appendToFile({ timelinePath, data });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { appendFile } = require('node:fs/promises');
   return appendFile(timelinePath, data);
 }
