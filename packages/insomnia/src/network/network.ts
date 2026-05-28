@@ -46,6 +46,7 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as pluginRequest from '../plugins/context/request';
+import type * as ScriptExecutorModule from '../script-executor';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -520,7 +521,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     const fn =
       process.type === 'renderer'
         ? runScriptConcurrently
-        : (require(/* @vite-ignore */ '../script-executor') as typeof import('../script-executor')).runScript;
+        : (require(/* @vite-ignore */ '../script-executor') as typeof ScriptExecutorModule).runScript;
     const output = await fn({
       script,
       context: {
