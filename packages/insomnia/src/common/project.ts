@@ -182,17 +182,7 @@ export const getProjectRecentRequests = async (projectId?: string) => {
     await Promise.all(
       cachedRecentRequests.map(async ({ requestId, workspaceId }): Promise<RecentProjectRequest | null> => {
         try {
-          let request: TrackableRecentRequest | undefined;
-
-          if (models.request.isRequestId(requestId)) {
-            request = await services.request.getById(requestId);
-          } else if (models.grpcRequest.isGrpcRequestId(requestId)) {
-            request = await services.grpcRequest.getById(requestId);
-          } else if (models.webSocketRequest.isWebSocketRequestId(requestId)) {
-            request = await services.webSocketRequest.getById(requestId);
-          } else if (models.socketIORequest.isSocketIORequestId(requestId)) {
-            request = await services.socketIORequest.getById(requestId);
-          }
+          const request = (await services.helpers.getRequestById(requestId)) as TrackableRecentRequest | null;
 
           if (!request) {
             return null;
