@@ -25,7 +25,6 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 
-import { startInvite } from './encryption';
 import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
 
 export function getSearchParamsString(
@@ -372,6 +371,7 @@ export const InviteForm = ({
             const emailsToInvite = emails.filter(({ teamId }) => !teamId).map(({ email }) => email);
             const groupsToInvite = emails.filter(({ teamId }) => teamId).map(({ teamId }) => teamId as string);
 
+            const { startInvite } = await import('./encryption');
             startInvite({
               emails: emailsToInvite,
               teamIds: groupsToInvite,

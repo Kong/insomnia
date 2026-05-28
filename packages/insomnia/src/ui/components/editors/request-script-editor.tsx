@@ -29,6 +29,7 @@ import {
   Vault,
 } from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
+import '../../.client/codemirror/lint/javascript-async-lint';
 import { Icon } from '../icon';
 
 interface Props {

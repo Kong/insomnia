@@ -1,4 +1,3 @@
-import iconv from 'iconv-lite';
 import { Fragment, useCallback, useRef, useState } from 'react';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW } from '~/insomnia-data/common';
@@ -148,9 +147,9 @@ export const ResponseViewer = ({
     // Show everything else as "source"
     const match = _getContentType().match(/charset=([\w-]+)/);
     const charset = match && match.length >= 2 ? match[1] : 'utf8';
-    // Sometimes iconv conversion fails so fallback to regular buffer
+    // Sometimes decoding fails so fallback to regular buffer
     try {
-      return iconv.decode(overSizedBody, charset);
+      return new TextDecoder(charset).decode(overSizedBody);
     } catch (err) {
       console.warn('[response] Failed to decode body', err);
       return overSizedBody.toString();
