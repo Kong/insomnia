@@ -14,6 +14,7 @@ export type AllTypes =
   | 'OAuth2Token'
   | 'PluginData'
   | 'Project'
+  | 'ProjectLintRuleset'
   | 'ProtoDirectory'
   | 'ProtoFile'
   | 'Request'

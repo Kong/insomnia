@@ -18,6 +18,7 @@ import * as oAuth2TokenService from './o-auth-2-token';
 import * as organizationService from './organization';
 import * as pluginDataService from './plugin-data';
 import * as projectService from './project';
+import * as projectLintRulesetService from './project-lint-ruleset';
 import * as protoDirectoryService from './proto-directory';
 import * as protoFileService from './proto-file';
 import * as requestService from './request';
@@ -72,6 +73,7 @@ export const servicesNodeImpl = {
   response: responseService,
   runnerTestResult: runnerTestResultService,
   project: projectService,
+  projectLintRuleset: projectLintRulesetService,
   settings: settingsService,
   stats: statsService,
   userSession: userSessionService,

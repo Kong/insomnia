@@ -2,14 +2,70 @@ import type { RulesetDefinition } from '@stoplight/spectral-core';
 import { Spectral } from '@stoplight/spectral-core';
 
 const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
+import dns from 'node:dns/promises';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
+import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { oas } from '@stoplight/spectral-rulesets';
+import { fetch as spectralFetch } from '@stoplight/spectral-runtime';
 import { DiagnosticSeverity } from '@stoplight/types';
+import { bundleSpectralRuleset } from 'insomnia/src/common/bundle-spectral-ruleset';
+import { isPrivateOrLoopbackHost } from 'insomnia/src/common/private-host';
 
 import { InsoError } from '../errors';
 import { logger } from '../logger';
+
+// Protect against SSRF attacks in spec $ref resolution.
+// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
+function isSafeRefUrl(href: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== 'https:') {
+    return false;
+  }
+  return Boolean(url.hostname) && !isPrivateOrLoopbackHost(url.hostname.toLowerCase());
+}
+
+// Block hosts that resolve to private/loopback addresses (e.g. *.localtest.me → 127.0.0.1),
+// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
+async function assertResolvesToPublicHost(hostname: string): Promise<void> {
+  const records = await dns.lookup(hostname, { all: true });
+  for (const { address } of records) {
+    if (isPrivateOrLoopbackHost(address)) {
+      throw new Error(`Failed to resolve host. "${hostname}" resolves to a private or loopback address.`);
+    }
+  }
+}
+
+// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
+const safeHttpResolver = {
+  async resolve(ref: { href: () => string }): Promise<string> {
+    const href = ref.href();
+    if (!isSafeRefUrl(href)) {
+      throw new Error(`Failed to resolve "${href}". Only https URLs to public hosts are allowed.`);
+    }
+    await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
+    const response = await fetch(href, { redirect: 'error', signal: AbortSignal.timeout(10_000) });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch "${href}": ${response.status} ${response.statusText}`);
+    }
+    return response.text();
+  },
+};
+
+export const safeRefResolver = new Resolver({
+  resolvers: {
+    http: safeHttpResolver,
+    https: safeHttpResolver,
+  },
+});
+
 export const getRuleSetFileFromFolderByFilename = async (filePath: string) => {
   try {
     const filesInSpecFolder = await fs.promises.readdir(path.dirname(filePath));
@@ -31,12 +87,24 @@ export async function lintSpecification({
   specContent: string;
   rulesetFileName?: string;
 }) {
-  const spectral = new Spectral();
+  const spectral = new Spectral({ resolver: safeRefResolver });
   // Use custom ruleset if present
   let ruleset = oas;
   try {
     if (rulesetFileName) {
-      ruleset = await bundleAndLoadRuleset(rulesetFileName, { fs });
+      // Flatten all local extends and validate remote extends (SSRF + disallowed keys)
+      // before any content reaches Spectral.
+      const bundledContent = await bundleSpectralRuleset(rulesetFileName);
+      // bundleAndLoadRuleset requires a file path, so write the pre-validated bundle to
+      // a uniquely-named temp directory and clean it up immediately after loading.
+      const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'spectral-'));
+      try {
+        const tempRulesetPath = path.join(tempDir, '.spectral.yaml');
+        await fs.promises.writeFile(tempRulesetPath, bundledContent, { encoding: 'utf8' });
+        ruleset = await bundleAndLoadRuleset(tempRulesetPath, { fs, fetch: spectralFetch });
+      } finally {
+        await fs.promises.rm(tempDir, { recursive: true, force: true });
+      }
     }
   } catch (error) {
     logger.fatal(error.message);
@@ -45,6 +113,7 @@ export async function lintSpecification({
 
   spectral.setRuleset(ruleset as RulesetDefinition);
   const results = await spectral.run(specContent);
+
   if (!results.length) {
     logger.log('No linting errors or warnings.');
     return { results, isValid: true };

@@ -42,6 +42,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { BrowserWindow } from 'electron';
+import YAML from 'yaml';
 
 import type { Workspace, WorkspaceMeta } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
@@ -223,6 +224,7 @@ class RepoFileWatcher {
     }
 
     this.queue.enqueue(() => this.flushProjectWorkspacesToDisk());
+    this.queue.enqueue(() => this.flushProjectLintRulesetToDisk());
     await this.queue.waitUntilDone();
   }
 
@@ -359,6 +361,7 @@ class RepoFileWatcher {
       this.flushDebounce = setTimeout(() => {
         this.flushDebounce = null;
         this.queue.enqueue(() => this.flushProjectWorkspacesToDisk());
+        this.queue.enqueue(() => this.flushProjectLintRulesetToDisk());
       }, DEBOUNCE_MS);
     });
   }
@@ -428,6 +431,39 @@ class RepoFileWatcher {
       } catch (err) {
         console.warn('[repo-file-watcher] Could not flush workspace to disk:', workspace._id, err);
       }
+    }
+  }
+
+  private async flushProjectLintRulesetToDisk(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+
+    const absPath = path.normalize(path.join(this.repoDir, '.spectral.yaml'));
+    const ruleset = await services.projectLintRuleset.getByParentId(this.projectId);
+
+    try {
+      if (!ruleset) {
+        // Ruleset removed from the DB — remove the file if we were tracking it.
+        if (this.lastWrittenHash.has(absPath) || this.lastSyncMtime.has(absPath)) {
+          await fs.promises.rm(absPath, { force: true });
+          this.lastWrittenHash.delete(absPath);
+          this.lastSyncMtime.delete(absPath);
+        }
+        return;
+      }
+
+      const hash = contentHash(ruleset.rulesetContent);
+      if (this.lastWrittenHash.get(absPath) === hash) {
+        return;
+      }
+
+      await fs.promises.writeFile(absPath, ruleset.rulesetContent, 'utf8');
+      this.lastWrittenHash.set(absPath, hash);
+      const stat = await fs.promises.stat(absPath);
+      this.lastSyncMtime.set(absPath, stat.mtimeMs);
+    } catch (err) {
+      console.warn('[repo-file-watcher] Could not flush project lint ruleset to disk:', err);
     }
   }
 
@@ -505,6 +541,27 @@ class RepoFileWatcher {
     this.debounceTimers.set(absPath, timer);
   }
 
+  private isSpectralRulesetPath(normalisedPath: string): boolean {
+    return (
+      path.basename(normalisedPath) === '.spectral.yaml' &&
+      path.normalize(path.dirname(normalisedPath)) === path.normalize(this.repoDir)
+    );
+  }
+
+  private isSpectralRulesetFile(normalisedPath: string, content: string): boolean {
+    if (!this.isSpectralRulesetPath(normalisedPath)) {
+      return false;
+    }
+    try {
+      const parsedContent = YAML.parse(content);
+      return (
+        !!parsedContent && typeof parsedContent === 'object' && ('extends' in parsedContent || 'rules' in parsedContent)
+      );
+    } catch {
+      return false;
+    }
+  }
+
   /**
    * Read a YAML file from disk and import its documents into the DB.
    *
@@ -527,6 +584,12 @@ class RepoFileWatcher {
 
     this.lastWrittenHash.set(normalised, result.hash);
     this.lastSyncMtime.set(normalised, result.mtimeMs);
+
+    if (this.isSpectralRulesetFile(normalised, result.content)) {
+      await services.projectLintRuleset.upsert(this.projectId, { rulesetContent: result.content });
+      this.notifyRenderer();
+      return;
+    }
 
     const docs = this.parseAndValidate(absPath, normalised, result.content);
     if (!docs) {
@@ -682,6 +745,16 @@ class RepoFileWatcher {
   private async handleFileDeletion(normalised: string): Promise<void> {
     // Only act if we were previously tracking this file
     if (!this.lastSyncMtime.has(normalised) && !this.lastWrittenHash.has(normalised)) {
+      return;
+    }
+
+    // The lint ruleset file was deleted — remove the ProjectLintRuleset record.
+    if (this.isSpectralRulesetPath(normalised)) {
+      await services.projectLintRuleset.remove(this.projectId);
+      this.lastSyncMtime.delete(normalised);
+      this.lastWrittenHash.delete(normalised);
+      this.clearProblem(normalised);
+      this.notifyRenderer();
       return;
     }
 

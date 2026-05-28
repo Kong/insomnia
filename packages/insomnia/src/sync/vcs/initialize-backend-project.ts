@@ -23,14 +23,23 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({
   // Create local project
   await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
+  // The lint ruleset is project-scoped (shared by every design document in the project),
+  // so it is not a descendant of the workspace and must be added explicitly.
+  const projectLintRuleset = await services.projectLintRuleset.getByParentId(workspace.parentId);
+
   // Everything unstaged
-  const candidates = (await database.getWithDescendants(workspace)).filter(models.canSync).map(
-    (doc: BaseModel): StatusCandidate => ({
-      key: doc._id,
-      name: doc.name || '',
-      document: doc,
-    }),
-  );
+  const candidates = [
+    ...(await database.getWithDescendants(workspace)),
+    ...(projectLintRuleset ? [projectLintRuleset] : []),
+  ]
+    .filter(models.canSync)
+    .map(
+      (doc: BaseModel): StatusCandidate => ({
+        key: doc._id,
+        name: doc.name || '',
+        document: doc,
+      }),
+    );
   const status = await vcs.status(candidates);
 
   // Stage everything

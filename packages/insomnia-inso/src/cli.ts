@@ -887,7 +887,11 @@ export const go = (args?: string[]) => {
     )
     .command('spec [identifier]')
     .description('Lint an API Specification, identifier can be an API Spec id or a file path')
-    .action(async identifier => {
+    .option(
+      '-r, --ruleset <path>',
+      'path to a Spectral ruleset file, overrides default OAS ruleset and any ruleset in the API Spec folder',
+    )
+    .action(async (identifier, cmd: { ruleset?: string }) => {
       const options = await mergeOptionsAndInit({});
 
       // Assert identifier is a file
@@ -900,11 +904,16 @@ export const go = (args?: string[]) => {
       const pathToSearch = '';
       let specContent: string | undefined;
       let rulesetFileName: string | undefined;
+      if (cmd.ruleset) {
+        rulesetFileName = getAbsoluteFilePath({ workingDir: options.workingDir, file: cmd.ruleset });
+      }
       if (isIdentifierAFile) {
         // try load as a file
         logger.trace(`Linting specification file from identifier: \`${identifierAsAbsPath}\``);
         specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf8');
-        rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
+        if (!rulesetFileName) {
+          rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
+        }
         if (!specContent) {
           logger.fatal(`Specification content not found using path: ${identifier} in ${identifierAsAbsPath}`);
           return process.exit(1);

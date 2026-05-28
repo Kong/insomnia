@@ -79,6 +79,7 @@ export type {
   RunnerResultPerRequestPerIteration,
 } from './runner-test-result';
 export type { Project, LocalProject, RemoteProject, GitProject } from './project';
+export type { ProjectLintRuleset } from './project-lint-ruleset';
 export type { Settings, ThemeSettings } from './settings';
 export type { Stats } from './stats';
 export type { UserSession } from './user-session';

@@ -2,6 +2,7 @@ import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { services } from '~/insomnia-data';
+import { reparentSyncDelta } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -29,7 +30,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     });
 
     // This is to synchronize the local database with the branch changes
-    await database.batchModifyDocs(delta);
+    await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
   } catch (err) {
     await window.main.sync.checkout([], currentBranch);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while fetching remote branch.';

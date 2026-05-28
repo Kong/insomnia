@@ -18,6 +18,7 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
+import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
@@ -97,6 +98,18 @@ const readDir = async (_: unknown, options: { path: string }) => {
   } catch (err) {
     throw new Error(`Failed to read directory: ${err}`);
   }
+};
+
+const resolveSafeRulesetPath = (rulesetPath: string): string | null => {
+  const userDataDir = path.resolve(app.getPath('userData'));
+  const resolved = path.resolve(rulesetPath);
+  const rel = path.relative(userDataDir, resolved);
+  const insideUserData = rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+  if (!insideUserData || path.basename(resolved) !== '.spectral.yaml') {
+    return null;
+  }
+
+  return resolved;
 };
 
 const writeResponseBodyToFile = async (
@@ -185,6 +198,7 @@ export interface RendererToMainBridgeAPI {
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
+  deleteRulesetFile: (options: { path: string }) => Promise<void>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
     destinationPath: string;
@@ -236,6 +250,7 @@ export interface RendererToMainBridgeAPI {
     documentContent: string;
     rulesetPath: string;
   }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
+  bundleSpectralRuleset: (options: { sourcePath: string }) => Promise<{ content?: string; error?: string }>;
   createPlugin: (options: { pluginName: string; mainJs: string }) => Promise<void>;
   database: {
     caCertificate: {
@@ -370,6 +385,20 @@ export function registerMainHandlers() {
       throw new Error(err);
     }
   });
+  ipcMainHandle('deleteRulesetFile', async (_, options: { path: string }) => {
+    const safePath = resolveSafeRulesetPath(options.path);
+    if (!safePath) {
+      throw new Error('Invalid ruleset path');
+    }
+    try {
+      await fs.promises.unlink(safePath);
+    } catch (err) {
+      if (err?.code === 'ENOENT') {
+        return;
+      }
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  });
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);
@@ -377,8 +406,41 @@ export function registerMainHandlers() {
   ipcMainHandle('getOAuth2Token', (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
     return getOAuth2TokenInMain(requestId, authentication, forceRefresh);
   });
+  ipcMainHandle('bundleSpectralRuleset', async (_, options: { sourcePath: string }) => {
+    try {
+      const content = await bundleSpectralRuleset(options.sourcePath);
+      return { content };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : String(err) };
+    }
+  });
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
-    const { documentContent, rulesetPath } = options;
+    const { documentContent } = options;
+    let { rulesetPath } = options;
+
+    //defensive validation for ruleset file before spawning the spectral lint worker
+    if (rulesetPath) {
+      const safePath = resolveSafeRulesetPath(rulesetPath);
+      if (!safePath) {
+        return { error: 'Invalid ruleset path' };
+      }
+      rulesetPath = safePath;
+
+      try {
+        // Validate the ruleset (flattens local extends, checks remote URLs for SSRF and
+        // disallowed keys such as "functions") before passing the path to the lint worker.
+        // Result is discarded — validation only; the original file is not modified.
+        await bundleSpectralRuleset(rulesetPath);
+      } catch (err) {
+        // Fall back to the default OAS ruleset
+        if (err && (err as NodeJS.ErrnoException).code === 'ENOENT') {
+          rulesetPath = '';
+        } else {
+          return { error: err instanceof Error ? err.message : String(err) };
+        }
+      }
+    }
+
     return new Promise((resolve, reject) => {
       // Use a filescoped variable to store and terminate the last open
       // This ensures we use a last in first out type of process management
@@ -391,12 +453,27 @@ export function registerMainHandlers() {
 
       let process: UtilityProcess | null = lintProcess!;
 
+      // defends against ReDoS via pattern function regex. We terminate the lintProcess worker if it exceeds a reasonable time limit (30s) so it does not pin a CPU core indefinitely.
+      const LINT_WORKER_TIMEOUT_MS = 30_000;
+      const timeoutHandle = setTimeout(() => {
+        if (process) {
+          console.warn(`[lint-process] exceeded ${LINT_WORKER_TIMEOUT_MS / 1000}s limit; terminating.`);
+          process.kill();
+          process = null;
+          resolve({
+            error: `Linting exceeded the ${LINT_WORKER_TIMEOUT_MS / 1000}s time limit and was terminated. The ruleset or specification may contain a deeply nested schema.`,
+          });
+        }
+      }, LINT_WORKER_TIMEOUT_MS);
+
       process.on('exit', code => {
         console.log('[lint-process] exited with code:', code);
+        clearTimeout(timeoutHandle);
         resolve({ cancelled: true });
       });
 
       process.on('message', msg => {
+        clearTimeout(timeoutHandle);
         resolve(msg);
         process?.kill();
         process = null;
@@ -404,12 +481,14 @@ export function registerMainHandlers() {
 
       process.on('error', err => {
         console.error('[lint-process] error:', err);
+        clearTimeout(timeoutHandle);
         reject({ error: err.toString() });
       });
 
       process.postMessage({ documentContent, rulesetPath });
     });
   });
+
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {
     return insecureReadFile(options.path);
   });

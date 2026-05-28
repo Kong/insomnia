@@ -3,7 +3,7 @@ import { href, redirect } from 'react-router';
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
 import { models, services } from '~/insomnia-data';
-import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
+import { getSyncItems, remoteCompareCache, reparentSyncDelta } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -20,9 +20,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { syncItems } = await getSyncItems({ workspaceId });
 
   try {
-    const delta = await window.main.sync.checkout(syncItems, branch);
+    const delta = (await window.main.sync.checkout(syncItems, branch)) as Operation;
     // This is to synchronize the local database with the branch changes
-    await database.batchModifyDocs(delta as Operation);
+    await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
     delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while checking out branch.';

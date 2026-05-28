@@ -134,6 +134,7 @@ export enum AnalyticsEvent {
   projectListFiltered = 'project-list-filtered',
   projectSwitched = 'project-switched',
   organizationSwitched = 'organization-switched',
+  uploadLintRulesetClicked = 'upload-lint-ruleset-clicked',
 }
 
 export enum InsoEvent {
