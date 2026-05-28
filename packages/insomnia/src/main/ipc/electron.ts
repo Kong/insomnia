@@ -26,6 +26,7 @@ export type HandleChannels =
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
+  | 'createPlugin'
   | 'curlRequest'
   | 'database.caCertificate.create'
   | 'services.invoke'
@@ -162,6 +163,8 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
+  | 'timeline.appendToFile'
+  | 'timeline.getPath'
   | 'writeFile'
   | 'writeResponseBodyToFile';
 

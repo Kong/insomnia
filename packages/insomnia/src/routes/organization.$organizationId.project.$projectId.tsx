@@ -1,5 +1,5 @@
 import { getLearningFeature } from 'insomnia-api';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, Outlet, redirect, useParams, useRouteLoaderData } from 'react-router';
@@ -16,6 +16,7 @@ import {
 } from '~/common/project';
 import { models, services } from '~/insomnia-data';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import { ProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';
@@ -120,6 +121,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 export function useProjectLoaderData() {
   return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId');
 }
+
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -137,6 +139,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const [isSidebarCollapsed] = reactUse.useLocalStorage('project-navigation-collapsed', false);
+
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
 
   useEffect(() => {
     if (isSidebarCollapsed) {
@@ -186,7 +190,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
           collapsible
         >
           <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-            <ProjectNavigationSidebar storageRules={storageRules} konnectSyncEnabled={features.konnectSync.enabled} />
+            <ProjectNavigationSidebar
+              storageRules={storageRules}
+              konnectSyncEnabled={features.konnectSync.enabled}
+              onCreateProject={() => setIsNewProjectModalOpen(true)}
+            />
             {isScratchPad && <ScratchPadTutorialPanel />}
             {!isLearningFeatureDismissed && learningFeature?.active && (
               <div className="flex shrink-0 flex-col gap-2 p-(--padding-sm)">
@@ -223,6 +231,13 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
           </GitFileIssuesProvider>
         </Panel>
       </PanelGroup>
+      {isNewProjectModalOpen && (
+        <ProjectModal
+          isOpen={isNewProjectModalOpen}
+          onOpenChange={setIsNewProjectModalOpen}
+          storageRules={storageRules}
+        />
+      )}
     </>
   );
 };

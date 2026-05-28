@@ -1,7 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, GridList, GridListItem, Input, SearchField } from 'react-aria-components';
+import { Button, GridList, GridListItem } from 'react-aria-components';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -22,7 +22,6 @@ import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
@@ -33,6 +32,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
+import { SidebarHeader } from './project-navigation-sidebar-header';
 import {
   type AllRequestsAndMetaInWorkspace,
   filterCollection,
@@ -48,9 +48,10 @@ import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
 
 interface ProjectNavigationSidebarProps {
-  storageRules: StorageRules;
   activeNodeId?: string;
   konnectSyncEnabled: boolean;
+  storageRules: StorageRules;
+  onCreateProject: () => void;
 }
 
 function showSkippedRoutesModal(result: SyncResult | null) {
@@ -83,7 +84,11 @@ function showSkippedRoutesModal(result: SyncResult | null) {
   });
 }
 
-export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: ProjectNavigationSidebarProps) => {
+export const ProjectNavigationSidebar = ({
+  konnectSyncEnabled,
+  storageRules,
+  onCreateProject,
+}: ProjectNavigationSidebarProps) => {
   const navigate = useNavigate();
   const { organizationId, projectId: activeProjectId } = useParams() as {
     organizationId: string;
@@ -103,7 +108,6 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
   const [searchParams, _setSearchParams] = useSearchParams();
   const tabNavigate = useTabNavigate();
 
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [collectionSortOrders, setCollectionSortOrders] = useState<Record<string, SortOrder>>({});
   const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
   const [projectNavigationSidebarFilter, setProjectNavigationSidebarFilter] = reactUse.useLocalStorage(
@@ -701,88 +705,67 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
       ? [selectedItemId]
       : [];
 
+  const projectsActionButton = !isScratchPad ? (
+    <Button
+      aria-label="Create new Project"
+      onPress={onCreateProject}
+      className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+    >
+      <Icon icon="plus" className="h-2.5 w-2.5" />
+      <span>New Project</span>
+    </Button>
+  ) : null;
+
+  const konnectActionButton = syncing ? (
+    <Button
+      aria-label="Cancel sync"
+      onPress={cancelSync}
+      className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+    >
+      Cancel
+      <Icon icon="stop-circle" />
+    </Button>
+  ) : (
+    <Button
+      aria-label="Sync Konnect"
+      onPress={handleSync}
+      className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+    >
+      Sync
+      <Icon icon="refresh" />
+    </Button>
+  );
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      <div className="flex shrink-0 border-b border-solid border-b-(--hl-md)">
-        {!isScratchPad &&
-          ['projects', 'konnect'].map(tabName => (
-            <button
-              key={tabName}
-              className={`border-b-2 border-solid px-4 py-2 text-xs ${activeTab === tabName ? 'border-(--color-surprise) text-(--color-font)' : 'border-b-transparent text-(--hl) hover:bg-(--hl-xs)'}`}
-              data-testid={`sidebar-tab-${tabName}`}
-              onClick={() => setActiveTab(tabName as 'projects' | 'konnect')}
-            >
-              {tabName === 'projects' ? (
-                `Projects (${nonKonnectProjects.length})`
-              ) : (
-                <span className="flex items-center gap-1">
-                  <KongLogo />
-                  Konnect ({konnectProjects.length})
-                </span>
-              )}
-            </button>
-          ))}
-      </div>
-      <div className="flex justify-between gap-1 p-(--padding-sm)">
-        <SearchField
-          aria-label="Projects filter"
-          className="group relative flex-1"
-          value={isProjectTabActive ? filterInputValue : konnectFilter}
-          isDisabled={projects.length === 0}
-          onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
-        >
-          <Input
-            placeholder="Filter"
-            className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-          />
-          <div className="absolute top-0 right-0 flex h-full items-center px-2">
-            <Button
-              aria-label="Clear search"
-              className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="close" />
-            </Button>
-          </div>
-        </SearchField>
-        {isProjectTabActive ? (
-          !isScratchPad && (
-            <Button
-              aria-label="Create new Project"
-              onPress={() => setIsNewProjectModalOpen(true)}
-              isDisabled={projects.length === 0}
-              className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="plus" className="h-2.5 w-2.5" />
-              <span>New Project</span>
-            </Button>
-          )
-        ) : syncing ? (
-          <Button
-            aria-label="Cancel sync"
-            onPress={cancelSync}
-            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          >
-            Cancel
-            <Icon icon="stop-circle" />
-          </Button>
-        ) : (
-          <Button
-            aria-label="Sync Konnect"
-            onPress={handleSync}
-            className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-          >
-            Sync
-            <Icon icon="refresh" />
-          </Button>
-        )}
-      </div>
+      <SidebarHeader
+        isScratchPad={isScratchPad}
+        tabs={[
+          { name: 'projects', label: `Projects (${nonKonnectProjects.length})` },
+          {
+            name: 'konnect',
+            label: (
+              <span className="flex items-center gap-1">
+                <KongLogo />
+                Konnect ({konnectProjects.length})
+              </span>
+            ),
+          },
+        ]}
+        activeTab={activeTab}
+        onTabChange={tab => setActiveTab(tab)}
+        filterValue={isProjectTabActive ? filterInputValue : konnectFilter || ''}
+        onFilterChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
+        isFilterDisabled={false}
+        actionButton={isProjectTabActive ? projectsActionButton : konnectActionButton}
+      />
 
       {!isProjectTabActive && syncing && <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>}
       {!isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
 
       <div
         ref={parentRef}
-        className="group/tree flex-1 overflow-y-auto py-(--padding-sm)"
+        className="group/tree flex-1 overflow-y-auto pb-(--padding-sm)"
         data-testid="project-navigation-tree-container"
       >
         <GridList
@@ -907,14 +890,37 @@ export const ProjectNavigationSidebar = ({ storageRules, konnectSyncEnabled }: P
           }}
         </GridList>
       </div>
+    </div>
+  );
+};
 
-      {isNewProjectModalOpen && (
-        <ProjectModal
-          isOpen={isNewProjectModalOpen}
-          onOpenChange={setIsNewProjectModalOpen}
-          storageRules={storageRules}
-        />
-      )}
+export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreateProject: () => void }) => {
+  const { organizationId } = useParams() as { organizationId: string };
+  const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
+
+  return (
+    <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
+      <SidebarHeader
+        isScratchPad={isScratchPad}
+        tabs={[{ name: 'projects', label: 'Projects (0)' }]}
+        activeTab="projects"
+        onTabChange={() => {}}
+        filterValue=""
+        onFilterChange={() => {}}
+        isFilterDisabled
+        actionButton={
+          !isScratchPad ? (
+            <Button
+              aria-label="Create new Project"
+              onPress={onCreateProject}
+              className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            >
+              <Icon icon="plus" className="h-2.5 w-2.5" />
+              <span>New Project</span>
+            </Button>
+          ) : null
+        }
+      />
     </div>
   );
 };

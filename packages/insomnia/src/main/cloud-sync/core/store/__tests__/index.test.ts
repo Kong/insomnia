@@ -48,8 +48,8 @@ describe('store', () => {
         expect(await s.getItem('json')).toEqual({
           hi: 'there',
         });
-        expect((await s._driver.getItem('buff')).toString('utf8')).toEqual('{"hi": "there"}');
-        expect((await s._driver.getItem('json')).toString('utf8')).toEqual('{\n  "hi": "there"\n}');
+        expect((await s._driver.getItem('buff'))!.toString('utf8')).toEqual('{"hi": "there"}');
+        expect((await s._driver.getItem('json'))!.toString('utf8')).toEqual('{\n  "hi": "there"\n}');
       });
     });
   }
@@ -58,14 +58,14 @@ describe('store', () => {
     const s = new Store(new MemoryDriver(), [
       {
         // Just some dumb hooks to test with
-        read: (_ext, buff) => Buffer.from(buff.toString('utf8').replace('WORLD', 'World')),
-        write: (_ext, buff) => Buffer.from(buff.toString('utf8').replace('World', 'WORLD')),
+        read: async (_ext, buff) => Buffer.from(buff.toString('utf8').replace('WORLD', 'World')),
+        write: async (_ext, buff) => Buffer.from(buff.toString('utf8').replace('World', 'WORLD')),
       },
     ]);
     await s.setItem('foo', {
       Hello: 'World!',
     });
-    expect((await s._driver.getItem('foo')).toString('utf8')).toBe('{\n  "Hello": "WORLD!"\n}');
+    expect((await s._driver.getItem('foo'))!.toString('utf8')).toBe('{\n  "Hello": "WORLD!"\n}');
     expect(await s.getItem('foo')).toEqual({
       Hello: 'World!',
     });

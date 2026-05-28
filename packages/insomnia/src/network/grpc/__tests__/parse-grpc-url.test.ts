@@ -40,6 +40,7 @@ describe('parseGrpcUrl', () => {
   });
 
   it.each([null, undefined, ''])('can handle falsey urls', input => {
+    // @ts-expect-error
     expect(parseGrpcUrl(input)).toStrictEqual({
       url: '',
       enableTls: false,

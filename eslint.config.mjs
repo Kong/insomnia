@@ -273,4 +273,11 @@ export default defineConfig([
       ],
     },
   },
+  // Test files ESLint rules
+  {
+    files: ['**/__tests__/**/*.{ts,tsx}', '**/*.test.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/ban-ts-comment': 'off',
+    },
+  },
 ]);

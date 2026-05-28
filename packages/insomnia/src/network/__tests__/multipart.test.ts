@@ -118,6 +118,7 @@ describe('buildMultipart()', () => {
 
   it('skips entries with no name or value', async () => {
     const { filePath, boundary, contentLength } = await buildMultipart([
+      // @ts-expect-error
       {
         value: 'bar',
       },

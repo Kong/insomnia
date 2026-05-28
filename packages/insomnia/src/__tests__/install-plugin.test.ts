@@ -189,7 +189,7 @@ describe('Plugin Installation', () => {
   describe('runYarnCommand', () => {
     it('should execute yarn command successfully', async () => {
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from('success'), Buffer.from(''));
         return {} as any;
       });
@@ -202,7 +202,7 @@ describe('Plugin Installation', () => {
 
     it('should handle yarn stderr with only deprecation warnings', async () => {
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from('success'), Buffer.from('warning: deprecated: This feature is deprecated'));
         return {} as any;
       });
@@ -214,7 +214,7 @@ describe('Plugin Installation', () => {
 
     it('should throw error for non-deprecation stderr messages', async () => {
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from('success'), Buffer.from('Error: Something went wrong'));
         return {} as any;
       });
@@ -246,7 +246,7 @@ describe('Plugin Installation', () => {
       };
 
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from(JSON.stringify(mockYarnOutput)), Buffer.from(''));
         return {} as any;
       });
@@ -270,7 +270,7 @@ describe('Plugin Installation', () => {
       };
 
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from(JSON.stringify(mockYarnOutput)), Buffer.from(''));
         return {} as any;
       });

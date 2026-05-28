@@ -275,6 +275,7 @@ const main: Window['main'] = {
   multipartBufferToArray: options => invokeWithNormalizedError('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     invokeWithNormalizedError('installPlugin', lookupName, allowScopedPackageNames),
+  createPlugin: options => invokeWithNormalizedError('createPlugin', options),
   initializeWorkspaceBackendProject: options => invokeWithNormalizedError('initializeWorkspaceBackendProject', options),
   curlRequest: options => invokeWithNormalizedError('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
@@ -387,6 +388,11 @@ const main: Window['main'] = {
   },
   notifyPluginPromptResult: (id: string, value: string | null) =>
     ipcRenderer.send('plugins.uiPromptResult', { id, value }),
+  timeline: {
+    getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
+    appendToFile: (options: { timelinePath: string; data: string }) =>
+      invokeWithNormalizedError('timeline.appendToFile', options),
+  },
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
