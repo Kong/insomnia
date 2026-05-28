@@ -90,6 +90,8 @@ export const FirstRequestCreation = ({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const createRequestFetcher = useRequestNewActionFetcher();
   const createWorkspaceFetcher = useWorkspaceNewActionFetcher();
+  const createWorkspaceFetcherRef = useRef(createWorkspaceFetcher);
+  createWorkspaceFetcherRef.current = createWorkspaceFetcher;
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [requestInput, setRequestInput] = useState('');
   const [recentRequests, setRecentRequests] = useState<RecentProjectRequest[]>([]);
@@ -100,6 +102,38 @@ export const FirstRequestCreation = ({
   const selectedCollection = collectionItems.find(collection => collection.id === selectedCollectionId) ?? null;
   const shouldShowJumpBackIn = recentRequests.length >= 3;
 
+  const ensureWorkspaceId = async () => {
+    if (selectedCollectionId) {
+      return selectedCollectionId;
+    }
+
+    await createWorkspaceFetcher.submit({
+      organizationId,
+      projectId,
+      name: 'My first collection',
+      scope: 'collection',
+      redirectAfterCreate: false,
+    });
+
+    const createdWorkspace = createWorkspaceFetcherRef.current.data;
+
+    if (
+      !createdWorkspace ||
+      createdWorkspace.error ||
+      !('workspaceId' in createdWorkspace) ||
+      !createdWorkspace.workspaceId
+    ) {
+      showToast({
+        icon: 'circle-exclamation',
+        title: 'Unable to create collection, please create collection manually',
+        status: 'error',
+      });
+      return null;
+    }
+    console.log('Created workspace', createdWorkspace.workspaceId);
+    return createdWorkspace.workspaceId;
+  };
+
   const handleInputEnter = (event: ReactKeyboardEvent<HTMLTextAreaElement> | KeyboardEvent) => {
     event.preventDefault();
     handleCreateRequest();
@@ -107,6 +141,13 @@ export const FirstRequestCreation = ({
 
   const handleRequestCreateShortcut = (_event: KeyboardEvent) => {
     if (!selectedCollectionId) {
+      createWorkspaceFetcher.submit({
+        organizationId,
+        projectId,
+        name: 'My first collection',
+        scope: 'collection',
+        withRequest: true,
+      });
       return;
     }
     createRequestFetcher.submit({
@@ -126,14 +167,8 @@ export const FirstRequestCreation = ({
     if (!trimmedInput) {
       return;
     }
-
-    if (!selectedCollectionId) {
-      showToast({
-        icon: 'circle-exclamation',
-        title: 'Create a collection first',
-        description: 'Choose a destination collection before creating your request.',
-        status: 'warning',
-      });
+    const workspaceId = await ensureWorkspaceId();
+    if (!workspaceId) {
       return;
     }
 
@@ -150,8 +185,8 @@ export const FirstRequestCreation = ({
         createRequestFetcher.submit({
           organizationId,
           projectId,
-          workspaceId: selectedCollectionId,
-          parentId: selectedCollectionId,
+          workspaceId,
+          parentId: workspaceId,
           requestType: 'From Curl',
           req,
         });
@@ -162,8 +197,8 @@ export const FirstRequestCreation = ({
       createRequestFetcher.submit({
         organizationId,
         projectId,
-        workspaceId: selectedCollectionId,
-        parentId: selectedCollectionId,
+        workspaceId,
+        parentId: workspaceId,
         requestType: 'HTTP',
         req: {
           url: normalizeRequestUrl(trimmedInput),
@@ -212,22 +247,18 @@ export const FirstRequestCreation = ({
     });
   };
 
-  const handleCreatePokemonRequest = () => {
-    if (!selectedCollectionId) {
-      showToast({
-        icon: 'circle-exclamation',
-        title: 'Create a collection first',
-        description: 'Choose a destination collection before creating your request.',
-        status: 'warning',
-      });
+  const handleCreatePokemonRequest = async () => {
+    const workspaceId = await ensureWorkspaceId();
+
+    if (!workspaceId) {
       return;
     }
 
     createRequestFetcher.submit({
       organizationId,
       projectId,
-      workspaceId: selectedCollectionId,
-      parentId: selectedCollectionId,
+      workspaceId,
+      parentId: workspaceId,
       requestType: 'HTTP',
       req: {
         url: 'https://pokeapi.co/api/v2/pokemon/ditto',
@@ -237,13 +268,9 @@ export const FirstRequestCreation = ({
   };
 
   const handleCreateGithubLookupRequest = async () => {
-    if (!selectedCollectionId) {
-      showToast({
-        icon: 'circle-exclamation',
-        title: 'Create a collection first',
-        description: 'Choose a destination collection before creating your request.',
-        status: 'warning',
-      });
+    const workspaceId = await ensureWorkspaceId();
+
+    if (!workspaceId) {
       return;
     }
 
@@ -261,8 +288,8 @@ export const FirstRequestCreation = ({
       createRequestFetcher.submit({
         organizationId,
         projectId,
-        workspaceId: selectedCollectionId,
-        parentId: selectedCollectionId,
+        workspaceId,
+        parentId: workspaceId,
         requestType: 'GraphQL',
         req: {
           ...req,
@@ -385,8 +412,8 @@ export const FirstRequestCreation = ({
                     aria-label="Create request"
                     primary
                     size="md"
-                    isDisabled={!trimmedInput || !selectedCollectionId || isCreatingRequest}
-                    onPress={() => void handleCreateRequest()}
+                    isDisabled={!trimmedInput || isCreatingRequest}
+                    onPress={() => handleCreateRequest()}
                   >
                     <span>Create</span>
                     <span aria-hidden="true" className="text-sm leading-none">
