@@ -1,10 +1,11 @@
 import Color from 'color';
 
 import type { ThemeSettings } from '~/insomnia-data';
-import { getAppDefaultTheme } from '~/insomnia-data/common';
+import { getAppDefaultTheme } from '../common/constants';
+import type { SerializableTheme } from './bridge-types';
+import { plugins } from './renderer-bridge';
 
-import type { Theme } from './index';
-import { type ColorScheme, getThemes } from './index';
+export type ColorScheme = 'default' | 'light' | 'dark';
 
 export type HexColor = `#${string}`;
 export type RGBColor = `rgb(${string})`;
@@ -331,7 +332,7 @@ export async function setTheme(themeName: string) {
     return;
   }
 
-  const themes: Theme[] = await getThemes();
+  const themes: SerializableTheme[] = await plugins.getThemes();
   let selectedTheme = themes.find(t => t.theme.name === themeName);
 
   if (!selectedTheme) {

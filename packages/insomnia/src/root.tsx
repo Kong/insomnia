@@ -568,7 +568,7 @@ const Root = () => {
         // gracefully handle open org in app from browser
         const userSession = await services.userSession.get();
         if (!userSession.id || userSession.id === '') {
-          const url = new URL(getLoginUrl());
+          const url = new URL(await getLoginUrl());
           window.main.openInBrowser(url.toString());
           window.localStorage.setItem('specificOrgRedirectAfterAuthorize', params.organizationId);
           return navigate(href('/auth/authorize'));

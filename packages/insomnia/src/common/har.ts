@@ -1,14 +1,10 @@
-import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import type { BaseModel, Environment, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import { applyRequestHooks } from '~/network/network-adapter';
 
-import * as plugins from '../plugins';
-import * as pluginApp from '../plugins/context/app';
-import * as pluginRequest from '../plugins/context/request';
-import * as pluginStore from '../plugins/context/store';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest } from '../templating/types';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
@@ -264,25 +260,7 @@ async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
-  let newRenderedRequest = renderedRequest;
-
-  for (const { plugin, hook } of await plugins.getRequestHooks()) {
-    newRenderedRequest = clone(newRenderedRequest);
-    const context = {
-      ...(pluginApp.init() as Record<string, any>),
-      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginStore.init(plugin) as Record<string, any>),
-    };
-
-    try {
-      await hook(context);
-    } catch (err) {
-      err.plugin = plugin;
-      throw err;
-    }
-  }
-
-  return newRenderedRequest;
+  return applyRequestHooks(renderedRequest, renderedContext);
 }
 
 export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequest, addContentLength = false) {

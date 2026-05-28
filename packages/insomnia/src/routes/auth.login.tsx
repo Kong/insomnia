@@ -37,7 +37,7 @@ const GoogleIcon = (props: React.ReactSVGElement['props']) => {
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const data = await request.formData();
   const provider = data.get('provider');
-  const url = new URL(getLoginUrl());
+  const url = new URL(await getLoginUrl());
 
   if (typeof provider === 'string' && provider) {
     url.searchParams.set('provider', provider);
