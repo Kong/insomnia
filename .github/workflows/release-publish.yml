@@ -247,13 +247,14 @@ jobs:
 
       - name: Upload x64 Linux snap to snapcraft (beta and stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
-        uses: canonical/action-publish@214b86e5ca036ead1668c79afb81e550e6c54d40 # v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
-        with:
-          # TODO-ARM64: Replace to *-amd64.snap when we have ARM64 build from insomnia-ee
-          snap: artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
-          release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+        # TODO-ARM64: Replace to *-amd64.snap when we have ARM64 build from insomnia-ee
+        run: |
+          sudo snap install snapcraft --classic
+          snapcraft upload \
+            --release="${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}" \
+            "artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap"
 
       # TODO: also release for aarch64 Linux?
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
