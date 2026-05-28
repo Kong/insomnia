@@ -1,7 +1,21 @@
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
+
+const closeManageEnvironmentsDialog = async (page: Page) => {
+  const dialog = page.getByTestId('WorkspaceEnvironmentsDialog');
+  const closeButton = page.getByRole('button', { name: 'Close', exact: true });
+
+  await closeButton.click();
+
+  if (await dialog.isVisible()) {
+    await expect.soft(dialog).toHaveAttribute('data-save-state', 'idle');
+    await closeButton.click();
+  }
+
+  await expect.soft(page.getByRole('heading', { name: 'Manage Environments' })).toBeHidden();
+};
 
 test.describe('Environment Editor', () => {
   test('manage environment', async ({ page, app, insomnia }) => {
@@ -18,7 +32,7 @@ test.describe('Environment Editor', () => {
     await page.getByTestId('CreateEnvironmentDropdown').click();
     await page.getByRole('menuitemradio', { name: 'Shared Environment' }).press('Enter');
     await page.getByRole('row', { name: 'New Environment' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+    await closeManageEnvironmentsDialog(page);
 
     await page.getByRole('option', { name: 'New Environment' }).press('Enter');
     await page.getByRole('option', { name: 'New Environment' }).press('Escape');
@@ -43,8 +57,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').fill('Gandalf');
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').press('Enter');
 
-    await page.getByRole('button', { name: 'Close', exact: true }).click();
-
+    await closeManageEnvironmentsDialog(page);
     await page.getByRole('option', { name: 'Gandalf' }).press('Enter');
     await page.getByRole('option', { name: 'Gandalf' }).press('Escape');
 
@@ -68,10 +81,7 @@ test.describe('Environment Editor', () => {
     await dialog.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
     await dialog.getByTestId('CodeEditor').getByRole('textbox').fill('"testString":"Gandalf",');
 
-    // Blur the editor before closing so the debounce flush is triggered by the button's mousedown
-    await dialog.getByRole('button', { name: 'Close' }).click();
-    // Wait for the dialog to be gone before navigating away
-    await expect.soft(page.getByRole('heading', { name: 'Manage Environments' })).toBeHidden();
+    await closeManageEnvironmentsDialog(page);
     await page.getByLabel('Manage collection environments').press('Escape');
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
 
@@ -117,9 +127,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Modal Submit' }).click();
     await expect.soft(page.getByRole('dialog', { name: 'Modal' })).toBeHidden();
 
-    // Close the environment editor and wait for the dialog to disappear before navigating
-    await page.getByRole('button', { name: 'Close', exact: true }).click();
-    await expect.soft(page.getByRole('heading', { name: 'Manage Environments' })).toBeHidden();
+    await closeManageEnvironmentsDialog(page);
     await page.getByLabel('Manage collection environments').press('Escape');
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
@@ -163,8 +171,7 @@ test.describe('Environment Editor', () => {
     await expect.soft(exampleStringRow).toHaveCSS('opacity', '0.4');
 
     // Close the editor and wait for it to disappear
-    await page.getByRole('button', { name: 'Close', exact: true }).click();
-    await expect.soft(page.getByRole('heading', { name: 'Manage Environments' })).toBeHidden();
+    await closeManageEnvironmentsDialog(page);
     await page.getByLabel('Manage collection environments').press('Escape');
 
     // Send request — disabled sub-env variable should fall back to base environment

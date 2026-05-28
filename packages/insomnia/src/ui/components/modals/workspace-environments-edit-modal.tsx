@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useMemo, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -62,9 +62,11 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
   const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
   const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
   const { toggleEnvironmentType } = useToggleEnvironmentType();
+  const pendingUpdateRef = useRef(false);
 
   const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const [hasPendingUpdate, setHasPendingUpdate] = useState(false);
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );
@@ -169,6 +171,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
 
   const handleEnvironmentChange = (value: EnvironmentInfo) => {
     if (environmentEditorRef.current?.isValid() && selectedEnvironment) {
+      pendingUpdateRef.current = true;
+      setHasPendingUpdate(true);
       const { object, propertyOrder } = value;
 
       updateEnvironmentFetcher.submit({
@@ -186,6 +190,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
 
   const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
     if (selectedEnvironment) {
+      pendingUpdateRef.current = true;
+      setHasPendingUpdate(true);
       const environmentData = getDataFromKVPair(kvPairData);
       updateEnvironmentFetcher.submit({
         organizationId,
@@ -199,6 +205,24 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
         environmentId: selectedEnvironment._id,
       });
     }
+  };
+  useEffect(() => {
+    if (pendingUpdateRef.current && updateEnvironmentFetcher.state === 'idle') {
+      pendingUpdateRef.current = false;
+      setHasPendingUpdate(false);
+    }
+  }, [updateEnvironmentFetcher.state]);
+  const isEnvironmentMutationPending =
+    hasPendingUpdate ||
+    createEnvironmentFetcher.state !== 'idle' ||
+    deleteEnvironmentFetcher.state !== 'idle' ||
+    duplicateEnvironmentFetcher.state !== 'idle' ||
+    updateEnvironmentFetcher.state !== 'idle';
+  const requestClose = (close: () => void) => {
+    if (pendingUpdateRef.current || isEnvironmentMutationPending) {
+      return;
+    }
+    close();
   };
   const environmentsDragAndDrop = useDragAndDrop({
     getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
@@ -249,17 +273,26 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
     <ModalOverlay
       isOpen
       onOpenChange={isOpen => {
-        !isOpen && onClose();
+        if (!isOpen && !pendingUpdateRef.current && !isEnvironmentMutationPending) {
+          onClose();
+        }
       }}
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
-          !isOpen && onClose();
+          if (!isOpen && !pendingUpdateRef.current && !isEnvironmentMutationPending) {
+            onClose();
+          }
         }}
         className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
+        <Dialog
+          data-testid="WorkspaceEnvironmentsDialog"
+          data-save-state={isEnvironmentMutationPending ? 'saving' : 'idle'}
+          aria-busy={isEnvironmentMutationPending}
+          className="flex h-full flex-1 flex-col overflow-hidden outline-hidden"
+        >
           {({ close }) => (
             <div className="flex h-full flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex items-center justify-between gap-2">
@@ -267,8 +300,9 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                   Manage Environments
                 </Heading>
                 <Button
+                  isDisabled={isEnvironmentMutationPending}
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  onPress={close}
+                  onPress={() => requestClose(close)}
                 >
                   <Icon icon="x" />
                 </Button>
@@ -551,9 +585,15 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                     * Environment data can be used for <a href={docsTemplateTags}>Nunjucks Templating</a> in your
                     requests.
                   </p>
+                  {isEnvironmentMutationPending && (
+                    <p data-testid="WorkspaceEnvironmentsSaveStatus" className="text-sm italic">
+                      Saving environments...
+                    </p>
+                  )}
                 </div>
                 <Button
-                  onPress={close}
+                  isDisabled={isEnvironmentMutationPending}
+                  onPress={() => requestClose(close)}
                   className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
                 >
                   Close
