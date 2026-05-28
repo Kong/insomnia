@@ -38,7 +38,7 @@ initServices(window._dataServices);
 // Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
 delete window._dataServices;
 
-configureFetch(options => insomniaFetch({ ...options }));
+configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));
 
 await initPlugins();
 

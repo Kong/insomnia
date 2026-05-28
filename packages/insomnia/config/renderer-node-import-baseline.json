@@ -17,14 +17,6 @@
       "builtin": "path"
     },
     {
-      "importer": "src/network/network.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "src/network/network.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/plugins/context/response.ts",
       "builtin": "fs"
     },
@@ -39,10 +31,6 @@
     {
       "importer": "src/plugins/index.ts",
       "builtin": "path"
-    },
-    {
-      "importer": "src/script-executor.ts",
-      "builtin": "fs/promises"
     },
     {
       "importer": "src/scripting/require-interceptor.ts",

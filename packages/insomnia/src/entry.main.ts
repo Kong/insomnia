@@ -58,7 +58,10 @@ initializeSentry();
 
 registerInsomniaProtocols();
 
-configureFetch(options => insomniaFetch({ ...options }));
+let openDeepLinkUrl = async (url: string) => {
+  console.warn('[main] openDeepLinkUrl function not initialized yet, cannot open URL:', url);
+};
+configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => openDeepLinkUrl(uri) }));
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -245,7 +248,7 @@ const _launchApp = async () => {
       });
       window = windowUtils.createWindowsAndReturnMain();
 
-      const openDeepLinkUrl = async (url: string) => {
+      openDeepLinkUrl = async (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {

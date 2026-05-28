@@ -1,9 +1,9 @@
-import { href, redirect } from 'react-router';
+import { href } from 'react-router';
 
 import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
 import type { Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -51,14 +51,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       },
       syncNewWorkspaceIfNeeded,
     });
-
-    return redirect(
-      `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
-        organizationId: newOrgId,
-        projectId: newProjectId,
-        workspaceId: newWorkspace._id,
-      })}/${models.workspace.scopeToActivity(newWorkspace.scope)}`,
-    );
+    return {
+      organizationId: newOrgId,
+      projectId: newProjectId,
+      workspaceId: newWorkspace._id,
+      workspaceScope: newWorkspace.scope,
+    };
   } catch (error) {
     return {
       error: 'Failed to duplicate workspace: ' + (error instanceof Error ? error.message : String(error)),

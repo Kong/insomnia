@@ -9,6 +9,7 @@ export function useUserService() {
   const isEssential = currentPlan?.type === 'free';
   const isEnterpriseLike = isEnterpriseOwner || isEnterpriseMember;
   const isTrailing = currentPlan?.status === 'trialing';
+  const isPaidEnterprise = isEnterpriseLike && !isTrailing;
   const trialDaysLeft: number | null =
     isTrailing && currentPlan?.trialingEnd ? diffInDayCeil(new Date(currentPlan?.trialingEnd), new Date()) : null;
   return {
@@ -17,6 +18,7 @@ export function useUserService() {
     isEnterpriseMember,
     isEssential,
     isEnterpriseLike,
+    isPaidEnterprise,
     canUpgrade: !isEnterpriseLike,
     displayName: [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email,
     isTrailing,

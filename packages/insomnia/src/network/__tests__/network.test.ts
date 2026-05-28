@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { models, services } from '~/insomnia-data';
 
@@ -11,7 +11,8 @@ import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import { HttpVersions } from '../../common/settings';
-import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
+import { getAuthHeader } from '../../main/network/get-auth-header';
+import { _parseHeaders, curlRequest, getHttpVersion } from '../../main/network/libcurl-promise';
 import { _getAwsAuthHeaders } from '../../network/parse-header-strings';
 import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
@@ -36,6 +37,20 @@ describe('getAuthQueryParams', () => {
   });
 });
 describe('sendCurlAndWriteTimeline()', () => {
+  beforeEach(() => {
+    vi.stubGlobal('window', {
+      main: {
+        timeline: {
+          getPath: (responseId: string) => Promise.resolve(`/tmp/${responseId}.timeline`),
+          appendToFile: vi.fn().mockResolvedValue(null),
+        },
+        getAuthHeader,
+        curlRequest,
+        cancelCurlRequest: vi.fn(),
+      },
+    });
+  });
+
   it('sends a generic request', async () => {
     const workspace = await services.workspace.create();
     const settings = await services.settings.getOrCreate();

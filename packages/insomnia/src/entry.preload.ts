@@ -258,7 +258,7 @@ const main: Window['main'] = {
   completeExecutionStep: options => ipcRenderer.send('completeExecutionStep', options),
   updateLatestStepName: options => ipcRenderer.send('updateLatestStepName', options),
   getExecution: options => invokeWithNormalizedError('getExecution', options),
-  loginStateChange: () => ipcRenderer.send('loginStateChange'),
+  loginStateChange: options => ipcRenderer.send('loginStateChange', options),
   restart: () => ipcRenderer.send('restart'),
   openInBrowser: options => ipcRenderer.send('openInBrowser', options),
   openDeepLink: options => ipcRenderer.send('openDeepLink', options),
@@ -388,6 +388,11 @@ const main: Window['main'] = {
   },
   notifyPluginPromptResult: (id: string, value: string | null) =>
     ipcRenderer.send('plugins.uiPromptResult', { id, value }),
+  timeline: {
+    getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
+    appendToFile: (options: { timelinePath: string; data: string }) =>
+      invokeWithNormalizedError('timeline.appendToFile', options),
+  },
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {
