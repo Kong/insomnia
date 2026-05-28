@@ -1,10 +1,10 @@
 import type { CurlRequestOptions } from '../main/network/libcurl-promise';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
-const isRendererProcess = (process as any).type === 'renderer';
+const isRendererProcess = () => (process as any).type === 'renderer';
 
 export async function cancelRequestById(requestId: string) {
-  if (isRendererProcess) {
+  if (isRendererProcess()) {
     window.main.completeExecutionStep({ requestId });
   }
 
@@ -40,7 +40,7 @@ export const cancellableExecution = async (options: { id: string; fn: Promise<an
 };
 
 export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions) => {
-  if (!isRendererProcess) {
+  if (!isRendererProcess()) {
     throw new Error('cancellableCurlRequest is only available in the renderer process');
   }
 
