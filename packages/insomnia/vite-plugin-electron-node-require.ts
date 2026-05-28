@@ -32,11 +32,6 @@ export function electronNodeRequire(options: Options): Plugin {
         ...Object.fromEntries(modules.map(e => [e, `virtual:external:${e}`])),
       };
 
-      // Ignore the modules from Rollup's commonjs plugin so that we can resolve them with this plugin
-      conf.build ??= {};
-      conf.build.commonjsOptions ??= {};
-      conf.build.commonjsOptions.ignore = [...modules];
-
       return conf;
     },
     resolveId(id, _importer, options) {
