@@ -15,6 +15,7 @@ import {
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { DEFAULT_STORAGE_RULES } from '~/common/organization';
 import type { GitProject, GitRepository } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
@@ -29,7 +30,6 @@ import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { MergeConflict } from '../../../sync/types';
 import { GitNonOriginBranchBanner } from '../git/git-non-origin-branch-banner';
