@@ -1,9 +1,17 @@
 import path from 'node:path';
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Cookie, Request, Response } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+
+const mockApplyHarRequestHooks = vi.hoisted(() => vi.fn(async request => request));
+
+vi.mock('../../network/network-adapter', () => {
+  return {
+    applyHarRequestHooks: mockApplyHarRequestHooks,
+  };
+});
 
 import { database as db } from '../../common/database';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
@@ -11,6 +19,8 @@ import { getRenderedRequestAndContext } from '../render';
 
 describe('export', () => {
   beforeEach(async () => {
+    mockApplyHarRequestHooks.mockReset();
+    mockApplyHarRequestHooks.mockImplementation(async request => request);
     await db.init({ inMemoryOnly: true }, true);
     await services.project.list();
     await services.settings.getOrCreate();
@@ -391,6 +401,33 @@ describe('export', () => {
   });
 
   describe('exportHarWithRequest()', () => {
+    it('applies request hook changes before exporting', async () => {
+      const workspace = await services.workspace.create();
+      const request: Request = {
+        ...models.request.init(),
+        _id: 'req_hooked',
+        modified: 123,
+        created: 123,
+        parentId: workspace._id,
+        type: models.request.type,
+        method: 'GET',
+        url: 'https://example.com/hooked',
+        headers: [],
+        parameters: [],
+        authentication: {},
+      };
+
+      mockApplyHarRequestHooks.mockImplementation(async renderedRequest => ({
+        ...renderedRequest,
+        headers: [...renderedRequest.headers, { name: 'X-From-Hook', value: 'true' }],
+      }));
+
+      const har = await exportHarWithRequest(request);
+
+      expect(mockApplyHarRequestHooks).toHaveBeenCalledOnce();
+      expect(har.headers).toEqual(expect.arrayContaining([{ name: 'X-From-Hook', value: 'true' }]));
+    });
+
     it('renders does it correctly', async () => {
       const workspace = await services.workspace.create();
       const cookies: Cookie[] = [
