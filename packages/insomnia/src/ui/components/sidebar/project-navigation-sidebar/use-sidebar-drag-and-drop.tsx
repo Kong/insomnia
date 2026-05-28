@@ -3,7 +3,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import type { DragAndDropHooks, ItemDropTarget } from 'react-aria-components';
 import { DropIndicator, useDragAndDrop } from 'react-aria-components';
 
-import { models } from '~/insomnia-data';
+import { models, type WorkspaceScope } from '~/insomnia-data';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 
 import type { CollectionChildFlatItem, EmptyNodeFlatItem, FlatItem } from './types';
@@ -16,11 +16,8 @@ type AllowDropTarget = Extract<
   FlatItem,
   { kind: 'workspace' | 'collectionChild' | 'project' | 'emptyFolder' | 'emptyProject' | 'emptyCollection' }
 >;
-// WhiteList workspace scopes that are allowed to be moved across projects.
-const allowCrossProjectDropWorkspaceScope: string[] = [
-  models.workspace.WorkspaceScopeKeys.collection,
-  models.workspace.WorkspaceScopeKeys.design,
-];
+// Whitelist workspace scopes that are allowed to be moved across projects.
+const allowCrossProjectDropWorkspaceScope: WorkspaceScope[] = [models.workspace.WorkspaceScopeKeys.collection];
 
 function isAllowDragItem(item: FlatItem): item is AllowDragItem {
   return allowDragKinds.includes(item.kind);

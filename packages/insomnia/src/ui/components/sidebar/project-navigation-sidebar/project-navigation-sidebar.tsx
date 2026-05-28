@@ -431,13 +431,16 @@ export const ProjectNavigationSidebar = ({
         let sortedWorkspaces: Workspace[] = [];
         if (workspaceOrder === 'type-manual') {
           const localOrder = localWorkspaceOrders?.[projectId];
-          sortedWorkspaces = localOrder
-            ? [...workspaces].sort((a, b) => {
-                const ai = localOrder.indexOf(a._id);
-                const bi = localOrder.indexOf(b._id);
-                return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi);
-              })
-            : [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b));
+          if (localOrder) {
+            const orderIndexByWorkspaceId = new Map(localOrder.map((workspaceId, index) => [workspaceId, index]));
+            sortedWorkspaces = [...workspaces].sort((a, b) => {
+              const ai = orderIndexByWorkspaceId.get(a._id) ?? Infinity;
+              const bi = orderIndexByWorkspaceId.get(b._id) ?? Infinity;
+              return ai - bi;
+            });
+          } else {
+            sortedWorkspaces = [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b));
+          }
         } else {
           sortedWorkspaces = [...workspaces].sort((a, b) => sortMethodMap[workspaceOrder](a, b));
         }
