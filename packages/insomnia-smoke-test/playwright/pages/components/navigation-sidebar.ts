@@ -99,16 +99,19 @@ export class NavigationSidebar {
     const actionsButton = workspaceRow.getByLabel('SideBar Workspace Actions');
     // Sometimes the dropdown button can be a bit tricky to click if the hover state isn't properly triggered, so we'll add some retries here to make it more robust
     for (let attempt = 0; attempt < 3; attempt++) {
+      await workspaceRow.scrollIntoViewIfNeeded();
       await workspaceRow.hover();
       if (attempt > 0) {
         console.log(`Retrying to open workspace actions dropdown for "${workspaceName}", attempt ${attempt + 1}`);
       }
       try {
         await actionsButton.waitFor({ state: 'visible', timeout: 1000 });
-        break;
+        await actionsButton.click();
+        return;
       } catch {}
     }
-    await actionsButton.click();
+    console.log(`Falling back to a direct click for workspace actions dropdown for "${workspaceName}"`);
+    await actionsButton.evaluate((button: HTMLButtonElement) => button.click());
   }
 
   async selectWorkspaceDropdownOption({
