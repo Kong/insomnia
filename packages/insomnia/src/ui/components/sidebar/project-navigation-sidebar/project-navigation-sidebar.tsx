@@ -13,12 +13,14 @@ import {
   getUnsyncedRemoteWorkspaces,
   type InsomniaFile,
 } from '~/common/project';
+import { sortMethodMap } from '~/common/sorting';
 import type { RequestGroup, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { AnalyticsEvent } from '~/ui/analytics';
+import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
@@ -163,20 +165,18 @@ export const ProjectNavigationSidebar = ({
   const tabNavigate = useTabNavigate();
 
   const [collectionSortOrders, setCollectionSortOrders] = useState<Record<string, SortOrder>>({});
+  const [flatItems, setFlatItems] = useState<FlatItem[]>([]);
+  const [projectWorkspaceSortOrder, setProjectWorkspaceSortOrder] = useState<Record<string, WorkspaceSortOrder>>({});
   const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
+  // Customized workspace sort orders by projectId
+  const [localWorkspaceOrders, setLocalWorkspaceOrders] = reactUse.useLocalStorage<Record<string, string[]>>(
+    `${organizationId}:local-workspace-orders`,
+    {},
+  );
   const [projectNavigationSidebarFilter, setProjectNavigationSidebarFilter] = reactUse.useLocalStorage(
     `${organizationId}:project-navigation-sidebar-filter`,
     '',
   );
-
-  useEffect(() => {
-    if (projectNavigationSidebarFilter) {
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.projectListFiltered,
-      });
-    }
-  }, [projectNavigationSidebarFilter]);
-
   const [konnectFilter, setKonnectFilter] = reactUse.useLocalStorage(
     `${organizationId}:project-navigation-konnect-filter`,
     '',
@@ -185,21 +185,19 @@ export const ProjectNavigationSidebar = ({
     `${organizationId}:sidebar-tab`,
     'projects',
   );
+  const [expandedProjectAndWorkspaceIds, setExpandedProjectAndWorkspaceIds] = reactUse.useLocalStorage<string[]>(
+    `${organizationId}:nav-expanded-projects-and-workspaces`,
+    [],
+  );
   const activeTab = !konnectSyncEnabled ? 'projects' : (storedTab ?? 'projects');
   const isProjectTabActive = activeTab === 'projects';
   const { syncing, progress, startSync, cancelSync } = useKonnectSync();
 
   const nonKonnectProjects = projects.filter(p => !p.konnectControlPlaneId);
   const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
-
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
-  const [expandedProjectAndWorkspaceIds, setExpandedProjectAndWorkspaceIds] = reactUse.useLocalStorage<string[]>(
-    `${organizationId}:nav-expanded-projects-and-workspaces`,
-    [],
-  );
-  const [flatItems, setFlatItems] = useState<FlatItem[]>([]);
   // ref to cache queried workspaces by project id
   const cachedWorkspacesRef = useRef<Map<string, Workspace[]>>(new Map());
   // ref to cache queried collection children (request & requestGroups) data and meta by workspace id
@@ -352,6 +350,14 @@ export const ProjectNavigationSidebar = ({
   };
 
   useEffect(() => {
+    if (projectNavigationSidebarFilter) {
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.projectListFiltered,
+      });
+    }
+  }, [projectNavigationSidebarFilter]);
+
+  useEffect(() => {
     getAllRemoteFilesByProjectId();
     const updateUnsyncedFiles = () => {
       getAllRemoteFilesByProjectId();
@@ -421,8 +427,24 @@ export const ProjectNavigationSidebar = ({
           hidden: false,
         });
         const workspaces = workspacesByProject.get(projectId) || [];
-        // TODO workspace sort
-        const sortedWorkspaces = [...workspaces].sort((a, b) => a.name.localeCompare(b.name));
+        const workspaceOrder = projectWorkspaceSortOrder[projectId] || 'type-manual';
+        let sortedWorkspaces: Workspace[] = [];
+        if (workspaceOrder === 'type-manual') {
+          const localOrder = localWorkspaceOrders?.[projectId];
+          if (localOrder) {
+            const orderIndexByWorkspaceId = new Map(localOrder.map((workspaceId, index) => [workspaceId, index]));
+            sortedWorkspaces = [...workspaces].sort((a, b) => {
+              const ai = orderIndexByWorkspaceId.get(a._id) ?? Infinity;
+              const bi = orderIndexByWorkspaceId.get(b._id) ?? Infinity;
+              return ai - bi;
+            });
+          } else {
+            sortedWorkspaces = [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b));
+          }
+        } else {
+          sortedWorkspaces = [...workspaces].sort((a, b) => sortMethodMap[workspaceOrder](a, b));
+        }
+
         const unsyncedWorkspaces = models.project.isRemoteProject(project)
           ? getUnsyncedRemoteWorkspaces(unsyncedFilesByProjectId.get(projectId) || [], sortedWorkspaces)
           : [];
@@ -498,7 +520,13 @@ export const ProjectNavigationSidebar = ({
               // If workspace or any of its collection child matches the filter, show the workspace; otherwise hide
               items.find(i => i.kind === 'workspace' && i.doc._id === workspaceId)!.hidden = shouldHide;
             }
-            const pinnedCollectionChildren = collectionChildren.filter(child => child.pinned && !child.hidden);
+            // Show pinned collection children when the workspace is expanded
+            const pinnedCollectionChildren = shouldHideCollectionChildren
+              ? []
+              : // Filter out pinned requests by pinned attribute. Besides, when there is an active filter, also filter out un-matched requests.
+                collectionChildren.filter(
+                  child => child.pinned && !(projectNavigationSidebarFilter ? child.hidden : false),
+                );
 
             if (pinnedCollectionChildren.length > 0) {
               items.push({
@@ -518,7 +546,7 @@ export const ProjectNavigationSidebar = ({
                 ancestors: child.ancestors,
                 doc: child.doc,
                 collapsed: child.collapsed,
-                hidden: child.hidden,
+                hidden: false,
                 level: child.level,
                 pinned: child.pinned,
                 isFirstPinned: idx === 0,
@@ -598,14 +626,60 @@ export const ProjectNavigationSidebar = ({
     };
     buildWorkspaceAndCollectionData();
   }, [
+    collectionSortOrders,
+    projectWorkspaceSortOrder,
     expandedProjectAndWorkspaceIds,
     isProjectTabActive,
+    localWorkspaceOrders,
     organizationId,
     projectNavigationSidebarFilter,
     projectsWithPresence,
     unsyncedFilesByProjectId,
-    collectionSortOrders,
   ]);
+
+  const handleLocalWorkspaceReorder = useCallback(
+    (
+      sourceProjectId: string,
+      targetProjectId: string,
+      draggedId: string,
+      targetWorkspaceId: string | null,
+      dropPosition: 'before' | 'after',
+    ) => {
+      setLocalWorkspaceOrders(prev => {
+        const isMoveToDifferentProject = sourceProjectId !== targetProjectId;
+        const workspaces = cachedWorkspacesRef.current.get(targetProjectId) || [];
+        const currentWorkspaceSortOrder = projectWorkspaceSortOrder[targetProjectId] || 'type-manual';
+        // Get the base order of workspace before re-order
+        const baseOrder =
+          // if current order is manual, use the current order in local state or default sort by created time; otherwise use current order to sort
+          currentWorkspaceSortOrder === 'type-manual'
+            ? prev?.[targetProjectId] ||
+              [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b)).map(w => w._id)
+            : [...workspaces].sort((a, b) => sortMethodMap[currentWorkspaceSortOrder](a, b)).map(w => w._id);
+        const reordered = (baseOrder as string[]).filter((id: string) => id !== draggedId);
+
+        if (targetWorkspaceId === null) {
+          // Drop workspace into a project, add it to the start of the workspace list
+          reordered.unshift(draggedId);
+        } else {
+          const targetIdx = reordered.indexOf(targetWorkspaceId);
+          if (!isMoveToDifferentProject && targetIdx === -1) return prev;
+          reordered.splice(
+            targetIdx === -1 ? reordered.length : dropPosition === 'before' ? targetIdx : targetIdx + 1,
+            0,
+            draggedId,
+          );
+        }
+
+        if (isMoveToDifferentProject || currentWorkspaceSortOrder !== 'type-manual') {
+          // If the current order is not manual, set the order to manual after re-order to persist the custom order
+          setProjectWorkspaceSortOrder(prev => ({ ...prev, [targetProjectId]: 'type-manual' }));
+        }
+        return { ...prev, [targetProjectId]: reordered };
+      });
+    },
+    [projectWorkspaceSortOrder, setLocalWorkspaceOrders],
+  );
 
   const toggleProjectOrWorkspace = useCallback(
     (projectOrWorkspaceId: string) => {
@@ -643,7 +717,7 @@ export const ProjectNavigationSidebar = ({
         return;
       }
 
-      if (projectNavigationSidebarFilter && collapsed === undefined) {
+      if (projectNavigationSidebarFilter) {
         return;
       }
 
@@ -766,6 +840,7 @@ export const ProjectNavigationSidebar = ({
     flatItems,
     organizationId,
     virtualizer,
+    onWorkspaceReorder: handleLocalWorkspaceReorder,
   });
   const { selectedItemId, routeInfo } = useProjectNavigationSidebarNavigation({
     setActiveTab,
@@ -945,7 +1020,18 @@ export const ProjectNavigationSidebar = ({
                     }}
                   >
                     {item.kind === 'project' && (
-                      <ProjectNode item={item} onToggle={toggleProjectOrWorkspace} storageRules={storageRules} />
+                      <ProjectNode
+                        item={item}
+                        onToggle={toggleProjectOrWorkspace}
+                        storageRules={storageRules}
+                        sortOrder={projectWorkspaceSortOrder[item.doc._id] || 'type-manual'}
+                        onSortOrderChange={newSortOrder =>
+                          setProjectWorkspaceSortOrder(prev => {
+                            const newProjectWorkspaceSortOrder = { ...prev, [item.doc._id]: newSortOrder };
+                            return newProjectWorkspaceSortOrder;
+                          })
+                        }
+                      />
                     )}
 
                     {item.kind === 'workspace' && (

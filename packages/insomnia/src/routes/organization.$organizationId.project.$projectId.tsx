@@ -20,7 +20,7 @@ import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import { ProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';
-import uiEventBus, { TOGGLE_PROJECT_SIDEBAR } from '~/ui/event-bus';
+import { useSidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
@@ -138,7 +138,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise, organizationId);
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
-  const [isSidebarCollapsed] = reactUse.useLocalStorage('project-navigation-collapsed', false);
+  const { isSidebarCollapsed } = useSidebarContext();
 
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
 
@@ -149,16 +149,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       sidebarPanelRef.current?.expand();
     }
   }, [isSidebarCollapsed]);
-
-  useEffect(() => {
-    return uiEventBus.on(TOGGLE_PROJECT_SIDEBAR, (collapsed: boolean) => {
-      if (collapsed) {
-        sidebarPanelRef.current?.collapse();
-      } else {
-        sidebarPanelRef.current?.expand();
-      }
-    });
-  }, []);
 
   const { features } = useOrganizationPermissions();
 

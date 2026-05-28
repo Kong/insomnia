@@ -72,6 +72,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('Tab Plus').click();
     await page.getByRole('menuitem', { name: 'add request to current' }).click();
     await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'foo');
+    await page.getByLabel('Insomnia Tabs').getByLabel('tab-foo', { exact: true }).click();
 
     await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Create in project').click();
@@ -85,7 +86,7 @@ test.describe('multiple-tab feature test', () => {
     await expect.soft(insomnia.navigationSidebar.requestRow('New Request', 'My first collection')).toBeVisible();
 
     // close tab after delete a request
-    await page.getByTestId('workspace-breadcrumb-level-0').click();
+    await insomnia.navigationSidebar.selectProject('Personal Workspace');
     await page.getByLabel('Create in project').click();
     await page.getByText('Request collection').click();
     await page.getByPlaceholder('Enter a name for your Request Collection').fill('Delete request test collection');

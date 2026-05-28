@@ -10,12 +10,16 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
+  SubmenuTrigger,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import type { SORT_ORDERS } from '~/common/constants';
+import { sortOrderName } from '~/common/constants';
+import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import type { GitRepository, Project, WorkspaceScope } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
@@ -27,20 +31,36 @@ import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { ProjectModal } from '../modals/project-modal';
 
+export const ICON_CLASS = 'h-3 w-3 shrink-0';
+
+export type WorkspaceSortOrder = Exclude<(typeof SORT_ORDERS)[number], 'http-method' | 'type-desc' | 'type-asc'>;
+const workspaceSortOrder: WorkspaceSortOrder[] = [
+  'type-manual',
+  'created-asc',
+  'created-desc',
+  'name-asc',
+  'name-desc',
+];
+
 interface Props {
   project: Project & { hasUncommittedOrUnpushedChanges?: boolean; gitRepository?: GitRepository };
   organizationId: string;
   storageRules: StorageRules;
+  sortOrder: WorkspaceSortOrder;
+  onSortOrderChange: (newOrder: WorkspaceSortOrder) => void;
 }
 
 interface ProjectActionItem {
   id: string;
   name: string;
   icon: IconProp;
+  scope?: WorkspaceScope;
   action: (projectId: string, projectName: string) => void;
+  hasSubmenu?: boolean;
+  submenuItems?: Omit<ProjectActionItem, 'icon'>[];
 }
 
-export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules }) => {
+export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules, sortOrder, onSortOrderChange }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: WorkspaceScope;
@@ -73,6 +93,18 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
       name: 'Settings',
       icon: 'gear',
       action: () => setIsProjectSettingsModalOpen(true),
+    },
+    {
+      id: 'Sort',
+      name: 'Sort',
+      icon: 'sort' as IconName,
+      action: () => {},
+      hasSubmenu: true,
+      submenuItems: workspaceSortOrder.map(order => ({
+        id: order,
+        name: sortOrderName[order],
+        action: () => onSortOrderChange(order),
+      })),
     },
     {
       id: 'delete',
@@ -108,18 +140,21 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
     {
       id: 'new-collection',
       name: 'Request collection',
+      scope: 'collection',
       icon: 'bars',
       action: createNewCollection,
     },
     {
       id: 'new-document',
       name: 'Design document',
+      scope: 'design',
       icon: 'file',
       action: createNewDocument,
     },
     {
       id: 'new-mcp-client',
       name: 'MCP Client',
+      scope: 'mcp',
       icon: ['fac', 'mcp'] as unknown as IconProp,
       action: createNewMcpClient,
     },
@@ -128,6 +163,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
           {
             id: 'new-mock-server',
             name: 'Mock Server',
+            scope: 'mock-server' as WorkspaceScope,
             icon: 'server' as IconName,
             action: createNewMockServer,
           },
@@ -136,6 +172,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
     {
       id: 'new-environment',
       name: 'Environment',
+      scope: 'environment',
       icon: 'code',
       action: createNewGlobalEnvironment,
     },
@@ -228,17 +265,61 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
                   <Icon icon={section.icon} /> <span>{section.name}</span>
                 </Header>
                 <Collection items={section.items}>
-                  {item => (
-                    <MenuItem
-                      key={item.id}
-                      id={item.id}
-                      className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                      aria-label={item.name}
-                    >
-                      <Icon icon={item.icon} />
-                      <span>{item.name}</span>
-                    </MenuItem>
-                  )}
+                  {item =>
+                    !item.hasSubmenu ? (
+                      <MenuItem
+                        key={item.id}
+                        id={item.id}
+                        className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                        aria-label={item.name}
+                      >
+                        {section.name === 'CREATE' && item.scope ? (
+                          <div
+                            className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
+                          >
+                            <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
+                          </div>
+                        ) : (
+                          <Icon icon={item.icon} className="h-4 w-4 shrink-0" />
+                        )}
+                        <span>{item.name}</span>
+                      </MenuItem>
+                    ) : (
+                      <SubmenuTrigger>
+                        <MenuItem
+                          className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                          aria-label={item.name}
+                        >
+                          <Icon icon={item.icon} className="h-4 w-4 shrink-0" />
+                          <span>{item.name}</span>
+                          <Icon icon="chevron-right" className="ml-auto" />
+                        </MenuItem>
+                        <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                          <Menu
+                            aria-label={`${item.name} submenu`}
+                            onAction={key =>
+                              item.submenuItems?.find(s => s.id === key)?.action(project._id, project.name)
+                            }
+                            items={item.submenuItems}
+                            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                          >
+                            {subItem => (
+                              <MenuItem
+                                id={subItem.id}
+                                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                                aria-label={subItem.name}
+                              >
+                                <span>{subItem.name}</span>
+                                {sortOrder === subItem.id && (
+                                  <Icon icon="check" className="h-4 w-3 justify-self-end text-(--color-success)" />
+                                )}
+                              </MenuItem>
+                            )}
+                          </Menu>
+                        </Popover>
+                      </SubmenuTrigger>
+                    )
+                  }
                 </Collection>
               </MenuSection>
             )}

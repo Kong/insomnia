@@ -28,7 +28,7 @@ import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle }
 import { href, redirect, Route as RouteComponent, Routes, useFetchers, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
+import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { generateId } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
 import type {
@@ -356,26 +356,7 @@ const Debug = () => {
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
 
-  function toggleSidebar() {
-    const layout = sidebarPanelRef.current?.getLayout();
-
-    if (!layout) {
-      return;
-    }
-
-    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
-
-    sidebarPanelRef.current?.setLayout(layout);
-  }
-
-  useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
-
-    return unsubscribe;
-  }, []);
-
   useDocBodyKeyboardShortcuts({
-    sidebar_toggle: toggleSidebar,
     request_togglePin: async () => {
       if (requestId) {
         const meta = models.grpcRequest.isGrpcRequestId(requestId)

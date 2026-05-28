@@ -13,9 +13,11 @@ export async function insomniaFetch<T = void>({
   origin,
   headers,
   timeout = INSOMNIA_FETCH_TIME_OUT,
+  onDeepLink,
 }: FetchConfig & {
   // It's not used at all, should be removed?
   retries?: number;
+  onDeepLink?: (uri: string) => void;
 }): Promise<T> {
   const config: RequestInit = {
     method,
@@ -39,8 +41,8 @@ export async function insomniaFetch<T = void>({
   try {
     const response = await fetch((origin || getApiBaseURL()) + path, config);
     const uri = response.headers.get('x-insomnia-command');
-    if (uri) {
-      window.main.openDeepLink(uri);
+    if (uri && onDeepLink) {
+      onDeepLink(uri);
     }
     const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
     if (!response.ok) {
