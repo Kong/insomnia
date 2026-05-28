@@ -1,4 +1,3 @@
-import * as protoLoader from '@grpc/proto-loader';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
@@ -49,13 +48,7 @@ const tryToSelectFolderPath = async () => {
 };
 const isProtofileValid = async (filePath: string) => {
   try {
-    await protoLoader.load(filePath, {
-      keepCase: true,
-      longs: String,
-      enums: String,
-      defaults: true,
-      oneofs: true,
-    });
+    await window.main.grpc.validateProtoFile(filePath);
     return true;
   } catch (error) {
     showError({

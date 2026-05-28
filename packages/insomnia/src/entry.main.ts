@@ -26,6 +26,7 @@ import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { registerGitServiceAPI } from './main/git-service';
+import { registerCookieHandlers } from './main/ipc/cookies';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
@@ -88,6 +89,7 @@ app.on('ready', async () => {
   // @TODO - Maybe move the register stuff in the registerMainHandlers function
   registerMainHandlers();
   registerPathHandlers();
+  registerCookieHandlers();
   registergRPCHandlers();
   registerGitServiceAPI();
   registerLLMConfigServiceAPI();
