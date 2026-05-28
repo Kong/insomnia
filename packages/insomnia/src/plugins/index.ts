@@ -156,6 +156,11 @@ export async function init() {
 async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: string[], allConfigs: PluginConfigMap) {
   const fs = getFs();
   const path = getPath();
+  const nodeRequire = getNodeRequire();
+
+  if (!nodeRequire) {
+    return;
+  }
 
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
@@ -196,14 +201,14 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         }
 
         // Now delete the require cache for this module, ensuring we're deleting only the relevant entries
-        for (const cachePath of Object.keys(global.require.cache)) {
+        for (const cachePath of Object.keys(nodeRequire.cache)) {
           // Check if the cache path starts with the safe module path
           if (cachePath.startsWith(safeModulePath)) {
-            delete global.require.cache[cachePath];
+            delete nodeRequire.cache[cachePath];
           }
         }
 
-        const pluginJson = global.require(packageJSONPath);
+        const pluginJson = nodeRequire(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
         if (!('insomnia' in pluginJson)) {
@@ -211,7 +216,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         }
 
         // Delete require cache entry and re-require
-        const module = global.require(modulePath);
+        const module = nodeRequire(modulePath);
 
         pluginMap[pluginJson.name] = {
           name: pluginJson.name,
@@ -272,8 +277,14 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
 export function getBundlePluginMap() {
   const path = getPath();
+  const nodeRequire = getNodeRequire();
   const appBundlePlugins = getAppBundlePlugins();
   const bundlePluginMap: Record<string, Plugin> = {};
+
+  if (!nodeRequire) {
+    return bundlePluginMap;
+  }
+
   appBundlePlugins.forEach(({ name: pluginName }) => {
     try {
       const isExecutedInInso = !process.type;
@@ -287,7 +298,7 @@ export function getBundlePluginMap() {
         bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
       }
       console.log('[plugin] Loading bundled plugin %s from %s', pluginName, bundlePluginPath);
-      const module = global.require(bundlePluginPath);
+      const module = nodeRequire(bundlePluginPath);
       bundlePluginMap[pluginName] = {
         name: pluginName,
         description: `Insomnia bundled plugin for ${pluginName}`,

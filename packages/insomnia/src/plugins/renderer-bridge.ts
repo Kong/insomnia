@@ -4,8 +4,15 @@ function call<M extends keyof Omit<PluginsBridgeAPI, 'getBridgeMetrics'>>(
   method: M,
   args?: Parameters<PluginsBridgeAPI[M]>[0],
 ): ReturnType<PluginsBridgeAPI[M]> {
-  const fn = (window.main.plugins[method] as (...a: any[]) => any);
-  return fn(args) as ReturnType<PluginsBridgeAPI[M]>;
+  const bridge = window.main?.plugins;
+  if (bridge?.[method]) {
+    const fn = bridge[method] as (...a: any[]) => any;
+    return fn(args) as ReturnType<PluginsBridgeAPI[M]>;
+  }
+
+  return import('./invoke-method').then(({ invokePluginMethod }) =>
+    invokePluginMethod(method, args),
+  ) as ReturnType<PluginsBridgeAPI[M]>;
 }
 
 export const plugins: PluginsBridgeAPI = {
