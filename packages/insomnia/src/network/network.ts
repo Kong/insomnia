@@ -30,6 +30,7 @@ import {
   executeCurlRequest,
   getAuthHeader,
   getTimelinePath,
+  runScript,
 } from '~/network/network-adapter';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
@@ -46,7 +47,6 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as pluginRequest from '../plugins/context/request';
-import type * as ScriptExecutorModule from '../script-executor';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -56,7 +56,7 @@ import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } fro
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { filterClientCertificates } from './certificate';
-import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
+import type { TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 const { isRequest } = models.request;
@@ -518,11 +518,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
   }
 
   try {
-    const fn =
-      process.type === 'renderer'
-        ? runScriptConcurrently
-        : (require(/* @vite-ignore */ '../script-executor') as typeof ScriptExecutorModule).runScript;
-    const output = await fn({
+    const output = await runScript({
       script,
       context: {
         request,
