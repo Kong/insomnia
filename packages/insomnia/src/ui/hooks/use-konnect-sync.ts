@@ -27,7 +27,15 @@ export function useKonnectSync(): UseKonnectSyncResult {
 
   const startSync = async (organizationId: string): Promise<SyncResult> => {
     if (abortRef.current) {
-      return { success: false, error: 'Sync already in progress.', controlPlanes: zeroCounts(), services: zeroCounts(), routes: zeroCounts(), skippedRoutes: [], durationMs: 0 };
+      return {
+        success: false,
+        error: 'Sync already in progress.',
+        controlPlanes: zeroCounts(),
+        services: zeroCounts(),
+        routes: zeroCounts(),
+        skippedRoutes: [],
+        durationMs: 0,
+      };
     }
 
     const controller = new AbortController();
@@ -37,7 +45,15 @@ export function useKonnectSync(): UseKonnectSyncResult {
     if (!pat) {
       abortRef.current = null;
       setState({ syncing: false, progress: '' });
-      return { success: false, error: 'No Konnect PAT found.', controlPlanes: zeroCounts(), services: zeroCounts(), routes: zeroCounts(), skippedRoutes: [], durationMs: 0 };
+      return {
+        success: false,
+        error: 'No Konnect PAT found.',
+        controlPlanes: zeroCounts(),
+        services: zeroCounts(),
+        routes: zeroCounts(),
+        skippedRoutes: [],
+        durationMs: 0,
+      };
     }
     setState({ syncing: true, progress: 'Starting sync...' });
 
@@ -89,6 +105,10 @@ export function useKonnectSync(): UseKonnectSyncResult {
         ...(!cancelled && result.error ? { error: result.error } : {}),
       },
     });
+
+    if (cancelled) {
+      result.error = 'Sync cancelled by user.';
+    }
 
     return result;
   };
