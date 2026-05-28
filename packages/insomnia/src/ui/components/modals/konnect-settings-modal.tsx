@@ -210,6 +210,7 @@ export const KonnectSettingsModal = ({
                       <Button
                         className="rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm font-semibold text-(--color-font) hover:bg-(--hl-xs)"
                         onPress={() => setShowDisconnectConfirm(true)}
+                        isDisabled={status === 'validating'}
                       >
                         Disconnect
                       </Button>
