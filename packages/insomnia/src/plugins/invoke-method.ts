@@ -1,3 +1,5 @@
+import clone from 'clone';
+
 import type {
   ApplyHarRequestHooksArgs,
   ApplyRequestHooksArgs,
@@ -6,7 +8,6 @@ import type {
   ExecutePluginMainActionArgs,
   RunTemplateTagActionArgs,
 } from './bridge-types';
-import clone from 'clone';
 import * as pluginApp from './context/app';
 import * as pluginData from './context/data';
 import * as pluginNetwork from './context/network';
