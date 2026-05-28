@@ -75,11 +75,14 @@ export const KonnectSettingsModal = ({
     try {
       const allProjects = await services.project.list();
       const konnectProjects = allProjects.filter(p => p.konnectControlPlaneId != null);
-      const bufferId = await database.bufferChanges();
-      for (const project of konnectProjects) {
-        await services.project.remove(project);
+      const bufferId = await database.bufferChangesIndefinitely();
+      try {
+        for (const project of konnectProjects) {
+          await services.project.remove(project);
+        }
+      } finally {
+        await database.flushChanges(bufferId);
       }
-      await database.flushChanges(bufferId);
       await window.main.secretStorage.deleteSecret('konnectPat');
       patchSettings({ hasKonnectPat: false });
       onClose();
