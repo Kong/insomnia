@@ -521,7 +521,7 @@ test.describe('pre-request features tests', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByTestId('workspace-breadcrumb-level-0').click();
 
-    await page.getByLabel('Pre-request Scripts', { exact: true }).click();
+    await page.getByTestId('workspace-grid').getByRole('row', { name: 'Pre-request Scripts' }).click();
     // go to request collection
     await insomnia.navigationSidebar.requestRow('persist global environment').click({
       modifiers: ['ControlOrMeta'],

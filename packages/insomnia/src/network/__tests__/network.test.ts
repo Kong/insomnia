@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { models, services } from '~/insomnia-data';
 
@@ -20,6 +20,8 @@ import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
+const originalProcessTypeDescriptor = Object.getOwnPropertyDescriptor(process, 'type');
+
 describe('getAuthQueryParams', () => {
   it('Creates a query param with key as parameter name and value as parameter value, when addTo is "queryParams"', async () => {
     const authentication = {
@@ -38,6 +40,10 @@ describe('getAuthQueryParams', () => {
 });
 describe('sendCurlAndWriteTimeline()', () => {
   beforeEach(() => {
+    Object.defineProperty(process, 'type', {
+      configurable: true,
+      value: 'renderer',
+    });
     vi.stubGlobal('window', {
       main: {
         timeline: {
@@ -49,6 +55,17 @@ describe('sendCurlAndWriteTimeline()', () => {
         cancelCurlRequest: vi.fn(),
       },
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+
+    if (originalProcessTypeDescriptor) {
+      Object.defineProperty(process, 'type', originalProcessTypeDescriptor);
+      return;
+    }
+
+    Reflect.deleteProperty(process, 'type');
   });
 
   it('sends a generic request', async () => {
