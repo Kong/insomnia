@@ -72,6 +72,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('Tab Plus').click();
     await page.getByRole('menuitem', { name: 'add request to current' }).click();
     await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'foo');
+    await page.getByLabel('Insomnia Tabs').getByLabel('tab-foo', { exact: true }).click();
 
     await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Create in project').click();
