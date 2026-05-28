@@ -1,3 +1,5 @@
+import '~/ui/components/.client/codemirror/lint/javascript-async-lint';
+
 import type { Snippet } from 'codemirror';
 import React, { type FC, useRef } from 'react';
 import {
@@ -29,7 +31,6 @@ import {
   Vault,
 } from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
-import '../../.client/codemirror/lint/javascript-async-lint';
 import { Icon } from '../icon';
 
 interface Props {
