@@ -46,6 +46,7 @@ import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as pluginRequest from '../plugins/context/request';
+import { runScript as nodejsRunScript } from '../script-executor';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -60,9 +61,6 @@ import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
-
-const runScriptInNode = (options: { script: string; context: RequestContext }) =>
-  require('../script-executor').runScript(options) as Promise<RequestContext>;
 
 
 export interface SendActionRuntime {
@@ -521,7 +519,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
   }
 
   try {
-    const fn = process.type === 'renderer' ? runScriptConcurrently : runScriptInNode;
+    const fn = process.type === 'renderer' ? runScriptConcurrently : nodejsRunScript;
     const output = await fn({
       script,
       context: {
