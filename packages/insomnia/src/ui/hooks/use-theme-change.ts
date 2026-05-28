@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 import { useRootLoaderData } from '~/root';
 
-import * as themes from '../../plugins/misc';
+import * as themes from '../../plugins/set-theme';
 
 export const useThemeChange = () => {
   const rootLoaderData = useRootLoaderData();

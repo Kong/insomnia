@@ -15,7 +15,7 @@ import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
 import type { PluginTemplateTag, RenderPurpose } from '../templating/types';
-import type { PluginTheme } from './misc';
+import type { PluginTheme } from './set-theme';
 import themes from './themes';
 export type { ColorScheme } from './types';
 
@@ -127,8 +127,28 @@ const getBuiltinModule = <T>(id: string) => {
   ).getBuiltinModule?.(id);
 };
 
-const resolveNodeModule = <T>(name: string, nodeName: string) => {
-  const resolved = getBuiltinModule<T>(nodeName) || getBuiltinModule<T>(name) || getNodeRequire()?.(nodeName);
+let hasLoggedMissingNodeRequire = false;
+
+const logMissingNodeRequire = (context: string) => {
+  if (hasLoggedMissingNodeRequire) {
+    return;
+  }
+
+  hasLoggedMissingNodeRequire = true;
+
+  const processType = (process as NodeJS.Process & { type?: string }).type;
+  const message = `[plugin] Skipping plugin loading while ${context} because require is unavailable`;
+
+  if (processType === 'renderer') {
+    console.debug(message);
+    return;
+  }
+
+  console.warn(message);
+};
+
+const resolveNodeModule = <T>(nodeName: string) => {
+  const resolved = getBuiltinModule<T>(nodeName) || getNodeRequire()?.(nodeName);
   if (!resolved) {
     throw new Error(`Node module ${nodeName} is not available`);
   }
@@ -136,11 +156,11 @@ const resolveNodeModule = <T>(name: string, nodeName: string) => {
 };
 
 const getFs = () => {
-  return resolveNodeModule<typeof nodeFs>('fs', 'node:fs');
+  return resolveNodeModule<typeof nodeFs>('node:fs');
 };
 
 const getPath = () => {
-  return resolveNodeModule<typeof nodePath>('path', 'node:path');
+  return resolveNodeModule<typeof nodePath>('node:path');
 };
 
 let plugins: Plugin[] | null | undefined = null;
@@ -159,6 +179,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
   const nodeRequire = getNodeRequire();
 
   if (!nodeRequire) {
+    logMissingNodeRequire('discovering installed plugins');
     return;
   }
 
@@ -282,6 +303,7 @@ export function getBundlePluginMap() {
   const bundlePluginMap: Record<string, Plugin> = {};
 
   if (!nodeRequire) {
+    logMissingNodeRequire('loading bundled plugins');
     return bundlePluginMap;
   }
 

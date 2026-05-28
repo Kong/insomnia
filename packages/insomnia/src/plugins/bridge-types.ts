@@ -1,6 +1,6 @@
 import type { ResponsePatch } from '../main/network/libcurl-promise';
 import type { RenderedRequest } from '../templating/types';
-import type { PluginTheme } from './misc';
+import type { PluginTheme } from './set-theme';
 
 export interface SerializablePlugin {
   name: string;

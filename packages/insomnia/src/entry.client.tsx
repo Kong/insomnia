@@ -13,8 +13,8 @@ import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { applyColorScheme } from './plugins/misc';
 import { plugins } from './plugins/renderer-bridge';
+import { applyColorScheme } from './plugins/set-theme';
 import { registerSyncMergeConflictListener } from './sync/vcs/insomnia-sync';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';

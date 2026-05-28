@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { PluginTheme } from './misc';
-import { containsNunjucks, validateTheme, validateThemeName } from './misc';
+import type { PluginTheme } from './set-theme';
+import { containsNunjucks, validateTheme, validateThemeName } from './set-theme';
 
 describe('containsNunjucks', () => {
   it('will return true if the value contains nunjucks without', () => {

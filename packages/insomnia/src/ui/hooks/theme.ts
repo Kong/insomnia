@@ -5,8 +5,8 @@ import type { ThemeSettings } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 
-import { applyColorScheme, getColorScheme, type PluginTheme } from '../../plugins/misc';
 import { plugins } from '../../plugins/renderer-bridge';
+import { applyColorScheme, getColorScheme, type PluginTheme } from '../../plugins/set-theme';
 import type { ColorScheme } from '../../plugins/types';
 import { useSettingsPatcher } from './use-request';
 
