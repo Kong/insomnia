@@ -61,7 +61,6 @@ import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
-
 export interface SendActionRuntime {
   appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
 }
@@ -521,7 +520,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     const fn =
       process.type === 'renderer'
         ? runScriptConcurrently
-        : (require(/* @vite-ignore */ './run-script') as typeof import('./run-script')).cancellableRunScript;
+        : (require(/* @vite-ignore */ '../script-executor') as typeof import('../script-executor')).runScript;
     const output = await fn({
       script,
       context: {
