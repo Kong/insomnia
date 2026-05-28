@@ -590,7 +590,7 @@ describe('prototype pollution resistance', () => {
   // Passing a context value must never modify Object.prototype
   it('context key named __proto__ does not pollute Object prototype', async () => {
     const before = ({} as any).polluted;
-    await render('{{ v }}', { context: { v: 'safe' }, ignoreUndefinedEnvVariable: true }).catch(() => {});
+    await Promise.resolve(render('{{ v }}', { context: { v: 'safe' }, ignoreUndefinedEnvVariable: true })).catch(() => {});
     expect(({} as any).polluted).toBe(before);
   });
 
