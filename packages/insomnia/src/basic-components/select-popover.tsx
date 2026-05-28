@@ -100,7 +100,7 @@ export function SelectPopover<T extends SelectPopoverItem>({
           )}
         >
           {title ? (
-            <Heading className="flex shrink-0 items-center px-3 py-2 text-sm font-semibold text-(--hl)">
+            <Heading className="flex shrink-0 items-center px-4 py-4 pb-1 text-sm font-semibold text-(--hl)">
               {title}
             </Heading>
           ) : null}
