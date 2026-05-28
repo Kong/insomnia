@@ -5,10 +5,9 @@ import { decryptSecretValue } from '~/utils/vault';
 
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
-import objectPath from './third_party/object-path';
-
 import { tokenizeArgs } from './tokenize-args';
 export { tokenizeArgs };
+import objectPath from './third_party/object-path';
 
 /**
  * Get list of paths to all primitive types in nested object

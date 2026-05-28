@@ -116,7 +116,7 @@ async function getLiquid(ignoreUndefinedEnvVariable?: boolean): Promise<{ engine
 
   const { engine, tagMetadata } = buildLiquidEngine({
     strictVariables: !ignoreUndefinedEnvVariable,
-    tagFactory: createLiquidTag,
+    tagFactory: (ext, plugin) => createLiquidTag(ext, plugin, (str, opts) => Promise.resolve(render(str, opts))),
     tags: allTags.map(ext => ({ templateTag: ext.templateTag, plugin: ext.plugin })),
   });
 

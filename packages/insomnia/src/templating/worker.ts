@@ -131,7 +131,7 @@ async function getLiquid(
 
   const { engine, tagMetadata } = buildLiquidEngine({
     strictVariables: !ignoreUndefinedEnvVariable,
-    tagFactory: createLiquidTagWorker,
+    tagFactory: (ext, plugin) => createLiquidTagWorker(ext, plugin, (str, opts) => Promise.resolve(render(str, opts))),
     tags: allTags.map(ext => ({ templateTag: ext.templateTag, plugin: ext.plugin })),
   });
 

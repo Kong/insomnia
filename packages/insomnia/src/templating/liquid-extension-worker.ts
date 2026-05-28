@@ -8,8 +8,6 @@ import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
 import { tokenizeArgs } from './tokenize-args';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
-import * as templating from './worker';
-
 export function decodeEncodingWorker<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
@@ -59,7 +57,7 @@ function resolveArg(arg: ReturnType<typeof tokenizeArgs>[number], scope: Record<
   return arg.value;
 }
 
-export function createLiquidTagWorker(ext: PluginTemplateTag, plugin: Plugin): typeof Tag {
+export function createLiquidTagWorker(ext: PluginTemplateTag, plugin: Plugin, renderFn?: (str: string, opts: { context: Record<string, any> }) => Promise<string | null>): typeof Tag {
   class InsomniWorkerTag extends Tag {
     private rawArgs: string;
 
@@ -127,7 +125,7 @@ export function createLiquidTagWorker(ext: PluginTemplateTag, plugin: Plugin): t
             fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
           encode: async (input: string, encoding?: string) =>
             fetchFromTemplateWorkerDatabase('encode', { input, encoding }),
-          render: (str: string) => templating.render(str, { context: renderContext }),
+          render: (str: string) => renderFn ? renderFn(str, { context: renderContext }) : Promise.resolve(str),
           openInBrowser: (url: string) => fetchFromTemplateWorkerDatabase('openInBrowser', { url }),
           models: {
             request: {

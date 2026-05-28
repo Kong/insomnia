@@ -15,7 +15,6 @@ import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
 import type { Plugin } from '../plugins/index';
-import * as templating from './index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import { decodeEncoding, tokenizeArgs } from './utils';
 
@@ -26,7 +25,7 @@ function resolveArg(arg: ReturnType<typeof tokenizeArgs>[number], scope: Record<
   return arg.value;
 }
 
-export function createLiquidTag(ext: PluginTemplateTag, plugin: Plugin): typeof Tag {
+export function createLiquidTag(ext: PluginTemplateTag, plugin: Plugin, renderFn?: (str: string, opts: { context: Record<string, any> }) => Promise<string | null>): typeof Tag {
   class InsomniTag extends Tag {
     private rawArgs: string;
 
@@ -67,7 +66,7 @@ export function createLiquidTag(ext: PluginTemplateTag, plugin: Plugin): typeof 
           decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
           encode: async (input: string, encoding: BinaryToTextEncoding) =>
             crypto.createHash('md5').update(input).digest(encoding),
-          render: (str: string) => templating.render(str, { context: renderContext }),
+          render: (str: string) => renderFn ? renderFn(str, { context: renderContext }) : Promise.resolve(str),
           openInBrowser: (url: string) => window.main.openInBrowser(url),
           models: {
             request: {
