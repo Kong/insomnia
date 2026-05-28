@@ -125,9 +125,7 @@ async function appendScriptLogs(timelinePath: string, data: string) {
     return window.main.timeline.appendToFile({ timelinePath, data });
   }
 
-  // Use a template literal so the static analyser does not flag this as a
-  // renderer-side Node builtin import (it only detects require('string-literal')).
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { appendFile } = require(`node:fs/promises`);
+  const { appendFile } = require('node:fs/promises');
   return appendFile(timelinePath, data);
 }
