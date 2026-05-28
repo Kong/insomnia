@@ -67,6 +67,7 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { registerPluginIpcHandlers } from '../plugin-window';
+import type { CookiesBridgeAPI } from './cookies';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
@@ -226,6 +227,7 @@ export interface RendererToMainBridgeAPI {
   webSocket: WebSocketBridgeAPI;
   socketIO: SocketIOBridgeAPI;
   mcp: McpBridgeAPI;
+  cookies: CookiesBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;

@@ -13,10 +13,8 @@ import {
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 
-// Vite is filtering out process.env variables that are not prefixed with VITE_.
-const ENV = 'env';
-
-const env = process[ENV];
+const env =
+  typeof window !== 'undefined' && window.app?.env ? window.app.env : typeof process !== 'undefined' ? process.env : {};
 
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
@@ -37,7 +35,7 @@ export const getProductName = () => appConfig.productName;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
+export const getAppEnvironment = () => env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
   appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
@@ -46,7 +44,7 @@ export const getCioWriteKey = () =>
   appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].writeKey;
 export const getCioSiteId = () =>
   appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].siteId;
-export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
+export const getAppBuildDate = () => new Date(env.BUILD_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () =>
   encodeURIComponent(
@@ -62,7 +60,7 @@ export function updatesSupported() {
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows && process.env['PORTABLE_EXECUTABLE_DIR']) {
+  if (isWindows && env['PORTABLE_EXECUTABLE_DIR']) {
     return false;
   }
 

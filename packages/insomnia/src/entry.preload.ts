@@ -9,6 +9,7 @@ import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
+import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
@@ -123,7 +124,14 @@ const grpc: gRPCBridgeAPI = {
   closeAll: () => ipcRenderer.send('grpc.closeAll'),
   loadMethods: options => invokeWithNormalizedError('grpc.loadMethods', options),
   loadMethodsFromReflection: options => invokeWithNormalizedError('grpc.loadMethodsFromReflection', options),
+  validateProtoFile: filePath => invokeWithNormalizedError('grpc.validateProtoFile', filePath),
   writeProtoFile: protoFileId => invokeWithNormalizedError('grpc.writeProtoFile', protoFileId),
+};
+
+const cookies: CookiesBridgeAPI = {
+  fromJSON: cookie => invokeWithNormalizedError('cookies.fromJSON', cookie),
+  parse: cookie => invokeWithNormalizedError('cookies.parse', cookie),
+  toString: cookie => invokeWithNormalizedError('cookies.toString', cookie),
 };
 
 const secretStorage: secretStorageBridgeAPI = {
@@ -252,6 +260,30 @@ const llm: LLMConfigServiceAPI = {
     invokeWithNormalizedError('llm.setAIFeatureEnabled', feature, enabled),
 };
 
+const rendererProcessEnv = Object.fromEntries(
+  Object.entries(process.env).filter(
+    ([key, value]) =>
+      value !== undefined &&
+      (key.startsWith('INSOMNIA_') ||
+        key === 'BUILD_DATE' ||
+        key === 'NODE_ENV' ||
+        key === 'PLAYWRIGHT_TEST' ||
+        key === 'PORTABLE_EXECUTABLE_DIR'),
+  ),
+);
+
+const rendererProcess = {
+  env: rendererProcessEnv,
+  platform: process.platform as NodeJS.Platform,
+  type: 'renderer' as const,
+  versions: {
+    chrome: process.versions.chrome,
+    electron: process.versions.electron,
+    node: process.versions.node,
+    v8: process.versions.v8,
+  },
+};
+
 const main: Window['main'] = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
@@ -305,6 +337,7 @@ const main: Window['main'] = {
   webSocket,
   socketIO,
   mcp,
+  cookies,
   git,
   llm,
   grpc,
@@ -413,6 +446,7 @@ const dialog: Window['dialog'] = {
   showSaveDialog: options => invokeWithNormalizedError('showSaveDialog', options),
 };
 const app: Window['app'] = {
+  env: rendererProcessEnv,
   getPath: options => ipcRenderer.sendSync('getPath', options),
   getAppPath: () => ipcRenderer.sendSync('getAppPath'),
   process: {
@@ -439,6 +473,8 @@ const database: Window['database'] = {
 
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
+  contextBridge.exposeInMainWorld('process', rendererProcess);
+  contextBridge.exposeInMainWorld('global', globalThis);
   contextBridge.exposeInMainWorld('dialog', dialog);
   contextBridge.exposeInMainWorld('app', app);
   contextBridge.exposeInMainWorld('shell', shell);
@@ -449,6 +485,14 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('_dataServices', servicesProxy);
 } else {
   window.main = main;
+  Object.defineProperty(window, 'process', {
+    configurable: true,
+    value: rendererProcess,
+  });
+  Object.defineProperty(window, 'global', {
+    configurable: true,
+    value: window,
+  });
   window.dialog = dialog;
   window.app = app;
   window.shell = shell;

@@ -1,5 +1,3 @@
-import contentDisposition from 'content-disposition';
-import { extension as mimeExtension } from 'mime-types';
 import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -67,6 +65,65 @@ export interface RunnerContextForRequest {
   results: RequestTestResult[];
   responseId: string;
 }
+
+const stripQuotedValue = (value: string) => {
+  const trimmed = value.trim();
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    return trimmed.slice(1, -1).replace(/\\(.)/g, '$1');
+  }
+  return trimmed;
+};
+
+const parseContentDispositionFilename = (headerValue: string) => {
+  const filenameStarMatch = headerValue.match(/filename\*\s*=\s*([^;]+)/i);
+  if (filenameStarMatch) {
+    const encodedValue = stripQuotedValue(filenameStarMatch[1]);
+    const parts = encodedValue.split("'");
+    const value = parts.length >= 3 ? parts.slice(2).join("'") : encodedValue;
+
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  }
+
+  const filenameMatch = headerValue.match(/filename\s*=\s*("(?:[^"\\]|\\.)*"|[^;]+)/i);
+  return filenameMatch ? stripQuotedValue(filenameMatch[1]) : null;
+};
+
+const getDownloadFileExtension = (contentType?: string | null) => {
+  const normalizedType = contentType?.split(';', 1)[0]?.trim().toLowerCase();
+  if (!normalizedType) {
+    return 'unknown';
+  }
+
+  switch (normalizedType) {
+    case 'application/json': {
+      return 'json';
+    }
+    case 'application/pdf': {
+      return 'pdf';
+    }
+    case 'application/xml':
+    case 'text/xml': {
+      return 'xml';
+    }
+    case 'text/csv': {
+      return 'csv';
+    }
+    case 'text/html': {
+      return 'html';
+    }
+    case 'text/plain': {
+      return 'txt';
+    }
+    default: {
+      const subtype = normalizedType.split('/')[1];
+      return subtype?.split('+').pop() || 'unknown';
+    }
+  }
+};
 
 const writeToDownloadPath = async (
   downloadPathAndName: string,
@@ -311,9 +368,8 @@ export const sendActionImplementation = async (options: {
 
   if (requestMeta.downloadPath) {
     const header = getContentDispositionHeader(responsePatch.headers || []);
-    const name = header
-      ? contentDisposition.parse(header.value).parameters.filename
-      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
+    const fallbackName = `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${getDownloadFileExtension(responsePatch.contentType)}`;
+    const name = header ? parseContentDispositionFilename(header.value) || fallbackName : fallbackName;
     await writeToDownloadPath(
       window.path.join(requestMeta.downloadPath, name),
       responsePatch,
