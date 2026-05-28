@@ -1,5 +1,12 @@
 import { invariant } from '../utils/invariant';
-import { requireInterceptor } from './require-interceptor';
+
+const getRequireInterceptor = () => {
+  if (typeof window === 'undefined' || !window.bridge?.requireInterceptor) {
+    throw new Error('require interceptor is unavailable');
+  }
+
+  return window.bridge.requireInterceptor;
+};
 
 export interface ASTRule {
   name: string;       // the identifier / property name being blocked.
@@ -56,7 +63,7 @@ export const interceptorRules: ThreatRule[] = [
     name: 'require',
     description: 'Replaces the require() function with an interceptor to prevent access to modules outside an explicit allowlist.',
     maskName: 'require',
-    maskValue: requireInterceptor,
+    maskValue: (moduleName: string) => getRequireInterceptor()(moduleName),
   },
   {
     name: 'window',

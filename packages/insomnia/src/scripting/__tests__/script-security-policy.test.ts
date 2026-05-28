@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { requireInterceptor } from '../require-interceptor';
 import { defaultSecurityPolicy } from '../sandbox';
 import { interceptorRules, maskRules } from '../script-security-policy';
 
@@ -49,8 +48,8 @@ describe('ScriptSecurityPolicy.buildMaskScope()', () => {
   });
 
   describe('require interceptor', () => {
-    it('masks require with requireInterceptor', () => {
-      expect(maskMap.get('require')).toBe(requireInterceptor);
+    it('masks require with an interceptor function', () => {
+      expect(typeof maskMap.get('require')).toBe('function');
     });
   });
 
