@@ -18,7 +18,7 @@ const getKeyBytes = (symmetricKey: JsonWebKey) => forge.util.hexToBytes(b64UrlTo
 const getRandomIv = () => {
   const iv = new Uint8Array(12);
   window.crypto.getRandomValues(iv);
-  return String.fromCharCode(...iv);
+  return String.fromCodePoint(...iv);
 };
 
 const encryptAES = (symmetricKey: JsonWebKey, plaintext: string): AESMessage => {

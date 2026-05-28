@@ -6,7 +6,6 @@
 import 'codemirror/addon/lint/json-lint';
 
 import CodeMirror from 'codemirror';
-import * as jsonlint from 'jsonlint-mod-fixed';
 
 import { render } from '~/templating/index';
 CodeMirror.registerHelper('lint', 'json', validator);
@@ -17,11 +16,29 @@ interface ValidationError {
   to: CodeMirror.Position;
 }
 
+interface ParseErrorHash {
+  line?: number;
+  loc?: {
+    first_line: number;
+    first_column: number;
+    last_line: number;
+    last_column: number;
+  };
+}
+
+interface JsonLintModule {
+  parser: {
+    parseError: (str: string, hash: ParseErrorHash) => void;
+  };
+  parse: (text: string) => unknown;
+}
+
 async function validator(text: string): Promise<ValidationError[]> {
   const found: ValidationError[] = [];
+  const jsonlint = (await import('jsonlint-mod-fixed')) as unknown as JsonLintModule;
 
   // Override jsonlint's parseError function so we pull the errors into our collection of ValidationErrors
-  jsonlint.parser.parseError = (str: string, hash: jsonlint.ParseErrorHash) => {
+  jsonlint.parser.parseError = (str: string, hash: ParseErrorHash) => {
     if (hash.line && !hash.loc) {
       found.push({
         from: CodeMirror.Pos(hash.line),
