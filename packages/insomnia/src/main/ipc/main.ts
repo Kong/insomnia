@@ -136,8 +136,7 @@ const writeResponseBodyToFile = async (
   }
 };
 
-const getResponsesDir = () =>
-  path.join(process.env.INSOMNIA_DATA_PATH || app.getPath('userData'), 'responses');
+const getResponsesDir = () => path.join(process.env.INSOMNIA_DATA_PATH || app.getPath('userData'), 'responses');
 
 const responsesDirCreated = new Set<string>();
 
@@ -151,10 +150,7 @@ const getTimelinePath = (_: unknown, responseId: string) => {
   return target;
 };
 
-const appendToTimeline = async (
-  _: unknown,
-  options: { timelinePath: string; data: string },
-) => {
+const appendToTimeline = async (_: unknown, options: { timelinePath: string; data: string }) => {
   const allowedResponsesDir = getResponsesDir();
   const resolvedPath = path.resolve(options.timelinePath);
   if (!resolvedPath.startsWith(path.resolve(allowedResponsesDir) + path.sep) || !resolvedPath.endsWith('.timeline')) {
@@ -171,7 +167,7 @@ const appendToTimeline = async (
 };
 
 export interface RendererToMainBridgeAPI {
-  loginStateChange: () => void;
+  loginStateChange: (isLoggedIn: boolean) => void;
   openInBrowser: (url: string) => void;
   restart: () => void;
   halfSecondAfterAppStart: () => void;
@@ -325,9 +321,11 @@ export function registerMainHandlers() {
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);
   });
-  ipcMainOn('loginStateChange', async () => {
+  ipcMainOn('loginStateChange', async (event, isLoggedIn: boolean) => {
     BrowserWindow.getAllWindows().forEach(w => {
-      w.webContents.send('loggedIn');
+      if (w.webContents !== event.sender) {
+        w.webContents.send('loggedIn', isLoggedIn);
+      }
     });
   });
   ipcMainHandle('backup', async () => {
