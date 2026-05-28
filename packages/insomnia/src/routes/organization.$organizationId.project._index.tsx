@@ -5,6 +5,7 @@ import { href, redirect, useParams } from 'react-router';
 
 import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import { DEFAULT_STORAGE_RULES } from '~/common/organization';
 import { getProjectsWithGitRepositories } from '~/common/project';
 import type { GitRepository, Project } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
@@ -14,7 +15,6 @@ import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { EmptyProjectNavigationSidebar } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
 export interface ProjectIndexLoaderData {

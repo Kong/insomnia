@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import { syncProjects } from '~/ui/organization-utils';
+import { syncProjects } from '~/common/organization';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.sync-projects';

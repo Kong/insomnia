@@ -1,5 +1,5 @@
+import { syncOrganizations } from '~/common/organization';
 import { services } from '~/insomnia-data';
-import { syncOrganizations } from '~/ui/organization-utils';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.sync';

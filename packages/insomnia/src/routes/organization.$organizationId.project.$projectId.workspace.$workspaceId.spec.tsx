@@ -26,6 +26,7 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
+import { DEFAULT_STORAGE_RULES } from '~/common/organization';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import {
@@ -53,7 +54,6 @@ import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
 

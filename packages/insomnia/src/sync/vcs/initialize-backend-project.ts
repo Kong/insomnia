@@ -1,7 +1,6 @@
-import type { BaseModel, Project, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import type { Project, Workspace } from '~/insomnia-data';
+import { services } from '~/insomnia-data';
 
-import { database } from '../../common/database';
 import type { Stage, StageEntry, Status, StatusCandidate } from '../types';
 
 export interface SyncVCSLike {
@@ -23,21 +22,7 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({
   // Create local project
   await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-  // Everything unstaged
-  const candidates = (await database.getWithDescendants(workspace)).filter(models.canSync).map(
-    (doc: BaseModel): StatusCandidate => ({
-      key: doc._id,
-      name: doc.name || '',
-      document: doc,
-    }),
-  );
-  const status = await vcs.status(candidates);
-
-  // Stage everything
-  await vcs.stage(Object.values(status.unstaged));
-
-  // Snapshot
-  await vcs.takeSnapshot('Initial Snapshot');
+  await services.workspace.commitAll({ workspace, vcs, message: 'Initial Snapshot' });
 
   // Mark for pushing to the active project
   await services.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: true });
@@ -46,7 +31,7 @@ export const initializeLocalBackendProjectAndMarkForSync = async ({
 export const pushSnapshotOnInitialize = async ({
   vcs,
   workspace,
-  project: { _id: projectId, remoteId: projectRemoteId, parentId },
+  project: { _id: projectId, remoteId: projectRemoteId, parentId: orgId },
 }: {
   vcs: SyncVCSLike;
   workspace: Workspace;
@@ -62,6 +47,6 @@ export const pushSnapshotOnInitialize = async ({
 
   if (projectIsForWorkspace && projectRemoteId && hasProject) {
     await services.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
-    await vcs.push({ teamId: parentId, teamProjectId: projectRemoteId });
+    await vcs.push({ teamId: orgId, teamProjectId: projectRemoteId });
   }
 };

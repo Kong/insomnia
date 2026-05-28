@@ -8,6 +8,7 @@ import * as reactUse from 'react-use';
 import { logout } from '~/account/session';
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import { DEFAULT_STORAGE_RULES } from '~/common/organization';
 import {
   checkAllProjectSyncStatus,
   getAllLocalFiles,
@@ -24,7 +25,6 @@ import uiEventBus, { TOGGLE_PROJECT_SIDEBAR } from '~/ui/event-bus';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';

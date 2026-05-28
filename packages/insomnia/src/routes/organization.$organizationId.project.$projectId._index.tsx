@@ -27,6 +27,7 @@ import {
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll } from '~/common/misc';
+import { DEFAULT_STORAGE_RULES } from '~/common/organization';
 import type { InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { GitRepository, Project, WorkspaceScope } from '~/insomnia-data';
@@ -56,7 +57,6 @@ import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 export interface ProjectLoaderData {
