@@ -21,7 +21,6 @@ import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizati
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
-import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
@@ -147,6 +146,7 @@ export const RequestActionsDropdown = ({
 
   const copyAsCurl = async () => {
     try {
+      const { exportHarRequest } = await import('../../../common/har');
       const har = await exportHarRequest(request._id, workspaceId);
       const { HTTPSnippet } = await import('httpsnippet');
       const snippet = new HTTPSnippet(har);
