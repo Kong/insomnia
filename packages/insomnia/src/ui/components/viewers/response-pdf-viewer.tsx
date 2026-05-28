@@ -1,9 +1,29 @@
+import { useEffect, useState } from 'react';
+
 interface Props {
   body: Buffer;
 }
 
-export const ResponsePDFViewer = (props: Props) => {
-  const url = `data:application/pdf;base64,${props.body.toString('base64')}`;
+export const ResponsePDFViewer = ({ body }: Props) => {
+  const [url, setUrl] = useState<string>('');
 
-  return <webview data-testid="ResponsePDFView" src={url} />;
+  useEffect(() => {
+    const blob = new Blob([body], { type: 'application/pdf' });
+    const objectUrl = URL.createObjectURL(blob);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [body]);
+
+  if (!url) {
+    return null;
+  }
+
+  return (
+    <iframe
+      data-testid="ResponsePDFView"
+      src={url}
+      title="PDF response preview"
+      style={{ width: '100%', height: '100%', border: 0, backgroundColor: '#fff' }}
+    />
+  );
 };

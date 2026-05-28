@@ -205,7 +205,7 @@ export interface RequestBodyParameter {
   value?: string;
   description?: string;
   disabled?: boolean;
-  multiline?: boolean;
+  multiline?: boolean | string;
   id?: string;
   fileName?: string;
   type?: string;

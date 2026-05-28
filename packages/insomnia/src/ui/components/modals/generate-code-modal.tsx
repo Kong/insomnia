@@ -3,7 +3,7 @@ import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from '
 import { Button } from 'react-aria-components';
 
 import type { Request } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { exportHarWithRequest } from '../../../common/har';
@@ -94,8 +94,8 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         setSnippet(cmd);
       }
 
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.generateCodeLanguageChanged,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.generateCodeLanguageChanged,
         properties: {
           language: target?.title,
         },

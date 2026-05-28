@@ -55,10 +55,15 @@ describe('generateId()', () => {
 
 describe('filterHeaders()', () => {
   it('handles bad headers', () => {
+    // @ts-expect-error
     expect(filterHeaders(null, null)).toEqual([]);
+    // @ts-expect-error
     expect(filterHeaders([], null)).toEqual([]);
+    // @ts-expect-error
     expect(filterHeaders(['bad'], null)).toEqual([]);
+    // @ts-expect-error
     expect(filterHeaders(['bad'], 'good')).toEqual([]);
+    // @ts-expect-error
     expect(filterHeaders(null, 'good')).toEqual([]);
     expect(
       filterHeaders(
@@ -75,7 +80,9 @@ describe('filterHeaders()', () => {
       filterHeaders(
         [
           {
+            // @ts-expect-error
             name: 123,
+            // @ts-expect-error
             value: 123,
           },
         ],
@@ -90,6 +97,7 @@ describe('filterHeaders()', () => {
             value: 'valid',
           },
         ],
+        // @ts-expect-error
         123,
       ),
     ).toEqual([]);
@@ -101,6 +109,7 @@ describe('filterHeaders()', () => {
             value: 'valid',
           },
         ],
+        // @ts-expect-error
         null,
       ),
     ).toEqual([]);
@@ -126,8 +135,8 @@ describe('filterHeaders()', () => {
 describe('debounce()', () => {
   it('debounces correctly', () => {
     vi.useFakeTimers();
-    const resultList = [];
-    const fn = debounce((...args) => {
+    const resultList: unknown[][] = [];
+    const fn = debounce((...args: unknown[]) => {
       resultList.push(args);
     }, 100);
     fn('foo');
@@ -156,6 +165,7 @@ describe('fuzzyMatch()', () => {
   });
 
   it('can get a negative fuzzy match on a single field', () => {
+    // @ts-expect-error
     expect(fuzzyMatch('foo')).toBeNull();
     expect(fuzzyMatch('foo', 'bar')).toBeNull();
   });
@@ -163,6 +173,7 @@ describe('fuzzyMatch()', () => {
 
 describe('fuzzyMatchAll()', () => {
   it('can get a positive fuzzy match on multiple fields', () => {
+    // @ts-expect-error
     expect(fuzzyMatchAll('', [undefined])).toEqual(null);
     expect(fuzzyMatchAll('', ['testing'])).toEqual(null);
     expect(fuzzyMatchAll('   ', ['testing'])).toEqual(null);
@@ -198,6 +209,7 @@ describe('fuzzyMatchAll()', () => {
   });
 
   it('can get a negative fuzzy match on multiple fields', () => {
+    // @ts-expect-error
     expect(fuzzyMatchAll('foo', [undefined])).toEqual(null);
     expect(fuzzyMatchAll('foo', ['bar'])).toEqual(null);
     expect(fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
@@ -210,6 +222,7 @@ describe('isNotNullOrUndefined', () => {
     expect(isNotNullOrUndefined('')).toBe(true);
     expect(isNotNullOrUndefined(false)).toBe(true);
     expect(isNotNullOrUndefined(null)).toBe(false);
+    // @ts-expect-error
     expect(isNotNullOrUndefined()).toBe(false);
   });
 });

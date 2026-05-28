@@ -243,7 +243,7 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
   const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
   if (typeof vaultEnvironmentData === 'object') {
     if (shouldDecrypt) {
-      const { vaultKey, vaultSalt } = await services.userSession.getOrCreate();
+      const { vaultKey, vaultSalt } = await services.userSession.get();
       const isVaultEnabled = !!vaultSalt;
       if (isVaultEnabled && vaultKey) {
         const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;

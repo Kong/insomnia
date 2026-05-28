@@ -15,6 +15,7 @@ import * as mcpResponseService from './mcp-response';
 import * as mockRouteService from './mock-route';
 import * as mockServerService from './mock-server';
 import * as oAuth2TokenService from './o-auth-2-token';
+import * as organizationService from './organization';
 import * as pluginDataService from './plugin-data';
 import * as projectService from './project';
 import * as protoDirectoryService from './proto-directory';
@@ -59,6 +60,7 @@ export const servicesNodeImpl = {
   mcpRequest: mcpRequestService,
   mcpResponse: mcpResponseService,
   oAuth2Token: oAuth2TokenService,
+  organization: organizationService,
   pluginData: pluginDataService,
   protoDirectory: protoDirectoryService,
   protoFile: protoFileService,

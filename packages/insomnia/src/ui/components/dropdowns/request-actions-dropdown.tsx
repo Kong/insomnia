@@ -4,30 +4,26 @@ import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, P
 import { useParams } from 'react-router';
 
 import type {
-  Environment,
   GrpcRequest,
+  Project,
   Request,
   RequestGroup,
   SocketIORequest,
   WebSocketRequest,
+  Workspace,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
-import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { RequestAction } from '../../../plugins';
-import { getRequestActions } from '../../../plugins';
-import * as pluginApp from '../../../plugins/context/app';
-import * as pluginData from '../../../plugins/context/data';
-import * as pluginNetwork from '../../../plugins/context/network';
-import * as pluginStore from '../../../plugins/context/store';
+import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
@@ -41,43 +37,45 @@ import { RequestSettingsModal } from '../modals/request-settings-modal';
 const { isRequest } = models.request;
 
 interface Props {
-  activeEnvironment: Environment;
   isPinned: boolean;
   request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
+  activeProject: Project;
+  activeWorkspace: Workspace;
   requestGroup?: RequestGroup;
   isOpen: boolean;
-  triggerRef: React.RefObject<HTMLDivElement>;
+  triggerRef?: React.RefObject<HTMLDivElement>;
   onOpenChange: (isOpen: boolean) => void;
   onRename: () => void;
 }
 
 export const RequestActionsDropdown = ({
-  activeEnvironment,
   isPinned,
   request,
   isOpen,
+  activeProject,
+  activeWorkspace,
   triggerRef,
   onOpenChange,
   onRename,
 }: Props) => {
+  const workspaceId = activeWorkspace._id;
+  const projectId = activeProject._id;
   const { settings } = useRootLoaderData()!;
-  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
-  const patchRequestMeta = useRequestMetaPatcher();
+  const patchRequestMeta = useRequestMetaPatcher(workspaceId);
   const { hotKeyRegistry } = settings;
-  const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
+  const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
-  const { organizationId, projectId, workspaceId } = useParams() as {
+
+  const { organizationId } = useParams() as {
     organizationId: string;
-    projectId: string;
-    workspaceId: string;
   };
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const tabNavigate = useTabNavigate();
 
   const openInNewTab = async () => {
-    window.main.trackSegmentEvent({ event: SegmentEvent.requestOpenInNewTabClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestOpenInNewTabClicked });
     tabNavigate(
       {
         organization: organizationId,
@@ -93,7 +91,7 @@ export const RequestActionsDropdown = ({
   };
 
   const onOpen = useCallback(async () => {
-    const actionPlugins = await getRequestActions();
+    const actionPlugins = await plugins.getRequestActions();
     setActionPlugins(actionPlugins);
   }, []);
 
@@ -101,7 +99,7 @@ export const RequestActionsDropdown = ({
     if (!request) {
       return;
     }
-    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuDuplicateClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuDuplicateClicked });
 
     showModal(PromptModal, {
       title: 'Duplicate Request',
@@ -120,16 +118,14 @@ export const RequestActionsDropdown = ({
     });
   };
 
-  const handlePluginClick = async ({ plugin, action }: RequestAction) => {
+  const handlePluginClick = async ({ pluginName, label }: SerializableActionMeta) => {
     try {
-      const context = {
-        ...pluginApp.init(),
-        ...pluginData.init(activeProject._id),
-        ...pluginStore.init(plugin),
-        ...pluginNetwork.init(),
-      };
-      await action(context, {
-        request,
+      await plugins.executeAction({
+        type: 'request',
+        pluginName,
+        label,
+        projectId: activeProject._id,
+        domainData: { request },
       });
     } catch (error) {
       showError({
@@ -141,8 +137,8 @@ export const RequestActionsDropdown = ({
 
   const generateCode = () => {
     if (isRequest(request)) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.generateCodeClicked,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.generateCodeClicked,
       });
 
       showModal(GenerateCodeModal, { request });
@@ -151,7 +147,7 @@ export const RequestActionsDropdown = ({
 
   const copyAsCurl = async () => {
     try {
-      const har = await exportHarRequest(request._id, activeEnvironment._id);
+      const har = await exportHarRequest(request._id, workspaceId);
       const { HTTPSnippet } = await import('httpsnippet');
       const snippet = new HTTPSnippet(har);
       const cmd = snippet.convert('shell', 'curl');
@@ -160,8 +156,8 @@ export const RequestActionsDropdown = ({
         window.clipboard.writeText(cmd);
       }
 
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.copyAsCurl,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.copyAsCurl,
       });
     } catch (err) {
       showModal(AlertModal, {
@@ -172,7 +168,7 @@ export const RequestActionsDropdown = ({
   };
 
   const togglePin = () => {
-    window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuPinClicked });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuPinClicked });
     patchRequestMeta(request._id, { pinned: !isPinned });
   };
 
@@ -279,7 +275,7 @@ export const RequestActionsDropdown = ({
           id: 'Rename',
           name: 'Rename',
           action: () => {
-            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuRenameClicked });
+            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuRenameClicked });
             onRename();
           },
           icon: 'edit',
@@ -297,7 +293,7 @@ export const RequestActionsDropdown = ({
           icon: 'gear',
           hint: hotKeyRegistry.request_showSettings,
           action: () => {
-            window.main.trackSegmentEvent({ event: SegmentEvent.requestListMenuSettingsClicked });
+            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuSettingsClicked });
             setIsSettingsModalOpen(true);
           },
         },
@@ -332,16 +328,11 @@ export const RequestActionsDropdown = ({
         <Button
           data-testid={`Dropdown-${toKebabCase(request.name)}`}
           aria-label="Request Actions"
-          className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-hover:flex group-focus:flex hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          className="aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
         >
-          <Icon icon="caret-down" />
+          <Icon icon="ellipsis" />
         </Button>
-        <Popover
-          className="flex min-w-max flex-col overflow-y-hidden"
-          triggerRef={triggerRef}
-          placement="bottom end"
-          offset={5}
-        >
+        <Popover className="flex min-w-max flex-col overflow-y-hidden" triggerRef={triggerRef}>
           <Menu
             aria-label="Request Actions Menu"
             selectionMode="single"

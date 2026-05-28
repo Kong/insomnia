@@ -30,7 +30,6 @@ import { services } from '~/insomnia-data';
 // @vitest-environment jsdom
 describe('Request Model - Comprehensive Tests', () => {
   beforeEach(async () => {
-    await services.project.all();
     await services.settings.getOrCreate();
 
     // Create test project for all tests

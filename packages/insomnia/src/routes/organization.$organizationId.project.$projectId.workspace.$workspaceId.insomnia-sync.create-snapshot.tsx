@@ -22,7 +22,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   try {
     await window.main.sync.takeSnapshot(data.message);
     if (data.push) {
-      const project = await services.project.getById(projectId);
+      const project = await services.project.get(projectId);
       invariant(project, 'Project not found');
       invariant(project.remoteId, 'Project is not remote');
 

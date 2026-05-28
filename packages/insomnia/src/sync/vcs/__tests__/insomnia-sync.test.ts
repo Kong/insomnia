@@ -26,7 +26,7 @@ describe('insomnia-sync', () => {
           cancelConflict: vi.fn(),
         },
       },
-    } as Window & typeof globalThis;
+    } as unknown as Window & typeof globalThis;
 
     const { registerSyncMergeConflictListener } = await import('../insomnia-sync');
 
@@ -57,7 +57,7 @@ describe('insomnia-sync', () => {
           cancelConflict,
         },
       },
-    } as Window & typeof globalThis;
+    } as unknown as Window & typeof globalThis;
 
     const { showModal } = await import('../../../ui/components/modals');
     const { registerSyncMergeConflictListener } = await import('../insomnia-sync');

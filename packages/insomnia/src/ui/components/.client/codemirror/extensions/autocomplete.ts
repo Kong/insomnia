@@ -529,7 +529,9 @@ function escapeHTML(unsafeText: string) {
 function renderHintMatch(li: HTMLElement, _allHints: CodeMirror.Hints, hint: Hint) {
   // Bold the matched text
   const { displayText, segment, type, displayValue } = hint;
-  const markedName = replaceWithSurround(displayText || '', segment, '<strong>', '</strong>');
+  const escapedDisplayText = escapeHTML(displayText || '');
+  const escapedSegment = escapeHTML(segment);
+  const markedName = replaceWithSurround(escapedDisplayText, escapedSegment, '<strong>', '</strong>');
   const { char, title } = ICONS[type];
   let safeValue = '';
 

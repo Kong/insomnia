@@ -9,7 +9,7 @@ import { invariant } from '~/utils/invariant';
 import type { Route } from './+types/organization._index';
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id: sessionId, accountId } = await services.userSession.getOrCreate();
+  const { id: sessionId, accountId } = await services.userSession.get();
   if (sessionId) {
     await syncOrganizations(sessionId, accountId);
 

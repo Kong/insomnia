@@ -11,11 +11,7 @@ import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'ele
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 
 import { fnOrString } from '../../common/misc';
-import {
-  type NunjucksParsedTagArg,
-  type NunjucksTagContextMenuAction,
-  type PluginTemplateTag,
-} from '../../templating/types';
+import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
 
@@ -30,6 +26,7 @@ export type HandleChannels =
   | 'curl.event.findMany'
   | 'curl.open'
   | 'curl.readyState'
+  | 'createPlugin'
   | 'curlRequest'
   | 'database.caCertificate.create'
   | 'services.invoke'
@@ -120,6 +117,25 @@ export type HandleChannels =
   | 'multipartBufferToArray'
   | 'onDefaultBrowserOAuthRedirect'
   | 'open-channel-to-hidden-browser-window'
+  | 'plugins.applyRequestHooks'
+  | 'plugins.applyResponseHooks'
+  | 'plugins.executeAction'
+  | 'plugins.executePluginMainAction'
+  | 'plugins.getActivePlugins'
+  | 'plugins.getBridgeMetrics'
+  | 'plugins.getBundlePlugins'
+  | 'plugins.getDocumentActions'
+  | 'plugins.getPlugins'
+  | 'plugins.getRequestActions'
+  | 'plugins.getRequestGroupActions'
+  | 'plugins.getTemplateTags'
+  | 'plugins.getThemes'
+  | 'plugins.getWorkspaceActions'
+  | 'plugins.hasRequestHooks'
+  | 'plugins.hasResponseHooks'
+  | 'plugins.reloadPlugins'
+  | 'plugins.runTemplateTagAction'
+  | 'plugins.uiPrompt'
   | 'openPath'
   | 'parseImport'
   | 'readCurlResponse'
@@ -147,6 +163,8 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
+  | 'timeline.appendToFile'
+  | 'timeline.getPath'
   | 'writeFile'
   | 'writeResponseBodyToFile';
 
@@ -179,6 +197,8 @@ export type MainOnChannels =
   | 'path.resolve'
   | 'readText'
   | 'restart'
+  | 'plugins.invokeResult'
+  | 'plugins.windowReady'
   | 'set-hidden-window-busy-status'
   | 'setMenuBarVisibility'
   | 'show-nunjucks-context-menu'
@@ -192,7 +212,7 @@ export type MainOnChannels =
   | 'socketIO.event.on'
   | 'startExecution'
   | 'trackPageView'
-  | 'trackSegmentEvent'
+  | 'trackAnalyticsEvent'
   | 'updateLatestStepName'
   | 'webSocket.close'
   | 'webSocket.closeAll'
@@ -202,11 +222,15 @@ export type MainOnChannels =
   | 'sync.cancelConflict'
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
+  | 'plugins.uiPromptResult'
   | 'writeText';
 
 export type RendererOnChannels =
   | 'contextMenuCommand'
   | 'db.changes'
+  | 'plugins.uiAlert'
+  | 'plugins.uiDialog'
+  | 'plugins.uiPrompt'
   | 'grpc.data'
   | 'grpc.end'
   | 'grpc.error'
@@ -240,6 +264,15 @@ export const ipcMainOnce = (
   listener: (event: IpcMainEvent, ...args: any[]) => Promise<void> | any,
 ) => ipcMain.once(channel, listener);
 
+interface ContextMenuTag {
+  templateTag: {
+    name: string;
+    displayName: string | (() => string);
+    args?: NunjucksParsedTagArg[];
+    needsEnterprisePlan?: boolean;
+  };
+}
+
 const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   if (arg.defaultValue === undefined) {
     return "''";
@@ -258,7 +291,7 @@ export function registerElectronHandlers() {
       options: {
         key: string;
         nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords>;
-        pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+        pluginTemplateTags?: { templateTag: Record<string, unknown> }[];
       },
     ) => {
       const { key, nunjucksTag, pluginTemplateTags = [] } = options;
@@ -303,7 +336,9 @@ export function registerElectronHandlers() {
               },
               { type: 'separator' },
             ];
-        const localTemplate: MenuItemConstructorOptions[] = [...localTemplateTags, ...pluginTemplateTags]
+        const localTemplate: MenuItemConstructorOptions[] = (
+          [...localTemplateTags, ...pluginTemplateTags] as ContextMenuTag[]
+        )
           // sort alphabetically
           .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
           .map(l => {
@@ -330,7 +365,7 @@ export function registerElectronHandlers() {
                     submenu: actions?.options?.map(action => ({
                       label: fnOrString(action.displayName),
                       click: () => {
-                        const additionalTagFields = additionalArgs.length
+                        const additionalTagFields = additionalArgs?.length
                           ? ', ' + additionalArgs.map(getTemplateValue).join(', ')
                           : '';
                         const displayName = action.displayName;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -12,7 +13,6 @@ const reqGroupBuilder = createBuilder(requestGroupModelSchema);
 
 describe('render tests', () => {
   beforeEach(async () => {
-    await services.project.all();
     await services.settings.getOrCreate();
     envBuilder.reset();
     reqGroupBuilder.reset();

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

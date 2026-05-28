@@ -6,12 +6,13 @@ import * as reactUse from 'react-use';
 import { CDN_INVALIDATION_TTL } from '~/common/constants';
 import { useRootLoaderData } from '~/root';
 import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
-import { useProjectIndexLoaderData } from '~/routes/organization.$organizationId.project.$projectId._index';
+import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
 import { useStorageRulesActionFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
 import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
+import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
 
 const InsomniaEventStreamContext = createContext<{
@@ -91,7 +92,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   };
 
   const { userSession } = useRootLoaderData()!;
-  const projectData = useProjectIndexLoaderData();
+  const projectData = useProjectLoaderData();
   const workspaceData = useWorkspaceLoaderData();
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
@@ -152,6 +153,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               | BranchDeletedEvent
               | FileChangedEvent
               | VaultKeyChangeEvent;
+            if (event.type === 'FileChanged' || event.type === 'FileDeleted') {
+              // Emit unsynced workspace file change when file changed or deleted event received, so that the workspace list can be updated if needed
+              uiEventBus.emit(CLOUD_SYNC_FILE_CHANGE);
+            }
             if (event.type === 'PresentUserLeave') {
               setPresence(prev =>
                 prev.filter(p => {

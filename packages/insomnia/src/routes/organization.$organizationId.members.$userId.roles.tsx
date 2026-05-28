@@ -16,7 +16,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(typeof roleId === 'string', 'Role ID is required');
 
   try {
-    const user = await services.userSession.getOrCreate();
+    const user = await services.userSession.get();
     const sessionId = user.id;
     const response = await updateUserRoles({
       organizationId,

@@ -12,7 +12,7 @@ export interface UntrackedProjectsLoaderData {
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { accountId } = await services.userSession.getOrCreate();
+  const { accountId } = await services.userSession.get();
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
   const listOfOrganizationIds = [...organizations.map(o => o.id), models.organization.SCRATCHPAD_ORGANIZATION_ID];
 

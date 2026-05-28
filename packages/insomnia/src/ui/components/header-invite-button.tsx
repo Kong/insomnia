@@ -5,7 +5,7 @@ import { Button, Heading, Link, Radio, RadioGroup } from 'react-aria-components'
 import { getCurrentSessionId } from '~/account/session';
 import { Modal } from '~/basic-components/modal';
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { Tooltip } from '~/ui/components/tooltip';
 
 import { Icon } from './icon';
@@ -109,8 +109,8 @@ const MissingSomeoneModal = ({ isOpen, onClose }: any) => {
   const [reason, setReason] = useState<string | null>(null);
   const handleClose = () => {
     if (reason) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.inviteNotPermitted,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.inviteNotPermitted,
         properties: {
           collaboration_type: reason,
         },
@@ -119,7 +119,7 @@ const MissingSomeoneModal = ({ isOpen, onClose }: any) => {
     onClose?.();
   };
   return (
-    <Modal title="Missing someone?" isOpen={isOpen} onClose={handleClose} isDismissable>
+    <Modal title="Missing someone?" isOpen={isOpen} onClose={handleClose} isDismissable centered>
       <p className="mt-8">
         You're on a paid plan, so please contact your company's Insomnia admins to get anyone added to this account.
       </p>

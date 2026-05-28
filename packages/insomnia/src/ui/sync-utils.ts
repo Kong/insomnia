@@ -37,7 +37,7 @@ type VCSAction =
   | 'setup'
   | 'clone';
 
-export function vcsSegmentEventProperties(type: 'remote', action: VCSAction, error?: string) {
+export function vcsEventProperties(type: 'remote', action: VCSAction, error?: string) {
   return { type, action, error };
 }
 

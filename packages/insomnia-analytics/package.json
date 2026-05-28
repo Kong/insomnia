@@ -1,0 +1,36 @@
+{
+  "private": true,
+  "name": "insomnia-analytics",
+  "license": "Apache-2.0",
+  "version": "12.5.1-alpha.0",
+  "author": "Kong <office@konghq.com>",
+  "description": "Shared analytics client for the Insomnia desktop app and CLI",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-analytics"
+  },
+  "bugs": {
+    "url": "https://github.com/kong/insomnia/issues"
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./events": {
+      "import": "./src/events.ts",
+      "types": "./src/events.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts --cache",
+    "type-check": "tsc --noEmit --project tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@segment/analytics-node": "2.2.1"
+  }
+}

@@ -1,12 +1,11 @@
 import { expect } from '@playwright/test';
 
-import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('Dashboard', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
-  test('Can create, rename and delete new project, collection and document', async ({ page }) => {
-    await page.getByLabel('All Files (0)').click();
+
+  test('Can create, rename and delete new project, collection and document', async ({ page, insomnia }) => {
     await expect.soft(page.locator('.app')).not.toContainText('Git Sync');
     await expect.soft(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -19,14 +18,10 @@ test.describe('Dashboard', () => {
     await expect.soft(page.locator('.app')).toContainText('Welcome to your project!');
     await expect.soft(page.locator('.app')).toContainText('Start fresh or bring in existing work');
 
-    // Rename Project
-    await page.getByRole('row', { name: 'My Project' }).first().focus();
-    await page
-      .getByRole('row', { name: 'My Project' })
-      .first()
-      .getByRole('button', { name: 'Project Actions' })
-      .click();
-    await page.getByRole('menuitemradio', { name: 'Settings' }).click();
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      projectName: 'My Project',
+      actionName: 'Settings',
+    });
     await page.getByPlaceholder('My Project').click();
     await page.getByPlaceholder('My Project').fill('My Project123');
     await page.getByRole('button', { name: 'Update' }).click();
@@ -39,24 +34,19 @@ test.describe('Dashboard', () => {
     await expect.soft(page.locator('.app')).toContainText('My Project123');
 
     // Delete project
-    await page.getByRole('row', { name: 'My Project' }).first().focus();
-    await page
-      .getByRole('row', { name: 'My Project' })
-      .first()
-      .getByRole('button', { name: 'Project Actions' })
-      .click();
-    await page.getByRole('menuitemradio', { name: 'Delete' }).click();
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      projectName: 'My Project123',
+      actionName: 'Delete',
+    });
     await page.getByRole('button', { name: 'Delete' }).click();
 
     // After deleting project, return to default Insomnia Dashboard
     await expect.soft(page.locator('.app')).toContainText('Personal Workspace');
     await expect.soft(page.locator('.app')).not.toContainText('My Project123');
     await expect.soft(page.locator('.app')).toContainText('Create document');
-    await page.getByLabel('All Files (0)').click();
     await expect.soft(page.locator('.app')).not.toContainText('Setup Git Sync');
 
     // Documents
-    await page.getByLabel('All Files (0)').click();
     await expect.soft(page.locator('.app')).not.toContainText('Git Sync');
     await expect.soft(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -64,7 +54,7 @@ test.describe('Dashboard', () => {
     await page.getByRole('button', { name: 'Create document', exact: true }).click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
 
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     // Rename document
     await page.getByLabel('Files').getByLabel('My Design Document').getByRole('button').click();
@@ -79,7 +69,7 @@ test.describe('Dashboard', () => {
     await page.locator('input[name="name"]').fill('test123-duplicate');
     await page.click('[role="dialog"] button:has-text("Duplicate")');
 
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     // Collections
 
@@ -87,7 +77,7 @@ test.describe('Dashboard', () => {
     await page.getByLabel('Create in project').click();
     await page.getByText('Request collection').click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     // Rename collection
     await page.click('text=CollectionMy Collectionjust now >> button');
@@ -102,7 +92,7 @@ test.describe('Dashboard', () => {
     await page.locator('input[name="name"]').fill('collection123-duplicate');
     await page.click('[role="dialog"] button:has-text("Duplicate")');
 
-    await page.getByTestId('project').click();
+    await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     // Delete collection
     await page.getByLabel('Files').getByLabel('collection123-duplicate').getByRole('button').click();

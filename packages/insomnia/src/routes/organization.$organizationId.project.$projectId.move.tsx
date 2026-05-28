@@ -14,7 +14,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   invariant(typeof organizationId === 'string', 'Organization ID is required');
 
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
   await services.project.update(project, {

@@ -11,7 +11,7 @@ export const initializeWorkspaceBackendProject = async ({ workspaceId }: { works
   const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  const { id } = await services.userSession.getOrCreate();
+  const { id } = await services.userSession.get();
   if (!id) {
     return;
   }
@@ -32,10 +32,10 @@ export const syncNewWorkspaceIfNeeded = async ({ workspaceId }: { workspaceId: s
   const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  const project = await services.project.getById(workspace.parentId);
+  const project = await services.project.get(workspace.parentId);
   invariant(project, 'Project not found');
 
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   if (!userSession.id || !models.project.isRemoteProject(project)) {
     return;
   }

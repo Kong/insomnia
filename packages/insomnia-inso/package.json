@@ -51,7 +51,6 @@
     "shellwords": "^1.0.1"
   },
   "dependencies": {
-    "@segment/analytics-node": "^2.2.1",
     "@seald-io/nedb": "^4.1.1",
     "@stoplight/spectral-core": "^1.22.0",
     "@stoplight/spectral-formats": "^1.8.2",
@@ -59,7 +58,7 @@
     "@stoplight/spectral-rulesets": "^1.22.1",
     "@stoplight/types": "^14.1.1",
     "commander": "^12.1.0",
-    "consola": "^2.15.3",
+    "consola": "^3.4.2",
     "cosmiconfig": "^9.0.0",
     "enquirer": "^2.4.1",
     "picocolors": "^1.1.1",

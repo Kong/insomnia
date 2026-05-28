@@ -24,9 +24,9 @@ import { useLatest } from 'react-use';
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import type { Settings, UserSession } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { executePluginMainAction, reloadPlugins } from '~/plugins';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
+import { plugins } from '~/plugins/renderer-bridge';
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
@@ -35,7 +35,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
-import { PENDING_IMPORT_ATTRIBUTION_KEY, SegmentEvent, trackImportEvent } from '~/ui/analytics';
+import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link } from '~/ui/components/base/link';
@@ -161,7 +161,7 @@ export const useRootLoaderData = () => {
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
   const workspaceCount = await services.workspace.count();
-  const userSession = await services.userSession.getOrCreate();
+  const userSession = await services.userSession.get();
   const cloudCredentials = await services.cloudCredential.all();
 
   return {
@@ -200,6 +200,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       img-src
             blob:
             data:
+            *
+            insomnia://*
+      ;
+      frame-src
+            blob:
             *
             insomnia://*
       ;
@@ -381,15 +386,14 @@ const Root = () => {
             JSON.stringify({ importSource, importSourceUrl }),
           );
         }
-
-        const userSession = await services.userSession.getOrCreate();
+        const userSession = await services.userSession.get();
         if (!userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
           window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
-          trackImportEvent(SegmentEvent.importLoginRequired);
+          trackImportEvent(AnalyticsEvent.importLoginRequired);
           return navigate(href('/auth/login'));
         }
-        trackImportEvent(SegmentEvent.importStarted, { source: 'import-url' });
+        trackImportEvent(AnalyticsEvent.importStarted, { source: 'import-url' });
 
         if (params.uri) {
           return setImportObject({
@@ -477,7 +481,7 @@ const Root = () => {
               await services.settings.update(settings, {
                 theme: parsedTheme.name,
               });
-              await reloadPlugins();
+              await plugins.reloadPlugins();
               await setTheme(parsedTheme.name);
               showModal(SettingsModal, { tab: 'themes' });
             }
@@ -511,7 +515,7 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://app/open/organization') {
         // if user is logged out, navigate to authorize instead
         // gracefully handle open org in app from browser
-        const userSession = await services.userSession.getOrCreate();
+        const userSession = await services.userSession.get();
         if (!userSession.id || userSession.id === '') {
           const url = new URL(getLoginUrl());
           window.main.openInBrowser(url.toString());
@@ -538,11 +542,11 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
-          const authResult = await executePluginMainAction({
+          const authResult = await plugins.executePluginMainAction({
             pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
             actionName: 'exchangeCode',
             params: { provider: 'azure', code },
-          });
+          }) as any;
           const { success, result, error } = authResult;
           if (success) {
             const { account, uniqueId } = result!;
@@ -635,7 +639,7 @@ const Root = () => {
     if (pendingDeepLink && organizationId && organizationId !== models.organization.SCRATCHPAD_ORGANIZATION_ID) {
       window.sessionStorage.removeItem('pendingDeepLinkAfterAuthorize');
       window.sessionStorage.setItem('suppressWelcomeModals', 'true');
-      trackImportEvent(SegmentEvent.importResumedAfterLogin);
+      trackImportEvent(AnalyticsEvent.importResumedAfterLogin);
       window.main.openDeepLink(pendingDeepLink);
     }
   }, [organizationId]);

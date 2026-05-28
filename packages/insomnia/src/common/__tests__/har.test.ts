@@ -12,7 +12,7 @@ import { getRenderedRequestAndContext } from '../render';
 describe('export', () => {
   beforeEach(async () => {
     await db.init({ inMemoryOnly: true }, true);
-    await services.project.all();
+    await services.project.list();
     await services.settings.getOrCreate();
   });
 
@@ -308,6 +308,7 @@ describe('export', () => {
   describe('exportHarResponse()', () => {
     it('exports a default har response for an empty response', async () => {
       const notFoundResponse = null;
+      // @ts-expect-error -- testing null response handling
       const harResponse = await exportHarResponse(notFoundResponse);
       expect(harResponse).toMatchObject({
         status: 0,

@@ -5,7 +5,7 @@ import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har'
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
 import { strings } from 'insomnia/src/common/strings';
-import { SegmentEvent } from 'insomnia/src/ui/analytics';
+import { AnalyticsEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
 import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
@@ -212,7 +212,7 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
           }
         }
-        window.main.trackSegmentEvent({ event: SegmentEvent.exportCompleted });
+        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.exportCompleted });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -240,8 +240,8 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: false,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.dataExport,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.dataExport,
       properties: { type: 'yaml', scope: 'mock-server' },
     });
   } catch (err) {
@@ -282,8 +282,8 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: shouldExportPrivateEnvironments,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.dataExport,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.dataExport,
       properties: { type: 'yaml', scope: 'environment' },
     });
   } catch (err) {
@@ -350,7 +350,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           }
         }
         await writeExportedFileToFileSystem(fileName, stringifiedExport);
-        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
+        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -378,8 +378,8 @@ export const exportMcpClientToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: false,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.dataExport,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.dataExport,
       properties: { type: 'yaml', scope: 'mcp' },
     });
   } catch (err) {
@@ -733,8 +733,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
             title: 'Export Complete',
             message: 'All your data have been successfully exported',
           });
-          window.main.trackSegmentEvent({
-            event: SegmentEvent.exportAllCollections,
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.exportAllCollections,
           });
         }}
         aria-label="Export all data"
@@ -802,8 +802,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   title: 'Export Complete',
                   message: 'All your data have been successfully exported',
                 });
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.exportAllCollections,
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.exportAllCollections,
                 });
               }}
               aria-label="Export all data"

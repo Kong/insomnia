@@ -29,7 +29,7 @@ import { Badge } from '~/ui/components/base/badge';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
-import { SegmentEvent } from '../../analytics';
+import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
@@ -142,8 +142,8 @@ export const NewWorkspaceModal = ({
 
   useEffect(() => {
     if (isOpen && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.mockCreateModalOpened,
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.mockCreateModalOpened,
       });
     }
   }, [isOpen, scope]);
