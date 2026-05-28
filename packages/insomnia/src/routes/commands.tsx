@@ -38,7 +38,7 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
     );
   };
 
-  const { accountId } = await services.userSession.getOrCreate();
+  const { accountId } = await services.userSession.get();
 
   const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 

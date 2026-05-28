@@ -6,7 +6,6 @@ import { database as db, services } from '~/insomnia-data';
 // @vitest-environment jsdom
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
-    await services.project.all();
     await services.settings.getOrCreate();
   });
 

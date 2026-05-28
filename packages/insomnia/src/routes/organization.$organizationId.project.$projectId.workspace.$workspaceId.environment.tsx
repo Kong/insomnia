@@ -1,8 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Breadcrumb,
-  Breadcrumbs,
   Button,
   DropIndicator,
   GridList,
@@ -18,19 +16,19 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
 import { EnvironmentKvPairDataType, EnvironmentType, models, services } from '~/insomnia-data';
-import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  useWorkspaceLoaderData,
+  WORKSPACE_CONTENT_WRAPPER,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
 import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
-import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
-import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
 import {
   EnvironmentEditor,
@@ -44,7 +42,7 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
-import { INSOMNIA_TAB_HEIGHT } from '~/ui/constant';
+import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
 import { getDataFromKVPair } from '~/utils/environment-utils';
@@ -298,300 +296,288 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   });
 
   return (
-    <PanelGroup
-      ref={sidebarPanelRef}
-      autoSaveId="insomnia-sidebar"
-      id="wrapper"
-      className="new-sidebar h-full w-full text-(--color-font)"
-      direction="horizontal"
-    >
-      <Panel
-        id="sidebar"
-        className="sidebar theme--sidebar flex flex-col justify-between divide-y divide-solid divide-(--hl-md) overflow-hidden"
-        maxSize={40}
-        minSize={10}
-        collapsible
+    <div className="flex h-full flex-col">
+      <OrganizationTabList />
+      <WorkspacePaneHeader hasSettings={false} />
+      <PanelGroup
+        ref={sidebarPanelRef}
+        autoSaveId="insomnia-sidebar"
+        id={WORKSPACE_CONTENT_WRAPPER}
+        className="new-sidebar w-full flex-1 text-(--color-font)"
+        direction="horizontal"
       >
-        <div className="flex flex-col items-start">
-          <Breadcrumbs
-            className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-(--padding-sm) font-bold`}
-          >
-            <Breadcrumb className="flex h-full items-center gap-2 text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-              <NavLink
-                data-testid="project"
-                className="flex aspect-square h-7 shrink-0 items-center justify-center gap-2 rounded-xs px-1 py-1 text-sm text-(--color-font) ring-1 ring-transparent outline-hidden transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-focused:outline-hidden"
-                to={`/organization/${organizationId}/project/${activeProject._id}`}
-              >
-                <Icon className="text-xs" icon="chevron-left" />
-              </NavLink>
-              <span aria-hidden role="separator" className="h-4 text-(--hl-lg) outline-1 outline-solid" />
-            </Breadcrumb>
-            <Breadcrumb className="flex h-full items-center gap-2 truncate text-(--color-font) outline-hidden select-none data-focused:outline-hidden">
-              <WorkspaceDropdown />
-            </Breadcrumb>
-          </Breadcrumbs>
-        </div>
-        <GridList
-          aria-label="Environments"
-          items={[baseEnvironment, ...subEnvironments]}
-          className="w-full flex-1 shrink-0 overflow-y-auto py-(--padding-xs) data-empty:py-0"
-          disallowEmptySelection
-          selectionMode="single"
-          selectionBehavior="replace"
-          selectedKeys={[selectedEnvironmentId]}
-          dragAndDropHooks={environmentsDragAndDrop.dragAndDropHooks}
-          onSelectionChange={keys => {
-            if (keys !== 'all') {
-              const [environmentId] = keys.values();
-              setSelectedEnvironmentId(environmentId.toString());
-            }
-          }}
+        <Panel
+          id="sidebar"
+          className="sidebar theme--sidebar flex flex-col justify-between divide-y divide-solid divide-(--hl-md) overflow-hidden"
+          maxSize={40}
+          minSize={10}
+          collapsible
         >
-          {item => {
-            return (
-              <GridListItem
-                key={item._id}
-                id={item._id}
-                textValue={item.name}
-                className="group outline-hidden select-none"
-              >
-                <div
-                  className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden pr-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)`}
+          <GridList
+            aria-label="Environments"
+            items={[baseEnvironment, ...subEnvironments]}
+            className="w-full flex-1 shrink-0 overflow-y-auto py-(--padding-xs) data-empty:py-0"
+            disallowEmptySelection
+            selectionMode="single"
+            selectionBehavior="replace"
+            selectedKeys={[selectedEnvironmentId]}
+            dragAndDropHooks={environmentsDragAndDrop.dragAndDropHooks}
+            onSelectionChange={keys => {
+              if (keys !== 'all') {
+                const [environmentId] = keys.values();
+                setSelectedEnvironmentId(environmentId.toString());
+              }
+            }}
+          >
+            {item => {
+              return (
+                <GridListItem
+                  key={item._id}
+                  id={item._id}
+                  textValue={item.name}
+                  className="group outline-hidden select-none"
                 >
-                  <span className="absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
-                  <Icon
-                    icon={
-                      item.isPrivate
-                        ? 'lock'
-                        : isUsingGitSync
-                          ? ['fab', 'git-alt']
-                          : isUsingInsomniaCloudSync
-                            ? 'globe-americas'
-                            : 'file-arrow-down'
-                    }
-                    className="w-5"
-                    style={{
-                      color: item.color || undefined,
-                    }}
-                  />
-                  <EditableInput
-                    value={item.name}
-                    name="name"
-                    ariaLabel="Environment name"
-                    className="flex-1 px-1 hover:bg-transparent!"
-                    onSubmit={name => {
-                      name &&
-                        updateEnvironmentFetcher.submit({
-                          organizationId,
-                          projectId,
-                          workspaceId,
-                          patch: {
-                            name,
-                          },
-                          environmentId: item._id,
-                        });
-                    }}
-                  />
-                  {item.parentId !== workspaceId && (
-                    <MenuTrigger>
-                      <Button
-                        aria-label="Project Actions"
-                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
-                      >
-                        <Icon icon="caret-down" />
-                      </Button>
-                      <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                        <Menu
-                          aria-label="Environment Actions"
-                          selectionMode="single"
-                          onAction={key => {
-                            environmentActionsList.find(({ id }) => key === id)?.action(item);
-                          }}
-                          items={environmentActionsList}
-                          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                  <div
+                    className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden pr-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)`}
+                  >
+                    <span className="absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
+                    <Icon
+                      icon={
+                        item.isPrivate
+                          ? 'lock'
+                          : isUsingGitSync
+                            ? ['fab', 'git-alt']
+                            : isUsingInsomniaCloudSync
+                              ? 'globe-americas'
+                              : 'file-arrow-down'
+                      }
+                      className="w-5"
+                      style={{
+                        color: item.color || undefined,
+                      }}
+                    />
+                    <EditableInput
+                      value={item.name}
+                      name="name"
+                      ariaLabel="Environment name"
+                      className="flex-1 px-1 hover:bg-transparent!"
+                      onSubmit={name => {
+                        name &&
+                          updateEnvironmentFetcher.submit({
+                            organizationId,
+                            projectId,
+                            workspaceId,
+                            patch: {
+                              name,
+                            },
+                            environmentId: item._id,
+                          });
+                      }}
+                    />
+                    {item.parentId !== workspaceId && (
+                      <MenuTrigger>
+                        <Button
+                          aria-label="Project Actions"
+                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                         >
-                          {item => (
-                            <MenuItem
-                              key={item.id}
-                              id={item.id}
-                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                              aria-label={item.name}
-                            >
-                              <Icon className="w-5" icon={item.icon} />
-                              <span>{item.name}</span>
-                            </MenuItem>
-                          )}
-                        </Menu>
-                      </Popover>
-                    </MenuTrigger>
-                  )}
-                  {item.parentId === workspaceId && (
-                    <MenuTrigger>
-                      <Button
-                        aria-label="Create Environment"
-                        data-testid="CreateEnvironmentDropdown"
-                        className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm)"
-                      >
-                        <Icon icon="plus-circle" />
-                      </Button>
-                      <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                        <Menu
-                          aria-label="New Environment"
-                          selectionMode="single"
-                          onAction={key => {
-                            createEnvironmentActionsList.find(({ id }) => key === id)?.action(item);
-                          }}
-                          items={createEnvironmentActionsList}
-                          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
-                        >
-                          {item => (
-                            <MenuItem
-                              key={item.id}
-                              id={item.id}
-                              className="flex w-full flex-col gap-1 bg-transparent px-(--padding-md) py-2 whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                              aria-label={item.name}
-                            >
-                              <div className="flex items-center gap-2">
+                          <Icon icon="caret-down" />
+                        </Button>
+                        <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                          <Menu
+                            aria-label="Environment Actions"
+                            selectionMode="single"
+                            onAction={key => {
+                              environmentActionsList.find(({ id }) => key === id)?.action(item);
+                            }}
+                            items={environmentActionsList}
+                            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                          >
+                            {item => (
+                              <MenuItem
+                                key={item.id}
+                                id={item.id}
+                                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                                aria-label={item.name}
+                              >
                                 <Icon className="w-5" icon={item.icon} />
                                 <span>{item.name}</span>
-                              </div>
-                              <Text slot="description" className="text-xs text-(--hl)">
-                                {item.description}
-                              </Text>
-                            </MenuItem>
-                          )}
-                        </Menu>
-                      </Popover>
-                    </MenuTrigger>
-                  )}
-                </div>
-              </GridListItem>
-            );
-          }}
-        </GridList>
-        <WorkspaceSyncDropdown />
-      </Panel>
-      <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-      <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
-        <OrganizationTabList />
-        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-          <div className="flex w-full shrink-0 basis-(--line-height-sm) items-center justify-between gap-2 overflow-hidden p-(--padding-sm)">
-            <Heading className="flex grow items-center gap-2 overflow-hidden px-4 py-2 text-lg">
-              <Icon
-                className="w-4"
-                icon={
-                  selectedEnvironment?.isPrivate
-                    ? 'lock'
-                    : isUsingGitSync
-                      ? ['fab', 'git-alt']
-                      : isUsingInsomniaCloudSync
-                        ? 'globe-americas'
-                        : 'file-arrow-down'
-                }
-              />
-              <EditableInput
-                value={selectedEnvironment?.name || ''}
-                name="name"
-                ariaLabel="Environment name"
-                className="flex-1 px-1"
-                onSubmit={name => {
-                  name &&
-                    updateEnvironmentFetcher.submit({
-                      organizationId,
-                      projectId,
-                      workspaceId,
-                      patch: {
-                        name,
-                      },
-                      environmentId: selectedEnvironmentId,
-                    });
-                }}
-              />
-            </Heading>
-            {selectedEnvironment && selectedEnvironment.parentId !== workspaceId && (
-              <Label className="mr-2 ml-auto flex shrink-0 items-center gap-2 rounded-xs bg-(--hl-sm) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm)">
-                <span>Color:</span>
-                <input
-                  onChange={e => {
-                    const color = e.target.value;
-                    updateEnvironmentFetcher.submit({
-                      organizationId,
-                      projectId,
-                      workspaceId,
-                      patch: {
-                        color,
-                      },
-                      environmentId: selectedEnvironment._id,
-                    });
-                  }}
-                  type="color"
-                  value={selectedEnvironment?.color || ''}
+                              </MenuItem>
+                            )}
+                          </Menu>
+                        </Popover>
+                      </MenuTrigger>
+                    )}
+                    {item.parentId === workspaceId && (
+                      <MenuTrigger>
+                        <Button
+                          aria-label="Create Environment"
+                          data-testid="CreateEnvironmentDropdown"
+                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm)"
+                        >
+                          <Icon icon="plus-circle" />
+                        </Button>
+                        <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                          <Menu
+                            aria-label="New Environment"
+                            selectionMode="single"
+                            onAction={key => {
+                              createEnvironmentActionsList.find(({ id }) => key === id)?.action(item);
+                            }}
+                            items={createEnvironmentActionsList}
+                            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                          >
+                            {item => (
+                              <MenuItem
+                                key={item.id}
+                                id={item.id}
+                                className="flex w-full flex-col gap-1 bg-transparent px-(--padding-md) py-2 whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                                aria-label={item.name}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Icon className="w-5" icon={item.icon} />
+                                  <span>{item.name}</span>
+                                </div>
+                                <Text slot="description" className="text-xs text-(--hl)">
+                                  {item.description}
+                                </Text>
+                              </MenuItem>
+                            )}
+                          </Menu>
+                        </Popover>
+                      </MenuTrigger>
+                    )}
+                  </div>
+                </GridListItem>
+              );
+            }}
+          </GridList>
+        </Panel>
+        <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
+        <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
+          <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+            <div className="flex w-full shrink-0 basis-(--line-height-sm) items-center justify-between gap-2 overflow-hidden p-(--padding-sm)">
+              <Heading className="flex grow items-center gap-2 overflow-hidden px-4 py-2 text-lg">
+                <Icon
+                  className="w-4"
+                  icon={
+                    selectedEnvironment?.isPrivate
+                      ? 'lock'
+                      : isUsingGitSync
+                        ? ['fab', 'git-alt']
+                        : isUsingInsomniaCloudSync
+                          ? 'globe-americas'
+                          : 'file-arrow-down'
+                  }
                 />
-              </Label>
+                <EditableInput
+                  value={selectedEnvironment?.name || ''}
+                  name="name"
+                  ariaLabel="Environment name"
+                  className="flex-1 px-1"
+                  onSubmit={name => {
+                    name &&
+                      updateEnvironmentFetcher.submit({
+                        organizationId,
+                        projectId,
+                        workspaceId,
+                        patch: {
+                          name,
+                        },
+                        environmentId: selectedEnvironmentId,
+                      });
+                  }}
+                />
+              </Heading>
+              {selectedEnvironment && selectedEnvironment.parentId !== workspaceId && (
+                <Label className="mr-2 ml-auto flex shrink-0 items-center gap-2 rounded-xs bg-(--hl-sm) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm)">
+                  <span>Color:</span>
+                  <input
+                    onChange={e => {
+                      const color = e.target.value;
+                      updateEnvironmentFetcher.submit({
+                        organizationId,
+                        projectId,
+                        workspaceId,
+                        patch: {
+                          color,
+                        },
+                        environmentId: selectedEnvironment._id,
+                      });
+                    }}
+                    type="color"
+                    value={selectedEnvironment?.color || ''}
+                  />
+                </Label>
+              )}
+              {selectedEnvironment && allowSwitchEnvironment && (
+                <ToggleButton
+                  onChange={isSelected => {
+                    const toggleSwitchEnvironmentType = (
+                      newEnvironmentType: EnvironmentType,
+                      kvPairData: EnvironmentKvPairData[],
+                    ) => {
+                      updateEnvironmentFetcher.submit({
+                        organizationId,
+                        projectId,
+                        workspaceId,
+                        patch: {
+                          environmentType: newEnvironmentType,
+                          kvPairData: kvPairData,
+                        },
+                        environmentId: selectedEnvironment._id,
+                      });
+                    };
+                    const isValidJSON = !!environmentEditorRef.current?.isValid();
+                    toggleEnvironmentType(isSelected, selectedEnvironment, isValidJSON, toggleSwitchEnvironmentType);
+                  }}
+                  isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
+                  className="flex w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                  aria-label={
+                    selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'
+                  }
+                >
+                  {({ isSelected }) => (
+                    <Fragment>
+                      <Icon
+                        icon={!isSelected ? 'toggle-on' : 'toggle-off'}
+                        className={`${!isSelected ? 'text-(--color-success)' : ''}`}
+                      />
+                      <span>Table View</span>
+                    </Fragment>
+                  )}
+                </ToggleButton>
+              )}
+            </div>
+            {/* legacy JSON environment do not have environmentType property*/}
+            {selectedEnvironment &&
+              (selectedEnvironment.environmentType === EnvironmentType.JSON ||
+                !selectedEnvironment.environmentType) && (
+                <EnvironmentEditor
+                  ref={environmentEditorRef}
+                  key={selectedEnvironment._id}
+                  onChange={debouncedHandleChange}
+                  environmentInfo={{
+                    object: selectedEnvironment.data,
+                    propertyOrder: selectedEnvironment.dataPropertyOrder,
+                  }}
+                />
+              )}
+            {selectedEnvironment && selectedEnvironment.environmentType === EnvironmentType.KVPAIR && (
+              <EnvironmentKVEditor
+                key={selectedEnvironment._id}
+                data={selectedEnvironment.kvPairData || []}
+                isPrivate={selectedEnvironment.isPrivate}
+                onChange={handleKVPairChange}
+                vaultKey={vaultKey}
+              />
             )}
-            {selectedEnvironment && allowSwitchEnvironment && (
-              <ToggleButton
-                onChange={isSelected => {
-                  const toggleSwitchEnvironmentType = (
-                    newEnvironmentType: EnvironmentType,
-                    kvPairData: EnvironmentKvPairData[],
-                  ) => {
-                    updateEnvironmentFetcher.submit({
-                      organizationId,
-                      projectId,
-                      workspaceId,
-                      patch: {
-                        environmentType: newEnvironmentType,
-                        kvPairData: kvPairData,
-                      },
-                      environmentId: selectedEnvironment._id,
-                    });
-                  };
-                  const isValidJSON = !!environmentEditorRef.current?.isValid();
-                  toggleEnvironmentType(isSelected, selectedEnvironment, isValidJSON, toggleSwitchEnvironmentType);
-                }}
-                isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
-                className="flex w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
-                aria-label={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'}
-              >
-                {({ isSelected }) => (
-                  <Fragment>
-                    <Icon
-                      icon={!isSelected ? 'toggle-on' : 'toggle-off'}
-                      className={`${!isSelected ? 'text-(--color-success)' : ''}`}
-                    />
-                    <span>Table View</span>
-                  </Fragment>
-                )}
-              </ToggleButton>
+            {showInputVaultKeyModal && (
+              <InputVaultKeyModal onClose={handleInputVaultKeyModalClose} allowClose={false} />
             )}
           </div>
-          {/* legacy JSON environment do not have environmentType property*/}
-          {selectedEnvironment &&
-            (selectedEnvironment.environmentType === EnvironmentType.JSON || !selectedEnvironment.environmentType) && (
-              <EnvironmentEditor
-                ref={environmentEditorRef}
-                key={selectedEnvironment._id}
-                onChange={debouncedHandleChange}
-                environmentInfo={{
-                  object: selectedEnvironment.data,
-                  propertyOrder: selectedEnvironment.dataPropertyOrder,
-                }}
-              />
-            )}
-          {selectedEnvironment && selectedEnvironment.environmentType === EnvironmentType.KVPAIR && (
-            <EnvironmentKVEditor
-              key={selectedEnvironment._id}
-              data={selectedEnvironment.kvPairData || []}
-              isPrivate={selectedEnvironment.isPrivate}
-              onChange={handleKVPairChange}
-              vaultKey={vaultKey}
-            />
-          )}
-          {showInputVaultKeyModal && <InputVaultKeyModal onClose={handleInputVaultKeyModalClose} allowClose={false} />}
-        </div>
-      </Panel>
-    </PanelGroup>
+        </Panel>
+      </PanelGroup>
+    </div>
   );
 };
 

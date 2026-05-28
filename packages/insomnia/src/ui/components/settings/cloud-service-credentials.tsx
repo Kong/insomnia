@@ -7,8 +7,7 @@ import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
-import { executePluginMainAction } from '../../../plugins';
-import { getBundlePlugins } from '../../../plugins';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { usePlanData } from '../../hooks/use-plan';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
@@ -64,7 +63,7 @@ export const CloudServiceCredentialList = () => {
   const deleteCredentialFetcher = useDeleteCloudCredentialActionFetcher();
   useEffect(() => {
     const checkVaultPlugin = async () => {
-      const plugins = await getBundlePlugins();
+      const plugins = await pluginsBridge.getBundlePlugins();
       const vaultPlugin = plugins.find(p => p.name === EXTERNAL_VAULT_PLUGIN_NAME);
       setIsVaultPluginInstalled(!!vaultPlugin);
     };
@@ -98,11 +97,11 @@ export const CloudServiceCredentialList = () => {
 
   const handleCreateCloudServiceCredential = async (key: CloudProviderName) => {
     if (key === 'azure') {
-      const { authUrl, error } = await executePluginMainAction({
+      const { authUrl, error } = (await pluginsBridge.executePluginMainAction({
         pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
         actionName: 'openAuthUrl',
         params: { provider: 'azure' },
-      });
+      })) as any;
       // show error modal if no authUrl generated
       if (!authUrl) {
         console.error('Failed to open Azure auth url', error);
@@ -247,7 +246,7 @@ export const CloudServiceCredentialList = () => {
           <button
             className="pointer mb-(--padding-sm) ml-(--padding-sm) flex h-(--line-height-xs) w-32 items-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
             onClick={async () =>
-              await executePluginMainAction({
+              await pluginsBridge.executePluginMainAction({
                 pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
                 actionName: 'clearCache',
               })

@@ -2,7 +2,7 @@ import { href } from 'react-router';
 
 import type { WebSocketRequest } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { updateMimeType } from '~/ui/components/dropdowns/content-type-dropdown';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -45,8 +45,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   await services.helpers.updateRequest(req, patch);
 
   if (req.name !== patch.name) {
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.requestRenamed,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestRenamed,
     });
   }
 

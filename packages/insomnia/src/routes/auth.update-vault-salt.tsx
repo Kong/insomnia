@@ -6,11 +6,11 @@ import { createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction(_args: ActionFunctionArgs) {
   try {
-    const userSession = await services.userSession.getOrCreate();
+    const userSession = await services.userSession.get();
     const { id: sessionId } = userSession;
     const { salt: vaultSalt } = await getVault({ sessionId });
     if (vaultSalt) {
-      await services.userSession.update(userSession, { vaultSalt });
+      await services.userSession.update({ vaultSalt });
       return vaultSalt;
     }
   } catch (error) {

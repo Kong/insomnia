@@ -3,7 +3,7 @@ import { Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
 import { getGitHubRestApiUrl } from '../../common/constants';
-import { SegmentEvent } from '../analytics';
+import { AnalyticsEvent } from '../analytics';
 import { Icon } from './icon';
 
 const LOCALSTORAGE_GITHUB_STARS_KEY = 'insomnia:github-stars';
@@ -50,8 +50,8 @@ export const GitHubStarsButton = () => {
   });
 
   const starClick = useCallback(() => {
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.buttonClick,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.buttonClick,
       properties: {
         type: 'GitHub stars',
         action: 'clicked star',
@@ -60,8 +60,8 @@ export const GitHubStarsButton = () => {
   }, []);
 
   const counterClick = useCallback(() => {
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.buttonClick,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.buttonClick,
       properties: {
         type: 'GitHub stars',
         action: 'clicked stargazers',

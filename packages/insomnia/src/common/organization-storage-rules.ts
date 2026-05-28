@@ -34,7 +34,7 @@ export async function fetchAndCacheOrganizationStorageRule(
     }
   }
 
-  const { id: sessionId } = await services.userSession.getOrCreate();
+  const { id: sessionId } = await services.userSession.get();
 
   return await getOrganizationStorageRule({
     organizationId,

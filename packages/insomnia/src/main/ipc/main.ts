@@ -36,9 +36,10 @@ import type {
 } from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
-import type { PluginTemplateTag, RenderedRequest } from '../../templating/types';
-import type { SegmentEvent } from '../analytics';
-import { setCurrentOrganizationId, trackPageView, trackSegmentEvent } from '../analytics';
+import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
+import type { RenderedRequest } from '../../templating/types';
+import type { AnalyticsEvent } from '../analytics';
+import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
@@ -46,6 +47,7 @@ import {
 } from '../authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '../authorize-user-in-window';
 import { backup, restoreBackup } from '../backup';
+import { createPlugin } from '../create-plugin';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
@@ -63,6 +65,7 @@ import {
 } from '../network/request-timing';
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
+import { registerPluginIpcHandlers } from '../plugin-window';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
@@ -133,6 +136,40 @@ const writeResponseBodyToFile = async (
   }
 };
 
+const getResponsesDir = () =>
+  path.join(process.env.INSOMNIA_DATA_PATH || app.getPath('userData'), 'responses');
+
+const responsesDirCreated = new Set<string>();
+
+const getTimelinePath = (_: unknown, responseId: string) => {
+  const base = path.resolve(getResponsesDir());
+  const target = path.resolve(base, responseId + '.timeline');
+  const relative = path.relative(base, target);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('Invalid response ID');
+  }
+  return target;
+};
+
+const appendToTimeline = async (
+  _: unknown,
+  options: { timelinePath: string; data: string },
+) => {
+  const allowedResponsesDir = getResponsesDir();
+  const resolvedPath = path.resolve(options.timelinePath);
+  if (!resolvedPath.startsWith(path.resolve(allowedResponsesDir) + path.sep) || !resolvedPath.endsWith('.timeline')) {
+    throw new Error(
+      'appendToTimeline: timelinePath is outside the allowed responses directory or does not end in .timeline',
+    );
+  }
+  const dir = path.dirname(resolvedPath);
+  if (!responsesDirCreated.has(dir)) {
+    await fs.promises.mkdir(dir, { recursive: true });
+    responsesDirCreated.add(dir);
+  }
+  await fs.promises.appendFile(resolvedPath, options.data);
+};
+
 export interface RendererToMainBridgeAPI {
   loginStateChange: (isLoggedIn: boolean) => void;
   openInBrowser: (url: string) => void;
@@ -186,13 +223,13 @@ export interface RendererToMainBridgeAPI {
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
   sync: SyncBridgeAPI;
-  trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
+  trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
   showNunjucksContextMenu: (options: {
     key: string;
     nunjucksTag?: { template: string; range: MarkerRange };
-    pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+    pluginTemplateTags?: { templateTag: Record<string, unknown> }[];
   }) => void;
   showContextMenu: (options: {
     key: string;
@@ -203,6 +240,7 @@ export interface RendererToMainBridgeAPI {
     documentContent: string;
     rulesetPath: string;
   }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
+  createPlugin: (options: { pluginName: string; mainJs: string }) => Promise<void>;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -237,6 +275,12 @@ export interface RendererToMainBridgeAPI {
     | { response: undefined; error: string }
   >;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
+  plugins: PluginsBridgeAPI;
+  notifyPluginPromptResult: (id: string, value: string | null) => void;
+  timeline: {
+    getPath: (responseId: string) => Promise<string>;
+    appendToFile: (options: { timelinePath: string; data: string }) => Promise<void>;
+  };
 }
 
 export function registerMainHandlers() {
@@ -257,6 +301,9 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return services.caCertificate.create(options);
+  });
+  ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
+    return createPlugin(options.pluginName, options.mainJs);
   });
   ipcMainHandle('services.invoke', async (_, serviceName: string, methodName: string, ...args: unknown[]) => {
     const service = services[serviceName as keyof Services];
@@ -399,10 +446,13 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', readDir);
 
   ipcMainHandle('readOrCreateDataDir', async (_, options: { folder: string }) => {
-    const dataPath = app.getPath('userData');
-    const folderPath = path.join(dataPath, options.folder);
+    const folderPath = path.join(app.getPath('userData'), options.folder);
     mkdirSync(folderPath, { recursive: true });
-    return readDir(_, { path: folderPath });
+    try {
+      return await readDir(_, { path: folderPath });
+    } catch {
+      return [];
+    }
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
@@ -413,9 +463,12 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn('trackSegmentEvent', (_, options: { event: SegmentEvent; properties?: Record<string, unknown> }): void => {
-    trackSegmentEvent(options.event, options.properties);
-  });
+  ipcMainOn(
+    'trackAnalyticsEvent',
+    (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
+      trackAnalyticsEvent(options.event, options.properties);
+    },
+  );
   ipcMainOn('trackPageView', (_, options: { name: string }): void => {
     trackPageView(options.name);
   });
@@ -661,4 +714,9 @@ export function registerMainHandlers() {
       });
     });
   });
+
+  ipcMainHandle('timeline.getPath', getTimelinePath);
+  ipcMainHandle('timeline.appendToFile', appendToTimeline);
+
+  registerPluginIpcHandlers();
 }

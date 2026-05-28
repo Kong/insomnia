@@ -14,10 +14,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
-  const project = await services.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
-  const user = await services.userSession.getOrCreate();
+  const user = await services.userSession.get();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to delete a project');
 

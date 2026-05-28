@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can make websocket connection', async ({ app, page }) => {
+test('can make websocket connection', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
@@ -18,7 +18,7 @@ test('can make websocket connection', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.getByLabel('Request Collection').getByTestId('localhost:4010').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('localhost:4010');
   await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010');
   await page.click('text=Connect');
   await expect.soft(statusTag).toContainText('101 Switching Protocols');
@@ -28,7 +28,7 @@ test('can make websocket connection', async ({ app, page }) => {
   await expect.soft(responseBody).toContainText('Closing connection with code 1005');
 
   // Can connect with Basic Auth
-  await page.getByLabel('Request Collection').getByTestId('basic-auth').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('basic-auth');
   await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010/basic-auth');
   await page.click('text=Connect');
   await expect.soft(statusTag).toContainText('101 Switching Protocols');
@@ -36,7 +36,7 @@ test('can make websocket connection', async ({ app, page }) => {
   await expect.soft(responseBody).toContainText('> authorization: Basic dXNlcjpwYXNzd29yZA==');
 
   // Can connect with Bearer Auth
-  await page.getByLabel('Request Collection').getByTestId('bearer').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('bearer');
   await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010/bearer');
   await page.click('text=Connect');
   await expect.soft(statusTag).toContainText('101 Switching Protocols');
@@ -44,7 +44,7 @@ test('can make websocket connection', async ({ app, page }) => {
   await expect.soft(responseBody).toContainText('> authorization: Bearer insomnia-cool-token-!!!1112113243111');
 
   // Can handle redirects
-  await page.getByLabel('Request Collection').getByTestId('redirect').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('redirect');
   await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010/redirect');
   await page.click('text=Connect');
   await expect.soft(statusTag).toContainText('101 Switching Protocols');

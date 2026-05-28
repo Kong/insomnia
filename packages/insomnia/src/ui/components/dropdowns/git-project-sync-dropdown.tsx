@@ -24,7 +24,7 @@ import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
@@ -664,8 +664,8 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
             <Button
               onPress={() => {
                 setIsUpdateProjectModalOpen(true);
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.gitSyncButtonClicked,
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.gitSyncButtonClicked,
                 });
               }}
               className="flex h-[25px] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"

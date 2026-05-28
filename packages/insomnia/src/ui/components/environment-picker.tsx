@@ -17,6 +17,7 @@ import { useNavigate, useParams } from 'react-router';
 import { models } from '~/insomnia-data';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 import { useEnvironmentSetActiveGlobalActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global';
+import { Tooltip } from '~/ui/components/tooltip';
 
 import { fuzzyMatch } from '../../common/misc';
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -53,7 +54,9 @@ export const EnvironmentPicker = ({
   };
 
   const { features } = useOrganizationPermissions();
-  const isUsingInsomniaCloudSync = Boolean(models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
+  const isUsingInsomniaCloudSync = Boolean(
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+  );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
@@ -91,10 +94,10 @@ export const EnvironmentPicker = ({
     <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
       <Button
         aria-label="Manage Environments"
-        className="flex max-w-full flex-col items-start gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+        className="flex max-w-full items-start gap-2 truncate rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
       >
         {activeGlobalEnvironment && activeGlobalBaseEnvironment && (
-          <div className="flex w-full flex-col">
+          <div className="flex w-full">
             <div className="flex w-full items-center gap-2">
               <Icon
                 icon={
@@ -109,31 +112,24 @@ export const EnvironmentPicker = ({
                 style={{ color: activeGlobalEnvironment.color || '' }}
                 className="w-5 shrink-0"
               />
-              <span className="truncate">{activeGlobalEnvironment.name}</span>
-            </div>
-            <div className="flex w-full items-center gap-2">
-              <Icon icon="0" className="invisible w-5 shrink-0" />
-              <span className="shrink truncate text-xs text-(--hl)">{activeGlobalBaseEnvironment.workspaceName}</span>
+              <Tooltip position="top" message="active global environment">
+                <span className="truncate">{activeGlobalEnvironment.name}</span>
+              </Tooltip>
+              <Icon icon="plus" className="w-3 shrink-0 text-(--hl)" />
             </div>
           </div>
         )}
         <div className="flex w-full flex-1 items-center gap-2">
           <Icon
-            icon={
-              activeEnvironment.isPrivate
-                ? 'lock'
-                : isUsingGitSync
-                  ? ['fab', 'git-alt']
-                  : isUsingInsomniaCloudSync
-                    ? 'globe-americas'
-                    : 'file-arrow-down'
-            }
+            icon={activeEnvironment.isPrivate ? 'lock' : 'code'}
             style={{ color: activeEnvironment.color || '' }}
             className="w-5 shrink-0"
           />
-          <span className="truncate">
-            {activeSubEnvironment ? activeSubEnvironment.name : activeBaseEnvironment.name}
-          </span>
+          <Tooltip position="top" message="active collection environment">
+            <span className="truncate">
+              {activeSubEnvironment ? activeSubEnvironment.name : activeBaseEnvironment.name}
+            </span>
+          </Tooltip>
         </div>
       </Button>
       <Popover className="z-10! flex max-h-[90vh] min-w-max flex-col" placement="bottom start" offset={8}>

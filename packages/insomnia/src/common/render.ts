@@ -129,6 +129,9 @@ export async function buildRenderContext({
     const keys = _getOrderedEnvironmentKeys(subObject);
 
     for (const key of keys) {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        continue;
+      }
       /*
        * If we're overwriting a string, try to render it first using the same key from the base
        * environment to support same-variable recursion. This allows for the following scenario:

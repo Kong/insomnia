@@ -2,7 +2,7 @@ import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import type { BaseModel, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
+import type { BaseModel, Environment, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 
 import * as plugins from '../plugins';
@@ -221,8 +221,22 @@ export async function exportHarResponse(response?: Response) {
   return harResponse;
 }
 
-export async function exportHarRequest(requestId: string, environmentId: string, addContentLength = false) {
+export async function exportHarRequest(requestId: string, environmentOrWorkspaceId: string, addContentLength = false) {
   const request = await services.request.getById(requestId);
+  let environmentId: string;
+  if (models.environment.isEnvironmentId(environmentOrWorkspaceId)) {
+    environmentId = environmentOrWorkspaceId;
+  } else if (models.workspace.isWorkspaceId(environmentOrWorkspaceId)) {
+    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(environmentOrWorkspaceId);
+    const baseEnvironment = await services.environment.getOrCreateForParentId(environmentOrWorkspaceId);
+    const activeEnvironment =
+      (await database.findOne<Environment>(models.environment.type, {
+        _id: workspaceMeta.activeEnvironmentId,
+      })) || baseEnvironment;
+    environmentId = activeEnvironment._id;
+  } else {
+    throw new Error(`Invalid environmentOrWorkspaceId provided to exportHarRequest: ${environmentOrWorkspaceId}`);
+  }
 
   if (!request) {
     return null;

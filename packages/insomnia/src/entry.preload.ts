@@ -17,9 +17,29 @@ import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
+import type {
+  ApplyRequestHooksArgs,
+  ApplyResponseHooksArgs,
+  ExecutePluginActionArgs,
+  ExecutePluginMainActionArgs,
+  PluginsBridgeAPI,
+  RunTemplateTagActionArgs,
+} from './plugins/bridge-types';
+import type { PluginInvokeMethod } from './plugins/invoke-method';
 import type { RenderedRequest } from './templating/types';
 import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
+
+type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI
+  ? Awaited<ReturnType<PluginsBridgeAPI[T]>>
+  : never;
+
+const invokePluginBridgeMethod = <T extends PluginInvokeMethod>(
+  method: T,
+  args?: unknown,
+): Promise<PluginMethodResult<T>> => {
+  return invokeWithNormalizedError(`plugins.${method}`, args) as Promise<PluginMethodResult<T>>;
+};
 
 const webSocket: WebSocketBridgeAPI = {
   open: options => invokeWithNormalizedError('webSocket.open', options),
@@ -255,6 +275,7 @@ const main: Window['main'] = {
   multipartBufferToArray: options => invokeWithNormalizedError('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     invokeWithNormalizedError('installPlugin', lookupName, allowScopedPackageNames),
+  createPlugin: options => invokeWithNormalizedError('createPlugin', options),
   initializeWorkspaceBackendProject: options => invokeWithNormalizedError('initializeWorkspaceBackendProject', options),
   curlRequest: options => invokeWithNormalizedError('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
@@ -289,7 +310,7 @@ const main: Window['main'] = {
   secretStorage,
   electronStorage,
   sync,
-  trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
+  trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
   showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),
@@ -344,6 +365,34 @@ const main: Window['main'] = {
     invokeWithNormalizedError('generateCommitsFromDiff', input),
   generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
     invokeWithNormalizedError('generateMcpSamplingResponse', parameters),
+  plugins: {
+    getThemes: () => invokePluginBridgeMethod('getThemes'),
+    getPlugins: () => invokePluginBridgeMethod('getPlugins'),
+    getActivePlugins: () => invokePluginBridgeMethod('getActivePlugins'),
+    reloadPlugins: () => invokePluginBridgeMethod('reloadPlugins'),
+    getRequestActions: () => invokePluginBridgeMethod('getRequestActions'),
+    getRequestGroupActions: () => invokePluginBridgeMethod('getRequestGroupActions'),
+    getWorkspaceActions: () => invokePluginBridgeMethod('getWorkspaceActions'),
+    getDocumentActions: () => invokePluginBridgeMethod('getDocumentActions'),
+    executeAction: (args: ExecutePluginActionArgs) => invokePluginBridgeMethod('executeAction', args),
+    getTemplateTags: () => invokePluginBridgeMethod('getTemplateTags'),
+    runTemplateTagAction: (args: RunTemplateTagActionArgs) => invokePluginBridgeMethod('runTemplateTagAction', args),
+    getBundlePlugins: () => invokePluginBridgeMethod('getBundlePlugins'),
+    executePluginMainAction: (args: ExecutePluginMainActionArgs) =>
+      invokePluginBridgeMethod('executePluginMainAction', args),
+    hasRequestHooks: () => invokePluginBridgeMethod('hasRequestHooks'),
+    hasResponseHooks: () => invokePluginBridgeMethod('hasResponseHooks'),
+    applyRequestHooks: (args: ApplyRequestHooksArgs) => invokePluginBridgeMethod('applyRequestHooks', args),
+    applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
+    getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
+  },
+  notifyPluginPromptResult: (id: string, value: string | null) =>
+    ipcRenderer.send('plugins.uiPromptResult', { id, value }),
+  timeline: {
+    getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
+    appendToFile: (options: { timelinePath: string; data: string }) =>
+      invokeWithNormalizedError('timeline.appendToFile', options),
+  },
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

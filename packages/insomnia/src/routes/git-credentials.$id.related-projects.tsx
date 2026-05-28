@@ -12,7 +12,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const gitRepositoryIds = relatedGitRepositories.map(repo => repo._id);
 
-  const relatedProjects = await services.project.getAllByGitRepositoryIds(gitRepositoryIds);
+  const relatedProjects = await services.project.list({ gitRepositoryIds });
 
   return {
     projects: relatedProjects,

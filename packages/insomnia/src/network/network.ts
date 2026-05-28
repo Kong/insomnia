@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import nodePath from 'node:path';
-
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
@@ -25,6 +22,15 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { EnvironmentType, models, services } from '~/insomnia-data';
+import {
+  appendTimelineLines,
+  appendToTimelineOnError,
+  applyRequestHooks,
+  applyResponseHooks,
+  executeCurlRequest,
+  getAuthHeader,
+  getTimelinePath,
+} from '~/network/network-adapter';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type {
@@ -39,13 +45,7 @@ import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeader
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
-import * as pluginApp from '../plugins/context/app';
-import * as pluginData from '../plugins/context/data';
-import * as pluginNetwork from '../plugins/context/network';
 import * as pluginRequest from '../plugins/context/request';
-import * as pluginResponse from '../plugins/context/response';
-import * as pluginStore from '../plugins/context/store';
-import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -54,13 +54,14 @@ import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
-import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
+import { cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
+
 
 export interface SendActionRuntime {
   appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
@@ -154,11 +155,7 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
-  const responsesDir = nodePath.join(
-    (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-    'responses',
-  );
-  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+  const timelinePath = await getTimelinePath(responseId);
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -221,12 +218,7 @@ export const fetchRequestData = async (
   const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const responsesDir = nodePath.join(
-    process.env['INSOMNIA_DATA_PATH'] ||
-      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-    'responses',
-  );
-  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+  const timelinePath = await getTimelinePath(responseId);
 
   return {
     request,
@@ -265,12 +257,7 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const responsesDir = nodePath.join(
-    process.env['INSOMNIA_DATA_PATH'] ||
-      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-    'responses',
-  );
-  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+  const timelinePath = await getTimelinePath(responseId);
 
   return {
     environment,
@@ -666,7 +653,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       parentFolders: output.parentFolders,
     };
   } catch (err) {
-    await fs.promises.appendFile(
+    await appendToTimelineOnError(
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
     );
@@ -877,11 +864,7 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const getRenderedRequestAuthHeader =
-    process.type === 'renderer'
-      ? (r: RenderedRequest, u: string) => window.main.getAuthHeader(r, u)
-      : (await import('../main/network/get-auth-header')).getAuthHeader;
-  const authHeader = await getRenderedRequestAuthHeader(renderedRequest, finalUrl);
+  const authHeader = await getAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
     requestId,
     req: renderedRequest,
@@ -893,12 +876,7 @@ export async function sendCurlAndWriteTimeline(
     authHeader,
   };
 
-  // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
-  const nodejsCurlRequest =
-    process.type === 'renderer'
-      ? cancellableCurlRequest
-      : (await import('../main/network/libcurl-promise')).curlRequest;
-  const output = await nodejsCurlRequest(requestOptions);
+  const output = await executeCurlRequest(requestOptions);
 
   if ('error' in output) {
     if (runtime) {
@@ -1068,62 +1046,42 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
 };
 
-async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, renderedContext: Record<string, any>) {
+export async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, renderedContext: Record<string, any>) {
   const newRenderedRequest = clone(renderedRequest);
 
-  for (const { plugin, hook } of await plugins.getRequestHooks()) {
-    const context = {
-      ...(pluginApp.init() as Record<string, any>),
-      ...pluginData.init(renderedContext.getProjectId()),
-      ...(pluginStore.init(plugin) as Record<string, any>),
-      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginNetwork.init() as Record<string, any>),
-    };
-
-    try {
-      await hook(context);
-    } catch (err) {
-      err.plugin = plugin;
-      throw err;
+  // Apply built-in default-headers hook in the renderer (no IPC needed)
+  const { request: reqCtx } = pluginRequest.init(newRenderedRequest, renderedContext);
+  const defaultHeaders = reqCtx.getEnvironmentVariable('DEFAULT_HEADERS');
+  if (defaultHeaders && typeof defaultHeaders === 'object' && !Array.isArray(defaultHeaders)) {
+    for (const name of Object.keys(defaultHeaders)) {
+      const value = (defaultHeaders as Record<string, any>)[name];
+      if (reqCtx.hasHeader(name)) {
+        console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
+      } else if (value === 'null') {
+        reqCtx.removeHeader(name);
+        console.log(`[header] Remove default header ${name}`);
+      } else {
+        reqCtx.setHeader(name, value);
+        console.log(`[header] Set default header ${name}: ${value}`);
+      }
     }
   }
 
-  return newRenderedRequest;
+  return applyRequestHooks(newRenderedRequest, renderedContext);
 }
 
-async function _applyResponsePluginHooks(
+export async function _applyResponsePluginHooks(
   response: ResponsePatch,
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<ResponsePatch> {
   try {
-    const newResponse = clone(response);
-    const newRequest = clone(renderedRequest);
-
-    for (const { plugin, hook } of await plugins.getResponseHooks()) {
-      const context = {
-        ...(pluginApp.init() as Record<string, any>),
-        ...pluginData.init(renderedContext.getProjectId()),
-        ...(pluginStore.init(plugin) as Record<string, any>),
-        ...(pluginResponse.init(newResponse) as Record<string, any>),
-        ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
-        ...(pluginNetwork.init() as Record<string, any>),
-      };
-
-      try {
-        await hook(context);
-      } catch (err) {
-        err.plugin = plugin;
-        throw err;
-      }
-    }
-
-    return newResponse;
+    return await applyResponseHooks(response, renderedRequest, renderedContext);
   } catch (err) {
     console.log('[plugin] Response hook failed', err, response);
     return {
       url: renderedRequest.url,
-      error: `[plugin] Response hook failed plugin=${err.plugin?.name} err=${err.message}`,
+      error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
       elapsedTime: 0, // 0 because this path is hit during plugin calls
       statusMessage: 'Error',
       settingSendCookies: renderedRequest.settingSendCookies,
@@ -1131,8 +1089,7 @@ async function _applyResponsePluginHooks(
     };
   }
 }
-export const defaultSendActionRuntime = {
-  appendTimeline: async (timelinePath: string, logs: string[]) => {
-    await fs.promises.appendFile(timelinePath, logs.join('\n'));
-  },
+
+export const defaultSendActionRuntime: SendActionRuntime = {
+  appendTimeline: appendTimelineLines,
 };

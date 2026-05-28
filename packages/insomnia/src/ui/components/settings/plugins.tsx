@@ -16,10 +16,10 @@ import { useRootLoaderData } from '~/root';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import type { Plugin } from '../../../plugins/index';
-import { getPlugins } from '../../../plugins/index';
+import type { SerializablePlugin } from '../../../plugins/bridge-types';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { reload } from '../../../templating/index';
-import { validatePluginName } from '../../../utils/plugin';
+import { validatePluginName } from '../../../utils/plugin-name';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
@@ -47,7 +47,7 @@ const getNpmRegistryUrlValidationError = (url: string): string | null => {
 };
 
 interface State {
-  plugins: Plugin[];
+  plugins: SerializablePlugin[];
   npmPluginValue: string;
   error: Error | null;
   installPluginErrMsg: string;
@@ -107,8 +107,9 @@ export const Plugins: FC = () => {
 
   async function handleReloadPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
-    // Get and reload plugins
-    const plugins = (await getPlugins(true)).filter(
+    await pluginsBridge.reloadPlugins();
+    const allPlugins = (await pluginsBridge.getPlugins()) as SerializablePlugin[];
+    const plugins = allPlugins.filter(
       // Filter out pre-bundled plugins
       p => p.directory,
     );
@@ -394,9 +395,7 @@ export const Plugins: FC = () => {
                     patchSettings({ npmRegistryUrl: trimmedRegistryUrl });
                   }}
                 />
-                <FieldError className="text-xs text-(--color-danger)">
-                  {npmRegistryUrlError}
-                </FieldError>
+                <FieldError className="text-xs text-(--color-danger)">{npmRegistryUrlError}</FieldError>
               </TextField>
               {npmRegistryUrl && (
                 <Button
@@ -458,7 +457,7 @@ export const Plugins: FC = () => {
                             acc[plugin.name] = { ...plugin.config, disabled: !isSelected };
                             return acc;
                           },
-                          {} as Record<string, Plugin['config']>,
+                          {} as Record<string, SerializablePlugin['config']>,
                         );
 
                         patchSettings({ pluginConfig: { ...settings.pluginConfig, ...config } });
@@ -586,11 +585,10 @@ export const Plugins: FC = () => {
             or{' '}
             <Button
               className="text-(--color-surprise) underline"
-              onPress={() =>
-                window.shell.showItemInFolder(
-                  window.path.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
-                )
-              }
+              onPress={async () => {
+                await window.main.readOrCreateDataDir({ folder: 'plugins' });
+                window.shell.showItemInFolder(window.path.resolve(window.app.getPath('userData'), 'plugins'));
+              }}
             >
               Reveal Plugins Folder
             </Button>{' '}

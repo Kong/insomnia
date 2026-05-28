@@ -23,7 +23,7 @@ import { useRequestGroupUpdateMetaActionFetcher } from '~/routes/organization.$o
 import { useWorkspaceUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
 import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
 
-export const useRequestPatcher = () => {
+export const useRequestPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -44,12 +44,13 @@ export const useRequestPatcher = () => {
       patch,
       projectId,
       requestId,
-      workspaceId,
+      // If workspaceId is not available in params, use the workspaceId from the argument. This is used in global navigation side bar where workspaceId might not in the url params
+      workspaceId: workspaceId || requestWorkspaceId,
     });
   };
 };
 
-export const useRequestMetaPatcher = () => {
+export const useRequestMetaPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -60,14 +61,15 @@ export const useRequestMetaPatcher = () => {
     fetcher.submit({
       organizationId,
       projectId,
-      workspaceId,
+      // If workspaceId is not available in params, use the workspaceId from the argument. This is used in global navigation side bar where workspaceId might not in the url params
+      workspaceId: workspaceId || requestWorkspaceId,
       requestId,
       patch,
     });
   };
 };
 
-export const useRequestGroupPatcher = () => {
+export const useRequestGroupPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -78,14 +80,15 @@ export const useRequestGroupPatcher = () => {
     fetcher.submit({
       organizationId,
       projectId,
-      workspaceId,
+      // If workspaceId is not available in params, use the workspaceId from the argument. This is used in global navigation side bar where workspaceId might not in the url params
+      workspaceId: workspaceId || requestWorkspaceId,
       requestGroupId,
       patch,
     });
   };
 };
 
-export const useRequestGroupMetaPatcher = () => {
+export const useRequestGroupMetaPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -96,7 +99,8 @@ export const useRequestGroupMetaPatcher = () => {
     fetcher.submit({
       organizationId,
       projectId,
-      workspaceId,
+      // If workspaceId is not available in params, use the workspaceId from the argument. This is used in global navigation side bar where workspaceId might not in the url params
+      workspaceId: workspaceId || requestWorkspaceId,
       requestGroupId,
       patch,
     });
