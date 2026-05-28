@@ -645,7 +645,7 @@ describe('unicode and special byte inputs', () => {
     expect(await render('{{ v }}', { context: { v: `hello${zwsp}world` } })).toBe(`hello${zwsp}world`);
   });
 
-  // U+202E (right-to-left override) can make "‮txt.exe" appear as "exe.txt" in some UIs;
+  // U+202E (right-to-left override) can make "U+202Etxt.exe" appear as "exe.txt" in some UIs;
   // the engine must not strip it — callers are responsible for detecting it if needed.
   it('right-to-left override character is not stripped', async () => {
     const rtlo = String.fromCodePoint(8238); // U+202E RIGHT-TO-LEFT OVERRIDE
