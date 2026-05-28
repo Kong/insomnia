@@ -1,10 +1,11 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, GridList, GridListItem } from 'react-aria-components';
+import { Button, GridList, GridListItem, Input, SearchField, Tab, TabList, Tabs } from 'react-aria-components';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { Button as BasicButton } from '~/basic-components/button';
 import type { SortOrder } from '~/common/constants';
 import { fuzzyMatchAll } from '~/common/misc';
 import {
@@ -20,19 +21,20 @@ import { useProjectLoaderData } from '~/routes/organization.$organizationId.proj
 import { AnalyticsEvent } from '~/ui/analytics';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
-import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
+import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
+import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
-import { SidebarHeader } from './project-navigation-sidebar-header';
 import {
   type AllRequestsAndMetaInWorkspace,
   filterCollection,
@@ -48,45 +50,97 @@ import { useSidebarDragAndDrop } from './use-sidebar-drag-and-drop';
 import { WorkspaceNode } from './workspace-node';
 
 interface ProjectNavigationSidebarProps {
+  storageRules: StorageRules;
   activeNodeId?: string;
   konnectSyncEnabled: boolean;
-  storageRules: StorageRules;
   onCreateProject: () => void;
 }
 
-function showSkippedRoutesModal(result: SyncResult | null) {
-  if (!result?.success || !result.skippedRoutes.length) {
-    return;
-  }
-  const byService = new Map<string, string[]>();
-  for (const { serviceName, routeName, reason } of result.skippedRoutes) {
-    const list = byService.get(serviceName) ?? [];
-    list.push(`${routeName} — ${reason}`);
-    byService.set(serviceName, list);
-  }
-  showModal(AlertModal, {
-    title: 'Skipped Routes',
-    message: (
-      <div>
-        <p>{result.skippedRoutes.length} route(s) were skipped because they cannot be represented in Insomnia:</p>
-        {[...byService.entries()].map(([service, routes]) => (
-          <div key={service} style={{ margin: '8px 0' }}>
-            <strong>{service}</strong>
-            <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-              {routes.map(r => (
-                <li key={r}>{r}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    ),
-  });
-}
+const SidebarSearchField = ({
+  value,
+  isDisabled,
+  onChange,
+}: {
+  value: string;
+  isDisabled: boolean;
+  onChange: (value: string) => void;
+}) => (
+  <SearchField
+    aria-label="Projects filter"
+    className="group relative flex-1"
+    value={value}
+    isDisabled={isDisabled}
+    onChange={onChange}
+  >
+    <Input
+      placeholder="Filter"
+      className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+    />
+    <div className="absolute top-0 right-0 flex h-full items-center px-2">
+      <Button
+        aria-label="Clear search"
+        className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+      >
+        <Icon icon="close" />
+      </Button>
+    </div>
+  </SearchField>
+);
+
+const SideBarTabList = ({
+  konnectSyncEnabled,
+  isScratchPad,
+  nonKonnectProjectLength,
+  konnectProjectsLength,
+}: {
+  konnectSyncEnabled: boolean;
+  isScratchPad: boolean;
+  nonKonnectProjectLength: number;
+  konnectProjectsLength: number;
+}) => {
+  return (
+    <TabList
+      aria-label="Sidebar navigation"
+      className="flex h-(--line-height-sm) w-full shrink-0 border-b border-solid border-b-(--hl-md)"
+    >
+      <Tab
+        id="projects"
+        className={`flex h-full shrink-0 items-center justify-between px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none ${konnectSyncEnabled ? 'cursor-pointer hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)' : 'text-(--color-font)!'}`}
+        data-testid="sidebar-tab-projects"
+      >
+        {isScratchPad ? 'Projects' : `Projects (${nonKonnectProjectLength})`}
+      </Tab>
+      {konnectSyncEnabled && !isScratchPad && (
+        <Tab
+          id="konnect"
+          className="flex h-full shrink-0 cursor-pointer items-center justify-between px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+          data-testid="sidebar-tab-konnect"
+        >
+          <span className="flex items-center gap-2">
+            <KongLogo />
+            Konnect ({konnectProjectsLength})
+          </span>
+        </Tab>
+      )}
+    </TabList>
+  );
+};
+
+const NewProjectButton = ({ onPress, isDisabled }: { onPress: () => void; isDisabled?: boolean }) => (
+  <BasicButton
+    aria-label="Create new Project"
+    onPress={onPress}
+    isDisabled={isDisabled}
+    className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+  >
+    <Icon icon="plus" className="h-2.5 w-2.5" />
+    <span>New Project</span>
+  </BasicButton>
+);
 
 export const ProjectNavigationSidebar = ({
-  konnectSyncEnabled,
   storageRules,
+  konnectSyncEnabled,
   onCreateProject,
 }: ProjectNavigationSidebarProps) => {
   const navigate = useNavigate();
@@ -97,7 +151,7 @@ export const ProjectNavigationSidebar = ({
     requestId?: string;
     requestGroupId?: string;
   };
-  const { userSession } = useRootLoaderData()!;
+  const { userSession, settings } = useRootLoaderData()!;
   const projectLoaderData = useProjectLoaderData()!;
   const { projects, projectsSyncStatusPromise } = projectLoaderData;
   const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(
@@ -133,7 +187,7 @@ export const ProjectNavigationSidebar = ({
   );
   const activeTab = !konnectSyncEnabled ? 'projects' : (storedTab ?? 'projects');
   const isProjectTabActive = activeTab === 'projects';
-  const { syncing, progress, error: syncError, startSync, cancelSync } = useKonnectSync();
+  const { syncing, progress, startSync, cancelSync } = useKonnectSync();
 
   const nonKonnectProjects = projects.filter(p => !p.konnectControlPlaneId);
   const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
@@ -152,6 +206,8 @@ export const ProjectNavigationSidebar = ({
   const cachedCollectionChildrenAndMetaRef = useRef<Map<string, AllRequestsAndMetaInWorkspace>>(new Map());
   // ref to track whether we are currently fetching unsynced files for cloud sync projects to avoid duplicate requests
   const isFetchingUnsyncedFilesRef = useRef(false);
+
+  const syncKonnectProjectsAndNotifyRef = useRef<() => Promise<void>>(async () => {});
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
@@ -232,48 +288,66 @@ export const ProjectNavigationSidebar = ({
     return setUnsyncedFilesByProjectId(result);
   }, [organizationId, cloudSyncProjectIdsKey]);
 
+  const syncKonnectProjectsAndNotify = async () => {
+    const result = await startSync(organizationId);
+    setLastSyncResult(result ?? null);
+    setShowSyncDetails(false);
+    setCopiedReason(null);
+  };
+  syncKonnectProjectsAndNotifyRef.current = syncKonnectProjectsAndNotify;
+
   const handleSync = async () => {
     if (!konnectSyncEnabled) {
       return;
     }
 
-    const runAndNotify = async () => {
-      const result = await startSync(organizationId);
-      showSkippedRoutesModal(result);
-    };
-
     const isResync = konnectProjects.length > 0;
     if (isResync) {
       showModal(AskModal, {
-        title: 'Re-sync Konnect',
+        title: 'Sync updates from Konnect',
         message: (
-          <div>
-            <p>Re-syncing will make the following changes:</p>
-            <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-              <li>
-                <strong>Reset</strong> — request method, URL, name, and Konnect-managed headers
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <KongLogo width={20} height={20} />
+                <span className="text-sm font-medium">Konnect</span>
+              </div>
+              <span className="text-(--hl)">→</span>
+              <div className="flex items-center gap-1">
+                <img src={insomniaLogo} alt="Insomnia" className="h-5 w-5" />
+                <span className="text-sm font-medium">Insomnia</span>
+              </div>
+            </div>
+            <p className="text-sm text-(--hl)">
+              Sync the latest changes from your Konnect organization into Insomnia. This will:
+            </p>
+            <ul className="flex flex-col gap-1 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-font)" />
+                Keep your local custom changes (never pushed to Konnect)
               </li>
-              <li>
-                <strong>Delete</strong> — requests added manually or no longer in Konnect
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-font)" />
+                Update existing resources to match Konnect
               </li>
-              <li>
-                <strong>Preserve</strong> — body, auth, query params, scripts, description, and user-added headers
+              <li className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-font)" />
+                Remove collections or environments tied to control planes, services, or routes deleted in Konnect
               </li>
             </ul>
-            <p>This cannot be undone. Continue?</p>
           </div>
         ),
-        yesText: 'Re-sync',
+        yesText: 'Sync Now',
         noText: 'Cancel',
-        color: 'warning',
+        color: 'surprise',
         onDone: async (confirmed: boolean) => {
           if (confirmed) {
-            await runAndNotify();
+            await syncKonnectProjectsAndNotify();
           }
         },
       });
     } else {
-      await runAndNotify();
+      await syncKonnectProjectsAndNotify();
     }
   };
 
@@ -705,191 +779,319 @@ export const ProjectNavigationSidebar = ({
       ? [selectedItemId]
       : [];
 
-  const projectsActionButton = !isScratchPad ? (
-    <Button
-      aria-label="Create new Project"
-      onPress={onCreateProject}
-      className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-    >
-      <Icon icon="plus" className="h-2.5 w-2.5" />
-      <span>New Project</span>
-    </Button>
-  ) : null;
-
-  const konnectActionButton = syncing ? (
-    <Button
-      aria-label="Cancel sync"
-      onPress={cancelSync}
-      className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-    >
-      Cancel
-      <Icon icon="stop-circle" />
-    </Button>
-  ) : (
-    <Button
-      aria-label="Sync Konnect"
-      onPress={handleSync}
-      className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-    >
-      Sync
-      <Icon icon="refresh" />
-    </Button>
-  );
+  const { hasKonnectPat } = settings;
+  const showKonnectSyncIntro = konnectSyncEnabled && !isProjectTabActive && !hasKonnectPat;
+  const [showKonnectConfigModal, setShowKonnectConfigModal] = useState(false);
+  const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
+  const [showSyncDetails, setShowSyncDetails] = useState(false);
+  const [copiedReason, setCopiedReason] = useState<string | null>(null);
+  const skippedRoutesByReason = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const { routeName, reason, serviceName } of lastSyncResult?.skippedRoutes ?? []) {
+      const list = map.get(reason) ?? [];
+      list.push(`${routeName} — ${serviceName}`);
+      map.set(reason, list);
+    }
+    return map;
+  }, [lastSyncResult]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      <SidebarHeader
-        isScratchPad={isScratchPad}
-        tabs={[
-          { name: 'projects', label: `Projects (${nonKonnectProjects.length})` },
-          {
-            name: 'konnect',
-            label: (
-              <span className="flex items-center gap-1">
-                <KongLogo />
-                Konnect ({konnectProjects.length})
-              </span>
-            ),
-          },
-        ]}
-        activeTab={activeTab}
-        onTabChange={tab => setActiveTab(tab)}
-        filterValue={isProjectTabActive ? filterInputValue : konnectFilter || ''}
-        onFilterChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
-        isFilterDisabled={false}
-        actionButton={isProjectTabActive ? projectsActionButton : konnectActionButton}
-      />
-
-      {!isProjectTabActive && syncing && <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>}
-      {!isProjectTabActive && syncError && <p className="px-4 pb-1 text-xs text-(--color-danger)">{syncError}</p>}
-
-      <div
-        ref={parentRef}
-        className="group/tree flex-1 overflow-y-auto pb-(--padding-sm)"
-        data-testid="project-navigation-tree-container"
-      >
-        <GridList
-          aria-label="Project Navigation Tree"
-          items={virtualizer.getVirtualItems()}
-          style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
-          className="outline-hidden"
-          selectedKeys={selectedKeys}
-          selectionMode="single"
-          dragAndDropHooks={sidebarDragAndDropHooks}
-        >
-          {virtualItem => {
-            const item = visibleFlatItems[virtualItem.index];
-            if (!item) return null;
-
-            return (
-              <GridListItem
-                // Prefix pinned-request to the key and id to ensure pinned items have a different key and id from non-pinned items with the same doc._id
-                key={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${virtualItem.key}`}
-                id={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`}
-                textValue={item.doc.name || item.kind}
-                onAuxClick={e => {
-                  if (e.button === 1 && item.kind === 'collectionChild') {
-                    e.preventDefault();
-                    tabNavigate(
-                      {
-                        organization: organizationId,
-                        project: item.project,
-                        workspace: item.workspace,
-                        item: item.doc,
-                      },
-                      { withTab: true, shouldNavigate: true, searchParams },
-                    );
-                  }
-                }}
-                onPress={async e => {
-                  const docId = item.doc._id;
-                  if (item.kind === 'project') {
-                    if (routeInfo?.resourceId === docId) {
-                      toggleProjectOrWorkspace(docId);
-                    } else {
-                      !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched });
-                      !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
-                    }
-                  } else if (item.kind === 'workspace') {
-                    if (routeInfo?.resourceId === docId && routeInfo?.routeId !== 'runner') {
-                      toggleProjectOrWorkspace(docId);
-                    } else {
-                      tabNavigate(
-                        {
-                          organization: organizationId,
-                          project: item.project,
-                          workspace: item.doc,
-                          item: item.doc,
-                        },
-                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
-                      );
-                    }
-                  } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
-                    if (
-                      routeInfo?.resourceId === docId &&
-                      models.requestGroup.isRequestGroupId(docId) &&
-                      routeInfo?.routeId !== 'runner'
-                    ) {
-                      toggleRequestGroups([docId], item.workspace);
-                    } else {
-                      tabNavigate(
-                        {
-                          organization: organizationId,
-                          project: item.project,
-                          workspace: item.workspace,
-                          item: item.doc,
-                        },
-                        { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
-                      );
-                    }
-                  }
-                }}
-                className="group outline-hidden select-none"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: `${virtualItem.size}px`,
-                  transform: `translateY(${virtualItem.start}px)`,
-                }}
-              >
-                {item.kind === 'project' && (
-                  <ProjectNode item={item} onToggle={toggleProjectOrWorkspace} storageRules={storageRules} />
+      <Tabs selectedKey={activeTab} onSelectionChange={key => setActiveTab(key as 'projects' | 'konnect')}>
+        <SideBarTabList
+          konnectSyncEnabled={konnectSyncEnabled}
+          isScratchPad={isScratchPad}
+          nonKonnectProjectLength={nonKonnectProjects.length}
+          konnectProjectsLength={konnectProjects.length}
+        />
+      </Tabs>
+      {showKonnectSyncIntro ? (
+        <KonnectSyncIntro onConfigure={() => setShowKonnectConfigModal(true)} />
+      ) : (
+        <>
+          <div className="flex justify-between gap-1 p-(--padding-sm)">
+            <SidebarSearchField
+              value={isProjectTabActive ? filterInputValue : (konnectFilter ?? '')}
+              isDisabled={projects.length === 0}
+              onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
+            />
+            {isProjectTabActive ? (
+              !isScratchPad && <NewProjectButton onPress={onCreateProject} isDisabled={projects.length === 0} />
+            ) : (
+              <div className="flex items-center gap-1">
+                {syncing ? (
+                  <Button
+                    aria-label="Cancel sync"
+                    onPress={cancelSync}
+                    className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                  >
+                    Cancel
+                    <Icon icon="stop-circle" />
+                  </Button>
+                ) : (
+                  <Button
+                    aria-label="Sync Konnect"
+                    onPress={handleSync}
+                    className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                  >
+                    <Icon icon="refresh" />
+                    Sync
+                  </Button>
                 )}
+                <Button
+                  aria-label="Konnect settings"
+                  onPress={() => setShowKonnectConfigModal(true)}
+                  className="flex aspect-square h-full items-center justify-center rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                >
+                  <Icon icon="gear" />
+                </Button>
+              </div>
+            )}
+          </div>
 
-                {item.kind === 'workspace' && (
-                  <WorkspaceNode
-                    item={item}
-                    onToggle={toggleProjectOrWorkspace}
-                    sortOrder={collectionSortOrders[item.doc._id] || 'type-manual'}
-                    onSortOrderChange={newSortOder => {
-                      if (item.doc.scope === 'collection') {
-                        setCollectionSortOrders(prev => {
-                          const newCollectionSortOrders = { ...prev, [item.doc._id]: newSortOder };
-                          return newCollectionSortOrders;
-                        });
+          {!isProjectTabActive && syncing && (
+            <p className="truncate px-4 pb-1 text-xs text-(--hl) italic">{progress}</p>
+          )}
+
+          <div
+            ref={parentRef}
+            className="group/tree flex-1 overflow-y-auto pb-(--padding-sm)"
+            data-testid="project-navigation-tree-container"
+          >
+            <GridList
+              aria-label="Project Navigation Tree"
+              items={virtualizer.getVirtualItems()}
+              style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
+              className="outline-hidden"
+              selectedKeys={selectedKeys}
+              selectionMode="single"
+              dragAndDropHooks={sidebarDragAndDropHooks}
+            >
+              {virtualItem => {
+                const item = visibleFlatItems[virtualItem.index];
+                if (!item) return null;
+
+                return (
+                  <GridListItem
+                    // Prefix pinned-request to the key and id to ensure pinned items have a different key and id from non-pinned items with the same doc._id
+                    key={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${virtualItem.key}`}
+                    id={`${item.kind === 'pinnedRequest' ? 'pinned-request-' : ''}${item.doc._id}`}
+                    textValue={item.doc.name || item.kind}
+                    onAuxClick={e => {
+                      if (e.button === 1 && item.kind === 'collectionChild') {
+                        e.preventDefault();
+                        tabNavigate(
+                          {
+                            organization: organizationId,
+                            project: item.project,
+                            workspace: item.workspace,
+                            item: item.doc,
+                          },
+                          { withTab: true, shouldNavigate: true, searchParams },
+                        );
                       }
                     }}
-                  />
-                )}
+                    onPress={async e => {
+                      const docId = item.doc._id;
+                      if (item.kind === 'project') {
+                        if (routeInfo?.resourceId === docId) {
+                          toggleProjectOrWorkspace(docId);
+                        } else {
+                          !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched });
+                          !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
+                        }
+                      } else if (item.kind === 'workspace') {
+                        if (routeInfo?.resourceId === docId && routeInfo?.routeId !== 'runner') {
+                          toggleProjectOrWorkspace(docId);
+                        } else {
+                          tabNavigate(
+                            {
+                              organization: organizationId,
+                              project: item.project,
+                              workspace: item.doc,
+                              item: item.doc,
+                            },
+                            { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                          );
+                        }
+                      } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
+                        if (
+                          routeInfo?.resourceId === docId &&
+                          models.requestGroup.isRequestGroupId(docId) &&
+                          routeInfo?.routeId !== 'runner'
+                        ) {
+                          toggleRequestGroups([docId], item.workspace);
+                        } else {
+                          tabNavigate(
+                            {
+                              organization: organizationId,
+                              project: item.project,
+                              workspace: item.workspace,
+                              item: item.doc,
+                            },
+                            { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                          );
+                        }
+                      }
+                    }}
+                    className="group outline-hidden select-none"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualItem.size}px`,
+                      transform: `translateY(${virtualItem.start}px)`,
+                    }}
+                  >
+                    {item.kind === 'project' && (
+                      <ProjectNode item={item} onToggle={toggleProjectOrWorkspace} storageRules={storageRules} />
+                    )}
 
-                {item.kind === 'pinnedHeader' && <PinnedHeaderNode />}
+                    {item.kind === 'workspace' && (
+                      <WorkspaceNode
+                        item={item}
+                        onToggle={toggleProjectOrWorkspace}
+                        sortOrder={collectionSortOrders[item.doc._id] || 'type-manual'}
+                        onSortOrderChange={newSortOder => {
+                          if (item.doc.scope === 'collection') {
+                            setCollectionSortOrders(prev => {
+                              const newCollectionSortOrders = { ...prev, [item.doc._id]: newSortOder };
+                              return newCollectionSortOrders;
+                            });
+                          }
+                        }}
+                      />
+                    )}
 
-                {item.kind === 'collectionChild' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
+                    {item.kind === 'pinnedHeader' && <PinnedHeaderNode />}
 
-                {item.kind === 'pinnedRequest' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
+                    {item.kind === 'collectionChild' && (
+                      <RequestNode item={item} onToggleFolder={toggleRequestGroups} />
+                    )}
 
-                {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
+                    {item.kind === 'pinnedRequest' && <RequestNode item={item} onToggleFolder={toggleRequestGroups} />}
 
-                {item.kind === 'emptyProject' || item.kind === 'emptyCollection' || item.kind === 'emptyFolder' ? (
-                  <EmptyNode item={item} storageRules={storageRules} />
-                ) : null}
-              </GridListItem>
-            );
-          }}
-        </GridList>
-      </div>
+                    {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
+
+                    {item.kind === 'emptyProject' || item.kind === 'emptyCollection' || item.kind === 'emptyFolder' ? (
+                      <EmptyNode item={item} storageRules={storageRules} />
+                    ) : null}
+                  </GridListItem>
+                );
+              }}
+            </GridList>
+          </div>
+          {!isProjectTabActive && lastSyncResult && (
+            <div
+              className={`m-2 flex items-start justify-between gap-2 rounded-sm p-3 text-xs ${
+                !lastSyncResult.success
+                  ? 'bg-[rgba(58,18,8,1)]'
+                  : lastSyncResult.skippedRoutes.length > 0
+                    ? 'bg-[rgba(250,173,20,0.15)]'
+                    : 'bg-[rgba(82,196,26,0.15)]'
+              }`}
+            >
+              <div className="flex min-w-0 items-start gap-3">
+                <Icon
+                  icon={
+                    lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0
+                      ? 'circle-check'
+                      : 'exclamation-triangle'
+                  }
+                  className={lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0 ? 'mt-1.5' : 'mt-1'}
+                />
+                <div className="min-w-0">
+                  <p className="font-semibold text-(--color-font)">
+                    {lastSyncResult.success
+                      ? lastSyncResult.skippedRoutes.length > 0
+                        ? 'Sync complete, with warnings'
+                        : 'Sync complete'
+                      : 'Sync failed'}
+                  </p>
+                  <p className="mt-0.5 text-(--hl)">
+                    {!lastSyncResult.success
+                      ? lastSyncResult.error
+                      : lastSyncResult.routes.created === 0 &&
+                          lastSyncResult.routes.updated === 0 &&
+                          lastSyncResult.routes.deleted === 0 &&
+                          lastSyncResult.routes.skipped === 0
+                        ? 'Already up-to-date with Konnect.'
+                        : [
+                            lastSyncResult.routes.created > 0 && `${lastSyncResult.routes.created} request(s) added`,
+                            lastSyncResult.routes.updated > 0 && `${lastSyncResult.routes.updated} request(s) updated`,
+                            lastSyncResult.routes.deleted > 0 && `${lastSyncResult.routes.deleted} request(s) deleted`,
+                            lastSyncResult.routes.skipped > 0 && `${lastSyncResult.routes.skipped} route(s) skipped`,
+                          ]
+                            .filter(Boolean)
+                            .join(', ') + '.'}
+                  </p>
+                  {lastSyncResult.success && lastSyncResult.skippedRoutes.length > 0 && (
+                    <>
+                      <button
+                        className="mt-1 flex items-center gap-1 text-(--hl) hover:text-(--color-font)"
+                        onClick={() => setShowSyncDetails(prev => !prev)}
+                      >
+                        <Icon icon={showSyncDetails ? 'chevron-down' : 'chevron-right'} className="h-2.5 w-2.5" />
+                        {showSyncDetails ? 'Hide details' : 'Show details'}
+                      </button>
+                      {showSyncDetails && (
+                        <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
+                          {[...skippedRoutesByReason.entries()].map(([reason, routes]) => {
+                            const MAX_SHOW = 5;
+                            const visible = routes.slice(0, MAX_SHOW);
+                            const extra = routes.length - MAX_SHOW;
+                            return (
+                              <div key={reason}>
+                                <p className="text-(--hl)">{reason} for the following routes:</p>
+                                <ul className="mt-1 space-y-0.5 pl-3">
+                                  {visible.map(r => (
+                                    <li key={r} className="list-disc text-(--color-font)">
+                                      {r}
+                                    </li>
+                                  ))}
+                                </ul>
+                                {extra > 0 && (
+                                  <div className="mt-1 flex items-center gap-2 pl-3 text-(--hl)">
+                                    <span>+ {extra} more</span>
+                                    <button
+                                      className="underline hover:text-(--color-font)"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(routes.join('\n'));
+                                        setCopiedReason(reason);
+                                        setTimeout(() => setCopiedReason(null), 2000);
+                                      }}
+                                    >
+                                      {copiedReason === reason ? 'Copied' : 'Copy full list'}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+              <button
+                className="-mt-2 shrink-0 text-xl text-(--hl) hover:text-(--color-font)"
+                onClick={() => setLastSyncResult(null)}
+              >
+                <Icon icon="close" />
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {showKonnectConfigModal && (
+        <KonnectSettingsModal
+          onClose={() => setShowKonnectConfigModal(false)}
+          syncKonnectProjectsAndNotifyRef={syncKonnectProjectsAndNotifyRef}
+        />
+      )}
     </div>
   );
 };
@@ -900,27 +1102,18 @@ export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreatePro
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      <SidebarHeader
-        isScratchPad={isScratchPad}
-        tabs={[{ name: 'projects', label: 'Projects (0)' }]}
-        activeTab="projects"
-        onTabChange={() => {}}
-        filterValue=""
-        onFilterChange={() => {}}
-        isFilterDisabled
-        actionButton={
-          !isScratchPad ? (
-            <Button
-              aria-label="Create new Project"
-              onPress={onCreateProject}
-              className="flex h-full items-center justify-center gap-1 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="plus" className="h-2.5 w-2.5" />
-              <span>New Project</span>
-            </Button>
-          ) : null
-        }
-      />
+      <Tabs>
+        <SideBarTabList
+          konnectSyncEnabled={false}
+          isScratchPad={isScratchPad}
+          nonKonnectProjectLength={0}
+          konnectProjectsLength={0}
+        />
+      </Tabs>
+      <div className="flex justify-between gap-1 p-(--padding-sm)">
+        <SidebarSearchField value="" isDisabled onChange={() => {}} />
+        {!isScratchPad && <NewProjectButton onPress={onCreateProject} />}
+      </div>
     </div>
   );
 };
