@@ -31,12 +31,13 @@ export function buildLiquidEngine(opts: {
     tagDelimiterRight: '%}',
     strictVariables,
     strictFilters: false,
-    // Match Nunjucks JS truthiness: '', 0, [] are falsy
-    jsTruthy: true,
-    // Restrict property access to own properties only — prevents prototype-chain traversal
-    // (e.g. {{ constructor }} or {{ __proto__ }}) from leaking context internals.
-    // Render contexts are plain objects so no legitimate template needs inherited properties.
-    ownPropertyOnly: true,
+    jsTruthy: true, // Required to match Nunjucks JS truthiness: '', 0, [] are falsy
+    ownPropertyOnly: true, // Contexts are plain objects     
+    dynamicPartials: false, // Disable dynamic paths to prevent variable-interpolated includes.
+    
+    // hard-stop rendering after 10 s and cap object allocations.
+    renderLimit: 10_000,
+    memoryLimit: 10_000_000,
   });
 
   // No-op globals to maintain backwards compat with Nunjucks builtins
