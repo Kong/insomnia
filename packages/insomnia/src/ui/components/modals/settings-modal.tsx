@@ -1,15 +1,12 @@
-import { getOrganizationFeatures } from 'insomnia-api';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { AI_PLUGIN_NAME, isKonnectSyncEnabled } from '~/common/constants';
-import { models } from '~/insomnia-data';
+import { AI_PLUGIN_NAME } from '~/common/constants';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
-import { KonnectSettings } from '~/ui/components/settings/konnect-settings';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
@@ -32,7 +29,16 @@ export interface SettingsModalHandle {
   show: (options?: { tab?: SettingsModalTabKey }) => void;
 }
 
-type SettingsModalTabKey = 'data' | 'keyboard' | 'themes' | 'plugins' | 'general' | 'proxy' | 'credentials' | 'ai' | 'scripting' | 'konnect';
+type SettingsModalTabKey =
+  | 'data'
+  | 'keyboard'
+  | 'themes'
+  | 'plugins'
+  | 'general'
+  | 'proxy'
+  | 'credentials'
+  | 'ai'
+  | 'scripting';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
@@ -42,29 +48,12 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   const { organizationId } = useParams() as { organizationId?: string };
 
   const [shouldShowAiSettingsTab, setShouldShowAiSettingsTab] = useState(false);
-  const [shouldShowKonnectTab, setShouldShowKonnectTab] = useState(false);
 
   useEffect(() => {
     const checkFeatures = async () => {
       const plugins = await pluginsBridge.getBundlePlugins();
       const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
       setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
-
-      if (
-        isKonnectSyncEnabled() &&
-        userSession.id &&
-        organizationId &&
-        !models.organization.isScratchpadOrganizationId(organizationId)
-      ) {
-        try {
-          const res = await getOrganizationFeatures({ organizationId, sessionId: userSession.id });
-          setShouldShowKonnectTab(res?.features?.konnectSync?.enabled ?? false);
-        } catch {
-          setShouldShowKonnectTab(false);
-        }
-      } else {
-        setShouldShowKonnectTab(false);
-      }
     };
     checkFeatures();
   }, [userSession.id, organizationId]);
@@ -173,14 +162,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
                 AI Settings
               </Tab>
             )}
-            {shouldShowKonnectTab && (
-              <Tab
-                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-                id="konnect"
-              >
-                Konnect
-              </Tab>
-            )}
           </TabList>
           <TabPanel className="h-full w-full overflow-y-auto" id="general">
             <General />
@@ -242,11 +223,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           {shouldShowAiSettingsTab && (
             <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="ai">
               <AISettings />
-            </TabPanel>
-          )}
-          {shouldShowKonnectTab && (
-            <TabPanel className="h-full w-full overflow-y-auto" id="konnect">
-              <KonnectSettings />
             </TabPanel>
           )}
         </Tabs>

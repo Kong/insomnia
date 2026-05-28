@@ -335,12 +335,26 @@ const Root = () => {
   const latestInSubmission = useLatest(ifInSubmission);
 
   useEffect(() => {
-    return window.main.on('git.db-synced', () => {
+    const unsubLoggedIn = window.main.on('loggedIn', (_, isLoggedIn: boolean) => {
+      if (!latestInSubmission.current) {
+        if (!isLoggedIn) {
+          // If the user just logged out, navigate to the login page
+          navigate(href('/auth/login'));
+        } else {
+          navigate(href('/organization'));
+        }
+      }
+    });
+    const unsubGitDbSynced = window.main.on('git.db-synced', () => {
       if (!latestInSubmission.current) {
         revalidate();
       }
     });
-  }, [latestInSubmission, revalidate]);
+    return () => {
+      unsubLoggedIn();
+      unsubGitDbSynced();
+    };
+  }, [latestInSubmission, revalidate, navigate]);
 
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
