@@ -521,7 +521,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
     const fn =
       process.type === 'renderer'
         ? runScriptConcurrently
-        : (require(/* @vite-ignore */ '../script-executor') as typeof ScriptExecutorModule).runScript;
+        : (require('../script-executor') as typeof ScriptExecutorModule).runScript;
     const output = await fn({
       script,
       context: {

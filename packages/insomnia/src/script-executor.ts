@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+
 import * as _ from 'es-toolkit/compat';
 
 import { initInsomniaObject, InsomniaObject } from '../../insomnia-scripting-environment/src/objects';
@@ -65,7 +67,7 @@ export const runScript = async ({
   const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
-  await appendScriptLogs(context.timelinePath, scriptConsole.dumpLogs());
+  await fs.promises.appendFile(context.timelinePath, scriptConsole.dumpLogs());
 
   // console.log('mutatedInsomniaObject', mutatedContextObject);
   // console.log('context', context);
@@ -118,13 +120,4 @@ function proxiedSetTimeout(callback: () => void, ms?: number | undefined) {
     callback();
     resolveHdl(null);
   }, ms);
-}
-
-async function appendScriptLogs(timelinePath: string, data: string) {
-  if (process.type === 'renderer') {
-    return window.main.timeline.appendToFile({ timelinePath, data });
-  }
-
-  const { appendFile } = require('node:fs/promises');
-  return appendFile(timelinePath, data);
 }
