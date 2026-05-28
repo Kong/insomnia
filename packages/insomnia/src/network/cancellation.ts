@@ -4,10 +4,7 @@ const cancelRequestFunctionMap = new Map<string, () => void>();
 const isRendererProcess = () => (process as any).type === 'renderer';
 
 export async function cancelRequestById(requestId: string) {
-  if (isRendererProcess()) {
-    window.main.completeExecutionStep({ requestId });
-  }
-
+  window.main.completeExecutionStep({ requestId });
   const cancel = cancelRequestFunctionMap.get(requestId);
   if (cancel) {
     return cancel();
