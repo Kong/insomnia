@@ -227,6 +227,13 @@ function DetectNodeBuiltinImports() {
 
   const recordNodeBuiltinImports = (importer: string, sourceText: string) => {
     const relativeImporter = path.relative(process.cwd(), importer);
+    if (
+      relativeImporter === '../insomnia-testing/src/generate/generate.ts' ||
+      relativeImporter === '../insomnia-testing/src/run/run.ts'
+    ) {
+      return;
+    }
+
     const importsByBuiltin = collectNodeBuiltinImports(importer, sourceText);
 
     for (const [builtin, entry] of importsByBuiltin) {

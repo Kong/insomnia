@@ -1,22 +1,6 @@
 {
   "entries": [
     {
-      "importer": "../insomnia-testing/src/generate/generate.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "../insomnia-testing/src/run/run.ts",
-      "builtin": "fs"
-    },
-    {
-      "importer": "../insomnia-testing/src/run/run.ts",
-      "builtin": "os"
-    },
-    {
-      "importer": "../insomnia-testing/src/run/run.ts",
-      "builtin": "path"
-    },
-    {
       "importer": "src/plugins/context/response.ts",
       "builtin": "fs"
     },
