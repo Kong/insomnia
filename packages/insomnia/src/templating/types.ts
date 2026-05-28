@@ -22,7 +22,6 @@ import type {
 
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PluginStore } from '../plugins/context/store';
-import type { extractNunjucksTagFromCoords } from './utils';
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
 export type PluginToMainAPIPaths =
@@ -104,7 +103,9 @@ export type RenderContextOptions = BaseRenderContextOptions &
 
 export type NunjucksTagContextMenuAction = 'edit' | 'delete';
 
-export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
+export interface nunjucksTagContextMenuOptions {
+  range: { from: { line: number; ch: number }; to: { line: number; ch: number } };
+  template: string;
   type: NunjucksTagContextMenuAction;
 }
 
