@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
+import { recordProjectRecentRequest } from '~/common/project';
 import type { Request, RequestGroup } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
@@ -217,12 +218,24 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 cookieJar: rendered.workspaceCookieJar,
                 suppressUserAgent: rendered.suppressUserAgent,
               });
+            rendered &&
+              recordProjectRecentRequest({
+                projectId,
+                requestId,
+                workspaceId: activeWorkspace._id,
+              });
           };
           startListening();
           return;
         }
 
         try {
+          recordProjectRecentRequest({
+            projectId,
+            requestId,
+            workspaceId: activeWorkspace._id,
+          });
+
           send({
             requestId,
             workspaceId: activeWorkspace._id,
@@ -380,7 +393,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="code"
                           label="Generate Client Code"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestSendMenuGenerateCodeClicked });
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.requestSendMenuGenerateCodeClicked,
+                            });
                             showModal(GenerateCodeModal, { request: activeRequest });
                           }}
                         />
@@ -392,7 +407,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="clock-o"
                           label="Send After Delay"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestSendMenuSendAfterDelayClicked });
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.requestSendMenuSendAfterDelayClicked,
+                            });
                             showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send After Delay',

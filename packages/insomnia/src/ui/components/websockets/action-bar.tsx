@@ -1,6 +1,7 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 
+import { recordProjectRecentRequest } from '~/common/project';
 import type { SocketIORequest, WebSocketRequest } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 import {
@@ -118,8 +119,15 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
         return;
       }
       const connectParams = await generateConnectParams();
-      connectParams && connect(connectParams);
-    }, [connect, generateConnectParams, isOpen, request._id, request.type, updateTabById]);
+      if (connectParams) {
+        recordProjectRecentRequest({
+          projectId,
+          requestId: request._id,
+          workspaceId,
+        });
+        connect(connectParams);
+      }
+    }, [connect, generateConnectParams, isOpen, projectId, request._id, request.type, updateTabById, workspaceId]);
 
     const setUrl = useCallback(
       (url: string) => {

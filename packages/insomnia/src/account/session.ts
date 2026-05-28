@@ -42,7 +42,7 @@ export async function absorbKey(sessionId: string, key: string) {
     JSON.parse(encPrivateKey),
   );
 
-  window.main.loginStateChange();
+  window.main.loginStateChange(true);
 }
 
 export async function getPrivateKey() {
@@ -93,7 +93,7 @@ export async function logout(clearCredentials = false) {
   if (clearCredentials) {
     await _removeAllCredentials();
   }
-  window.main.loginStateChange();
+  window.main.loginStateChange(false);
 }
 
 /** Set data for the new session and store it encrypted with the sessionId */

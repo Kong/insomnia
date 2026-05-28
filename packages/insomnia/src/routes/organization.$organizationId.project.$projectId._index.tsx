@@ -41,6 +41,7 @@ import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
+import { FirstRequestCreation } from '~/ui/components/first-request-creation';
 import { Icon } from '~/ui/components/icon';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
@@ -142,6 +143,36 @@ const Component = () => {
     userSession.accountId &&
     models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && models.organization.isPersonalOrganization(organization);
+  const greetingName = userSession.firstName || userSession.email.split('@')[0] || 'there';
+  const collectionItems = useMemo(
+    () =>
+      localFiles
+        .filter(file => file.scope === 'collection' && file.workspace)
+        .map(file => ({
+          id: file.workspace!._id,
+          label: file.name,
+        })),
+    [localFiles],
+  );
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
+    scope: WorkspaceScope;
+    isOpen: boolean;
+    redirect?: boolean;
+  } | null>({
+    scope: 'collection',
+    isOpen: false,
+  });
+
+  useEffect(() => {
+    setSelectedCollectionId(currentSelection => {
+      if (currentSelection && collectionItems.some(collection => collection.id === currentSelection)) {
+        return currentSelection;
+      }
+
+      return collectionItems[0]?.id ?? null;
+    });
+  }, [collectionItems]);
 
   const tabNavigate = useTabNavigate();
 
@@ -218,14 +249,6 @@ const Component = () => {
         return;
       },
     }));
-
-  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
-    scope: WorkspaceScope;
-    isOpen: boolean;
-  } | null>({
-    scope: 'collection',
-    isOpen: false,
-  });
 
   const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
   const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
@@ -308,6 +331,17 @@ const Component = () => {
     <ErrorBoundary>
       <Fragment>
         <OrganizationTabList showActiveStatus={false} />
+        <div className="px-4 pt-4">
+          <FirstRequestCreation
+            greetingName={greetingName}
+            collectionItems={collectionItems}
+            selectedCollectionId={selectedCollectionId}
+            onSelectedCollectionChange={setSelectedCollectionId}
+            onCreateCollection={() => {
+              setNewWorkspaceModalState({ scope: 'collection', isOpen: true, redirect: false });
+            }}
+          />
+        </div>
         {activeProject ? (
           <div className="flex w-full flex-col overflow-hidden">
             {billing.isActive ? null : (
@@ -668,10 +702,17 @@ const Component = () => {
             project={activeProject}
             storageRules={storageRules}
             scope={newWorkspaceModalState.scope}
+            onCreateWorkspace={workspaceId => {
+              if (newWorkspaceModalState.scope === 'collection' && newWorkspaceModalState.redirect === false) {
+                setSelectedCollectionId(workspaceId);
+              }
+            }}
+            redirectAfterCreate={newWorkspaceModalState.redirect}
             onOpenChange={isOpen => {
               setNewWorkspaceModalState({
                 scope: newWorkspaceModalState.scope,
                 isOpen,
+                redirect: newWorkspaceModalState.redirect,
               });
             }}
           />
