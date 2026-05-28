@@ -124,7 +124,7 @@ export const KonnectSettingsModal = ({
               {showDisconnectConfirm ? (
                 <>
                   <p className="text-sm text-(--hl)">
-                    Disconnecting will remove your Personal Access Token and deletes related project data. This action
+                    Disconnecting will remove your Personal Access Token and delete related project data. This action
                     cannot be undone. Are you sure?
                   </p>
                   <div className="flex items-center justify-end gap-3 pt-2">
@@ -200,7 +200,7 @@ export const KonnectSettingsModal = ({
 
                   <div className="flex items-center gap-2">
                     <Button
-                      className="disabled:forbid-pointer-events rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs) disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs) disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                       isDisabled={!pat.trim() || status === 'validating'}
                       onPress={handleConnect}
                     >
