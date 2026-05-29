@@ -100,22 +100,25 @@ export const mockRouteToHar = ({
   body: string;
 }): Promise<Har.Response> => {
   const validHeaders = headersArray.filter(({ name }) => !!name);
-  return import('~/common/har').then(({ getResponseCookiesFromHeaders }) => ({
-    status: +statusCode,
-    statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
-    httpVersion: 'HTTP/1.1',
-    headers: validHeaders,
-    cookies: getResponseCookiesFromHeaders(validHeaders),
-    content: {
-      size: Buffer.byteLength(body),
-      mimeType,
-      text: body,
-      compression: 0,
-    },
-    headersSize: -1,
-    bodySize: -1,
-    redirectURL: '',
-  }));
+  return (async () => {
+    const { getResponseCookiesFromHeaders } = await import('~/common/har');
+    return {
+      status: +statusCode,
+      statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
+      httpVersion: 'HTTP/1.1',
+      headers: validHeaders,
+      cookies: await getResponseCookiesFromHeaders(validHeaders),
+      content: {
+        size: Buffer.byteLength(body),
+        mimeType,
+        text: body,
+        compression: 0,
+      },
+      headersSize: -1,
+      bodySize: -1,
+      redirectURL: '',
+    };
+  })();
 };
 
 export const useMockRoutePatcher = () => {

@@ -1,4 +1,4 @@
-import { Cookie as ToughCookie } from 'tough-cookie';
+import { Cookie as ToughCookie, CookieJar } from 'tough-cookie';
 
 import type { Cookie } from '~/insomnia-data';
 
@@ -26,10 +26,26 @@ const cookieToString = (cookie: CookieInput) => {
   return value;
 };
 
+const getCookiesForUrl = (cookies: Cookie[], url: string): Cookie[] => {
+  try {
+    const sanitized = cookies.map(c => ({
+      ...c,
+      expires: c.expires === null || c.expires === undefined ? 'Infinity' : c.expires,
+    }));
+    const jar = CookieJar.fromJSON(JSON.stringify({ cookies: sanitized }));
+    jar.rejectPublicSuffixes = false;
+    jar.looseMode = true;
+    return jar.getCookiesSync(url).map(c => c.toJSON() as Cookie);
+  } catch {
+    return [];
+  }
+};
+
 export interface CookiesBridgeAPI {
   fromJSON: (cookie: CookieInput) => Promise<Cookie | null>;
   parse: (cookie: string) => Promise<Cookie | null>;
   toString: (cookie: CookieInput) => Promise<string>;
+  getCookiesForUrl: (args: { cookies: Cookie[]; url: string }) => Promise<Cookie[]>;
 }
 
 export function registerCookieHandlers() {
@@ -41,5 +57,8 @@ export function registerCookieHandlers() {
   });
   ipcMainHandle('cookies.toString', (_, cookie: CookieInput) => {
     return cookieToString(cookie);
+  });
+  ipcMainHandle('cookies.getCookiesForUrl', (_, { cookies, url }: { cookies: Cookie[]; url: string }) => {
+    return getCookiesForUrl(cookies, url);
   });
 }

@@ -132,6 +132,7 @@ const cookies: CookiesBridgeAPI = {
   fromJSON: cookie => invokeWithNormalizedError('cookies.fromJSON', cookie),
   parse: cookie => invokeWithNormalizedError('cookies.parse', cookie),
   toString: cookie => invokeWithNormalizedError('cookies.toString', cookie),
+  getCookiesForUrl: args => invokeWithNormalizedError('cookies.getCookiesForUrl', args),
 };
 
 const secretStorage: secretStorageBridgeAPI = {
