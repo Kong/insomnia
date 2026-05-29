@@ -80,10 +80,10 @@ function parseRemoteExtendsUrl(entry: string, base?: URL): URL {
 // - Hostname must not be a known private/loopback address
 // - DNS resolution must not yield a private/loopback address
 async function assertSafeRemoteUrl(url: URL): Promise<void> {
+  const hostname = url.hostname.toLowerCase();
   if (url.protocol !== 'https:') {
     throw new Error(`Remote "extends" URL must use https: ${url.href}`);
   }
-  const hostname = url.hostname.toLowerCase();
   if (!hostname || isPrivateOrLoopbackHost(hostname)) {
     throw new Error(`Remote "extends" URL targets a disallowed host: ${url.href}`);
   }
@@ -154,6 +154,61 @@ async function validateRemoteExtends(url: URL, visited: Set<string>, depth: numb
   }
 }
 
+// Fetches a remote "extends" URL and fully inlines it into a self-contained ruleset object.
+// Unlike validateRemoteExtends (which preserves the URL for Spectral to fetch later), this
+// fetches the content (SSRF-guarded), validates it (blocking the "functions" RCE vector and
+// prototype pollution), recursively flattens any nested remote/relative extends, and merges
+// everything into a single object. Built-in spectral identifiers (spectral:oas, …) are the only
+// entries preserved in "extends"; no remote URLs remain. This is the basis for the compiled
+// ruleset the lint worker consumes, eliminating the second (unguarded) fetch that created the
+// validate-then-use race.
+async function flattenRemoteExtends(url: URL, visited: Set<string>, depth: number): Promise<Ruleset> {
+  if (depth > MAX_EXTENDS_DEPTH) {
+    throw new Error(`"extends" nested too deeply (max ${MAX_EXTENDS_DEPTH}) at ${url.href}`);
+  }
+  if (visited.has(url.href)) {
+    throw new Error(`"extends" cycle detected at ${url.href}`);
+  }
+
+  const ruleset = await readRemoteRuleset(url);
+  const validation = validateSpectralRuleset(YAML.stringify(ruleset));
+  if (!validation.isValid) {
+    throw new Error(`Remote ruleset at "${url.href}" failed validation: ${validation.error}`);
+  }
+
+  const nextVisited = new Set(visited).add(url.href);
+  const flattened: Ruleset = {};
+  const builtinExtends: string[] = [];
+
+  for (const entry of toArray(ruleset.extends)) {
+    if (Array.isArray(entry)) {
+      throw new TypeError(
+        `Failed to process "extends" entry ${JSON.stringify(entry)}: tuple format (e.g. [path, severity]) is not supported. Use a plain string instead.`,
+      );
+    }
+    // Built-in identifiers (spectral:oas, …) are resolved by Spectral locally; carry through.
+    if (ALLOWED_EXTENDS_IDENTIFIERS.includes(entry)) {
+      builtinExtends.push(entry);
+      continue;
+    }
+    // Nested remote/relative URL — resolve against the current URL and flatten recursively.
+    const child = await flattenRemoteExtends(parseRemoteExtendsUrl(entry, url), nextVisited, depth + 1);
+    if (child.extends) {
+      builtinExtends.push(...child.extends);
+    }
+    mergeInto(flattened, child); // later extends entries override earlier ones
+  }
+
+  // Apply this remote ruleset's own rules on top; parent rules override child rules of the same name.
+  const ownOverrides: Ruleset = { ...ruleset };
+  delete ownOverrides.extends;
+  mergeInto(flattened, ownOverrides);
+
+  const uniqueExtends = [...new Set(builtinExtends)];
+  delete flattened.extends;
+  return uniqueExtends.length > 0 ? { extends: uniqueExtends, ...flattened } : flattened;
+}
+
 // Recursively processes a local ruleset file's "extends" entries:
 // - Local file paths are loaded and their rules merged into the output.
 // - Remote URLs are validated (SSRF + content) then kept in "extends" for Spectral to fetch at lint time.
@@ -165,6 +220,7 @@ async function flattenRuleset(
   visited: Set<string>,
   depth: number,
   rootDir: string,
+  inlineRemote: boolean,
 ): Promise<Ruleset> {
   const absolute = path.resolve(filePath);
   assertAllowed(absolute, visited, depth, rootDir);
@@ -174,8 +230,9 @@ async function flattenRuleset(
   const nextVisited = new Set(visited).add(absolute);
 
   const flattenedRuleset: Ruleset = {};
-  // Collects entries that stay in "extends": built-in spectral identifiers and remote URLs
-  // (already validated by validateRemoteExtends). Local file paths are flattened out entirely.
+  // Collects entries that stay in "extends": built-in spectral identifiers and, in bundle mode,
+  // remote URLs (already validated by validateRemoteExtends). Local file paths are flattened out
+  // entirely; in compile mode (inlineRemote) remote URLs are flattened out too.
   const remainingExtends: string[] = [];
 
   for (const entry of toArray(ruleset.extends)) {
@@ -189,15 +246,27 @@ async function flattenRuleset(
       remainingExtends.push(entry);
       continue;
     }
-    // Remote URL extends — validate upfront (SSRF + content checks), then preserve the URL
-    // in "extends" for Spectral to fetch fresh at lint time via spectralRuntime.fetch.
+    // Remote URL extends.
     if (!entry.startsWith('./') && !entry.startsWith('../') && !path.isAbsolute(entry)) {
+      if (inlineRemote) {
+        // Compile mode: fetch + validate + fully inline the remote content so the lint worker
+        // never re-fetches it (eliminates the validate-then-use race). Built-in identifiers
+        // surfaced by the remote ruleset are preserved.
+        const remoteRuleset = await flattenRemoteExtends(parseRemoteExtendsUrl(entry), nextVisited, depth + 1);
+        if (remoteRuleset.extends) {
+          remainingExtends.push(...remoteRuleset.extends);
+        }
+        mergeInto(flattenedRuleset, remoteRuleset);
+        continue;
+      }
+      // Bundle mode: validate upfront (SSRF + content checks), then preserve the URL in "extends"
+      // as the pollable source. The compile step inlines it before linting.
       await validateRemoteExtends(parseRemoteExtendsUrl(entry), nextVisited, depth + 1);
       remainingExtends.push(entry);
       continue;
     }
     // Local file paths are recursively loaded and flattened.
-    const childRuleset = await flattenRuleset(path.resolve(baseDir, entry), nextVisited, depth + 1, rootDir);
+    const childRuleset = await flattenRuleset(path.resolve(baseDir, entry), nextVisited, depth + 1, rootDir, inlineRemote);
     if (childRuleset.extends) {
       remainingExtends.push(...childRuleset.extends);
     }
@@ -215,14 +284,32 @@ async function flattenRuleset(
   return uniqueExtends.length > 0 ? { extends: uniqueExtends, ...flattenedRuleset } : flattenedRuleset;
 }
 
-// Entry point for ruleset processing. Flattens all local "extends" into a single ruleset,
-// validates all remote "extends" URLs (SSRF + content), validates the merged output for
-// disallowed keys (e.g. "functions"), and returns the result as a YAML string.
-// The output is safe to store and pass to Spectral: local content is fully merged, remote URLs
-// have been pre-vetted and are preserved in "extends" for Spectral to resolve at lint time.
+// Entry point for ruleset processing at upload/storage time. Flattens all local "extends" into a
+// single ruleset, validates all remote "extends" URLs (SSRF + content), validates the merged
+// output for disallowed keys (e.g. "functions"), and returns the result as a YAML string.
+// The output is safe to STORE: local content is fully merged, remote URLs have been pre-vetted
+// and are preserved in "extends" as the pollable source. Use compileSpectralRuleset to produce
+// the URL-free object that is actually linted.
 export async function bundleSpectralRuleset(sourcePath: string): Promise<string> {
   const rootDir = path.dirname(path.resolve(sourcePath));
-  const flattenedRuleset = await flattenRuleset(sourcePath, new Set(), 0, rootDir);
+  const flattenedRuleset = await flattenRuleset(sourcePath, new Set(), 0, rootDir, /* inlineRemote */ false);
+  const yaml = YAML.stringify(flattenedRuleset);
+  const validation = validateSpectralRuleset(yaml);
+  if (!validation.isValid) {
+    throw new Error(`Invalid Spectral ruleset: ${validation.error}`);
+  }
+  return yaml;
+}
+
+// Entry point for ruleset processing at lint time. Behaves like bundleSpectralRuleset but also
+// fetches, validates, and fully inlines remote "extends" URLs, leaving only built-in identifiers
+// (spectral:oas, …) in "extends". The returned YAML is a single self-contained object with no
+// remote references, so the lint worker has nothing left to fetch — closing the validate-then-use
+// race that allowed a server to serve clean content to the validator and malicious content to the
+// worker.
+export async function compileSpectralRuleset(sourcePath: string): Promise<string> {
+  const rootDir = path.dirname(path.resolve(sourcePath));
+  const flattenedRuleset = await flattenRuleset(sourcePath, new Set(), 0, rootDir, /* inlineRemote */ true);
   const yaml = YAML.stringify(flattenedRuleset);
   const validation = validateSpectralRuleset(yaml);
   if (!validation.isValid) {

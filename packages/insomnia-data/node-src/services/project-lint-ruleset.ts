@@ -3,6 +3,10 @@ import { database as db, models } from 'insomnia-data';
 
 const { type } = models.projectLintRuleset;
 
+export function all() {
+  return db.find<ProjectLintRuleset>(type);
+}
+
 export function getByParentId(projectId: string) {
   return db.findOne<ProjectLintRuleset>(type, { parentId: projectId });
 }

@@ -23,6 +23,7 @@ import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
 import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
+import { writeCompiledRuleset } from '~/main/spectral-ruleset-cache';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
@@ -483,10 +484,12 @@ export function registerMainHandlers() {
       rulesetPath = safePath;
 
       try {
-        // Validate the ruleset (flattens local extends, checks remote URLs for SSRF and
-        // disallowed keys such as "functions") before passing the path to the lint worker.
-        // Result is discarded — validation only; the original file is not modified.
-        await bundleSpectralRuleset(rulesetPath);
+        // Compile the ruleset (flattens local extends, fetches + validates + fully inlines remote
+        // extends, blocking SSRF and disallowed keys such as "functions") into a URL-free object
+        // written to a cache path under userData. The worker is pointed at that compiled object so
+        // it has nothing left to fetch — closing the validate-then-use race.
+        const { compiledPath } = await writeCompiledRuleset(rulesetPath);
+        rulesetPath = compiledPath;
       } catch (err) {
         // Fall back to the default OAS ruleset
         if (err && (err as NodeJS.ErrnoException).code === 'ENOENT') {
