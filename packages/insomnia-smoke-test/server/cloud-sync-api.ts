@@ -1,10 +1,10 @@
+import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 
 import type { Application } from 'express';
 import { json } from 'express';
 import type { FieldNode, OperationDefinitionNode } from 'graphql';
 import { parse } from 'graphql';
-import forge from 'node-forge';
 
 export interface AESMessage {
   iv: string;
@@ -13,33 +13,35 @@ export interface AESMessage {
   ad: string;
 }
 
-// copy from packages/insomnia/src/account/crypt.ts
-export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, additionalData = ''): AESMessage {
-  const _b64UrlToHex = (s: string) => {
-    const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
-    // Node.js compatible base64 decoding using Buffer
-    const decoded = Buffer.from(b64, 'base64').toString('binary');
-    return forge.util.bytesToHex(decoded);
-  };
-  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
-  const key = forge.util.hexToBytes(rawKey);
-  const iv = forge.random.getBytesSync(12);
-  const cipher = forge.cipher.createCipher('AES-GCM', key);
-  cipher.start({
-    additionalData,
-    iv,
-    tagLength: 128,
+function jwkToKeyBuf(jwkOrKey: string | JsonWebKey): Buffer {
+  return typeof jwkOrKey === 'string'
+    ? Buffer.from(jwkOrKey, 'hex')
+    : Buffer.from(jwkOrKey.k || '', 'base64url');
+}
+
+export function decryptAESBuffer(jwkOrKey: string | JsonWebKey, msg: AESMessage): Buffer {
+  const decipher = crypto.createDecipheriv('aes-256-gcm', jwkToKeyBuf(jwkOrKey), Buffer.from(msg.iv, 'hex'), {
+    authTagLength: 16,
   });
-  // @ts-expect-error -- TSCONVERSION needs to be converted to string
-  cipher.update(forge.util.createBuffer(buff));
-  cipher.finish();
+  decipher.setAuthTag(Buffer.from(msg.t, 'hex'));
+  if (msg.ad) {
+    decipher.setAAD(Buffer.from(msg.ad, 'hex'));
+  }
+  return Buffer.concat([decipher.update(Buffer.from(msg.d, 'hex')), decipher.final()]);
+}
+
+export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, additionalData = ''): AESMessage {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', jwkToKeyBuf(jwkOrKey), iv);
+  if (additionalData) {
+    cipher.setAAD(Buffer.from(additionalData, 'binary'));
+  }
+  const d = Buffer.concat([cipher.update(buff), cipher.final()]);
   return {
-    iv: forge.util.bytesToHex(iv),
-    // @ts-expect-error -- TSCONVERSION needs to be converted to string
-    t: forge.util.bytesToHex(cipher.mode.tag),
-    ad: forge.util.bytesToHex(additionalData),
-    // @ts-expect-error -- TSCONVERSION needs to be converted to string
-    d: forge.util.bytesToHex(cipher.output),
+    iv: iv.toString('hex'),
+    t: cipher.getAuthTag().toString('hex'),
+    ad: additionalData ? Buffer.from(additionalData, 'binary').toString('hex') : '',
+    d: d.toString('hex'),
   };
 }
 
@@ -80,6 +82,13 @@ const cloudSyncProject = [
     id: 'proj_5145140e072d4007a30bfa6630ddae72',
     name: 'MCP Project',
     rootDocumentId: 'wrk_efab8e758b97459bab2659d8fdcf8627',
+    teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
+    teams,
+  },
+  {
+    id: 'proj_5145140e072d4007a30bfa6630ddae73',
+    name: 'Design Project',
+    rootDocumentId: 'wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4',
     teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
@@ -219,6 +228,28 @@ const projectSnapshots: Record<string, any[]> = {
       ],
     },
   ],
+  // design project snapshots
+  proj_5145140e072d4007a30bfa6630ddae73: [
+    {
+      ...commonSnapshotProps,
+      created: '2026-01-22T06:20:00.759Z',
+      id: '2ce4bced4220de84704bee82b6174890ba4a89f0',
+      name: 'Initial Snapshot',
+      parent: '0000000000000000000000000000000000000000',
+      state: [
+        {
+          blob: '75bdac19931bd37e2853464f7a26ecbb79bc4fca',
+          key: 'wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4',
+          name: 'Design Project',
+        },
+        {
+          blob: '52aa4f92c8e47e955f0c3fcc2fd38d41710450ad',
+          key: 'spc_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b5',
+          name: 'Design Project.yaml',
+        },
+      ],
+    },
+  ],
 };
 const environmentProjectNewCommitSnapshot = [
   {
@@ -288,11 +319,17 @@ const rawBlobs: Record<string, string> = {
     '{"_id":"mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0","authentication":{},"connected":false,"created":1769408435331,"description":"","env":[],"headers":[{"name":"User-Agent","value":"insomnia/12.3.0"}],"mcpStdioAccess":false,"parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","roots":[],"sslValidation":true,"subscribeResources":[],"transportType":"streamable-http","type":"McpRequest","url":""}',
   '379b74a13b742b573c16dda3ed38abde8cfdb0c3':
     '{"_id":"mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0","authentication":{},"connected":false,"created":1769408435331,"description":"","env":[],"headers":[{"name":"User-Agent","value":"insomnia/12.3.0"}],"mcpStdioAccess":false,"parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","roots":[],"sslValidation":true,"subscribeResources":[],"transportType":"streamable-http","type":"McpRequest","url":"http://localhost:4010/mcp"}',
+  // design project blobs
+  '75bdac19931bd37e2853464f7a26ecbb79bc4fca':
+    '{"_id":"wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4","created":1769408700000,"description":"","name":"Design Project","parentId":null,"scope":"design","type":"Workspace"}',
+  '52aa4f92c8e47e955f0c3fcc2fd38d41710450ad':
+    '{"_id":"spc_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b5","contents":"openapi: 3.0.0\\ninfo:\\n  title: Petstore\\n  version: 1.0.0\\npaths: {}","created":1769408700001,"fileName":"Design Project.yaml","parentId":"wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4","type":"ApiSpec"}',
 };
 const defaultBranches = [{ name: 'master' }, { name: 'develop' }];
 let deletedProjectIds: string[] = [];
 let cloudSyncApiEnabled = false;
 let remoteHasNewCommit = false;
+let multiUserMode = false;
 
 const resetCloudSyncTestState = () => {
   Object.keys(newSnapshots).forEach(projectId => {
@@ -303,6 +340,7 @@ const resetCloudSyncTestState = () => {
   });
   deletedProjectIds = [];
   remoteHasNewCommit = false;
+  multiUserMode = false;
 };
 
 const getSnapshotsForProject = (projectId: string) => {
@@ -335,6 +373,12 @@ export default function setup(app: Application) {
   app.post('/__test-config/cloud-sync/new-commit', json(), (req, res) => {
     const { enabled = false } = req.body ?? {};
     remoteHasNewCommit = !!enabled;
+    return res.status(200).send();
+  });
+
+  app.post('/__test-config/cloud-sync/team-members', json(), (req, res) => {
+    const { multi = false } = req.body ?? {};
+    multiUserMode = !!multi;
     return res.status(200).send();
   });
 
@@ -498,12 +542,23 @@ export default function setup(app: Application) {
           }
 
           case 'teamMemberKeys': {
-            return res.status(200).json({
-              data: {
-                teamMemberKeys: {
-                  memberKeys: [
+            const memberKeys = [
+              {
+                accountId: 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
+                publicKey: JSON.stringify({
+                  alg: 'RSA-OAEP-256',
+                  e: 'AQAB',
+                  ext: true,
+                  key_ops: ['encrypt'],
+                  kty: 'RSA',
+                  n: 'pTQVaUaiqggIldSKm6ib6eFRLLoGj9W-2O4gTbiorR-2b8-ZmKUwQ0F-jgYX71AjYaFn5VjOHOHSP6byNAjN7WzJ6A_Z3tytNraLoZfwK8KdfflOCZiZzQeD3nO8BNgh_zEgCHStU61b6N6bSpCKjbyPkmZcOkJfsz0LJMAxrXvFB-I42WYA2vJKReTJKXeYx4d6L_XGNIoYtmGZit8FldT4AucfQUXgdlKvr4_OZmt6hgjwt_Pjcu-_jO7m589mMWMebfUhjte3Lp1jps0MqTOvgRb0FQf5eoBHnL01OZjvFPDKeqlvoz7II9wFNHIKzSvgAKnyemh6DiyPuIukyQ',
+                }),
+                autoLinked: false,
+              },
+              ...(multiUserMode
+                ? [
                     {
-                      accountId: 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
+                      accountId: 'acct_74b577e6b59d43a5a607f84b4f73e3df',
                       publicKey: JSON.stringify({
                         alg: 'RSA-OAEP-256',
                         e: 'AQAB',
@@ -514,8 +569,12 @@ export default function setup(app: Application) {
                       }),
                       autoLinked: false,
                     },
-                  ],
-                },
+                  ]
+                : []),
+            ];
+            return res.status(200).json({
+              data: {
+                teamMemberKeys: { memberKeys },
               },
             });
           }
@@ -570,7 +629,14 @@ export default function setup(app: Application) {
           case 'blobsCreate': {
             const blobs = variables.blobs || [];
             blobs.forEach((blob: { id: string; content: string }) => {
-              newBlobs[blob.id] = blob.content;
+              try {
+                const aesMsg: AESMessage = JSON.parse(blob.content);
+                const decryptedBuf = decryptAESBuffer(symmetricKey, aesMsg);
+                newBlobs[blob.id] = zlib.gunzipSync(decryptedBuf).toString('utf8');
+              } catch (e) {
+                console.error('[mock] blobsCreate: decrypt failed for blob', blob.id, e);
+                newBlobs[blob.id] = blob.content;
+              }
             });
             return res.status(200).json({
               data: {

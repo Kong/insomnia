@@ -1,5 +1,9 @@
 import { mkdirSync } from 'node:fs';
 
+declare global {
+  var __PLAYWRIGHT_OPEN_DIALOG_QUEUE__: { filePaths: string[]; canceled: boolean }[] | undefined;
+}
+
 import type {
   IpcMainEvent,
   IpcMainInvokeEvent,
@@ -429,6 +433,14 @@ export function registerElectronHandlers() {
     });
   });
   ipcMainHandle('showOpenDialog', async (_, options: OpenDialogOptions) => {
+    // Playwright test hook: consume queued responses set via `electronApp.evaluate`
+    // instead of opening the native dialog. See packages/insomnia-smoke-test.
+    if (process.env.PLAYWRIGHT === 'true') {
+      const queue = globalThis.__PLAYWRIGHT_OPEN_DIALOG_QUEUE__;
+      if (queue && queue.length > 0) {
+        return queue.shift();
+      }
+    }
     const { filePaths, canceled } = await dialog.showOpenDialog(options);
     return { filePaths, canceled };
   });

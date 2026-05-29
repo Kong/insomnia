@@ -2,11 +2,13 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import path from 'node:path';
 
-import type { ElectronApplication, TraceMode } from '@playwright/test';
+import type { ElectronApplication, PlaywrightWorkerArgs, TraceMode } from '@playwright/test';
 import { test as baseTest } from '@playwright/test';
 
+import type { EnvOptions } from './launch';
+import { launchInsomnia, liveApps } from './launch';
 import { InsomniaApp } from './pages';
-import { bundleType, cwd, executablePath, mainPath, randomDataPath } from './paths';
+import { randomDataPath } from './paths';
 
 // Throw an error if the condition fails
 // > Not providing an inline default argument for message as the result is smaller
@@ -22,26 +24,6 @@ export function invariant(
   // Condition not passed
 
   throw new Error(typeof message === 'function' ? message() : message);
-}
-
-interface EnvOptions {
-  INSOMNIA_DATA_PATH: string;
-  INSOMNIA_API_URL: string;
-  INSOMNIA_APP_WEBSITE_URL: string;
-  INSOMNIA_AI_URL: string;
-  INSOMNIA_MOCK_API_URL: string;
-  INSOMNIA_GITHUB_REST_API_URL: string;
-  INSOMNIA_GITHUB_API_URL: string;
-  INSOMNIA_GITLAB_API_URL: string;
-  INSOMNIA_UPDATES_URL: string;
-  INSOMNIA_SKIP_ONBOARDING: string;
-  INSOMNIA_PUBLIC_KEY: string;
-  INSOMNIA_SECRET_KEY: string;
-  INSOMNIA_SESSION?: string;
-  INSOMNIA_VAULT_KEY: string;
-  INSOMNIA_VAULT_SALT: string;
-  INSOMNIA_VAULT_SRP_SECRET: string;
-  KONNECT_API_URL: string;
 }
 
 interface AESMessage {
@@ -99,18 +81,16 @@ export const test = baseTest.extend<{
       KONNECT_API_URL: echoServer,
       ...(userConfig.session ? { INSOMNIA_SESSION: JSON.stringify(userConfig.session) } : {}),
     };
-    const { ELECTRON_RUN_AS_NODE: _ignored, ...launchEnv } = process.env;
 
-    const electronApp = await playwright._electron.launch({
-      cwd,
-      executablePath,
-      args: bundleType() === 'package' ? ['--no-sandbox'] : ['--no-sandbox', mainPath],
-      env: {
-        ...launchEnv,
-        ...options,
-        PLAYWRIGHT: 'true',
-      },
-    });
+    const electronApp = await launchInsomnia(playwright, options);
+    // Stash the launch options on the app so InsomniaApp.relaunch() can reuse them
+    // without re-deriving env from fixtures.
+    const stashed = electronApp as ElectronApplication & {
+      __launchEnv?: EnvOptions;
+      __playwright?: PlaywrightWorkerArgs['playwright'];
+    };
+    stashed.__launchEnv = options;
+    stashed.__playwright = playwright;
 
     const appContext = electronApp.context();
 
@@ -145,14 +125,29 @@ export const test = baseTest.extend<{
       // Use a different name rather than the default trace.zip to avoid overwriting the trace.
       // Refer: https://github.com/microsoft/playwright/issues/35005
       // Discard the trace if not needed
-      await (isTrace
-        ? appContext.tracing.stop({
-            path: path.join(testInfo.outputDir, `trace-${testInfo.title}-${testInfo.status}.zip`),
-          })
-        : appContext.tracing.stop());
+      // The app may have been relaunched during the test (e.g. insomnia.relaunch()), which closes
+      // the original Electron process and invalidates appContext. Guard against that here.
+      try {
+        await (isTrace
+          ? appContext.tracing.stop({
+              path: path.join(testInfo.outputDir, `trace-${testInfo.title}-${testInfo.status}.zip`),
+            })
+          : appContext.tracing.stop());
+      } catch {
+        // Original app was closed by relaunch(); tracing on the new app is not captured.
+      }
     }
 
-    await electronApp.close();
+    // Close any apps that are still alive (e.g. relaunched copies). Snapshot
+    // first: close() fires the 'close' listener which calls liveApps.delete(),
+    // so iterating the live Set would skip un-visited entries.
+    for (const live of Array.from(liveApps)) {
+      try {
+        await live.close();
+      } catch {
+        // Best-effort: an already-closed app rejects; ignore.
+      }
+    }
   },
   page: async ({ app }, use) => {
     // The plugin window is created after the main window's did-finish-load, so

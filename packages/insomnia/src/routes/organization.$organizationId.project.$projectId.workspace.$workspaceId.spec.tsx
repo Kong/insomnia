@@ -286,7 +286,11 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   useEffect(() => {
     setSelectedRulesetPath(
-      isConnectedGitProject && gitSyncRulesetPath ? gitSyncRulesetPath : rulesetContent ? rulesetWritePath : '',
+      isConnectedGitProject && gitSyncRulesetPath && rulesetContent
+        ? gitSyncRulesetPath
+        : rulesetContent
+          ? rulesetWritePath
+          : '',
     );
   }, [gitSyncRulesetPath, isConnectedGitProject, rulesetWritePath, rulesetContent]);
 
