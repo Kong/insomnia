@@ -342,7 +342,7 @@ const Component = () => {
             selectedCollectionId={selectedCollectionId}
             onSelectedCollectionChange={setSelectedCollectionId}
             onCreateCollection={() => {
-              setNewWorkspaceModalState({ scope: 'collection', isOpen: true, redirect: false });
+              setNewWorkspaceModalState({ scope: 'collection', isOpen: true, redirect: false, source: 'home-page' });
             }}
           />
         </div>

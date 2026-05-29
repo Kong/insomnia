@@ -389,7 +389,7 @@ async function createMockServer(
         generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
         dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
         generation_duration_seconds: generationDurationMs / 1000,
-        source: source || 'menu',
+        ...(source && { source }),
       },
     });
 

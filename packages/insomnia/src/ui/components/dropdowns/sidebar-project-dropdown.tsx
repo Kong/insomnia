@@ -65,6 +65,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: WorkspaceScope;
     isOpen: boolean;
+    source?: string;
   } | null>({
     scope: 'collection',
     isOpen: false,
@@ -79,13 +80,13 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
   const isGitProjectInconsistent = models.project.isGitProject(project) && !storageRules.enableGitSync;
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitProjectInconsistent;
 
-  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
-  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
+  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar-dropdown' });
+  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source: 'sidebar-dropdown' });
   const canCreateMockServer = project?._id;
   const createNewMockServer = () =>
-    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
-  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
-  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
+    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source: 'sidebar-dropdown' });
+  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source: 'sidebar-dropdown' });
+  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source: 'sidebar-dropdown' });
 
   const projectActionList: ProjectActionItem[] = [
     {
@@ -341,6 +342,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
           project={project}
           storageRules={storageRules}
           scope={newWorkspaceModalState.scope}
+          source={newWorkspaceModalState.source}
           onOpenChange={isOpen => {
             setNewWorkspaceModalState({
               scope: newWorkspaceModalState.scope,
