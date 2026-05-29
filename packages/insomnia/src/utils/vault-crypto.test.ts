@@ -85,7 +85,7 @@ describe('decryptSecretValue', () => {
   });
 
   it('handles large plaintext', () => {
-    const plaintext = 'x'.repeat(10000);
+    const plaintext = 'x'.repeat(10_000);
     const encrypted = encryptSecretValue(plaintext, TEST_AES_KEY);
     const decrypted = decryptSecretValue(encrypted, TEST_AES_KEY);
     expect(decrypted).toBe(plaintext);

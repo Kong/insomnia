@@ -16,6 +16,8 @@ import type { Settings } from '~/insomnia-data';
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
+// Scripting environment types are imported explicitly from separate modules as they're
+// part of the public API for request script execution.
 import { Environment, Variables, Vault } from '../../../../../insomnia-scripting-environment/src/objects/environments';
 import { Execution } from '../../../../../insomnia-scripting-environment/src/objects/execution';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
