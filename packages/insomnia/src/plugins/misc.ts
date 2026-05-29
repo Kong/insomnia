@@ -1,7 +1,8 @@
 import Color from 'color';
 
 import type { ThemeSettings } from '~/insomnia-data';
-import { getAppDefaultTheme } from '../common/constants';
+import { getAppDefaultTheme } from '~/insomnia-data/common';
+
 import type { SerializableTheme } from './bridge-types';
 import { plugins } from './renderer-bridge';
 
