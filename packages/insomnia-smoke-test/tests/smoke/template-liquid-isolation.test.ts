@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 // and blocked file-loading tags (include/render/layout).
 // Run: npm run test:smoke:dev -- template-liquid-isolation
 
-test('LiquidJS template rendering: env vars and control flow', async ({ page, insomnia }) => {
+test('LiquidJS template rendering — env vars and control flow', async ({ page, insomnia }) => {
   await insomnia.projectPage.importFixture('liquid-security-collection.yaml');
 
   const sendButton = page.getByTestId('request-pane').getByRole('button', { name: 'Send' });
