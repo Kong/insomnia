@@ -15,9 +15,12 @@ const extensionToMimeType: Record<string, string> = {
   yml: 'application/yaml',
 };
 
-const mimeTypeToExtension: Record<string, string> = Object.fromEntries(
-  Object.entries(extensionToMimeType).map(([extension, mimeType]) => [mimeType, extension]),
-);
+const mimeTypeToExtension: Record<string, string> = {
+  ...Object.fromEntries(
+    Object.entries(extensionToMimeType).map(([extension, mimeType]) => [mimeType, extension]),
+  ),
+  'application/octet-stream': 'bin',
+};
 
 export const lookupMimeType = (filePath: string) => {
   const match = /\.([^.]+)$/.exec(filePath.trim().toLowerCase());

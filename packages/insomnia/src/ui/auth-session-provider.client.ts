@@ -25,20 +25,22 @@ async function getSessionKeyPair() {
       const { keyPair } = await import('../utils/sealedbox');
       const sessionKeyPair = keyPair();
 
-      encodeBase64(sessionKeyPair.publicKey).then(res => {
-        try {
-          window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || res);
-        } catch {
-          console.error('Failed to store public key in localStorage.');
-        }
-      });
-      encodeBase64(sessionKeyPair.secretKey).then(res => {
-        try {
-          window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || res);
-        } catch {
-          console.error('Failed to store secret key in localStorage.');
-        }
-      });
+      const [publicKeyEncoded, secretKeyEncoded] = await Promise.all([
+        encodeBase64(sessionKeyPair.publicKey),
+        encodeBase64(sessionKeyPair.secretKey),
+      ]);
+
+      try {
+        window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || publicKeyEncoded);
+      } catch {
+        console.error('Failed to store public key in localStorage.');
+      }
+
+      try {
+        window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || secretKeyEncoded);
+      } catch {
+        console.error('Failed to store secret key in localStorage.');
+      }
 
       return sessionKeyPair;
     })();

@@ -6,7 +6,25 @@ import 'node-forge/lib/aes';
 import forge from 'node-forge/lib/forge';
 
 import type { AESMessage } from '../account/crypt';
-import { base64decode, base64encode } from './vault';
+
+const base64encode = (input: string | object) => {
+  const inputStr = typeof input === 'string' ? input : JSON.stringify(input);
+  const binary = atob(btoa(unescape(encodeURIComponent(inputStr))));
+  return btoa(binary);
+};
+
+const base64decode = (base64Str: string, toObject: boolean = false) => {
+  try {
+    const decodedStr = decodeURIComponent(escape(atob(base64Str)));
+    if (toObject) {
+      return JSON.parse(decodedStr);
+    }
+    return decodedStr;
+  } catch {
+    console.error(`failed to base64 decode string ${base64Str}`);
+  }
+  return base64Str;
+};
 
 const b64UrlToHex = (value: string) => {
   const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
