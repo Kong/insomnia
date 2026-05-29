@@ -78,6 +78,8 @@ export const getOrInheritAuthentication = ({
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
+  console.log('----------------------------------requestGroups2', requestGroups);
+  // TODO: 顺序反了
   const closestParentFolderWithAuth = [...requestGroups]
     .reverse()
     .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
