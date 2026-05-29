@@ -558,7 +558,7 @@ const Component = () => {
                     <div className="flex w-full flex-col items-center justify-center gap-4">
                       <ProjectEmptyView
                         onCreateRequestCollectionWithRequest={createNewCollectionWithRequest}
-                        onCreateDesignDocument={createNewDocument}
+                        onCreateDesignDocument={() => createNewDocument('empty-state')}
                         onImportFrom={() => setImportModalType('file')}
                       />
                       {createNewWorkspaceFetcher.data?.error && (
