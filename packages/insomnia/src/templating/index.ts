@@ -55,7 +55,6 @@ export function render(
       resolve(result);
     } catch (err: any) {
       clearTimeout(id);
-      console.warn('[templating] Error rendering template', err);
       const newError = translateLiquidError(err, text, templatingContext, path);
       if (hasTemplateInterpolationSymbols && newError.reason === 'undefined') {
         newError.extraInfo = {
