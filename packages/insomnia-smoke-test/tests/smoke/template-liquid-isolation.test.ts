@@ -24,6 +24,7 @@ test('LiquidJS template rendering — env vars and control flow', async ({ page,
 
   // role=user → "standard" branch
   await insomnia.navigationSidebar.clickRequestOrFolder('Control Flow If');
+  await statusTag.waitFor({ state: 'hidden' });
   await sendButton.click();
   await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
@@ -31,12 +32,14 @@ test('LiquidJS template rendering — env vars and control flow', async ({ page,
 
   // items=[alpha,beta,gamma] → "[alpha][beta][gamma]"
   await insomnia.navigationSidebar.clickRequestOrFolder('For Loop Iteration');
+  await statusTag.waitFor({ state: 'hidden' });
   await sendButton.click();
   await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
   await expect.soft(responseBody).toContainText('[alpha][beta][gamma]');
 
   await insomnia.navigationSidebar.clickRequestOrFolder('Assign And Unless');
+  await statusTag.waitFor({ state: 'hidden' });
   await sendButton.click();
   await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
