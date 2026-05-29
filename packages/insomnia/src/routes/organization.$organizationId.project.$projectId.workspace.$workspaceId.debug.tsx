@@ -762,7 +762,7 @@ const Debug = () => {
   const tabNavigate = useTabNavigate();
 
   return (
-    <div className="new-sidebar h-full w-full text-(--color-font)">
+    <div className="new-sidebar flex h-full w-full flex-col text-(--color-font)">
       <div className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
@@ -774,7 +774,7 @@ const Debug = () => {
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
         id={WORKSPACE_CONTENT_WRAPPER}
-        className="new-sidebar h-full w-full text-(--color-font)"
+        className="new-sidebar min-h-0 flex-1 text-(--color-font)"
         direction="horizontal"
       >
         {/* Design page has a collection view with legacy collection list */}
