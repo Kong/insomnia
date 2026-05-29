@@ -125,6 +125,9 @@ export class ProjectPage extends BasePage {
     await this.page.locator('[data-test-id="import-from-clipboard"]').click();
     await this.scanButton.click();
     await this.page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    // Wait for the import dialog to close and the app to navigate to the workspace
+    await this.page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await this.page.getByTestId('workspace-breadcrumb-level-0').waitFor({ state: 'visible' });
   }
 
   /**

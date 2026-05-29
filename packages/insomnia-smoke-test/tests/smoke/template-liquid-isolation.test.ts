@@ -16,6 +16,7 @@ test('LiquidJS template rendering — env vars and control flow', async ({ page,
 
   await insomnia.navigationSidebar.clickRequestOrFolder('Env Var Rendering');
   await sendButton.click();
+  await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
@@ -24,17 +25,20 @@ test('LiquidJS template rendering — env vars and control flow', async ({ page,
   // role=user → "standard" branch
   await insomnia.navigationSidebar.clickRequestOrFolder('Control Flow If');
   await sendButton.click();
+  await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
   await expect.soft(responseBody).toContainText('standard');
 
   // items=[alpha,beta,gamma] → "[alpha][beta][gamma]"
   await insomnia.navigationSidebar.clickRequestOrFolder('For Loop Iteration');
   await sendButton.click();
+  await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
   await expect.soft(responseBody).toContainText('[alpha][beta][gamma]');
 
   await insomnia.navigationSidebar.clickRequestOrFolder('Assign And Unless');
   await sendButton.click();
+  await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
   await expect.soft(responseBody).toContainText('Bearer abc123');
 });
