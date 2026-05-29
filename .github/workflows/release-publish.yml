@@ -249,11 +249,12 @@ jobs:
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
+          SNAP_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
         # TODO-ARM64: Replace to *-amd64.snap when we have ARM64 build from insomnia-ee
         run: |
           sudo snap install snapcraft --classic
           snapcraft upload \
-            --release="${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}" \
+            --release="$SNAP_CHANNEL" \
             "artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap"
 
       # TODO: also release for aarch64 Linux?

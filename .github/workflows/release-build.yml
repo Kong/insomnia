@@ -386,6 +386,7 @@ jobs:
       - name: update-pull-request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
           PR_BODY: |
             # WARNING: <ins>Do not merge</ins> this PR. Use the "Publish" workflow.
 
@@ -433,9 +434,9 @@ jobs:
             ```
             </details>
         run: |
-          PR_NUMBER=$(gh pr list --repo "${{ github.repository }}" --base develop --head "${GITHUB_REF_NAME}" --state open --json number -q '.[0].number')
+          PR_NUMBER=$(gh pr list --repo "$REPO" --base develop --head "$GITHUB_REF_NAME" --state open --json number -q '.[0].number')
           if [ -z "$PR_NUMBER" ]; then
-            echo "No open PR found from ${GITHUB_REF_NAME} into develop; skipping body update."
+            echo "No open PR found from $GITHUB_REF_NAME into develop; skipping body update."
             exit 0
           fi
-          gh pr edit "$PR_NUMBER" --repo "${{ github.repository }}" --body "$PR_BODY"
+          gh pr edit "$PR_NUMBER" --repo "$REPO" --body "$PR_BODY"
