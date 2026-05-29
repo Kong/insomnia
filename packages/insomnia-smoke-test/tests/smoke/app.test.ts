@@ -93,25 +93,11 @@ test('can send requests', async ({ page, insomnia }) => {
     })
     .toBe(true);
 
-  // Wait for the PDF viewer iframe to finish painting — the extension frame mounts before the
-  // PDF content fully reflows, causing intermittent height mismatches (159px vs 197px).
-  // Poll until the bounding box height stabilises across two consecutive reads.
-  await expect
-    .poll(
-      async () => {
-        const box1 = await pdfIframe.boundingBox();
-        await new Promise(r => setTimeout(r, 200));
-        const box2 = await pdfIframe.boundingBox();
-        return box1?.height === box2?.height ? box2?.height : 0;
-      },
-      { timeout: 10_000, message: 'PDF iframe height did not stabilise' },
-    )
-    .toBeGreaterThan(0);
-
+  // No explicit timeout — inherits the global expect.timeout (40s on CI) so Playwright
+  // retries long enough for the Chromium PDF viewer to finish rendering.
   await expect.soft(pdfIframe).toHaveScreenshot('dummy-pdf-preview.png', {
     animations: 'disabled',
-    maxDiffPixelRatio: 0.15, // 15% discrepancy allowed for CI/environment differences
-    timeout: 5000,
+    maxDiffPixelRatio: 0.15,
   });
 
   await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
