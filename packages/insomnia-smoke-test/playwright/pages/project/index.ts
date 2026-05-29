@@ -125,9 +125,13 @@ export class ProjectPage extends BasePage {
     await this.page.locator('[data-test-id="import-from-clipboard"]').click();
     await this.scanButton.click();
     await this.page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    // Wait for the import dialog to close and the app to navigate to the workspace
     await this.page.getByRole('dialog').waitFor({ state: 'hidden' });
-    await this.page.getByTestId('workspace-breadcrumb-level-0').waitFor({ state: 'visible' });
+    // After import the app either navigates into the workspace (single collection)
+    // or stays on the project page (multiple collections). 2 s is enough to detect navigation.
+    await this.page
+      .getByTestId('workspace-breadcrumb-level-0')
+      .waitFor({ state: 'visible', timeout: 2000 })
+      .catch(() => {});
   }
 
   /**
