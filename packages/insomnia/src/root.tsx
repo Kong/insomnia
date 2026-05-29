@@ -91,6 +91,54 @@ const sanitizeUrlAndExtractOrigin = (url: string) => {
 };
 export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHistoryMiddleware];
 
+// Shared URL-parsing utility used by both useAuthDeepLinkHandler and Root's
+// full deep-link handler to avoid duplicating the try/catch and dev-protocol
+// normalisation logic.
+const parseDeepLinkUrl = (url: string) => {
+  // Get the url without params
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    console.log('[deep-link] Invalid args, expected insomnia://x/y/z', url);
+    return;
+  }
+  let urlWithoutParams = url.slice(0, Math.max(0, url.indexOf('?'))) || url;
+  const params = Object.fromEntries(parsedUrl.searchParams);
+
+  // Change protocol for dev redirects to match switch case
+  if (isDevelopment()) {
+    urlWithoutParams = urlWithoutParams.replace('insomniadev://', 'insomnia://');
+  }
+  return { urlWithoutParams, params };
+};
+
+// Handles the auth/logout deep-link (insomnia://app/auth/login) independently
+// of the Root component so that it continues to work even when Root is replaced
+// by ErrorBoundary. Without this, an invalid session that causes an error before
+// Root mounts would leave the IPC listener unregistered, blocking the API-
+// triggered redirect to the logout page.
+// Root calls this hook too, but skips the auth/login case in its own handler
+// (see the early return below) to avoid double-handling.
+const useAuthDeepLinkHandler = () => {
+  const { submit: logoutSubmit } = useLogoutFetcher();
+  useEffect(() => {
+    return window.main.on('shell:open', async (_, url: string) => {
+      const parsed = parseDeepLinkUrl(url);
+      if (!parsed) return;
+      const { urlWithoutParams, params } = parsed;
+
+      if (urlWithoutParams === 'insomnia://app/auth/login') {
+        if (params.message) {
+          window.localStorage.setItem('logoutMessage', params.message);
+        }
+
+        return logoutSubmit();
+      }
+    });
+  }, [logoutSubmit]);
+};
+
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
@@ -108,6 +156,7 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
 
   const errorMessage = getErrorMessage(error);
   const logoutFetcher = useLogoutFetcher();
+  useAuthDeepLinkHandler();
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden">
@@ -322,12 +371,12 @@ const Root = () => {
   const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
-  const { submit: logoutSubmit } = useLogoutFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
     key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   });
   const navigate = useNavigate();
+  useAuthDeepLinkHandler();
 
   const { revalidate } = useRevalidator();
   const inflightFetchers = useFetchers();
@@ -358,32 +407,20 @@ const Root = () => {
 
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
-      // Get the url without params
-      let parsedUrl;
-      try {
-        parsedUrl = new URL(url);
-      } catch {
-        console.log('[deep-link] Invalid args, expected insomnia://x/y/z', url);
+      const parsed = parseDeepLinkUrl(url);
+      if (!parsed) {
         return;
       }
-      let urlWithoutParams = url.slice(0, Math.max(0, url.indexOf('?'))) || url;
-      const params = Object.fromEntries(parsedUrl.searchParams);
-      // Change protocol for dev redirects to match switch case
-      if (isDevelopment()) {
-        urlWithoutParams = urlWithoutParams.replace('insomniadev://', 'insomnia://');
+      const { urlWithoutParams, params } = parsed;
+      // Handled by useAuthDeepLinkHandler (registered in both Root and ErrorBoundary)
+      if (urlWithoutParams === 'insomnia://app/auth/login') {
+        return;
       }
       if (urlWithoutParams === 'insomnia://app/alert') {
         return showModal(AlertModal, {
           title: params.title,
           message: params.message,
         });
-      }
-      if (urlWithoutParams === 'insomnia://app/auth/login') {
-        if (params.message) {
-          window.localStorage.setItem('logoutMessage', params.message);
-        }
-
-        return logoutSubmit();
       }
       // Supports params: uri, curl, origin
       if (urlWithoutParams === 'insomnia://app/import') {
@@ -556,11 +593,11 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
-          const authResult = await plugins.executePluginMainAction({
+          const authResult = (await plugins.executePluginMainAction({
             pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
             actionName: 'exchangeCode',
             params: { provider: 'azure', code },
-          }) as any;
+          })) as any;
           const { success, result, error } = authResult;
           if (success) {
             const { account, uniqueId } = result!;
@@ -636,7 +673,6 @@ const Root = () => {
     authorizeSubmit,
     createCloudCredentials,
     gitProviderCompleteSignInSubmit,
-    logoutSubmit,
     navigate,
     organizationId,
     projectId,

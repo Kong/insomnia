@@ -22,7 +22,6 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useMockRouteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
 import { Icon } from '~/ui/components/icon';
-import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { MockRouteModal } from '~/ui/components/modals/mock-route-modal';
@@ -168,28 +167,6 @@ const Component = () => {
   ];
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
-
-  function toggleSidebar() {
-    const layout = sidebarPanelRef.current?.getLayout();
-
-    if (!layout) {
-      return;
-    }
-
-    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
-
-    sidebarPanelRef.current?.setLayout(layout);
-  }
-
-  useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
-
-    return unsubscribe;
-  }, []);
-
-  useDocBodyKeyboardShortcuts({
-    sidebar_toggle: toggleSidebar,
-  });
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',

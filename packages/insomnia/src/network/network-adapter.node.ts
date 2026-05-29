@@ -6,6 +6,7 @@ import clone from 'clone';
 import type { RequestHeader } from '~/insomnia-data';
 import type { RenderedRequest } from '~/templating/types';
 
+import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import { getAuthHeader as getAuthHeaderFromMain } from '../main/network/get-auth-header';
 import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../main/network/libcurl-promise';
 import { curlRequest } from '../main/network/libcurl-promise';
@@ -15,6 +16,7 @@ import * as pluginNetwork from '../plugins/context/network';
 import * as pluginRequest from '../plugins/context/request';
 import * as pluginResponse from '../plugins/context/response';
 import * as pluginStore from '../plugins/context/store';
+import { runScript as executeScript } from '../script-executor';
 
 export const getTimelinePath = async (responseId: string): Promise<string> => {
   const electron = require('electron') as { app: { getPath: (name: string) => string } };
@@ -39,6 +41,11 @@ export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHea
 
 export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> =>
   curlRequest(options);
+
+export const runScript = (options: {
+  script: string;
+  context: RequestContext;
+}): Promise<RequestContext | { error: string }> => executeScript(options);
 
 export async function applyRequestHooks(
   newRenderedRequest: RenderedRequest,

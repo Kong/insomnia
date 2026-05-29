@@ -15,6 +15,7 @@ export const {
   appendTimelineLines,
   getAuthHeader,
   executeCurlRequest,
+  runScript,
   applyRequestHooks,
   applyResponseHooks,
 } = impl;

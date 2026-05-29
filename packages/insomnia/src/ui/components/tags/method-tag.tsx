@@ -12,9 +12,28 @@ interface Props {
   override?: string | null;
   fullNames?: boolean;
 }
+
 function removeVowels(str: string) {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
+
+const requestBadgeClassNames: Record<string, string> = {
+  GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
+  POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
+  HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+  OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+  DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
+  PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
+  PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+  WS: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+  IO: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+  gRPC: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+  MCP: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+};
+
+export const getRequestBadgeClassName = (badge: string) => {
+  return requestBadgeClassNames[badge] || 'bg-(--hl-md) text-(--color-font)';
+};
 
 export const getMethodShortHand = (doc: Request) => {
   if (isEventStreamRequest(doc)) {

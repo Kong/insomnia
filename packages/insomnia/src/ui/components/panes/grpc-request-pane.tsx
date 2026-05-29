@@ -3,6 +3,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { recordProjectRecentRequest } from '~/common/project';
 import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
@@ -66,7 +67,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   const { requestMessages, running, methods } = grpcState;
   const editorRef = useRef<CodeEditorHandle>(null);
   const gitVersion = useGitVCSVersion();
-  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+  const { projectId, workspaceId, requestId } = useParams() as {
+    projectId: string;
+    workspaceId: string;
+    requestId: string;
+  };
   const patchRequest = useRequestPatcher();
   const { updateTabById } = useInsomniaTabContext();
 
@@ -159,6 +164,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
 
         updateTabById?.(requestId, { temporary: false });
+
+        recordProjectRecentRequest({
+          projectId,
+          requestId,
+          workspaceId,
+        });
 
         window.main.grpc.start({
           request,

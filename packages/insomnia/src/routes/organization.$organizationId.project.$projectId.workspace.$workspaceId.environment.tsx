@@ -17,7 +17,6 @@ import {
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
-import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
 import { EnvironmentKvPairDataType, EnvironmentType, models, services } from '~/insomnia-data';
@@ -37,7 +36,6 @@ import {
 } from '~/ui/components/editors/environment-editor';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
 import { Icon } from '~/ui/components/icon';
-import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
@@ -269,31 +267,9 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
 
-  function toggleSidebar() {
-    const layout = sidebarPanelRef.current?.getLayout();
-
-    if (!layout) {
-      return;
-    }
-
-    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
-
-    sidebarPanelRef.current?.setLayout(layout);
-  }
-
   const handleInputVaultKeyModalClose = () => {
     setShowModal(false);
   };
-
-  useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
-
-    return unsubscribe;
-  }, []);
-
-  useDocBodyKeyboardShortcuts({
-    sidebar_toggle: toggleSidebar,
-  });
 
   return (
     <div className="flex h-full flex-col">

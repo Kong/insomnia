@@ -33,6 +33,7 @@ import {
   executeCurlRequest,
   getAuthHeader,
   getTimelinePath,
+  runScript,
 } from '~/network/network-adapter';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
@@ -51,9 +52,8 @@ import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
-import { cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
-import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
+import type { TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 const { isRequest } = models.request;
@@ -515,8 +515,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
   }
 
   try {
-    const fn = process.type === 'renderer' ? runScriptConcurrently : cancellableRunScript;
-    const output = await fn({
+    const output = await runScript({
       script,
       context: {
         request,
