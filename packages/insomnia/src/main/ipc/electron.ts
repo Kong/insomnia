@@ -27,6 +27,7 @@ export type HandleChannels =
   | 'curl.open'
   | 'curl.readyState'
   | 'cookies.fromJSON'
+  | 'cookies.getCookiesForUrl'
   | 'cookies.parse'
   | 'cookies.toString'
   | 'createPlugin'
