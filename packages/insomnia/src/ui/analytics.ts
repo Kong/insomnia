@@ -47,3 +47,7 @@ export function trackImportEvent(event: AnalyticsEvent, properties: Record<strin
     properties: { ...readPendingImportAttribution(), ...properties },
   });
 }
+
+export interface RequestCreatedMetricsProperties {
+  source: 'sidebar' | 'shortcut' | 'tab-list' | 'placeholder-request-pane' | 'add-request-to-collection-modal';
+}

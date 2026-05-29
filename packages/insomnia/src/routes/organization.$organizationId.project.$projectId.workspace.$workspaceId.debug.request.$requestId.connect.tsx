@@ -10,6 +10,7 @@ import type {
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import type { RenderedRequest } from '~/templating/types';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 
@@ -47,6 +48,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
     });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'WebSocket' },
+    });
   }
   if (isGraphqlSubscriptionRequest(req)) {
     window.main.webSocket.open({
@@ -70,6 +75,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
     });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'GraphQL' },
+    });
   }
   if (isEventStreamRequest(req)) {
     const renderedRequest = { ...req, ...rendered } as RenderedRequest;
@@ -84,6 +93,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       cookieJar: rendered.cookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
     });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'Event Stream' },
+    });
   }
   if (models.socketIORequest.isSocketIORequest(req)) {
     window.main.socketIO.open({
@@ -96,8 +109,16 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       query: rendered.query || {},
       path: rendered.path,
     });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'SocketIO' },
+    });
   }
   if (models.mcpRequest.isMcpRequest(req)) {
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.requestExecuted,
+      properties: { request_type: 'MCP' },
+    });
     return window.main.mcp.connect({
       requestId,
       workspaceId,

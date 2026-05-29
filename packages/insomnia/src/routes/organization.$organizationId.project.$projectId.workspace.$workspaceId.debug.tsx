@@ -417,6 +417,9 @@ const Debug = () => {
         workspaceId,
         requestType: 'HTTP',
         parentId,
+        metrics: {
+          source: 'shortcut',
+        },
       });
     },
     request_showCreateFolder: () => {
@@ -488,6 +491,9 @@ const Debug = () => {
       requestType,
       parentId,
       req,
+      metrics: {
+        source: 'sidebar',
+      }
     });
 
   const reorderFetcher = useDebugReorderActionFetcher();
@@ -641,61 +647,67 @@ const Debug = () => {
           name: 'HTTP Request',
           icon: 'plus-circle',
           hint: hotKeyRegistry.request_createHTTP,
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'HTTP',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'Event Stream',
           name: 'Event Stream Request (SSE)',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'Event Stream',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'GraphQL Request',
           name: 'GraphQL Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'GraphQL',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'gRPC Request',
           name: 'gRPC Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'gRPC',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'WebSocket Request',
           name: 'WebSocket Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'WebSocket',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'Socket.IO Request',
           name: 'Socket.IO Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'SocketIO',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
       ],
     },

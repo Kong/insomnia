@@ -86,6 +86,7 @@ export enum AnalyticsEvent {
   aiFeatureEnabled = 'AI Feature Enabled',
   aiFeatureDisabled = 'AI Feature Disabled',
   installPlugin = 'Plugin Installed',
+  AppMenuPreferencesClicked = 'App Menu Preferences Clicked',
 
   homepageFiltered = 'homepage-filtered',
   quickSearchOpenedByKeyboard = 'quick-search-opened-by-keyboard',

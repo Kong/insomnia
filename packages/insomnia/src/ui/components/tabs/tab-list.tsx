@@ -259,6 +259,9 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         workspaceId,
         requestType: 'HTTP',
         parentId: workspaceId,
+        metrics: {
+          source: 'tab-list',
+        }
       });
     }
   };
