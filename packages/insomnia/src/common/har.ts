@@ -1,14 +1,20 @@
+import clone from 'clone';
 import type * as Har from 'har-format';
+import { Cookie as ToughCookie } from 'tough-cookie';
 
-import type { BaseModel, Cookie, Environment, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
+import type { BaseModel, Environment, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import { applyRequestHooks } from '~/network/network-adapter';
 
+import * as plugins from '../plugins';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginRequest from '../plugins/context/request';
+import * as pluginStore from '../plugins/context/store';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest } from '../templating/types';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import { smartEncodeUrl } from '../utils/url/querystring';
 import { getAppVersion } from './constants';
+import { jarFromCookies } from './cookies';
 import { database } from './database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
 import { getRenderedRequestAndContext } from './render';
@@ -205,7 +211,7 @@ export async function exportHarResponse(response?: Response) {
     status: response.statusCode,
     statusText: response.statusMessage,
     httpVersion: 'HTTP/1.1',
-    cookies: await getResponseCookies(response),
+    cookies: getResponseCookies(response),
     headers: getResponseHeaders(response),
     content: await getResponseContent(response),
     redirectURL: '',
@@ -258,7 +264,25 @@ async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
-  return applyRequestHooks(renderedRequest, renderedContext);
+  let newRenderedRequest = renderedRequest;
+
+  for (const { plugin, hook } of await plugins.getRequestHooks()) {
+    newRenderedRequest = clone(newRenderedRequest);
+    const context = {
+      ...(pluginApp.init() as Record<string, any>),
+      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
+      ...(pluginStore.init(plugin) as Record<string, any>),
+    };
+
+    try {
+      await hook(context);
+    } catch (err) {
+      err.plugin = plugin;
+      throw err;
+    }
+  }
+
+  return newRenderedRequest;
 }
 
 export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequest, addContentLength = false) {
@@ -297,7 +321,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
     method: renderedRequest.method,
     url,
     httpVersion: 'HTTP/1.1',
-    cookies: await getRequestCookies(renderedRequest),
+    cookies: getRequestCookies(renderedRequest),
     headers: getRequestHeaders(renderedRequest),
     queryString: getRequestQueryString(renderedRequest),
     postData: await getRequestPostData(renderedRequest),
@@ -307,56 +331,36 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
   return harRequest;
 }
 
-async function getRequestCookies(renderedRequest: RenderedRequest): Promise<Har.Cookie[]> {
-  if (!renderedRequest.url) {
-    return [];
-  }
-  if (typeof window !== 'undefined' && window.main?.cookies) {
-    const domainCookies = await window.main.cookies.getCookiesForUrl({
-      cookies: renderedRequest.cookieJar.cookies,
-      url: renderedRequest.url,
-    });
-    return domainCookies.map(mapCookieToHar);
-  }
-  // Fallback for non-renderer contexts (tests, plugin window)
-  const { jarFromCookies } = await import('./cookies');
+function getRequestCookies(renderedRequest: RenderedRequest) {
+  // filter out invalid cookies to avoid getCookiesSync complaining
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-  const domainCookies = jar.getCookiesSync(renderedRequest.url);
-  return domainCookies.map(c => mapCookieToHar(c.toJSON() as Cookie));
+  const domainCookies = renderedRequest.url ? jar.getCookiesSync(renderedRequest.url) : [];
+  const harCookies: Har.Cookie[] = domainCookies.map(mapCookie);
+  return harCookies;
 }
 
-export async function getResponseCookiesFromHeaders(headers: Har.Cookie[]): Promise<Har.Cookie[]> {
-  const setCookieHeaders = getSetCookieHeaders(headers);
-  if (typeof window !== 'undefined' && window.main?.cookies) {
-    const results: Har.Cookie[] = [];
-    for (const harCookie of setCookieHeaders) {
-      const cookie = await window.main.cookies.parse(harCookie.value || '');
-      if (cookie) {
-        results.push(mapCookieToHar(cookie));
-      }
-    }
-    return results;
-  }
-  // Fallback for non-renderer contexts (tests, plugin window)
-  const { Cookie: ToughCookie } = await import('tough-cookie');
-  return setCookieHeaders.reduce((accumulator, harCookie) => {
-    let cookie = null;
+export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
+  return getSetCookieHeaders(headers).reduce((accumulator, harCookie) => {
+    let cookie: null | undefined | ToughCookie = null;
+
     try {
       cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
     } catch {}
-    if (!cookie) {
+
+    if (cookie === null || cookie === undefined) {
       return accumulator;
     }
-    return [...accumulator, mapCookieToHar(cookie.toJSON() as Cookie)];
+
+    return [...accumulator, mapCookie(cookie)];
   }, [] as Har.Cookie[]);
 }
 
-async function getResponseCookies(response: Response): Promise<Har.Cookie[]> {
+function getResponseCookies(response: Response) {
   const headers = response.headers.filter(Boolean);
   return getResponseCookiesFromHeaders(headers);
 }
 
-function mapCookieToHar(cookie: Cookie): Har.Cookie {
+function mapCookie(cookie: ToughCookie) {
   const harCookie: Har.Cookie = {
     name: cookie.key,
     value: cookie.value,

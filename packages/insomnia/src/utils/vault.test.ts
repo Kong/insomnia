@@ -1,8 +1,13 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { base64decode, base64encode, decryptVaultKeyFromSession } from './vault';
-import { decryptSecretValue, encryptSecretValue } from './vault-crypto';
+import {
+  base64decode,
+  base64encode,
+  decryptSecretValue,
+  decryptVaultKeyFromSession,
+  encryptSecretValue,
+} from './vault';
 
 vi.mock('../models/settings', () => ({
   getOrCreate: vi.fn(),

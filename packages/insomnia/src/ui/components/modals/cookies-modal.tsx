@@ -1,6 +1,6 @@
 import clone from 'clone';
 import { isValid } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Button,
   Dialog,
@@ -18,12 +18,14 @@ import {
   TextField,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
+import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { Cookie, CookieJar } from '~/insomnia-data';
 import { useUpdateCookieJarActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
+import { cookieToString } from '../../../common/cookies';
 import { fuzzyMatch } from '../../../common/misc';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
@@ -267,36 +269,13 @@ export interface CookieListProps {
 
 const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps) => {
   const [cookieToEdit, setCookieToEdit] = useState<Cookie | null>(null);
-  const [cookieStrings, setCookieStrings] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void Promise.all(
-      cookies.map(async cookie => {
-        try {
-          return [cookie.id, await window.main.cookies.toString(cookie)] as const;
-        } catch (err) {
-          console.warn('Failed to parse cookie string', err);
-          return [cookie.id, ''] as const;
-        }
-      }),
-    ).then(entries => {
-      if (!cancelled) {
-        setCookieStrings(Object.fromEntries(entries));
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [cookies]);
 
   return (
     <>
       <ListBox aria-label="Cookies list" className="flex min-h-[200px] w-full flex-col">
         {cookies.map((cookie, index) => {
-          const cookieString = cookieStrings[cookie.id] || '';
+          const cookieJSON = ToughCookie.fromJSON(cookie);
+          const cookieString = cookieJSON ? cookieToString(cookieJSON) : '';
 
           if (cookie.expires && !isValid(new Date(cookie.expires))) {
             cookie.expires = null;
@@ -422,41 +401,24 @@ interface CookieModifyModalProps {
 
 const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: CookieModifyModalProps) => {
   const [editCookie, setEditCookie] = useState<Cookie>(cookie);
-  const [rawDefaultValue, setRawDefaultValue] = useState('');
 
   let localDateTime: string;
   if (editCookie && editCookie.expires && isValid(new Date(editCookie.expires))) {
     localDateTime = new Date(editCookie.expires).toISOString().slice(0, 16);
   }
 
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      if (!cookie) {
-        if (!cancelled) {
-          setRawDefaultValue('');
-        }
-        return;
-      }
-
-      try {
-        const value = await window.main.cookies.toString(cookie);
-        if (!cancelled) {
-          setRawDefaultValue(value);
-        }
-      } catch (err) {
-        console.warn('Failed to parse cookie string', err);
-        if (!cancelled) {
-          setRawDefaultValue('');
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [cookie]);
+  let rawDefaultValue;
+  if (!editCookie) {
+    rawDefaultValue = '';
+  } else {
+    try {
+      const c = ToughCookie.fromJSON(JSON.stringify(editCookie));
+      rawDefaultValue = c ? cookieToString(c) : '';
+    } catch (err) {
+      console.warn('Failed to parse cookie string', err);
+      rawDefaultValue = '';
+    }
+  }
 
   return (
     <ModalOverlay
@@ -592,9 +554,10 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                             Raw Cookie String
                             <input
                               type="text"
-                              onChange={async event => {
+                              onChange={event => {
                                 try {
-                                  const parsed = await window.main.cookies.parse(event.target.value);
+                                  // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
+                                  const parsed = ToughCookie.parse(event.target.value, { loose: true })?.toJSON();
                                   if (parsed) {
                                     // Make sure cookie has an id and keep its host-only-flag
                                     parsed.id = editCookie.id;
