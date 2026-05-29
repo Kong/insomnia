@@ -4,10 +4,7 @@ import type * as AdapterType from './network-adapter.renderer';
 
  
 const impl = (
-  (process as any).type === 'renderer' &&
-  globalThis.window !== undefined &&
-  globalThis.window.main !== undefined &&
-  globalThis.window.main.plugins !== undefined
+  (process as any).type === 'renderer'
     ? require('./network-adapter.renderer')
     : require(/* @vite-ignore */ './network-adapter.node')
 ) as typeof AdapterType;

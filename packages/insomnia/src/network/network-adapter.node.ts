@@ -4,7 +4,6 @@ import nodePath from 'node:path';
 import clone from 'clone';
 
 import type { RequestHeader } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import type { RenderedRequest } from '~/templating/types';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
@@ -48,23 +47,10 @@ export const runScript = (options: {
   context: RequestContext;
 }): Promise<RequestContext | { error: string }> => executeScript(options);
 
-async function canRunPluginHooksInNodeAdapter() {
-  if (!process.versions?.electron || typeof global.require !== 'function') {
-    return false;
-  }
-
-  const settings = await services.settings.get();
-  return Boolean(settings);
-}
-
 export async function applyRequestHooks(
   newRenderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
-  if (!await canRunPluginHooksInNodeAdapter()) {
-    return newRenderedRequest;
-  }
-
   const pluginIndex = require('../plugins/index');
   for (const { plugin, hook } of await pluginIndex.getRequestHooks()) {
     const context = {
@@ -90,10 +76,6 @@ export async function applyResponseHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<ResponsePatch> {
-  if (!await canRunPluginHooksInNodeAdapter()) {
-    return response;
-  }
-
   const newResponse = clone(response);
   const newRequest = clone(renderedRequest);
   const pluginIndex = require('../plugins/index');

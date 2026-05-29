@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import {
   FileDescriptorSet as ProtobufEsFileDescriptorSet,
   MethodIdempotency,
@@ -62,7 +60,6 @@ export interface gRPCBridgeAPI {
   cancel: typeof cancel;
   loadMethods: typeof loadMethods;
   loadMethodsFromReflection: typeof loadMethodsFromReflection;
-  validateProtoFile: (filePath: string) => Promise<void>;
   closeAll: typeof closeAll;
   writeProtoFile: (protoFileId: string) => Promise<{ filePath: string; dirs: string[] }>;
 }
@@ -94,16 +91,8 @@ export function registergRPCHandlers() {
   ipcMainOn('grpc.closeAll', closeAll);
   ipcMainHandle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
   ipcMainHandle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
-  ipcMainHandle('grpc.validateProtoFile', (_, filePath: string) => validateProtoFile(filePath));
   ipcMainHandle('grpc.writeProtoFile', (_, protoFileId: string) => writeProtoFileById(protoFileId));
 }
-
-const validateProtoFile = async (filePath: string): Promise<void> => {
-  await protoLoader.load(filePath, {
-    ...grpcOptions,
-    includeDirs: [path.dirname(filePath)],
-  });
-};
 
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
   const definition = await protoLoader.load(filePath, {

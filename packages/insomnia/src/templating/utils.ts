@@ -1,6 +1,7 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
 import { models, services } from '~/insomnia-data';
+import { decryptSecretValue } from '~/utils/vault';
 
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
@@ -156,7 +157,6 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
       const { vaultKey, vaultSalt } = await services.userSession.get();
       const isVaultEnabled = !!vaultSalt;
       if (isVaultEnabled && vaultKey) {
-        const { decryptSecretValue } = await import('~/utils/vault-crypto');
         const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;
         // decrypt all secret values under vaultEnvironmentPath property in context
         Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {

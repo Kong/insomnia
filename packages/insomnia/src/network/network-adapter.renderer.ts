@@ -31,10 +31,6 @@ export async function applyRequestHooks(
   newRenderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
-  if (!globalThis.window?.main?.plugins) {
-    return newRenderedRequest;
-  }
-
   if (!await pluginsBridge.hasRequestHooks()) {
     return newRenderedRequest;
   }
@@ -50,10 +46,6 @@ export async function applyResponseHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<ResponsePatch> {
-  if (!globalThis.window?.main?.plugins) {
-    return response;
-  }
-
   if (!await pluginsBridge.hasResponseHooks()) {
     return response;
   }

@@ -3,9 +3,6 @@ import { ipcRenderer } from 'electron';
 // Provide window.app so plugin-loading code (which checks process.type === 'renderer')
 // can resolve the userData path without needing the main renderer's full preload.
 window.app = {
-  env: Object.fromEntries(
-    Object.entries(process.env).filter(([key, value]) => value !== undefined && key.startsWith('INSOMNIA_')),
-  ),
   getPath: (name: string) => ipcRenderer.sendSync('getPath', name) as string,
   getAppPath: () => ipcRenderer.sendSync('getAppPath') as string,
   process: { platform: process.platform as NodeJS.Platform },
