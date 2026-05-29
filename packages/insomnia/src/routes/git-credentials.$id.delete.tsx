@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import { _removeGitRepository } from '~/account/session';
+import { removeGitRepository } from '~/account/session';
 import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -16,7 +16,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const connectedRepositories = await services.gitRepository.getAllByCredentialId(id);
 
   for (const repo of connectedRepositories) {
-    await _removeGitRepository(repo);
+    await removeGitRepository(repo);
   }
 
   await services.gitCredentials.remove(credential);

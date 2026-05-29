@@ -179,7 +179,7 @@ async function _removeAllCredentials() {
   const customGitRepos = await services.gitRepository.all();
   for (const repo of customGitRepos) {
     if (!repo.credentialsId) continue; // unauthenticated git repositories need not be removed
-    removals.push(_removeGitRepository(repo));
+    removals.push(removeGitRepository(repo));
   }
 
   const proxySettings = await services.settings.get();
@@ -206,7 +206,7 @@ async function _removeAllCredentials() {
  * each model instance individually to clear them all out.
  *
  */
-export async function _removeGitRepository(repo: GitRepository) {
+export async function removeGitRepository(repo: GitRepository) {
   const queryIds = models.project.getQueryableGitRepositoryIds(repo._id);
   const projects = await database.find<Project>(models.project.type, { gitRepositoryId: { $in: queryIds } });
   for (const p of projects) {
