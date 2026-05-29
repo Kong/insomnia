@@ -1,7 +1,9 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
 import os from 'node:os';
 
+import electron from 'electron';
 import iconv from 'iconv-lite';
 
 import { jarFromCookies } from '~/common/cookies';
@@ -118,7 +120,7 @@ export default class BaseExtension {
             userInfo: os.userInfo(),
           };
         },
-        readFile: async (path: string) => window.main.secureReadFile({ path }),
+        readFile: async (path: string) => fs.readFile(path, 'utf8'),
         decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
         encode: async (input: string, encoding: BinaryToTextEncoding) =>
           crypto.createHash('md5').update(input).digest(encoding),
@@ -126,7 +128,7 @@ export default class BaseExtension {
           templating.render(str, {
             context: renderContext,
           }),
-        openInBrowser: (url: string) => window.main.openInBrowser(url),
+        openInBrowser: (url: string) => electron.shell.openExternal(url),
         models: {
           request: {
             getById: services.request.getById,

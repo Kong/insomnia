@@ -1,9 +1,10 @@
 import type { Environment } from 'nunjucks';
+import nunjucks from 'nunjucks';
 
 import { localTemplateTags } from '~/templating/local-template-tags';
 
 import type { TemplateTag } from '../plugins';
-import BaseExtensionWorker, { fetchFromTemplateWorkerDatabase } from './base-extension-worker';
+import BaseExtension from './base-extension';
 import { extractUndefinedVariableKey, RenderError } from './render-error';
 
 // Some constants
@@ -140,29 +141,24 @@ async function getNunjucks(ignoreUndefinedEnvVariable?: boolean): Promise<Nunjuc
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  const { nunjucks } = await import('./nunjucks.client');
   const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
   nunjucksEnvironment.addGlobal('range', () => {});
   nunjucksEnvironment.addGlobal('cycler', () => {});
   nunjucksEnvironment.addGlobal('joiner', () => {});
-  const bundlePluginTemplateTags = (await fetchFromTemplateWorkerDatabase(
-    'plugin.getBundlePluginTemplateTags',
-    {},
-  )) as TemplateTag[];
-  bundlePluginTemplateTags.forEach(tag => {
-    const { templateTag, plugin } = tag;
-    const pluginName = plugin.name;
-    const tagName = templateTag.name;
-    // default run method to send context, parsed args, plugin name, and tag name to main for execution
-    templateTag.run = async (context, ...args) =>
-      await fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginTag', { context, args, pluginName, tagName });
-  });
-  const allExtensions = [...localTemplateTags, ...bundlePluginTemplateTags];
+  const pluginTemplateTags: TemplateTag[] = [];
+
+  const allExtensions = [
+    ...localTemplateTags,
+
+    // Spread after local tags to allow plugins to override them.
+    // TODO: Determine if this is in fact the behavior we've explicitly decided to support.
+    ...pluginTemplateTags,
+  ];
 
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;
     templateTag.priority = templateTag.priority || allExtensions.indexOf(extension);
-    const instance = new BaseExtensionWorker(templateTag, plugin);
+    const instance = new BaseExtension(templateTag, plugin);
     nunjucksEnvironment.addExtension(instance.getTag() || '', instance);
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
