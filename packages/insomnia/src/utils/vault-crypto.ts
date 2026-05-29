@@ -21,8 +21,11 @@ const getRandomIv = () => {
   return String.fromCodePoint(...iv);
 };
 
+const createForgeCipher = forge.cipher.createCipher.bind(forge.cipher);
+const createForgeDecipher = forge.cipher.createDecipher.bind(forge.cipher);
+
 const encryptAES = (symmetricKey: JsonWebKey, plaintext: string): AESMessage => {
-  const cipher = forge.cipher.createCipher('AES-GCM', getKeyBytes(symmetricKey));
+  const cipher = createForgeCipher('AES-GCM', getKeyBytes(symmetricKey));
   const iv = getRandomIv();
   const encodedPlaintext = encodeURIComponent(plaintext);
   cipher.start({
@@ -40,7 +43,7 @@ const encryptAES = (symmetricKey: JsonWebKey, plaintext: string): AESMessage => 
 };
 
 const decryptAES = (symmetricKey: JsonWebKey, encryptedValue: AESMessage) => {
-  const decipher = forge.cipher.createDecipher('AES-GCM', getKeyBytes(symmetricKey));
+  const decipher = createForgeDecipher('AES-GCM', getKeyBytes(symmetricKey));
   decipher.start({
     iv: forge.util.hexToBytes(encryptedValue.iv),
     tagLength: encryptedValue.t.length * 4,
