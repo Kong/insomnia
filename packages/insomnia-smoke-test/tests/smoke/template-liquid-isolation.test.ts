@@ -20,30 +20,30 @@ test('LiquidJS template rendering — env vars and control flow', async ({ page,
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
-  await expect.soft(responseBody).toContainText('Hello world');
+  await expect.soft(responseBody).toContainText('Hello world req-ENV1');
 
-  // role=user → "standard" branch
+  // role=user → "standard-req-CTRL"; fingerprint guards against stale response from prior request
   await insomnia.navigationSidebar.clickRequestOrFolder('Control Flow If');
   await statusTag.waitFor({ state: 'hidden' });
   await sendButton.click();
   await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('standard');
+  await expect.soft(responseBody).toContainText('standard-req-CTRL');
 
-  // items=[alpha,beta,gamma] → "[alpha][beta][gamma]"
+  // items=[alpha,beta,gamma] → "[alpha][beta][gamma] req-LOOP"
   await insomnia.navigationSidebar.clickRequestOrFolder('For Loop Iteration');
   await statusTag.waitFor({ state: 'hidden' });
   await sendButton.click();
   await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('[alpha][beta][gamma]');
+  await expect.soft(responseBody).toContainText('[alpha][beta][gamma] req-LOOP');
 
   await insomnia.navigationSidebar.clickRequestOrFolder('Assign And Unless');
   await statusTag.waitFor({ state: 'hidden' });
   await sendButton.click();
   await statusTag.waitFor({ state: 'visible' });
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('Bearer abc123');
+  await expect.soft(responseBody).toContainText('Bearer abc123 req-AUTH');
 });
 
 test('LiquidJS blocked file-loading tags produce render errors', async ({ page, insomnia }) => {

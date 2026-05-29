@@ -18,7 +18,7 @@ collection:
     method: POST
     body:
       mimeType: text/plain
-      text: "{{ _.greeting }} {{ _.target }}"
+      text: "{{ _.greeting }} {{ _.target }} req-ENV1"
     headers:
       - name: Content-Type
         value: text/plain
@@ -41,7 +41,7 @@ collection:
     method: POST
     body:
       mimeType: text/plain
-      text: "{% if _.role == 'admin' %}elevated{% elsif _.role == 'user' %}standard{% else %}none{% endif %}"
+      text: "{% if _.role == 'admin' %}elevated-req-CTRL{% elsif _.role == 'user' %}standard-req-CTRL{% else %}none-req-CTRL{% endif %}"
     headers:
       - name: Content-Type
         value: text/plain
@@ -64,7 +64,7 @@ collection:
     method: POST
     body:
       mimeType: text/plain
-      text: "{% for item in _.items %}[{{ item }}]{% endfor %}"
+      text: "{% for item in _.items %}[{{ item }}]{% endfor %} req-LOOP"
     headers:
       - name: Content-Type
         value: text/plain
@@ -181,7 +181,7 @@ collection:
     method: POST
     body:
       mimeType: text/plain
-      text: "{% assign prefix = 'Bearer' %}{% unless _.token == '' %}{{ prefix }} {{ _.token }}{% endunless %}"
+      text: "{% assign prefix = 'Bearer' %}{% unless _.token == '' %}{{ prefix }} {{ _.token }}{% endunless %} req-AUTH"
     headers:
       - name: Content-Type
         value: text/plain
