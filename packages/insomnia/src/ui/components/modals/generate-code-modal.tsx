@@ -67,9 +67,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const generateCode = useCallback(
     async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
-      const { HTTPSnippet, availableTargets } = await import('httpsnippet');
-
-      const targets = availableTargets();
+      const targets = await window.main.getCodeSnippetTargets() as HTTPSnippetTarget[];
       const targetOrFallback = target || (targets.find(t => t.key === 'shell') as HTTPSnippetTarget);
       const clientOrFallback = client || (targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient);
 
@@ -89,9 +87,8 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       );
       const har = await exportHarWithRequest(request, props.environmentId, addContentLength);
       if (har) {
-        const snippet = new HTTPSnippet(har);
-        const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
-        setSnippet(cmd);
+        const cmd = await window.main.generateCodeSnippet({ har, target: targetOrFallback.key, client: clientOrFallback.key });
+        setSnippet(cmd as string);
       }
 
       window.main.trackAnalyticsEvent({

@@ -273,6 +273,8 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
+  generateCodeSnippet: (options: { har: object; target: string; client: string }) => Promise<string>;
+  getCodeSnippetTargets: () => Promise<{ key: string; title: string; clients: { key: string; title: string }[] }[]>;
   generateCommitsFromDiff: (
     input: Parameters<GenerateCommitsFromDiffFunction>[0],
   ) => Promise<
@@ -487,6 +489,17 @@ export function registerMainHandlers() {
 
       process.postMessage({ documentContent, rulesetPath });
     });
+  });
+
+  ipcMainHandle('generateCodeSnippet', async (_, options: { har: object; target: string; client: string }) => {
+    const { HTTPSnippet } = await import('httpsnippet');
+    const snippet = new HTTPSnippet(options.har as any);
+    return snippet.convert(options.target, options.client) || '';
+  });
+
+  ipcMainHandle('getCodeSnippetTargets', async () => {
+    const { availableTargets } = await import('httpsnippet');
+    return availableTargets();
   });
 
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {

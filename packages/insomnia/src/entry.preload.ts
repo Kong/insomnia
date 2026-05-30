@@ -364,6 +364,9 @@ const main: Window['main'] = {
       useDynamicMockResponses,
       mockServerAdditionalFiles,
     ),
+  generateCodeSnippet: (options: { har: object; target: string; client: string }) =>
+    invokeWithNormalizedError('generateCodeSnippet', options),
+  getCodeSnippetTargets: () => invokeWithNormalizedError('getCodeSnippetTargets'),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
     invokeWithNormalizedError('generateCommitsFromDiff', input),
   generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
