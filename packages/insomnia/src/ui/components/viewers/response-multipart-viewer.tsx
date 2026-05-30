@@ -1,12 +1,12 @@
 import { format } from 'date-fns';
 import type { SaveDialogOptions } from 'electron';
-import { extension as mimeExtension } from 'mime-types';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { getContentTypeFromHeaders, PREVIEW_MODE_FRIENDLY } from '~/insomnia-data/common';
 import type { Part } from '~/main/multipart-buffer-to-array';
 
+import { mimeTypeExtension } from '../../../common/mime';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals/index';
 import { WrapperModal } from '../modals/wrapper-modal';
@@ -77,7 +77,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
       return;
     }
     const contentType = getContentTypeFromHeaders(selectedPart.headers, 'text/plain');
-    const extension = mimeExtension(contentType) || '.txt';
+    const extension = mimeTypeExtension(contentType) || 'txt';
     const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
     const dir = lastDir || window.app.getPath('desktop');
     const date = format(Date.now(), 'yyyy-MM-dd');
