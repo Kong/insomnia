@@ -513,7 +513,6 @@ export const CodeEditor = memo(
             codeMirror.current.foldCode(from, to);
           }
         }
-        // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [
         hideGutters,
@@ -524,7 +523,6 @@ export const CodeEditor = memo(
         settings.hotKeyRegistry,
         settings.autocompleteDelay,
         settings.nunjucksPowerUserMode,
-        settings.pluginsAllowElevatedAccess,
         settings.showVariableSourceAndValue,
         noLint,
         readOnly,
