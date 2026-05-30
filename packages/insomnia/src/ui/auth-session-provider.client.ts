@@ -30,17 +30,15 @@ async function getSessionKeyPair() {
         encodeBase64(sessionKeyPair.secretKey),
       ]);
 
+      // Session keypairs are ephemeral and used only for the initial login handshake.
+      // They are NOT persistent credentials and are discarded after the session ends.
       try {
-        // Session keypairs are ephemeral and used only for the initial login handshake.
-        // They are NOT persistent credentials and are discarded after the session ends.
         window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || publicKeyEncoded);
       } catch {
         console.error('Failed to store public key in localStorage.');
       }
 
       try {
-        // Session keypairs are ephemeral and used only for the initial login handshake.
-        // They are NOT persistent credentials and are discarded after the session ends.
         window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || secretKeyEncoded);
       } catch {
         console.error('Failed to store secret key in localStorage.');

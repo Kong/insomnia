@@ -86,7 +86,7 @@ export const isInMockContentTypeList = (contentType: string): boolean =>
   Boolean(contentType && mockContentTypes.includes(contentType));
 
 // mockbin expect a HAR response structure
-export const mockRouteToHar = ({
+export const mockRouteToHar = async ({
   statusCode,
   statusText,
   mimeType,
@@ -100,25 +100,23 @@ export const mockRouteToHar = ({
   body: string;
 }): Promise<Har.Response> => {
   const validHeaders = headersArray.filter(({ name }) => !!name);
-  return (async () => {
-    const { getResponseCookiesFromHeaders } = await import('~/common/har');
-    return {
-      status: +statusCode,
-      statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
-      httpVersion: 'HTTP/1.1',
-      headers: validHeaders,
-      cookies: await getResponseCookiesFromHeaders(validHeaders),
-      content: {
-        size: Buffer.byteLength(body),
-        mimeType,
-        text: body,
-        compression: 0,
-      },
-      headersSize: -1,
-      bodySize: -1,
-      redirectURL: '',
-    };
-  })();
+  const { getResponseCookiesFromHeaders } = await import('~/common/har');
+  return {
+    status: +statusCode,
+    statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
+    httpVersion: 'HTTP/1.1',
+    headers: validHeaders,
+    cookies: getResponseCookiesFromHeaders(validHeaders),
+    content: {
+      size: Buffer.byteLength(body),
+      mimeType,
+      text: body,
+      compression: 0,
+    },
+    headersSize: -1,
+    bodySize: -1,
+    redirectURL: '',
+  };
 };
 
 export const useMockRoutePatcher = () => {
