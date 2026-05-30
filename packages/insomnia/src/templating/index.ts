@@ -5,9 +5,8 @@ import { buildLiquidEngine, stripLiquidComments } from './liquid-engine';
 import { createLiquidTag } from './liquid-extension';
 import { extractUndefinedVariableKey, translateLiquidError } from './render-error';
 
-export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
-// Alias for forward-compat imports
-export const LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
+import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from './constants';
+export { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME };
 
 // Cached engine instances
 let liquidAll: Liquid | null = null;
