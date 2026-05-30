@@ -35,7 +35,7 @@ const getKeyBytes = (symmetricKey: JsonWebKey) => forge.util.hexToBytes(b64UrlTo
 
 const getRandomIv = () => {
   const iv = new Uint8Array(12);
-  window.crypto.getRandomValues(iv);
+  globalThis.crypto.getRandomValues(iv);
   return String.fromCodePoint(...iv);
 };
 
