@@ -5,8 +5,36 @@ import type { DatabaseBridgeAPI } from '../src/main/ipc/database';
 import type { DiffMatchPatch, DiffOp } from 'diff-match-patch-ts';
 import type { Services } from '~/insomnia-data';
 
+type RendererEnv = {
+  INSOMNIA_GITLAB_REDIRECT_URI: string | undefined;
+  INSOMNIA_GITLAB_CLIENT_ID: string | undefined;
+  INSOMNIA_GITLAB_API_URL: string | undefined;
+  PLAYWRIGHT_TEST: string | undefined;
+  INSOMNIA_SKIP_ONBOARDING: string | undefined;
+  INSOMNIA_SESSION: string | undefined;
+  INSOMNIA_SECRET_KEY: string | undefined;
+  INSOMNIA_PUBLIC_KEY: string | undefined;
+  INSOMNIA_VAULT_SALT: string | undefined;
+  INSOMNIA_VAULT_KEY: string | undefined;
+  INSOMNIA_VAULT_SRP_SECRET: string | undefined;
+  INSOMNIA_ENV: string | undefined;
+  BUILD_DATE: string | undefined;
+  PORTABLE_EXECUTABLE_DIR: string | undefined;
+  OAUTH_REDIRECT_URL: string | undefined;
+  OAUTH_RELAY_URL: string | undefined;
+  INSOMNIA_API_URL: string | undefined;
+  INSOMNIA_MOCK_API_URL: string | undefined;
+  INSOMNIA_AI_URL: string | undefined;
+  KONNECT_API_URL: string | undefined;
+  INSOMNIA_APP_WEBSITE_URL: string | undefined;
+  INSOMNIA_GITHUB_REST_API_URL: string | undefined;
+  INSOMNIA_GITHUB_API_URL: string | undefined;
+  INSOMNIA_ENABLE_PLUGIN_BRIDGE: string | undefined;
+};
+
 declare global {
   interface Window {
+    env: RendererEnv;
     main: RendererToMainBridgeAPI;
     bridge: HiddenBrowserWindowToMainBridgeAPI;
     database: DatabaseBridgeAPI;
