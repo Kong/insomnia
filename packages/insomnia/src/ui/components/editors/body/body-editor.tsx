@@ -2,13 +2,13 @@ import clone from 'clone';
 import type { Request, RequestBodyParameter } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders } from 'insomnia-data/common';
-import { lookup } from 'mime-types';
 import React, { type FC, useCallback } from 'react';
 import { Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
+import { lookupMimeType } from '../../../../common/mime';
 import { getContentTypeHeader } from '../../../../common/misc';
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
@@ -89,7 +89,7 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
 
     // Update Content-Type header if the user wants
     const contentType = contentTypeHeader.value;
-    const newContentType = lookup(path) || CONTENT_TYPE_FILE;
+    const newContentType = lookupMimeType(path) || CONTENT_TYPE_FILE;
 
     if (contentType !== newContentType && path) {
       contentTypeHeader.value = newContentType;
