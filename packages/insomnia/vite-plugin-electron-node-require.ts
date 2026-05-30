@@ -61,7 +61,7 @@ export function electronNodeRequire(options: Options): Plugin {
         // We need to handle electron because it's different when required in the renderer process
         if (externalId === 'electron') {
           return `
-            const electron = require('electron');
+            const electron = typeof require !== 'undefined' ? require('electron') : {};
             export { electron as default };
             export const BrowserWindow = electron.BrowserWindow;
             export const clipboard = electron.clipboard;
@@ -97,8 +97,11 @@ export function electronNodeRequire(options: Options): Plugin {
           ].join('\n');
         }
 
+        // Use a guarded require so the renderer (nodeIntegration: false) gets an empty
+        // stub instead of a ReferenceError crash. Features that actually need these
+        // Node.js modules will fail at call-time rather than at module-load time.
         return [
-          `const requiredModule = require('${externalId}');`,
+          `const requiredModule = typeof require !== 'undefined' ? require('${externalId}') : {};`,
           `${validExports.map(e => `export const ${e} = requiredModule.${e};`).join('\n')}`,
           `${exports.includes('default') ? 'export default requiredModule.default;' : 'export default requiredModule'}`,
         ].join('\n');

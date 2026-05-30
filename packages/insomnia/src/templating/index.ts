@@ -2,7 +2,6 @@ import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import type { Liquid } from 'liquidjs';
 
 import { buildLiquidEngine, stripLiquidComments } from './liquid-engine';
-import { createLiquidTag } from './liquid-extension';
 import { extractUndefinedVariableKey, translateLiquidError } from './render-error';
 
 export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
@@ -100,7 +99,11 @@ async function getLiquid(ignoreUndefinedEnvVariable?: boolean): Promise<{ engine
     return { engine: liquidAll, tagMetadata: liquidAllTagMetadata };
   }
 
-  const pluginTemplateTags = await (await import('../plugins')).getTemplateTags();
+  const [{ getTemplateTags }, { createLiquidTag }] = await Promise.all([
+    import('../plugins'),
+    import('./liquid-extension'),
+  ]);
+  const pluginTemplateTags = await getTemplateTags();
 
   const allTags = [
     ...localTemplateTags,

@@ -66,39 +66,43 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const generateCode = useCallback(
     async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
-      const { HTTPSnippet, availableTargets } = await import('httpsnippet');
+      try {
+        const { HTTPSnippet, availableTargets } = await import('httpsnippet');
 
-      const targets = availableTargets();
-      const targetOrFallback = target || (targets.find(t => t.key === 'shell') as HTTPSnippetTarget);
-      const clientOrFallback = client || (targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient);
+        const targets = availableTargets();
+        const targetOrFallback = target || (targets.find(t => t.key === 'shell') as HTTPSnippetTarget);
+        const clientOrFallback = client || (targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient);
 
-      setState({
-        request,
-        client: clientOrFallback,
-        target: targetOrFallback,
-        targets,
-      });
-      // Save client/target for next time
-      window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
-      window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
+        setState({
+          request,
+          client: clientOrFallback,
+          target: targetOrFallback,
+          targets,
+        });
+        // Save client/target for next time
+        window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
+        window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
 
-      // Some clients need a content-length for the request to succeed
-      const addContentLength = Boolean(
-        (TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key),
-      );
-      const har = await window.main.exportHarRequest(request._id, props.environmentId, addContentLength);
-      if (har) {
-        const snippet = new HTTPSnippet(har);
-        const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
-        setSnippet(cmd);
+        // Some clients need a content-length for the request to succeed
+        const addContentLength = Boolean(
+          (TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key),
+        );
+        const har = await window.main.exportHarRequest(request._id, props.environmentId, addContentLength);
+        if (har) {
+          const snippet = new HTTPSnippet(har);
+          const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
+          setSnippet(cmd);
+        }
+
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.generateCodeLanguageChanged,
+          properties: {
+            language: target?.title,
+          },
+        });
+      } catch (err) {
+        console.error('[generate-code] failed to generate code snippet:', err);
       }
-
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.generateCodeLanguageChanged,
-        properties: {
-          language: target?.title,
-        },
-      });
     },
     [props.environmentId],
   );

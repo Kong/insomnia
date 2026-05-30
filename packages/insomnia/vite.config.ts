@@ -21,13 +21,15 @@ export default defineConfig(({ mode }) => {
       // In dev mode Vite uses runtime assignment via env.mjs, which throws
       // TypeError because process.type is read-only in Electron's renderer process.
       ...(!__DEV__ ? { 'process.type': JSON.stringify('renderer') } : {}),
+      // CJS packages that reference `global` (e.g. event-stream via httpsnippet)
+      // crash in the renderer because `global` is not defined in browser contexts.
+      'global': 'globalThis',
     },
     server: {
       port: pkg.dev['dev-server-port'],
       warmup: {
         clientFiles: [
           // https://github.com/remix-run/react-router/issues/12786#issuecomment-2634033513
-          './src/components/**/*',
           './src/entry.client.tsx',
           './src/root.tsx',
           './src/routes/**/*',
@@ -54,6 +56,10 @@ export default defineConfig(({ mode }) => {
         // builds inline the module directly (avoids runtime require() in server bundle).
         '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
+        // Provide a browser-compatible shim for Node's legacy url module so packages
+        // like httpsnippet that call url.parse() work in the renderer.
+        'url': path.resolve(__dirname, './src/polyfills/node-url.ts'),
+        'querystring': path.resolve(__dirname, './src/polyfills/node-querystring.ts'),
       },
     },
     plugins: [
@@ -61,8 +67,10 @@ export default defineConfig(({ mode }) => {
         modules: [
           'electron',
           ...externalDependencies,
-          ...builtinModules.filter(m => m !== 'buffer'),
-          ...builtinModules.map(m => `node:${m}`),
+          // These are excluded so Vite can resolve them via the aliases below (browser-compatible
+          // shims) instead of generating empty stubs that crash packages like httpsnippet.
+          ...builtinModules.filter(m => !['buffer', 'util', 'events', 'url', 'querystring'].includes(m)),
+          ...builtinModules.map(m => `node:${m}`).filter(m => !['node:util', 'node:events', 'node:url', 'node:querystring'].includes(m)),
         ],
       }),
       reactRouter(),

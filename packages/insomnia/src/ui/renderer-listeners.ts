@@ -3,7 +3,6 @@ import { type RAToastContent, showToast } from '~/ui/components/toast-notificati
 
 import * as themes from '../plugins/misc';
 import { plugins } from '../plugins/renderer-bridge';
-import * as templating from '../templating';
 import { showModal } from './components/modals';
 import { SettingsModal } from './components/modals/settings-modal';
 
@@ -15,7 +14,8 @@ window.main.on('reload-plugins', async () => {
   const settings = await services.settings.get();
   await plugins.reloadPlugins();
   await themes.applyColorScheme(settings);
-  templating.reload();
+  const { reload } = await import('../templating');
+  reload();
   console.log('[plugins] reloaded');
 });
 
