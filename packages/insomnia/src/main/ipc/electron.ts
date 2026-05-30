@@ -20,6 +20,8 @@ export type HandleChannels =
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
+  | 'generateCodeSnippet'
+  | 'getCodeSnippetTargets'
   | 'generateMockRouteDataFromSpec'
   | 'generateCommitsFromDiff'
   | 'generateMcpSamplingResponse'

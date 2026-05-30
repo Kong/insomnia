@@ -148,9 +148,10 @@ export const RequestActionsDropdown = ({
   const copyAsCurl = async () => {
     try {
       const har = await exportHarRequest(request._id, workspaceId);
-      const { HTTPSnippet } = await import('httpsnippet');
-      const snippet = new HTTPSnippet(har);
-      const cmd = snippet.convert('shell', 'curl');
+      if (!har) {
+        return;
+      }
+      const cmd = await window.main.generateCodeSnippet({ har, target: 'shell', client: 'curl' });
 
       if (cmd) {
         window.clipboard.writeText(cmd);
