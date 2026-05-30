@@ -86,8 +86,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       const addContentLength = Boolean(
         (TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key),
       );
-      const { exportHarWithRequest } = await import('../../../common/har');
-      const har = await exportHarWithRequest(request, props.environmentId, addContentLength);
+      const har = await window.main.exportHarRequest(request._id, props.environmentId, addContentLength);
       if (har) {
         const snippet = new HTTPSnippet(har);
         const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';

@@ -100,7 +100,7 @@ export const mockRouteToHar = async ({
   body: string;
 }): Promise<Har.Response> => {
   const validHeaders = headersArray.filter(({ name }) => !!name);
-  const { getResponseCookiesFromHeaders } = await import('~/common/har');
+  const { getResponseCookiesFromHeaders } = await import('~/common/cookies');
   return {
     status: +statusCode,
     statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',

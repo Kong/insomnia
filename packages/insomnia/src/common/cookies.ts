@@ -1,6 +1,9 @@
+import type * as Har from 'har-format';
 import { Cookie as ToughCookie, CookieJar, type CookieJSON } from 'tough-cookie';
 
 import type { Cookie } from '~/insomnia-data';
+
+import { getSetCookieHeaders } from './misc';
 
 /**
  * Get a list of cookie objects from a request.jar()
@@ -46,6 +49,64 @@ export const jarFromCookies = (cookies: Cookie[] | ToughCookie[]) => {
 
   return jar;
 };
+
+export function mapCookie(cookie: ToughCookie): Har.Cookie {
+  const harCookie: Har.Cookie = {
+    name: cookie.key,
+    value: cookie.value,
+  };
+
+  if (cookie.path) {
+    harCookie.path = cookie.path;
+  }
+
+  if (cookie.domain) {
+    harCookie.domain = cookie.domain;
+  }
+
+  if (cookie.expires) {
+    let expires: Date | null = null;
+
+    if (cookie.expires instanceof Date) {
+      expires = cookie.expires;
+    } else if (typeof cookie.expires === 'string') {
+      expires = new Date(cookie.expires);
+    } else if (typeof cookie.expires === 'number') {
+      expires = new Date();
+      expires.setTime(cookie.expires);
+    }
+
+    if (expires && !Number.isNaN(expires.getTime())) {
+      harCookie.expires = expires.toISOString();
+    }
+  }
+
+  if (cookie.httpOnly) {
+    harCookie.httpOnly = true;
+  }
+
+  if (cookie.secure) {
+    harCookie.secure = true;
+  }
+
+  return harCookie;
+}
+
+export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
+  return getSetCookieHeaders(headers).reduce((accumulator, harCookie) => {
+    let cookie: null | undefined | ToughCookie = null;
+
+    try {
+      cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
+    } catch {}
+
+    if (cookie === null || cookie === undefined) {
+      return accumulator;
+    }
+
+    return [...accumulator, mapCookie(cookie)];
+  }, [] as Har.Cookie[]);
+}
 
 export const cookieToString = (cookie: Parameters<typeof ToughCookie.fromJSON>[0] | ToughCookie) => {
   // Cookie can either be a plain JS object or Cookie instance

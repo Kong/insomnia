@@ -6,7 +6,7 @@ import type { Cookie, Request, Response } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 
 import { database as db } from '../../common/database';
-import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
+import { exportHar, exportHarResponse, exportHarWithRequest } from '../../main/har';
 import { getRenderedRequestAndContext } from '../render';
 
 describe('export', () => {

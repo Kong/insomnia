@@ -1,10 +1,14 @@
 import clone from 'clone';
 import type * as Har from 'har-format';
-import { Cookie as ToughCookie } from 'tough-cookie';
 
 import type { BaseModel, Environment, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 
+import { getAppVersion } from '../common/constants';
+import { getResponseCookiesFromHeaders, jarFromCookies, mapCookie } from '../common/cookies';
+import { database } from '../common/database';
+import { filterHeaders, hasAuthHeader } from '../common/misc';
+import { getRenderedRequestAndContext } from '../common/render';
 import * as plugins from '../plugins';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginRequest from '../plugins/context/request';
@@ -13,11 +17,8 @@ import { RenderError } from '../templating/render-error';
 import type { RenderedRequest } from '../templating/types';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import { smartEncodeUrl } from '../utils/url/querystring';
-import { getAppVersion } from './constants';
-import { jarFromCookies } from './cookies';
-import { database } from './database';
-import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
-import { getRenderedRequestAndContext } from './render';
+import { getAuthHeader } from './network/get-auth-header';
+import { secureReadFile } from './secure-read-file';
 
 const { isRequest } = models.request;
 
@@ -25,10 +26,7 @@ const getDocWithDescendants =
   (includePrivateDocs = false) =>
   async (parentDoc: BaseModel | null) => {
     const docs = parentDoc ? await database.getWithDescendants(parentDoc) : [];
-    return docs.filter(
-      // Don't include if private, except if we want to
-      doc => !doc?.isPrivate || includePrivateDocs,
-    );
+    return docs.filter(doc => !doc?.isPrivate || includePrivateDocs);
   };
 
 export async function exportWorkspacesHAR(workspaces: Workspace[], includePrivateDocs = false) {
@@ -82,7 +80,6 @@ export async function exportRequestsHAR(requests: BaseModel[], includePrivateDoc
     const workspace = mapRequestIdToWorkspace[request._id];
 
     if (workspace == null) {
-      // Workspace not found for request, so don't export it.
       continue;
     }
 
@@ -96,6 +93,7 @@ export async function exportRequestsHAR(requests: BaseModel[], includePrivateDoc
   const data = await exportHar(harRequests);
   return JSON.stringify(data, null, '\t');
 }
+
 export interface ExportRequest {
   requestId: string;
   environmentId: string | null;
@@ -129,7 +127,6 @@ export async function exportHarCurrentRequest(request: Request, response: Respon
 }
 
 export async function exportHar(exportRequests: ExportRequest[]) {
-  // Export HAR entries with the same start time in order to keep their workspace sort order.
   const startedDateTime = new Date().toISOString();
   const entries: Har.Entry[] = [];
 
@@ -301,12 +298,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
     }
   }
 
-  // Set auth header if we have it
   if (!hasAuthHeader(renderedRequest.headers)) {
-    const getAuthHeader =
-      process.type === 'renderer'
-        ? window.main.getAuthHeader
-        : (await import('../main/network/get-auth-header')).getAuthHeader;
     const header = await getAuthHeader(renderedRequest, url);
 
     if (header) {
@@ -332,88 +324,15 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
 }
 
 function getRequestCookies(renderedRequest: RenderedRequest) {
-  // filter out invalid cookies to avoid getCookiesSync complaining
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
   const domainCookies = renderedRequest.url ? jar.getCookiesSync(renderedRequest.url) : [];
   const harCookies: Har.Cookie[] = domainCookies.map(mapCookie);
   return harCookies;
 }
 
-export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
-  return getSetCookieHeaders(headers).reduce((accumulator, harCookie) => {
-    let cookie: null | undefined | ToughCookie = null;
-
-    try {
-      cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
-    } catch {}
-
-    if (cookie === null || cookie === undefined) {
-      return accumulator;
-    }
-
-    return [...accumulator, mapCookie(cookie)];
-  }, [] as Har.Cookie[]);
-}
-
 function getResponseCookies(response: Response) {
   const headers = response.headers.filter(Boolean);
   return getResponseCookiesFromHeaders(headers);
-}
-
-function mapCookie(cookie: ToughCookie) {
-  const harCookie: Har.Cookie = {
-    name: cookie.key,
-    value: cookie.value,
-  };
-
-  if (cookie.path) {
-    harCookie.path = cookie.path;
-  }
-
-  if (cookie.domain) {
-    harCookie.domain = cookie.domain;
-  }
-
-  if (cookie.expires) {
-    let expires: Date | null = null;
-
-    if (cookie.expires instanceof Date) {
-      expires = cookie.expires;
-    } else if (typeof cookie.expires === 'string') {
-      expires = new Date(cookie.expires);
-    } else if (typeof cookie.expires === 'number') {
-      expires = new Date();
-      expires.setTime(cookie.expires);
-    }
-
-    if (expires && !Number.isNaN(expires.getTime())) {
-      harCookie.expires = expires.toISOString();
-    }
-  }
-
-  if (cookie.httpOnly) {
-    harCookie.httpOnly = true;
-  }
-
-  if (cookie.secure) {
-    harCookie.secure = true;
-  }
-
-  return harCookie;
-}
-
-async function getResponseContent(response: Response) {
-  let body = await services.helpers.getResponseBodyBuffer(response);
-
-  if (body === null) {
-    body = Buffer.alloc(0);
-  }
-  const harContent: Har.Content = {
-    size: Buffer.byteLength(body),
-    mimeType: response.contentType,
-    text: body.toString('utf8'),
-  };
-  return harContent;
 }
 
 function getResponseHeaders(response: Response) {
@@ -445,17 +364,13 @@ async function getRequestPostData(renderedRequest: RenderedRequest): Promise<Har
   let body;
   if (renderedRequest.body.fileName) {
     try {
-      const text = await window.main.secureReadFile({ path: renderedRequest.body.fileName });
-
-      body = {
-        text,
-      };
+      const text = await secureReadFile(renderedRequest.body.fileName);
+      body = { text };
     } catch (error) {
       console.warn('[code gen] Failed to read file', error);
       return;
     }
   } else {
-    // For every other type, Insomnia uses the same body format as HAR
     body = renderedRequest.body;
   }
 
@@ -473,4 +388,18 @@ async function getRequestPostData(renderedRequest: RenderedRequest): Promise<Har
     mimeType: body.mimeType || '',
     text: body.text || '',
   };
+}
+
+async function getResponseContent(response: Response) {
+  let body = await services.helpers.getResponseBodyBuffer(response);
+
+  if (body === null) {
+    body = Buffer.alloc(0);
+  }
+  const harContent: Har.Content = {
+    size: Buffer.byteLength(body),
+    mimeType: response.contentType,
+    text: body.toString('utf8'),
+  };
+  return harContent;
 }

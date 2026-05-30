@@ -1,4 +1,4 @@
-import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
+import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/main/har';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { database as db, services } from '~/insomnia-data';

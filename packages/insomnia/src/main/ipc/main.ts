@@ -16,6 +16,7 @@ import {
   utilityProcess,
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
+import type * as Har from 'har-format';
 import iconv from 'iconv-lite';
 
 import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
@@ -25,6 +26,12 @@ import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/ins
 import { services } from '~/insomnia-data';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
+import {
+  exportHarCurrentRequest as exportHarCurrentRequestFromHar,
+  exportHarRequest as exportHarRequestFromHar,
+  exportRequestsHAR as exportRequestsHARFromHar,
+  exportWorkspacesHAR as exportWorkspacesHARFromHar,
+} from '~/main/har';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -285,6 +292,14 @@ export interface RendererToMainBridgeAPI {
     | { response: Awaited<ReturnType<GenerateMcpSamplingResponseFunction>>; error: undefined }
     | { response: undefined; error: string }
   >;
+  exportHarRequest: (
+    requestId: string,
+    environmentOrWorkspaceId?: string,
+    addContentLength?: boolean,
+  ) => Promise<Har.Request | null>;
+  exportHarCurrentRequest: (requestId: string, responseId: string) => Promise<Har.Har>;
+  exportWorkspacesHAR: (workspaceIds: string[], includePrivateDocs?: boolean) => Promise<string>;
+  exportRequestsHAR: (requestIds: string[], includePrivateDocs?: boolean) => Promise<string>;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
   notifyPluginPromptResult: (id: string, value: string | null) => void;
@@ -400,6 +415,33 @@ export function registerMainHandlers() {
     }
   });
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
+  ipcMainHandle(
+    'exportHarRequest',
+    (_, requestId: string, environmentOrWorkspaceId?: string, addContentLength?: boolean) =>
+      exportHarRequestFromHar(requestId, environmentOrWorkspaceId ?? '', addContentLength),
+  );
+  ipcMainHandle('exportHarCurrentRequest', async (_, requestId: string, responseId: string) => {
+    const [request, response] = await Promise.all([
+      services.request.getById(requestId),
+      services.response.getById(responseId),
+    ]);
+    if (!request || !response) {
+      throw new Error('Request or response not found');
+    }
+    return exportHarCurrentRequestFromHar(request, response);
+  });
+  ipcMainHandle('exportWorkspacesHAR', async (_, workspaceIds: string[], includePrivateDocs?: boolean) => {
+    const workspaces = (await Promise.all(workspaceIds.map(id => services.workspace.getById(id)))).filter(
+      (w): w is NonNullable<typeof w> => w != null,
+    );
+    return exportWorkspacesHARFromHar(workspaces, includePrivateDocs);
+  });
+  ipcMainHandle('exportRequestsHAR', async (_, requestIds: string[], includePrivateDocs?: boolean) => {
+    const requests = (await Promise.all(requestIds.map(id => services.request.getById(id)))).filter(
+      (r): r is NonNullable<typeof r> => r != null,
+    );
+    return exportRequestsHARFromHar(requests, includePrivateDocs);
+  });
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);
   });

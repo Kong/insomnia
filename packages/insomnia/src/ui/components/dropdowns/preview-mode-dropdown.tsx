@@ -35,8 +35,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const { exportHarCurrentRequest } = await import('../../../common/har');
-    const data = await exportHarCurrentRequest(activeRequest, activeResponse);
+    const data = await window.main.exportHarCurrentRequest(activeRequest._id, activeResponse._id);
     const har = JSON.stringify(data, null, '\t');
 
     const { filePath } = await window.dialog.showSaveDialog({

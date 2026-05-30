@@ -1,7 +1,6 @@
 import type { Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
 
-import { exportWorkspacesHAR } from '../../common/har';
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 
@@ -87,8 +86,10 @@ export const init = (activeProjectId?: string) => ({
         return allInsomniaExports;
       },
 
-      har: async ({ workspace, includePrivate }: HarExport = {}) =>
-        exportWorkspacesHAR(workspace ? [workspace] : await getWorkspaces(activeProjectId), Boolean(includePrivate)),
+      har: async ({ workspace, includePrivate }: HarExport = {}) => {
+        const { exportWorkspacesHAR } = await import('../../main/har');
+        return exportWorkspacesHAR(workspace ? [workspace] : await getWorkspaces(activeProjectId), Boolean(includePrivate));
+      },
     },
   },
 });

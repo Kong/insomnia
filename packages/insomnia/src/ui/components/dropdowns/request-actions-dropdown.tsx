@@ -146,8 +146,7 @@ export const RequestActionsDropdown = ({
 
   const copyAsCurl = async () => {
     try {
-      const { exportHarRequest } = await import('../../../common/har');
-      const har = await exportHarRequest(request._id, workspaceId);
+      const har = await window.main.exportHarRequest(request._id, workspaceId);
       const { HTTPSnippet } = await import('httpsnippet');
       const snippet = new HTTPSnippet(har);
       const cmd = snippet.convert('shell', 'curl');

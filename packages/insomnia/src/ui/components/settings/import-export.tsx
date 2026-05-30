@@ -169,9 +169,8 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             if (!fileName) {
               return;
             }
-            const { exportWorkspacesHAR } = await import('insomnia/src/common/har');
-            const stringifiedExport = await exportWorkspacesHAR(
-              workspacesForActiveProject,
+            const stringifiedExport = await window.main.exportWorkspacesHAR(
+              workspacesForActiveProject.map(w => w._id),
               shouldExportPrivateEnvironments,
             );
 
@@ -332,8 +331,10 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
       try {
         switch (selectedFormat) {
           case VALUE_HAR: {
-            const { exportRequestsHAR } = await import('insomnia/src/common/har');
-            stringifiedExport = await exportRequestsHAR(requests, shouldExportPrivateEnvironments);
+            stringifiedExport = await window.main.exportRequestsHAR(
+              requests.map(r => r._id),
+              shouldExportPrivateEnvironments,
+            );
             break;
           }
 

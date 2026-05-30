@@ -282,6 +282,14 @@ const main: Window['main'] = {
   writeFile: options => invokeWithNormalizedError('writeFile', options),
   deleteRulesetFile: options => invokeWithNormalizedError('deleteRulesetFile', options),
   writeResponseBodyToFile: options => invokeWithNormalizedError('writeResponseBodyToFile', options),
+  exportHarRequest: (requestId, environmentOrWorkspaceId, addContentLength) =>
+    invokeWithNormalizedError('exportHarRequest', requestId, environmentOrWorkspaceId, addContentLength),
+  exportHarCurrentRequest: (requestId, responseId) =>
+    invokeWithNormalizedError('exportHarCurrentRequest', requestId, responseId),
+  exportWorkspacesHAR: (workspaceIds, includePrivateDocs) =>
+    invokeWithNormalizedError('exportWorkspacesHAR', workspaceIds, includePrivateDocs),
+  exportRequestsHAR: (requestIds, includePrivateDocs) =>
+    invokeWithNormalizedError('exportRequestsHAR', requestIds, includePrivateDocs),
   getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<RequestHeader | undefined> =>
     invokeWithNormalizedError('getAuthHeader', renderedRequest, url),
   getOAuth2Token: (

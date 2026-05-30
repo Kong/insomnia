@@ -384,8 +384,7 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath || !activeRequest) {
                 return;
               }
-              const { exportHarCurrentRequest } = await import('../../../common/har');
-              const data = await exportHarCurrentRequest(activeRequest, activeResponse);
+              const data = await window.main.exportHarCurrentRequest(activeRequest._id, activeResponse._id);
               const har = JSON.stringify(data, null, '\t');
 
               await window.main.writeFile({
