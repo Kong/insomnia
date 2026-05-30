@@ -5,7 +5,7 @@ import { invokePluginMethod } from './invoke-method';
 // back to running plugins directly in the renderer (legacy behaviour).
 // This module lives in the renderer bundle (not the preload) so the heavy
 // plugin-system deps it pulls in don't inflate the preload.
-const bridgeEnabled = process.env.INSOMNIA_ENABLE_PLUGIN_BRIDGE !== 'false';
+const bridgeEnabled = (typeof window !== 'undefined' ? window.env?.INSOMNIA_ENABLE_PLUGIN_BRIDGE : process.env.INSOMNIA_ENABLE_PLUGIN_BRIDGE) !== 'false';
 
 function call<M extends keyof Omit<PluginsBridgeAPI, 'getBridgeMetrics'>>(
   method: M,

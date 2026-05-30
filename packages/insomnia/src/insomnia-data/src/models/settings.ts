@@ -22,7 +22,7 @@ export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme
 export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings => model.type === type;
 
 // force vertical layout for playwright tests to avoid horizontal scrolling issues
-const forceVerticalLayout = process.env.PLAYWRIGHT_TEST ? true : false;
+const forceVerticalLayout = (typeof window !== 'undefined' ? window.env?.PLAYWRIGHT_TEST : process.env.PLAYWRIGHT_TEST) ? true : false;
 
 export function init(): BaseSettings {
   return {
