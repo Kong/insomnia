@@ -10,7 +10,6 @@ import CodeMirror, {
 } from 'codemirror';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
-import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-aria-components';
@@ -44,6 +43,18 @@ import { queryXPath } from '~/utils/xpath/query';
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
+
+const isOptionValueEqual = (currentValue: unknown, nextValue: unknown) => {
+  if (currentValue === nextValue) {
+    return true;
+  }
+
+  try {
+    return JSON.stringify(currentValue) === JSON.stringify(nextValue);
+  } catch {
+    return false;
+  }
+};
 
 interface EditorState {
   scroll: CodeMirror.ScrollInfo;
@@ -587,7 +598,7 @@ export const CodeEditor = memo(
             const lintOption = lintOptions || true;
             try {
               const newValue = shouldLint ? lintOption : false;
-              if (!deepEqual(codeMirror.current?.getOption('lint'), newValue)) {
+              if (!isOptionValueEqual(codeMirror.current?.getOption('lint'), newValue)) {
                 tryToSetOption('lint', newValue);
               }
             } catch (err) {

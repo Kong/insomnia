@@ -1,5 +1,5 @@
 import type { Snippet } from 'codemirror';
-import React, { type FC, useRef } from 'react';
+import React, { type FC, useEffect, useRef } from 'react';
 import {
   Button,
   Collection,
@@ -16,19 +16,14 @@ import type { Settings } from '~/insomnia-data';
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
-import {
-  CookieObject,
-  Environment,
-  Execution,
-  InsomniaObject,
-  Request as ScriptRequest,
-  RequestInfo,
-  Response as ScriptResponse,
-  Url,
-  Variables,
-  Vault,
-} from '../../../../../insomnia-scripting-environment/src/objects';
+// Scripting environment types are imported explicitly from separate modules as they're
+// part of the public API for request script execution.
+import { Environment, Variables, Vault } from '../../../../../insomnia-scripting-environment/src/objects/environments';
+import { Execution } from '../../../../../insomnia-scripting-environment/src/objects/execution';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
+import { Request as ScriptRequest } from '../../../../../insomnia-scripting-environment/src/objects/request';
+import { RequestInfo } from '../../../../../insomnia-scripting-environment/src/objects/request-info';
+import { Url } from '../../../../../insomnia-scripting-environment/src/objects/urls';
 import { Icon } from '../icon';
 
 interface Props {
@@ -152,7 +147,7 @@ const lintOptions = {
 // TODO: introduce this functionality for other objects, such as Url, UrlMatchPattern and so on
 // TODO: introduce function arguments
 // TODO: provide snippets for environment keys if possible
-function getRequestScriptSnippets(insomniaObject: InsomniaObject, path: string): Snippet[] {
+function getRequestScriptSnippets(insomniaObject: Record<string, any>, path: string): Snippet[] {
   let snippets: Snippet[] = [];
 
   const refs = new Set();
@@ -543,6 +538,10 @@ export const RequestScriptEditor: FC<Props> = ({
 }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
 
+  useEffect(() => {
+    void import('~/ui/components/.client/codemirror/lint/javascript-async-lint');
+  }, []);
+
   // Inserts at the line below the cursor and moves to the line beneath
   const addSnippet = (snippet: string) => {
     const cursorRow = editorRef.current?.getCursor()?.line || 0;
@@ -563,7 +562,7 @@ export const RequestScriptEditor: FC<Props> = ({
   });
   // TODO(george): Add more to this object to provide improved autocomplete
   const requestScriptSnippets = getRequestScriptSnippets(
-    new InsomniaObject({
+    {
       globals: new Environment('globals', {}),
       baseGlobals: new Environment('baseGlobals', {}),
       iterationData: new Environment('iterationData', {}),
@@ -580,34 +579,25 @@ export const RequestScriptEditor: FC<Props> = ({
       }),
       vault: settings.enableVaultInScripts ? new Vault('vault', {}, settings.enableVaultInScripts) : undefined,
       request: req,
-      response: new ScriptResponse({
+      response: {
         code: 200,
-        reason: 'OK',
-        header: [
+        status: 'OK',
+        headers: [
           { key: 'header1', value: 'val1' },
           { key: 'header2', value: 'val2' },
         ],
-        cookie: [
+        cookies: [
           { key: 'header1', value: 'val1' },
           { key: 'header2', value: 'val2' },
         ],
         body: '{"key": 888}',
-        stream: undefined,
         responseTime: 100,
-        originalRequest: req,
-      }),
+      },
       settings,
       clientCertificates: [],
-      cookies: new CookieObject({
-        _id: '',
-        type: 'CookieJar',
-        parentId: '',
-        modified: 0,
-        created: 0,
-        isPrivate: false,
-        name: '',
-        cookies: [],
-      }),
+      cookies: {
+        toObject: () => ({}),
+      },
       requestInfo: new RequestInfo({
         // @TODO - Look into this event name when we introduce iteration data
         eventName: 'prerequest',
@@ -620,7 +610,7 @@ export const RequestScriptEditor: FC<Props> = ({
         location: ['path'],
       }),
       parentFolders: new ParentFolders([]),
-    }),
+    },
     'insomnia',
   );
 

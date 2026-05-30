@@ -4,7 +4,6 @@ import { Button } from 'react-aria-components';
 import { models, services } from '~/insomnia-data';
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '~/insomnia-data/common';
 
-import { exportHarCurrentRequest } from '../../../common/har';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -36,6 +35,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
+    const { exportHarCurrentRequest } = await import('../../../common/har');
     const data = await exportHarCurrentRequest(activeRequest, activeResponse);
     const har = JSON.stringify(data, null, '\t');
 

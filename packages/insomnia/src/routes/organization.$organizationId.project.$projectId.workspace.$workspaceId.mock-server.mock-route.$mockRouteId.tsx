@@ -16,7 +16,6 @@ import {
   RESPONSE_CODE_REASONS,
 } from '~/common/constants';
 import { database as db } from '~/common/database';
-import { getResponseCookiesFromHeaders } from '~/common/har';
 import type { MockRoute, MockServer, Request, RequestHeader, Response } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
@@ -99,24 +98,27 @@ export const mockRouteToHar = ({
   mimeType: string;
   headersArray: RequestHeader[];
   body: string;
-}): Har.Response => {
+}): Promise<Har.Response> => {
   const validHeaders = headersArray.filter(({ name }) => !!name);
-  return {
-    status: +statusCode,
-    statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
-    httpVersion: 'HTTP/1.1',
-    headers: validHeaders,
-    cookies: getResponseCookiesFromHeaders(validHeaders),
-    content: {
-      size: Buffer.byteLength(body),
-      mimeType,
-      text: body,
-      compression: 0,
-    },
-    headersSize: -1,
-    bodySize: -1,
-    redirectURL: '',
-  };
+  return (async () => {
+    const { getResponseCookiesFromHeaders } = await import('~/common/har');
+    return {
+      status: +statusCode,
+      statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
+      httpVersion: 'HTTP/1.1',
+      headers: validHeaders,
+      cookies: await getResponseCookiesFromHeaders(validHeaders),
+      content: {
+        size: Buffer.byteLength(body),
+        mimeType,
+        text: body,
+        compression: 0,
+      },
+      headersSize: -1,
+      bodySize: -1,
+      redirectURL: '',
+    };
+  })();
 };
 
 export const useMockRoutePatcher = () => {
@@ -168,7 +170,7 @@ export const MockRouteRoute = () => {
         organizationId,
         sessionId: userSession.id,
         method: mockRoute.method,
-        data: mockRouteToHar({
+        data: await mockRouteToHar({
           statusCode: mockRoute.statusCode,
           statusText: mockRoute.statusText,
           headersArray: mockRoute.headers,

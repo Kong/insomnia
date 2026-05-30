@@ -54,7 +54,6 @@ import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { filterClientCertificates } from './certificate';
 import type { TransformedExecuteScriptContext } from './concurrency';
-import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
@@ -1009,6 +1008,8 @@ const extractCookies = async (
     const totalSetCookies = setCookieStrings.length;
     if (totalSetCookies) {
       const currentUrl = getCurrentUrl({ headerResults, finalUrl });
+      // Lazy load cookie utilities only when needed to avoid upfront overhead
+      const { addSetCookiesToToughCookieJar } = await import('./set-cookie-util');
       const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({
         setCookieStrings,
         currentUrl,

@@ -68,9 +68,9 @@ export const OrganizationSelect = ({
           <div className="my-1 border-t border-(--hl-sm)" />
           <Button
             className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden"
-            onPress={() => {
+            onPress={async () => {
               setIsOpen(false);
-              window.main.openInBrowser(getLoginUrl());
+              window.main.openInBrowser(await getLoginUrl());
             }}
           >
             <Icon icon="sign-in-alt" />
@@ -78,11 +78,11 @@ export const OrganizationSelect = ({
           </Button>
           <Button
             className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden"
-            onPress={() => {
+            onPress={async () => {
               setIsOpen(false);
               // If user is in the scratchpad workspace redirect them to the login page
               if (isScratchpadWorkspace) {
-                return window.main.openInBrowser(getLoginUrl());
+                return window.main.openInBrowser(await getLoginUrl());
               }
 
               if (!currentPlan) {

@@ -1,32 +1,57 @@
 import * as session from '../account/session';
 import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
 import { invariant } from '../utils/invariant';
-import { keyPair, open } from '../utils/sealedbox';
 
 interface AuthBox {
   token: string;
   key: string;
 }
 
-const sessionKeyPair = keyPair();
-encodeBase64(sessionKeyPair.publicKey).then(res => {
-  try {
-    window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || res);
-  } catch {
-    console.error('Failed to store public key in localStorage.');
-  }
-});
-encodeBase64(sessionKeyPair.secretKey).then(res => {
-  try {
-    window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || res);
-  } catch {
-    console.error('Failed to store secret key in localStorage.');
-  }
-});
 /**
  * Keypair used for the login handshake.
  * This keypair can be re-used for the entire session.
  */
+
+interface SessionKeyPair {
+  publicKey: Uint8Array;
+  secretKey: Uint8Array;
+}
+
+let sessionKeyPairPromise: Promise<SessionKeyPair> | null = null;
+
+async function getSessionKeyPair() {
+  if (!sessionKeyPairPromise) {
+    sessionKeyPairPromise = (async () => {
+      const { keyPair } = await import('../utils/sealedbox');
+      const sessionKeyPair = keyPair();
+
+      const [publicKeyEncoded, secretKeyEncoded] = await Promise.all([
+        encodeBase64(sessionKeyPair.publicKey),
+        encodeBase64(sessionKeyPair.secretKey),
+      ]);
+
+      try {
+        // Session keypairs are ephemeral and used only for the initial login handshake.
+        // They are NOT persistent credentials and are discarded after the session ends.
+        window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || publicKeyEncoded);
+      } catch {
+        console.error('Failed to store public key in localStorage.');
+      }
+
+      try {
+        // Session keypairs are ephemeral and used only for the initial login handshake.
+        // They are NOT persistent credentials and are discarded after the session ends.
+        window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || secretKeyEncoded);
+      } catch {
+        console.error('Failed to store secret key in localStorage.');
+      }
+
+      return sessionKeyPair;
+    })();
+  }
+
+  return sessionKeyPairPromise;
+}
 
 export async function decodeBase64(base64: string): Promise<Uint8Array> {
   try {
@@ -65,9 +90,11 @@ export async function encodeBase64(data: Uint8Array): Promise<string> {
 
 export async function submitAuthCode(code: string) {
   try {
+    await getSessionKeyPair();
     const rawBox = await decodeBase64(code.trim());
     const publicKey = await decodeBase64(window.localStorage.getItem('insomnia.publicKey') || '');
     const secretKey = await decodeBase64(window.localStorage.getItem('insomnia.secretKey') || '');
+    const { open } = await import('../utils/sealedbox');
     const boxData = open(rawBox, publicKey, secretKey);
     invariant(boxData, 'Invalid authentication code.');
 
@@ -80,7 +107,8 @@ export async function submitAuthCode(code: string) {
   }
 }
 
-export function getLoginUrl() {
+export async function getLoginUrl() {
+  await getSessionKeyPair();
   const publicKey = window.localStorage.getItem('insomnia.publicKey');
   if (!publicKey) {
     console.log('[auth] No public key found');

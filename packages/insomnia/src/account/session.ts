@@ -5,7 +5,7 @@ import { models, services } from '~/insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
-import * as crypt from './crypt';
+import type { AESMessage } from './crypt';
 
 export interface SessionData {
   accountId: string;
@@ -15,7 +15,7 @@ export interface SessionData {
   lastName: string;
   symmetricKey: JsonWebKey;
   publicKey: JsonWebKey;
-  encPrivateKey: crypt.AESMessage;
+  encPrivateKey: AESMessage;
 }
 
 /** Creates a session from a sessionId and derived symmetric key. */
@@ -28,7 +28,8 @@ export async function absorbKey(sessionId: string, key: string) {
   ]);
   const { public_key: publicKey, enc_private_key: encPrivateKey, enc_symmetric_key: encSymmetricKey } = keys;
   const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
-  const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
+  const { decryptAES } = await import('./crypt');
+  const symmetricKeyStr = decryptAES(key, JSON.parse(encSymmetricKey));
 
   // Store the information for later
   await setSessionData(
@@ -58,7 +59,8 @@ export async function getPrivateKey() {
     throw new Error("Can't get private key: session is missing keys.");
   }
 
-  const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
+  const { decryptAES } = await import('./crypt');
+  const privateKeyStr = decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr) as JsonWebKey;
 }
 
@@ -105,7 +107,7 @@ export async function setSessionData(
   email: string,
   symmetricKey: JsonWebKey,
   publicKey: JsonWebKey,
-  encPrivateKey: crypt.AESMessage,
+  encPrivateKey: AESMessage,
 ) {
   const sessionData: SessionData = {
     id,

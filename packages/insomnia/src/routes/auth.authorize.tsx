@@ -1,5 +1,5 @@
 import { getVault } from 'insomnia-api';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
@@ -10,7 +10,6 @@ import { Icon } from '~/ui/components/icon';
 import { validateVaultKey } from '~/ui/vault-key.client';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
-import { getVaultKeyFromStorage } from '~/utils/vault';
 
 import type { Route } from './+types/auth.authorize';
 
@@ -45,6 +44,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       // save vault salt to session
       await services.userSession.update({ vaultSalt });
       // get vault key saved in local
+      const { getVaultKeyFromStorage } = await import('~/utils/vault');
       const localVaultKey = await getVaultKeyFromStorage(accountId);
       if (localVaultKey) {
         // validate vault key with server
@@ -75,7 +75,12 @@ export const useAuthorizeActionFetcher = createFetcherSubmitHook(
 );
 
 const Component = () => {
-  const url = getLoginUrl();
+  const [url, setUrl] = useState('');
+
+  useEffect(() => {
+    void getLoginUrl().then(setUrl);
+  }, []);
+
   const copyUrl = () => {
     window.clipboard.writeText(url);
   };
