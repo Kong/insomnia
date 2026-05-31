@@ -1,4 +1,6 @@
 import { get as _get } from 'es-toolkit/compat';
+import { UndefinedVariableError } from 'liquidjs';
+
 export class RenderError extends Error {
   // TODO: unsound definite assignment assertions
   // This is easy to fix, but be careful: extending from Error has especially tricky behavior.
@@ -19,19 +21,51 @@ export class RenderError extends Error {
   }
 }
 
-// because nunjucks only report the first error, we need to extract all missing variables that are not present in the context
-// for example, if the text is `{{ a }} {{ b }}`, nunjucks only report `a` is missing, but we need to report both `a` and `b`
+/**
+ * Translate a LiquidJS error into our RenderError shape.
+ * LiquidJS errors expose line/col directly on token.getPosition().
+ */
+export function translateLiquidError(
+  err: Error,
+  _text: string,
+  _templatingContext: Record<string, any>,
+  path: string | null,
+): RenderError {
+  const isUndefined = err instanceof UndefinedVariableError;
+  const token = (err as any).token;
+  let line = 1;
+  let column = 1;
+  if (token && typeof token.getPosition === 'function') {
+    const pos = token.getPosition() as number[];
+    line = pos[0] ?? 1;
+    column = pos[1] ?? 1;
+  }
+  const sanitizedMsg = err.message
+    .replace(/,?\s*line:\d+,?\s*col:\d+/g, '')
+    .replace(/^\s*Error:\s*/, '')
+    .trim();
+  const newError = new RenderError(sanitizedMsg);
+  newError.path = path || '';
+  newError.message = sanitizedMsg;
+  newError.location = { line, column };
+  newError.type = 'render';
+  newError.reason = isUndefined ? 'undefined' : 'error';
+  return newError;
+}
+
+// LiquidJS only reports the first undefined variable, so we regex-scan the
+// full template text to find all missing variables for the UI panel.
 export function extractUndefinedVariableKey(text = '', templatingContext: Record<string, any>): string[] {
-  const regexVariable = /{{\s*([^ }]+)\s*}}/g;
+  // Strip Liquid filter expressions (| filter: args) so `{{ a | upper }}` reports `a` not `a | upper`
+  const regexVariable = /{{\s*([^|}\s][^|}]*?)\s*(?:\|[^}]*)?\s*}}/g;
   const missingVariables: string[] = [];
   let match;
 
   while ((match = regexVariable.exec(text)) !== null) {
-    let variable = match[1];
+    let variable = match[1].trim();
     if (variable.includes('_.')) {
       variable = variable.split('_.')[1];
     }
-    // Check if the variable is not present in the context
     if (_get(templatingContext, variable) === undefined) {
       missingVariables.push(variable);
     }

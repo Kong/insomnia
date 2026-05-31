@@ -93,10 +93,11 @@ test('can send requests', async ({ page, insomnia }) => {
     })
     .toBe(true);
 
+  // No explicit timeout — inherits the global expect.timeout (40s on CI) so Playwright
+  // retries long enough for the Chromium PDF viewer to finish rendering.
   await expect.soft(pdfIframe).toHaveScreenshot('dummy-pdf-preview.png', {
     animations: 'disabled',
-    maxDiffPixelRatio: 0.15, // 15% discrepancy allowed for CI/environment differences
-    timeout: 5000,
+    maxDiffPixelRatio: 0.15,
   });
 
   await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();

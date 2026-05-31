@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/Kong/insomnia#readme",
   "dependencies": {
+    "liquidjs": "^10.27.0",
     "@types/deep-equal": "^1.0.4",
     "@types/tv4": "^1.2.33",
     "@types/xml2js": "^0.4.14",

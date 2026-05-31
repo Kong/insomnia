@@ -486,7 +486,7 @@ export const CodeEditor = memo(
         maybePrettifyAndSetValue(defaultValue || '', false, filter);
         // Clear history so we can't undo the initial set
         codeMirror.current?.clearHistory();
-        // Setup nunjucks listeners
+        // Setup Liquid template listeners
         if (!readOnly && isNunjucksEnabled && !settings.nunjucksPowerUserMode) {
           codeMirror.current?.enableNunjucksTags(
             handleRender,
@@ -748,12 +748,12 @@ export const CodeEditor = memo(
             event.preventDefault();
             const pluginTemplateTags = await plugins.getTemplateTags();
             const target = event.target as HTMLElement;
-            // right click on nunjucks tag
+            // right click on Liquid template tag
             if (target?.classList?.contains('nunjucks-tag')) {
               const { clientX, clientY } = event;
               const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
               if (nunjucksTag) {
-                // show context menu for nunjucks tag
+                // show context menu for Liquid template tag
                 window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
               }
             } else {
