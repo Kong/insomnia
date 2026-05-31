@@ -16,9 +16,7 @@ const extensionToMimeType: Record<string, string> = {
 };
 
 const mimeTypeToExtension: Record<string, string> = {
-  ...Object.fromEntries(
-    Object.entries(extensionToMimeType).map(([extension, mimeType]) => [mimeType, extension]),
-  ),
+  ...Object.fromEntries(Object.entries(extensionToMimeType).map(([extension, mimeType]) => [mimeType, extension])),
   'application/octet-stream': 'bin',
 };
 
