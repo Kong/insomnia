@@ -50,7 +50,6 @@ export function normalizeToDotAndBracketNotation(prefix: string) {
   return objectPath.normalize(prefix);
 }
 
-
 /**
  * Parse a Liquid template tag string into a usable object
  * @param {string} tagStr - the template string for the tag

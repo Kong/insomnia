@@ -17,7 +17,7 @@ import { version } from '../../package.json';
 // In the inso CLI and main process, fall back to process.env.
 const ENV = 'env';
 
-const env = (typeof window !== 'undefined' && window.env) ? window.env : process[ENV];
+const env = typeof window !== 'undefined' && window.env ? window.env : process[ENV];
 
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
