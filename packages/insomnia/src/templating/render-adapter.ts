@@ -1,12 +1,11 @@
-// Runtime adapter: renderer process delegates to the Web Worker; main/node uses the full engine directly.
-// Vite inlines process.type='renderer' in the renderer build so Rollup tree-shakes the node branch,
-// preventing liquid-extension.ts (node:crypto, node:os) from entering the renderer bundle.
+// Runtime adapter selection: renderer delegates to the templating worker, node/CLI uses the node implementation.
+// Vite inlines process.type='renderer' in renderer builds so Rollup can tree-shake the node branch.
 import type * as AdapterType from './render-adapter.renderer';
 
 const impl = (
-  (process as any).type === 'renderer'
-    ? require('./render-adapter.renderer')
-    : require(/* @vite-ignore */ './render-adapter.node')
+  process.type === 'renderer'
+    ? require('./render-adapter.renderer.ts')
+    : require('./render-adapter.node.ts')
 ) as typeof AdapterType;
 
 export const { renderTemplate } = impl;
