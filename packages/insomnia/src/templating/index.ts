@@ -1,11 +1,10 @@
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import type { Liquid } from 'liquidjs';
 
+import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from './constants';
 import { buildLiquidEngine, stripLiquidComments } from './liquid-engine';
 import { createLiquidTag } from './liquid-extension';
 import { extractUndefinedVariableKey, translateLiquidError } from './render-error';
-
-import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from './constants';
 export { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME };
 
 // Cached engine instances
@@ -42,10 +41,7 @@ export function render(
 
   return new Promise<string | null>(async (resolve, reject) => {
     // NOTE: this is added as a breadcrumb because rendering sometimes hangs
-    const id = setTimeout(
-      () => console.log('[templating] Warning: liquid failed to respond within 5 seconds'),
-      5000,
-    );
+    const id = setTimeout(() => console.log('[templating] Warning: liquid failed to respond within 5 seconds'), 5000);
     try {
       const { engine } = await getLiquid(config.ignoreUndefinedEnvVariable);
       const preprocessed = stripLiquidComments(text);
@@ -94,7 +90,9 @@ export async function getTagDefinitions() {
     }));
 }
 
-async function getLiquid(ignoreUndefinedEnvVariable?: boolean): Promise<{ engine: Liquid; tagMetadata: Map<string, any> }> {
+async function getLiquid(
+  ignoreUndefinedEnvVariable?: boolean,
+): Promise<{ engine: Liquid; tagMetadata: Map<string, any> }> {
   if (!ignoreUndefinedEnvVariable && liquidAll && liquidAllTagMetadata) {
     return { engine: liquidAll, tagMetadata: liquidAllTagMetadata };
   }
