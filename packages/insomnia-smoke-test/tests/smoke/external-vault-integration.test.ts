@@ -113,7 +113,15 @@ test('Setup external vault and used in request', async ({ app, page, insomnia })
   // enable elevated access and execute again in renderer process
   await page.getByTestId('settings-button').click();
   await page.getByRole('tab', { name: 'Plugins' }).click();
-  await page.getByText('Allow elevated access for plugins').click();
+  const allowElevatedAccessForPlugins = page.getByRole('checkbox', {
+    name: 'Allow elevated access for plugins',
+  });
+  await expect.soft(allowElevatedAccessForPlugins).toBeVisible();
+  await allowElevatedAccessForPlugins.evaluate(element => {
+    if (element instanceof HTMLInputElement && !element.checked) {
+      element.click();
+    }
+  });
   // close the settings
   await page.locator('.app').press('Escape');
   // send request and execute the tags in renderer process
