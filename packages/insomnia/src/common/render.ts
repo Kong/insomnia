@@ -14,10 +14,10 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import { renderTemplate } from '~/templating/render-adapter';
 
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating/constants';
-import { renderTemplate } from '../templating/render-adapter';
 import { RenderError } from '../templating/render-error';
 import type {
   BaseRenderContext,

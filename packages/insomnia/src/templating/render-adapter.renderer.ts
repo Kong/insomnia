@@ -1,6 +1,6 @@
-import { renderInWorker } from '../ui/worker/templating-handler';
 import type { RenderInputType } from './types';
 
-export function renderTemplate(input: RenderInputType): Promise<string> {
+export async function renderTemplate(input: RenderInputType): Promise<string> {
+  const { renderInWorker } = await import('../ui/worker/templating-handler');
   return renderInWorker(input);
 }
