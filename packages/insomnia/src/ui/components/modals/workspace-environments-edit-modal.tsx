@@ -554,7 +554,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                 </div>
                 <Button
                   onPress={close}
-                  className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
+                  isDisabled={updateEnvironmentFetcher.state !== 'idle'}
+                  className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline aria-disabled:opacity-50"
                 >
                   Close
                 </Button>
