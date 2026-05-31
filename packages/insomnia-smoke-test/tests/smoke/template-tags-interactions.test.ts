@@ -157,6 +157,7 @@ test('Critical Path For Template Tags Interactions', async ({ page, app, insomni
   await page.getByTestId('settings-button').click();
   await page.getByRole('tab', { name: 'Plugins' }).click();
   await page.locator('text=Allow elevated access for plugins').click();
+  await expect.soft(page.getByRole('checkbox', { name: 'Allow elevated access for plugins' })).toBeChecked();
   await page.locator('.app').press('Escape');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await page.getByRole('dialog').locator('#prompt-input').fill('prompt-value');
