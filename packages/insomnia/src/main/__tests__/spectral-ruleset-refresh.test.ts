@@ -5,8 +5,8 @@ vi.mock('node:fs', () => ({
   default: {
     promises: {
       mkdtemp: vi.fn(async () => '/tmp/spectral-refresh-test'),
-      writeFile: vi.fn(async () => undefined),
-      rm: vi.fn(async () => undefined),
+      writeFile: vi.fn(async () => {}),
+      rm: vi.fn(async () => {}),
     },
   },
 }));
