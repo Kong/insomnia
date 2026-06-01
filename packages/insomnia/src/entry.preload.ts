@@ -481,8 +481,6 @@ const env: Window['env'] = {
   // GitHub API URL overrides for GitHub Enterprise targets
   INSOMNIA_GITHUB_REST_API_URL: process.env.INSOMNIA_GITHUB_REST_API_URL,
   INSOMNIA_GITHUB_API_URL: process.env.INSOMNIA_GITHUB_API_URL,
-  // Disables the renderer↔hidden-window plugin bridge when set to 'false'
-  INSOMNIA_ENABLE_PLUGIN_BRIDGE: process.env.INSOMNIA_ENABLE_PLUGIN_BRIDGE,
 };
 
 if (process.contextIsolated) {

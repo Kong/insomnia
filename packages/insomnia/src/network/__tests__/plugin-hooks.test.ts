@@ -100,6 +100,7 @@ describe('applyResponseHooks', () => {
     expect(mockPlugins.applyResponseHooks).toHaveBeenCalledOnce();
   });
 
+  // The adapter propagates; network.ts:responseTransform catches and converts to an error ResponsePatch.
   it('propagates errors from the plugin window to the caller', async () => {
     mockPlugins.hasResponseHooks.mockResolvedValue(true);
     mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] hook exploded'));

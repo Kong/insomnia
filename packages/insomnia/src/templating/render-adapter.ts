@@ -4,10 +4,7 @@
 import type * as AdapterType from './render-adapter.node';
 
 const impl = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (process as any).type === 'renderer'
-    ? require('./render-adapter.renderer.ts')
-    : require('./render-adapter.node.ts')
+  (process as any).type === 'renderer' ? require('./render-adapter.renderer') : require('./render-adapter.node')
 ) as typeof AdapterType;
 
 export const { renderTemplate } = impl;
