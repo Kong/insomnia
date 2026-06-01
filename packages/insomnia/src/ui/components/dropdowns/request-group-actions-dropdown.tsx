@@ -5,6 +5,7 @@ import { useParams } from 'react-router';
 
 import type { Project, Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
@@ -14,7 +15,6 @@ import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organiza
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { toKebabCase } from '../../../common/misc';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import type { CreateRequestType } from '../../hooks/use-request';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
@@ -79,6 +79,9 @@ export const RequestGroupActionsDropdown = ({
       requestType,
       parentId,
       req,
+      metrics: {
+        source: 'sidebar',
+      }
     });
 
   const onOpen = async () => {

@@ -210,3 +210,76 @@ describe('base64 tag', () => {
     });
   });
 });
+
+describe('file tag: filesystem access isolation', () => {
+  const fileTag = localTemplateTags.find(p => p.templateTag.name === 'file')?.templateTag;
+  invariant(fileTag, 'missing file tag in localTemplateTags');
+
+  it('reads through context.util.readFile, not fs directly', async () => {
+    const readFile = vi.fn(async (_path: string) => 'file-contents');
+    const ctx = { util: { readFile } } as unknown as PluginTemplateTagContext;
+
+    const result = await fileTag.run(ctx, '/allowed/path/secret.txt');
+
+    expect(readFile).toHaveBeenCalledOnce();
+    expect(readFile).toHaveBeenCalledWith('/allowed/path/secret.txt');
+    expect(result).toBe('file-contents');
+  });
+
+  it('throws when no path is provided — no fallback fs read occurs', async () => {
+    const readFile = vi.fn();
+    const ctx = { util: { readFile } } as unknown as PluginTemplateTagContext;
+
+    await expect(fileTag.run(ctx, '')).rejects.toThrow('No file selected');
+    expect(readFile).not.toHaveBeenCalled();
+  });
+
+  it('propagates errors from context.util.readFile without a fallback', async () => {
+    const readFile = vi.fn(async () => { throw new Error('access denied by secureReadFile'); });
+    const ctx = { util: { readFile } } as unknown as PluginTemplateTagContext;
+
+    await expect(fileTag.run(ctx, '/sensitive/secrets.txt')).rejects.toThrow('access denied by secureReadFile');
+  });
+
+  it('does not expose a direct fs module — only the context bridge is available', async () => {
+    // Verify that the tag has no other way to read files: removing readFile from the context
+    // must cause a failure, not a silent fallback.
+    const ctx = { util: {} } as unknown as PluginTemplateTagContext;
+    await expect(fileTag.run(ctx, '/some/path')).rejects.toBeDefined();
+  });
+});
+
+describe('hash tag: crypto access isolation', () => {
+  const hashTag = localTemplateTags.find(p => p.templateTag.name === 'hash')?.templateTag;
+  invariant(hashTag, 'missing hash tag in localTemplateTags');
+
+  it('produces a sha256 hex digest using Web Crypto (crypto.subtle)', async () => {
+    // "abc" sha256 = ba7816bf8f01cfea414140de5dae2ec73b00361bbef0469fa72ffd1e7bf1f5d3 (first 8 bytes for brevity)
+    const result = await hashTag.run({} as PluginTemplateTagContext, 'SHA-256', 'hex', 'abc');
+    expect(typeof result).toBe('string');
+    expect(result).toMatch(/^[0-9a-f]{64}$/);
+    expect(result.startsWith('ba7816bf')).toBe(true);
+  });
+
+  it('produces a sha256 base64 digest', async () => {
+    const result = await hashTag.run({} as PluginTemplateTagContext, 'SHA-256', 'base64', 'abc');
+    expect(typeof result).toBe('string');
+    // base64 of a 32-byte hash is always 44 chars with padding
+    expect(result).toHaveLength(44);
+  });
+
+  it('falls back to SHA-256 for an unrecognised algorithm name', async () => {
+    // The tag maps unknown algorithm strings to SHA-256 rather than throwing.
+    // This test documents that behaviour so a future change to throw instead is noticed.
+    const result = await hashTag.run({} as PluginTemplateTagContext, 'MD4' as any, 'hex', 'abc');
+    // SHA-256('abc') = ba7816bf...
+    expect(result).toMatch(/^[0-9a-f]{64}$/);
+    expect((result as string).startsWith('ba7816bf')).toBe(true);
+  });
+
+  it('throws on non-string value', async () => {
+    await expect(
+      hashTag.run({} as PluginTemplateTagContext, 'SHA-256', 'hex', 42 as unknown as string),
+    ).rejects.toThrow();
+  });
+});

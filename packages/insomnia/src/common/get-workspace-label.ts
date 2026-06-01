@@ -2,8 +2,7 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 import type { Workspace, WorkspaceScope } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
-
-import { strings } from './strings';
+import { strings } from '~/insomnia-data/common';
 
 export type ProjectScopeKeys = WorkspaceScope | 'unsynced';
 

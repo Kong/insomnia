@@ -1,4 +1,5 @@
-import type { PlatformKeyCombinations } from '../../../../common/settings';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
+
 import { Hotkey } from '../../hotkey';
 
 interface Props {

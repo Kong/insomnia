@@ -3,9 +3,9 @@ import type { KonnectProxyUrl, KonnectRoute } from './api';
 // ─── Template injection sanitisation ─────────────────────────────────────────
 
 /**
- * Strips Nunjucks template syntax (`{{ }}`, `{% %}`) from a string
+ * Strips Liquid template syntax (`{{ }}`, `{% %}`) from a string
  * sourced from external API data, preventing template injection when the value
- * is later rendered by Insomnia's Nunjucks engine.
+ * is later rendered by Insomnia's Liquid engine.
  */
 function stripTemplateSyntax(value: string): string {
   let prev = '';
@@ -27,7 +27,7 @@ function sanitizeStringArray(arr: string[] | null): string[] | null {
 }
 
 /**
- * Returns a copy of the route with Nunjucks template syntax stripped from all
+ * Returns a copy of the route with Liquid template syntax stripped from all
  * string fields that flow into rendered request content. Array fields that
  * become entirely empty after stripping are set to null so existing fallbacks
  * (e.g. default HTTP methods) apply correctly.

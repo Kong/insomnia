@@ -1,8 +1,17 @@
 import type { MockServer } from '~/insomnia-data';
+import {
+  CONTENT_TYPE_FORM_URLENCODED,
+  CONTENT_TYPE_GRAPHQL,
+  CONTENT_TYPE_JSON,
+  isLinux,
+  isMac,
+  isWindows,
+  METHOD_GET,
+  platform,
+} from '~/insomnia-data/common';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import { isLinux, isMac, isWindows, platform } from './platform';
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.
 const ENV = 'env';
@@ -25,9 +34,6 @@ export const getInsomniaVaultKey = () => env.INSOMNIA_VAULT_KEY;
 export const getInsomniaVaultSrpSecret = () => env.INSOMNIA_VAULT_SRP_SECRET;
 export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
-export const getAppDefaultTheme = () => appConfig.theme;
-export const getAppDefaultLightTheme = () => appConfig.lightTheme;
-export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
@@ -183,7 +189,7 @@ export const isValidActivity = (activity: string): activity is GlobalActivity =>
 };
 
 // HTTP Methods
-export const METHOD_GET = 'GET';
+export { METHOD_GET };
 export const METHOD_POST = 'POST';
 export const METHOD_PUT = 'PUT';
 export const METHOD_PATCH = 'PATCH';
@@ -203,28 +209,15 @@ export const HTTP_METHODS = [
 // Additional methods
 export const METHOD_GRPC = 'GRPC';
 
-// Preview Modes
-export const PREVIEW_MODE_FRIENDLY = 'friendly';
-export const PREVIEW_MODE_SOURCE = 'source';
-export const PREVIEW_MODE_RAW = 'raw';
-const previewModeMap = {
-  [PREVIEW_MODE_FRIENDLY]: ['Preview', 'Visual Preview'],
-  [PREVIEW_MODE_SOURCE]: ['Source', 'Source Code'],
-  [PREVIEW_MODE_RAW]: ['Raw', 'Raw Data'],
-};
-export const PREVIEW_MODES = Object.keys(previewModeMap) as (keyof typeof previewModeMap)[];
-
 // Content Types
-export const CONTENT_TYPE_JSON = 'application/json';
+export { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON } from '~/insomnia-data/common';
 export const CONTENT_TYPE_PLAINTEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'application/yaml';
 export const CONTENT_TYPE_EVENT_STREAM = 'text/event-stream';
 export const CONTENT_TYPE_EDN = 'application/edn';
-export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
-export const CONTENT_TYPE_GRAPHQL = 'application/graphql';
 export const CONTENT_TYPE_OTHER = '';
 export const contentTypesMap: Record<string, string[]> = {
   [CONTENT_TYPE_EDN]: ['EDN', 'EDN'],
@@ -363,14 +356,6 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
   'modified-desc': 'Last Modified',
 };
 
-export type PreviewMode = 'friendly' | 'source' | 'raw';
-
-export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
-  if (previewMode in previewModeMap) {
-    return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
-  }
-  return '';
-}
 export function getMimeTypeFromContentType(contentType: string) {
   // Check if the Content-Type header is provided
   if (!contentType) {
@@ -396,15 +381,6 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
   }
 
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
-}
-
-export function getContentTypeFromHeaders(headers: any[], defaultValue: string | null = null) {
-  if (!Array.isArray(headers)) {
-    return null;
-  }
-
-  const header = headers.find(({ name }) => name.toLowerCase() === 'content-type');
-  return header ? header.value : defaultValue;
 }
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status

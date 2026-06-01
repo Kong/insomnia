@@ -78,6 +78,8 @@ test.describe('Environment Editor', () => {
     //Switch to table view and edit environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    // Explicitly select Gandalf so table edits target the correct sub-environment
+    await page.getByLabel('Environments', { exact: true }).getByText('Gandalf').click();
     // switch table view
     await page.getByRole('button', { name: 'Table Edit' }).click();
     const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
@@ -120,7 +122,7 @@ test.describe('Environment Editor', () => {
 
     // Close the environment editor and wait for the dialog to disappear before navigating
     await page.getByRole('button', { name: 'Close', exact: true }).click();
-    await expect.soft(page.getByRole('heading', { name: 'Manage Environments' })).toBeHidden();
+    await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
     await page.getByLabel('Manage collection environments').press('Escape');
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();

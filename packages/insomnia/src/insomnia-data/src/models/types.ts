@@ -67,11 +67,12 @@ export type { RequestGroup } from './request-group';
 export type { RequestGroupMeta } from './request-group-meta';
 export type { RequestAccordionKeys, RequestMeta } from './request-meta';
 export type { RequestVersion } from './request-version';
-export type { Compression, Response, ResponseHeader } from './response';
+export type { Compression, Response, ResponseHeader, ResponseTimelineEntry } from './response';
 export type { McpRequest, McpTransportType, McpServerPrimitiveTypes } from './mcp-request';
 export type { McpPayload } from './mcp-payload';
 export type { McpResponse } from './mcp-response';
 export type {
+  RequestTestResult,
   RunnerTestResult,
   BaseRunnerTestResult,
   RunnerResultPerRequest,
@@ -82,7 +83,7 @@ export type { Project, LocalProject, RemoteProject, GitProject } from './project
 export type { ProjectLintRuleset } from './project-lint-ruleset';
 export type { Settings, ThemeSettings } from './settings';
 export type { Stats } from './stats';
-export type { UserSession } from './user-session';
+export type { UserSession, AESMessage } from './user-session';
 export type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from './grpc-request';
 export type { GrpcRequestMeta } from './grpc-request-meta';
 export type { Workspace, WorkspaceScope } from './workspace';

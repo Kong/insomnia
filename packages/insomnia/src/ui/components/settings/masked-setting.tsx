@@ -1,9 +1,9 @@
 import React, { type FC } from 'react';
 import * as reactUse from 'react-use';
 
+import type { SettingsOfType } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 
-import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { HelpTooltip } from '../help-tooltip';
 

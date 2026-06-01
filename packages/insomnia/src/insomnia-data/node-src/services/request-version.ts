@@ -1,6 +1,8 @@
+import { promisify } from 'node:util';
+import zlib from 'node:zlib';
+
 import deepEqual from 'deep-equal';
 
-import { compressObject, decompressObject } from '~/common/misc';
 import type {
   GrpcRequest,
   McpRequest,
@@ -14,6 +16,8 @@ import { database, database as db, models } from '~/insomnia-data';
 import * as requestHelpers from './helpers/request-operations';
 
 const { isRequest } = models.request;
+const { isWebSocketRequest } = models.webSocketRequest;
+const { isSocketIORequest } = models.socketIORequest;
 const { type } = models.requestVersion;
 
 const FIELDS_TO_IGNORE = [
@@ -35,11 +39,31 @@ export function findByParentId(parentId: string) {
   return db.find<RequestVersion>(type, { parentId });
 }
 
+function compressObject(obj: any) {
+  const compressed = zlib.gzipSync(JSON.stringify(obj));
+  return compressed.toString('base64');
+}
+
+export async function decompressObject<ObjectType>(input: string | null): Promise<ObjectType | null> {
+  if (typeof input !== 'string') {
+    return null;
+  }
+
+  const jsonBuffer = await promisify(zlib.gunzip)(Buffer.from(input, 'base64'));
+  return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
+}
+
+export async function getRequest<T extends Request | WebSocketRequest | SocketIORequest>(
+  requestVersion: RequestVersion,
+) {
+  return await decompressObject<T>(requestVersion.compressedRequest);
+}
+
 export async function create(request: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest) {
   if (
     !isRequest(request) &&
-    !models.webSocketRequest.isWebSocketRequest(request) &&
-    !models.socketIORequest.isSocketIORequest(request) &&
+    !isWebSocketRequest(request) &&
+    !isSocketIORequest(request) &&
     !models.mcpRequest.isMcpRequest(request)
   ) {
     throw new Error(`New ${type} was not given a valid ${request.type} instance`);
@@ -53,9 +77,7 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
     },
     { modified: -1 },
   );
-  const latestRequest = latestRequestVersion
-    ? decompressObject<Request | WebSocketRequest | SocketIORequest>(latestRequestVersion.compressedRequest)
-    : null;
+  const latestRequest = latestRequestVersion ? await getRequest(latestRequestVersion) : null;
 
   const hasChanged = _diffRequests(latestRequest, request);
 
@@ -79,7 +101,9 @@ export async function restore(requestVersionId: string) {
     return null;
   }
 
-  const requestPatch = decompressObject<Request | WebSocketRequest | GrpcRequest>(requestVersion.compressedRequest);
+  const requestPatch = await decompressObject<Request | WebSocketRequest | GrpcRequest>(
+    requestVersion.compressedRequest,
+  );
 
   if (!requestPatch) {
     return null;

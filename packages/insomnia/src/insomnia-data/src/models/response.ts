@@ -1,5 +1,7 @@
-import type { RequestTestResult } from '../../../../../insomnia-scripting-environment/src/objects';
+import type { CurlInfoDebug } from '@getinsomnia/node-libcurl';
+
 import type { BaseModel } from './base-types';
+import type { RequestTestResult } from './runner-test-result';
 
 export const name = 'Response';
 
@@ -46,6 +48,12 @@ export interface BaseResponse {
 }
 
 export type Response = BaseModel & BaseResponse;
+
+export interface ResponseTimelineEntry {
+  name: keyof typeof CurlInfoDebug;
+  timestamp: number;
+  value: string;
+}
 
 export const isResponse = (model: Pick<BaseModel, 'type'>): model is Response => model.type === type;
 

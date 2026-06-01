@@ -1,7 +1,6 @@
-import { generateId } from '~/common/misc';
 import type { AllTypes, BaseModel } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
-import { typedKeys } from '~/utils';
+import { generateId, typedKeys } from '~/insomnia-data/common';
 
 import { migrate as migrateCookieJar } from './cookie-jar';
 import { migrate as migrateRequest } from './request';

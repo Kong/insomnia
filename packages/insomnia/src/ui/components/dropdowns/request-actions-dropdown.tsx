@@ -13,6 +13,7 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -22,7 +23,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';

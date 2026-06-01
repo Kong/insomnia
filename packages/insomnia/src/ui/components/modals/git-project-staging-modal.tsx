@@ -34,6 +34,7 @@ import { Button as BasicButton } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import type { GitCredentials, GitRepository } from '~/insomnia-data';
+import { platform } from '~/insomnia-data/common';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
@@ -58,7 +59,6 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
-import { platform } from '../../../common/platform';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showToast } from '../toast-notification';
@@ -1071,7 +1071,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               offset={8}
               className="max-w-xs rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
             >
-              <Dialog className="outline-none" >
+              <Dialog className="outline-none">
                 You can now browse Git Sync project files on your local file system and manage changes using your normal
                 Git workflows.{' '}
                 <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">

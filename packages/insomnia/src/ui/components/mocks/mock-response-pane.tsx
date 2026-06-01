@@ -3,22 +3,16 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import type { MockRoute, MockServer, Response } from '~/insomnia-data';
+import type { MockRoute, MockServer, Response, ResponseTimelineEntry } from '~/insomnia-data';
 import { services } from '~/insomnia-data';
+import { getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, type PreviewMode } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
-import {
-  getMockServiceURL,
-  getPreviewModeName,
-  PREVIEW_MODE_FRIENDLY,
-  PREVIEW_MODES,
-  type PreviewMode,
-} from '../../../common/constants';
+import { getMockServiceURL } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';

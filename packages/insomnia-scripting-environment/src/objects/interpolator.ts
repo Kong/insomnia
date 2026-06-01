@@ -1,18 +1,25 @@
 import { fakerFunctions } from 'insomnia/src/templating/faker-functions';
-import nunjucks, { type ConfigureOptions, type Environment as NunjuncksEnv } from 'nunjucks';
+import { Liquid } from 'liquidjs';
 
 /** @ignore */
 class Interpolator {
-  private engine: NunjuncksEnv;
+  private engine: Liquid;
 
-  constructor(config: ConfigureOptions) {
-    this.engine = nunjucks.configure(config);
+  constructor() {
+    this.engine = new Liquid({
+      outputDelimiterLeft: '{{',
+      outputDelimiterRight: '}}',
+      tagDelimiterLeft: '{%',
+      tagDelimiterRight: '%}',
+      strictVariables: true,
+      jsTruthy: true,
+      ownPropertyOnly: false,
+    });
   }
 
-  render = (template: string, context: object) => {
-    // TODO: handle timeout
-    // TODO: support plugin?
-    return this.engine.renderString(this.renderWithFaker(template), context);
+  render = async (template: string, context: object): Promise<string> => {
+    // TODO: support plugins
+    return this.engine.parseAndRender(this.renderWithFaker(template), context);
   };
 
   renderWithFaker = (template: string) => {
@@ -47,20 +54,7 @@ class Interpolator {
 }
 
 /** @ignore */
-const interpolator = new Interpolator({
-  autoescape: false,
-  // Don't escape HTML
-  throwOnUndefined: true,
-  // Strict mode
-  tags: {
-    blockStart: '{%',
-    blockEnd: '%}',
-    variableStart: '{{',
-    variableEnd: '}}',
-    commentStart: '{#',
-    commentEnd: '#}',
-  },
-});
+const interpolator = new Interpolator();
 
 /** @ignore */
 export function getInterpolator() {

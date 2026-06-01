@@ -4,20 +4,26 @@ import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { docsMcpAuthentication } from '~/common/documentation';
-import type { McpResponse, RequestVersion, Response, SocketIOResponse, WebSocketResponse } from '~/insomnia-data';
+import type {
+  McpResponse,
+  RequestVersion,
+  Response,
+  ResponseTimelineEntry,
+  SocketIOResponse,
+  WebSocketResponse,
+} from '~/insomnia-data';
 import { models } from '~/insomnia-data';
+import { deserializeNDJSON } from '~/insomnia-data/common';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { McpEvent } from '../../../main/mcp/types';
 import type { CurlEvent } from '../../../main/network/curl';
-import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../../ui/analytics';
-import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';

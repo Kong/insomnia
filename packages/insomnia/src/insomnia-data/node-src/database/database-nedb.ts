@@ -6,7 +6,6 @@ import fsPath from 'node:path';
 
 import NeDB from '@seald-io/nedb';
 
-import { generateId } from '~/common/misc';
 import type {
   AllTypes,
   ApiSpec,
@@ -28,6 +27,7 @@ import type {
   WorkspaceMeta,
 } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
+import { generateId } from '~/insomnia-data/common';
 
 import { initModel } from './init-model';
 import { repairDatabase } from './repair-database';

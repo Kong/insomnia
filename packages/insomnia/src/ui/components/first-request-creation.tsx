@@ -332,8 +332,8 @@ export const FirstRequestCreation = ({
     ? 'w-full rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#999999_0%,#DDDDDD_100%),radial-gradient(100%_100.41%_at_100%_99.92%,#999999_0%,#DDDDDD_100%)] p-px'
     : 'w-full rounded-sm bg-[radial-gradient(100%_100.41%_at_100%_99.92%,#4C4C4C_0%,rgba(3,3,3,0)_100%),radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#4C4C4C_0%,rgba(3,3,3,0)_100%)] p-px';
   const wrapperSurfaceClassName = isLightTheme
-    ? 'flex w-full flex-col items-center rounded-[inherit] bg-[#FFFFFF] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(96,48,191,0.2)_100%] px-6 pt-6 pb-5'
-    : 'flex w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-6 pb-5';
+    ? 'flex w-full flex-col items-center rounded-[inherit] bg-[#FFFFFF] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(96,48,191,0.2)_100%] px-6 pt-8 pb-5'
+    : 'flex w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-8 pb-5';
 
   return (
     <>
@@ -354,7 +354,7 @@ export const FirstRequestCreation = ({
                   ref={inputRef}
                   autoFocus
                   aria-label="Request endpoint or cURL input"
-                  className="h-full w-full flex-1 resize-none text-xs"
+                  className="text-md h-full w-full flex-1 resize-none font-mono"
                   placeholder="Enter an endpoint URL or paste cURL, or ⌘N for a new blank request"
                   value={requestInput}
                   onChange={event => {
@@ -370,14 +370,14 @@ export const FirstRequestCreation = ({
                 <Tooltip message="Upload Postman, OpenAPI, etc.">
                   <Button
                     aria-label="Attach content"
-                    className="w-10 rounded-full px-0"
-                    size="lg"
+                    className="w-10 rounded-md px-0"
+                    size="md"
                     variant="text"
                     icon={<Icon className="text-lg" icon="paperclip" />}
                     onPress={() => setIsImportModalOpen(true)}
                   />
                 </Tooltip>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <SelectPopover
                     isOpen={selectOpen}
                     onOpenChange={isOpen => setSelectOpen(isOpen)}
@@ -392,14 +392,14 @@ export const FirstRequestCreation = ({
                         New Collection
                       </Button>
                     }
-                    triggerClassName="h-8 rounded-xs px-3 text-sm"
+                    triggerClassName="h-8 rounded-md px-3 text-sm"
                     popoverClassName="w-[240px]"
                     dialogClassName="w-[240px]"
                     renderTrigger={selectedItem => (
-                      <>
+                      <div className="flex items-center gap-2">
                         <span className="truncate">{selectedItem?.label ?? 'New collection'}</span>
                         <Icon icon="chevron-down" className="w-3 shrink-0" />
-                      </>
+                      </div>
                     )}
                     renderItem={(item, isSelected) => (
                       <>
@@ -415,10 +415,7 @@ export const FirstRequestCreation = ({
                     isDisabled={!trimmedInput || isCreatingRequest}
                     onPress={() => handleCreateRequest()}
                   >
-                    <span>Create</span>
-                    <span aria-hidden="true" className="text-sm leading-none">
-                      ↵
-                    </span>
+                    <span>Create ⏎</span>
                   </Button>
                 </div>
               </div>
@@ -427,7 +424,7 @@ export const FirstRequestCreation = ({
               <div className="mt-2 text-xs text-[#FF5631]">Invalid cURL. Verify your input and try again.</div>
             )}
             <div className="my-6 px-4">
-              <p className="text-xs font-semibold text-(--hl)">
+              <p className="text-sm font-semibold text-(--hl)">
                 {shouldShowJumpBackIn ? 'Jump back in' : 'Not sure where to start?'}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -437,6 +434,7 @@ export const FirstRequestCreation = ({
                         key={recentRequest.request._id}
                         variant="outlined"
                         size="md"
+                        className="px-2"
                         onPress={() => {
                           navigate(
                             `/organization/${organizationId}/project/${projectId}/workspace/${recentRequest.workspaceId}/debug/request/${recentRequest.request._id}`,
@@ -448,7 +446,7 @@ export const FirstRequestCreation = ({
                       </Button>
                     ))
                   : quickStartItems.map(item => (
-                      <Button key={item.id} variant="outlined" size="md" onPress={item.onClick}>
+                      <Button key={item.id} variant="outlined" size="md" className="px-2" onPress={item.onClick}>
                         {item.icon}
                         <span>{item.label}</span>
                       </Button>

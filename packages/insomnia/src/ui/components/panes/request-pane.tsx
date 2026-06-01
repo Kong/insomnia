@@ -6,9 +6,9 @@ import * as reactUse from 'react-use';
 
 import type { RequestParameter, Settings } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import { deconstructQueryStringToParams, getContentTypeFromHeaders } from '~/insomnia-data/common';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
-import { getContentTypeFromHeaders } from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
@@ -16,7 +16,7 @@ import {
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../../ui/analytics';
-import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
+import { extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';

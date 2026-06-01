@@ -110,7 +110,7 @@ export const KonnectSettingsModal = ({
           {({ close }) => (
             <div className="flex h-full flex-1 flex-col gap-4">
               <div className="flex items-center justify-between gap-2">
-                <Heading slot="title" className="text-lg font-bold">
+                <Heading slot="title" className="text-2xl">
                   {showDisconnectConfirm ? 'Disconnect Kong Konnect?' : 'Kong Konnect settings'}
                 </Heading>
                 <Button
@@ -123,7 +123,7 @@ export const KonnectSettingsModal = ({
 
               {showDisconnectConfirm ? (
                 <>
-                  <p className="text-sm text-(--hl)">
+                  <p className="text-sm">
                     Disconnecting will remove your Personal Access Token and delete related project data. This action
                     cannot be undone. Are you sure?
                   </p>
@@ -146,19 +146,20 @@ export const KonnectSettingsModal = ({
               ) : (
                 <>
                   <div className="flex flex-col gap-3">
-                    <label className="text-sm font-semibold" htmlFor="konnect-modal-pat">
-                      Personal Access Token
-                    </label>
-                    <p className="text-sm text-(--hl)">
-                      Enter a Personal Access Token (PAT) to sync your Konnect control planes into Insomnia projects.
-                    </p>
-                    <button
-                      className="w-fit text-sm text-(--color-font) underline hover:opacity-80"
-                      onClick={() => window.main.openInBrowser('https://cloud.konghq.com/global/account/tokens')}
-                    >
-                      Generate new PAT <Icon icon="arrow-up-right-from-square" className="text-xs" />
-                    </button>
-
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold" htmlFor="konnect-modal-pat">
+                        Personal Access Token
+                      </label>
+                      <p className="text-sm text-(--hl)">
+                        Enter a Personal Access Token (PAT) to sync your Konnect control planes into Insomnia projects.
+                      </p>
+                      <button
+                        className="w-fit text-sm text-(--hl) underline hover:opacity-80"
+                        onClick={() => window.main.openInBrowser('https://cloud.konghq.com/global/account/tokens')}
+                      >
+                        Generate new PAT ↗
+                      </button>
+                    </div>
                     <div className="relative">
                       <input
                         id="konnect-modal-pat"
@@ -208,7 +209,7 @@ export const KonnectSettingsModal = ({
                     </Button>
                     {isConnected && (
                       <Button
-                        className="rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm font-semibold text-(--color-font) hover:bg-(--hl-xs)"
+                        className="rounded-xs px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs)"
                         onPress={() => setShowDisconnectConfirm(true)}
                         isDisabled={status === 'validating'}
                       >

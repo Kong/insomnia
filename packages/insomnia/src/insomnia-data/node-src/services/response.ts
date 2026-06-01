@@ -1,6 +1,5 @@
-import { database as db } from '~/common/database';
 import type { Response } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import { database as db, models } from '~/insomnia-data';
 
 import * as requestHelpers from './helpers/request-operations';
 import * as requestVersionService from './request-version';

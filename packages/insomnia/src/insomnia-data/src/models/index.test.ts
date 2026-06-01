@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { generateId } from '../../../common/misc';
+import { generateId } from '~/insomnia-data/common';
+
 import * as models from './';
 import type { AllTypes } from './types';
 

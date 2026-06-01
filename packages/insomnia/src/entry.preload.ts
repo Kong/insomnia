@@ -172,6 +172,7 @@ const sync: SyncBridgeAPI = {
   pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
   push: (...args) => invokeSyncMethod('push', ...args),
   remoteBackendProjects: (...args) => invokeSyncMethod('remoteBackendProjects', ...args),
+  remoteBackendProjectsOfTeam: (...args) => invokeSyncMethod('remoteBackendProjectsOfTeam', ...args),
   removeBackendProjectsForRoot: (...args) => invokeSyncMethod('removeBackendProjectsForRoot', ...args),
   removeBranch: (...args) => invokeSyncMethod('removeBranch', ...args),
   removeRemoteBranch: (...args) => invokeSyncMethod('removeRemoteBranch', ...args),

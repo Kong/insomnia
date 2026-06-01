@@ -15,6 +15,11 @@ export interface BackendProjectWithTeams extends BackendProject {
   teams: Team[];
 }
 
+export interface BackendProjectWithTeamsAndTeamProjectId extends BackendProject {
+  teams: Team[];
+  teamProjectId: string;
+}
+
 export interface BackendProjectWithTeam extends BackendProject {
   team: Team;
 }

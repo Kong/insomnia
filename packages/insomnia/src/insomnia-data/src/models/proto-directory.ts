@@ -1,4 +1,4 @@
-import { generateId } from '~/common/misc';
+import { generateId } from '~/insomnia-data/common';
 
 import type { BaseModel } from './base-types';
 

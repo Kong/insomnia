@@ -1,5 +1,6 @@
 import React, { type FC, Fragment } from 'react';
 
+import { type HttpVersion, HttpVersions, isMac, strings, UpdateChannel } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
@@ -12,9 +13,6 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
-import { isMac } from '../../../common/platform';
-import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
-import { strings } from '../../../common/strings';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { BooleanSetting } from './boolean-setting';

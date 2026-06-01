@@ -27,6 +27,7 @@ import { href } from 'react-router';
 
 import type { Project, Workspace } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
+import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
@@ -36,7 +37,6 @@ import type { CreateRequestType } from '~/ui/hooks/use-request';
 
 import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import { AnalyticsEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';

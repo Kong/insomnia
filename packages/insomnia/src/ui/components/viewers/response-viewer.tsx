@@ -1,15 +1,11 @@
 import iconv from 'iconv-lite';
 import { Fragment, useCallback, useRef, useState } from 'react';
 
+import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW } from '~/insomnia-data/common';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
-import {
-  HUGE_RESPONSE_MB,
-  LARGE_RESPONSE_MB,
-  PREVIEW_MODE_FRIENDLY,
-  PREVIEW_MODE_RAW,
-} from '../../../common/constants';
+import { HUGE_RESPONSE_MB, LARGE_RESPONSE_MB } from '../../../common/constants';
 import { unescapeForwardSlash } from '../../../common/misc';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';

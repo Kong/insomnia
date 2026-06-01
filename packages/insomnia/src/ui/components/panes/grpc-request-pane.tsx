@@ -7,6 +7,7 @@ import { recordProjectRecentRequest } from '~/common/project';
 import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
@@ -194,6 +195,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                   : undefined,
               }
             : {}),
+        });
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.requestExecuted,
+          properties: { request_type: 'gRPC' },
         });
         setGrpcState({
           ...grpcState,

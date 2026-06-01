@@ -1,7 +1,3 @@
-import { getOperationAST, parse } from 'graphql';
-
-import type { Request } from '~/insomnia-data';
-
 import { CONTENT_TYPE_GRAPHQL } from '../common/constants';
 import type { RenderedRequest } from '../templating/types';
 
@@ -18,24 +14,4 @@ export function parseGraphQLReqeustBody(renderedRequest: RenderedRequest) {
       console.error('Failed to parse GraphQL variables', e);
     }
   }
-}
-
-export function getOperationType(request: Request) {
-  if (request.body?.mimeType === CONTENT_TYPE_GRAPHQL) {
-    let documentAST;
-    let requestBody;
-    try {
-      requestBody = JSON.parse(request.body.text || '');
-      documentAST = parse(requestBody?.query || '');
-    } catch {
-      documentAST = null;
-    }
-    if (documentAST) {
-      const operationAST = getOperationAST(documentAST, requestBody?.operationName);
-      if (operationAST) {
-        return operationAST.operation;
-      }
-    }
-  }
-  return;
 }

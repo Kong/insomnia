@@ -22,9 +22,13 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
-import type { RunnerResultPerRequest, RunnerTestResult, UserUploadEnvironment } from '~/insomnia-data';
+import type {
+  ResponseTimelineEntry,
+  RunnerResultPerRequest,
+  RunnerTestResult,
+  UserUploadEnvironment,
+} from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';

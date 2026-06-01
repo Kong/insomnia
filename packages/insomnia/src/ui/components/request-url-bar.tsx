@@ -191,7 +191,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           const startListening = async () => {
             const environmentId = activeEnvironment._id;
             const workspaceId = activeWorkspace._id;
-            // Render any nunjucks tags in the url/headers/authentication settings/cookies
+            // Render any Liquid template tags in the url/headers/authentication settings/cookies
             const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
             const ancestors = await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type]);
