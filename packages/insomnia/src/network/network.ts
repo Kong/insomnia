@@ -65,6 +65,7 @@ export interface SendActionRuntime {
 
 export const getOrInheritAuthentication = ({
   request,
+  // requestGroups is supposed to be of order leaf to root
   requestGroups,
 }: {
   request: Request | WebSocketRequest | SocketIORequest;
@@ -75,11 +76,9 @@ export const getOrInheritAuthentication = ({
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
-  console.log('----------------------------------requestGroups2', requestGroups);
-  // TODO: 顺序反了
-  const closestParentFolderWithAuth = [...requestGroups]
-    .reverse()
-    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+  const closestParentFolderWithAuth = requestGroups.find(
+    ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
+  );
   const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
@@ -99,7 +98,7 @@ export function getOrInheritHeaders({
   const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
   // parent folders, then child folders, then request
-  const headerContexts = [...requestGroups.reverse(), request];
+  const headerContexts = [...[...requestGroups].reverse(), request];
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
