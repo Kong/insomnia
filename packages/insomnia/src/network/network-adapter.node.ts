@@ -39,8 +39,7 @@ export const appendTimelineLines = (timelinePath: string, logs: string[]): Promi
 export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHeader | undefined> =>
   getAuthHeaderFromMain(r, u);
 
-export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> =>
-  curlRequest(options);
+export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> => curlRequest(options);
 
 export const runScript = (options: {
   script: string;
@@ -51,6 +50,22 @@ export async function applyRequestHooks(
   newRenderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
+  const { request: reqCtx } = pluginRequest.init(newRenderedRequest, renderedContext);
+  const defaultHeaders = reqCtx.getEnvironmentVariable('DEFAULT_HEADERS');
+  if (defaultHeaders && typeof defaultHeaders === 'object' && !Array.isArray(defaultHeaders)) {
+    for (const name of Object.keys(defaultHeaders)) {
+      const value = (defaultHeaders as Record<string, any>)[name];
+      if (reqCtx.hasHeader(name)) {
+        console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
+      } else if (value === 'null') {
+        reqCtx.removeHeader(name);
+        console.log(`[header] Remove default header ${name}`);
+      } else {
+        reqCtx.setHeader(name, value);
+        console.log(`[header] Set default header ${name}: ${value}`);
+      }
+    }
+  }
   const pluginIndex = require('../plugins/index');
   for (const { plugin, hook } of await pluginIndex.getRequestHooks()) {
     const context = {
