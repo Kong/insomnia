@@ -17,6 +17,7 @@ import * as pluginRequest from '../plugins/context/request';
 import * as pluginResponse from '../plugins/context/response';
 import * as pluginStore from '../plugins/context/store';
 import { runScript as executeScript } from '../script-executor';
+import { applyDefaultHeaders } from './apply-default-headers';
 
 export const getTimelinePath = async (responseId: string): Promise<string> => {
   const electron = require('electron') as { app: { getPath: (name: string) => string } };
@@ -50,23 +51,7 @@ export async function applyRequestHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
-  const newRenderedRequest = clone(renderedRequest);
-  const { request: reqCtx } = pluginRequest.init(newRenderedRequest, renderedContext);
-  const defaultHeaders = reqCtx.getEnvironmentVariable('DEFAULT_HEADERS');
-  if (defaultHeaders && typeof defaultHeaders === 'object' && !Array.isArray(defaultHeaders)) {
-    for (const name of Object.keys(defaultHeaders)) {
-      const value = (defaultHeaders as Record<string, any>)[name];
-      if (reqCtx.hasHeader(name)) {
-        console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
-      } else if (value === 'null') {
-        reqCtx.removeHeader(name);
-        console.log(`[header] Remove default header ${name}`);
-      } else {
-        reqCtx.setHeader(name, value);
-        console.log(`[header] Set default header ${name}: ${value}`);
-      }
-    }
-  }
+  const newRenderedRequest = applyDefaultHeaders(renderedRequest, renderedContext['DEFAULT_HEADERS']);
   const pluginIndex = require('../plugins/index');
   for (const { plugin, hook } of await pluginIndex.getRequestHooks()) {
     const context = {

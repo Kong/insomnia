@@ -1,12 +1,10 @@
-import clone from 'clone';
-
-import { filterHeaders } from '~/common/misc';
 import type { RequestHeader } from '~/insomnia-data';
 import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
 import type { RenderedRequest } from '~/templating/types';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { CurlRequestOptions, ResponsePatch } from '../main/network/libcurl-promise';
+import { applyDefaultHeaders } from './apply-default-headers';
 import { cancellableCurlRequest } from './cancellation';
 import { runScriptConcurrently } from './concurrency';
 
@@ -32,24 +30,7 @@ export async function applyRequestHooks(
   newRenderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
-  const request = clone(newRenderedRequest);
-  const defaultHeaders = renderedContext['DEFAULT_HEADERS'];
-  if (defaultHeaders && typeof defaultHeaders === 'object' && !Array.isArray(defaultHeaders)) {
-    for (const name of Object.keys(defaultHeaders)) {
-      const value = (defaultHeaders as Record<string, any>)[name];
-      const existing = filterHeaders(request.headers, name);
-      if (existing.length) {
-        console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
-      } else if (value === 'null') {
-        const toRemove = filterHeaders(request.headers, name);
-        request.headers = request.headers.filter(h => !toRemove.includes(h));
-        console.log(`[header] Remove default header ${name}`);
-      } else {
-        request.headers.push({ name, value: String(value) });
-        console.log(`[header] Set default header ${name}: ${value}`);
-      }
-    }
-  }
+  const request = applyDefaultHeaders(newRenderedRequest, renderedContext['DEFAULT_HEADERS']);
   if (!(await pluginsBridge.hasRequestHooks())) {
     return request;
   }
