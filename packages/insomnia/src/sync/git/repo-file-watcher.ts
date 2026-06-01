@@ -82,6 +82,19 @@ function contentHash(content: string): string {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
 }
 
+/**
+ * Path-traversal guard: returns true when `absPath` resolves outside `repoDir`.
+ *
+ * A plain `rel.startsWith('..')` check would also reject legitimate in-repo
+ * paths whose relative path merely begins with `..` (e.g. a file named
+ * `..foo.yaml`). Only treat the path as an escape when the relative path is
+ * exactly `..` or a `..` path segment (`../...`).
+ */
+function isPathOutsideRepo(repoDir: string, absPath: string): boolean {
+  const rel = path.relative(repoDir, absPath);
+  return rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel);
+}
+
 export interface WatcherNotifier {
   onDbSynced: () => void;
   onProblemsChanged: (payload: FileProblemsChangedPayload) => void;
@@ -254,8 +267,7 @@ class RepoFileWatcher {
           const absPath = path.resolve(this.repoDir, gitFilePath);
 
           // Path-traversal guard
-          const rel = path.relative(this.repoDir, absPath);
-          if (rel.startsWith('..') || path.isAbsolute(rel)) return;
+          if (isPathOutsideRepo(this.repoDir, absPath)) return;
 
           // Get the most recently modified DB document in this workspace\u2019s tree
           const allDocs = await db.getWithDescendants(workspace);
@@ -437,8 +449,7 @@ class RepoFileWatcher {
       const gitFilePath: string = meta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
       const absPath = path.normalize(path.join(this.repoDir, gitFilePath));
 
-      const rel = path.relative(this.repoDir, absPath);
-      if (rel.startsWith('..') || path.isAbsolute(rel)) {
+      if (isPathOutsideRepo(this.repoDir, absPath)) {
         continue;
       }
 
@@ -973,8 +984,7 @@ class RepoFileWatcher {
     for (const { workspace, meta } of entries) {
       if (meta?.gitFilePath) {
         const absPath = path.normalize(path.join(this.repoDir, meta.gitFilePath));
-        const rel = path.relative(this.repoDir, absPath);
-        if (rel.startsWith('..') || path.isAbsolute(rel)) {
+        if (isPathOutsideRepo(this.repoDir, absPath)) {
           continue;
         }
         this.lastKnownGitFilePath.set(workspace._id, absPath);
