@@ -336,4 +336,12 @@ describe('executePluginMainAction', () => {
     });
     expect(result).toBe('action-result');
   });
+
+  it('propagates rejections from the IPC call', async () => {
+    vi.mocked(fetchFromTemplateWorkerDatabase).mockRejectedValue(new Error('IPC failure'));
+
+    await expect(
+      executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' }),
+    ).rejects.toThrow('IPC failure');
+  });
 });
