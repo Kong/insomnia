@@ -179,7 +179,7 @@ export const Plugins: FC = () => {
                   />
                 </TextField>
                 <Button
-                  className="flex h-full w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
+                  className="flex h-full shrink-0 min-w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
                   isDisabled={isInstallingFromNpm}
                   type="submit"
                   onPress={async () => {

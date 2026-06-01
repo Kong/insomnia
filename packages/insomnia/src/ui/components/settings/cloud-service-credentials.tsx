@@ -244,7 +244,7 @@ export const CloudServiceCredentialList = () => {
             max={720}
           />
           <button
-            className="pointer mb-(--padding-sm) ml-(--padding-sm) flex h-(--line-height-xs) w-32 items-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
+            className="pointer mb-(--padding-sm) ml-(--padding-sm) flex h-(--line-height-xs) shrink-0 min-w-32 items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-md) text-center whitespace-nowrap hover:bg-(--hl-xs)"
             onClick={async () =>
               await pluginsBridge.executePluginMainAction({
                 pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
