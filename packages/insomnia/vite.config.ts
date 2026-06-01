@@ -10,6 +10,8 @@ import pkg from './package.json';
 export const externalDependencies = ['@apidevtools/swagger-parser', 'mocha'];
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
+  const browserSafeBuiltinModules = new Set(['assert', 'buffer', 'events', 'path', 'util']);
+  const nodeBuiltinModules = builtinModules.filter(m => !browserSafeBuiltinModules.has(m));
 
   return {
     define: {
@@ -58,10 +60,19 @@ export default defineConfig(({ mode }) => {
         '~': path.resolve(__dirname, './src'),
         // Shim Node's `path` module for browser-safe dependencies (e.g. mime-types uses path.extname).
         'path': path.resolve(__dirname, './src/path-shim.ts'),
+        'node:path': path.resolve(__dirname, './src/path-shim.ts'),
+        // Shim Node's `assert` module for browser-safe dependencies that still use runtime invariants.
+        'assert': path.resolve(__dirname, '../../node_modules/assert'),
+        'node:assert': path.resolve(__dirname, '../../node_modules/assert'),
         // Shim Node's `events` module for browser-safe dependencies (e.g. jshint uses EventEmitter).
         'events': path.resolve(__dirname, '../../node_modules/events'),
+        'node:events': path.resolve(__dirname, '../../node_modules/events'),
         // Shim Node's `util` module for browser-safe dependencies (e.g. tough-cookie uses util.inherits).
         'util': path.resolve(__dirname, '../../node_modules/util'),
+        'node:util': path.resolve(__dirname, '../../node_modules/util'),
+        // Buffer is also browser-safe in this renderer bundle, so keep it bundled instead of externalized.
+        'buffer': path.resolve(__dirname, '../../node_modules/buffer'),
+        'node:buffer': path.resolve(__dirname, '../../node_modules/buffer'),
       },
     },
     plugins: [
@@ -72,8 +83,8 @@ export default defineConfig(({ mode }) => {
         modules: [
           'electron',
           ...externalDependencies,
-          ...builtinModules.filter(m => m !== 'buffer' && m !== 'path' && m !== 'util'),
-          ...builtinModules.map(m => `node:${m}`),
+          ...nodeBuiltinModules,
+          ...nodeBuiltinModules.map(m => `node:${m}`),
         ],
       }),
       reactRouter(),
@@ -108,6 +119,7 @@ export interface Options {
  */
 export function electronNodeRequire(options: Options): Plugin {
   const { modules = [] } = options;
+  const getExternalId = (id: string) => id.split('virtual:external:')[1]?.split('?')[0];
 
   return {
     name: 'vite-plugin-electron-node-require',
@@ -137,7 +149,7 @@ export function electronNodeRequire(options: Options): Plugin {
       return conf;
     },
     resolveId(id, _importer, options) {
-      const externalId = id.split('virtual:external:')[1];
+      const externalId = getExternalId(id);
 
       if (externalId && modules.includes(externalId)) {
         if (options.ssr) {
@@ -153,7 +165,11 @@ export function electronNodeRequire(options: Options): Plugin {
     },
     load(id, options) {
       if (id.includes('virtual:external:')) {
-        const externalId = id.split('virtual:external:')[1];
+        const externalId = getExternalId(id);
+
+        if (!externalId) {
+          return null;
+        }
 
         // We need to handle electron because it's different when required in the renderer process
         if (externalId === 'electron') {
