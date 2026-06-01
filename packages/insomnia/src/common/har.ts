@@ -303,51 +303,31 @@ async function getRequestCookies(renderedRequest: RenderedRequest): Promise<Har.
   if (!renderedRequest.url) {
     return [];
   }
-  if (typeof window !== 'undefined' && window.main?.cookies) {
-    const domainCookies = await window.main.cookies.getCookiesForUrl({
-      cookies: renderedRequest.cookieJar.cookies,
-      url: renderedRequest.url,
-    });
-    return domainCookies.map(mapCookieToHar);
-  }
-  // Fallback for non-renderer contexts (tests, plugin window)
-  const { jarFromCookies } = await import('./cookies');
-  const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-  const domainCookies = jar.getCookiesSync(renderedRequest.url);
-  return domainCookies.map(c => mapCookieToHar(c.toJSON() as Cookie));
+  const domainCookies = await getCookieBridge().getCookiesForUrl({
+    cookies: renderedRequest.cookieJar.cookies,
+    url: renderedRequest.url,
+  });
+  return domainCookies.map(mapCookieToHar);
 }
 
 export async function getResponseCookiesFromHeaders(headers: Har.Cookie[]): Promise<Har.Cookie[]> {
   const setCookieHeaders = getSetCookieHeaders(headers);
-  if (typeof window !== 'undefined' && window.main?.cookies) {
-    const results: Har.Cookie[] = [];
-    for (const harCookie of setCookieHeaders) {
-      const cookie = await window.main.cookies.parse(harCookie.value || '');
-      if (cookie) {
-        results.push(mapCookieToHar(cookie));
-      }
+  const results: Har.Cookie[] = [];
+  const cookiesBridge = getCookieBridge();
+  for (const harCookie of setCookieHeaders) {
+    const cookie = await cookiesBridge.parse(harCookie.value || '');
+    if (cookie) {
+      results.push(mapCookieToHar(cookie));
     }
-    return results;
   }
-  // Fallback for non-renderer contexts (tests, plugin window)
-  const { Cookie: ToughCookie } = await import('tough-cookie');
-  return setCookieHeaders.reduce((accumulator, harCookie) => {
-    let cookie = null;
-    try {
-      cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
-    } catch {}
-    if (!cookie) {
-      return accumulator;
-    }
-    return [...accumulator, mapCookieToHar(cookie.toJSON() as Cookie)];
-  }, [] as Har.Cookie[]);
+  return results;
 }
 
 async function getResponseCookies(response: Response): Promise<Har.Cookie[]> {
   const headers = response.headers.filter(Boolean);
   return getResponseCookiesFromHeaders(headers);
 }
-function mapCookieToHar(cookie: ToughCookie): Har.Cookie {
+function mapCookieToHar(cookie: Cookie): Har.Cookie {
   const harCookie: Har.Cookie = {
     name: cookie.key,
     value: cookie.value,
@@ -387,6 +367,14 @@ function mapCookieToHar(cookie: ToughCookie): Har.Cookie {
   }
 
   return harCookie;
+}
+
+function getCookieBridge() {
+  if (typeof window === 'undefined' || !window.main?.cookies) {
+    throw new Error('window.main.cookies is required for cookie handling');
+  }
+
+  return window.main.cookies;
 }
 
 async function getResponseContent(response: Response) {

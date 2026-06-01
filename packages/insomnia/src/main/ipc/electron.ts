@@ -187,7 +187,8 @@ export type HandleChannels =
   | 'cookies.fromJSON'
   | 'cookies.parse'
   | 'cookies.toString'
-  | 'cookies.getCookiesForUrl';
+  | 'cookies.getCookiesForUrl'
+  | 'cookies.addSetCookies';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
