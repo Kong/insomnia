@@ -13,8 +13,8 @@ import type {
   ThemeInner,
 } from './bridge-types';
 export type { HexColor, PluginTheme, RGBAColor, RGBColor, StylesThemeBlocks, ThemeBlock, ThemeColor, ThemeInner };
-import type { ColorScheme } from './index';
 import { plugins } from './renderer-bridge';
+import type { ColorScheme } from './types';
 
 export interface CompleteStyleBlock {
   background: Required<Required<ThemeBlock>['background']>;
