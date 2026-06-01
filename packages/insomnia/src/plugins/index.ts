@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import electron from 'electron';
+
 import type { Request, RequestGroup, Workspace } from '~/insomnia-data';
 import { database as db, models, services } from '~/insomnia-data';
 import type { PluginConfigMap } from '~/insomnia-data/common';
@@ -127,7 +129,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Make sure the default directories exist
     // imported lazy becuase this should only be read in plugin hidden window
-    const electron = await import('electron');
+
     const pluginPath = path.resolve(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'plugins');
 
     // Also look in node_modules folder in each directory
@@ -295,7 +297,7 @@ export function getPluginCommonContext({
     ...pluginStore.init(plugin),
     ...pluginNetwork.init(),
     util: {
-      openInBrowser: async (url: string) => await import('electron').then(electron => electron.shell.openExternal(url)),
+      openInBrowser: (url: string) => electron.shell.openExternal(url),
       models: {
         request: {
           getById: services.request.getById,
