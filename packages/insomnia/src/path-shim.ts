@@ -1,2 +1,5 @@
-export const extname = (p: string) => p.slice(p.lastIndexOf('.'));
+export const extname = (p: string) => {
+  const idx = p.lastIndexOf('.');
+  return idx === -1 || idx === 0 ? '' : p.slice(idx);
+};
 export default { extname };

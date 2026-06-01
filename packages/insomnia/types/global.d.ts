@@ -29,7 +29,6 @@ type RendererEnv = {
   INSOMNIA_APP_WEBSITE_URL: string | undefined;
   INSOMNIA_GITHUB_REST_API_URL: string | undefined;
   INSOMNIA_GITHUB_API_URL: string | undefined;
-  INSOMNIA_ENABLE_PLUGIN_BRIDGE: string | undefined;
 };
 
 declare global {
