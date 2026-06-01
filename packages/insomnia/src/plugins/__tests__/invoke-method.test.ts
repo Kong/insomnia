@@ -20,9 +20,9 @@ vi.mock('insomnia-data', () => ({
   },
 }));
 
-import type { Plugin } from '../index';
 import { _testOnlySetPlugins } from '../index';
 import { invokePluginMethod } from '../invoke-method';
+import type { Plugin } from '../types';
 
 const makePlugin = (overrides: Partial<Plugin> = {}): Plugin => ({
   name: 'test-plugin',
@@ -41,7 +41,9 @@ afterEach(() => {
 
 describe('invokePluginMethod', () => {
   it('serializes request action metadata', async () => {
-    _testOnlySetPlugins([makePlugin({ module: { requestActions: [{ label: 'Run', icon: 'bolt', action: vi.fn() }] } })]);
+    _testOnlySetPlugins([
+      makePlugin({ module: { requestActions: [{ label: 'Run', icon: 'bolt', action: vi.fn() }] } }),
+    ]);
 
     await expect(invokePluginMethod('getRequestActions')).resolves.toEqual([
       { label: 'Run', icon: 'bolt', pluginName: 'test-plugin' },

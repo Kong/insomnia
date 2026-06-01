@@ -3,7 +3,7 @@ import type { Context, Emitter, Liquid, TagToken, TopLevelToken } from 'liquidjs
 import { Tag } from 'liquidjs';
 
 import packageJson from '../../package.json';
-import type { Plugin } from '../plugins/index';
+import type { Plugin } from '../plugins/types';
 import { tokenizeArgs } from './tokenize-args';
 import type {
   BaseRenderContext,

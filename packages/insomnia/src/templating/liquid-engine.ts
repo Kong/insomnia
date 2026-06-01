@@ -1,7 +1,7 @@
 import type { Tag } from 'liquidjs';
 import { Liquid, Tag as LiquidTag } from 'liquidjs';
 
-import type { Plugin } from '../plugins/index';
+import type { Plugin } from '../plugins/types';
 import type { PluginTemplateTag } from './types';
 
 export type TagFactory = (ext: PluginTemplateTag, plugin: Plugin) => typeof Tag;
@@ -30,11 +30,11 @@ export function buildLiquidEngine(opts: {
     tagDelimiterLeft: '{%',
     tagDelimiterRight: '%}',
     strictVariables,
-    strictFilters: true, // Enabling for 13.0.0 to catch nonexistent filters. 
+    strictFilters: true, // Enabling for 13.0.0 to catch nonexistent filters.
     jsTruthy: true, // Required to match Nunjucks JS truthiness: '', 0, [] are falsy
-    ownPropertyOnly: true, // Contexts are plain objects     
+    ownPropertyOnly: true, // Contexts are plain objects
     dynamicPartials: false, // Disable dynamic paths to prevent variable-interpolated includes.
-    
+
     // hard-stop rendering after 10 s and cap object allocations.
     renderLimit: 10_000,
     memoryLimit: 10_000_000,
@@ -44,7 +44,9 @@ export function buildLiquidEngine(opts: {
   // which routes through window.main.secureReadFile (path allowlist).
   class BlockedFileTag extends LiquidTag {
     render(): void {
-      throw new Error('{% include %}, {% render %}, and {% layout %} are disabled. Use the File template tag to read files.');
+      throw new Error(
+        '{% include %}, {% render %}, and {% layout %} are disabled. Use the File template tag to read files.',
+      );
     }
   }
   engine.registerTag('include', BlockedFileTag);
