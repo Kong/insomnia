@@ -61,6 +61,7 @@ export interface gRPCBridgeAPI {
   loadMethodsFromReflection: typeof loadMethodsFromReflection;
   closeAll: typeof closeAll;
   writeProtoFile: (protoFileId: string) => Promise<{ filePath: string; dirs: string[] }>;
+  validateProtoFile: (filePath: string) => Promise<void>;
 }
 
 const grpcOptions = {
@@ -82,6 +83,10 @@ export const writeProtoFileById = async (protoFileId: string): Promise<{ filePat
   return result;
 };
 
+export const validateProtoFileByPath = async (filePath: string): Promise<void> => {
+  await protoLoader.load(filePath, grpcOptions);
+};
+
 export function registergRPCHandlers() {
   ipcMainOn('grpc.start', start);
   ipcMainOn('grpc.sendMessage', sendMessage);
@@ -91,6 +96,7 @@ export function registergRPCHandlers() {
   ipcMainHandle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
   ipcMainHandle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
   ipcMainHandle('grpc.writeProtoFile', (_, protoFileId: string) => writeProtoFileById(protoFileId));
+  ipcMainHandle('grpc.validateProtoFile', (_, filePath: string) => validateProtoFileByPath(filePath));
 }
 
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {

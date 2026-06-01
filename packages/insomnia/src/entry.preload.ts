@@ -124,6 +124,7 @@ const grpc: gRPCBridgeAPI = {
   loadMethods: options => invokeWithNormalizedError('grpc.loadMethods', options),
   loadMethodsFromReflection: options => invokeWithNormalizedError('grpc.loadMethodsFromReflection', options),
   writeProtoFile: protoFileId => invokeWithNormalizedError('grpc.writeProtoFile', protoFileId),
+  validateProtoFile: filePath => invokeWithNormalizedError('grpc.validateProtoFile', filePath),
 };
 
 const secretStorage: secretStorageBridgeAPI = {
