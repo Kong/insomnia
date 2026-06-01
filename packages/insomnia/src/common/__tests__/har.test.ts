@@ -1,6 +1,17 @@
 import path from 'node:path';
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('~/network/network-adapter', () => ({
+  getTimelinePath: () => Promise.resolve(''),
+  appendToTimelineOnError: () => Promise.resolve(),
+  appendTimelineLines: () => Promise.resolve(),
+  getAuthHeader: () => Promise.resolve(),
+  executeCurlRequest: () => Promise.resolve({}),
+  runScript: () => Promise.resolve({}),
+  applyRequestHooks: (request: any) => Promise.resolve(request),
+  applyResponseHooks: (response: any) => Promise.resolve(response),
+}));
 
 import type { Cookie, Request, Response } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
