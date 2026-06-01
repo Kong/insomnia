@@ -1,8 +1,7 @@
 import type * as Har from 'har-format';
-import type { BaseModel, Environment, Request, RequestGroup, Response, Workspace } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
-import { Cookie as ToughCookie } from 'tough-cookie';
 
+import type { BaseModel, Cookie, Environment, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
+import { models, services } from '~/insomnia-data';
 import { applyRequestHooks } from '~/network/network-adapter';
 
 import { RenderError } from '../templating/render-error';
@@ -10,7 +9,6 @@ import type { RenderedRequest } from '../templating/types';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import { smartEncodeUrl } from '../utils/url/querystring';
 import { getAppVersion } from './constants';
-import { jarFromCookies } from './cookies';
 import { database } from './database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
 import { getRenderedRequestAndContext } from './render';
@@ -207,7 +205,7 @@ export async function exportHarResponse(response?: Response) {
     status: response.statusCode,
     statusText: response.statusMessage,
     httpVersion: 'HTTP/1.1',
-    cookies: getResponseCookies(response),
+    cookies: await getResponseCookies(response),
     headers: getResponseHeaders(response),
     content: await getResponseContent(response),
     redirectURL: '',
@@ -292,7 +290,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
     method: renderedRequest.method,
     url,
     httpVersion: 'HTTP/1.1',
-    cookies: getRequestCookies(renderedRequest),
+    cookies: await getRequestCookies(renderedRequest),
     headers: getRequestHeaders(renderedRequest),
     queryString: getRequestQueryString(renderedRequest),
     postData: await getRequestPostData(renderedRequest),
@@ -301,37 +299,55 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
   };
   return harRequest;
 }
-
-function getRequestCookies(renderedRequest: RenderedRequest) {
-  // filter out invalid cookies to avoid getCookiesSync complaining
+async function getRequestCookies(renderedRequest: RenderedRequest): Promise<Har.Cookie[]> {
+  if (!renderedRequest.url) {
+    return [];
+  }
+  if (typeof window !== 'undefined' && window.main?.cookies) {
+    const domainCookies = await window.main.cookies.getCookiesForUrl({
+      cookies: renderedRequest.cookieJar.cookies,
+      url: renderedRequest.url,
+    });
+    return domainCookies.map(mapCookieToHar);
+  }
+  // Fallback for non-renderer contexts (tests, plugin window)
+  const { jarFromCookies } = await import('./cookies');
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-  const domainCookies = renderedRequest.url ? jar.getCookiesSync(renderedRequest.url) : [];
-  const harCookies: Har.Cookie[] = domainCookies.map(mapCookie);
-  return harCookies;
+  const domainCookies = jar.getCookiesSync(renderedRequest.url);
+  return domainCookies.map(c => mapCookieToHar(c.toJSON() as Cookie));
 }
 
-export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
-  return getSetCookieHeaders(headers).reduce((accumulator, harCookie) => {
-    let cookie: null | undefined | ToughCookie = null;
-
+export async function getResponseCookiesFromHeaders(headers: Har.Cookie[]): Promise<Har.Cookie[]> {
+  const setCookieHeaders = getSetCookieHeaders(headers);
+  if (typeof window !== 'undefined' && window.main?.cookies) {
+    const results: Har.Cookie[] = [];
+    for (const harCookie of setCookieHeaders) {
+      const cookie = await window.main.cookies.parse(harCookie.value || '');
+      if (cookie) {
+        results.push(mapCookieToHar(cookie));
+      }
+    }
+    return results;
+  }
+  // Fallback for non-renderer contexts (tests, plugin window)
+  const { Cookie: ToughCookie } = await import('tough-cookie');
+  return setCookieHeaders.reduce((accumulator, harCookie) => {
+    let cookie = null;
     try {
       cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
     } catch {}
-
-    if (cookie === null || cookie === undefined) {
+    if (!cookie) {
       return accumulator;
     }
-
-    return [...accumulator, mapCookie(cookie)];
+    return [...accumulator, mapCookieToHar(cookie.toJSON() as Cookie)];
   }, [] as Har.Cookie[]);
 }
 
-function getResponseCookies(response: Response) {
+async function getResponseCookies(response: Response): Promise<Har.Cookie[]> {
   const headers = response.headers.filter(Boolean);
   return getResponseCookiesFromHeaders(headers);
 }
-
-function mapCookie(cookie: ToughCookie) {
+function mapCookieToHar(cookie: ToughCookie): Har.Cookie {
   const harCookie: Har.Cookie = {
     name: cookie.key,
     value: cookie.value,
