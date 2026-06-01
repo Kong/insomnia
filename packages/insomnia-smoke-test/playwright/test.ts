@@ -157,6 +157,14 @@ export const test = baseTest.extend<{
     // firstWindow() always returns the main app window.
     const page = await app.firstWindow({ timeout: 60_000 });
 
+    // Surface renderer errors so they appear in test output instead of being silent.
+    page.on('pageerror', err => console.error('[renderer pageerror]', err.message, err.stack));
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        console.error('[renderer console.error]', msg.text());
+      }
+    });
+
     await page.waitForLoadState();
 
     // Seed a fake Konnect PAT so konnect-enabled UI renders in all tests
