@@ -77,7 +77,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
       return;
     }
     const contentType = getContentTypeFromHeaders(selectedPart.headers, 'text/plain');
-    const extension = mimeExtension(contentType) || '.txt';
+    const extension = mimeExtension(contentType) || 'txt';
     const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
     const dir = lastDir || window.app.getPath('desktop');
     const date = format(Date.now(), 'yyyy-MM-dd');

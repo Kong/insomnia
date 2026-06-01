@@ -2,7 +2,7 @@ import { Switch } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
 
-import { type ASTRule, blockedPropertyRules, blockedRootRules, maskRules, type ThreatRule } from '../../../scripting/script-security-policy';
+import { type ASTRule, blockedPropertyRules, blockedRootRules, maskRules, type ThreatRule } from '../../../scripting/script-security-rules';
 import { useSettingsPatcher } from '../../hooks/use-request';
 
 const DISABLED_TOOLTIP = 'Enable the script sandbox to configure individual rules';

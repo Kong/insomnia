@@ -20,7 +20,7 @@ import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
 import { base64decode } from '../../../../utils/vault';
-import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault';
+import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault-crypto';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import { showModal } from '../../modals';
@@ -77,7 +77,28 @@ export const EnvironmentKVEditor = ({
   );
   const codeModalRef = useRef<CodePromptModalHandle>(null);
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
+  const [decryptedValues, setDecryptedValues] = useState<Record<string, string>>({});
   const symmetricKey = vaultKey === '' ? {} : base64decode(vaultKey, true);
+
+  useEffect(() => {
+    const secretPairs = kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET);
+    if (secretPairs.length === 0 || Object.keys(symmetricKey).length === 0) {
+      setDecryptedValues({});
+      return;
+    }
+    let cancelled = false;
+    Promise.all(
+      secretPairs.map(async p => ({ id: p.id, value: await decryptSecretValue(p.value, symmetricKey as JsonWebKey) })),
+    )
+      .then(results => {
+        if (!cancelled) {
+          setDecryptedValues(Object.fromEntries(results.map(r => [r.id, r.value])));
+        }
+      })
+      .catch(console.error);
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET).map(p => ({ id: p.id, value: p.value }))), vaultKey]);
 
   const commonItemTypes = [
     {
@@ -152,7 +173,7 @@ export const EnvironmentKVEditor = ({
     onChange(kvPairs);
   };
 
-  const handleItemTypeChange = (id: string, newType: EnvironmentKvPairDataType) => {
+  const handleItemTypeChange = async (id: string, newType: EnvironmentKvPairDataType) => {
     const targetItem = kvPairs.find(pair => pair.id === id);
     if (targetItem) {
       const { type: originType, value: originValue } = targetItem;
@@ -172,13 +193,13 @@ export const EnvironmentKVEditor = ({
             if (yes) {
               handleItemChange(id, 'type', newType);
               // decrypt and save the value
-              handleItemChange(id, 'value', decryptSecretValue(originValue, symmetricKey));
+              handleItemChange(id, 'value', await decryptSecretValue(originValue, symmetricKey as JsonWebKey));
             }
           },
         });
       } else if (newType === EnvironmentKvPairDataType.SECRET) {
         // encrypt value if set to secret type
-        handleItemChange(id, 'value', encryptSecretValue(originValue, symmetricKey));
+        handleItemChange(id, 'value', await encryptSecretValue(originValue, symmetricKey as JsonWebKey));
         handleItemChange(id, 'type', newType);
       } else {
         handleItemChange(id, 'type', newType);
@@ -310,9 +331,9 @@ export const EnvironmentKVEditor = ({
               itemId={id}
               enabled={enabled && !disabled}
               placeholder="Input Secret"
-              value={decryptSecretValue(value, symmetricKey)}
-              onChange={newValue => {
-                const encryptedValue = encryptSecretValue(newValue, symmetricKey);
+              value={decryptedValues[id] ?? ''}
+              onChange={async newValue => {
+                const encryptedValue = await encryptSecretValue(newValue, symmetricKey as JsonWebKey);
                 handleItemChange(id, 'value', encryptedValue);
               }}
             />

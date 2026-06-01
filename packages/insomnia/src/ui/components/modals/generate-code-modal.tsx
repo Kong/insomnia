@@ -1,5 +1,5 @@
 import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import type { Request } from '~/insomnia-data';
@@ -65,11 +65,13 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const [snippet, setSnippet] = useState<string>('');
 
+  useEffect(() => {
+    editorRef.current?.setValue(snippet);
+  }, [snippet]);
+
   const generateCode = useCallback(
     async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
-      const { HTTPSnippet, availableTargets } = await import('httpsnippet');
-
-      const targets = availableTargets();
+      const targets = (await window.main.getCodeSnippetTargets()) as HTTPSnippetTarget[];
       const targetOrFallback = target || (targets.find(t => t.key === 'shell') as HTTPSnippetTarget);
       const clientOrFallback = client || (targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient);
 
@@ -89,9 +91,12 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       );
       const har = await exportHarWithRequest(request, props.environmentId, addContentLength);
       if (har) {
-        const snippet = new HTTPSnippet(har);
-        const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
-        setSnippet(cmd);
+        const cmd = await window.main.generateCodeSnippet({
+          har,
+          target: targetOrFallback.key,
+          client: clientOrFallback.key,
+        });
+        setSnippet(cmd as string);
       }
 
       window.main.trackAnalyticsEvent({
@@ -189,7 +194,6 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
             id="generate-code-modal-content"
             placeholder="Generating code snippet..."
             className="border-top"
-            key={Date.now()}
             mode={MODE_MAP[target.key] || target.key}
             ref={editorRef}
             defaultValue={snippet}

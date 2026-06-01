@@ -373,8 +373,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           const allPreScripts = docsWithScripts.map(doc => doc.preRequestScript).filter((s): s is string => !!s);
           const allPostScripts = docsWithScripts.map(doc => doc.afterResponseScript).filter((s): s is string => !!s);
 
-          const requestType = activeRequest.body?.mimeType === CONTENT_TYPE_GRAPHQL ? 'GraphQL' :
-            models.request.isEventStreamRequest(activeRequest) ? 'Event Stream' : 'HTTP';
+          const requestType =
+            activeRequest.body?.mimeType === CONTENT_TYPE_GRAPHQL
+              ? 'GraphQL'
+              : models.request.isEventStreamRequest(activeRequest)
+                ? 'Event Stream'
+                : 'HTTP';
           window.main.trackAnalyticsEvent({
             event: AnalyticsEvent.requestExecuted,
             properties: {

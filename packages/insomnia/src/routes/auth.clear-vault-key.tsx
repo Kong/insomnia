@@ -1,8 +1,8 @@
-import electron from 'electron';
 import { getVault } from 'insomnia-api';
 import { href } from 'react-router';
 
 import { services } from '~/insomnia-data';
+import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.clear-vault-key';
@@ -23,11 +23,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     // Update vault salt and delete vault key from session
     await services.userSession.update({ vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification
-    electron.ipcRenderer.emit('show-toast', null, {
-      content: {
-        title: 'Your vault key has been reset, all you local secrets have been deleted.',
-        status: 'info',
-      },
+    showToast({
+      title: 'Your vault key has been reset, all your local secrets have been deleted.',
+      status: 'info',
     });
     return true;
   }

@@ -1,7 +1,7 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
 import { models, services } from '~/insomnia-data';
-import { decryptSecretValue } from '~/utils/vault';
+import { decryptSecretValue } from '~/utils/vault-crypto';
 
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
@@ -49,7 +49,6 @@ export function forceBracketNotation(prefix: string, key: string | number) {
 export function normalizeToDotAndBracketNotation(prefix: string) {
   return objectPath.normalize(prefix);
 }
-
 
 /**
  * Parse a Liquid template tag string into a usable object
@@ -159,10 +158,10 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
       if (isVaultEnabled && vaultKey) {
         const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;
         // decrypt all secret values under vaultEnvironmentPath property in context
-        Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+        for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
           const encryptedValue = vaultEnvironmentData[vaultContextKey];
-          vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
-        });
+          vaultEnvironmentData[vaultContextKey] = await decryptSecretValue(encryptedValue, symmetricKey);
+        }
       } else if (isVaultEnabled && !vaultKey) {
         // remove all values under vaultEnvironmentPath if no vault key found
         vaultEnvironmentData = {};

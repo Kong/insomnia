@@ -39,6 +39,7 @@ import type {
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
 import type { RenderedRequest } from '../../templating/types';
+import { decryptSecretValue,encryptSecretValue } from '../../utils/vault';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
@@ -273,6 +274,8 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
+  generateCodeSnippet: (options: { har: object; target: string; client: string }) => Promise<string>;
+  getCodeSnippetTargets: () => Promise<{ key: string; title: string; clients: { key: string; title: string }[] }[]>;
   generateCommitsFromDiff: (
     input: Parameters<GenerateCommitsFromDiffFunction>[0],
   ) => Promise<
@@ -288,6 +291,10 @@ export interface RendererToMainBridgeAPI {
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
   notifyPluginPromptResult: (id: string, value: string | null) => void;
+  vault: {
+    encryptSecretValue: (rawValue: string, symmetricKey: JsonWebKey) => Promise<string>;
+    decryptSecretValue: (encryptedValue: string, symmetricKey: JsonWebKey) => Promise<string>;
+  };
   timeline: {
     getPath: (responseId: string) => Promise<string>;
     appendToFile: (options: { timelinePath: string; data: string }) => Promise<void>;
@@ -487,6 +494,17 @@ export function registerMainHandlers() {
 
       process.postMessage({ documentContent, rulesetPath });
     });
+  });
+
+  ipcMainHandle('generateCodeSnippet', async (_, options: { har: object; target: string; client: string }) => {
+    const { HTTPSnippet } = await import('httpsnippet');
+    const snippet = new HTTPSnippet(options.har as any);
+    return snippet.convert(options.target, options.client) || '';
+  });
+
+  ipcMainHandle('getCodeSnippetTargets', async () => {
+    const { availableTargets } = await import('httpsnippet');
+    return availableTargets();
   });
 
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {
@@ -794,6 +812,13 @@ export function registerMainHandlers() {
 
   ipcMainHandle('timeline.getPath', getTimelinePath);
   ipcMainHandle('timeline.appendToFile', appendToTimeline);
+
+  ipcMainHandle('vault.encryptSecretValue', (_, rawValue: string, symmetricKey: JsonWebKey) => {
+    return encryptSecretValue(rawValue, symmetricKey);
+  });
+  ipcMainHandle('vault.decryptSecretValue', (_, encryptedValue: string, symmetricKey: JsonWebKey) => {
+    return decryptSecretValue(encryptedValue, symmetricKey);
+  });
 
   registerPluginIpcHandlers();
 }
