@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../themes', () => ({ default: [] }));
 vi.mock('~/templating/liquid-extension-worker', () => ({
@@ -21,7 +21,6 @@ vi.mock('~/insomnia-data', () => ({
   },
 }));
 
-import { services } from '~/insomnia-data';
 import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
 
 import type { Plugin } from '../index';
