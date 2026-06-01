@@ -158,10 +158,10 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
       if (isVaultEnabled && vaultKey) {
         const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;
         // decrypt all secret values under vaultEnvironmentPath property in context
-        Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+        for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
           const encryptedValue = vaultEnvironmentData[vaultContextKey];
-          vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
-        });
+          vaultEnvironmentData[vaultContextKey] = await decryptSecretValue(encryptedValue, symmetricKey);
+        }
       } else if (isVaultEnabled && !vaultKey) {
         // remove all values under vaultEnvironmentPath if no vault key found
         vaultEnvironmentData = {};

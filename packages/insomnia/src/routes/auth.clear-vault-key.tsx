@@ -24,7 +24,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     await services.userSession.update({ vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification
     showToast({
-      title: 'Your vault key has been reset, all you local secrets have been deleted.',
+      title: 'Your vault key has been reset, all your local secrets have been deleted.',
       status: 'info',
     });
     return true;

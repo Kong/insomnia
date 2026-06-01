@@ -170,7 +170,9 @@ export type HandleChannels =
   | 'timeline.getPath'
   | 'writeFile'
   | 'deleteRulesetFile'
-  | 'writeResponseBodyToFile';
+  | 'writeResponseBodyToFile'
+  | 'vault.encryptSecretValue'
+  | 'vault.decryptSecretValue';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
