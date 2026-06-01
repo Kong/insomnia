@@ -947,6 +947,10 @@ export class VCS {
       throw new Error(`Failed to query ${name}: ${errors[0].message}`);
     }
 
+    if (data == null) {
+      throw new Error(`Failed to query ${name}: no data returned`);
+    }
+
     return data;
   }
 
