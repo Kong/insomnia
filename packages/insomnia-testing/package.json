@@ -14,6 +14,12 @@
   },
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "browser": "./src/browser.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test": "vitest run",

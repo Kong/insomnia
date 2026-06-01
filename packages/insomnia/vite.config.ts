@@ -52,8 +52,6 @@ export default defineConfig(({ mode }) => {
         // These must appear before the '~' catch-all so the specific path wins.
         '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
         '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
-        // Redirect to a renderer-safe subset that excludes Node.js-only modules (run.ts, generate-to-file.ts).
-        'insomnia-testing': path.resolve(__dirname, './src/insomnia-testing.renderer.ts'),
         '~': path.resolve(__dirname, './src'),
         // Shim Node's `path` module for browser-safe dependencies (e.g. mime-types uses path.extname).
         'path': path.resolve(__dirname, './src/path-shim.ts'),
