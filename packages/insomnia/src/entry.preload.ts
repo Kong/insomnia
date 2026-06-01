@@ -351,6 +351,26 @@ const main: Window['main'] = {
     decryptSecretValue: (encryptedValue, symmetricKey) =>
       invokeWithNormalizedError('vault.decryptSecretValue', encryptedValue, symmetricKey),
   },
+  crypt: {
+    encryptRSAWithJWK: (publicKeyJWK: JsonWebKey, plaintext: string) =>
+      invokeWithNormalizedError('crypt.encryptRSAWithJWK', publicKeyJWK, plaintext),
+    decryptRSAWithJWK: (privateJWK: JsonWebKey, encryptedBlob: string) =>
+      invokeWithNormalizedError('crypt.decryptRSAWithJWK', privateJWK, encryptedBlob),
+    encryptAESBuffer: (jwkOrKey: string | JsonWebKey, buff: number[], additionalData?: string) =>
+      invokeWithNormalizedError('crypt.encryptAESBuffer', jwkOrKey, buff, additionalData),
+    encryptAES: (jwkOrKey: string | JsonWebKey, plaintext: string, additionalData?: string) =>
+      invokeWithNormalizedError('crypt.encryptAES', jwkOrKey, plaintext, additionalData),
+    decryptAES: (jwkOrKey: string | JsonWebKey, encryptedResult: object) =>
+      invokeWithNormalizedError('crypt.decryptAES', jwkOrKey, encryptedResult),
+    decryptAESToBuffer: (jwkOrKey: string | JsonWebKey, encryptedResult: object) =>
+      invokeWithNormalizedError('crypt.decryptAESToBuffer', jwkOrKey, encryptedResult),
+    generateAES256Key: () => invokeWithNormalizedError('crypt.generateAES256Key'),
+  },
+  sealedBox: {
+    keyPair: () => invokeWithNormalizedError('sealedbox.keyPair'),
+    open: (sealedbox: Uint8Array, pk: Uint8Array, sk: Uint8Array) =>
+      invokeWithNormalizedError('sealedbox.open', sealedbox, pk, sk),
+  },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     invokeWithNormalizedError('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   syncNewWorkspaceIfNeeded: options => invokeWithNormalizedError('syncNewWorkspaceIfNeeded', options),

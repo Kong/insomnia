@@ -174,7 +174,16 @@ export type HandleChannels =
   | 'deleteRulesetFile'
   | 'writeResponseBodyToFile'
   | 'vault.encryptSecretValue'
-  | 'vault.decryptSecretValue';
+  | 'vault.decryptSecretValue'
+  | 'crypt.encryptRSAWithJWK'
+  | 'crypt.decryptRSAWithJWK'
+  | 'crypt.encryptAESBuffer'
+  | 'crypt.encryptAES'
+  | 'crypt.decryptAES'
+  | 'crypt.decryptAESToBuffer'
+  | 'crypt.generateAES256Key'
+  | 'sealedbox.keyPair'
+  | 'sealedbox.open';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
