@@ -98,7 +98,7 @@ export function getOrInheritHeaders({
   const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
   // parent folders, then child folders, then request
-  const headerContexts = [...[...requestGroups].reverse(), request];
+  const headerContexts = [...requestGroups].reverse().concat(request);
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
