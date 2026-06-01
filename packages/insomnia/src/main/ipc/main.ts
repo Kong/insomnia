@@ -68,6 +68,7 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { registerPluginIpcHandlers } from '../plugin-window';
+import { getSendRequestCallback } from '~/network/unit-test-feature';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
@@ -181,6 +182,7 @@ const appendToTimeline = async (_: unknown, options: { timelinePath: string; dat
 };
 
 export interface RendererToMainBridgeAPI {
+  runTests: (src: string) => Promise<import('insomnia-testing').TestResults>;
   loginStateChange: (isLoggedIn: boolean) => void;
   openInBrowser: (url: string) => void;
   restart: () => void;
@@ -821,6 +823,12 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('vault.decryptSecretValue', (_, encryptedValue: string, symmetricKey: JsonWebKey) => {
     return decryptSecretValue(encryptedValue, symmetricKey);
+  });
+
+  ipcMainHandle('run-tests', async (_, src: string) => {
+    const { runTests } = await import('insomnia-testing');
+    const sendRequest = getSendRequestCallback();
+    return runTests(src, { sendRequest });
   });
 
   registerPluginIpcHandlers();

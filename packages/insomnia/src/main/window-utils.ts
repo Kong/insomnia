@@ -201,11 +201,10 @@ export function createWindow(): ElectronBrowserWindow {
     webPreferences: {
       preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
-      nodeIntegration: true,
-      nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs
+      nodeIntegration: false,
+      nodeIntegrationInWorker: false,
       webviewTag: true,
-      // TODO: enable context isolation
-      contextIsolation: false,
+      contextIsolation: true,
       disableBlinkFeatures: 'Auxclick',
     },
   });

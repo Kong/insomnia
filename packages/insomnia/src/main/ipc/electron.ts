@@ -16,6 +16,7 @@ import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
+  | 'run-tests'
   | 'authorizeUserInDefaultBrowser'
   | 'authorizeUserInWindow'
   | 'backup'
