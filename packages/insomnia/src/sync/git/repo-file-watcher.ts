@@ -290,7 +290,7 @@ class RepoFileWatcher {
           const hash = contentHash(yamlContent);
           const normalised = path.normalize(absPath);
           this.lastWrittenHash.set(normalised, hash);
-          this.lastSyncMtime.set(normalised, Date.now());
+          this.lastSyncMtime.set(normalised, Date.now() + 1);
 
           console.log(
             '[repo-file-watcher] DB newer than disk for workspace',
