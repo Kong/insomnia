@@ -19,6 +19,7 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from 'insomnia-data';
 import { services } from 'insomnia-data';
+import type { TestResults } from 'insomnia-testing';
 
 import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
 import { AI_PLUGIN_NAME } from '~/common/constants';
@@ -29,6 +30,7 @@ import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
+import { getSendRequestCallback } from '~/network/unit-test-feature';
 import type {
   GenerateCommitsFromDiffFunction,
   GenerateMcpSamplingResponseFunction,
@@ -68,7 +70,6 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { registerPluginIpcHandlers } from '../plugin-window';
-import { getSendRequestCallback } from '~/network/unit-test-feature';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
@@ -182,7 +183,7 @@ const appendToTimeline = async (_: unknown, options: { timelinePath: string; dat
 };
 
 export interface RendererToMainBridgeAPI {
-  runTests: (src: string) => Promise<import('insomnia-testing').TestResults>;
+  runTests: (src: string) => Promise<TestResults>;
   loginStateChange: (isLoggedIn: boolean) => void;
   openInBrowser: (url: string) => void;
   restart: () => void;
