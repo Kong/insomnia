@@ -72,6 +72,7 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { registerPluginIpcHandlers } from '../plugin-window';
+import type { CookiesBridgeAPI } from './cookies';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
@@ -229,6 +230,7 @@ export interface RendererToMainBridgeAPI {
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
+  cookies: CookiesBridgeAPI;
   webSocket: WebSocketBridgeAPI;
   socketIO: SocketIOBridgeAPI;
   mcp: McpBridgeAPI;

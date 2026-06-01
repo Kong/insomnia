@@ -9,6 +9,7 @@ import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
+import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
@@ -113,6 +114,13 @@ const mcp: McpBridgeAPI = {
     findNotifications: options => invokeWithNormalizedError('mcp.event.findNotifications', options),
     findPendingEvents: options => invokeWithNormalizedError('mcp.event.findPendingEvents', options),
   },
+};
+
+const cookies: CookiesBridgeAPI = {
+  fromJSON: cookie => invokeWithNormalizedError('cookies.fromJSON', cookie),
+  parse: cookie => invokeWithNormalizedError('cookies.parse', cookie),
+  toString: cookie => invokeWithNormalizedError('cookies.toString', cookie),
+  getCookiesForUrl: args => invokeWithNormalizedError('cookies.getCookiesForUrl', args),
 };
 
 const grpc: gRPCBridgeAPI = {
@@ -305,6 +313,7 @@ const main: Window['main'] = {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
+  cookies,
   webSocket,
   socketIO,
   mcp,

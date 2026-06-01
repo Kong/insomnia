@@ -7,7 +7,7 @@ import { defaultServerConditions, defineConfig } from 'vite';
 
 import pkg from './package.json';
 //These will be excluded from the bundle and remain as runtime dependencies
-export const externalDependencies = ['@apidevtools/swagger-parser', 'mocha', 'tough-cookie'];
+export const externalDependencies = ['@apidevtools/swagger-parser', 'mocha'];
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
 
