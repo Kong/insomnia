@@ -83,6 +83,7 @@ export type HandleChannels =
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
   | 'grpc.writeProtoFile'
+  | 'grpc.validateProtoFile'
   | 'initializeWorkspaceBackendProject'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
