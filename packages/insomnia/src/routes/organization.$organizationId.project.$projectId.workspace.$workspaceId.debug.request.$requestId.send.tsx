@@ -10,7 +10,7 @@ import type {
   UserUploadEnvironment,
 } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
-import { extension as mimeExtension } from 'mime-types';
+import { mimeTypeExtension as mimeExtension } from '~/common/mime';
 import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
