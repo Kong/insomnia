@@ -12,7 +12,7 @@ import type { KeyCombination } from '~/insomnia-data/common';
 import { isMac } from '~/insomnia-data/common';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/index';
+import { getTagDefinitions } from '~/templating/renderer-safe';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
 import { extractNunjucksTagFromCoords } from '~/templating/utils';
 import { showModal } from '~/ui/components/modals';

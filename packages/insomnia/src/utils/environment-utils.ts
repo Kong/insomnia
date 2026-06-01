@@ -5,7 +5,7 @@ import { EnvironmentKvPairDataType, models } from '~/insomnia-data';
 
 import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { generateId } from '../common/misc';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating/constants';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents

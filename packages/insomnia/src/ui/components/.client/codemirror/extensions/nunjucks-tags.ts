@@ -1,7 +1,7 @@
 import CodeMirror, { type Token } from 'codemirror';
 
 import * as misc from '~/common/misc';
-import { getTagDefinitions } from '~/templating/index';
+import { getTagDefinitions } from '~/templating/renderer-safe';
 import type { HandleRender, RenderContextAndKeys } from '~/templating/types';
 import { tokenizeTag } from '~/templating/utils';
 import { showModal } from '~/ui/components/modals/index';

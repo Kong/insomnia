@@ -8,7 +8,7 @@ import 'codemirror/addon/lint/json-lint';
 import CodeMirror from 'codemirror';
 import * as jsonlint from 'jsonlint-mod-fixed';
 
-import { render } from '~/templating/index';
+import { render } from '~/templating/renderer-safe';
 CodeMirror.registerHelper('lint', 'json', validator);
 
 interface ValidationError {
