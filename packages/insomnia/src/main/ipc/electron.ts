@@ -183,7 +183,11 @@ export type HandleChannels =
   | 'crypt.decryptAESToBuffer'
   | 'crypt.generateAES256Key'
   | 'sealedbox.keyPair'
-  | 'sealedbox.open';
+  | 'sealedbox.open'
+  | 'cookies.fromJSON'
+  | 'cookies.parse'
+  | 'cookies.toString'
+  | 'cookies.getCookiesForUrl';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
