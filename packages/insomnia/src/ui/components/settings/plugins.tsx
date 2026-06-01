@@ -18,7 +18,7 @@ import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '.
 import { docsPlugins } from '../../../common/documentation';
 import type { SerializablePlugin } from '../../../plugins/bridge-types';
 import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
-import { reload } from '../../../templating/index';
+import { reload } from '../../../templating/renderer-safe';
 import { validatePluginName } from '../../../utils/plugin-name';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';

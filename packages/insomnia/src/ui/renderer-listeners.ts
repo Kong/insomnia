@@ -3,7 +3,7 @@ import { type RAToastContent, showToast } from '~/ui/components/toast-notificati
 
 import * as themes from '../plugins/misc';
 import { plugins } from '../plugins/renderer-bridge';
-import * as templating from '../templating';
+import * as templating from '../templating/renderer-safe';
 import { showModal } from './components/modals';
 import { SettingsModal } from './components/modals/settings-modal';
 
