@@ -956,7 +956,7 @@ export const responseTransform = async (
     return {
       url: renderedRequest.url,
       error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
-      elapsedTime: 0,
+      elapsedTime: 0, // 0 because this path is hit during plugin calls
       statusMessage: 'Error',
       settingSendCookies: renderedRequest.settingSendCookies,
       settingStoreCookies: renderedRequest.settingStoreCookies,

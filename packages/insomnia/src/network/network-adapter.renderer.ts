@@ -41,7 +41,8 @@ export async function applyRequestHooks(
       if (existing.length) {
         console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
       } else if (value === 'null') {
-        request.headers = request.headers.filter(h => filterHeaders([h], name).length === 0);
+        const toRemove = filterHeaders(request.headers, name);
+        request.headers = request.headers.filter(h => !toRemove.includes(h));
         console.log(`[header] Remove default header ${name}`);
       } else {
         request.headers.push({ name, value: String(value) });
