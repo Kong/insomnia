@@ -539,7 +539,12 @@ class RepoFileWatcher {
       });
 
       watcher.on('error', err => {
-        console.warn('[repo-file-watcher] fs.watch error:', err);
+        console.warn('[repo-file-watcher] fs.watch error, falling back to polling:', err);
+        // The watcher can no longer be relied upon for fs events. Drop the
+        // fs.watch flag and start the polling fallback so we don't end up with
+        // neither reliable events nor polling.
+        this.fsWatchActive = false;
+        this.startPolling();
       });
 
       this.fsWatchers.push(watcher);
@@ -550,13 +555,16 @@ class RepoFileWatcher {
   }
 
   private startPolling(): void {
-    if (!this.fsWatchActive) {
-      this.pollTimer = setInterval(() => {
-        this.pollDirectory(this.repoDir).catch(err => {
-          console.warn('[repo-file-watcher] poll error:', err);
-        });
-      }, POLL_INTERVAL_MS);
+    // Skip when fs.watch is active (polling is only a fallback), when polling is
+    // already running, or after the watcher has been stopped.
+    if (this.fsWatchActive || this.pollTimer || this.stopped) {
+      return;
     }
+    this.pollTimer = setInterval(() => {
+      this.pollDirectory(this.repoDir).catch(err => {
+        console.warn('[repo-file-watcher] poll error:', err);
+      });
+    }, POLL_INTERVAL_MS);
   }
 
   private async pollDirectory(dir: string): Promise<void> {
