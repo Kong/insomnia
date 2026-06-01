@@ -83,16 +83,19 @@ export const EnvironmentKVEditor = ({
   useEffect(() => {
     const secretPairs = kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET);
     if (secretPairs.length === 0 || Object.keys(symmetricKey).length === 0) {
+      setDecryptedValues({});
       return;
     }
     let cancelled = false;
     Promise.all(
       secretPairs.map(async p => ({ id: p.id, value: await decryptSecretValue(p.value, symmetricKey as JsonWebKey) })),
-    ).then(results => {
-      if (!cancelled) {
-        setDecryptedValues(Object.fromEntries(results.map(r => [r.id, r.value])));
-      }
-    });
+    )
+      .then(results => {
+        if (!cancelled) {
+          setDecryptedValues(Object.fromEntries(results.map(r => [r.id, r.value])));
+        }
+      })
+      .catch(console.error);
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET).map(p => ({ id: p.id, value: p.value }))), vaultKey]);

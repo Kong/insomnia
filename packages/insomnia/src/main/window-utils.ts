@@ -17,6 +17,7 @@ import {
 } from 'electron';
 
 import { isLinux, isMac } from '~/insomnia-data/common';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
@@ -269,6 +270,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: `${MNEMONIC_SYM}Preferences`,
         click: () => {
+          trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
           mainBrowserWindow.webContents?.send('toggle-preferences');
         },
       },
