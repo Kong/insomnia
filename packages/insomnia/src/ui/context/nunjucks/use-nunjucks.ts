@@ -4,7 +4,7 @@ import { getRenderContext, getRenderContextAncestors, render } from '~/common/re
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating/constants';
 import type { HandleRender, RenderContextOptions } from '~/templating/types';
 import { getKeys } from '~/templating/utils';
 

@@ -1,7 +1,10 @@
 // @ts-nocheck
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../themes', () => ({ default: [] }));
+vi.mock('~/templating/liquid-extension-worker', () => ({
+  fetchFromTemplateWorkerDatabase: vi.fn(),
+}));
 vi.mock('../context/app', () => ({ init: vi.fn().mockReturnValue({ app: {} }) }));
 vi.mock('../context/store', () => ({ init: vi.fn().mockReturnValue({ store: {} }) }));
 vi.mock('../context/network', () => ({ init: vi.fn().mockReturnValue({ network: {} }) }));
@@ -18,7 +21,7 @@ vi.mock('~/insomnia-data', () => ({
   },
 }));
 
-import { services } from '~/insomnia-data';
+import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
 
 import type { Plugin } from '../index';
 import {
@@ -309,52 +312,36 @@ describe('getPluginCommonContext', () => {
 });
 
 describe('executePluginMainAction', () => {
-  // @kong/insomnia-plugin-external-vault is a real bundlePlugin name from config.json
   const bundlePluginName = '@kong/insomnia-plugin-external-vault';
-
-  beforeEach(() => {
-    vi.mocked(services.settings.get).mockResolvedValue({ pluginsAllowElevatedAccess: true } as any);
-  });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('executes the matching action and returns its result', async () => {
-    const action = vi.fn().mockResolvedValue('action-result');
-    _testOnlySetPlugins([
-      makePlugin({
-        name: bundlePluginName,
-        directory: '',
-        module: { unsafePluginMainActions: [{ name: 'doThing', action }] },
-      }),
-    ]);
+  it('delegates to main process via IPC and returns the result', async () => {
+    vi.mocked(fetchFromTemplateWorkerDatabase).mockResolvedValue('action-result');
 
-    const result = await executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' });
+    const result = await executePluginMainAction({
+      pluginName: bundlePluginName,
+      actionName: 'doThing',
+      context: { foo: 'bar' },
+      params: { x: 1 },
+    });
 
+    expect(fetchFromTemplateWorkerDatabase).toHaveBeenCalledWith('plugin.executeBundlePluginMainAction', {
+      pluginName: bundlePluginName,
+      actionName: 'doThing',
+      context: { foo: 'bar' },
+      params: { x: 1 },
+    });
     expect(result).toBe('action-result');
-    expect(action).toHaveBeenCalledOnce();
   });
 
-  it('throws when the plugin is not found', async () => {
-    _testOnlySetPlugins([]);
+  it('propagates rejections from the IPC call', async () => {
+    vi.mocked(fetchFromTemplateWorkerDatabase).mockRejectedValue(new Error('IPC failure'));
 
-    await expect(executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' })).rejects.toThrow(
-      `Plugin ${bundlePluginName} not found`,
-    );
-  });
-
-  it('throws when the action name is not found in the plugin', async () => {
-    _testOnlySetPlugins([
-      makePlugin({
-        name: bundlePluginName,
-        directory: '',
-        module: { unsafePluginMainActions: [{ name: 'otherAction', action: vi.fn() }] },
-      }),
-    ]);
-
-    await expect(executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' })).rejects.toThrow(
-      'Action doThing not found',
-    );
+    await expect(
+      executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' }),
+    ).rejects.toThrow('IPC failure');
   });
 });

@@ -150,27 +150,7 @@ test('Critical Path For Template Tags Interactions', async ({ page, app, insomni
   const { tagPrefix } = templateTagTestCases.prompt[0];
   await page.locator(`[data-template^="${tagPrefix}"]`).isVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-  // prompt is not allowed to use by default
+  // prompt tag is blocked in the sandboxed render-adapter worker
   await expect.soft(page.getByText('Unexpected Request Failure')).toBeVisible();
   await page.getByRole('dialog').getByRole('button', { name: 'OK' }).click();
-  // elevate access for plugins
-  await page.getByTestId('settings-button').click();
-  await page.getByRole('tab', { name: 'Plugins' }).click();
-  const allowElevatedAccessForPlugins = page.getByRole('checkbox', {
-    name: 'Allow elevated access for plugins',
-  });
-  await expect.soft(allowElevatedAccessForPlugins).toBeVisible();
-  await allowElevatedAccessForPlugins.evaluate(element => {
-    if (element instanceof HTMLInputElement && !element.checked) {
-      element.click();
-    }
-  });
-  await expect.soft(allowElevatedAccessForPlugins).toBeChecked();
-  await page.locator('.app').press('Escape');
-  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-  await page.getByRole('dialog').locator('#prompt-input').fill('prompt-value');
-  await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click();
-  await page.click('text=Console');
-  const responsePane = page.getByTestId('response-pane');
-  await expect.soft(responsePane).toContainText('prompt-value');
 });

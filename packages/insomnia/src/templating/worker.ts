@@ -3,12 +3,11 @@ import type { Liquid } from 'liquidjs';
 import { localTemplateTags } from '~/templating/local-template-tags';
 
 import type { TemplateTag } from '../plugins';
+import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from './constants';
 import { buildLiquidEngine, stripLiquidComments } from './liquid-engine';
 import { createLiquidTagWorker, fetchFromTemplateWorkerDatabase } from './liquid-extension-worker';
 import { extractUndefinedVariableKey, translateLiquidError } from './render-error';
-
-export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
-export const LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
+export { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME };
 
 // Cached engine instances
 let liquidAll: Liquid | null = null;
@@ -44,10 +43,7 @@ export function render(
 
   return new Promise<string | null>(async (resolve, reject) => {
     // NOTE: this is added as a breadcrumb because rendering sometimes hangs
-    const id = setTimeout(
-      () => console.log('[templating] Warning: liquid failed to respond within 5 seconds'),
-      5000,
-    );
+    const id = setTimeout(() => console.log('[templating] Warning: liquid failed to respond within 5 seconds'), 5000);
     try {
       const { engine } = await getLiquid(config.ignoreUndefinedEnvVariable);
       const preprocessed = stripLiquidComments(text);

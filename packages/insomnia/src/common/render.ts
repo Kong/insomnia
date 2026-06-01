@@ -14,9 +14,10 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
+import { renderTemplate } from '~/templating/render-adapter';
 
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
-import * as templating from '../templating';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating/constants';
 import { RenderError } from '../templating/render-error';
 import type {
   BaseRenderContext,
@@ -24,7 +25,6 @@ import type {
   RenderContextAncestor,
   RenderContextOptions,
   RenderedRequest,
-  RenderInputType,
 } from '../templating/types';
 import * as templatingUtils from '../templating/utils';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -228,13 +228,6 @@ export async function buildRenderContext({
 
   return finalRenderContext;
 }
-const renderInThisProcess = async (input: RenderInputType) => {
-  return templating.render(input.input, {
-    context: input.context,
-    path: input.path,
-    ignoreUndefinedEnvVariable: input.ignoreUndefinedEnvVariable,
-  });
-};
 /**
  * Recursively render any JS object and return a new one
  * @param {*} obj - object to render
@@ -289,21 +282,8 @@ export async function render<T>(
       }
 
       try {
-        // Some plugins may, at the moment, require unique and intrusive access. Templates exposed by these
-        // plugins will not function correctly when rendering in a separate process or thread. The user can
-        // explicitly configure rendering to happen on the same thread/process as the rest of the app, in
-        // which case it's okay to render locally.
-
-        const settings = await services.settings.get();
-        const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
-        const currentProcessIsRendererAndPluginsAreRestricted =
-          process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
-        const renderFork = currentProcessIsRendererAndPluginsAreRestricted
-          ? (await import('../ui/worker/templating-handler')).renderInWorker
-          : renderInThisProcess;
-
         // @ts-expect-error -- TSCONVERSION
-        input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
+        input = await renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
@@ -311,7 +291,7 @@ export async function render<T>(
         // @ts-expect-error -- TSCONVERSION
         if (input.includes('{%')) {
           // @ts-expect-error -- TSCONVERSION
-          input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
+          input = await renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
         }
       } catch (err) {
         console.log(`Failed to render element ${path}`, input);
@@ -441,7 +421,7 @@ export async function getRenderContext({
     }
   }
 
-  const inKey = templating.NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
+  const inKey = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
 
   if (rootGlobalEnvironment) {
     getKeySource(rootGlobalEnvironment.data || {}, inKey, 'rootGlobal');
