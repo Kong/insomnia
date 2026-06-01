@@ -1,20 +1,7 @@
 import { services } from '~/insomnia-data';
 
+import type { PluginStore } from '../../templating/types';
 import type { Plugin } from '../index';
-
-export interface PluginStore {
-  hasItem(arg0: string): Promise<boolean>;
-  setItem(arg0: string, arg1: string): Promise<void>;
-  getItem(arg0: string): Promise<string | null>;
-  removeItem(arg0: string): Promise<void>;
-  clear(): Promise<void>;
-  all(): Promise<
-    {
-      key: string;
-      value: string;
-    }[]
-  >;
-}
 
 export function init(plugin: Pick<Plugin, 'name'>): { store: PluginStore } {
   return {

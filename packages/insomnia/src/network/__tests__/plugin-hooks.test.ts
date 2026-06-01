@@ -1,21 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockRequestCtx = vi.hoisted(() => ({
-  getEnvironmentVariable: vi.fn().mockReturnValue(null),
-  hasHeader: vi.fn().mockReturnValue(false),
-  removeHeader: vi.fn(),
-  setHeader: vi.fn(),
-}));
-
 const mockPlugins = vi.hoisted(() => ({
   hasRequestHooks: vi.fn(),
   hasResponseHooks: vi.fn(),
   applyRequestHooks: vi.fn(),
   applyResponseHooks: vi.fn(),
-}));
-
-vi.mock('../../plugins/context/request', () => ({
-  init: vi.fn().mockReturnValue({ request: mockRequestCtx }),
 }));
 
 Object.defineProperty(globalThis, 'window', {
@@ -24,14 +13,16 @@ Object.defineProperty(globalThis, 'window', {
   configurable: true,
 });
 
-import { _applyRequestPluginHooks, _applyResponsePluginHooks } from '../network';
+import { applyRequestHooks, applyResponseHooks } from '../network-adapter.renderer';
 
-const mockRenderedRequest = {
-  url: 'http://example.com',
-  headers: [],
-  settingSendCookies: true,
-  settingStoreCookies: true,
-} as any;
+const makeRequest = (extra: Record<string, any> = {}) =>
+  ({
+    url: 'http://example.com',
+    headers: [],
+    settingSendCookies: true,
+    settingStoreCookies: true,
+    ...extra,
+  }) as any;
 
 const mockRenderedContext = {
   getProjectId: () => 'test-project',
@@ -44,123 +35,83 @@ const mockResponse = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockRequestCtx.getEnvironmentVariable.mockReturnValue(null);
   mockPlugins.hasRequestHooks.mockResolvedValue(false);
   mockPlugins.hasResponseHooks.mockResolvedValue(false);
-  mockPlugins.applyRequestHooks.mockResolvedValue(mockRenderedRequest);
+  mockPlugins.applyRequestHooks.mockResolvedValue(makeRequest());
   mockPlugins.applyResponseHooks.mockResolvedValue(mockResponse);
 });
 
-describe('_applyRequestPluginHooks', () => {
+describe('applyRequestHooks', () => {
   it('skips applyRequestHooks when hasRequestHooks returns false', async () => {
-    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
+    await applyRequestHooks(makeRequest(), mockRenderedContext);
     expect(mockPlugins.applyRequestHooks).not.toHaveBeenCalled();
   });
 
   it('calls applyRequestHooks when hasRequestHooks returns true', async () => {
     mockPlugins.hasRequestHooks.mockResolvedValue(true);
-    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
+    await applyRequestHooks(makeRequest(), mockRenderedContext);
     expect(mockPlugins.applyRequestHooks).toHaveBeenCalledOnce();
   });
 
   it('passes projectId and environment to applyRequestHooks', async () => {
     mockPlugins.hasRequestHooks.mockResolvedValue(true);
-    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
-    expect(mockPlugins.applyRequestHooks).toHaveBeenCalledWith(
-      expect.objectContaining({ projectId: 'test-project' }),
-    );
+    await applyRequestHooks(makeRequest(), mockRenderedContext);
+    expect(mockPlugins.applyRequestHooks).toHaveBeenCalledWith(expect.objectContaining({ projectId: 'test-project' }));
   });
 
   it('propagates errors from applyRequestHooks', async () => {
     mockPlugins.hasRequestHooks.mockResolvedValue(true);
     mockPlugins.applyRequestHooks.mockRejectedValue(new Error('[plugin=test-plugin] sync failure'));
-    await expect(_applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext)).rejects.toThrow('sync failure');
+    await expect(applyRequestHooks(makeRequest(), mockRenderedContext)).rejects.toThrow('sync failure');
   });
 
   it('applies DEFAULT_HEADERS from the environment without invoking the plugin window', async () => {
-    mockRequestCtx.getEnvironmentVariable.mockReturnValue({ 'X-Custom': 'value' });
-    mockRequestCtx.hasHeader.mockReturnValue(false);
-
-    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
-
-    expect(mockRequestCtx.setHeader).toHaveBeenCalledWith('X-Custom', 'value');
+    const ctx = { ...mockRenderedContext, DEFAULT_HEADERS: { 'X-Custom': 'value' } };
+    const result = await applyRequestHooks(makeRequest(), ctx);
+    expect(result.headers).toEqual(expect.arrayContaining([{ name: 'X-Custom', value: 'value' }]));
     expect(mockPlugins.applyRequestHooks).not.toHaveBeenCalled();
   });
 
   it('skips DEFAULT_HEADERS that already exist on the request', async () => {
-    mockRequestCtx.getEnvironmentVariable.mockReturnValue({ 'X-Custom': 'value' });
-    mockRequestCtx.hasHeader.mockReturnValue(true);
-
-    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
-
-    expect(mockRequestCtx.setHeader).not.toHaveBeenCalled();
+    const ctx = { ...mockRenderedContext, DEFAULT_HEADERS: { 'X-Custom': 'value' } };
+    const result = await applyRequestHooks(makeRequest({ headers: [{ name: 'X-Custom', value: 'existing' }] }), ctx);
+    const matches = result.headers.filter((h: any) => h.name === 'X-Custom');
+    expect(matches).toHaveLength(1);
+    expect(matches[0].value).toBe('existing');
   });
 
-  it('removes a DEFAULT_HEADER when its value is "null"', async () => {
-    mockRequestCtx.getEnvironmentVariable.mockReturnValue({ 'X-Remove': 'null' });
-    mockRequestCtx.hasHeader.mockReturnValue(false);
-
-    await _applyRequestPluginHooks(mockRenderedRequest, mockRenderedContext);
-
-    expect(mockRequestCtx.removeHeader).toHaveBeenCalledWith('X-Remove');
+  it('does not add a DEFAULT_HEADER whose value is "null"', async () => {
+    const ctx = { ...mockRenderedContext, DEFAULT_HEADERS: { 'X-Remove': 'null' } };
+    const result = await applyRequestHooks(makeRequest(), ctx);
+    expect(result.headers.find((h: any) => h.name === 'X-Remove')).toBeUndefined();
   });
 });
 
-describe('_applyResponsePluginHooks', () => {
+describe('applyResponseHooks', () => {
   it('returns the original response when hasResponseHooks returns false', async () => {
-    const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
+    const result = await applyResponseHooks(mockResponse, makeRequest(), mockRenderedContext);
     expect(result).toBe(mockResponse);
     expect(mockPlugins.applyResponseHooks).not.toHaveBeenCalled();
   });
 
   it('calls applyResponseHooks when hasResponseHooks returns true', async () => {
     mockPlugins.hasResponseHooks.mockResolvedValue(true);
-    await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
+    await applyResponseHooks(mockResponse, makeRequest(), mockRenderedContext);
     expect(mockPlugins.applyResponseHooks).toHaveBeenCalledOnce();
   });
 
-  it('returns an error ResponsePatch instead of throwing on hook failure', async () => {
+  // The adapter propagates; network.ts:responseTransform catches and converts to an error ResponsePatch.
+  it('propagates errors from the plugin window to the caller', async () => {
     mockPlugins.hasResponseHooks.mockResolvedValue(true);
     mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] hook exploded'));
-
-    const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
-
-    expect(result).toHaveProperty('error');
-    expect(result.statusMessage).toBe('Error');
+    await expect(applyResponseHooks(mockResponse, makeRequest(), mockRenderedContext)).rejects.toThrow('hook exploded');
   });
 
-  it('includes the error message in the error response', async () => {
+  it('returns the modified response on success', async () => {
+    const modified = { ...mockResponse, status: 201 };
     mockPlugins.hasResponseHooks.mockResolvedValue(true);
-    mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] detailed failure reason'));
-
-    const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
-    expect(result.error).toContain('detailed failure reason');
-  });
-
-  it('handles non-Error rejections without producing undefined in the error message', async () => {
-    mockPlugins.hasResponseHooks.mockResolvedValue(true);
-    mockPlugins.applyResponseHooks.mockRejectedValue('string rejection');
-
-    const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
-    expect(result.error).toContain('string rejection');
-    expect(result.error).not.toContain('undefined');
-  });
-
-  it('returns an error ResponsePatch for async hook rejections', async () => {
-    mockPlugins.hasResponseHooks.mockResolvedValue(true);
-    mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] async boom'));
-
-    const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
-
-    expect(result).toHaveProperty('error');
-    expect(result.error).toContain('async boom');
-  });
-
-  it('preserves the request URL in the error response', async () => {
-    mockPlugins.hasResponseHooks.mockResolvedValue(true);
-    mockPlugins.applyResponseHooks.mockRejectedValue(new Error('[plugin=test-plugin] fail'));
-
-    const result = await _applyResponsePluginHooks(mockResponse, mockRenderedRequest, mockRenderedContext);
-    expect(result.url).toBe('http://example.com');
+    mockPlugins.applyResponseHooks.mockResolvedValue(modified);
+    const result = await applyResponseHooks(mockResponse, makeRequest(), mockRenderedContext);
+    expect(result).toBe(modified);
   });
 });

@@ -12,7 +12,7 @@ import type { KeyCombination } from '~/insomnia-data/common';
 import { isMac } from '~/insomnia-data/common';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/index';
+import { getTagDefinitions } from '~/templating/renderer-safe';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
 import { extractNunjucksTagFromCoords } from '~/templating/utils';
 import { showModal } from '~/ui/components/modals';
@@ -228,7 +228,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           id,
         );
       }
-      // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       defaultValue,
@@ -244,7 +243,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       getKeyMap,
       settings.hotKeyRegistry,
       settings.nunjucksPowerUserMode,
-      settings.pluginsAllowElevatedAccess,
       settings.showVariableSourceAndValue,
       eventListeners,
       id,

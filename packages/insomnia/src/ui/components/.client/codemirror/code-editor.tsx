@@ -23,7 +23,7 @@ import type { KeyCombination } from '~/insomnia-data/common';
 import { isMac } from '~/insomnia-data/common';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/index';
+import { getTagDefinitions } from '~/templating/renderer-safe';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
 import { extractNunjucksTagFromCoords } from '~/templating/utils';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
@@ -513,7 +513,6 @@ export const CodeEditor = memo(
             codeMirror.current.foldCode(from, to);
           }
         }
-        // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [
         hideGutters,
@@ -524,7 +523,6 @@ export const CodeEditor = memo(
         settings.hotKeyRegistry,
         settings.autocompleteDelay,
         settings.nunjucksPowerUserMode,
-        settings.pluginsAllowElevatedAccess,
         settings.showVariableSourceAndValue,
         noLint,
         readOnly,

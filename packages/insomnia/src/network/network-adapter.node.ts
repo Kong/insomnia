@@ -17,6 +17,7 @@ import * as pluginRequest from '../plugins/context/request';
 import * as pluginResponse from '../plugins/context/response';
 import * as pluginStore from '../plugins/context/store';
 import { runScript as executeScript } from '../script-executor';
+import { applyDefaultHeaders } from './apply-default-headers';
 
 export const getTimelinePath = async (responseId: string): Promise<string> => {
   const electron = require('electron') as { app: { getPath: (name: string) => string } };
@@ -39,8 +40,7 @@ export const appendTimelineLines = (timelinePath: string, logs: string[]): Promi
 export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHeader | undefined> =>
   getAuthHeaderFromMain(r, u);
 
-export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> =>
-  curlRequest(options);
+export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> => curlRequest(options);
 
 export const runScript = (options: {
   script: string;
@@ -48,9 +48,10 @@ export const runScript = (options: {
 }): Promise<RequestContext | { error: string }> => executeScript(options);
 
 export async function applyRequestHooks(
-  newRenderedRequest: RenderedRequest,
+  renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
+  const newRenderedRequest = applyDefaultHeaders(renderedRequest, renderedContext['DEFAULT_HEADERS']);
   const pluginIndex = require('../plugins/index');
   for (const { plugin, hook } of await pluginIndex.getRequestHooks()) {
     const context = {
