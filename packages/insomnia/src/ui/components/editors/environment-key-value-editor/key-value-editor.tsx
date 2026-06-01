@@ -20,7 +20,7 @@ import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
 import { base64decode } from '../../../../utils/vault';
-import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault-crypto';
+import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault-adapter';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import { showModal } from '../../modals';

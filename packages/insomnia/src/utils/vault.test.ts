@@ -1,13 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  base64decode,
-  base64encode,
-  decryptSecretValue,
-  decryptVaultKeyFromSession,
-  encryptSecretValue,
-} from './vault';
+import { base64decode, base64encode, decryptVaultKeyFromSession } from './vault';
 
 vi.mock('../models/settings', () => ({
   getOrCreate: vi.fn(),
@@ -32,11 +26,12 @@ const mockSecretStorage = {
 
 describe('base64encode', () => {
   it('encodes a string', () => {
-    expect(base64encode('hello world')).toBe(Buffer.from('hello world', 'utf8').toString('base64'));
+    expect(base64encode('hello world')).toBe('aGVsbG8gd29ybGQ=');
   });
 
   it('encodes a JsonWebKey object', () => {
-    expect(base64encode(TEST_AES_KEY)).toBe(Buffer.from(JSON.stringify(TEST_AES_KEY), 'utf8').toString('base64'));
+    const encoded = base64encode(TEST_AES_KEY);
+    expect(base64decode(encoded, true)).toEqual(TEST_AES_KEY);
   });
 });
 
@@ -55,29 +50,6 @@ describe('base64decode', () => {
   it('returns original string when JSON parse fails on toObject=true', () => {
     const encoded = base64encode('not-valid-json');
     expect(base64decode(encoded, true)).toBe(encoded);
-  });
-});
-
-describe('encryptSecretValue', () => {
-  it('returns rawValue when symmetricKey is not an object', () => {
-    expect(encryptSecretValue('secret', 'invalid' as unknown as JsonWebKey)).toBe('secret');
-  });
-
-  it('encrypts the value with a valid key', () => {
-    const encrypted = encryptSecretValue('my secret', TEST_AES_KEY);
-    expect(typeof encrypted).toBe('string');
-    expect(encrypted).not.toBe('my secret');
-  });
-});
-
-describe('decryptSecretValue', () => {
-  it('returns encryptedValue when symmetricKey is not an object', () => {
-    expect(decryptSecretValue('encrypted', 'invalid' as unknown as JsonWebKey)).toBe('encrypted');
-  });
-
-  it('round-trips encrypt then decrypt', () => {
-    const encrypted = encryptSecretValue('my secret', TEST_AES_KEY);
-    expect(decryptSecretValue(encrypted, TEST_AES_KEY)).toBe('my secret');
   });
 });
 
