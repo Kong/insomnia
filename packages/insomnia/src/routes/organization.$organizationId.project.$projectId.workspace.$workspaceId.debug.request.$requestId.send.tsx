@@ -1,9 +1,9 @@
 import contentDisposition from 'content-disposition';
-import { mimeTypeExtension as mimeExtension } from '~/common/mime';
 import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
+import { mimeTypeExtension as mimeExtension } from '~/common/mime';
 import { getContentDispositionHeader } from '~/common/misc';
 import type {
   Environment,
