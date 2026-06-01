@@ -38,9 +38,11 @@ import type {
   ModelConfig,
 } from '~/plugins/types';
 
+import * as crypt from '../../account/crypt';
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
 import type { RenderedRequest } from '../../templating/types';
+import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '../../utils/sealedbox';
 import { decryptSecretValue, encryptSecretValue } from '../../utils/vault-adapter';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
@@ -297,6 +299,27 @@ export interface RendererToMainBridgeAPI {
   vault: {
     encryptSecretValue: (rawValue: string, symmetricKey: JsonWebKey) => Promise<string>;
     decryptSecretValue: (encryptedValue: string, symmetricKey: JsonWebKey) => Promise<string>;
+  };
+  crypt: {
+    encryptRSAWithJWK: (publicKeyJWK: JsonWebKey, plaintext: string) => Promise<string>;
+    decryptRSAWithJWK: (privateJWK: JsonWebKey, encryptedBlob: string) => Promise<string>;
+    encryptAESBuffer: (
+      jwkOrKey: string | JsonWebKey,
+      buff: number[],
+      additionalData?: string,
+    ) => Promise<crypt.AESMessage>;
+    encryptAES: (
+      jwkOrKey: string | JsonWebKey,
+      plaintext: string,
+      additionalData?: string,
+    ) => Promise<crypt.AESMessage>;
+    decryptAES: (jwkOrKey: string | JsonWebKey, encryptedResult: crypt.AESMessage) => Promise<string>;
+    decryptAESToBuffer: (jwkOrKey: string | JsonWebKey, encryptedResult: crypt.AESMessage) => Promise<number[]>;
+    generateAES256Key: () => Promise<JsonWebKey>;
+  };
+  sealedBox: {
+    keyPair: () => Promise<{ publicKey: Uint8Array; secretKey: Uint8Array }>;
+    open: (sealedbox: Uint8Array, pk: Uint8Array, sk: Uint8Array) => Promise<Uint8Array | null>;
   };
   timeline: {
     getPath: (responseId: string) => Promise<string>;
@@ -824,6 +847,38 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('vault.decryptSecretValue', (_, encryptedValue: string, symmetricKey: JsonWebKey) => {
     return decryptSecretValue(encryptedValue, symmetricKey);
+  });
+
+  ipcMainHandle('crypt.encryptRSAWithJWK', (_, publicKeyJWK: JsonWebKey, plaintext: string) => {
+    return crypt.encryptRSAWithJWK(publicKeyJWK, plaintext);
+  });
+  ipcMainHandle('crypt.decryptRSAWithJWK', (_, privateJWK: JsonWebKey, encryptedBlob: string) => {
+    return crypt.decryptRSAWithJWK(privateJWK, encryptedBlob);
+  });
+  ipcMainHandle(
+    'crypt.encryptAESBuffer',
+    (_, jwkOrKey: string | JsonWebKey, buff: number[], additionalData?: string) => {
+      return crypt.encryptAESBuffer(jwkOrKey, Buffer.from(buff), additionalData);
+    },
+  );
+  ipcMainHandle('crypt.encryptAES', (_, jwkOrKey: string | JsonWebKey, plaintext: string, additionalData?: string) => {
+    return crypt.encryptAES(jwkOrKey, plaintext, additionalData);
+  });
+  ipcMainHandle('crypt.decryptAES', (_, jwkOrKey: string | JsonWebKey, encryptedResult: crypt.AESMessage) => {
+    return crypt.decryptAES(jwkOrKey, encryptedResult);
+  });
+  ipcMainHandle('crypt.decryptAESToBuffer', (_, jwkOrKey: string | JsonWebKey, encryptedResult: crypt.AESMessage) => {
+    return Array.from(crypt.decryptAESToBuffer(jwkOrKey, encryptedResult));
+  });
+  ipcMainHandle('crypt.generateAES256Key', _ => {
+    return crypt.generateAES256Key();
+  });
+
+  ipcMainHandle('sealedbox.keyPair', _ => {
+    return sealedboxKeyPair();
+  });
+  ipcMainHandle('sealedbox.open', (_, sealedbox: Uint8Array, pk: Uint8Array, sk: Uint8Array) => {
+    return sealedboxOpen(sealedbox, pk, sk);
   });
 
   ipcMainHandle('run-tests', async (_, src: string) => {
