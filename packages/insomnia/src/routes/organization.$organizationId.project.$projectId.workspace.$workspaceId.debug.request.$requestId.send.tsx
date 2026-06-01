@@ -1,9 +1,9 @@
 import contentDisposition from 'content-disposition';
+import { extension as mimeExtension } from 'mime-types';
 import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
-import { mimeTypeExtension as mimeExtension } from '~/common/mime';
 import { getContentDispositionHeader } from '~/common/misc';
 import type {
   Environment,
@@ -373,8 +373,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           const allPreScripts = docsWithScripts.map(doc => doc.preRequestScript).filter((s): s is string => !!s);
           const allPostScripts = docsWithScripts.map(doc => doc.afterResponseScript).filter((s): s is string => !!s);
 
-          const requestType = activeRequest.body?.mimeType === CONTENT_TYPE_GRAPHQL ? 'GraphQL' :
-            models.request.isEventStreamRequest(activeRequest) ? 'Event Stream' : 'HTTP';
+          const requestType =
+            activeRequest.body?.mimeType === CONTENT_TYPE_GRAPHQL
+              ? 'GraphQL'
+              : models.request.isEventStreamRequest(activeRequest)
+                ? 'Event Stream'
+                : 'HTTP';
           window.main.trackAnalyticsEvent({
             event: AnalyticsEvent.requestExecuted,
             properties: {

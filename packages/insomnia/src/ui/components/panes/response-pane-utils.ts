@@ -1,4 +1,5 @@
-import { mimeTypeExtension } from '~/common/mime';
+import { extension as mimeExtension } from 'mime-types';
+
 import { jsonPrettify } from '~/utils/prettify/json';
 
 export async function downloadResponseBody(
@@ -12,7 +13,7 @@ export async function downloadResponseBody(
   }
 
   const { contentType } = activeResponse;
-  const extension = mimeTypeExtension(contentType) || 'unknown';
+  const extension = mimeExtension(contentType) || 'unknown';
   const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
     title: 'Save Response Body',
     buttonLabel: 'Save',
