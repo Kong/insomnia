@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { decryptSecretValue, encryptSecretValue } from './vault-crypto';
+import { decryptSecretValue, encryptSecretValue } from './vault-adapter.renderer';
 
 const mockEncrypt = vi.fn();
 const mockDecrypt = vi.fn();

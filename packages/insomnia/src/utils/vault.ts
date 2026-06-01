@@ -1,18 +1,20 @@
 import { services } from 'insomnia-data';
 
-import { type AESMessage, decryptAES, encryptAES } from '../account/crypt';
 import { getInsomniaVaultKey, PLAYWRIGHT_TEST } from '../common/constants';
 
 export const base64encode = (input: string | JsonWebKey) => {
   const inputStr = typeof input === 'string' ? input : JSON.stringify(input);
-  return Buffer.from(inputStr, 'utf8').toString('base64');
+  const bytes = new TextEncoder().encode(inputStr);
+  let binary = '';
+  bytes.forEach(byte => (binary += String.fromCodePoint(byte)));
+  return btoa(binary);
 };
 
 export function base64decode(base64Str: string, toObject: true): object;
 export function base64decode(base64Str: string, toObject: false): string;
 export function base64decode(base64Str: string, toObject: boolean): string | object {
   try {
-    const decodedStr = Buffer.from(base64Str, 'base64').toString('utf8');
+    const decodedStr = new TextDecoder().decode(Uint8Array.from(atob(base64Str), c => c.codePointAt(0) ?? 0));
     if (toObject) {
       return JSON.parse(decodedStr);
     }
@@ -60,33 +62,4 @@ export const getVaultKeyFromStorage = async (accountId: string) => {
 
 export const deleteVaultKeyFromStorage = async (accountId: string) => {
   await window.main.secretStorage.deleteSecret(getVaultSecretKey(accountId));
-};
-
-export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) => {
-  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
-    // invalid symmetricKey
-    return rawValue;
-  }
-  try {
-    const encryptResult = encryptAES(symmetricKey, rawValue);
-    const encryptedValue = base64encode(encryptResult);
-    return encryptedValue;
-  } catch {
-    // return original value if encryption fails
-    return rawValue;
-  }
-};
-
-export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWebKey) => {
-  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
-    // invalid symmetricKey
-    return encryptedValue;
-  }
-  try {
-    const jsonWebKey = base64decode(encryptedValue, true) as AESMessage;
-    return decryptAES(symmetricKey, jsonWebKey);
-  } catch {
-    // return origin value if failed to decrypt
-    return encryptedValue;
-  }
 };
