@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { defaultServerConditions, defineConfig } from 'vite';
 
 import pkg from './package.json';
 
@@ -60,6 +60,17 @@ export default defineConfig(({ mode }) => {
     plugins: [reactRouter(), tailwindcss()],
     worker: {
       format: 'es',
+    },
+    // The Electron renderer is browser-like even in React Router's SSR (server) build.
+    // Vite's DEFAULT_SERVER_CONDITIONS excludes "browser", so packages with a
+    // "browser" exports condition (e.g. insomnia-testing) would otherwise resolve to
+    // their full Node entry point in the server bundle — pulling in Node-only modules
+    // like mocha. Prepending "browser" here keeps the server bundle consistent with
+    // the client build while retaining all other default server conditions.
+    ssr: {
+      resolve: {
+        conditions: ['browser', ...defaultServerConditions],
+      },
     },
   };
 });
