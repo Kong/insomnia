@@ -1,9 +1,8 @@
 import { URL } from 'node:url';
 
-import { type RequestAuthentication,services } from 'insomnia-data';
+import type { RequestAuthentication } from 'insomnia-data';
 import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
 
-import { getAppVersion } from '../../../common/constants';
 import { type Converter, type ImportRequest, type Parameter } from '../entities';
 
 export const id = 'curl';
@@ -455,18 +454,6 @@ export const convert: Converter = async rawData => {
     .filter(command => command[0] === 'curl')
     .map(importCommand)
     .map(buildRequestObject);
-
-  const { disableAppVersionUserAgent } = await services.settings.get();
-  if (!disableAppVersionUserAgent) {
-    const defaultUserAgent = `insomnia/${getAppVersion()}`;
-    for (const req of requests) {
-      const headers = req.headers ?? [];
-      if (!headers.some(header => header.name.toLowerCase() === 'user-agent')) {
-        headers.push({ name: 'User-Agent', value: defaultUserAgent });
-        req.headers = headers;
-      }
-    }
-  }
 
   return requests;
 };

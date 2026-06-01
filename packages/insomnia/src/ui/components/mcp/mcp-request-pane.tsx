@@ -423,6 +423,7 @@ export const McpRequestPane: FC<Props> = ({
             bulk={false}
             isDisabled={!isDisconnected}
             requestType="McpRequest"
+            disableUserAgentHeader={activeRequest.disableUserAgentHeader}
             onDescriptionToggle={() => {
               window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpRequestHeadersDescriptionToggled });
             }}

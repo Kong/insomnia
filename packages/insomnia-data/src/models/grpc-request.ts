@@ -34,6 +34,7 @@ interface BaseGrpcRequest {
     apiKey: string;
     module: string;
   };
+  disableUserAgentHeader: boolean;
   konnectRouteKey?: string | null;
   konnectManagedHeaderNames?: string[] | null;
 }
@@ -74,5 +75,6 @@ export function init(): BaseGrpcRequest {
       apiKey: '',
       module: 'buf.build/connectrpc/eliza',
     },
+    disableUserAgentHeader: false,
   };
 }

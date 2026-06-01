@@ -289,6 +289,7 @@ export interface BaseRequest {
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
+  disableUserAgentHeader: boolean;
   konnectRouteKey?: string | null;
   konnectManagedHeaderNames?: string[] | null;
 }
@@ -348,6 +349,7 @@ export function init(): BaseRequest {
     settingEncodeUrl: true,
     settingRebuildPath: true,
     settingFollowRedirects: 'global',
+    disableUserAgentHeader: false,
   };
 }
 

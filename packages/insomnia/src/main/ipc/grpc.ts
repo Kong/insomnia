@@ -126,7 +126,10 @@ interface MethodDefs {
   example?: Record<string, any>;
 }
 
-const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflectionApi']): Promise<MethodDefs[]> => {
+const getMethodsFromReflectionServer = async (
+  reflectionApi: GrpcRequest['reflectionApi'],
+  disableUserAgentHeader: boolean,
+): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
   const GetFileDescriptorSetRequest = proto3.makeMessageType('buf.reflect.v1beta1.GetFileDescriptorSetRequest', () => [
     { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
@@ -169,7 +172,7 @@ const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflec
   });
   const client = createPromiseClient(FileDescriptorSetService, transport);
   const headers: HeadersInit = {
-    'User-Agent': `insomnia/${version}`,
+    ...(disableUserAgentHeader ? {} : { 'User-Agent': `insomnia/${version}` }),
     ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
   };
   try {
@@ -219,12 +222,13 @@ const getMethodsFromReflection = async (
   metadata: GrpcRequestHeader[],
   rejectUnauthorized: boolean,
   reflectionApi: GrpcRequest['reflectionApi'],
+  disableUserAgentHeader: boolean,
   clientCert?: string,
   clientKey?: string,
   caCertificate?: string,
 ): Promise<MethodDefs[]> => {
   if (reflectionApi.enabled) {
-    return getMethodsFromReflectionServer(reflectionApi);
+    return getMethodsFromReflectionServer(reflectionApi, disableUserAgentHeader);
   }
   const { url, path } = parseGrpcUrl(host);
   const client = new grpcReflection.Client(
@@ -272,6 +276,7 @@ export const loadMethodsFromReflection = async (options: {
   metadata: GrpcRequestHeader[];
   rejectUnauthorized: boolean;
   reflectionApi: GrpcRequest['reflectionApi'];
+  disableUserAgentHeader?: boolean;
   clientCert?: string;
   clientKey?: string;
   caCertificate?: string;
@@ -282,6 +287,7 @@ export const loadMethodsFromReflection = async (options: {
     options.metadata,
     options.rejectUnauthorized,
     options.reflectionApi,
+    options.disableUserAgentHeader ?? false,
     options.clientCert,
     options.clientKey,
     options.caCertificate,
@@ -330,6 +336,7 @@ export const getSelectedMethod = async (
     request.metadata,
     settings.validateSSL,
     request.reflectionApi,
+    request.disableUserAgentHeader,
     ipcParams.clientCert,
     ipcParams.clientKey,
     ipcParams.caCertificate,

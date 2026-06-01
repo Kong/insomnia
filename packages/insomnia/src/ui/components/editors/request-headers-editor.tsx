@@ -2,6 +2,7 @@ import type { RequestHeader } from 'insomnia-data';
 import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
+import { getAppVersion } from '~/common/constants';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
@@ -15,28 +16,57 @@ interface Props {
   bulk: boolean;
   isDisabled?: boolean;
   requestType: 'Request' | 'RequestGroup' | 'WebSocketRequest' | 'McpRequest';
+  disableUserAgentHeader?: boolean;
   onDescriptionToggle?: () => void;
 }
 export const readOnlyWebsocketPairs = [
-  { name: 'Connection', value: 'Upgrade' },
-  { name: 'Upgrade', value: 'websocket' },
-  { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
-  { name: 'Sec-WebSocket-Version', value: '13' },
-  { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
+  { name: 'Connection', value: 'Upgrade', canDisable: false },
+  { name: 'Upgrade', value: 'websocket', canDisable: false },
+  { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>', canDisable: false },
+  { name: 'Sec-WebSocket-Version', value: '13', canDisable: false },
+  { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits', canDisable: false },
+  { name: 'User-Agent', value: 'insomnia/' + getAppVersion(), canDisable: true },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
 export const readOnlyHttpPairs = [
-  { name: 'Accept', value: '*/*' },
-  { name: 'Host', value: '<calculated at runtime>' },
+  { name: 'Accept', value: '*/*', canDisable: false },
+  { name: 'Host', value: '<calculated at runtime>', canDisable: false },
+  { name: 'User-Agent', value: 'insomnia/' + getAppVersion(), canDisable: true },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
 
-export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, requestType, onDescriptionToggle }) => {
+export const RequestHeadersEditor: FC<Props> = ({
+  headers,
+  bulk,
+  isDisabled,
+  requestType,
+  disableUserAgentHeader,
+  onDescriptionToggle,
+}) => {
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
-  const patcher = requestType === 'RequestGroup' ? patchRequestGroup : patchRequest;
+  const isRequestGroup = requestType === 'RequestGroup';
+  const patcher = isRequestGroup ? patchRequestGroup : patchRequest;
   const isWebSocketRequest = requestType === 'WebSocketRequest';
   const { requestId, requestGroupId } = useParams() as { requestId?: string; requestGroupId?: string };
-  const id = requestType === 'RequestGroup' ? requestGroupId : requestId;
+  const id = isRequestGroup ? requestGroupId : requestId;
   invariant(id, 'Request or RequestGroup ID is required');
+  const showUserAgentReadOnly =
+    !isRequestGroup && !headers.some(h => h.name.toLowerCase() === 'user-agent');
+  const readOnlyPairs = (isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs)
+    .filter(p => showUserAgentReadOnly || p.name.toLowerCase() !== 'user-agent');
+  const patchHeaders = useCallback(
+    (newHeaders: RequestHeader[]) => {
+      const hadUserAgent = headers.some(h => h.name.toLowerCase() === 'user-agent');
+      const hasUserAgent = newHeaders.some(h => h.name.toLowerCase() === 'user-agent');
+      // If the user just removed their last User-Agent header, default the read-only row to
+      // disabled rather than letting it silently start sending `insomnia/<version>`.
+      if (!isRequestGroup && hadUserAgent && !hasUserAgent) {
+        patchRequest(id, { headers: newHeaders, disableUserAgentHeader: true });
+      } else {
+        patcher(id, { headers: newHeaders });
+      }
+    },
+    [headers, id, isRequestGroup, patcher, patchRequest],
+  );
   const handleBulkUpdate = useCallback(
     (headersString: string) => {
       const headersArray: {
@@ -59,9 +89,9 @@ export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, req
           value,
         });
       }
-      patcher(id, { headers: headersArray });
+      patchHeaders(headersArray);
     },
-    [patcher, id],
+    [patchHeaders],
   );
 
   let headersString = '';
@@ -99,9 +129,15 @@ export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, req
       pairs={headers}
       handleGetAutocompleteNameConstants={getCommonHeaderNames}
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-      onChange={headers => patcher(id, { headers })}
+      onChange={patchHeaders}
       isDisabled={isDisabled}
-      readOnlyPairs={isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs}
+      readOnlyPairs={readOnlyPairs}
+      readOnlyDisabledByName={showUserAgentReadOnly ? { 'user-agent': !!disableUserAgentHeader } : undefined}
+      onReadOnlyDisabledChange={
+        showUserAgentReadOnly
+          ? (_name, disabled) => patchRequest(id, { disableUserAgentHeader: disabled })
+          : undefined
+      }
       onDescriptionToggle={onDescriptionToggle}
     />
   );
