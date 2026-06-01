@@ -12,6 +12,7 @@ export const {
   appendTimelineLines,
   getAuthHeader,
   executeCurlRequest,
+  extractCookies,
   runScript,
   applyRequestHooks,
   applyResponseHooks,

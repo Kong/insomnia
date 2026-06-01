@@ -479,7 +479,7 @@ async function createMockRoutes(
           organizationId,
           sessionId,
           method: route.method,
-          data: mockRouteToHar({
+          data: await mockRouteToHar({
             statusCode: mockRoute.statusCode,
             statusText: mockRoute.statusText || '',
             headersArray: mockRoute.headers,
