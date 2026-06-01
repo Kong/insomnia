@@ -55,6 +55,8 @@ export default defineConfig(({ mode }) => {
         '~': path.resolve(__dirname, './src'),
         // Shim Node's `path` module for browser-safe dependencies (e.g. mime-types uses path.extname).
         'path': path.resolve(__dirname, './src/path-shim.ts'),
+        // Shim Node's `events` module for browser-safe dependencies (e.g. jshint uses EventEmitter).
+        'events': path.resolve(__dirname, '../../node_modules/events'),
       },
     },
     plugins: [reactRouter(), tailwindcss()],
