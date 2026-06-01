@@ -278,6 +278,7 @@ const main: Window['main'] = {
     invokeWithNormalizedError('installPlugin', lookupName, allowScopedPackageNames),
   createPlugin: options => invokeWithNormalizedError('createPlugin', options),
   initializeWorkspaceBackendProject: options => invokeWithNormalizedError('initializeWorkspaceBackendProject', options),
+  runTests: src => invokeWithNormalizedError('run-tests', src),
   curlRequest: options => invokeWithNormalizedError('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => invokeWithNormalizedError('writeFile', options),
