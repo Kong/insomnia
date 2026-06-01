@@ -47,9 +47,10 @@ export const runScript = (options: {
 }): Promise<RequestContext | { error: string }> => executeScript(options);
 
 export async function applyRequestHooks(
-  newRenderedRequest: RenderedRequest,
+  renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
+  const newRenderedRequest = clone(renderedRequest);
   const { request: reqCtx } = pluginRequest.init(newRenderedRequest, renderedContext);
   const defaultHeaders = reqCtx.getEnvironmentVariable('DEFAULT_HEADERS');
   if (defaultHeaders && typeof defaultHeaders === 'object' && !Array.isArray(defaultHeaders)) {
