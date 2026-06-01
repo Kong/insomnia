@@ -60,6 +60,8 @@ export default defineConfig(({ mode }) => {
         'path': path.resolve(__dirname, './src/path-shim.ts'),
         // Shim Node's `events` module for browser-safe dependencies (e.g. jshint uses EventEmitter).
         'events': path.resolve(__dirname, '../../node_modules/events'),
+        // Shim Node's `util` module for browser-safe dependencies (e.g. tough-cookie uses util.inherits).
+        'util': path.resolve(__dirname, '../../node_modules/util'),
       },
     },
     plugins: [
@@ -70,7 +72,7 @@ export default defineConfig(({ mode }) => {
         modules: [
           'electron',
           ...externalDependencies,
-          ...builtinModules.filter(m => m !== 'buffer' && m !== 'path'),
+          ...builtinModules.filter(m => m !== 'buffer' && m !== 'path' && m !== 'util'),
           ...builtinModules.map(m => `node:${m}`),
         ],
       }),
