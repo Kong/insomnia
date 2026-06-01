@@ -13,6 +13,7 @@ import type {
   Request,
   RequestGroup,
   Response,
+  ResponseHeader,
   Services,
   SocketIORequest,
   UserUploadEnvironment,
@@ -20,8 +21,36 @@ import type {
   Workspace,
 } from '~/insomnia-data';
 
-import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
-import type { PluginStore } from '../plugins/context/store';
+type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
+  Partial<Pick<Request, 'body' | 'authentication'>>;
+export interface NodeCurlRequestOptions {
+  request: NodeCurlRequestType;
+  caCertficatePath?: string;
+}
+export interface NodeCurlResponseType {
+  body: string;
+  code: number;
+  reason: string;
+  status: string;
+  responseTime: number;
+  headers: ResponseHeader[];
+  json: () => any;
+  ok?: boolean;
+}
+
+export interface PluginStore {
+  hasItem(arg0: string): Promise<boolean>;
+  setItem(arg0: string, arg1: string): Promise<void>;
+  getItem(arg0: string): Promise<string | null>;
+  removeItem(arg0: string): Promise<void>;
+  clear(): Promise<void>;
+  all(): Promise<
+    {
+      key: string;
+      value: string;
+    }[]
+  >;
+}
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
 export type PluginToMainAPIPaths =

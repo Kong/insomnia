@@ -1,13 +1,18 @@
-import type { Context, Emitter, Liquid,TagToken, TopLevelToken } from 'liquidjs';
+import type { Context, Emitter, Liquid, TagToken, TopLevelToken } from 'liquidjs';
 import { Tag } from 'liquidjs';
 
 import type { CloudProviderCredential, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
 
 import packageJson from '../../package.json';
-import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
 import { tokenizeArgs } from './tokenize-args';
-import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
+import type {
+  BaseRenderContext,
+  NodeCurlRequestOptions,
+  PluginTemplateTag,
+  PluginTemplateTagContext,
+  PluginToMainAPIPaths,
+} from './types';
 export function decodeEncodingWorker<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
@@ -30,10 +35,7 @@ export function decodeEncodingWorker<T>(value: T) {
   return value;
 }
 
-export const fetchFromTemplateWorkerDatabase = async (
-  path: PluginToMainAPIPaths,
-  body: any,
-) => {
+export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths, body: any) => {
   const resp = await fetch('insomnia-templating-worker-database://' + path, {
     method: 'post',
     body: JSON.stringify(body),
@@ -57,7 +59,11 @@ function resolveArg(arg: ReturnType<typeof tokenizeArgs>[number], scope: Record<
   return arg.value;
 }
 
-export function createLiquidTagWorker(ext: PluginTemplateTag, plugin: Plugin, renderFn?: (str: string, opts: { context: Record<string, any> }) => Promise<string | null>): typeof Tag {
+export function createLiquidTagWorker(
+  ext: PluginTemplateTag,
+  plugin: Plugin,
+  renderFn?: (str: string, opts: { context: Record<string, any> }) => Promise<string | null>,
+): typeof Tag {
   class InsomniWorkerTag extends Tag {
     private rawArgs: string;
 
@@ -73,25 +79,39 @@ export function createLiquidTagWorker(ext: PluginTemplateTag, plugin: Plugin, re
       const renderPurpose = renderContext.getPurpose?.();
 
       const parsedArgs = tokenizeArgs(this.rawArgs);
-      const args = parsedArgs
-        .map(a => resolveArg(a, scope))
-        .map(decodeEncodingWorker);
+      const args = parsedArgs.map(a => resolveArg(a, scope)).map(decodeEncodingWorker);
 
       const platform = ({ MacIntel: 'darwin', Win32: 'win32' }[globalThis.navigator?.platform ?? ''] ||
         'linux') as NodeJS.Platform;
 
       const helperContext: PluginTemplateTagContext = {
         app: {
-          alert: () => { throw new Error(legacyModeErrorMessage); },
-          dialog: () => { throw new Error(legacyModeErrorMessage); },
-          prompt: () => { throw new Error(legacyModeErrorMessage); },
-          getPath: () => { throw new Error(legacyModeErrorMessage); },
+          alert: () => {
+            throw new Error(legacyModeErrorMessage);
+          },
+          dialog: () => {
+            throw new Error(legacyModeErrorMessage);
+          },
+          prompt: () => {
+            throw new Error(legacyModeErrorMessage);
+          },
+          getPath: () => {
+            throw new Error(legacyModeErrorMessage);
+          },
           getInfo: () => ({ version: packageJson.version, platform }),
-          showSaveDialog: async () => { throw new Error(legacyModeErrorMessage); },
+          showSaveDialog: async () => {
+            throw new Error(legacyModeErrorMessage);
+          },
           clipboard: {
-            readText: () => { throw new Error(legacyModeErrorMessage); },
-            writeText: () => { throw new Error(legacyModeErrorMessage); },
-            clear: () => { throw new Error(legacyModeErrorMessage); },
+            readText: () => {
+              throw new Error(legacyModeErrorMessage);
+            },
+            writeText: () => {
+              throw new Error(legacyModeErrorMessage);
+            },
+            clear: () => {
+              throw new Error(legacyModeErrorMessage);
+            },
           },
         },
         store: {
@@ -103,8 +123,7 @@ export function createLiquidTagWorker(ext: PluginTemplateTag, plugin: Plugin, re
             fetchFromTemplateWorkerDatabase('pluginData.getItem', { pluginName: plugin?.name, key }),
           removeItem: async (key: string) =>
             fetchFromTemplateWorkerDatabase('pluginData.removeItem', { pluginName: plugin?.name, key }),
-          clear: async () =>
-            fetchFromTemplateWorkerDatabase('pluginData.removeItem', { pluginName: plugin?.name }),
+          clear: async () => fetchFromTemplateWorkerDatabase('pluginData.removeItem', { pluginName: plugin?.name }),
           all: async (): Promise<{ key: string; value: string }[]> =>
             fetchFromTemplateWorkerDatabase('pluginData.getItem', { pluginName: plugin?.name }),
         },
@@ -125,7 +144,7 @@ export function createLiquidTagWorker(ext: PluginTemplateTag, plugin: Plugin, re
             fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
           encode: async (input: string, encoding?: string) =>
             fetchFromTemplateWorkerDatabase('encode', { input, encoding }),
-          render: (str: string) => renderFn ? renderFn(str, { context: renderContext }) : Promise.resolve(str),
+          render: (str: string) => (renderFn ? renderFn(str, { context: renderContext }) : Promise.resolve(str)),
           openInBrowser: (url: string) => fetchFromTemplateWorkerDatabase('openInBrowser', { url }),
           models: {
             request: {
@@ -139,12 +158,9 @@ export function createLiquidTagWorker(ext: PluginTemplateTag, plugin: Plugin, re
               },
             },
             cloudCredential: {
-              getById: async (id: string) =>
-                fetchFromTemplateWorkerDatabase('cloudCredential.getById', { id }),
-              update: async (
-                originCredential: CloudProviderCredential,
-                patch: Partial<CloudProviderCredential>,
-              ) => fetchFromTemplateWorkerDatabase('cloudCredential.update', { originCredential, patch }),
+              getById: async (id: string) => fetchFromTemplateWorkerDatabase('cloudCredential.getById', { id }),
+              update: async (originCredential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) =>
+                fetchFromTemplateWorkerDatabase('cloudCredential.update', { originCredential, patch }),
             },
             workspace: {
               getById: async (id: string) => fetchFromTemplateWorkerDatabase('workspace.getById', { id }),
