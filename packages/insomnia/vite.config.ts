@@ -56,6 +56,8 @@ export default defineConfig(({ mode }) => {
         // builds inline the module directly (avoids runtime require() in server bundle).
         '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
+        // Shim Node's `path` module for browser-safe dependencies (e.g. mime-types uses path.extname).
+        'path': path.resolve(__dirname, './src/path-shim.ts'),
       },
     },
     plugins: [
@@ -66,7 +68,7 @@ export default defineConfig(({ mode }) => {
         modules: [
           'electron',
           ...externalDependencies,
-          ...builtinModules.filter(m => m !== 'buffer'),
+          ...builtinModules.filter(m => m !== 'buffer' && m !== 'path'),
           ...builtinModules.map(m => `node:${m}`),
         ],
       }),
