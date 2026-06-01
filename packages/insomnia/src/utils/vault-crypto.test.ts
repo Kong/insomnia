@@ -1,9 +1,20 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { decryptSecretValue, encryptSecretValue } from './vault-crypto';
 
-const TEST_AES_KEY: JsonWebKey = {
+const mockEncrypt = vi.fn();
+const mockDecrypt = vi.fn();
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  Object.defineProperty(window, 'main', {
+    value: { vault: { encryptSecretValue: mockEncrypt, decryptSecretValue: mockDecrypt } },
+    writable: true,
+  });
+});
+
+const VALID_KEY: JsonWebKey = {
   kty: 'oct',
   alg: 'A256GCM',
   ext: true,
@@ -12,82 +23,51 @@ const TEST_AES_KEY: JsonWebKey = {
 };
 
 describe('encryptSecretValue', () => {
-  it('returns rawValue when symmetricKey is not an object', () => {
-    expect(encryptSecretValue('secret', 'invalid' as unknown as JsonWebKey)).toBe('secret');
+  it('returns rawValue when symmetricKey is not an object', async () => {
+    expect(await encryptSecretValue('secret', 'invalid' as unknown as JsonWebKey)).toBe('secret');
+    expect(mockEncrypt).not.toHaveBeenCalled();
   });
 
-  it('returns rawValue when symmetricKey is empty object', () => {
-    expect(encryptSecretValue('secret', {})).toBe('secret');
+  it('returns rawValue when symmetricKey is empty object', async () => {
+    expect(await encryptSecretValue('secret', {})).toBe('secret');
+    expect(mockEncrypt).not.toHaveBeenCalled();
   });
 
-  it('encrypts the value with a valid key', () => {
-    const encrypted = encryptSecretValue('my secret', TEST_AES_KEY);
-    expect(typeof encrypted).toBe('string');
-    expect(encrypted).not.toBe('my secret');
+  it('delegates to window.main.vault.encryptSecretValue with a valid key', async () => {
+    mockEncrypt.mockResolvedValue('encrypted-value');
+    const result = await encryptSecretValue('my secret', VALID_KEY);
+    expect(mockEncrypt).toHaveBeenCalledWith('my secret', VALID_KEY);
+    expect(result).toBe('encrypted-value');
   });
 
-  it('returns original value when encryption fails', () => {
-    // Use an invalid key format
-    const invalidKey = { kty: 'oct', k: 'invalid' };
-    const encrypted = encryptSecretValue('my secret', invalidKey as unknown as JsonWebKey);
-    expect(encrypted).toBe('my secret');
+  it('returns rawValue when IPC call throws', async () => {
+    mockEncrypt.mockRejectedValue(new Error('IPC error'));
+    const result = await encryptSecretValue('my secret', VALID_KEY);
+    expect(result).toBe('my secret');
   });
 });
 
 describe('decryptSecretValue', () => {
-  it('returns encryptedValue when symmetricKey is not an object', () => {
-    expect(decryptSecretValue('encrypted', 'invalid' as unknown as JsonWebKey)).toBe('encrypted');
+  it('returns encryptedValue when symmetricKey is not an object', async () => {
+    expect(await decryptSecretValue('encrypted', 'invalid' as unknown as JsonWebKey)).toBe('encrypted');
+    expect(mockDecrypt).not.toHaveBeenCalled();
   });
 
-  it('returns encryptedValue when symmetricKey is empty object', () => {
-    expect(decryptSecretValue('encrypted', {})).toBe('encrypted');
+  it('returns encryptedValue when symmetricKey is empty object', async () => {
+    expect(await decryptSecretValue('encrypted', {})).toBe('encrypted');
+    expect(mockDecrypt).not.toHaveBeenCalled();
   });
 
-  it('round-trips encrypt then decrypt', () => {
-    const plaintext = 'my secret value';
-    const encrypted = encryptSecretValue(plaintext, TEST_AES_KEY);
-    const decrypted = decryptSecretValue(encrypted, TEST_AES_KEY);
-    expect(decrypted).toBe(plaintext);
+  it('delegates to window.main.vault.decryptSecretValue with a valid key', async () => {
+    mockDecrypt.mockResolvedValue('plaintext');
+    const result = await decryptSecretValue('encrypted-blob', VALID_KEY);
+    expect(mockDecrypt).toHaveBeenCalledWith('encrypted-blob', VALID_KEY);
+    expect(result).toBe('plaintext');
   });
 
-  it('returns original value when decryption fails', () => {
-    // Use an invalid encrypted value
-    const encrypted = encryptSecretValue('my secret', TEST_AES_KEY);
-    // Try to decrypt with wrong key
-    const wrongKey = {
-      kty: 'oct',
-      alg: 'A256GCM',
-      k: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    };
-    const result = decryptSecretValue(encrypted, wrongKey);
-    expect(result).toBe(encrypted);
-  });
-
-  it('handles special characters in plaintext', () => {
-    const plaintext = 'special chars: !@#$%^&*()_+-=[]{}|;:,.<>?/~`';
-    const encrypted = encryptSecretValue(plaintext, TEST_AES_KEY);
-    const decrypted = decryptSecretValue(encrypted, TEST_AES_KEY);
-    expect(decrypted).toBe(plaintext);
-  });
-
-  it('handles unicode characters in plaintext', () => {
-    const plaintext = 'unicode: 你好世界 🚀 مرحبا العالم';
-    const encrypted = encryptSecretValue(plaintext, TEST_AES_KEY);
-    const decrypted = decryptSecretValue(encrypted, TEST_AES_KEY);
-    expect(decrypted).toBe(plaintext);
-  });
-
-  it('handles empty string', () => {
-    const plaintext = '';
-    const encrypted = encryptSecretValue(plaintext, TEST_AES_KEY);
-    const decrypted = decryptSecretValue(encrypted, TEST_AES_KEY);
-    expect(decrypted).toBe(plaintext);
-  });
-
-  it('handles large plaintext', () => {
-    const plaintext = 'x'.repeat(10_000);
-    const encrypted = encryptSecretValue(plaintext, TEST_AES_KEY);
-    const decrypted = decryptSecretValue(encrypted, TEST_AES_KEY);
-    expect(decrypted).toBe(plaintext);
+  it('returns encryptedValue when IPC call throws', async () => {
+    mockDecrypt.mockRejectedValue(new Error('IPC error'));
+    const result = await decryptSecretValue('encrypted-blob', VALID_KEY);
+    expect(result).toBe('encrypted-blob');
   });
 });

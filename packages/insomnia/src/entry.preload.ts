@@ -342,6 +342,12 @@ const main: Window['main'] = {
         port.postMessage({ ...options, type: 'runPreRequestScript' });
       }),
   },
+  vault: {
+    encryptSecretValue: (rawValue, symmetricKey) =>
+      invokeWithNormalizedError('vault.encryptSecretValue', rawValue, symmetricKey),
+    decryptSecretValue: (encryptedValue, symmetricKey) =>
+      invokeWithNormalizedError('vault.decryptSecretValue', encryptedValue, symmetricKey),
+  },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     invokeWithNormalizedError('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   syncNewWorkspaceIfNeeded: options => invokeWithNormalizedError('syncNewWorkspaceIfNeeded', options),

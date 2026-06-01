@@ -1,5 +1,5 @@
 import contentDisposition from 'content-disposition';
-import { extension as mimeExtension } from 'mime-types';
+import { mimeTypeExtension as mimeExtension } from '~/common/mime';
 import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
