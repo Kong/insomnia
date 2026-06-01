@@ -53,12 +53,11 @@ export default defineConfig(({ mode }) => {
         '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
         '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
+        // Shim Node's `path` module for browser-safe dependencies (e.g. mime-types uses path.extname).
+        'path': path.resolve(__dirname, './src/path-shim.ts'),
       },
     },
-    plugins: [
-      reactRouter(),
-      tailwindcss(),
-    ],
+    plugins: [reactRouter(), tailwindcss()],
     worker: {
       format: 'es',
     },
