@@ -2,9 +2,8 @@ import fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import { services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import { services } from '~/insomnia-data';
 
 import * as plugin from '../response';
 

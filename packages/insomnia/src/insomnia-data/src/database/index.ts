@@ -24,7 +24,7 @@ export async function initDatabase(impl: IDatabase, config?: NeDB.DataStoreOptio
  * This is a getter that returns the initialized database instance.
  *
  * Usage:
- * - Import: `import { database } from '~/insomnia-data';`
+ * - Import: `import { database } from 'insomnia-data';`
  * - Call methods directly: `await database.find(type, query);`
  */
 export let database: IDatabase = new Proxy({} as IDatabase, {

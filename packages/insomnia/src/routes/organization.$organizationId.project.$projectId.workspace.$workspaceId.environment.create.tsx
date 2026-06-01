@@ -1,6 +1,6 @@
+import { EnvironmentType, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { EnvironmentType, services } from '~/insomnia-data';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';

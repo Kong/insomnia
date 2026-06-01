@@ -1,5 +1,5 @@
-import type { Settings } from '~/insomnia-data';
-import { database as db, models } from '~/insomnia-data';
+import type { Settings } from 'insomnia-data';
+import { database as db, models } from 'insomnia-data';
 
 export async function all() {
   let settingsList = await db.find<Settings>(models.settings.type);

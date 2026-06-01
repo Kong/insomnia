@@ -1,5 +1,5 @@
-import type { IQueryStringOptions, StrictNullSearchParamsValueType } from '~/insomnia-data/common';
-import { deconstructQueryStringToParams } from '~/insomnia-data/common';
+import type { IQueryStringOptions, StrictNullSearchParamsValueType } from 'insomnia-data/common';
+import { deconstructQueryStringToParams } from 'insomnia-data/common';
 
 import { setDefaultProtocol } from './protocol';
 

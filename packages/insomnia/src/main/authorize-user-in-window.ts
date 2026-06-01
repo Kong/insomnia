@@ -1,6 +1,5 @@
 import { BrowserWindow, dialog } from 'electron';
-
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
 
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,

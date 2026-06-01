@@ -1,6 +1,5 @@
+import { CONTENT_TYPE_JSON } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
-
-import { CONTENT_TYPE_JSON } from '~/insomnia-data/common';
 
 import type { BaseModel } from './base-types';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';

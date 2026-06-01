@@ -16,7 +16,9 @@
     "baseUrl": ".",
     "rootDirs": [".", "./.react-router/types"],
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "insomnia-data": ["./src/insomnia-data"],
+      "insomnia-data/*": ["./src/insomnia-data/*"]
     },
     /* Runs in the DOM */
     "lib": ["ES2023", "DOM.Iterable", "DOM"],

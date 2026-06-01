@@ -1,6 +1,5 @@
+import { EnvironmentKvPairDataType, models } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import { EnvironmentKvPairDataType, models } from '~/insomnia-data';
 
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating';
 import {

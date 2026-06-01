@@ -1,5 +1,6 @@
+import type { BaseModel, GitRepository, Project, RequestGroup, Workspace, WorkspaceMeta } from 'insomnia-data';
+
 import type { InsomniaFile } from '~/common/project';
-import type { BaseModel, GitRepository, Project, RequestGroup, Workspace, WorkspaceMeta } from '~/insomnia-data';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
 export type ProjectWithPresence = Project & {

@@ -1,7 +1,7 @@
 import * as crypto from 'node:crypto';
 
-import type { CookieJar } from '~/insomnia-data';
-import { database as db, models } from '~/insomnia-data';
+import type { CookieJar } from 'insomnia-data';
+import { database as db, models } from 'insomnia-data';
 
 const { type, prefix } = models.cookieJar;
 

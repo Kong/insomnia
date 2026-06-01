@@ -1,6 +1,5 @@
+import { models, services } from 'insomnia-data';
 import { describe, expect, it, vi } from 'vitest';
-
-import { models, services } from '~/insomnia-data';
 
 describe('init()', () => {
   it('contains all required fields', async () => {

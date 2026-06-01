@@ -1,5 +1,6 @@
+import { models, services } from 'insomnia-data';
+
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
-import { models, services } from '~/insomnia-data';
 import { getMainVCS } from '~/main/cloud-sync/vcs';
 import {
   initializeLocalBackendProjectAndMarkForSync,

@@ -1,3 +1,5 @@
+import type { ApiSpec, GitRepository, MockServer, Project, WorkspaceMeta } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
@@ -6,8 +8,6 @@ import { scopeToLabelMap } from '~/common/get-workspace-label';
 import { isNotNullOrUndefined } from '~/common/misc';
 import type { InsomniaFile } from '~/common/project';
 import { descendingNumberSort } from '~/common/sorting';
-import type { ApiSpec, GitRepository, MockServer, Project, WorkspaceMeta } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherLoadHook } from '~/utils/router';
 

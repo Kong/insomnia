@@ -1,7 +1,6 @@
+import type { GitCredentials } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import type { GitAuth } from 'isomorphic-git';
-
-import type { GitCredentials } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 
 import type { CustomProviderConfig, GitRemoteProvider, ValidationResult } from './types';
 

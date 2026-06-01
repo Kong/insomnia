@@ -1,4 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -29,8 +31,6 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common
 import { fuzzyMatchAll } from '~/common/misc';
 import type { InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
-import type { GitRepository, Project, WorkspaceScope } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';

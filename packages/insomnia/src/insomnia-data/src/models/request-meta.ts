@@ -1,4 +1,4 @@
-import { PREVIEW_MODE_FRIENDLY, type PreviewMode } from '~/insomnia-data/common';
+import { PREVIEW_MODE_FRIENDLY, type PreviewMode } from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
 

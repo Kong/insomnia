@@ -1,5 +1,5 @@
-import type { BaseModel } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import type { BaseModel } from 'insomnia-data';
+import { models } from 'insomnia-data';
 
 const { workspace, requestGroup, request } = models;
 

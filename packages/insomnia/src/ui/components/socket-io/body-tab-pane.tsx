@@ -1,3 +1,4 @@
+import type { SocketIOPayload, SocketIORequest } from 'insomnia-data';
 import React, { useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -19,7 +20,6 @@ import {
 } from 'react-aria-components';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { SocketIOPayload, SocketIORequest } from '~/insomnia-data';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';

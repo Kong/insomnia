@@ -5,8 +5,8 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 
 import { app, net } from 'electron';
+import { services } from 'insomnia-data';
 
-import { services } from '~/insomnia-data';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';

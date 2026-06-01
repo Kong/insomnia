@@ -1,6 +1,5 @@
+import { services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { services } from '~/insomnia-data';
 
 import {
   clearActiveBackend,
@@ -11,7 +10,7 @@ import {
   updateBackendConfig,
 } from '../llm-config-service';
 
-vi.mock('~/insomnia-data', async () => {
+vi.mock('insomnia-data', async () => {
   return {
     services: {
       pluginData: {

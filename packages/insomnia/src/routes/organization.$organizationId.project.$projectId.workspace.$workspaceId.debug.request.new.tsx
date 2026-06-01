@@ -1,3 +1,5 @@
+import type { Request, RequestBody, RequestParameter } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import {
@@ -8,8 +10,6 @@ import {
   METHOD_GET,
   METHOD_POST,
 } from '~/common/constants';
-import type { Request, RequestBody, RequestParameter } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import type { RequestCreatedMetricsProperties } from '~/ui/analytics';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { CreateRequestType } from '~/ui/hooks/use-request';

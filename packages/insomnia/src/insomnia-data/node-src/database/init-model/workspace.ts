@@ -1,7 +1,6 @@
+import type { Workspace } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import type { Merge } from 'type-fest';
-
-import type { Workspace } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 
 import * as clientCertificateService from '../../services/client-certificate';
 

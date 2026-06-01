@@ -1,6 +1,6 @@
-import type { Settings } from '~/insomnia-data';
-import type { KeyboardShortcut } from '~/insomnia-data/common';
-import { newDefaultRegistry } from '~/insomnia-data/common';
+import type { Settings } from 'insomnia-data';
+import type { KeyboardShortcut } from 'insomnia-data/common';
+import { newDefaultRegistry } from 'insomnia-data/common';
 
 export function migrate(doc: Settings) {
   try {

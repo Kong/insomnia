@@ -1,10 +1,4 @@
 import contentDisposition from 'content-disposition';
-import { extension as mimeExtension } from 'mime-types';
-import { href, redirect } from 'react-router';
-import { v4 as uuidv4 } from 'uuid';
-
-import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
-import { getContentDispositionHeader } from '~/common/misc';
 import type {
   Environment,
   Request,
@@ -14,8 +8,14 @@ import type {
   ResponseInfo,
   RunnerResultPerRequestPerIteration,
   UserUploadEnvironment,
-} from '~/insomnia-data';
-import { database as db, models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { database as db, models, services } from 'insomnia-data';
+import { extension as mimeExtension } from 'mime-types';
+import { href, redirect } from 'react-router';
+import { v4 as uuidv4 } from 'uuid';
+
+import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
+import { getContentDispositionHeader } from '~/common/misc';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import {

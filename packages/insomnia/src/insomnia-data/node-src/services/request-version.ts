@@ -2,7 +2,6 @@ import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 
 import deepEqual from 'deep-equal';
-
 import type {
   GrpcRequest,
   McpRequest,
@@ -10,8 +9,8 @@ import type {
   RequestVersion,
   SocketIORequest,
   WebSocketRequest,
-} from '~/insomnia-data';
-import { database, database as db, models } from '~/insomnia-data';
+} from 'insomnia-data';
+import { database, database as db, models } from 'insomnia-data';
 
 import * as requestHelpers from './helpers/request-operations';
 

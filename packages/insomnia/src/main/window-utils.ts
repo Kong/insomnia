@@ -15,8 +15,8 @@ import {
   screen,
   shell,
 } from 'electron';
+import { isLinux, isMac } from 'insomnia-data/common';
 
-import { isLinux, isMac } from '~/insomnia-data/common';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';

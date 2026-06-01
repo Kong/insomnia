@@ -1,5 +1,5 @@
-import type { OAuth2Token } from '~/insomnia-data';
-import { database as db, models } from '~/insomnia-data';
+import type { OAuth2Token } from 'insomnia-data';
+import { database as db, models } from 'insomnia-data';
 
 const { type } = models.oAuth2Token;
 

@@ -8,9 +8,9 @@ import type {
   ResponseTimelineEntry,
   SocketIOResponse,
   WebSocketResponse,
-} from '~/insomnia-data';
-import { database as db, models } from '~/insomnia-data';
-import { deserializeNDJSON } from '~/insomnia-data/common';
+} from 'insomnia-data';
+import { database as db, models } from 'insomnia-data';
+import { deserializeNDJSON } from 'insomnia-data/common';
 
 import * as settingsService from '../settings';
 

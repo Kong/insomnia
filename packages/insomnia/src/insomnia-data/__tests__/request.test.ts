@@ -5,9 +5,6 @@
  * we added comments to in request.ts, ensuring they work correctly.
  */
 
-import { v4 as uuidv4 } from 'uuid';
-import { beforeEach, describe, expect, it } from 'vitest';
-
 import type {
   AuthTypeAPIKey,
   AuthTypeAsap,
@@ -24,8 +21,10 @@ import type {
   RequestBody,
   RequestHeader,
   RequestParameter,
-} from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { v4 as uuidv4 } from 'uuid';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 // @vitest-environment jsdom
 describe('Request Model - Comprehensive Tests', () => {

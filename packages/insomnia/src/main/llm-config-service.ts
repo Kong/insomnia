@@ -1,9 +1,9 @@
 import path from 'node:path';
 
 import { app } from 'electron';
+import { services } from 'insomnia-data';
 
 import { LLM_BACKENDS } from '~/common/constants';
-import { services } from '~/insomnia-data';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
 

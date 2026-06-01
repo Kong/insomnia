@@ -1,4 +1,4 @@
-import type { Response } from '~/insomnia-data';
+import type { Response } from 'insomnia-data';
 
 export function migrate(doc: Response) {
   try {

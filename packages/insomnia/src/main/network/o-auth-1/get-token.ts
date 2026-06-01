@@ -1,8 +1,7 @@
 import crypto from 'node:crypto';
 
+import type { RequestAuthentication, RequestBody } from 'insomnia-data';
 import OAuth1 from 'oauth-1.0a';
-
-import type { RequestAuthentication, RequestBody } from '~/insomnia-data';
 
 import {
   CONTENT_TYPE_FORM_URLENCODED,

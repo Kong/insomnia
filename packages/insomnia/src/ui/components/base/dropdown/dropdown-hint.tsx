@@ -1,4 +1,4 @@
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 
 import { Hotkey } from '../../hotkey';
 

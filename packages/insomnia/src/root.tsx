@@ -1,5 +1,7 @@
 import { config } from '@fortawesome/fontawesome-svg-core';
 import type { IpcRendererEvent } from 'electron';
+import type { Settings, UserSession } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
@@ -22,8 +24,6 @@ import {
 import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
-import type { Settings, UserSession } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
 import { plugins } from '~/plugins/renderer-bridge';

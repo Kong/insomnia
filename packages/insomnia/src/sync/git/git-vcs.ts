@@ -2,11 +2,11 @@ import path from 'node:path';
 
 import type { Change } from 'diff';
 import { diffLines } from 'diff';
+import type { GitAuthor, GitRemoteConfig } from 'insomnia-data';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
-import type { GitAuthor, GitRemoteConfig } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 

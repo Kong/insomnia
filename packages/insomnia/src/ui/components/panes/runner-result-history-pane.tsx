@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import type { RunnerTestResult } from 'insomnia-data';
 import React, { type FC } from 'react';
 import {
   Cell,
@@ -11,8 +12,6 @@ import {
   TableHeader,
   TooltipTrigger,
 } from 'react-aria-components';
-
-import type { RunnerTestResult } from '~/insomnia-data';
 
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';

@@ -1,4 +1,4 @@
-import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
+import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 
 import { getRenderContext, render } from '../common/render';
 import { RenderError } from '../templating/render-error';

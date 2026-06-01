@@ -4,9 +4,6 @@ import os from 'node:os';
 
 import { shell } from 'electron';
 import iconv from 'iconv-lite';
-import { v4 as uuidv4 } from 'uuid';
-
-import { jarFromCookies } from '~/common/cookies';
 import type {
   AllTypes,
   CloudProviderCredential,
@@ -14,8 +11,11 @@ import type {
   RequestGroup,
   Response,
   Workspace,
-} from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { v4 as uuidv4 } from 'uuid';
+
+import { jarFromCookies } from '~/common/cookies';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';

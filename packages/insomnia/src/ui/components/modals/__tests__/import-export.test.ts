@@ -1,4 +1,5 @@
 import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
+import { database as db, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('~/network/network-adapter', () => ({
@@ -11,8 +12,6 @@ vi.mock('~/network/network-adapter', () => ({
   applyRequestHooks: (request: any) => Promise.resolve(request),
   applyResponseHooks: (response: any) => Promise.resolve(response),
 }));
-
-import { database as db, services } from '~/insomnia-data';
 
 // @vitest-environment jsdom
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {

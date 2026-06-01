@@ -1,6 +1,5 @@
+import { models, type Project } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import { models, type Project } from '~/insomnia-data';
 
 const defaultOrgProject = { name: 'a', remoteId: 'proj_team_123456789345678987654', _id: 'not important' };
 
