@@ -571,7 +571,14 @@ class RepoFileWatcher {
     // Check known files for mtime changes or deletions — no readdir
     for (const [absPath, lastMtime] of this.lastSyncMtime) {
       try {
-        const stat = await fs.promises.stat(absPath);
+        // Use lstat (not stat) so symlinks are detected rather than followed.
+        // importFile/readIfChanged ignore symlinks, so following the link here
+        // would compare the target's mtime and enqueue an import that always
+        // skips — repeated every poll. Skip symlinks to suppress that churn.
+        const stat = await fs.promises.lstat(absPath);
+        if (stat.isSymbolicLink()) {
+          continue;
+        }
         if (stat.mtimeMs > lastMtime) {
           this.queue.enqueue(() => this.importFile(absPath));
         }
