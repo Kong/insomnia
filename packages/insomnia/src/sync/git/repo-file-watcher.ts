@@ -112,6 +112,8 @@ class RepoFileWatcher {
   private debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
   /** Per-workspace debounce timers for the DB→disk outbound flush */
   private flushDebounces = new Map<string, ReturnType<typeof setTimeout>>();
+  /** Debounce timer for the project-level lint ruleset (.spectral.yaml) flush */
+  private flushRulesetDebounce: ReturnType<typeof setTimeout> | null = null;
   /** Set to true by stop() so async callbacks can bail out cleanly */
   private stopped = false;
 
@@ -210,6 +212,10 @@ class RepoFileWatcher {
     for (const t of this.flushDebounces.values()) {
       clearTimeout(t);
     }
+
+    if (this.flushRulesetDebounce) {
+      clearTimeout(this.flushRulesetDebounce);
+    }
   }
 
   /**
@@ -230,6 +236,11 @@ class RepoFileWatcher {
     }
     this.flushDebounces.clear();
 
+    if (this.flushRulesetDebounce) {
+      clearTimeout(this.flushRulesetDebounce);
+      this.flushRulesetDebounce = null;
+    }
+
     // Cancel all pending debounced imports and enqueue them immediately.
     // This ensures all external changes are in the queue before we flush,
     // preventing the flush from overwriting un-imported external edits.
@@ -240,6 +251,7 @@ class RepoFileWatcher {
     }
 
     this.queue.enqueue(() => this.flushWorkspacesToDisk());
+    this.queue.enqueue(() => this.flushProjectLintRulesetToDisk());
     await this.queue.waitUntilDone();
   }
 
@@ -363,9 +375,19 @@ class RepoFileWatcher {
       }
 
       const affectedWorkspaceIds = new Set<string>();
+      let lintRulesetChanged = false;
 
       for (const [, doc] of changes) {
         if (!models.canSync(doc)) {
+          continue;
+        }
+        // The project lint ruleset is parented to the project, not a workspace.
+        // It flushes to .spectral.yaml on its own — keep it out of the workspace
+        // resolution below so it doesn't fall into the "flush all" branch.
+        if (models.projectLintRuleset.isProjectLintRuleset(doc)) {
+          if (doc.parentId === this.projectId) {
+            lintRulesetChanged = true;
+          }
           continue;
         }
         const workspaceId = this.resolveWorkspaceId(doc);
@@ -378,6 +400,17 @@ class RepoFileWatcher {
           }
           break;
         }
+      }
+
+      if (lintRulesetChanged) {
+        // Debounce: coalesce rapid ruleset edits into one flush
+        if (this.flushRulesetDebounce) {
+          clearTimeout(this.flushRulesetDebounce);
+        }
+        this.flushRulesetDebounce = setTimeout(() => {
+          this.flushRulesetDebounce = null;
+          this.queue.enqueue(() => this.flushProjectLintRulesetToDisk());
+        }, DEBOUNCE_MS);
       }
 
       if (affectedWorkspaceIds.size === 0) {
