@@ -116,9 +116,9 @@ export function SelectPopover<T extends SelectPopoverItem>({
 
               const [key] = keys.values();
 
-               if (key === undefined) {
-                 return;
-               }
+              if (key === undefined) {
+                return;
+              }
 
               onSelectionChange(key);
               setOpen(false);
