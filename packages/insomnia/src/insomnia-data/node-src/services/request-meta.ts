@@ -1,5 +1,5 @@
-import type { RequestMeta } from '~/insomnia-data';
-import { database as db, models } from '~/insomnia-data';
+import type { RequestMeta } from 'insomnia-data';
+import { database as db, models } from 'insomnia-data';
 
 const { type } = models.requestMeta;
 

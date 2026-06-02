@@ -1,6 +1,5 @@
+import { services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import { services } from '~/insomnia-data';
 
 describe('create()', () => {
   it('fails when missing parentId', async () => {

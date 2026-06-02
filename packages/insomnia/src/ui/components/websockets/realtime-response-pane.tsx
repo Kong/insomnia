@@ -1,9 +1,4 @@
 import classnames from 'classnames';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
-import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-
-import { docsMcpAuthentication } from '~/common/documentation';
 import type {
   McpResponse,
   RequestVersion,
@@ -11,9 +6,14 @@ import type {
   ResponseTimelineEntry,
   SocketIOResponse,
   WebSocketResponse,
-} from '~/insomnia-data';
-import { models } from '~/insomnia-data';
-import { deserializeNDJSON } from '~/insomnia-data/common';
+} from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { deserializeNDJSON } from 'insomnia-data/common';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
+import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+
+import { docsMcpAuthentication } from '~/common/documentation';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
 

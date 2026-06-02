@@ -1,6 +1,3 @@
-import orderedJSON from 'json-order';
-import { z, type ZodError } from 'zod/v4';
-
 import type {
   AllTypes,
   ApiSpec,
@@ -17,8 +14,10 @@ import type {
   UnitTestSuite,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import orderedJSON from 'json-order';
+import { z, type ZodError } from 'zod/v4';
 
 import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';

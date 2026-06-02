@@ -1,6 +1,5 @@
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
-
-import { services } from '~/insomnia-data';
 
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import {

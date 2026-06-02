@@ -1,7 +1,6 @@
 import * as Sentry from '@sentry/electron/renderer';
 import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
-
-import { initServices } from '~/insomnia-data';
+import { initServices } from 'insomnia-data';
 
 import type { RequestContext } from '../../insomnia-scripting-environment/src/objects';
 import { runScript } from './scripting/run-script';

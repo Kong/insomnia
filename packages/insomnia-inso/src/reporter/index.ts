@@ -1,6 +1,5 @@
+import type { RequestTestResult } from 'insomnia-data';
 import pc from 'picocolors';
-
-import type { RequestTestResult } from '~/insomnia-data';
 
 export const reporterTypes = ['dot', 'list', 'min', 'progress', 'spec', 'tap'] as const;
 export type TestReporter = (typeof reporterTypes)[number];

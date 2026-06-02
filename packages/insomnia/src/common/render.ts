@@ -1,6 +1,4 @@
 import clone from 'clone';
-import orderedJSON from 'json-order';
-
 import type {
   Environment,
   GrpcRequest,
@@ -12,8 +10,10 @@ import type {
   UserUploadEnvironment,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import orderedJSON from 'json-order';
+
 import { renderTemplate } from '~/templating/render-adapter';
 
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';

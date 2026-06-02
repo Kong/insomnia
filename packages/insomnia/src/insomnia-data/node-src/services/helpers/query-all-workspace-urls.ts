@@ -1,6 +1,6 @@
-import type { GrpcRequest, models, Request } from '~/insomnia-data';
-import { database as db } from '~/insomnia-data';
-import { invariant } from '~/insomnia-data/common';
+import type { GrpcRequest, models, Request } from 'insomnia-data';
+import { database as db } from 'insomnia-data';
+import { invariant } from 'insomnia-data/common';
 
 import * as workspaceService from '../workspace';
 

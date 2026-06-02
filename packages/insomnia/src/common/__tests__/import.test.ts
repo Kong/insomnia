@@ -1,10 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { EnvironmentKvPairDataType, EnvironmentType, services } from 'insomnia-data';
 import { describe, expect, it, vi } from 'vitest';
 import { parse } from 'yaml';
-
-import { EnvironmentKvPairDataType, EnvironmentType, services } from '~/insomnia-data';
 
 import * as importUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';

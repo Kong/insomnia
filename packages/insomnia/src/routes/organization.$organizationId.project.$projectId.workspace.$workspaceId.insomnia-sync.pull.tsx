@@ -1,7 +1,7 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import { services } from '~/insomnia-data';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { getSyncItems, remoteCompareCache, reparentSyncDelta, vcsEventProperties } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';

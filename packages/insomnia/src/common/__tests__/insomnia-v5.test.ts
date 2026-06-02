@@ -5,11 +5,10 @@
  * ensuring they work correctly and handle edge cases properly.
  */
 
+import type { Request } from 'insomnia-data';
+import { EnvironmentKvPairDataType, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
-
-import type { Request } from '~/insomnia-data';
-import { EnvironmentKvPairDataType, services } from '~/insomnia-data';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
 import { database as db } from '../database';

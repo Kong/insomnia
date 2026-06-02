@@ -1,7 +1,6 @@
 import Color from 'color';
-
-import type { ThemeSettings } from '~/insomnia-data';
-import { getAppDefaultTheme } from '~/insomnia-data/common';
+import type { ThemeSettings } from 'insomnia-data';
+import { getAppDefaultTheme } from 'insomnia-data/common';
 
 import type {
   HexColor,

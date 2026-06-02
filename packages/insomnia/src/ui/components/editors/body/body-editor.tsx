@@ -1,12 +1,11 @@
 import clone from 'clone';
+import type { Request, RequestBodyParameter } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders } from 'insomnia-data/common';
 import { lookup } from 'mime-types';
 import React, { type FC, useCallback } from 'react';
 import { Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router';
-
-import type { Request, RequestBodyParameter } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
-import { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders } from '~/insomnia-data/common';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';

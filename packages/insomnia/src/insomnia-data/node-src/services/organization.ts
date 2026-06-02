@@ -1,6 +1,5 @@
 import { getOrganizations, type Organization } from 'insomnia-api';
-
-import { models } from '~/insomnia-data';
+import { models } from 'insomnia-data';
 
 import * as userSessionService from './user-session';
 

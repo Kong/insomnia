@@ -4,8 +4,7 @@ import { parse as urlParse } from 'node:url';
 
 import { Curl, CurlAuth, CurlFeature, CurlProxy, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
-
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
 
 import { getApiBaseURL } from '../common/constants';
 import { setDefaultProtocol } from './network/libcurl-promise';

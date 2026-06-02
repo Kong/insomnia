@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 
-import { isWindows } from '~/insomnia-data/common';
+import { isWindows } from 'insomnia-data/common';
 // Based on node-graceful-fs and vs-code's take on renaming files in a way that is more resilient to Windows locking renames
 // https://github.com/microsoft/vscode/pull/188899/files#diff-2bf233effbb62ea789bb7c4739d222a43ccd97ed9f1219f75bb07e9dee91c1a7R529
 // On Windows, A/V software can lock the directory, causing this

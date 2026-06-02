@@ -1,7 +1,7 @@
+import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type FC } from 'react';
 import * as reactUse from 'react-use';
 
-import type { SettingsOfType } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 
 import { useSettingsPatcher } from '../../hooks/use-request';

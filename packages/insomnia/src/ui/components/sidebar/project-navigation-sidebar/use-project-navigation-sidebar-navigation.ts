@@ -1,8 +1,8 @@
 import type { Virtualizer } from '@tanstack/react-virtual';
+import { database, models, type Workspace } from 'insomnia-data';
 import type { Dispatch, SetStateAction } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import { database, models, type Workspace } from '~/insomnia-data';
 import type { NavigationResources } from '~/ui/hooks/use-insomnia-navigation';
 import { useInsomniaNavigation } from '~/ui/hooks/use-insomnia-navigation';
 

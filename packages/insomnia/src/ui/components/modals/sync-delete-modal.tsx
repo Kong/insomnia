@@ -1,7 +1,6 @@
+import { strings } from 'insomnia-data/common';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-
-import { strings } from '~/insomnia-data/common';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { interceptAccessError } from '../../../sync/access-error';

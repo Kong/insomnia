@@ -1,11 +1,11 @@
 import classnames from 'classnames';
 import clone from 'clone';
+import type { BaseModel, CloudProviderCredential, Request, RequestGroup, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import type { BaseModel, CloudProviderCredential, Request, RequestGroup, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';

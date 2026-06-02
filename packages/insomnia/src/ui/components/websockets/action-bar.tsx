@@ -1,9 +1,9 @@
+import type { SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 
 import { recordProjectRecentRequest } from '~/common/project';
-import type { SocketIORequest, WebSocketRequest } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,

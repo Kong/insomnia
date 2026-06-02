@@ -1,4 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { MockRoute } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button, GridList, GridListItem, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -13,8 +15,6 @@ import {
 } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import type { MockRoute } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import {
   useWorkspaceLoaderData,

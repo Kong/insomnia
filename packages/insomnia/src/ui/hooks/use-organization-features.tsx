@@ -1,7 +1,7 @@
+import { models } from 'insomnia-data';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
-import { models } from '~/insomnia-data';
 import {
   fallbackBilling,
   fallbackFeatures,

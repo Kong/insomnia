@@ -1,5 +1,6 @@
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
+import { models, services } from 'insomnia-data';
 import type { OpenAPIV3 } from 'openapi-types';
 import { Fragment, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -30,7 +31,6 @@ import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import { selectFileOrFolder } from '~/common/select-file-or-folder';
-import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useDeleteProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete-ruleset';
 import { useUpdateProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.update-ruleset';

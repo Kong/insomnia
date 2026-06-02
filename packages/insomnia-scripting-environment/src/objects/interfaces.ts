@@ -1,6 +1,5 @@
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
-
-import type { ClientCertificate, CookieJar, Request, RequestTestResult, Settings } from '~/insomnia-data';
+import type { ClientCertificate, CookieJar, Request, RequestTestResult, Settings } from 'insomnia-data';
 
 import type { ExecutionOption } from './execution';
 import type { RequestInfoOption } from './request-info';

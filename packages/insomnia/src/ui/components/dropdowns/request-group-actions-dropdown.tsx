@@ -1,11 +1,11 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { Project, Request, RequestGroup, Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { Project, Request, RequestGroup, Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';

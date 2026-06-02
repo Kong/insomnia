@@ -1,7 +1,6 @@
+import type { CloudProviderCredential, Request, RequestGroup, Response, Workspace } from 'insomnia-data';
 import type { Context, Emitter, Liquid, TagToken, TopLevelToken } from 'liquidjs';
 import { Tag } from 'liquidjs';
-
-import type { CloudProviderCredential, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
 
 import packageJson from '../../package.json';
 import type { Plugin } from '../plugins/index';

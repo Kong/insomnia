@@ -1,4 +1,4 @@
-import { strings } from '~/insomnia-data/common';
+import { strings } from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
 

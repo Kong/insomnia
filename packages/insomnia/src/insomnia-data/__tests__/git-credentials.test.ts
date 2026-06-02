@@ -1,7 +1,6 @@
+import type { BaseGitCredentialsV2 } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import type { BaseGitCredentialsV2 } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 
 const { init, isGitCredentialsV2, supportsRenewal } = models.gitCredentials;
 

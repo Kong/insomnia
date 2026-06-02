@@ -2,10 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import electron from 'electron';
+import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from 'insomnia-data';
+import { database as db, models, services } from 'insomnia-data';
+import type { PluginConfigMap } from 'insomnia-data/common';
 
-import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from '~/insomnia-data';
-import { database as db, models, services } from '~/insomnia-data';
-import type { PluginConfigMap } from '~/insomnia-data/common';
 import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
 
 import type { ParsedApiSpec } from '../common/api-specs';

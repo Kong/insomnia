@@ -1,6 +1,5 @@
 import type { StorageRules } from 'insomnia-api';
-
-import { generateId } from '~/insomnia-data/common';
+import { generateId } from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
 

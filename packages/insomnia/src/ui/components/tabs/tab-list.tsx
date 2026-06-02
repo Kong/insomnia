@@ -1,3 +1,5 @@
+import type { BaseModel, MockRoute, Request } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -12,8 +14,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { BaseModel, MockRoute, Request } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';

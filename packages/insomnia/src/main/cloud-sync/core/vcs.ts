@@ -6,9 +6,9 @@ import path from 'node:path';
 
 import clone from 'clone';
 import { runVcsGraphQL } from 'insomnia-api';
+import type { BaseModel } from 'insomnia-data';
 
 import { PLAYWRIGHT_TEST } from '~/common/constants';
-import type { BaseModel } from '~/insomnia-data';
 
 import * as crypt from '../../../account/crypt';
 import * as session from '../../../account/session';

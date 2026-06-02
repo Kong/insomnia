@@ -1,4 +1,4 @@
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
 
 import { type AESMessage, decryptAES, encryptAES } from '../account/crypt';
 import { getInsomniaVaultKey, PLAYWRIGHT_TEST } from '../common/constants';

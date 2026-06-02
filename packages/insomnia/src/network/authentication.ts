@@ -1,4 +1,4 @@
-import type { RequestAuthentication } from '~/insomnia-data';
+import type { RequestAuthentication } from 'insomnia-data';
 
 export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
   if (!accessToken) {

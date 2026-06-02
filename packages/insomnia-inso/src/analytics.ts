@@ -2,9 +2,8 @@ import os from 'node:os';
 
 import { getSegmentWriteKey } from 'insomnia/src/common/constants';
 import { InsoEvent, InsomniaAnalytics } from 'insomnia-analytics';
+import type { Settings } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
-
-import type { Settings } from '~/insomnia-data';
 
 import packageJson from '../package.json';
 import neDbAdapter from './db/adapters/ne-db-adapter';

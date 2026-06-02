@@ -1,6 +1,6 @@
+import { services } from 'insomnia-data';
 import { href, type LoaderFunctionArgs } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import { createFetcherLoadHook } from '~/utils/router';
 
 export async function clientLoader(_args: LoaderFunctionArgs) {

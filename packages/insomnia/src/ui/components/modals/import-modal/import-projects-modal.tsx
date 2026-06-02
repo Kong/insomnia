@@ -1,4 +1,6 @@
 import classnames from 'classnames';
+import type { Project } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Label, ProgressBar } from 'react-aria-components';
@@ -8,8 +10,6 @@ import * as reactUse from 'react-use';
 import { database } from '~/common/database';
 import type { ScanResult } from '~/common/import';
 import { selectFileOrFolder } from '~/common/select-file-or-folder';
-import type { Project } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { importScannedResources } from '~/routes/import.resources';
 import { scanImportResources } from '~/routes/import.scan';
 import { useOrganizationLoaderData } from '~/routes/organization';

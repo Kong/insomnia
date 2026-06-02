@@ -1,7 +1,7 @@
 import type { Readable } from 'node:stream';
 
-import type { Compression, ResponseHeader } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { Compression, ResponseHeader } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
 interface MaybeResponse {
   parentId?: string;

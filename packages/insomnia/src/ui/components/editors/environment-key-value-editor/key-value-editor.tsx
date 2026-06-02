@@ -1,3 +1,5 @@
+import type { EnvironmentKvPairData } from 'insomnia-data';
+import { EnvironmentKvPairDataType } from 'insomnia-data';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -13,8 +15,6 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
-import type { EnvironmentKvPairData } from '~/insomnia-data';
-import { EnvironmentKvPairDataType } from '~/insomnia-data';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 

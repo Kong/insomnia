@@ -1,6 +1,6 @@
+import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW } from 'insomnia-data/common';
 import { Fragment, useCallback, useRef, useState } from 'react';
 
-import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW } from '~/insomnia-data/common';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 

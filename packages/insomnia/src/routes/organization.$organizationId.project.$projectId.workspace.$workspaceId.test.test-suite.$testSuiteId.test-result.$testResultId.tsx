@@ -1,9 +1,9 @@
+import type { UnitTestResult } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { Heading } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
-import type { UnitTestResult } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { Icon } from '~/ui/components/icon';
 import { invariant } from '~/utils/invariant';
 

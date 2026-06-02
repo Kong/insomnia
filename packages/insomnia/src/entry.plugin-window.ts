@@ -1,6 +1,5 @@
 import { ipcRenderer } from 'electron';
-
-import { initDatabase, initServices } from '~/insomnia-data';
+import { initDatabase, initServices } from 'insomnia-data';
 
 import { pluginWindowDatabase } from './main/database.plugin-window';
 import { invokePluginMethod } from './plugins/invoke-method';

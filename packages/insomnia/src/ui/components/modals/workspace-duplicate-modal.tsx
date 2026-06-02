@@ -1,10 +1,10 @@
+import type { BaseModel, Project, Workspace } from 'insomnia-data';
+import { database, models } from 'insomnia-data';
+import { strings } from 'insomnia-data/common';
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { href, useNavigate, useParams } from 'react-router';
 
-import type { BaseModel, Project, Workspace } from '~/insomnia-data';
-import { database, models } from '~/insomnia-data';
-import { strings } from '~/insomnia-data/common';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
 

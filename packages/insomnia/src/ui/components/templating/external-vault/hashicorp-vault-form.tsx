@@ -1,7 +1,7 @@
+import type { CloudProviderCredential } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React from 'react';
 
-import type { CloudProviderCredential } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import type { NunjucksParsedTag } from '~/templating/types';
 
