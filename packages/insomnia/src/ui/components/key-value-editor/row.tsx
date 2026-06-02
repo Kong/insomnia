@@ -78,7 +78,7 @@ export const Row: FC<Props> = ({
 
   const isFile = pair.type === 'file';
   const isMultiline = pair.type === 'text' && pair.multiline;
-  const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+  const bytes = isMultiline ? new TextEncoder().encode(pair.value).length : 0;
 
   return (
     <li onKeyDown={onKeydown} onClick={onClick} className={classes}>

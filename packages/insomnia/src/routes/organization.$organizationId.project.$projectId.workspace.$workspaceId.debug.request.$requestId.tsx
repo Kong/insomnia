@@ -173,7 +173,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     // Oversized repsonses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
       const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
-      activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+      // string is only returned when readFailureValue is passed; this loader does not pass it.
+      if (typeof buffer !== 'string') {
+        activeResponse.bodyBuffer = buffer;
+      }
     }
   }
 

@@ -15,7 +15,7 @@ export const servicesProxy = new Proxy({} as Services, {
             // without misidentifying genuine Uint8Array returns.
             // TODO: remove once service methods stop returning Buffer (tracked for deprecation).
             if (result && typeof result === 'object' && result.__type === 'Buffer' && Array.isArray(result.data)) {
-              return Buffer.from(result.data);
+              return new Uint8Array(result.data);
             }
             return result;
           };

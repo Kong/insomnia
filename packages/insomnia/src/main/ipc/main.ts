@@ -203,8 +203,8 @@ export interface RendererToMainBridgeAPI {
   installPlugin: typeof installPlugin;
   initializeWorkspaceBackendProject: typeof initializeWorkspaceBackendProject;
   parseImport: typeof convert;
-  multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
-  writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
+  multipartBufferToArray: (options: { bodyBuffer: Buffer | Uint8Array; contentType: string }) => Promise<Part[]>;
+  writeFile: (options: { path: string; content: string | Buffer | Uint8Array }) => Promise<string>;
   deleteRulesetFile: (options: { path: string }) => Promise<void>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
@@ -410,7 +410,7 @@ export function registerMainHandlers() {
       return initializeWorkspaceBackendProject(options);
     },
   );
-  ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Buffer }) => {
+  ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Buffer | Uint8Array }) => {
     try {
       const dir = path.dirname(options.path);
       await fs.promises.mkdir(dir, { recursive: true });

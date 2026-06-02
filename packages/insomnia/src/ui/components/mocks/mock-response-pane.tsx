@@ -10,6 +10,7 @@ import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
 
 import { getMockServiceURL } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
@@ -294,7 +295,7 @@ const PreviewModeDropdown = ({
             label="Copy raw response"
             onClick={async () => {
               const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
-              bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
+              bodyBuffer && window.clipboard.writeText(bodyBufferToUtf8(bodyBuffer));
             }}
           />
         </DropdownItem>
@@ -314,7 +315,7 @@ const PreviewModeDropdown = ({
               }
               await window.main.writeFile({
                 path: filePath,
-                content: activeResponse.bodyBuffer?.toString('utf8') || '',
+                content: bodyBufferToUtf8(activeResponse.bodyBuffer) || '',
               });
             }}
           />
@@ -337,7 +338,7 @@ const PreviewModeDropdown = ({
                 }
                 await window.main.writeFile({
                   path: filePath,
-                  content: jsonPrettify(activeResponse.bodyBuffer?.toString('utf8')) || '',
+                  content: jsonPrettify(bodyBufferToUtf8(activeResponse.bodyBuffer)) || '',
                 });
               }}
             />

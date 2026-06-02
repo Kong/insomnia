@@ -66,7 +66,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
       const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
-      activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+      // string is only returned when readFailureValue is passed; this loader does not pass it.
+      if (typeof buffer !== 'string') {
+        activeResponse.bodyBuffer = buffer;
+      }
     }
   }
   return {
@@ -108,7 +111,7 @@ export const mockRouteToHar = async ({
     headers: validHeaders,
     cookies: await getResponseCookiesFromHeaders(validHeaders),
     content: {
-      size: Buffer.byteLength(body),
+      size: new TextEncoder().encode(body).length,
       mimeType,
       text: body,
       compression: 0,

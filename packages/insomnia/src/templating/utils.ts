@@ -1,6 +1,7 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 import { models, services } from 'insomnia-data';
 
+import { base64ToUtf8, utf8ToBase64 } from '~/utils/utf8-bytes';
 import { decryptSecretValue } from '~/utils/vault-adapter';
 
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
@@ -122,7 +123,7 @@ export function encodeEncoding<T>(value: T, encoding?: 'base64') {
   }
 
   if (encoding === 'base64') {
-    const encodedValue = Buffer.from(value, 'utf8').toString('base64');
+    const encodedValue = utf8ToBase64(value);
     return `b64::${encodedValue}::46b`;
   }
 
@@ -137,7 +138,7 @@ export function decodeEncoding<T>(value: T) {
   const results = value.match(/^b64::(.+)::46b$/);
 
   if (results) {
-    return Buffer.from(results[1], 'base64').toString('utf8');
+    return base64ToUtf8(results[1]);
   }
 
   return value;

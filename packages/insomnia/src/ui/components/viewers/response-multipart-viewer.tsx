@@ -16,7 +16,7 @@ import { ResponseViewer } from './response-viewer';
 interface Props {
   download: (...args: any[]) => any;
   responseId: string;
-  bodyBuffer: Buffer | null;
+  bodyBuffer: Uint8Array | null;
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
@@ -198,7 +198,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
           error={null}
           filter={filter}
           filterHistory={filterHistory}
-          bodyBuffer={Buffer.from(selectedPart?.value || '')}
+          bodyBuffer={selectedPart?.value ?? new Uint8Array(0)}
           key={`${responseId}::${selectedPart?.id}`}
           previewMode={PREVIEW_MODE_FRIENDLY}
           responseId={`${responseId}[${selectedPart?.id}]`}

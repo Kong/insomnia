@@ -23,7 +23,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   // Best effort to parse the binary data as a string
   try {
     if ('data' in event && typeof event.data === 'object' && 'data' in event.data && Array.isArray(event.data.data)) {
-      raw = Buffer.from(event.data.data).toString();
+      raw = new TextDecoder().decode(new Uint8Array(event.data.data));
     }
   } catch (err) {
     console.error('Failed to parse event data to string, defaulting to JSON.stringify', err);

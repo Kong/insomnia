@@ -126,7 +126,7 @@ export const KeyValueEditor: FC<Props> = ({
 
       const isFile = 'type' in pair && pair.type === 'file';
       const isMultiline = 'type' in pair && pair.type === 'text' && pair.multiline;
-      const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+      const bytes = isMultiline ? new TextEncoder().encode(pair.value).length : 0;
 
       let valueEditor = (
         <div className="relative flex h-full w-full flex-1 px-2">
@@ -286,7 +286,7 @@ export const KeyValueEditor: FC<Props> = ({
           {pair => {
             const isFile = pair.type === 'file';
             const isMultiline = pair.type === 'text' && pair.multiline;
-            const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+            const bytes = isMultiline ? new TextEncoder().encode(pair.value).length : 0;
 
             let valueEditor = (
               <div className="relative flex h-full w-full flex-1 px-2">
@@ -376,7 +376,7 @@ export const KeyValueEditor: FC<Props> = ({
           {pair => {
             const isFile = pair.type === 'file';
             const isMultiline = pair.type === 'text' && pair.multiline;
-            const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+            const bytes = isMultiline ? new TextEncoder().encode(pair.value).length : 0;
             const isOnlyTextAllowed = !allowFile && !allowMultiline;
 
             let valueEditor = (

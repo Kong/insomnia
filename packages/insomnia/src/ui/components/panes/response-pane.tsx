@@ -6,6 +6,7 @@ import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/cancellation';
@@ -219,7 +220,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
               copyToClipboard={async () => {
                 const bodyBuffer = activeResponse ? await services.helpers.getResponseBodyBuffer(activeResponse) : null;
                 if (bodyBuffer) {
-                  window.clipboard.writeText(bodyBuffer.toString('utf8'));
+                  window.clipboard.writeText(bodyBufferToUtf8(bodyBuffer));
                 }
               }}
             />

@@ -15,7 +15,7 @@ export function multipartBufferToArray({
   bodyBuffer,
   contentType,
 }: {
-  bodyBuffer: Buffer | null;
+  bodyBuffer: Buffer | Uint8Array | null;
   contentType: string;
 }): Promise<Part[]> {
   return new Promise((resolve, reject) => {
@@ -65,7 +65,7 @@ export function multipartBufferToArray({
     });
     // @ts-expect-error -- TSCONVERSION
     form.parse(fakeReq);
-    fakeReq.write(bodyBuffer);
+    fakeReq.write(Buffer.from(bodyBuffer));
     fakeReq.end();
   });
 }
