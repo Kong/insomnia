@@ -1,27 +1,22 @@
 {
   "compilerOptions": {
-    /* Base Options: */
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "es2022",
-    "allowJs": true,
+    "allowJs": false,
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "module": "ESNext",
+    "sourceMap": true,
+    "strict": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
-    "forceConsistentCasingInFileNames": true,
-    /* Strictness */
-    "strict": true,
-    "noImplicitOverride": true,
-    /* If NOT transpiling with TypeScript: */
-    "module": "ESNext",
-    "noEmit": true,
-    /* If your code runs in the DOM: */
-    "lib": ["es2022", "WebWorker"]
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true
   }
 }
