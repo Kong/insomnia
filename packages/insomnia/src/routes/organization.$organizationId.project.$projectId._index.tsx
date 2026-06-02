@@ -343,7 +343,7 @@ const Component = () => {
               collectionItems={collectionItems}
               selectedCollectionId={selectedCollectionId}
               onSelectedCollectionChange={setSelectedCollectionId}
-              onCreateDesignDocument={createNewDocument}
+              onCreateDesignDocument={() => createNewDocument('home-page')}
               onCreateCollection={() => {
                 setNewWorkspaceModalState({
                   scope: 'collection',
