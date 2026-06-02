@@ -146,6 +146,7 @@ export type HandleChannels =
   | 'readDir'
   | 'readOrCreateDataDir'
   | 'restoreBackup'
+  | 'run-tests'
   | 'electronStorage.getItem'
   | 'electronStorage.setItem'
   | 'secretStorage.decryptString'

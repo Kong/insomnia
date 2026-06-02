@@ -29,6 +29,7 @@ import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
+import { getSendRequestCallback } from '~/network/unit-test-feature';
 import type {
   GenerateCommitsFromDiffFunction,
   GenerateMcpSamplingResponseFunction,
@@ -181,6 +182,7 @@ const appendToTimeline = async (_: unknown, options: { timelinePath: string; dat
 };
 
 export interface RendererToMainBridgeAPI {
+  runTests: (src: string) => Promise<TestResults>;
   loginStateChange: (isLoggedIn: boolean) => void;
   openInBrowser: (url: string) => void;
   restart: () => void;
@@ -823,5 +825,10 @@ export function registerMainHandlers() {
     return decryptSecretValue(encryptedValue, symmetricKey);
   });
 
+  ipcMainHandle('run-tests', async (_, src: string) => {
+    const { runTests } = await import('insomnia-testing');
+    const sendRequest = getSendRequestCallback();
+    return runTests(src, { sendRequest });
+  });
   registerPluginIpcHandlers();
 }
