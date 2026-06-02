@@ -248,11 +248,25 @@ export const ProjectSettingsForm: FC<Props> = ({
               className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
             />
           </TextField>
-          <ProjectTypeSelect
-            storageRules={storageRules}
-            value={storageType}
-            onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
-          />
+          {project?.konnectControlPlaneId ? (
+            <div className="flex flex-col gap-2">
+              <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
+                Type
+              </Label>
+              <div className="flex h-7.5 items-center rounded-sm border border-(--hl-sm) px-2 opacity-75">
+                <div className="flex items-center gap-2">
+                  <Icon icon="laptop" />
+                  <span>Synced from Konnect</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <ProjectTypeSelect
+              storageRules={storageRules}
+              value={storageType}
+              onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+            />
+          )}
           <ProjectTypeWarning
             isGitSyncEnabled={isGitSyncEnabled}
             storageType={storageType}
