@@ -109,13 +109,16 @@ export function SelectPopover<T extends SelectPopoverItem>({
             items={[...items]}
             selectedKeys={selectedKey === null || selectedKey === undefined ? [] : [selectedKey]}
             selectionMode="single"
-            disallowEmptySelection
             onSelectionChange={keys => {
               if (keys === 'all' || !keys) {
                 return;
               }
 
               const [key] = keys.values();
+
+               if (key === undefined) {
+                 return;
+               }
 
               onSelectionChange(key);
               setOpen(false);
