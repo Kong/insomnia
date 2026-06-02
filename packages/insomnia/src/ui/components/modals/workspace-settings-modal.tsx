@@ -1,3 +1,5 @@
+import type { MockServer, Project, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useEffect, useState } from 'react';
 import {
   Button,
@@ -13,8 +15,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { MockServer, Project, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 

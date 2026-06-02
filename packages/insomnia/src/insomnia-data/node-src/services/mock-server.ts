@@ -1,5 +1,5 @@
-import type { MockServer } from '~/insomnia-data';
-import { database as db, models } from '~/insomnia-data';
+import type { MockServer } from 'insomnia-data';
+import { database as db, models } from 'insomnia-data';
 
 import * as workspace from './workspace';
 

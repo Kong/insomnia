@@ -1,8 +1,7 @@
 import type { Schema } from '@develohpanda/fluent-builder';
 import clone from 'clone';
-
-import type { AllTypes, BaseModel, Environment, GrpcRequest, Request, RequestGroup, Workspace } from '~/insomnia-data';
-import { EnvironmentKvPairDataType, EnvironmentType, models } from '~/insomnia-data';
+import type { AllTypes, BaseModel, Environment, GrpcRequest, Request, RequestGroup, Workspace } from 'insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models } from 'insomnia-data';
 
 const { environment, grpcRequest, request, requestGroup, workspace } = models;
 

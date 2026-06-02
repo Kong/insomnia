@@ -1,9 +1,8 @@
 import type { Organization } from 'insomnia-api';
+import type { GitProject, GitRepository, Project } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
-
-import type { GitProject, GitRepository, Project } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
 
 import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
 

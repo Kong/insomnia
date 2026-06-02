@@ -1,7 +1,7 @@
+import type { CustomGitCredentialV2 } from 'insomnia-data';
 import { Form } from 'react-aria-components';
 
 import { Button } from '~/basic-components/button';
-import type { CustomGitCredentialV2 } from '~/insomnia-data';
 import { useGitCredentialsUpdateActionFetcher } from '~/routes/git-credentials.$id.update';
 import { useGitCredentialsCreateActionFetcher } from '~/routes/git-credentials.create';
 import { Input } from '~/ui/components/base/input';

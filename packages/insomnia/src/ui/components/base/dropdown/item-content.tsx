@@ -1,6 +1,5 @@
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { type CSSProperties, type FC, type PropsWithChildren, type ReactNode } from 'react';
-
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 
 import { SvgIcon } from '../../svg-icon';
 import { PromptButton } from '../prompt-button';

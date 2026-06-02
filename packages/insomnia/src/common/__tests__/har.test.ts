@@ -12,9 +12,8 @@ vi.mock('~/network/network-adapter', () => ({
   applyRequestHooks: (request: any) => Promise.resolve(request),
   applyResponseHooks: (response: any) => Promise.resolve(response),
 }));
-
-import type { Cookie, Request, Response } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import type { Cookie, Request, Response } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';

@@ -1,8 +1,7 @@
 import crypto from 'node:crypto';
 
 import clone from 'clone';
-
-import type { BaseModel } from '~/insomnia-data';
+import type { BaseModel } from 'insomnia-data';
 
 import { deleteKeys, resetKeys } from '../../../sync/ignore-keys';
 import { deterministicStringify } from '../../../sync/lib/deterministic-stringify';

@@ -1,5 +1,5 @@
-import type { SocketIOPayload } from '~/insomnia-data';
-import { database, models } from '~/insomnia-data';
+import type { SocketIOPayload } from 'insomnia-data';
+import { database, models } from 'insomnia-data';
 
 const { type, name } = models.socketIOPayload;
 

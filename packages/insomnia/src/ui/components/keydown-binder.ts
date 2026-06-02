@@ -1,3 +1,5 @@
+import type { KeyboardShortcut, KeyCombination } from 'insomnia-data/common';
+import { getPlatformKeyCombinations, keyboardKeys } from 'insomnia-data/common';
 import { useEffect } from 'react';
 import {
   createKeybindingsHandler as _createKeybindingsHandler,
@@ -6,8 +8,6 @@ import {
   tinykeys,
 } from 'tinykeys';
 
-import type { KeyboardShortcut, KeyCombination } from '~/insomnia-data/common';
-import { getPlatformKeyCombinations, keyboardKeys } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 
 const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>

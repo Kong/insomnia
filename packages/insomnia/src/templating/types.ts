@@ -1,7 +1,5 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 
-import type { Cookie } from 'tough-cookie';
-
 import type {
   CloudProviderCredential,
   CookieJar,
@@ -19,7 +17,8 @@ import type {
   UserUploadEnvironment,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import type { Cookie } from 'tough-cookie';
 
 type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
   Partial<Pick<Request, 'body' | 'authentication'>>;

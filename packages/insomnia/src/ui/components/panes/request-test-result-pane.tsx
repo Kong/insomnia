@@ -1,7 +1,6 @@
+import type { RequestTestResult } from 'insomnia-data';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
-
-import type { RequestTestResult } from '~/insomnia-data';
 
 import { fuzzyMatch } from '../../../common/misc';
 

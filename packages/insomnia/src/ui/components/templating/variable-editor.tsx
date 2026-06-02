@@ -1,6 +1,5 @@
+import { models } from 'insomnia-data';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
-
-import { models } from '~/insomnia-data';
 
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating/constants';
 import type { RenderPurpose } from '../../../templating/types';

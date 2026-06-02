@@ -1,7 +1,6 @@
+import type { BaseModel } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { useMemo } from 'react';
-
-import type { BaseModel } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 
 import { fuzzyMatchAll } from '../../common/misc';
 

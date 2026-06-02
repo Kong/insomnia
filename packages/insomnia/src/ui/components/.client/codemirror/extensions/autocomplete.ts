@@ -1,9 +1,9 @@
 import 'codemirror/addon/mode/overlay';
 
 import CodeMirror, { type EnvironmentAutocompleteOptions, type Hint, type ShowHintOptions } from 'codemirror';
+import { getPlatformKeyCombinations } from 'insomnia-data/common';
 
 import { escapeRegex, fnOrString, isNotNullOrUndefined } from '~/common/misc';
-import { getPlatformKeyCombinations } from '~/insomnia-data/common';
 import type { NunjucksParsedTag } from '~/templating/types';
 import { getDefaultFill } from '~/templating/utils';
 

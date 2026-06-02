@@ -1,3 +1,5 @@
+import type { Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import {
@@ -7,8 +9,6 @@ import {
   importResourcesToProject,
   importResourcesToWorkspace,
 } from '~/common/import';
-import type { Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 

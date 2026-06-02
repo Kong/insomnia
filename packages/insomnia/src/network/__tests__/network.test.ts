@@ -3,10 +3,9 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
+import { models, services } from 'insomnia-data';
+import { HttpVersions } from 'insomnia-data/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { models, services } from '~/insomnia-data';
-import { HttpVersions } from '~/insomnia-data/common';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';

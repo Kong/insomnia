@@ -14,6 +14,7 @@ export default defineConfig({
       '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
       '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.node'),
       '~': path.resolve(__dirname, './src'),
+      'insomnia-data': path.resolve(__dirname, './src/insomnia-data'),
       'electron/main': 'electron',
     },
     server: {

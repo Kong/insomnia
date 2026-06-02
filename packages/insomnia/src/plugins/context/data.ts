@@ -1,5 +1,5 @@
-import type { Workspace } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
 import { exportWorkspacesHAR } from '../../common/har';
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';

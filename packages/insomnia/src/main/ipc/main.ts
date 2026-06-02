@@ -17,12 +17,12 @@ import {
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
 import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import { convert } from '~/main/importers/convert';

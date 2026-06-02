@@ -1,7 +1,7 @@
+import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
 import React, { type FC, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
 
-import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '~/insomnia-data/common';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';

@@ -1,7 +1,7 @@
+import type { GitAuthor } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
-import type { GitAuthor } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { gitRemoteProviderRegistry } from '~/sync/git/providers';
 import { invariant } from '~/utils/invariant';
 

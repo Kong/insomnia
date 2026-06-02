@@ -18,9 +18,6 @@ import path from 'node:path';
 
 import { app } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type PromiseFsClient } from 'isomorphic-git';
-import YAML, { parse } from 'yaml';
-
 import type {
   BaseModel,
   GitProject,
@@ -29,8 +26,11 @@ import type {
   Workspace,
   WorkspaceMeta,
   WorkspaceScope,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { Errors, type PromiseFsClient } from 'isomorphic-git';
+import YAML, { parse } from 'yaml';
+
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,

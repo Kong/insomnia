@@ -1,11 +1,11 @@
+import type { AuthTypeOAuth2, McpRequest, Project } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-components';
 import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
-import type { AuthTypeOAuth2, McpRequest, Project } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import type { McpReadyState } from '~/main/mcp/types';
 import { _buildBearerHeader } from '~/network/authentication';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';

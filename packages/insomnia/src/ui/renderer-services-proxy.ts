@@ -1,4 +1,5 @@
-import type { Services } from '~/insomnia-data';
+import type { Services } from 'insomnia-data';
+
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 
 export const servicesProxy = new Proxy({} as Services, {

@@ -1,5 +1,5 @@
-import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import { models } from 'insomnia-data';
 
 import * as grpcRequestService from '../grpc-request';
 import * as mcpRequestService from '../mcp-request';

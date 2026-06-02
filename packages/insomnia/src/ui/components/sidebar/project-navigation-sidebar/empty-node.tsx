@@ -1,9 +1,9 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
+import type { WorkspaceScope } from 'insomnia-data';
 import { useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
-import type { WorkspaceScope } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { showModal } from '~/ui/components/modals';

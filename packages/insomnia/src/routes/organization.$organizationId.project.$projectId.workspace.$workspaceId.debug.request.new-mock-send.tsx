@@ -1,7 +1,7 @@
+import type { Request } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import type { Request } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import {
   fetchRequestData,
   responseTransform,

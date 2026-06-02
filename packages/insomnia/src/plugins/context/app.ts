@@ -1,8 +1,7 @@
 import { getAppVersion } from 'insomnia/src/common/constants';
 import type { AppContext, RenderPurpose } from 'insomnia/src/templating/types';
 import { invariant } from 'insomnia/src/utils/invariant';
-
-import { platform } from '~/insomnia-data/common';
+import { platform } from 'insomnia-data/common';
 
 // TODO: consider how this would work in a webworker context
 const isRenderer = process.type === 'renderer';

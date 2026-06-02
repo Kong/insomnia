@@ -1,10 +1,10 @@
+import type { BaseModel, Project } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
+import { strings } from 'insomnia-data/common';
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
-import type { BaseModel, Project } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
-import { strings } from '~/insomnia-data/common';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';

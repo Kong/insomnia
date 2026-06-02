@@ -2,8 +2,6 @@ import crypto from 'node:crypto';
 import querystring from 'node:querystring';
 
 import { BrowserWindow } from 'electron';
-import { v4 as uuidv4 } from 'uuid';
-
 import type {
   AuthTypeOAuth2,
   OAuth2ResponseType,
@@ -13,8 +11,10 @@ import type {
   RequestHeader,
   RequestParameter,
   Response,
-} from '~/insomnia-data';
-import { database as db, models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { database as db, models, services } from 'insomnia-data';
+import { v4 as uuidv4 } from 'uuid';
+
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
 import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-storage';

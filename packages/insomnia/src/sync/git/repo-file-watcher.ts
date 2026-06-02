@@ -42,10 +42,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { BrowserWindow } from 'electron';
+import type { Workspace, WorkspaceMeta } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import YAML from 'yaml';
 
-import type { Workspace, WorkspaceMeta } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import type { WorkspaceFileIssue } from '~/main/git-service';
 
 import { database as db } from '../../common/database';

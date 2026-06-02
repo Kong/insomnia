@@ -1,4 +1,4 @@
-import type { RequestHeader } from '~/insomnia-data';
+import type { RequestHeader } from 'insomnia-data';
 
 import allCharsets from '../datasets/charsets';
 import allMimeTypes from '../datasets/content-types';

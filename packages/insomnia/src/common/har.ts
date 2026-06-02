@@ -1,8 +1,8 @@
 import type * as Har from 'har-format';
+import type { BaseModel, Environment, Request, RequestGroup, Response, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import type { BaseModel, Environment, Request, RequestGroup, Response, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { applyRequestHooks } from '~/network/network-adapter';
 
 import { RenderError } from '../templating/render-error';

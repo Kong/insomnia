@@ -1,7 +1,7 @@
 import path from 'node:path';
 
-import type { AllTypes } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+import type { AllTypes } from 'insomnia-data';
+import { models } from 'insomnia-data';
 
 import { GIT_CLONE_DIR } from './git-vcs';
 

@@ -1,6 +1,19 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import type {
+  ChangeBufferEvent,
+  Environment,
+  GrpcRequest,
+  Project,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+  Workspace,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -30,19 +43,6 @@ import * as reactUse from 'react-use';
 
 import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { generateId } from '~/common/misc';
-import type {
-  ChangeBufferEvent,
-  Environment,
-  GrpcRequest,
-  Project,
-  Request,
-  RequestGroup,
-  SocketIORequest,
-  WebSocketRequest,
-  Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import { useRootLoaderData } from '~/root';
 import {

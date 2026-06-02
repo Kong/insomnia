@@ -1,9 +1,9 @@
 import type { Virtualizer } from '@tanstack/react-virtual';
+import { models, type WorkspaceScope } from 'insomnia-data';
 import { useCallback, useMemo, useRef } from 'react';
 import type { DragAndDropHooks, ItemDropTarget } from 'react-aria-components';
 import { DropIndicator, useDragAndDrop } from 'react-aria-components';
 
-import { models, type WorkspaceScope } from '~/insomnia-data';
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 
 import type { CollectionChildFlatItem, EmptyNodeFlatItem, FlatItem } from './types';

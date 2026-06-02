@@ -1,4 +1,5 @@
 import type { Snippet } from 'codemirror';
+import type { Settings } from 'insomnia-data';
 import React, { type FC, useRef } from 'react';
 import {
   Button,
@@ -12,7 +13,6 @@ import {
   Toolbar,
 } from 'react-aria-components';
 
-import type { Settings } from '~/insomnia-data';
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 

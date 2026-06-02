@@ -7,7 +7,7 @@ vi.mock('../context/store', () => ({ init: vi.fn().mockReturnValue({ store: {} }
 vi.mock('../context/network', () => ({ init: vi.fn().mockReturnValue({ network: {} }) }));
 vi.mock('../context/request', () => ({ init: vi.fn().mockReturnValue({ request: {} }) }));
 vi.mock('../context/response', () => ({ init: vi.fn().mockReturnValue({ response: {} }) }));
-vi.mock('~/insomnia-data', () => ({
+vi.mock('insomnia-data', () => ({
   services: {
     settings: { get: vi.fn() },
     request: { getById: vi.fn() },

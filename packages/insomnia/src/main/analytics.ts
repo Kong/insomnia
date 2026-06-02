@@ -3,9 +3,8 @@ import crypto from 'node:crypto';
 import * as Sentry from '@sentry/electron/main';
 import { net } from 'electron';
 import { AnalyticsEvent, InsomniaAnalytics } from 'insomnia-analytics';
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
-
-import { services } from '~/insomnia-data';
 
 import {
   getApiBaseURL,

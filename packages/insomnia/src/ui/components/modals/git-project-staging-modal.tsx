@@ -1,3 +1,5 @@
+import type { GitCredentials, GitRepository } from 'insomnia-data';
+import { platform } from 'insomnia-data/common';
 import React, {
   type FC,
   forwardRef,
@@ -33,8 +35,6 @@ import { Banner } from '~/basic-components/banner';
 import { Button as BasicButton } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import type { GitCredentials, GitRepository } from '~/insomnia-data';
-import { platform } from '~/insomnia-data/common';
 import { useAIGenerateActionFetcher } from '~/routes/ai.generate-commit-messages';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';

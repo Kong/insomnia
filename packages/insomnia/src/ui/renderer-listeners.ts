@@ -1,4 +1,5 @@
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
+
 import { type RAToastContent, showToast } from '~/ui/components/toast-notification';
 
 import * as themes from '../plugins/misc';

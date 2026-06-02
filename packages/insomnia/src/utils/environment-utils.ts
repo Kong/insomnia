@@ -1,7 +1,6 @@
+import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
+import { EnvironmentKvPairDataType, models } from 'insomnia-data';
 import orderedJSON from 'json-order';
-
-import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
-import { EnvironmentKvPairDataType, models } from '~/insomnia-data';
 
 import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { generateId } from '../common/misc';

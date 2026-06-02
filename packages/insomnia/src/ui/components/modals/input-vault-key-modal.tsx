@@ -1,7 +1,7 @@
+import { services } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
 
-import { services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useResetVaultKeyFetcher } from '~/routes/auth.reset-vault-key';
 import { useValidateVaultKeyActionFetcher } from '~/routes/auth.validate-vault-key';

@@ -1,1 +1,1 @@
-export { invariant } from '~/insomnia-data/common';
+export { invariant } from 'insomnia-data/common';

@@ -3,10 +3,9 @@ import type { AnyMessage, MethodInfo, PartialMessage, ServiceType } from '@bufbu
 import type { UnaryResponse } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import * as grpcReflection from 'grpc-reflection-js';
+import { services } from 'insomnia-data';
 import protobuf from 'protobufjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { services } from '~/insomnia-data';
 
 import { loadMethodsFromReflection, writeProtoFileById } from '../grpc';
 

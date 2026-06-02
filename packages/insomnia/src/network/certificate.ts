@@ -1,4 +1,4 @@
-import type { ClientCertificate } from '~/insomnia-data';
+import type { ClientCertificate } from 'insomnia-data';
 
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { urlMatchesCertHost } from './url-matches-cert-host';

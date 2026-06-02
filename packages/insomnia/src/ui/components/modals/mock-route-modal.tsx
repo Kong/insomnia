@@ -1,3 +1,4 @@
+import type { ResponseHeader } from 'insomnia-data';
 import React from 'react';
 import {
   Button,
@@ -13,7 +14,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { ResponseHeader } from '~/insomnia-data';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
 import { useMockRouteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
 

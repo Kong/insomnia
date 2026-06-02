@@ -1,4 +1,4 @@
-import type { MockServer } from '~/insomnia-data';
+import type { MockServer } from 'insomnia-data';
 import {
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
@@ -8,7 +8,7 @@ import {
   isWindows,
   METHOD_GET,
   platform,
-} from '~/insomnia-data/common';
+} from 'insomnia-data/common';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
@@ -211,7 +211,7 @@ export const HTTP_METHODS = [
 export const METHOD_GRPC = 'GRPC';
 
 // Content Types
-export { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON } from '~/insomnia-data/common';
+export { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON } from 'insomnia-data/common';
 export const CONTENT_TYPE_PLAINTEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'application/yaml';

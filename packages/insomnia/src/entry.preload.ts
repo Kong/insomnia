@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
 
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from '~/insomnia-data';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
