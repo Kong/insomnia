@@ -32,6 +32,7 @@ interface NewWorkspaceData {
   fileName?: string;
   withRequest?: boolean;
   mockServerDynamicResponses?: boolean;
+  source?: string;
 }
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
@@ -118,6 +119,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         organizationId,
         projectId,
         name,
+        workspaceData.source,
       );
 
       if (mockServerError) {
@@ -185,11 +187,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     window.main.trackAnalyticsEvent({
       event: event,
-      ...(environmentType && {
-        properties: {
-          type: environmentType,
-        },
-      }),
+      properties: {
+        ...(environmentType && { type: environmentType }),
+        ...(workspaceData.source && { source: workspaceData.source }),
+      },
     });
 
     if (workspaceData.withRequest) {
@@ -214,7 +215,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })
       )._id;
 
-      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestCreated, properties: { requestType: 'HTTP' } });
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.requestCreated,
+        properties: { requestType: 'HTTP', ...(workspaceData.source && { source: workspaceData.source }) },
+      });
 
       if (!redirectAfterCreate) {
         return {
@@ -289,6 +293,7 @@ async function createMockServer(
   organizationId: string,
   projectId: string,
   name: string,
+  source?: string,
 ): Promise<string | undefined> {
   try {
     const mockServerType = workspaceData.mockServerType!;
@@ -384,7 +389,7 @@ async function createMockServer(
         generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
         dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
         generation_duration_seconds: generationDurationMs / 1000,
-        source: 'menu',
+        ...(source && { source }),
       },
     });
 

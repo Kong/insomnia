@@ -493,7 +493,7 @@ const Debug = () => {
       req,
       metrics: {
         source: 'sidebar',
-      }
+      },
     });
 
   const reorderFetcher = useDebugReorderActionFetcher();

@@ -1043,6 +1043,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                 storageRules={storageRules}
                 scope="mock-server"
                 sourceApiSpec={apiSpec}
+                source="design-view"
                 onOpenChange={setNewMockServerModalOpen}
               />
             )}

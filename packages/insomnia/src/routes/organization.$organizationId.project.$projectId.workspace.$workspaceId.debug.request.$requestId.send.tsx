@@ -403,6 +403,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               has_docs: !!activeRequest.description,
               count_certificates: clientCertificates.length,
               request_type: requestType,
+              source: 'request-pane',
             },
           });
 

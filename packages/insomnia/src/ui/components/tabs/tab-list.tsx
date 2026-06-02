@@ -261,7 +261,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         parentId: workspaceId,
         metrics: {
           source: 'tab-list',
-        }
+        },
       });
     }
   };

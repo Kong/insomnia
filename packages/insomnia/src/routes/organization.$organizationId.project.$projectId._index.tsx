@@ -159,6 +159,7 @@ const Component = () => {
     scope: WorkspaceScope;
     isOpen: boolean;
     redirect?: boolean;
+    source?: string;
   } | null>({
     scope: 'collection',
     isOpen: false,
@@ -250,12 +251,14 @@ const Component = () => {
       },
     }));
 
-  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
-  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
-  const createNewMockServer = () =>
-    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
-  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
-  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
+  const createNewCollection = (source: string) =>
+    setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source });
+  const createNewDocument = (source: string) => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source });
+  const createNewMockServer = (source: string) =>
+    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source });
+  const createNewGlobalEnvironment = (source: string) =>
+    setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source });
+  const createNewMcpClient = (source: string) => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source });
 
   const createNewCollectionWithRequest = () => {
     if (!activeProject) {
@@ -268,6 +271,7 @@ const Component = () => {
       name: 'My first collection',
       scope: 'collection',
       withRequest: true,
+      source: 'home-page',
     });
   };
 
@@ -283,19 +287,19 @@ const Component = () => {
       id: 'new-collection',
       name: 'Request collection',
       icon: 'bars',
-      action: createNewCollection,
+      action: () => createNewCollection('navbar'),
     },
     {
       id: 'new-document',
       name: 'Design document',
       icon: 'file',
-      action: createNewDocument,
+      action: () => createNewDocument('navbar'),
     },
     {
       id: 'new-mcp-client',
       name: 'MCP Client',
       icon: ['fac', 'mcp'] as unknown as IconProp,
-      action: createNewMcpClient,
+      action: () => createNewMcpClient('navbar'),
     },
     ...(canCreateMockServer
       ? [
@@ -303,7 +307,7 @@ const Component = () => {
             id: 'new-mock-server',
             name: 'Mock Server',
             icon: 'server' as IconName,
-            action: createNewMockServer,
+            action: () => createNewMockServer('navbar'),
           },
         ]
       : []),
@@ -311,7 +315,7 @@ const Component = () => {
       id: 'new-environment',
       name: 'Environment',
       icon: 'code',
-      action: createNewGlobalEnvironment,
+      action: () => createNewGlobalEnvironment('navbar'),
     },
   ];
 
@@ -338,7 +342,7 @@ const Component = () => {
             selectedCollectionId={selectedCollectionId}
             onSelectedCollectionChange={setSelectedCollectionId}
             onCreateCollection={() => {
-              setNewWorkspaceModalState({ scope: 'collection', isOpen: true, redirect: false });
+              setNewWorkspaceModalState({ scope: 'collection', isOpen: true, redirect: false, source: 'home-page' });
             }}
           />
         </div>
@@ -554,7 +558,7 @@ const Component = () => {
                     <div className="flex w-full flex-col items-center justify-center gap-4">
                       <ProjectEmptyView
                         onCreateRequestCollectionWithRequest={createNewCollectionWithRequest}
-                        onCreateDesignDocument={createNewDocument}
+                        onCreateDesignDocument={() => createNewDocument('empty-state')}
                         onImportFrom={() => setImportModalType('file')}
                       />
                       {createNewWorkspaceFetcher.data?.error && (
@@ -708,6 +712,7 @@ const Component = () => {
               }
             }}
             redirectAfterCreate={newWorkspaceModalState.redirect}
+            source={newWorkspaceModalState.source}
             onOpenChange={isOpen => {
               setNewWorkspaceModalState({
                 scope: newWorkspaceModalState.scope,

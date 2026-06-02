@@ -81,7 +81,7 @@ export const RequestGroupActionsDropdown = ({
       req,
       metrics: {
         source: 'sidebar',
-      }
+      },
     });
 
   const onOpen = async () => {

@@ -145,6 +145,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
           workspaceId,
           params: {
             isPrivate: false,
+            source: 'environment-editor',
           },
         });
       },
@@ -161,6 +162,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
           workspaceId,
           params: {
             isPrivate: true,
+            source: 'environment-editor',
           },
         });
       },
