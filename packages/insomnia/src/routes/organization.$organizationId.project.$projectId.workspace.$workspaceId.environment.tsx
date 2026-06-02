@@ -164,6 +164,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
           workspaceId,
           params: {
             isPrivate: false,
+            source: 'environment-editor',
           },
         });
       },
@@ -180,6 +181,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
           workspaceId,
           params: {
             isPrivate: true,
+            source: 'environment-editor',
           },
         });
       },

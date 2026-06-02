@@ -1,5 +1,5 @@
 import type { StorageRules } from 'insomnia-api';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Collection,
@@ -57,6 +57,7 @@ export const NewWorkspaceModal = ({
   sourceApiSpec,
   onCreateWorkspace,
   redirectAfterCreate = true,
+  source,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -66,6 +67,7 @@ export const NewWorkspaceModal = ({
   redirectAfterCreate?: boolean;
   scope: WorkspaceScope;
   sourceApiSpec?: ApiSpec;
+  source?: string;
 }) => {
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
 
@@ -172,6 +174,7 @@ export const NewWorkspaceModal = ({
         apiSpecContents: sourceApiSpec.contents,
       }),
       redirectAfterCreate,
+      ...(source && { source }),
     });
   };
 
