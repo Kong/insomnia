@@ -19,15 +19,22 @@ test.describe('Konnect sidebar tab', () => {
     await expect.soft(page.getByRole('button', { name: 'Create new Project' })).toBeVisible();
   });
 
-  test('hidden when konnectSync feature flag is disabled', async ({ page, insomnia, request }) => {
-    await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/features', {
-      data: { features: { gitSync: { enabled: true }, konnectSync: { enabled: false } } },
+  test.describe('with konnectSync feature flag disabled', () => {
+    test.beforeEach(async ({ request }) => {
+      await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/features', {
+        data: { features: { gitSync: { enabled: true }, konnectSync: { enabled: false } } },
+      });
     });
-    await page.reload();
-    await expect.soft(page.getByTestId('sidebar-tab-konnect')).toBeHidden();
 
-    await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/features', {
-      data: { features: { gitSync: { enabled: true }, konnectSync: { enabled: true } } },
+    test.afterEach(async ({ request }) => {
+      await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/features', {
+        data: { features: { gitSync: { enabled: true }, konnectSync: { enabled: true } } },
+      });
+    });
+
+    test('hides the Konnect tab', async ({ page }) => {
+      await page.reload();
+      await expect.soft(page.getByTestId('sidebar-tab-konnect')).toBeHidden();
     });
   });
 });
