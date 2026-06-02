@@ -8,8 +8,23 @@ import { useParams } from 'react-router';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
-import { lookupMimeType } from '../../../../common/mime';
 import { getContentTypeHeader } from '../../../../common/misc';
+
+const lookupMimeType = (path: string) => {
+  const ext = path.split('.').pop()?.toLowerCase();
+  const mimeMap: Record<string, string> = {
+    'json': 'application/json',
+    'xml': 'application/xml',
+    'txt': 'text/plain',
+    'html': 'text/html',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'pdf': 'application/pdf',
+  };
+  return mimeMap[ext || ''];
+};
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
 import { AskModal } from '../../modals/ask-modal';

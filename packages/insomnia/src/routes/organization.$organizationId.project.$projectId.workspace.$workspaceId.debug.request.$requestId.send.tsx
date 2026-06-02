@@ -14,7 +14,6 @@ import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
-import { mimeTypeExtension as mimeExtension } from '~/common/mime';
 import { getContentDispositionHeader } from '~/common/misc';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
@@ -314,7 +313,7 @@ export const sendActionImplementation = async (options: {
     const header = getContentDispositionHeader(responsePatch.headers || []);
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
-      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
+      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.unknown`;
     await writeToDownloadPath(
       window.path.join(requestMeta.downloadPath, name),
       responsePatch,

@@ -1,5 +1,4 @@
 import type { Snippet } from 'codemirror';
-import type { Settings } from 'insomnia-data';
 import React, { type FC, useRef } from 'react';
 import {
   Button,
