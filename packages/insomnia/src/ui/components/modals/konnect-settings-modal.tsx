@@ -114,6 +114,7 @@ export const KonnectSettingsModal = ({
                   {showDisconnectConfirm ? 'Disconnect Kong Konnect?' : 'Kong Konnect settings'}
                 </Heading>
                 <Button
+                  aria-label="Close"
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                   onPress={close}
                 >
