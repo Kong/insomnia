@@ -11,9 +11,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "paths": {
-      "~/*": ["../insomnia/src/*"],
-      "insomnia-data": ["../insomnia/src/insomnia-data"],
-      "insomnia-data/*": ["../insomnia/src/insomnia-data/*"]
+      "~/*": ["../insomnia/src/*"]
     },
     /* Strictness */
     "strict": true,
