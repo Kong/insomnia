@@ -51,8 +51,7 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        // Resolve these adapters to their renderer variants so both client and server
-        // builds inline the module directly (avoids runtime require() in server bundle).
+        // Short-circuit the adapter wrappers to the renderer implementation directly.
         // These must appear before the '~' catch-all so the specific path wins.
         '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
         '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),

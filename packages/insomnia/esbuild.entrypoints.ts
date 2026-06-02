@@ -4,6 +4,16 @@ import path from 'node:path';
 
 import esbuild, { type BuildOptions, type Plugin } from 'esbuild';
 
+// Redirects *.renderer imports to their *.node equivalents for node/main-process builds.
+const rendererToNodePlugin: Plugin = {
+  name: 'renderer-to-node',
+  setup(build) {
+    build.onResolve({ filter: /\.renderer$/ }, args => ({
+      path: path.resolve(args.resolveDir, args.path.replace('.renderer', '.node') + '.ts'),
+    }));
+  },
+};
+
 import pkg from './package.json';
 interface Options {
   mode?: 'development' | 'production';
@@ -105,6 +115,7 @@ export default async function build(options: Options) {
     platform: 'node',
     sourcemap: true,
     format: 'cjs',
+    plugins: [rendererToNodePlugin],
     define: {
       ...env,
       // Electron main = "browser"

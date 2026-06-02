@@ -1,9 +1,3 @@
-// Runtime adapter selection: renderer delegates to IPC, node/CLI uses direct crypto.
-// Vite inlines process.type at build time so Rollup tree-shakes the unused branch from each bundle.
-import type * as AdapterType from './vault-adapter.node';
-
-const impl = (
-  (process as any).type === 'renderer' ? require('./vault-adapter.renderer') : require('./vault-adapter.node')
-) as typeof AdapterType;
-
-export const { encryptSecretValue, decryptSecretValue } = impl;
+// Imports the renderer implementation by default.
+// esbuild node builds alias this to vault-adapter.node via the renderer-to-node plugin.
+export { encryptSecretValue, decryptSecretValue } from './vault-adapter.renderer';
