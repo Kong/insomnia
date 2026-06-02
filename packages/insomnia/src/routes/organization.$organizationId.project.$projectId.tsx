@@ -194,7 +194,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const navigationSidebarRef = useRef<ProjectNavigationSidebarHandle>(null);
 
   useEffect(() => {
-    const isExpanded = searchParams.get('isExpended') === 'true';
+    const isExpanded = searchParams.get('isExpanded') === 'true';
     if (navigationSidebarRef.current && isExpanded && activeProject) {
       navigationSidebarRef.current.expandProject(activeProject._id);
     }
