@@ -114,6 +114,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
         await services.request.create({
           parentId: parentId || workspaceId,
           url: req.url,
+          name: req.name || 'New Request',
           method: req.method,
           headers: req.headers,
           body: req.body as RequestBody,

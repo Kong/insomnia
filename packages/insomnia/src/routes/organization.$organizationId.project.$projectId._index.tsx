@@ -34,7 +34,7 @@ import { sortMethodMap } from '~/common/sorting';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
+import { useProjectLoaderData, useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
@@ -79,6 +79,7 @@ export interface ProjectLoaderData {
 const Component = () => {
   const { localFiles, activeProject, activeProjectGitRepository, projects, remoteFilesPromise } =
     useProjectLoaderData()!;
+  const { activeSidebarTab } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -336,15 +337,19 @@ const Component = () => {
       <Fragment>
         <OrganizationTabList showActiveStatus={false} />
         <div className="px-4 pt-4">
-          <FirstRequestCreation
-            greetingName={greetingName}
-            collectionItems={collectionItems}
-            selectedCollectionId={selectedCollectionId}
-            onSelectedCollectionChange={setSelectedCollectionId}
-            onCreateCollection={() => {
-              setNewWorkspaceModalState({ scope: 'collection', isOpen: true, redirect: false, source: 'home-page' });
-            }}
-          />
+          {activeSidebarTab === 'projects' && (
+            <FirstRequestCreation
+              greetingName={greetingName}
+              collectionItems={collectionItems}
+              selectedCollectionId={selectedCollectionId}
+              onSelectedCollectionChange={setSelectedCollectionId}
+              onCreateDesignDocument={createNewDocument}
+              onCreateCollection={() => {
+                setNewWorkspaceModalState({ scope: 'collection', isOpen: true, redirect: false, source: 'home-page' });
+              }}
+              onImportFrom={() => setImportModalType('file')}
+            />
+          )}
         </div>
         {activeProject ? (
           <div className="flex w-full flex-col overflow-hidden">

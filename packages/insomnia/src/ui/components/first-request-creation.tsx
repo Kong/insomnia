@@ -1,11 +1,13 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Request } from 'insomnia-data';
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from 'insomnia-data/common';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
 import { getProjectRecentRequests, type RecentProjectRequest } from '~/common/project';
+import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -73,6 +75,8 @@ interface FirstRequestCreationProps {
   selectedCollectionId: string | null;
   onSelectedCollectionChange: (collectionId: string | null) => void;
   onCreateCollection: () => void;
+  onCreateDesignDocument: () => void;
+  onImportFrom: () => void;
 }
 
 export const FirstRequestCreation = ({
@@ -81,6 +85,8 @@ export const FirstRequestCreation = ({
   selectedCollectionId,
   onSelectedCollectionChange,
   onCreateCollection,
+  onCreateDesignDocument,
+  onImportFrom,
 }: FirstRequestCreationProps) => {
   const navigate = useNavigate();
   const { organizationId, projectId } = useParams() as {
@@ -95,6 +101,7 @@ export const FirstRequestCreation = ({
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [requestInput, setRequestInput] = useState('');
   const [recentRequests, setRecentRequests] = useState<RecentProjectRequest[]>([]);
+  const [isRequestInputFocused, setIsRequestInputFocused] = useState(false);
   const [curlParseError, setCurlParseError] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
   const trimmedInput = requestInput.trim();
@@ -325,6 +332,18 @@ export const FirstRequestCreation = ({
       icon: <SvgIcon icon="graphql" />,
       onClick: handleCreateGithubLookupRequest,
     },
+    {
+      id: 'create-openapi-spec',
+      label: 'Create OpenAPI spec',
+      icon: <Icon icon="file" className="text-(--font-size-xl)" />,
+      onClick: onCreateDesignDocument,
+    },
+    {
+      id: 'import-files',
+      label: 'Import files',
+      icon: <Icon icon="file-import" className="text-(--font-size-xl)" />,
+      onClick: onImportFrom,
+    },
   ];
 
   const isLightTheme = useIsLightTheme();
@@ -335,6 +354,9 @@ export const FirstRequestCreation = ({
     ? 'flex w-full flex-col items-center rounded-[inherit] bg-[#FFFFFF] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(96,48,191,0.2)_100%] px-6 pt-8 pb-5'
     : 'flex w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-8 pb-5';
 
+  const { settings } = useRootLoaderData()!;
+  const keyComb = getPlatformKeyCombinations(settings.hotKeyRegistry.request_createHTTP)[0];
+  const shortcutDisplay = constructKeyCombinationDisplay(keyComb, false);
   return (
     <>
       <div className={wrapperClassName}>
@@ -348,15 +370,19 @@ export const FirstRequestCreation = ({
               : `We have a sneaking suspicion that you came here to send a request, so let’s get started!`}
           </p>
           <div className="mt-8 w-[50%] min-w-100">
-            <div className="flex aspect-540/127 flex-col overflow-hidden rounded-lg border border-[#3F3F46] bg-(--color-bg) shadow-[0_0_0_4px_#0044F433]">
+            <div
+              className={`flex aspect-540/127 flex-col overflow-hidden rounded-lg border border-(--hl-md) bg-(--color-bg) ${isRequestInputFocused ? 'shadow-[0_0_0_4px_#0044F433]' : ''}`}
+            >
               <div className="flex-1 px-4 pt-3 pb-2">
                 <textarea
                   ref={inputRef}
                   autoFocus
                   aria-label="Request endpoint or cURL input"
                   className="text-md h-full w-full flex-1 resize-none font-mono"
-                  placeholder="Enter an endpoint URL or paste cURL, or ⌘N for a new blank request"
+                  placeholder={`Enter an endpoint URL or paste cURL, or ${shortcutDisplay} for a new blank request`}
                   value={requestInput}
+                  onFocus={() => setIsRequestInputFocused(true)}
+                  onBlur={() => setIsRequestInputFocused(false)}
                   onChange={event => {
                     setCurlParseError(false);
                     setRequestInput(event.target.value);
@@ -392,7 +418,7 @@ export const FirstRequestCreation = ({
                         New Collection
                       </Button>
                     }
-                    triggerClassName="h-8 rounded-md px-3 text-sm"
+                    triggerClassName="h-8 rounded-md px-3 text-sm data-[focus-visible=true]:!ring-0"
                     popoverClassName="w-[240px]"
                     dialogClassName="w-[240px]"
                     renderTrigger={selectedItem => (
