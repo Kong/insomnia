@@ -1150,7 +1150,7 @@ const Debug = () => {
                     <Panel id="pane-one" order={1} minSize={10} className="pane-one theme--pane">
                       {workspaceId ? (
                         <ErrorBoundary showAlert>
-                          {isRequestGroupId(requestGroupId) && <RequestGroupPane settings={settings} />}
+                          {isRequestGroupId(requestGroupId) && <RequestGroupPane />}
                           {models.grpcRequest.isGrpcRequestId(requestId) &&
                             grpcState &&
                             activeRequest?._id === requestId && (
