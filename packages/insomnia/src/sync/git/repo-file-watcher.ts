@@ -41,7 +41,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { Workspace, WorkspaceMeta } from 'insomnia-data';
+import type { BaseModel, Workspace, WorkspaceMeta } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import YAML from 'yaml';
 
