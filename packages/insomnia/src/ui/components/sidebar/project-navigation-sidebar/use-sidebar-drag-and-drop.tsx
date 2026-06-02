@@ -58,7 +58,6 @@ function canDrop(
 
   const dropIsProject = realDropItem.kind === 'project';
   const dragInCloud = models.project.isRemoteProject(dragItem.project);
-
   if (dragItem.kind === 'workspace') {
     const dragWorkspaceScope = dragItem.doc.scope;
     if (realDropItem) {
@@ -90,8 +89,8 @@ function canDrop(
         return !models.project.isRemoteProject(realDropItem.project);
       };
       if (realDropItem.kind === 'workspace') {
-        if (expandedProjectAndWorkspaceIds?.includes(realDropItem.doc._id)) {
-          // Can not drop on expanded workspace
+        if (realDropItem.doc.scope === 'collection' && expandedProjectAndWorkspaceIds?.includes(realDropItem.doc._id)) {
+          // Can not drop on expanded collection
           return false;
         }
         return isWorkspaceMoveAllowed();
