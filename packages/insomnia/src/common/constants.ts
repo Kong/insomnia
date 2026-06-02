@@ -38,7 +38,8 @@ export const getProductName = () => appConfig.productName;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const getAppEnvironment = () => env.INSOMNIA_ENV || 'production';
+// Must specify `process.env` here because esbuild define is a build-time replacement and won't inject to runtime
+export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
   appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
