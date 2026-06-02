@@ -21,7 +21,7 @@ import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 
-export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
+export const RequestGroupPane: FC = () => {
   const { activeRequestGroup } = useRequestGroupLoaderData()!;
   const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
@@ -177,7 +177,6 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                   uniquenessKey={`${activeRequestGroup._id}:pre-request-script`}
                   defaultValue={activeRequestGroup.preRequestScript || ''}
                   onChange={preRequestScript => patchRequestGroup(activeRequestGroup._id, { preRequestScript })}
-                  settings={settings}
                 />
               </ErrorBoundary>
             </TabPanel>
@@ -187,7 +186,6 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                   uniquenessKey={`${activeRequestGroup._id}:after-response-script`}
                   defaultValue={activeRequestGroup.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequestGroup(activeRequestGroup._id, { afterResponseScript })}
-                  settings={settings}
                 />
               </ErrorBoundary>
             </TabPanel>
