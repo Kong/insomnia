@@ -6,6 +6,17 @@ import { models, services } from 'insomnia-data';
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
 
+async function decryptAESString(
+  symmetricKey: string | JsonWebKey,
+  encryptedResult: AESMessage,
+): Promise<string> {
+  if (typeof window !== 'undefined' && window.main?.crypt?.decryptAES) {
+    return window.main.crypt.decryptAES(symmetricKey, encryptedResult);
+  }
+  const crypt = await import('./crypt');
+  return crypt.decryptAES(symmetricKey, encryptedResult);
+}
+
 export interface SessionData {
   accountId: string;
   id: string;
@@ -27,7 +38,7 @@ export async function absorbKey(sessionId: string, key: string) {
   ]);
   const { public_key: publicKey, enc_private_key: encPrivateKey, enc_symmetric_key: encSymmetricKey } = keys;
   const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
-  const symmetricKeyStr = await window.main.crypt.decryptAES(key, JSON.parse(encSymmetricKey));
+  const symmetricKeyStr = await decryptAESString(key, JSON.parse(encSymmetricKey));
 
   // Store the information for later
   await setSessionData(
@@ -41,7 +52,9 @@ export async function absorbKey(sessionId: string, key: string) {
     JSON.parse(encPrivateKey),
   );
 
-  window.main.loginStateChange(true);
+  if (typeof window !== 'undefined' && window.main?.loginStateChange) {
+    window.main.loginStateChange(true);
+  }
 }
 
 export async function getPrivateKey() {
@@ -57,7 +70,7 @@ export async function getPrivateKey() {
     throw new Error("Can't get private key: session is missing keys.");
   }
 
-  const privateKeyStr = await window.main.crypt.decryptAES(symmetricKey, encPrivateKey);
+  const privateKeyStr = await decryptAESString(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr) as JsonWebKey;
 }
 
@@ -92,7 +105,9 @@ export async function logout(clearCredentials = false) {
   if (clearCredentials) {
     await _removeAllCredentials();
   }
-  window.main.loginStateChange(false);
+  if (typeof window !== 'undefined' && window.main?.loginStateChange) {
+    window.main.loginStateChange(false);
+  }
 }
 
 /** Set data for the new session and store it encrypted with the sessionId */
