@@ -1,5 +1,4 @@
 import { getEncryptionKeys, getUserProfile, logout as logoutAPI } from 'insomnia-api';
-
 import type { GitRepository, Project, WorkspaceMeta } from 'insomnia-data';
 import type { AESMessage } from 'insomnia-data';
 import { models, services } from 'insomnia-data';

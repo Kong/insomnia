@@ -1,6 +1,5 @@
-import { Cookie as ToughCookie, CookieJar } from 'tough-cookie';
-
 import type { Cookie } from 'insomnia-data';
+import { Cookie as ToughCookie, CookieJar } from 'tough-cookie';
 
 import { ipcMainHandle } from './electron';
 

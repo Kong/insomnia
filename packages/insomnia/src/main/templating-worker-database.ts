@@ -4,11 +4,11 @@ import os from 'node:os';
 
 import { shell } from 'electron';
 import iconv from 'iconv-lite';
+import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
-import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
-import { services } from 'insomnia-data';
 import { getPluginCommonContext } from '~/plugins';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
@@ -108,7 +108,10 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
     return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
-  'response.getBodyBuffer': async (body: { response?: { bodyPath?: string; bodyCompression?: any }; readFailureValue?: string }) => {
+  'response.getBodyBuffer': async (body: {
+    response?: { bodyPath?: string; bodyCompression?: any };
+    readFailureValue?: string;
+  }) => {
     return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
