@@ -51,6 +51,17 @@ export interface PluginStore {
   >;
 }
 
+export interface SerializedCookie {
+  key?: string;
+  value?: string;
+  domain?: string;
+  path?: string;
+  expires?: string | Date;
+  httpOnly?: boolean;
+  secure?: boolean;
+  hostOnly?: boolean;
+}
+
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
 export type PluginToMainAPIPaths =
   | 'readFile'
@@ -320,7 +331,7 @@ export interface PluginTemplateTagContext {
       oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
       cookieJar: {
         getOrCreateForParentId: (parentId: string) => Promise<CookieJar>;
-        getCookiesForUrl: (parentId: string, url: string) => Promise<Cookie[]>;
+        getCookiesForUrl: (parentId: string, url: string) => Promise<SerializedCookie[]>;
       };
       response: {
         getLatestForRequestId: Services['response']['getLatestForRequestId'];

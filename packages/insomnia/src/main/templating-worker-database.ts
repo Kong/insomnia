@@ -103,7 +103,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
     const cookies = await services.cookieJar.getOrCreateForParentId(body.parentId);
     const jar = jarFromCookies(cookies.cookies);
-    return jar.getCookiesSync(body.url);
+    return jar.getCookiesSync(body.url).map(c => c.toJSON());
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
     return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
