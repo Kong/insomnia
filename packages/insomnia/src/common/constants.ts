@@ -38,7 +38,8 @@ export const getProductName = () => appConfig.productName;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const getAppEnvironment = () => env.INSOMNIA_ENV || 'production';
+// Must specify full `process.env.INSOMNIA_ENV` here because esbuild define is a build-time replacement and won't inject to runtime
+export const getAppEnvironment = () => env.INSOMNIA_ENV || process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
   appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
@@ -47,7 +48,8 @@ export const getCioWriteKey = () =>
   appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].writeKey;
 export const getCioSiteId = () =>
   appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].siteId;
-export const getAppBuildDate = () => new Date(env.BUILD_DATE ?? '').toLocaleDateString();
+// Must specify full `process.env.BUILD_DATE` here because esbuild define is a build-time replacement and won't inject to runtime
+export const getAppBuildDate = () => new Date((env.BUILD_DATE || process.env.BUILD_DATE) ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () =>
   encodeURIComponent(
