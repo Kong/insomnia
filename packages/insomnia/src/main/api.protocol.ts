@@ -1,15 +1,180 @@
 import path from 'node:path';
-import { Readable } from 'node:stream';
+import { isReadable, Readable, Writable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
 
 import { Curl, CurlAuth, CurlFeature, CurlProxy, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
-import { app, net, protocol, session } from 'electron';
+import {
+  app,
+  type ClientRequest,
+  type ClientRequestConstructorOptions,
+  type IncomingMessage,
+  net,
+  protocol,
+  type Session,
+  session,
+} from 'electron';
 
 import { services } from '~/insomnia-data';
 
 import { getApiBaseURL } from '../common/constants';
 import { setDefaultProtocol } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
+
+function createDeferredPromise<T, E extends Error = Error>(): {
+  promise: Promise<T>;
+  resolve: (x: T) => void;
+  reject: (e: E) => void;
+} {
+  let res: (x: T) => void;
+  let rej: (e: E) => void;
+  const promise = new Promise<T>((resolve, reject) => {
+    res = resolve;
+    rej = reject;
+  });
+
+  return { promise, resolve: res!, reject: rej! };
+}
+
+function fetchWithSession(
+  input: RequestInfo,
+  init: (RequestInit & { bypassCustomProtocolHandlers?: boolean }) | undefined,
+  session: Session | undefined,
+  request: (options: ClientRequestConstructorOptions | string) => ClientRequest,
+) {
+  const p = createDeferredPromise<Response>();
+  let req: Request;
+  try {
+    req = new Request(input, init);
+  } catch (e: any) {
+    p.reject(e);
+    return p.promise;
+  }
+
+  if (req.signal.aborted) {
+    // 1. Abort the fetch() call with p, request, null, and
+    //    requestObject’s signal’s abort reason.
+    const error = (req.signal as any).reason ?? new DOMException('The operation was aborted.', 'AbortError');
+    p.reject(error);
+
+    if (req.body != null && isReadable(req.body as unknown as NodeJS.ReadableStream)) {
+      req.body.cancel(error).catch(err => {
+        if (err.code === 'ERR_INVALID_STATE') {
+          // Node bug?
+          return;
+        }
+        throw err;
+      });
+    }
+
+    // 2. Return p.
+    return p.promise;
+  }
+
+  let locallyAborted = false;
+  req.signal.addEventListener(
+    'abort',
+    () => {
+      // 1. Set locallyAborted to true.
+      locallyAborted = true;
+
+      // 2. Abort the fetch() call with p, request, responseObject,
+      //    and requestObject’s signal’s abort reason.
+      const error = (req.signal as any).reason ?? new DOMException('The operation was aborted.', 'AbortError');
+      p.reject(error);
+      if (req.body != null && isReadable(req.body as unknown as NodeJS.ReadableStream)) {
+        req.body.cancel(error).catch(err => {
+          if (err.code === 'ERR_INVALID_STATE') {
+            // Node bug?
+            return;
+          }
+          throw err;
+        });
+      }
+
+      r.abort();
+    },
+    { once: true },
+  );
+
+  const origin = req.headers.get('origin') ?? undefined;
+  // We can't set credentials to same-origin unless there's an origin set.
+  const credentials = req.credentials === 'same-origin' && !origin ? 'include' : req.credentials;
+
+  const r = request({
+    session,
+    method: req.method,
+    url: req.url,
+    origin,
+    credentials,
+    cache: req.cache,
+    referrerPolicy: req.referrerPolicy,
+    redirect: req.redirect,
+  });
+
+  (r as any)._urlLoaderOptions.bypassCustomProtocolHandlers = !!init?.bypassCustomProtocolHandlers;
+
+  // cors is the default mode, but we can't set mode=cors without an origin.
+  if (req.mode && (req.mode !== 'cors' || origin)) {
+    r.setHeader('Sec-Fetch-Mode', req.mode);
+  }
+
+  for (const [k, v] of req.headers) {
+    r.setHeader(k, v);
+  }
+
+  r.on('response', (resp: IncomingMessage) => {
+    if (locallyAborted) return;
+    const headers = new Headers();
+    for (const [k, v] of Object.entries(resp.headers)) {
+      headers.set(k, Array.isArray(v) ? v.join(', ') : v);
+    }
+    const nullBodyStatus = [101, 204, 205, 304];
+    const body =
+      nullBodyStatus.includes(resp.statusCode) || req.method === 'HEAD'
+        ? null
+        : (Readable.toWeb(resp as unknown as Readable) as ReadableStream);
+    const rResp = new Response(body, {
+      headers,
+      status: resp.statusCode,
+      statusText: resp.statusMessage,
+    });
+    (rResp as any).__original_resp = resp;
+    p.resolve(rResp);
+  });
+
+  r.on('error', err => {
+    p.reject(err);
+  });
+
+  r.on('login', (authInfo, callback) => {
+    console.log(
+      '-------------------------------------',
+      'client request login',
+      '-------------------------------------',
+    );
+    console.log(JSON.stringify(authInfo, null, 2));
+    callback('user', 'password');
+    // callback();
+  });
+
+  // pipeTo expects a WritableStream<Uint8Array>. Node.js' Writable.toWeb returns WritableStream<any>,
+  // which causes a TS structural mismatch.
+  const writable = Writable.toWeb(r as unknown as Writable) as unknown as WritableStream<Uint8Array>;
+  if (!req.body?.pipeTo(writable).then(() => r.end())) {
+    r.end();
+  }
+
+  return p.promise;
+}
+
+const netFetchWithProxyAuthentication: typeof net.fetch = (input, init) => {
+  console.log(
+    '-------------------------------------',
+    `fetching ${typeof input === 'string' ? input : input.url}`,
+    '-------------------------------------',
+  );
+  return fetchWithSession(input, init, session.defaultSession, net.request);
+};
 
 export interface RegisterProtocolOptions {
   scheme: string;
@@ -192,15 +357,15 @@ export async function registerInsomniaProtocols() {
       // Some embedded UIs (including the Customer.io in-app messaging/marketing SDK) load fonts from Google fonts.
       // When those requests are routed through our custom https handler they fail due to unknown issues.
       if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-        return net.fetch(request.url, { bypassCustomProtocolHandlers: true });
+        return netFetchWithProxyAuthentication(request.url, { bypassCustomProtocolHandlers: true });
       }
 
-      return net.fetch(request, { bypassCustomProtocolHandlers: true });
+      return netFetchWithProxyAuthentication(request, { bypassCustomProtocolHandlers: true });
     });
   }
   if (!protocol.isProtocolHandled(httpScheme)) {
     protocol.handle(httpScheme, async request => {
-      return net.fetch(request, { bypassCustomProtocolHandlers: true });
+      return netFetchWithProxyAuthentication(request, { bypassCustomProtocolHandlers: true });
     });
   }
   if (!protocol.isProtocolHandled(templatingWorkerDatabaseInterface)) {

@@ -21,10 +21,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const error = await submitAuthCode(data.code);
   if (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    const humanReadableError =
-      errorMessage === 'Failed to fetch'
-        ? 'Network failed, please try again. If the problem persists, check your network and proxy settings.'
-        : errorMessage;
+    const humanReadableError = errorMessage.startsWith('Failed to fetch')
+      ? 'Network failed, please try again. If the problem persists, check your network and proxy settings.'
+      : errorMessage;
     return {
       errors: {
         message: humanReadableError,
