@@ -159,9 +159,6 @@ export const test = baseTest.extend<{
 
     await page.waitForLoadState();
 
-    // Seed a fake Konnect PAT so konnect-enabled UI renders in all tests
-    await page.evaluate(() => (window as any).main.secretStorage.setSecret('konnectPat', 'kpat_test'));
-
     await use(page);
   },
   dataPath: async ({}, use) => {
