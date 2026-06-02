@@ -128,9 +128,10 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       });
 
     // Make sure the default directories exist
-    // imported lazy becuase this should only be read in plugin hidden window
-
-    const pluginPath = path.resolve(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'plugins');
+    const pluginPath = path.resolve(
+      process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
+      'plugins',
+    );
 
     // Also look in node_modules folder in each directory
     const basePaths = [pluginPath, ...extraPaths];
@@ -148,7 +149,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
   return plugins;
 }
 
-export function getBundlePluginMap() {
+function getBundlePluginMap() {
   const appBundlePlugins = getAppBundlePlugins();
   const bundlePluginMap: Record<string, Plugin> = {};
   appBundlePlugins.forEach(({ name: pluginName }) => {
@@ -297,7 +298,10 @@ export function getPluginCommonContext({
     ...pluginStore.init(plugin),
     ...pluginNetwork.init(),
     util: {
-      openInBrowser: (url: string) => electron.shell.openExternal(url),
+      openInBrowser: async (url: string) =>
+        process.type === 'renderer' || process.type === 'worker'
+          ? window.main.openInBrowser(url)
+          : electron.shell.openExternal(url),
       models: {
         request: {
           getById: services.request.getById,
