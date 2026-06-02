@@ -276,7 +276,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
               {({ close }) => (
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between gap-2">
-                    <Heading className="text-2xl">Delete {getWorkspaceLabel(workspace).singular}</Heading>
+                    <Heading className="text-2xl">
+                      {project.konnectControlPlaneId ? 'Remove' : 'Delete'} {getWorkspaceLabel(workspace).singular}
+                    </Heading>
                     <Button
                       className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       onPress={close}
@@ -295,9 +297,20 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                     <input type="hidden" name="workspaceId" value={workspace._id} />
                     <div>
                       <p className="line-clamp-5">
-                        This will permanently delete the{' '}
-                        <strong className="break-all whitespace-pre-wrap">{workspace?.name}</strong>{' '}
-                        {getWorkspaceLabel(workspace).singular}
+                        {project.konnectControlPlaneId ? (
+                          <>
+                            Do you wish to remove your local copy of the{' '}
+                            <strong className="break-all whitespace-pre-wrap">{workspace?.name}</strong>{' '}
+                            {getWorkspaceLabel(workspace).singular}? This will not affect anything in Konnect, or any
+                            other users.
+                          </>
+                        ) : (
+                          <>
+                            This will permanently delete the{' '}
+                            <strong className="break-all whitespace-pre-wrap">{workspace?.name}</strong>{' '}
+                            {getWorkspaceLabel(workspace).singular}
+                          </>
+                        )}
                       </p>
                       {models.project.isRemoteProject(project) && (
                         <RadioGroup name="localOnly" defaultValue="true" className="mb-2 flex flex-col gap-2">
@@ -338,7 +351,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                         aria-label="Delete Workspace"
                         className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                       >
-                        Delete
+                        {project.konnectControlPlaneId ? 'Remove' : 'Delete'}
                       </Button>
                     </div>
                   </deleteWorkspaceFetcher.Form>
