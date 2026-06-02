@@ -18,7 +18,6 @@ import type {
   WebSocketRequest,
   Workspace,
 } from 'insomnia-data';
-import type { Cookie } from 'tough-cookie';
 
 type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
   Partial<Pick<Request, 'body' | 'authentication'>>;

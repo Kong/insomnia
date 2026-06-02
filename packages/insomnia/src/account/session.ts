@@ -1,8 +1,8 @@
 import { getEncryptionKeys, getUserProfile, logout as logoutAPI } from 'insomnia-api';
 
-import type { GitRepository, Project, WorkspaceMeta } from '~/insomnia-data';
-import type { AESMessage } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+import type { GitRepository, Project, WorkspaceMeta } from 'insomnia-data';
+import type { AESMessage } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
