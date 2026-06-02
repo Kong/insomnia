@@ -2,7 +2,18 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import type { RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type Dispatch,
+  type ForwardedRef,
+  forwardRef,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Button, GridList, GridListItem, Input, SearchField, Tab, TabList, Tabs } from 'react-aria-components';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
@@ -50,9 +61,17 @@ import { WorkspaceNode } from './workspace-node';
 interface ProjectNavigationSidebarProps {
   storageRules: StorageRules;
   activeNodeId?: string;
+  activeTab: ProjectNavigationSidebarTabId;
   konnectSyncEnabled: boolean;
   onCreateProject: () => void;
+  setActiveTab: Dispatch<SetStateAction<ProjectNavigationSidebarTabId | undefined>>;
 }
+
+export interface ProjectNavigationSidebarHandle {
+  expandProject: (projectId: string) => void;
+}
+
+export type ProjectNavigationSidebarTabId = 'projects' | 'konnect';
 
 const SidebarSearchField = ({
   value,
@@ -136,11 +155,10 @@ const NewProjectButton = ({ onPress, isDisabled }: { onPress: () => void; isDisa
   </BasicButton>
 );
 
-export const ProjectNavigationSidebar = ({
-  storageRules,
-  konnectSyncEnabled,
-  onCreateProject,
-}: ProjectNavigationSidebarProps) => {
+const ProjectNavigationSidebarInner = (
+  { storageRules, konnectSyncEnabled, onCreateProject, activeTab, setActiveTab }: ProjectNavigationSidebarProps,
+  ref: ForwardedRef<ProjectNavigationSidebarHandle>,
+) => {
   const navigate = useNavigate();
   const { organizationId, projectId: activeProjectId } = useParams() as {
     organizationId: string;
@@ -177,15 +195,10 @@ export const ProjectNavigationSidebar = ({
     `${organizationId}:project-navigation-konnect-filter`,
     '',
   );
-  const [storedTab, setActiveTab] = reactUse.useLocalStorage<'projects' | 'konnect'>(
-    `${organizationId}:sidebar-tab`,
-    'projects',
-  );
   const [expandedProjectAndWorkspaceIds, setExpandedProjectAndWorkspaceIds] = reactUse.useLocalStorage<string[]>(
     `${organizationId}:nav-expanded-projects-and-workspaces`,
     [],
   );
-  const activeTab = !konnectSyncEnabled ? 'projects' : (storedTab ?? 'projects');
   const isProjectTabActive = activeTab === 'projects';
   const { syncing, progress, startSync, cancelSync } = useKonnectSync();
 
@@ -723,6 +736,16 @@ export const ProjectNavigationSidebar = ({
     [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
   );
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      expandProject(projectId: string) {
+        expandProjectOrWorkspaces([projectId]);
+      },
+    }),
+    [expandProjectOrWorkspaces],
+  );
+
   const toggleRequestGroups = useCallback(
     async (requestGroupIds: string[], workspace: Workspace, collapsed?: boolean) => {
       if (requestGroupIds.length === 0) {
@@ -884,7 +907,7 @@ export const ProjectNavigationSidebar = ({
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      <Tabs selectedKey={activeTab} onSelectionChange={key => setActiveTab(key as 'projects' | 'konnect')}>
+      <Tabs selectedKey={activeTab} onSelectionChange={key => setActiveTab(key as ProjectNavigationSidebarTabId)}>
         <SideBarTabList
           konnectSyncEnabled={konnectSyncEnabled}
           isScratchPad={isScratchPad}
@@ -1193,6 +1216,10 @@ export const ProjectNavigationSidebar = ({
     </div>
   );
 };
+
+export const ProjectNavigationSidebar = forwardRef<ProjectNavigationSidebarHandle, ProjectNavigationSidebarProps>(
+  ProjectNavigationSidebarInner,
+);
 
 export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreateProject: () => void }) => {
   const { organizationId } = useParams() as { organizationId: string };
