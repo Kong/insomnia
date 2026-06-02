@@ -14,7 +14,6 @@ import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
 import { Tooltip } from '~/ui/components/tooltip';
 import { getBadgeClassName, ResourceIcon } from '~/ui/components/workspace/resource-icon';
-import { useIsLightTheme } from '~/ui/hooks/theme';
 import { setDefaultProtocol } from '~/utils/url/protocol';
 
 import { Icon } from './icon';
@@ -327,18 +326,10 @@ export const FirstRequestCreation = ({
     },
   ];
 
-  const isLightTheme = useIsLightTheme();
-  const wrapperClassName = isLightTheme
-    ? 'w-full rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#999999_0%,#DDDDDD_100%),radial-gradient(100%_100.41%_at_100%_99.92%,#999999_0%,#DDDDDD_100%)] p-px'
-    : 'w-full rounded-sm bg-[radial-gradient(100%_100.41%_at_100%_99.92%,#4C4C4C_0%,rgba(3,3,3,0)_100%),radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#4C4C4C_0%,rgba(3,3,3,0)_100%)] p-px';
-  const wrapperSurfaceClassName = isLightTheme
-    ? 'flex w-full flex-col items-center rounded-[inherit] bg-[#FFFFFF] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(96,48,191,0.2)_100%] px-6 pt-8 pb-5'
-    : 'flex w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-8 pb-5';
-
   return (
     <>
-      <div className={wrapperClassName}>
-        <div className={wrapperSurfaceClassName}>
+      <div className="rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,var(--hl-md)_0%,var(--hl-xs)_100%),radial-gradient(100%_100.41%_at_100%_99.92%,var(--hl-md)_0%,var(--hl-xs)_100%)] p-px">
+        <div className="flex w-full flex-col items-center rounded-sm bg-(--color-bg) bg-[linear-gradient(180deg,rgba(var(--color-surprise-rgb),0.2)_0%,color-mix(in_srgb,var(--color-bg)_0%,transparent)_72.8%)] px-6 pt-8 pb-5">
           <h2 className="text-center text-2xl leading-none font-semibold">
             {shouldShowJumpBackIn ? `Welcome back, ${greetingName}!` : `Welcome, ${greetingName}!`}
           </h2>
