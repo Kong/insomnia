@@ -1,4 +1,5 @@
 import type { Cookie, RequestHeader } from 'insomnia-data';
+
 import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
 import type { RenderedRequest } from '~/templating/types';
 

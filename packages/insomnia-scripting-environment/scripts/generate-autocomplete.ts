@@ -8,7 +8,7 @@
 // Re-run this script whenever the public scripting API surface changes.
 
 import { writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // These imports are Node.js-only (via tough-cookie etc.) — safe here, never in the renderer.
@@ -130,6 +130,6 @@ const insomnia = new InsomniaObject({
 
 const snippets = walk(insomnia, 'insomnia');
 
-const outputPath = join(dirname(fileURLToPath(import.meta.url)), '../src/autocomplete-snippets.json');
+const outputPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/autocomplete-snippets.json');
 writeFileSync(outputPath, JSON.stringify(snippets, null, 2) + '\n');
 console.log(`Wrote ${snippets.length} snippets to src/autocomplete-snippets.json`);
