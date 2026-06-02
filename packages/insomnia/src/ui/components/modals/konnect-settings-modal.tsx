@@ -66,6 +66,7 @@ export const KonnectSettingsModal = ({
       patchSettings({ hasKonnectPat: true });
       window.main.trackAnalyticsEvent({ event: AnalyticsEvent.kongKonnectPatValidated });
       syncKonnectProjectsAndNotifyRef.current();
+      onClose();
     }
   };
 
