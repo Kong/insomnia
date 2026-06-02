@@ -96,7 +96,7 @@ export function createLiquidTag(
               getCookiesForUrl: async (parentId: string, url: string) => {
                 const cookies = await services.cookieJar.getOrCreateForParentId(parentId);
                 const jar = jarFromCookies(cookies.cookies);
-                return jar.getCookiesSync(url);
+                return jar.getCookiesSync(url).map(c => c.toJSON());
               },
             },
             response: {
