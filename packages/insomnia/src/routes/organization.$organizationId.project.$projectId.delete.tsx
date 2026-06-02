@@ -1,4 +1,5 @@
 import { deleteTeamProject, isApiError } from 'insomnia-api';
+import type { Project } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
@@ -44,6 +45,24 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     await database.flushChanges(bufferId);
 
     project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
+
+    // If the deleted project is a Konnect project, navigate to another Konnect project
+    // (most recent from history, or first remaining) to keep the user on the Konnect tab.
+    if (project.konnectControlPlaneId) {
+      const remainingKonnectProjects = (
+        await database.find<Project>(models.project.type, { parentId: organizationId })
+      ).filter(p => p.konnectControlPlaneId != null && p._id !== projectId);
+
+      if (remainingKonnectProjects.length > 0) {
+        const targetProject = remainingKonnectProjects[0];
+        return redirect(
+          href('/organization/:organizationId/project/:projectId', {
+            organizationId,
+            projectId: targetProject._id,
+          }),
+        );
+      }
+    }
 
     // When redirect to `/organizations/:organizationId`, it sometimes doesn't reload the index loader, so manually redirect to the initial route for the organization
     const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
