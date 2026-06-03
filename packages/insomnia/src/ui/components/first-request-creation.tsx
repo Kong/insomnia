@@ -8,6 +8,7 @@ import { SelectPopover } from '~/basic-components/select-popover';
 import { getProjectRecentRequests, type RecentProjectRequest } from '~/common/project';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
@@ -112,6 +113,7 @@ export const FirstRequestCreation = ({
       name: 'My first collection',
       scope: 'collection',
       redirectAfterCreate: false,
+      source: 'first-request-pane',
     });
 
     const createdWorkspace = createWorkspaceFetcherRef.current.data;
@@ -129,7 +131,6 @@ export const FirstRequestCreation = ({
       });
       return null;
     }
-    console.log('Created workspace', createdWorkspace.workspaceId);
     return createdWorkspace.workspaceId;
   };
 
@@ -146,6 +147,7 @@ export const FirstRequestCreation = ({
         name: 'My first collection',
         scope: 'collection',
         withRequest: true,
+        source: 'first-request-pane',
       });
       return;
     }
@@ -155,6 +157,9 @@ export const FirstRequestCreation = ({
       workspaceId: selectedCollectionId,
       parentId: selectedCollectionId,
       requestType: 'HTTP',
+      metrics: {
+        source: 'first-request-pane',
+      },
     });
   };
 
@@ -188,6 +193,9 @@ export const FirstRequestCreation = ({
           parentId: workspaceId,
           requestType: 'From Curl',
           req,
+          metrics: {
+            source: 'first-request-pane',
+          },
         });
 
         return;
@@ -201,6 +209,9 @@ export const FirstRequestCreation = ({
         requestType: 'HTTP',
         req: {
           url: normalizeRequestUrl(trimmedInput),
+        },
+        metrics: {
+          source: 'first-request-pane',
         },
       });
     } catch (error) {
@@ -243,6 +254,7 @@ export const FirstRequestCreation = ({
       name: 'Notion MCP Server',
       scope: 'mcp',
       mcpServerUrl: NOTION_MCP_SERVER_URL,
+      source: 'first-request-pane',
     });
   };
 
@@ -262,6 +274,9 @@ export const FirstRequestCreation = ({
       req: {
         url: 'https://pokeapi.co/api/v2/pokemon/ditto',
         name: 'List a pokemon',
+      },
+      metrics: {
+        source: 'first-request-pane',
       },
     });
   };
@@ -293,6 +308,9 @@ export const FirstRequestCreation = ({
         req: {
           ...req,
           name: 'Lookup GitHub repository',
+        },
+        metrics: {
+          source: 'first-request-pane',
         },
       });
     } catch (error) {
@@ -365,7 +383,15 @@ export const FirstRequestCreation = ({
                     size="md"
                     variant="text"
                     icon={<Icon className="text-lg" icon="paperclip" />}
-                    onPress={() => setIsImportModalOpen(true)}
+                    onPress={() => {
+                      window.main.trackAnalyticsEvent({
+                        event: AnalyticsEvent.importStarted,
+                        properties: {
+                          source: 'first-request-pane',
+                        },
+                      });
+                      setIsImportModalOpen(true);
+                    }}
                   />
                 </Tooltip>
                 <div className="flex items-center gap-2">
@@ -375,7 +401,12 @@ export const FirstRequestCreation = ({
                     ariaLabel="Select target collection"
                     items={collectionItems}
                     selectedKey={selectedCollectionId}
-                    onSelectionChange={key => onSelectedCollectionChange(key ? String(key) : null)}
+                    onSelectionChange={key => {
+                      onSelectedCollectionChange(key ? String(key) : null);
+                      window.main.trackAnalyticsEvent({
+                        event: AnalyticsEvent.firstRequestPaneCollectionChanged,
+                      });
+                    }}
                     title="Where should we put your request?"
                     emptyState="You have no collections, so a new one will be created for you by default."
                     footer={
@@ -437,7 +468,21 @@ export const FirstRequestCreation = ({
                       </Button>
                     ))
                   : quickStartItems.map(item => (
-                      <Button key={item.id} variant="outlined" size="md" className="px-2" onPress={item.onClick}>
+                      <Button
+                        key={item.id}
+                        variant="outlined"
+                        size="md"
+                        className="px-2"
+                        onPress={() => {
+                          window.main.trackAnalyticsEvent({
+                            event: AnalyticsEvent.firstRequestPaneExampleClicked,
+                            properties: {
+                              name: item.label,
+                            },
+                          });
+                          item.onClick();
+                        }}
+                      >
                         {item.icon}
                         <span>{item.label}</span>
                       </Button>

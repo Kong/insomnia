@@ -49,5 +49,12 @@ export function trackImportEvent(event: AnalyticsEvent, properties: Record<strin
 }
 
 export interface RequestCreatedMetricsProperties {
-  source: 'sidebar' | 'shortcut' | 'tab-list' | 'placeholder-request-pane' | 'add-request-to-collection-modal';
+  source:
+    | 'sidebar'
+    | 'shortcut'
+    | 'tab-list'
+    | 'placeholder-request-pane'
+    | 'add-request-to-collection-modal'
+    | 'home-page'
+    | 'first-request-pane';
 }

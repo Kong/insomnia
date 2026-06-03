@@ -364,15 +364,18 @@ jobs:
     needs: build-and-upload-release-artifacts
     runs-on: ubuntu-24.04
     permissions:
+      contents: read
       pull-requests: write
     steps:
+      - name: Checkout branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
       - name: Get release version
         id: release_version
         shell: bash
         run: |
-          echo "version=${BRANCH/release\//}" >> $GITHUB_OUTPUT
-        env:
-          BRANCH: ${{ github.ref_name }}
+          echo "version=$(jq .version packages/insomnia/package.json -rj)" >> $GITHUB_OUTPUT
+          echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
       - name: update-pull-request
         uses: kt3k/update-pr-description@fef8b17c6648e0daa550d2ed6b5cf140d282574e # v2.0.0
@@ -402,7 +405,7 @@ jobs:
             You can update the changelog.md in this branch, run git log to get the latest changes:
 
             ```bash
-            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
+            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="${{ steps.release_version.outputs.branch }}"
             ```
             </details>
 
