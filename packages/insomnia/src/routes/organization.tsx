@@ -1,7 +1,7 @@
 import { type Billing, type CurrentPlan, type FeatureList, type Organization, type User } from 'insomnia-api';
 import type { Settings } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Link, ToggleButton, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
