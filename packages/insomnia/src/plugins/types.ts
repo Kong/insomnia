@@ -1,8 +1,9 @@
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from 'insomnia-data';
 
+import type { PluginTheme } from '~/plugins/bridge-types';
+
 import type { ParsedApiSpec } from '../common/api-specs';
 import type { PluginTemplateTag } from '../templating/types';
-import type { PluginTheme } from './misc';
 
 // shared types for private plugins
 
