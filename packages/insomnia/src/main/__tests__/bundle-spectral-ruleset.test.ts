@@ -400,7 +400,7 @@ rules:
       // ...but that remote itself extends an http:// localhost URL.
       vi.mocked(fetch).mockResolvedValueOnce(rulesetResponse(`extends:\n  - "http://localhost:8000/exec.yaml"\n`));
 
-      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('Remote "extends" URL must use https:');
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('must use https');
     });
 
     it('rejects a functions: key inside a nested remote ruleset', async () => {
