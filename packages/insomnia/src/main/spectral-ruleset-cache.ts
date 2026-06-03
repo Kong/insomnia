@@ -46,6 +46,12 @@ export async function writeCompiledRuleset(
   return { compiledPath };
 }
 
+// Clears the in-memory hash cache for a project without touching the disk.
+// Forces the next writeCompiledRuleset call to recompile.
+export function invalidateCompiledRulesetCache(projectId: string): void {
+  lastWrittenHash.delete(projectId);
+}
+
 // Deletes the compiled ruleset file for a project and clears the in-memory hash cache,
 // so the next writeCompiledRuleset call always recompiles from scratch.
 export async function deleteCompiledRuleset(projectId: string): Promise<void> {

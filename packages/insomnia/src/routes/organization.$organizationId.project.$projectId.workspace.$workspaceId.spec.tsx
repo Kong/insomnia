@@ -33,6 +33,7 @@ import { debounce } from '~/common/misc';
 import { selectFileOrFolder } from '~/common/select-file-or-folder';
 import { useRootLoaderData } from '~/root';
 import { useDeleteProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete-ruleset';
+import { useRefreshProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.refresh-ruleset';
 import { useUpdateProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.update-ruleset';
 import {
   useWorkspaceLoaderData,
@@ -101,6 +102,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   // For git, the RepoFileWatcher keeps .spectral.yaml in sync with this record.
   const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
   const rulesetContent = projectLintRuleset?.rulesetContent || '';
+  const rulesetLastCompiledAt = projectLintRuleset?.modified ?? null;
 
   let parsedSpec: OpenAPIV3.Document | undefined;
 
@@ -114,6 +116,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     isConnectedGitProject,
     parsedSpec,
     rulesetContent,
+    rulesetLastCompiledAt,
   };
 }
 
@@ -192,7 +195,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
-  const { apiSpec, gitSyncRulesetPath, isConnectedGitProject, parsedSpec, rulesetContent } =
+  const { apiSpec, gitSyncRulesetPath, isConnectedGitProject, parsedSpec, rulesetContent, rulesetLastCompiledAt } =
     useLoaderData<typeof clientLoader>();
 
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
@@ -201,6 +204,8 @@ const Component = ({ params }: Route.ComponentProps) => {
   const { submit: updateApiSpec } = useSpecUpdateActionFetcher();
   const { submit: updateProjectRuleset } = useUpdateProjectRulesetActionFetcher();
   const { submit: deleteProjectRuleset } = useDeleteProjectRulesetActionFetcher();
+  const { submit: refreshProjectRuleset } = useRefreshProjectRulesetActionFetcher();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
   const gitVersion = useGitVCSVersion();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
@@ -452,6 +457,25 @@ const Component = ({ params }: Route.ComponentProps) => {
     });
 
     setSelectedRulesetPath(gitSyncRulesetPath || rulesetWritePath);
+  };
+
+  const handleRefreshRuleset = async () => {
+    if (!rulesetContent) {
+      return;
+    }
+    setIsRefreshing(true);
+    try {
+      await window.main.refreshCompiledRuleset({ projectId, rulesetContent });
+      refreshProjectRuleset({ organizationId, projectId });
+      editor.current?.tryToSetOption('lint', { ...lintOptions });
+    } catch (err) {
+      showError({
+        title: 'Refresh Failed',
+        message: `Failed to refresh ruleset: ${err instanceof Error ? err.message : String(err)}`,
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleUnselectSpectralFile = async () => {
@@ -1111,22 +1135,49 @@ const Component = ({ params }: Route.ComponentProps) => {
                             )}
                           </span>
                           {selectedRulesetPath ? (
-                            <TooltipTrigger delay={0}>
-                              <Button
-                                aria-label="Remove custom ruleset"
-                                onPress={handleUnselectSpectralFile}
-                                className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                              >
-                                <Icon icon="xmark" />
-                              </Button>
-                              <Tooltip
-                                placement="top end"
-                                offset={8}
-                                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                              >
-                                <p>Clear custom ruleset and use default OAS ruleset</p>
-                              </Tooltip>
-                            </TooltipTrigger>
+                            <>
+                              <TooltipTrigger delay={0}>
+                                <Button
+                                  aria-label="Refresh ruleset from remote sources"
+                                  isDisabled={isRefreshing}
+                                  onPress={handleRefreshRuleset}
+                                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
+                                >
+                                  <Icon
+                                    icon={isRefreshing ? 'spinner' : 'rotate'}
+                                    className={isRefreshing ? 'animate-spin' : ''}
+                                  />
+                                </Button>
+                                <Tooltip
+                                  placement="top end"
+                                  offset={8}
+                                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                                >
+                                  <p>Recompile ruleset, including re-fetching any referenced remote entries.</p>
+                                  {rulesetLastCompiledAt && (
+                                    <p className="mt-1">
+                                      {`Last updated ${new Date(rulesetLastCompiledAt).toLocaleString()}`}.
+                                    </p>
+                                  )}
+                                </Tooltip>
+                              </TooltipTrigger>
+                              <TooltipTrigger delay={0}>
+                                <Button
+                                  aria-label="Remove custom ruleset"
+                                  onPress={handleUnselectSpectralFile}
+                                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                                >
+                                  <Icon icon="xmark" />
+                                </Button>
+                                <Tooltip
+                                  placement="top end"
+                                  offset={8}
+                                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                                >
+                                  <p>Clear custom ruleset and use default OAS ruleset</p>
+                                </Tooltip>
+                              </TooltipTrigger>
+                            </>
                           ) : (
                             <Button
                               aria-label="Upload custom ruleset"

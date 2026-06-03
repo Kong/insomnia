@@ -38,7 +38,11 @@ import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
-import { deleteCompiledRuleset, writeCompiledRuleset } from '~/main/spectral-ruleset-cache';
+import {
+  deleteCompiledRuleset,
+  invalidateCompiledRulesetCache,
+  writeCompiledRuleset,
+} from '~/main/spectral-ruleset-cache';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 import type {
   GenerateCommitsFromDiffFunction,
@@ -203,6 +207,7 @@ export interface RendererToMainBridgeAPI {
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
   deleteCompiledRuleset: (options: { projectId: string }) => Promise<void>;
+  refreshCompiledRuleset: (options: { projectId: string; rulesetContent: string }) => Promise<{ compiledPath: string }>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
     destinationPath: string;
@@ -433,6 +438,10 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('deleteCompiledRuleset', async (_, options: { projectId: string }) => {
     await deleteCompiledRuleset(options.projectId);
+  });
+  ipcMainHandle('refreshCompiledRuleset', async (_, options: { projectId: string; rulesetContent: string }) => {
+    invalidateCompiledRulesetCache(options.projectId);
+    return writeCompiledRuleset(options.projectId, options.rulesetContent);
   });
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
