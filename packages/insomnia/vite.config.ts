@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['@getinsomnia/node-libcurl'],
       force: true, // wipe vite cache
-      include: ['codemirror-graphql/utils/SchemaReference', '@stoplight/spectral-core', 'isomorphic-git'],
+      include: ['codemirror-graphql/utils/SchemaReference', '@stoplight/spectral-core', 'isomorphic-git', 'json-bigint'],
     },
     resolve: {
       alias: {
