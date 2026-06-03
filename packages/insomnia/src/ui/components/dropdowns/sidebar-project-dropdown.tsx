@@ -93,13 +93,18 @@ export const ProjectDropdown: FC<Props> = ({
   const isGitProjectInconsistent = models.project.isGitProject(project) && !storageRules.enableGitSync;
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitProjectInconsistent;
 
-  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar-dropdown' });
-  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source: 'sidebar-dropdown' });
+  const createNewCollection = () =>
+    setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar-dropdown' });
+  const createNewDocument = () =>
+    setNewWorkspaceModalState({ scope: 'design', isOpen: true, source: 'sidebar-dropdown' });
   const canCreateMockServer = project?._id;
   const createNewMockServer = () =>
-    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source: 'sidebar-dropdown' });
-  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source: 'sidebar-dropdown' });
-  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source: 'sidebar-dropdown' });
+    canCreateMockServer &&
+    setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source: 'sidebar-dropdown' });
+  const createNewGlobalEnvironment = () =>
+    setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source: 'sidebar-dropdown' });
+  const createNewMcpClient = () =>
+    setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source: 'sidebar-dropdown' });
 
   const projectActionList: ProjectActionItem[] = [
     {
@@ -279,7 +284,7 @@ export const ProjectDropdown: FC<Props> = ({
         >
           <Icon icon="ellipsis" />
         </Button>
-        <Popover className="flex min-w-max flex-col overflow-y-hidden">
+        <Popover placement="bottom end" className="flex min-w-44 flex-col overflow-y-hidden">
           <Menu
             aria-label="Project Actions Menu"
             selectionMode="single"
@@ -290,7 +295,7 @@ export const ProjectDropdown: FC<Props> = ({
                 ?.action(project._id, project.name);
             }}
             items={projectDropdownActions}
-            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+            className="min-w-44 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
           >
             {section => (
               <MenuSection className="flex flex-1 flex-col">

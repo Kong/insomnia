@@ -147,6 +147,51 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
   );
 };
 
+const ScratchPadAuthActions = () => (
+  <>
+    <NavLink
+      to={href('/auth/login')}
+      className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+    >
+      Login
+    </NavLink>
+    <NavLink
+      className="flex items-center justify-center gap-2 rounded-xs bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
+      to={href('/auth/login')}
+    >
+      Sign up for free
+    </NavLink>
+  </>
+);
+
+const LoginUserActions = ({
+  organizationId,
+  isMinimal,
+  user,
+  currentPlan,
+}: {
+  organizationId: string;
+  isMinimal: boolean;
+  user: User;
+  currentPlan?: CurrentPlan;
+}) => {
+  return (
+    <>
+      <PresentUsers />
+      <HeaderInviteButton
+        organizationId={organizationId}
+        className={
+          !isMinimal
+            ? 'border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise)'
+            : 'text-(--color-font)'
+        }
+      />
+      <HeaderPlanIndicator isMinimal={isMinimal} />
+      <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
+    </>
+  );
+};
+
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { organizations, user, currentPlan } = loaderData;
   const { settings } = useRootLoaderData()!;
@@ -221,7 +266,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
 
   useEffect(() => {
     return window.main.on('toggle-sidebar', () => {
-      console.log('toggle-sidebar event received, toggling sidebar');
       toggleSidebar();
     });
   }, [toggleSidebar]);
@@ -259,7 +303,18 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   {!user ? <GitHubStarsButton /> : null}
                 </div>
                 <CommandPalette />
-                <div />
+                <div className="flex min-w-min items-center justify-end gap-(--padding-sm) space-x-3 p-2">
+                  {user ? (
+                    <LoginUserActions
+                      organizationId={organizationId}
+                      isMinimal={false}
+                      user={user}
+                      currentPlan={currentPlan}
+                    />
+                  ) : (
+                    <ScratchPadAuthActions />
+                  )}
+                </div>
               </header>
               <div className="overflow-hidden border-b border-(--hl-md) [grid-area:Content]">
                 <RunnerProvider>
@@ -439,42 +494,22 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         </Link>
                       )}
                     </div>
+                    <div
+                      className={`flex items-center justify-end gap-(--padding-sm) p-2 ${!isMinimal ? 'hidden' : ''}`}
+                    >
+                      {user ? (
+                        <LoginUserActions
+                          organizationId={organizationId}
+                          isMinimal
+                          user={user}
+                          currentPlan={currentPlan}
+                        />
+                      ) : (
+                        <ScratchPadAuthActions />
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div
-                className={`flex items-center justify-end gap-(--padding-sm) self-center justify-self-end border-l-0 p-2 ${isMinimal ? '[grid-area:Statusbar]' : '[grid-area:Header]'}`}
-              >
-                {user ? (
-                  <Fragment>
-                    <PresentUsers />
-                    <HeaderInviteButton
-                      organizationId={organizationId}
-                      className={
-                        isMinimal
-                          ? 'text-(--color-font)'
-                          : 'border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise)'
-                      }
-                    />
-                    <HeaderPlanIndicator isMinimal={isMinimal} />
-                    <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
-                  </Fragment>
-                ) : (
-                  <Fragment>
-                    <NavLink
-                      to={href('/auth/login')}
-                      className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                    >
-                      Login
-                    </NavLink>
-                    <NavLink
-                      className="flex items-center justify-center gap-2 rounded-xs bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
-                      to={href('/auth/login')}
-                    >
-                      Sign up for free
-                    </NavLink>
-                  </Fragment>
-                )}
               </div>
             </div>
           </div>
