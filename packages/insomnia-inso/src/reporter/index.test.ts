@@ -1,6 +1,6 @@
+import type { RequestTestResult } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { logTestResult, logTestResultSummary, reporterTypes } from './index';
 
 describe('Reporter', () => {

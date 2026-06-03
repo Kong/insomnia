@@ -1,6 +1,6 @@
+import { services } from 'insomnia-data';
 import { type ActionFunctionArgs, href } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import { saveVaultKey, validateVaultKey } from '~/ui/vault-key.client';
 import { createFetcherSubmitHook } from '~/utils/router';
 

@@ -24,8 +24,9 @@
  * @see providers/ for provider implementations
  */
 
-import type { GitCredentials, GitRepository } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
+import type { GitCredentials, GitRepository } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
+
 import { getElectronStorage } from '~/main/electron-storage';
 
 const { isGitCredentialsOAuth } = models.gitRepository;

@@ -4,7 +4,6 @@ import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
 import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
-import { strings } from 'insomnia/src/common/strings';
 import { AnalyticsEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
@@ -13,12 +12,13 @@ import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-re
 import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal/import-modal';
 import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
 import type { Organization } from 'insomnia-api';
+import type { BaseModel, Environment, Project, Workspace } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
+import { strings } from 'insomnia-data/common';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
-import type { BaseModel, Environment, Project, Workspace } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';

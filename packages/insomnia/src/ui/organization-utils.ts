@@ -1,8 +1,8 @@
 import { createTeamProject, fetchTeamProjects, getCurrentPlan, getUserProfile, isApiError } from 'insomnia-api';
+import type { Project, Workspace } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 
 import { projectLock } from '~/common/project';
-import type { Project, Workspace } from '~/insomnia-data';
-import { database, models, services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 
 import {

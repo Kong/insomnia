@@ -1,9 +1,10 @@
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
+
 import { type RAToastContent, showToast } from '~/ui/components/toast-notification';
 
 import * as themes from '../plugins/misc';
 import { plugins } from '../plugins/renderer-bridge';
-import * as templating from '../templating';
+import * as templating from '../templating/renderer-safe';
 import { showModal } from './components/modals';
 import { SettingsModal } from './components/modals/settings-modal';
 

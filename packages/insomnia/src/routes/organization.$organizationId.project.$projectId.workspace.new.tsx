@@ -1,10 +1,10 @@
 import { upsertMockbin } from 'insomnia-api';
+import type { MockRoute, MockServer, WorkspaceScope } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { getAppVersion, getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
-import type { MockRoute, MockServer, WorkspaceScope } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -18,6 +18,7 @@ import { mockRouteToHar } from './organization.$organizationId.project.$projectI
 interface NewWorkspaceData {
   name: string;
   scope: WorkspaceScope;
+  mcpServerUrl?: string;
   folderPath?: string;
   mockServerType?: 'self-hosted' | 'cloud';
   mockServerUrl?: string;
@@ -31,11 +32,13 @@ interface NewWorkspaceData {
   fileName?: string;
   withRequest?: boolean;
   mockServerDynamicResponses?: boolean;
+  source?: string;
 }
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   try {
+    const redirectAfterCreate = new URL(request.url).searchParams.get('redirectAfterCreate') !== 'false';
     const workspaceData = (await request.json()) as NewWorkspaceData;
     const project = await services.project.get(projectId);
 
@@ -116,6 +119,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         organizationId,
         projectId,
         name,
+        workspaceData.source,
       );
 
       if (mockServerError) {
@@ -138,7 +142,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       await services.mcpRequest.create({
         parentId: workspace._id,
         transportType: 'streamable-http',
-        url: '',
+        url: workspaceData.mcpServerUrl?.trim() || '',
         name: 'MCP Client',
         headers: defaultHeaders,
         description: '',
@@ -183,11 +187,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     window.main.trackAnalyticsEvent({
       event: event,
-      ...(environmentType && {
-        properties: {
-          type: environmentType,
-        },
-      }),
+      properties: {
+        ...(environmentType && { type: environmentType }),
+        ...(workspaceData.source && { source: workspaceData.source }),
+      },
     });
 
     if (workspaceData.withRequest) {
@@ -212,7 +215,17 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         })
       )._id;
 
-      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestCreated, properties: { requestType: 'HTTP' } });
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.requestCreated,
+        properties: { requestType: 'HTTP', ...(workspaceData.source && { source: workspaceData.source }) },
+      });
+
+      if (!redirectAfterCreate) {
+        return {
+          workspaceId: workspace._id,
+          requestId: activeRequestId,
+        };
+      }
 
       return redirect(
         href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
@@ -222,6 +235,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           requestId: activeRequestId,
         }),
       );
+    }
+
+    if (!redirectAfterCreate) {
+      return {
+        workspaceId: workspace._id,
+      };
     }
 
     return redirect(
@@ -245,14 +264,22 @@ export const useWorkspaceNewActionFetcher = createFetcherSubmitHook(
     ({
       organizationId,
       projectId,
+      redirectAfterCreate,
       ...workspaceData
-    }: NewWorkspaceData & { organizationId: string; projectId: string }) => {
+    }: NewWorkspaceData & { organizationId: string; projectId: string; redirectAfterCreate?: boolean }) => {
+      const action = href('/organization/:organizationId/project/:projectId/workspace/new', {
+        organizationId,
+        projectId,
+      });
+      const query = new URLSearchParams();
+
+      if (redirectAfterCreate !== undefined) {
+        query.set('redirectAfterCreate', String(redirectAfterCreate));
+      }
+
       return submit(JSON.stringify(workspaceData), {
         method: 'POST',
-        action: href('/organization/:organizationId/project/:projectId/workspace/new', {
-          organizationId,
-          projectId,
-        }),
+        action: query.toString() ? `${action}?${query.toString()}` : action,
         encType: 'application/json',
       });
     },
@@ -266,6 +293,7 @@ async function createMockServer(
   organizationId: string,
   projectId: string,
   name: string,
+  source?: string,
 ): Promise<string | undefined> {
   try {
     const mockServerType = workspaceData.mockServerType!;
@@ -361,7 +389,7 @@ async function createMockServer(
         generation_from: workspaceData.apiSpecContents ? 'design_doc' : workspaceData.mockServerSpecSource || '',
         dynamic_responses: workspaceData.mockServerDynamicResponses ? 'yes' : 'no',
         generation_duration_seconds: generationDurationMs / 1000,
-        source: 'menu',
+        ...(source && { source }),
       },
     });
 

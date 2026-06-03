@@ -1,4 +1,4 @@
-import { services } from '~/insomnia-data';
+import { services } from 'insomnia-data';
 
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import {

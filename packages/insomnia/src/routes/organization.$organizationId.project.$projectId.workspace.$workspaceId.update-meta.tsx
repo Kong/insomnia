@@ -1,7 +1,7 @@
+import type { WorkspaceMeta } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import type { WorkspaceMeta } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import { createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';

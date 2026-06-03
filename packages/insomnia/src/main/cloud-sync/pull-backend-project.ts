@@ -1,5 +1,6 @@
-import type { RemoteProject, Workspace } from '~/insomnia-data';
-import { database, models } from '~/insomnia-data';
+import type { RemoteProject, Workspace } from 'insomnia-data';
+import { database, models } from 'insomnia-data';
+
 import type { VCS } from '~/main/cloud-sync/core/vcs';
 import { interceptAccessError } from '~/sync/access-error';
 import type { BackendProjectWithTeam } from '~/sync/types';
@@ -58,6 +59,11 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
     if (models.workspace.isWorkspace(doc)) {
       doc.parentId = remoteProject._id;
       workspaceId = doc._id;
+    }
+    // ProjectLintRuleset is parented to the project, whose _id is not stable across machines,
+    // so its parentId is normalized to null in sync transit. Re-parent it to the local project.
+    if (models.projectLintRuleset.isProjectLintRuleset(doc)) {
+      doc.parentId = remoteProject._id;
     }
     const allModelType = models.types();
     if (allModelType.includes(doc.type)) {

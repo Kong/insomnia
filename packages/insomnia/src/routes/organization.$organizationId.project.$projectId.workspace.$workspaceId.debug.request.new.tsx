@@ -1,3 +1,5 @@
+import type { Request, RequestBody, RequestParameter } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import {
@@ -8,8 +10,7 @@ import {
   METHOD_GET,
   METHOD_POST,
 } from '~/common/constants';
-import type { Request, RequestBody, RequestParameter } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
+import type { RequestCreatedMetricsProperties } from '~/ui/analytics';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { invariant } from '~/utils/invariant';
@@ -20,10 +21,11 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const { requestType, parentId, req } = (await request.json()) as {
+  const { requestType, parentId, req, metrics } = (await request.json()) as {
     requestType: CreateRequestType;
     parentId?: string;
-    req?: Request;
+    req?: Partial<Request>;
+    metrics?: RequestCreatedMetricsProperties;
   };
 
   const settings = await services.settings.getOrCreate();
@@ -44,7 +46,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       await services.request.create({
         parentId: parentId || workspaceId,
         method: METHOD_GET,
-        name: 'New Request',
+        name: req?.name || 'New Request',
+        url: req?.url || '',
         headers: defaultHeaders,
       })
     )._id;
@@ -65,9 +68,11 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
         headers: [...defaultHeaders, { name: 'Content-Type', value: CONTENT_TYPE_JSON }],
         body: {
           mimeType: CONTENT_TYPE_GRAPHQL,
-          text: '',
+          text: req?.body?.text || '',
         },
-        name: 'New Request',
+        name: req?.name || 'New Request',
+        url: req?.url || '',
+        authentication: req?.authentication,
       })
     )._id;
   }
@@ -151,6 +156,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
           ? req.authentication.type
           : 'none',
       has_docs: !!req?.description,
+      source: metrics?.source,
     },
   });
 
@@ -173,6 +179,7 @@ export const useRequestNewActionFetcher = createFetcherSubmitHook(
       requestType,
       parentId,
       req,
+      metrics,
     }: {
       organizationId: string;
       projectId: string;
@@ -180,6 +187,7 @@ export const useRequestNewActionFetcher = createFetcherSubmitHook(
       requestType: CreateRequestType;
       parentId?: string;
       req?: Partial<Request>;
+      metrics?: RequestCreatedMetricsProperties;
     }) => {
       const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/new', {
         organizationId,
@@ -187,7 +195,7 @@ export const useRequestNewActionFetcher = createFetcherSubmitHook(
         workspaceId,
       });
 
-      return submit(JSON.stringify({ requestType, parentId, req }), {
+      return submit(JSON.stringify({ requestType, parentId, req, metrics }), {
         action: url,
         method: 'POST',
         encType: 'application/json',

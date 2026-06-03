@@ -1,4 +1,11 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type {
+  AuthTypeAPIKey,
+  AuthTypeAwsIam,
+  AuthTypeBasic,
+  AuthTypeNTLM,
+  RequestAuthentication,
+} from 'insomnia-data';
 import React, { type FC, useCallback } from 'react';
 import {
   Button,
@@ -12,14 +19,6 @@ import {
   SelectValue,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
-
-import type {
-  AuthTypeAPIKey,
-  AuthTypeAwsIam,
-  AuthTypeBasic,
-  AuthTypeNTLM,
-  RequestAuthentication,
-} from '~/insomnia-data';
 
 import {
   type AuthTypes,

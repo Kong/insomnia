@@ -3,6 +3,7 @@ import type { IpcRendererEvent } from 'electron';
 import type {
   BackendProject,
   BackendProjectWithTeam,
+  BackendProjectWithTeamsAndTeamProjectId,
   Compare,
   MergeConflict,
   Snapshot,
@@ -43,6 +44,7 @@ export interface SyncBridgeMethods {
   }) => Promise<Operation>;
   push: (options: { teamId: string; teamProjectId: string }) => Promise<void>;
   remoteBackendProjects: (options: { teamId: string; teamProjectId: string }) => Promise<BackendProjectWithTeam[]>;
+  remoteBackendProjectsOfTeam: (options: { teamId: string }) => Promise<BackendProjectWithTeamsAndTeamProjectId[]>;
   removeBackendProjectsForRoot: (rootDocumentId: string) => Promise<void>;
   removeBranch: (branchName: string) => Promise<void>;
   removeRemoteBranch: (branchName: string) => Promise<void>;

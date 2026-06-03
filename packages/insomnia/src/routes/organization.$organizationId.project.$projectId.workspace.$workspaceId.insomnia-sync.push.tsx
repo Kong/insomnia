@@ -1,6 +1,6 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { remoteCompareCache, vcsEventProperties } from '~/ui/sync-utils';
 import { invariant } from '~/utils/invariant';

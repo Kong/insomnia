@@ -1,11 +1,12 @@
+import type { Environment, RequestPathParameter } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { deconstructQueryStringToParams } from 'insomnia-data/common';
 import React, { type FC, Fragment } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { Environment, RequestPathParameter } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { getAuthObjectOrNull } from '~/network/authentication';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -16,7 +17,7 @@ import {
   type SocketIORequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
+import { extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';

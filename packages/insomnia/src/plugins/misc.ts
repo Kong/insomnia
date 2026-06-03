@@ -1,85 +1,25 @@
 import Color from 'color';
+import type { ThemeSettings } from 'insomnia-data';
+import { getAppDefaultTheme } from 'insomnia-data/common';
 
-import type { ThemeSettings } from '~/insomnia-data';
-
-import { getAppDefaultTheme } from '../common/constants';
-import type { Theme } from './index';
-import { type ColorScheme, getThemes } from './index';
-
-export type HexColor = `#${string}`;
-export type RGBColor = `rgb(${string})`;
-export type RGBAColor = `rgba(${string})`;
-
-export type ThemeColor = HexColor | RGBColor | RGBAColor;
-
-// notice that for each sub-block (`background`, `foreground`, `highlight`) the `default` key is required if the sub-block is present
-export interface ThemeBlock {
-  background?: {
-    default: ThemeColor;
-    success?: ThemeColor;
-    notice?: ThemeColor;
-    warning?: ThemeColor;
-    danger?: ThemeColor;
-    surprise?: ThemeColor;
-    info?: ThemeColor;
-  };
-  foreground?: {
-    default: ThemeColor;
-    success?: ThemeColor;
-    notice?: ThemeColor;
-    warning?: ThemeColor;
-    danger?: ThemeColor;
-    surprise?: ThemeColor;
-    info?: ThemeColor;
-  };
-  highlight?: {
-    default: ThemeColor;
-    xxs?: ThemeColor;
-    xs?: ThemeColor;
-    sm?: ThemeColor;
-    md?: ThemeColor;
-    lg?: ThemeColor;
-    xl?: ThemeColor;
-  };
-}
+import type {
+  HexColor,
+  PluginTheme,
+  RGBAColor,
+  RGBColor,
+  StylesThemeBlocks,
+  ThemeBlock,
+  ThemeColor,
+  ThemeInner,
+} from './bridge-types';
+export type { HexColor, PluginTheme, RGBAColor, RGBColor, StylesThemeBlocks, ThemeBlock, ThemeColor, ThemeInner };
+import type { ColorScheme } from './index';
+import { plugins } from './renderer-bridge';
 
 export interface CompleteStyleBlock {
   background: Required<Required<ThemeBlock>['background']>;
   foreground: Required<Required<ThemeBlock>['foreground']>;
   highlight: Required<Required<ThemeBlock>['highlight']>;
-}
-
-export interface StylesThemeBlocks {
-  appHeader?: ThemeBlock;
-  dialog?: ThemeBlock;
-  dialogFooter?: ThemeBlock;
-  dialogHeader?: ThemeBlock;
-  dropdown?: ThemeBlock;
-  editor?: ThemeBlock;
-  link?: ThemeBlock;
-  overlay?: ThemeBlock;
-  pane?: ThemeBlock;
-  paneHeader?: ThemeBlock;
-  sidebar?: ThemeBlock;
-  sidebarHeader?: ThemeBlock;
-  sidebarList?: ThemeBlock;
-
-  /** does not respect parent wrapping theme */
-  tooltip?: ThemeBlock;
-
-  transparentOverlay?: ThemeBlock;
-}
-
-export type ThemeInner = ThemeBlock & {
-  rawCss?: string;
-  styles?: StylesThemeBlocks | null;
-};
-
-export interface PluginTheme {
-  /** this name is used to generate CSS classes, and must be lower case and must not contain whitespace */
-  name: string;
-  displayName: string;
-  theme: ThemeInner;
 }
 
 export const validateThemeName = (name: string) => {
@@ -93,7 +33,7 @@ export const validateThemeName = (name: string) => {
   return validName;
 };
 
-export const containsNunjucks = (data: string) => data.includes('{{') && data.includes('}}');
+export const containsTemplateSyntax = (data: string) => data.includes('{{') && data.includes('}}');
 const getChildValue = (theme: any, path: string[]) => {
   return path.reduce((acc, v: string) => {
     try {
@@ -114,7 +54,7 @@ export const validateTheme = (pluginTheme: PluginTheme) => {
       return;
     }
 
-    if (typeof data === 'string' && containsNunjucks(data)) {
+    if (typeof data === 'string' && containsTemplateSyntax(data)) {
       console.error(
         `[plugin] Nunjucks values in plugin themes are no longer valid. The plugin ${pluginTheme.displayName} (${pluginTheme.name}) has an invalid value, "${data}" at the path $.theme.${keyPath.join('.')}`,
       );
@@ -331,7 +271,7 @@ export async function setTheme(themeName: string) {
     return;
   }
 
-  const themes: Theme[] = await getThemes();
+  const themes = await plugins.getThemes();
   let selectedTheme = themes.find(t => t.theme.name === themeName);
 
   if (!selectedTheme) {

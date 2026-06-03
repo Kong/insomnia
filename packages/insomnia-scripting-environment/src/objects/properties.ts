@@ -147,7 +147,7 @@ export class Property extends PropertyBase {
 
   static _index = 'id';
 
-  static replaceSubstitutions(content: string, ...variables: object[]): string {
+  static async replaceSubstitutions(content: string, ...variables: object[]): Promise<string> {
     if (!Array.isArray(variables) || typeof content !== 'string') {
       throw new TypeError(
         "replaceSubstitutions: the first param's type is not string or other parameters are not an array",
@@ -161,7 +161,7 @@ export class Property extends PropertyBase {
     return getInterpolator().render(content, context);
   }
 
-  static replaceSubstitutionsIn(obj: object, ...variables: object[]): object {
+  static async replaceSubstitutionsIn(obj: object, ...variables: object[]): Promise<object> {
     if (!Array.isArray(variables) || typeof obj !== 'object') {
       throw new TypeError(
         "replaceSubstitutions: the first param's type is not object or other parameters are not an array",
@@ -177,7 +177,7 @@ export class Property extends PropertyBase {
         context = { ...context, ...variable };
       });
 
-      const rendered = getInterpolator().render(content, context);
+      const rendered = await getInterpolator().render(content, context);
       return JSON.parse(rendered);
     } catch (e: any) {
       throw new Error(`replaceSubstitutionsIn: ${e.toString()}`);

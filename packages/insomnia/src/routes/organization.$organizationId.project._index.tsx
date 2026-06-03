@@ -1,3 +1,5 @@
+import type { GitRepository, Project } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import type { LoaderFunctionArgs } from 'react-router';
@@ -6,8 +8,6 @@ import { href, redirect, useParams } from 'react-router';
 import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { getProjectsWithGitRepositories } from '~/common/project';
-import type { GitRepository, Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
@@ -22,11 +22,33 @@ export interface ProjectIndexLoaderData {
   projects: (Project & { gitRepository?: GitRepository })[];
 }
 
+const shouldAutoCreateInitialProject = async ({
+  organizationId,
+  accountId,
+}: {
+  organizationId: string;
+  accountId: string | null | undefined;
+}) => {
+  if (!accountId) {
+    return false;
+  }
+
+  const organization = await services.organization.get(organizationId);
+
+  if (!organization || !models.organization.isPersonalOrganization(organization)) {
+    return false;
+  }
+
+  const firstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
+
+  return !window.localStorage.getItem(firstPersonalOrgLandingKey);
+};
+
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
-  const { id: sessionId } = await services.userSession.get();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (!sessionId) {
     await logout();
@@ -38,6 +60,33 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   // If there are projects in the organization and no project is selected, redirect to the first project
   if (projects.length > 0) {
     return redirect(`/organization/${organizationId}/project/${projects[0]._id}`);
+  }
+
+  let isFirstPersonalOrgLanding = false;
+
+  try {
+    isFirstPersonalOrgLanding = await shouldAutoCreateInitialProject({ organizationId, accountId });
+  } catch (error) {
+    console.warn('[project] Failed to evaluate first personal org landing state', error);
+  }
+
+  if (isFirstPersonalOrgLanding) {
+    try {
+      const project = await services.project.create({
+        name: 'Drafts',
+        parentId: organizationId,
+      });
+
+      await services.workspace.create({
+        name: 'My first collection',
+        scope: 'collection',
+        parentId: project._id,
+      });
+
+      return redirect(`/organization/${organizationId}/project/${project._id}`);
+    } catch (error) {
+      console.warn('[project] Failed to auto-create initial local project', error);
+    }
   }
 
   return {

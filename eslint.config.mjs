@@ -21,12 +21,12 @@ const generalRestrictedImportPatterns = [
   // Block relative paths to insomnia-data
   {
     group: ['./**/insomnia-data', './**/insomnia-data/**', '../**/insomnia-data', '../**/insomnia-data/**'],
-    message: "Please use '~/insomnia-data' instead of relative paths",
+    message: "Please use 'insomnia-data' instead of relative paths",
   },
-  // Only allow ~/insomnia-data and ~/insomnia-data/node
+  // Only allow supported insomnia-data entrypoints
   {
-    regex: '^~/insomnia-data/(?!node($|/)).+',
-    message: "Only '~/insomnia-data' and '~/insomnia-data/node' are allowed",
+    regex: '^insomnia-data/(?!node($|/)|common($|/)).+',
+    message: "Only 'insomnia-data', 'insomnia-data/node' and 'insomnia-data/common' are allowed",
   },
 ];
 const rendererNodeMigrationOffenders = [
@@ -43,6 +43,8 @@ const rendererNodeRestrictionIgnores = [
   ...rendererNodeMigrationOffenders,
   'packages/insomnia/src/common/__tests__/**/*.{ts,tsx}',
   'packages/insomnia/src/common/send-request.ts',
+  'packages/insomnia/src/common/bundle-spectral-ruleset.ts',
+  'packages/insomnia/src/common/private-host.ts',
 ];
 
 export default defineConfig([

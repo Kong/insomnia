@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useRevalidator } from 'react-router';
 
 import type { SyncResult } from '../../konnect/sync';
-import { syncKonnect } from '../../konnect/sync';
+import { syncKonnect, zeroCounts } from '../../konnect/sync';
 import { AnalyticsEvent } from '../analytics';
 
 const REVALIDATE_DEBOUNCE_MS = 500;
@@ -10,25 +10,33 @@ const REVALIDATE_DEBOUNCE_MS = 500;
 interface KonnectSyncState {
   syncing: boolean;
   progress: string;
-  error: string | null;
 }
 
 export interface UseKonnectSyncResult {
   syncing: boolean;
   progress: string;
-  error: string | null;
-  startSync: (organizationId: string) => Promise<SyncResult | null>;
+  startSync: (organizationId: string) => Promise<SyncResult>;
   cancelSync: () => void;
 }
 
 export function useKonnectSync(): UseKonnectSyncResult {
-  const [state, setState] = useState<KonnectSyncState>({ syncing: false, progress: '', error: null });
+  const [state, setState] = useState<KonnectSyncState>({ syncing: false, progress: '' });
   const abortRef = useRef<AbortController | null>(null);
   const revalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { revalidate } = useRevalidator();
 
-  const startSync = async (organizationId: string): Promise<SyncResult | null> => {
-    if (abortRef.current) { return null; }
+  const startSync = async (organizationId: string): Promise<SyncResult> => {
+    if (abortRef.current) {
+      return {
+        success: false,
+        error: 'Sync already in progress.',
+        controlPlanes: zeroCounts(),
+        services: zeroCounts(),
+        routes: zeroCounts(),
+        skippedRoutes: [],
+        durationMs: 0,
+      };
+    }
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -36,10 +44,18 @@ export function useKonnectSync(): UseKonnectSyncResult {
     const pat = await window.main.secretStorage.getSecret('konnectPat');
     if (!pat) {
       abortRef.current = null;
-      setState({ syncing: false, progress: '', error: 'No PAT found. Go to Preferences → Konnect to add one.' });
-      return null;
+      setState({ syncing: false, progress: '' });
+      return {
+        success: false,
+        error: 'No Konnect PAT found.',
+        controlPlanes: zeroCounts(),
+        services: zeroCounts(),
+        routes: zeroCounts(),
+        skippedRoutes: [],
+        durationMs: 0,
+      };
     }
-    setState({ syncing: true, progress: 'Starting sync...', error: null });
+    setState({ syncing: true, progress: 'Starting sync...' });
 
     const result = await syncKonnect({
       pat,
@@ -47,20 +63,24 @@ export function useKonnectSync(): UseKonnectSyncResult {
       signal: controller.signal,
       onProgress: message => {
         setState(s => ({ ...s, progress: message }));
-        if (revalidateTimerRef.current) { clearTimeout(revalidateTimerRef.current); }
+        if (revalidateTimerRef.current) {
+          clearTimeout(revalidateTimerRef.current);
+        }
         revalidateTimerRef.current = setTimeout(revalidate, REVALIDATE_DEBOUNCE_MS);
       },
     });
 
     abortRef.current = null;
-    if (revalidateTimerRef.current) { clearTimeout(revalidateTimerRef.current); revalidateTimerRef.current = null; }
+    if (revalidateTimerRef.current) {
+      clearTimeout(revalidateTimerRef.current);
+      revalidateTimerRef.current = null;
+    }
     revalidate();
 
     const cancelled = controller.signal.aborted;
     setState({
       syncing: false,
       progress: '',
-      error: !result.success && !cancelled ? (result.error ?? 'Sync failed') : null,
     });
 
     window.main.trackAnalyticsEvent({
@@ -86,6 +106,10 @@ export function useKonnectSync(): UseKonnectSyncResult {
       },
     });
 
+    if (cancelled) {
+      result.error = 'Sync cancelled by user.';
+    }
+
     return result;
   };
 
@@ -93,5 +117,5 @@ export function useKonnectSync(): UseKonnectSyncResult {
     abortRef.current?.abort();
   };
 
-  return { syncing: state.syncing, progress: state.progress, error: state.error, startSync, cancelSync };
+  return { syncing: state.syncing, progress: state.progress, startSync, cancelSync };
 }

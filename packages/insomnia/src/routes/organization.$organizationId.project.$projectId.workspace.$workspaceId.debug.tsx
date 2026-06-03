@@ -1,6 +1,19 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import type {
+  ChangeBufferEvent,
+  Environment,
+  GrpcRequest,
+  Project,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+  Workspace,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -28,21 +41,8 @@ import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle }
 import { href, redirect, Route as RouteComponent, Routes, useFetchers, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
+import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { generateId } from '~/common/misc';
-import type { PlatformKeyCombinations } from '~/common/settings';
-import type {
-  ChangeBufferEvent,
-  Environment,
-  GrpcRequest,
-  Project,
-  Request,
-  RequestGroup,
-  SocketIORequest,
-  WebSocketRequest,
-  Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import { useRootLoaderData } from '~/root';
 import {
@@ -356,26 +356,7 @@ const Debug = () => {
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
 
-  function toggleSidebar() {
-    const layout = sidebarPanelRef.current?.getLayout();
-
-    if (!layout) {
-      return;
-    }
-
-    layout[0] = layout && layout[0] > 0 ? 0 : DEFAULT_SIDEBAR_SIZE;
-
-    sidebarPanelRef.current?.setLayout(layout);
-  }
-
-  useEffect(() => {
-    const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
-
-    return unsubscribe;
-  }, []);
-
   useDocBodyKeyboardShortcuts({
-    sidebar_toggle: toggleSidebar,
     request_togglePin: async () => {
       if (requestId) {
         const meta = models.grpcRequest.isGrpcRequestId(requestId)
@@ -436,6 +417,9 @@ const Debug = () => {
         workspaceId,
         requestType: 'HTTP',
         parentId,
+        metrics: {
+          source: 'shortcut',
+        },
       });
     },
     request_showCreateFolder: () => {
@@ -507,6 +491,9 @@ const Debug = () => {
       requestType,
       parentId,
       req,
+      metrics: {
+        source: 'sidebar',
+      },
     });
 
   const reorderFetcher = useDebugReorderActionFetcher();
@@ -660,61 +647,67 @@ const Debug = () => {
           name: 'HTTP Request',
           icon: 'plus-circle',
           hint: hotKeyRegistry.request_createHTTP,
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'HTTP',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'Event Stream',
           name: 'Event Stream Request (SSE)',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'Event Stream',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'GraphQL Request',
           name: 'GraphQL Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'GraphQL',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'gRPC Request',
           name: 'gRPC Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'gRPC',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'WebSocket Request',
           name: 'WebSocket Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'WebSocket',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
         {
           id: 'Socket.IO Request',
           name: 'Socket.IO Request',
           icon: 'plus-circle',
-          action: () =>
+          action: () => {
             createRequest({
               requestType: 'SocketIO',
               parentId: workspaceId,
-            }),
+            });
+          },
         },
       ],
     },
@@ -781,7 +774,7 @@ const Debug = () => {
   const tabNavigate = useTabNavigate();
 
   return (
-    <div className="new-sidebar h-full w-full text-(--color-font)">
+    <div className="new-sidebar flex h-full w-full flex-col text-(--color-font)">
       <div className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
@@ -793,7 +786,7 @@ const Debug = () => {
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
         id={WORKSPACE_CONTENT_WRAPPER}
-        className="new-sidebar h-full w-full text-(--color-font)"
+        className="new-sidebar min-h-0 flex-1 text-(--color-font)"
         direction="horizontal"
       >
         {/* Design page has a collection view with legacy collection list */}

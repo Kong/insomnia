@@ -3,12 +3,12 @@ import {
   exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
+import type { ApiSpec, MockServer, Project, Workspace } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { type FC, Fragment, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Label, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
-import type { ApiSpec, MockServer, Project, Workspace } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';

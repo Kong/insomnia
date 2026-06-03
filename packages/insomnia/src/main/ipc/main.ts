@@ -17,11 +17,12 @@ import {
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
+import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import { convert } from '~/main/importers/convert';
@@ -38,6 +39,7 @@ import type {
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
 import type { RenderedRequest } from '../../templating/types';
+import { decryptSecretValue,encryptSecretValue } from '../../utils/vault';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
@@ -47,6 +49,7 @@ import {
 } from '../authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '../authorize-user-in-window';
 import { backup, restoreBackup } from '../backup';
+import { createPlugin } from '../create-plugin';
 import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
@@ -98,6 +101,18 @@ const readDir = async (_: unknown, options: { path: string }) => {
   }
 };
 
+const resolveSafeRulesetPath = (rulesetPath: string): string | null => {
+  const userDataDir = path.resolve(app.getPath('userData'));
+  const resolved = path.resolve(rulesetPath);
+  const rel = path.relative(userDataDir, resolved);
+  const insideUserData = rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+  if (!insideUserData || path.basename(resolved) !== '.spectral.yaml') {
+    return null;
+  }
+
+  return resolved;
+};
+
 const writeResponseBodyToFile = async (
   _: unknown,
   options: { sourcePath: string; destinationPath: string; bodyCompression?: 'zip' | null },
@@ -135,8 +150,38 @@ const writeResponseBodyToFile = async (
   }
 };
 
+const getResponsesDir = () => path.join(process.env.INSOMNIA_DATA_PATH || app.getPath('userData'), 'responses');
+
+const responsesDirCreated = new Set<string>();
+
+const getTimelinePath = (_: unknown, responseId: string) => {
+  const base = path.resolve(getResponsesDir());
+  const target = path.resolve(base, responseId + '.timeline');
+  const relative = path.relative(base, target);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('Invalid response ID');
+  }
+  return target;
+};
+
+const appendToTimeline = async (_: unknown, options: { timelinePath: string; data: string }) => {
+  const allowedResponsesDir = getResponsesDir();
+  const resolvedPath = path.resolve(options.timelinePath);
+  if (!resolvedPath.startsWith(path.resolve(allowedResponsesDir) + path.sep) || !resolvedPath.endsWith('.timeline')) {
+    throw new Error(
+      'appendToTimeline: timelinePath is outside the allowed responses directory or does not end in .timeline',
+    );
+  }
+  const dir = path.dirname(resolvedPath);
+  if (!responsesDirCreated.has(dir)) {
+    await fs.promises.mkdir(dir, { recursive: true });
+    responsesDirCreated.add(dir);
+  }
+  await fs.promises.appendFile(resolvedPath, options.data);
+};
+
 export interface RendererToMainBridgeAPI {
-  loginStateChange: () => void;
+  loginStateChange: (isLoggedIn: boolean) => void;
   openInBrowser: (url: string) => void;
   restart: () => void;
   halfSecondAfterAppStart: () => void;
@@ -154,6 +199,7 @@ export interface RendererToMainBridgeAPI {
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
+  deleteRulesetFile: (options: { path: string }) => Promise<void>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
     destinationPath: string;
@@ -205,6 +251,8 @@ export interface RendererToMainBridgeAPI {
     documentContent: string;
     rulesetPath: string;
   }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
+  bundleSpectralRuleset: (options: { sourcePath: string }) => Promise<{ content?: string; error?: string }>;
+  createPlugin: (options: { pluginName: string; mainJs: string }) => Promise<void>;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -226,6 +274,8 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
+  generateCodeSnippet: (options: { har: object; target: string; client: string }) => Promise<string>;
+  getCodeSnippetTargets: () => Promise<{ key: string; title: string; clients: { key: string; title: string }[] }[]>;
   generateCommitsFromDiff: (
     input: Parameters<GenerateCommitsFromDiffFunction>[0],
   ) => Promise<
@@ -241,6 +291,14 @@ export interface RendererToMainBridgeAPI {
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
   notifyPluginPromptResult: (id: string, value: string | null) => void;
+  vault: {
+    encryptSecretValue: (rawValue: string, symmetricKey: JsonWebKey) => Promise<string>;
+    decryptSecretValue: (encryptedValue: string, symmetricKey: JsonWebKey) => Promise<string>;
+  };
+  timeline: {
+    getPath: (responseId: string) => Promise<string>;
+    appendToFile: (options: { timelinePath: string; data: string }) => Promise<void>;
+  };
 }
 
 export function registerMainHandlers() {
@@ -262,6 +320,9 @@ export function registerMainHandlers() {
   ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
     return services.caCertificate.create(options);
   });
+  ipcMainHandle('createPlugin', async (_, options: { pluginName: string; mainJs: string }) => {
+    return createPlugin(options.pluginName, options.mainJs);
+  });
   ipcMainHandle('services.invoke', async (_, serviceName: string, methodName: string, ...args: unknown[]) => {
     const service = services[serviceName as keyof Services];
     if (!service) {
@@ -282,9 +343,11 @@ export function registerMainHandlers() {
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);
   });
-  ipcMainOn('loginStateChange', async () => {
+  ipcMainOn('loginStateChange', async (event, isLoggedIn: boolean) => {
     BrowserWindow.getAllWindows().forEach(w => {
-      w.webContents.send('loggedIn');
+      if (w.webContents !== event.sender) {
+        w.webContents.send('loggedIn', isLoggedIn);
+      }
     });
   });
   ipcMainHandle('backup', async () => {
@@ -329,6 +392,20 @@ export function registerMainHandlers() {
       throw new Error(err);
     }
   });
+  ipcMainHandle('deleteRulesetFile', async (_, options: { path: string }) => {
+    const safePath = resolveSafeRulesetPath(options.path);
+    if (!safePath) {
+      throw new Error('Invalid ruleset path');
+    }
+    try {
+      await fs.promises.unlink(safePath);
+    } catch (err) {
+      if (err?.code === 'ENOENT') {
+        return;
+      }
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  });
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);
@@ -336,8 +413,41 @@ export function registerMainHandlers() {
   ipcMainHandle('getOAuth2Token', (_, requestId: string, authentication: AuthTypeOAuth2, forceRefresh?: boolean) => {
     return getOAuth2TokenInMain(requestId, authentication, forceRefresh);
   });
+  ipcMainHandle('bundleSpectralRuleset', async (_, options: { sourcePath: string }) => {
+    try {
+      const content = await bundleSpectralRuleset(options.sourcePath);
+      return { content };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : String(err) };
+    }
+  });
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
-    const { documentContent, rulesetPath } = options;
+    const { documentContent } = options;
+    let { rulesetPath } = options;
+
+    //defensive validation for ruleset file before spawning the spectral lint worker
+    if (rulesetPath) {
+      const safePath = resolveSafeRulesetPath(rulesetPath);
+      if (!safePath) {
+        return { error: 'Invalid ruleset path' };
+      }
+      rulesetPath = safePath;
+
+      try {
+        // Validate the ruleset (flattens local extends, checks remote URLs for SSRF and
+        // disallowed keys such as "functions") before passing the path to the lint worker.
+        // Result is discarded — validation only; the original file is not modified.
+        await bundleSpectralRuleset(rulesetPath);
+      } catch (err) {
+        // Fall back to the default OAS ruleset
+        if (err && (err as NodeJS.ErrnoException).code === 'ENOENT') {
+          rulesetPath = '';
+        } else {
+          return { error: err instanceof Error ? err.message : String(err) };
+        }
+      }
+    }
+
     return new Promise((resolve, reject) => {
       // Use a filescoped variable to store and terminate the last open
       // This ensures we use a last in first out type of process management
@@ -350,12 +460,27 @@ export function registerMainHandlers() {
 
       let process: UtilityProcess | null = lintProcess!;
 
+      // defends against ReDoS via pattern function regex. We terminate the lintProcess worker if it exceeds a reasonable time limit (30s) so it does not pin a CPU core indefinitely.
+      const LINT_WORKER_TIMEOUT_MS = 30_000;
+      const timeoutHandle = setTimeout(() => {
+        if (process) {
+          console.warn(`[lint-process] exceeded ${LINT_WORKER_TIMEOUT_MS / 1000}s limit; terminating.`);
+          process.kill();
+          process = null;
+          resolve({
+            error: `Linting exceeded the ${LINT_WORKER_TIMEOUT_MS / 1000}s time limit and was terminated. The ruleset or specification may contain a deeply nested schema.`,
+          });
+        }
+      }, LINT_WORKER_TIMEOUT_MS);
+
       process.on('exit', code => {
         console.log('[lint-process] exited with code:', code);
+        clearTimeout(timeoutHandle);
         resolve({ cancelled: true });
       });
 
       process.on('message', msg => {
+        clearTimeout(timeoutHandle);
         resolve(msg);
         process?.kill();
         process = null;
@@ -363,12 +488,25 @@ export function registerMainHandlers() {
 
       process.on('error', err => {
         console.error('[lint-process] error:', err);
+        clearTimeout(timeoutHandle);
         reject({ error: err.toString() });
       });
 
       process.postMessage({ documentContent, rulesetPath });
     });
   });
+
+  ipcMainHandle('generateCodeSnippet', async (_, options: { har: object; target: string; client: string }) => {
+    const { HTTPSnippet } = await import('httpsnippet');
+    const snippet = new HTTPSnippet(options.har as any);
+    return snippet.convert(options.target, options.client) || '';
+  });
+
+  ipcMainHandle('getCodeSnippetTargets', async () => {
+    const { availableTargets } = await import('httpsnippet');
+    return availableTargets();
+  });
+
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {
     return insecureReadFile(options.path);
   });
@@ -659,17 +797,30 @@ export function registerMainHandlers() {
         reject({ error: err.toString() });
       });
       const { systemPrompt, messages, modelConfig: modelConfigFromSamplingRequest } = input;
+      const mergedModelConfig = !modelConfig
+        ? modelConfigFromSamplingRequest
+        : {
+            ...modelConfig,
+            ...modelConfigFromSamplingRequest,
+          };
 
       process.postMessage({
         messages,
         systemPrompt,
-        modelConfig: {
-          ...modelConfig,
-          ...modelConfigFromSamplingRequest,
-        },
+        modelConfig: mergedModelConfig,
         aiPluginName: AI_PLUGIN_NAME,
       });
     });
+  });
+
+  ipcMainHandle('timeline.getPath', getTimelinePath);
+  ipcMainHandle('timeline.appendToFile', appendToTimeline);
+
+  ipcMainHandle('vault.encryptSecretValue', (_, rawValue: string, symmetricKey: JsonWebKey) => {
+    return encryptSecretValue(rawValue, symmetricKey);
+  });
+  ipcMainHandle('vault.decryptSecretValue', (_, encryptedValue: string, symmetricKey: JsonWebKey) => {
+    return decryptSecretValue(encryptedValue, symmetricKey);
   });
 
   registerPluginIpcHandlers();

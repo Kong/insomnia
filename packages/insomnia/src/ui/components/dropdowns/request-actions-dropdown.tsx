@@ -1,8 +1,4 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useCallback, useState } from 'react';
-import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
-import { useParams } from 'react-router';
-
 import type {
   GrpcRequest,
   Project,
@@ -11,8 +7,13 @@ import type {
   SocketIORequest,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
+import React, { Fragment, useCallback, useState } from 'react';
+import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
+import { useParams } from 'react-router';
+
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
@@ -22,7 +23,6 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -148,9 +148,10 @@ export const RequestActionsDropdown = ({
   const copyAsCurl = async () => {
     try {
       const har = await exportHarRequest(request._id, workspaceId);
-      const { HTTPSnippet } = await import('httpsnippet');
-      const snippet = new HTTPSnippet(har);
-      const cmd = snippet.convert('shell', 'curl');
+      if (!har) {
+        return;
+      }
+      const cmd = await window.main.generateCodeSnippet({ har, target: 'shell', client: 'curl' });
 
       if (cmd) {
         window.clipboard.writeText(cmd);

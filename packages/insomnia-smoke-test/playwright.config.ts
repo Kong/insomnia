@@ -8,7 +8,7 @@ const echoServer: PlaywrightTestConfig['webServer'] = {
   url: 'http://localhost:4010',
   timeout: 20 * 1000,
   reuseExistingServer: !process.env.CI,
-  stdout: 'pipe',
+  stdout: 'ignore',
   stderr: 'pipe',
   wait: {
     stdout: /Listening at http/,

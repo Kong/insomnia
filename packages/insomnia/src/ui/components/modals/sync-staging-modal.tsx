@@ -1,3 +1,4 @@
+import { models } from 'insomnia-data';
 import { useEffect, useState } from 'react';
 import {
   Button,
@@ -16,7 +17,6 @@ import {
 import { useParams } from 'react-router';
 import { stringify } from 'yaml';
 
-import { models } from '~/insomnia-data';
 import { useInsomniaSyncCreateSnapshotActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.create-snapshot';
 import { useInsomniaSyncStageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.stage';
 import { useInsomniaSyncUnstageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';

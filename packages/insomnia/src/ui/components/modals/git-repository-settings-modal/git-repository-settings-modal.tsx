@@ -1,8 +1,8 @@
+import type { GitRepository } from 'insomnia-data';
 import { useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
-import type { GitRepository } from '~/insomnia-data';
 import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';

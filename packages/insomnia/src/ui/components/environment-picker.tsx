@@ -1,4 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import { models } from 'insomnia-data';
 import { Fragment } from 'react';
 import {
   Button,
@@ -14,7 +15,6 @@ import {
 } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
-import { models } from '~/insomnia-data';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 import { useEnvironmentSetActiveGlobalActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global';
 import { Tooltip } from '~/ui/components/tooltip';

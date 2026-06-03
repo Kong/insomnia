@@ -1,4 +1,4 @@
-import React, { type FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import { useRootLoaderData } from '~/root';
@@ -24,6 +24,9 @@ export const PlaceholderRequestPane: FC = () => {
         workspaceId,
         requestType: 'HTTP',
         parentId: workspaceId,
+        metrics: {
+          source: 'placeholder-request-pane',
+        },
       }),
     [requestFetcher, organizationId, projectId, workspaceId],
   );

@@ -1,6 +1,5 @@
+import { services } from 'insomnia-data';
 import { afterEach, describe, expect, it } from 'vitest';
-
-import { services } from '~/insomnia-data';
 
 import { convert } from './curl';
 

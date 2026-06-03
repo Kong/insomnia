@@ -1,3 +1,5 @@
+import type { BaseModel, MockRoute, Request } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -12,15 +14,12 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { BaseModel, MockRoute, Request } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
-import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
@@ -260,6 +259,9 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         workspaceId,
         requestType: 'HTTP',
         parentId: workspaceId,
+        metrics: {
+          source: 'tab-list',
+        },
       });
     }
   };
@@ -373,7 +375,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   if (!tabList.length) return null;
 
   return (
-    <div className="box-content flex bg-(--color-bg)" style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}>
+    <div className="box-content flex h-(--line-height-sm) bg-(--color-bg)">
       <Button
         onPress={scrollLeft}
         isDisabled={leftScrollDisable}
@@ -393,7 +395,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           disallowEmptySelection
           selectionMode="single"
           selectionBehavior="replace"
-          className="flex h-[41px] w-fit"
+          className="flex h-(--line-height-sm) w-fit"
           dragAndDropHooks={dragAndDropHooks}
           items={tabList}
           dependencies={[issuesByWorkspaceId]}

@@ -1,8 +1,7 @@
 import classNames from 'classnames';
+import type { SocketIOEventListener, SocketIORequest } from 'insomnia-data';
 import React, { useMemo } from 'react';
 import { Button, GridList, GridListItem, Input, Switch } from 'react-aria-components';
-
-import type { SocketIOEventListener, SocketIORequest } from '~/insomnia-data';
 
 import { generateId } from '../../../common/misc';
 import { useRequestPatcher } from '../../hooks/use-request';

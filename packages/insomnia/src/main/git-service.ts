@@ -13,13 +13,11 @@
  * - Legacy migration support
  *
  */
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { app } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type PromiseFsClient } from 'isomorphic-git';
-import YAML, { parse } from 'yaml';
-
 import type {
   BaseModel,
   GitProject,
@@ -28,8 +26,11 @@ import type {
   Workspace,
   WorkspaceMeta,
   WorkspaceScope,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { Errors, type PromiseFsClient } from 'isomorphic-git';
+import YAML, { parse } from 'yaml';
+
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
@@ -1219,6 +1220,16 @@ export const cloneGitRepoAction = async ({
         process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
         `version-control/git/${gitRepository._id}`,
       );
+
+      // If the project already has a ruleset in the DB (e.g. cloud → git migration),
+      // write it to disk now so its mtime is newer than the cloned file. This ensures
+      // the cloud ruleset is preserved and it shows up as a diff in the commit modal rather than being silently replaced by the repo's file.
+      const existingRuleset = await services.projectLintRuleset.getByParentId(project._id);
+      if (existingRuleset) {
+        const rulesetPath = path.join(cloneBaseDir, '.spectral.yaml');
+        await fs.promises.writeFile(rulesetPath, existingRuleset.rulesetContent, 'utf8');
+      }
+
       await repoFileWatcherRegistry.startWatcher(gitRepository._id, cloneBaseDir, project._id);
 
       const updateRepository = await services.gitRepository.getById(gitRepository._id);

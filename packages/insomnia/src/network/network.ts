@@ -1,9 +1,3 @@
-import fs from 'node:fs';
-import nodePath from 'node:path';
-
-import clone from 'clone';
-import orderedJSON from 'json-order';
-
 import type {
   CaCertificate,
   ClientCertificate,
@@ -18,46 +12,46 @@ import type {
   RequestGroup,
   RequestHeader,
   RequestParameter,
+  RequestTestResult,
+  ResponseTimelineEntry,
   Settings,
   SocketIORequest,
   UserUploadEnvironment,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { EnvironmentType, models, services } from '~/insomnia-data';
-import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
+} from 'insomnia-data';
+import { EnvironmentType, models, services } from 'insomnia-data';
+import { invariant, serializeNDJSON } from 'insomnia-data/common';
+import orderedJSON from 'json-order';
+
+import {
+  appendTimelineLines,
+  appendToTimelineOnError,
+  applyRequestHooks,
+  applyResponseHooks,
+  executeCurlRequest,
+  getAuthHeader,
+  getTimelinePath,
+  runScript,
+} from '~/network/network-adapter';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
-import type {
-  ExecutionOption,
-  RequestContext,
-  RequestTestResult,
-} from '../../../insomnia-scripting-environment/src/objects';
+import type { ExecutionOption, RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeaders } from '../common/misc';
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
-import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
-import * as pluginApp from '../plugins/context/app';
-import * as pluginData from '../plugins/context/data';
-import * as pluginNetwork from '../plugins/context/network';
-import * as pluginRequest from '../plugins/context/request';
-import * as pluginResponse from '../plugins/context/response';
-import * as pluginStore from '../plugins/context/store';
-import * as plugins from '../plugins/index';
+import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promise';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { invariant } from '../utils/invariant';
-import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
-import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
-import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
+import type { TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 const { isRequest } = models.request;
@@ -69,6 +63,7 @@ export interface SendActionRuntime {
 
 export const getOrInheritAuthentication = ({
   request,
+  // requestGroups is supposed to be of order leaf to root
   requestGroups,
 }: {
   request: Request | WebSocketRequest | SocketIORequest;
@@ -79,9 +74,9 @@ export const getOrInheritAuthentication = ({
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
-  const closestParentFolderWithAuth = [...requestGroups]
-    .reverse()
-    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+  const closestParentFolderWithAuth = requestGroups.find(
+    ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
+  );
   const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
@@ -101,7 +96,7 @@ export function getOrInheritHeaders({
   const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
   // parent folders, then child folders, then request
-  const headerContexts = [...requestGroups.reverse(), request];
+  const headerContexts = [...requestGroups].reverse().concat(request);
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
@@ -155,11 +150,7 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
-  const responsesDir = nodePath.join(
-    (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-    'responses',
-  );
-  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+  const timelinePath = await getTimelinePath(responseId);
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -222,12 +213,7 @@ export const fetchRequestData = async (
   const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const responsesDir = nodePath.join(
-    process.env['INSOMNIA_DATA_PATH'] ||
-      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-    'responses',
-  );
-  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+  const timelinePath = await getTimelinePath(responseId);
 
   return {
     request,
@@ -266,12 +252,7 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const responsesDir = nodePath.join(
-    process.env['INSOMNIA_DATA_PATH'] ||
-      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
-    'responses',
-  );
-  const timelinePath = nodePath.join(responsesDir, responseId + '.timeline');
+  const timelinePath = await getTimelinePath(responseId);
 
   return {
     environment,
@@ -533,8 +514,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
   }
 
   try {
-    const fn = process.type === 'renderer' ? runScriptConcurrently : cancellableRunScript;
-    const output = await fn({
+    const output = await runScript({
       script,
       context: {
         request,
@@ -667,7 +647,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       parentFolders: output.parentFolders,
     };
   } catch (err) {
-    await fs.promises.appendFile(
+    await appendToTimelineOnError(
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
     );
@@ -818,7 +798,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
 }) => {
   const { request, context } = renderResult;
   try {
-    return await _applyRequestPluginHooks(request, context);
+    return await applyRequestHooks(request, context);
   } catch {
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
@@ -878,11 +858,7 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const getRenderedRequestAuthHeader =
-    process.type === 'renderer'
-      ? (r: RenderedRequest, u: string) => window.main.getAuthHeader(r, u)
-      : (await import('../main/network/get-auth-header')).getAuthHeader;
-  const authHeader = await getRenderedRequestAuthHeader(renderedRequest, finalUrl);
+  const authHeader = await getAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
     requestId,
     req: renderedRequest,
@@ -894,12 +870,7 @@ export async function sendCurlAndWriteTimeline(
     authHeader,
   };
 
-  // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
-  const nodejsCurlRequest =
-    process.type === 'renderer'
-      ? cancellableCurlRequest
-      : (await import('../main/network/libcurl-promise')).curlRequest;
-  const output = await nodejsCurlRequest(requestOptions);
+  const output = await executeCurlRequest(requestOptions);
 
   if ('error' in output) {
     if (runtime) {
@@ -979,7 +950,19 @@ export const responseTransform = async (
     return response;
   }
   console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`);
-  return await _applyResponsePluginHooks(response, renderedRequest, context);
+  try {
+    return await applyResponseHooks(response, renderedRequest, context);
+  } catch (err) {
+    console.log('[plugin] Response hook failed', err, response);
+    return {
+      url: renderedRequest.url,
+      error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
+      elapsedTime: 0, // 0 because this path is hit during plugin calls
+      statusMessage: 'Error',
+      settingSendCookies: renderedRequest.settingSendCookies,
+      settingStoreCookies: renderedRequest.settingStoreCookies,
+    };
+  }
 };
 export function getAuthQueryParams(authentication: RequestAuthentication) {
   if (authentication.disabled) {
@@ -1069,111 +1052,6 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
 };
 
-export async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, renderedContext: Record<string, any>) {
-  const newRenderedRequest = clone(renderedRequest);
-
-  // Apply built-in default-headers hook in the renderer (no IPC needed)
-  const { request: reqCtx } = pluginRequest.init(newRenderedRequest, renderedContext);
-  const defaultHeaders = reqCtx.getEnvironmentVariable('DEFAULT_HEADERS');
-  if (defaultHeaders && typeof defaultHeaders === 'object' && !Array.isArray(defaultHeaders)) {
-    for (const name of Object.keys(defaultHeaders)) {
-      const value = (defaultHeaders as Record<string, any>)[name];
-      if (reqCtx.hasHeader(name)) {
-        console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
-      } else if (value === 'null') {
-        reqCtx.removeHeader(name);
-        console.log(`[header] Remove default header ${name}`);
-      } else {
-        reqCtx.setHeader(name, value);
-        console.log(`[header] Set default header ${name}: ${value}`);
-      }
-    }
-  }
-
-  if (process.type !== 'renderer') {
-    for (const { plugin, hook } of await plugins.getRequestHooks()) {
-      const context = {
-        ...(pluginApp.init() as Record<string, any>),
-        ...pluginData.init(renderedContext.getProjectId()),
-        ...(pluginStore.init(plugin) as Record<string, any>),
-        ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
-        ...(pluginNetwork.init() as Record<string, any>),
-      };
-      try {
-        await hook(context);
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        (error as any).plugin = plugin;
-        throw error;
-      }
-    }
-    return newRenderedRequest;
-  }
-
-  if (!await pluginsBridge.hasRequestHooks()) {
-    return newRenderedRequest;
-  }
-
-  return pluginsBridge.applyRequestHooks({
-    renderedRequest: newRenderedRequest,
-    projectId: renderedContext.getProjectId(),
-    environment: renderedContext,
-  });
-}
-
-export async function _applyResponsePluginHooks(
-  response: ResponsePatch,
-  renderedRequest: RenderedRequest,
-  renderedContext: Record<string, any>,
-): Promise<ResponsePatch> {
-  try {
-    if (process.type !== 'renderer') {
-      const newResponse = clone(response);
-      const newRequest = clone(renderedRequest);
-      for (const { plugin, hook } of await plugins.getResponseHooks()) {
-        const context = {
-          ...(pluginApp.init() as Record<string, any>),
-          ...pluginData.init(renderedContext.getProjectId()),
-          ...(pluginStore.init(plugin) as Record<string, any>),
-          ...(pluginResponse.init(newResponse) as Record<string, any>),
-          ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
-          ...(pluginNetwork.init() as Record<string, any>),
-        };
-        try {
-          await hook(context);
-        } catch (err) {
-          const error = err instanceof Error ? err : new Error(String(err));
-          (error as any).plugin = plugin;
-          throw error;
-        }
-      }
-      return newResponse;
-    }
-
-    if (!await pluginsBridge.hasResponseHooks()) {
-      return response;
-    }
-
-    return await pluginsBridge.applyResponseHooks({
-      response,
-      renderedRequest,
-      projectId: renderedContext.getProjectId(),
-      environment: renderedContext,
-    });
-  } catch (err) {
-    console.log('[plugin] Response hook failed', err, response);
-    return {
-      url: renderedRequest.url,
-      error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
-      elapsedTime: 0, // 0 because this path is hit during plugin calls
-      statusMessage: 'Error',
-      settingSendCookies: renderedRequest.settingSendCookies,
-      settingStoreCookies: renderedRequest.settingStoreCookies,
-    };
-  }
-}
-export const defaultSendActionRuntime = {
-  appendTimeline: async (timelinePath: string, logs: string[]) => {
-    await fs.promises.appendFile(timelinePath, logs.join('\n'));
-  },
+export const defaultSendActionRuntime: SendActionRuntime = {
+  appendTimeline: appendTimelineLines,
 };

@@ -1,9 +1,8 @@
+import { models, services } from 'insomnia-data';
+import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from 'insomnia-data/common';
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
-import { models, services } from '~/insomnia-data';
-
-import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import {
   type RequestLoaderData,

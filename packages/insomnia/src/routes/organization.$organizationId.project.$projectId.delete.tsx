@@ -1,9 +1,9 @@
 import { deleteTeamProject, isApiError } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
-import { models, services } from '~/insomnia-data';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';

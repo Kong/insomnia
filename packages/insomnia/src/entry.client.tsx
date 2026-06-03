@@ -2,18 +2,17 @@ import './ui/renderer-listeners';
 import './ui/log';
 
 import { configureFetch } from 'insomnia-api';
+import { initDatabase, initServices, services } from 'insomnia-data';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
-import { initDatabase, initServices, services } from '~/insomnia-data';
 import { database as clientDatabase } from '~/ui/database.client';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { init as initPlugins } from './plugins';
 import { applyColorScheme } from './plugins/misc';
 import { registerSyncMergeConflictListener } from './sync/vcs/insomnia-sync';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
@@ -38,9 +37,7 @@ initServices(window._dataServices);
 // Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
 delete window._dataServices;
 
-configureFetch(options => insomniaFetch({ ...options }));
-
-await initPlugins();
+configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));
 
 await migrateFromLocalStorage();
 registerSyncMergeConflictListener();

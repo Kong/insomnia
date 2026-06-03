@@ -5,11 +5,11 @@
  * window.main is stubbed globally so trackAnalyticsEvent calls don't throw.
  */
 
+import { initDatabase, models, services as insoservices } from 'insomnia-data';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { initDatabase, models, services as insoservices } from '~/insomnia-data';
-
-import { resetV4Counter } from '../../__mocks__/uuid';
+// eslint-disable-next-line no-restricted-imports
+import { resetV4Counter } from '../../../../insomnia-data/__mocks__/uuid';
 import { database as db } from '../../common/database';
 import { mainDatabase } from '../../main/database.main';
 import type { KonnectControlPlane, KonnectRoute, KonnectService } from '../api';

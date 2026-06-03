@@ -17,6 +17,7 @@
   "workspaces": [
     "packages/insomnia-testing",
     "packages/insomnia",
+    "packages/insomnia-data",
     "packages/insomnia-analytics",
     "packages/insomnia-api",
     "packages/insomnia-inso",

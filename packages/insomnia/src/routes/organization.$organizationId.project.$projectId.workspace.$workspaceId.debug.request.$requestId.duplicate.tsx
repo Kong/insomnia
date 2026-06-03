@@ -1,6 +1,6 @@
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
 

@@ -4,6 +4,9 @@ import {
   exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
+import type { Project, Workspace } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useState } from 'react';
 import {
   Button,
@@ -25,8 +28,6 @@ import {
 } from 'react-aria-components';
 import { href } from 'react-router';
 
-import type { Project, Workspace } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
@@ -36,7 +37,6 @@ import type { CreateRequestType } from '~/ui/hooks/use-request';
 
 import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { PlatformKeyCombinations } from '../../../common/settings';
 import { AnalyticsEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
@@ -348,7 +348,7 @@ export const SidebarWorkspaceDropdown = ({
                       <MenuItem
                         key={item.id}
                         id={item.id}
-                        className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold${item.className ? ` ${item.className}` : ''}`}
+                        className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold ${item.className ? ` ${item.className}` : ''}`}
                         aria-label={item.name}
                       >
                         <Icon icon={item.icon} className="h-4 w-3" />
@@ -358,7 +358,7 @@ export const SidebarWorkspaceDropdown = ({
                     ) : (
                       <SubmenuTrigger>
                         <MenuItem
-                          className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold${item.className ? ` ${item.className}` : ''}`}
+                          className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold ${item.className ? ` ${item.className}` : ''}`}
                           aria-label={item.name}
                         >
                           <Icon icon={item.icon} className="h-4 w-3" />

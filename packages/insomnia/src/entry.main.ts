@@ -7,11 +7,12 @@ import electron, { app, BrowserWindow, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
+import type { Project, RemoteProject, Stats } from 'insomnia-data';
+import { database, initDatabase, initServices, models, services } from 'insomnia-data';
+import { isMac } from 'insomnia-data/common';
+import { servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
-import type { Project, RemoteProject, Stats } from '~/insomnia-data';
-import { database, initDatabase, initServices, models, services } from '~/insomnia-data';
-import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
@@ -20,7 +21,6 @@ import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
-import { isMac } from './common/platform';
 import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
@@ -58,7 +58,10 @@ initializeSentry();
 
 registerInsomniaProtocols();
 
-configureFetch(options => insomniaFetch({ ...options }));
+let openDeepLinkUrl = async (url: string) => {
+  console.warn('[main] openDeepLinkUrl function not initialized yet, cannot open URL:', url);
+};
+configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => openDeepLinkUrl(uri) }));
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -245,7 +248,7 @@ const _launchApp = async () => {
       });
       window = windowUtils.createWindowsAndReturnMain();
 
-      const openDeepLinkUrl = async (url: string) => {
+      openDeepLinkUrl = async (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {

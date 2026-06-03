@@ -1,16 +1,16 @@
 import type { queueAsPromised } from 'fastq';
 import * as fastq from 'fastq';
-
 import type {
   ClientCertificate,
   CookieJar,
   Environment,
   Request,
+  RequestTestResult,
   Settings,
   UserUploadEnvironment,
-} from '~/insomnia-data';
+} from 'insomnia-data';
 
-import type { RequestContext, RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
+import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import { cancellableExecution } from './cancellation';
 
 export interface ExecuteScriptContext {

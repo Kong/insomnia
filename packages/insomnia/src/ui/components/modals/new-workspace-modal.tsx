@@ -1,5 +1,7 @@
 import type { StorageRules } from 'insomnia-api';
-import React, { useEffect, useState } from 'react';
+import type { ApiSpec, Project, WorkspaceScope } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Collection,
@@ -21,8 +23,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { ApiSpec, Project, WorkspaceScope } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';
@@ -55,13 +55,19 @@ export const NewWorkspaceModal = ({
   scope,
   storageRules,
   sourceApiSpec,
+  onCreateWorkspace,
+  redirectAfterCreate = true,
+  source,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   project: Project;
   storageRules: StorageRules;
+  onCreateWorkspace?: (workspaceId: string) => void;
+  redirectAfterCreate?: boolean;
   scope: WorkspaceScope;
   sourceApiSpec?: ApiSpec;
+  source?: string;
 }) => {
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
 
@@ -99,6 +105,7 @@ export const NewWorkspaceModal = ({
   });
 
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
+  const prevCreateNewWorkspaceFetcherState = useRef(createNewWorkspaceFetcher.state);
 
   const [progressMessage, setProgressMessage] = useState(0);
   const progressMessages = ['Creating...', 'Working...', 'Building...', 'Still going...', 'Almost there...'];
@@ -119,15 +126,25 @@ export const NewWorkspaceModal = ({
   }, [createNewWorkspaceFetcher.state, scope, progressMessages.length]);
 
   useEffect(() => {
-    if (
-      scope === models.workspace.WorkspaceScopeKeys.mockServer &&
-      createNewWorkspaceFetcher.state === 'idle' &&
-      createNewWorkspaceFetcher.data &&
-      !createNewWorkspaceFetcher.data.error
-    ) {
-      onOpenChange(false);
+    const didCreateWorkspace =
+      prevCreateNewWorkspaceFetcherState.current !== 'idle' && createNewWorkspaceFetcher.state === 'idle';
+
+    prevCreateNewWorkspaceFetcherState.current = createNewWorkspaceFetcher.state;
+
+    if (!didCreateWorkspace || createNewWorkspaceFetcher.data?.error) {
+      return;
     }
-  }, [createNewWorkspaceFetcher.state, createNewWorkspaceFetcher.data, scope, onOpenChange]);
+
+    if (
+      createNewWorkspaceFetcher.data &&
+      'workspaceId' in createNewWorkspaceFetcher.data &&
+      createNewWorkspaceFetcher.data.workspaceId
+    ) {
+      onCreateWorkspace?.(createNewWorkspaceFetcher.data.workspaceId);
+    }
+
+    onOpenChange(false);
+  }, [createNewWorkspaceFetcher.data, createNewWorkspaceFetcher.state, onCreateWorkspace, onOpenChange]);
 
   useEffect(() => {
     if (
@@ -156,6 +173,8 @@ export const NewWorkspaceModal = ({
       ...(sourceApiSpec?.contents && {
         apiSpecContents: sourceApiSpec.contents,
       }),
+      redirectAfterCreate,
+      ...(source && { source }),
     });
   };
 

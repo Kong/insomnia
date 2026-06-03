@@ -3,15 +3,15 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
-import { beforeEach, describe, expect, it } from 'vitest';
-
-import { models, services } from '~/insomnia-data';
+import { models, services } from 'insomnia-data';
+import { HttpVersions } from 'insomnia-data/common';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
-import { HttpVersions } from '../../common/settings';
-import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
+import { getAuthHeader } from '../../main/network/get-auth-header';
+import { _parseHeaders, curlRequest, getHttpVersion } from '../../main/network/libcurl-promise';
 import { _getAwsAuthHeaders } from '../../network/parse-header-strings';
 import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
@@ -36,6 +36,20 @@ describe('getAuthQueryParams', () => {
   });
 });
 describe('sendCurlAndWriteTimeline()', () => {
+  beforeEach(() => {
+    vi.stubGlobal('window', {
+      main: {
+        timeline: {
+          getPath: (responseId: string) => Promise.resolve(`/tmp/${responseId}.timeline`),
+          appendToFile: vi.fn().mockResolvedValue(null),
+        },
+        getAuthHeader,
+        curlRequest,
+        cancelCurlRequest: vi.fn(),
+      },
+    });
+  });
+
   it('sends a generic request', async () => {
     const workspace = await services.workspace.create();
     const settings = await services.settings.getOrCreate();
@@ -1080,6 +1094,32 @@ describe('getCurrentUrl for tough-cookie', () => {
     ];
     const finalUrl = 'http://mergemyshit.dev';
     expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/biscuit');
+  });
+});
+
+describe('getOrInheritAuthentication', () => {
+  it('should prefer the closest parent folder auth over higher-level folder auth', () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'basic', username: 'closest', password: 'closest-pass' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({
+      type: 'basic',
+      username: 'closest',
+      password: 'closest-pass',
+    });
+  });
+
+  it("should stop inheritance when the closest parent folder auth is { type: 'none' }", () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'none' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({ type: 'none' });
   });
 });
 

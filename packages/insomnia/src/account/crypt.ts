@@ -1,11 +1,7 @@
+import type { AESMessage } from 'insomnia-data';
 import forge from 'node-forge';
 
-export interface AESMessage {
-  iv: string;
-  t: string;
-  d: string;
-  ad: string;
-}
+export type { AESMessage };
 
 /**
  * Encrypt with RSA256 public key

@@ -1,4 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -29,8 +31,6 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common
 import { fuzzyMatchAll } from '~/common/misc';
 import type { InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
-import type { GitRepository, Project, WorkspaceScope } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -41,6 +41,7 @@ import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
+import { FirstRequestCreation } from '~/ui/components/first-request-creation';
 import { Icon } from '~/ui/components/icon';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
@@ -142,6 +143,37 @@ const Component = () => {
     userSession.accountId &&
     models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && models.organization.isPersonalOrganization(organization);
+  const greetingName = userSession.firstName || userSession.email.split('@')[0] || 'there';
+  const collectionItems = useMemo(
+    () =>
+      localFiles
+        .filter(file => file.scope === 'collection' && file.workspace)
+        .map(file => ({
+          id: file.workspace!._id,
+          label: file.name,
+        })),
+    [localFiles],
+  );
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
+    scope: WorkspaceScope;
+    isOpen: boolean;
+    redirect?: boolean;
+    source?: string;
+  } | null>({
+    scope: 'collection',
+    isOpen: false,
+  });
+
+  useEffect(() => {
+    setSelectedCollectionId(currentSelection => {
+      if (currentSelection && collectionItems.some(collection => collection.id === currentSelection)) {
+        return currentSelection;
+      }
+
+      return collectionItems[0]?.id ?? null;
+    });
+  }, [collectionItems]);
 
   const tabNavigate = useTabNavigate();
 
@@ -219,20 +251,14 @@ const Component = () => {
       },
     }));
 
-  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
-    scope: WorkspaceScope;
-    isOpen: boolean;
-  } | null>({
-    scope: 'collection',
-    isOpen: false,
-  });
-
-  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
-  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
-  const createNewMockServer = () =>
-    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
-  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
-  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
+  const createNewCollection = (source: string) =>
+    setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source });
+  const createNewDocument = (source: string) => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source });
+  const createNewMockServer = (source: string) =>
+    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source });
+  const createNewGlobalEnvironment = (source: string) =>
+    setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source });
+  const createNewMcpClient = (source: string) => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source });
 
   const createNewCollectionWithRequest = () => {
     if (!activeProject) {
@@ -245,6 +271,7 @@ const Component = () => {
       name: 'My first collection',
       scope: 'collection',
       withRequest: true,
+      source: 'home-page',
     });
   };
 
@@ -260,19 +287,19 @@ const Component = () => {
       id: 'new-collection',
       name: 'Request collection',
       icon: 'bars',
-      action: createNewCollection,
+      action: () => createNewCollection('navbar'),
     },
     {
       id: 'new-document',
       name: 'Design document',
       icon: 'file',
-      action: createNewDocument,
+      action: () => createNewDocument('navbar'),
     },
     {
       id: 'new-mcp-client',
       name: 'MCP Client',
       icon: ['fac', 'mcp'] as unknown as IconProp,
-      action: createNewMcpClient,
+      action: () => createNewMcpClient('navbar'),
     },
     ...(canCreateMockServer
       ? [
@@ -280,7 +307,7 @@ const Component = () => {
             id: 'new-mock-server',
             name: 'Mock Server',
             icon: 'server' as IconName,
-            action: createNewMockServer,
+            action: () => createNewMockServer('navbar'),
           },
         ]
       : []),
@@ -288,7 +315,7 @@ const Component = () => {
       id: 'new-environment',
       name: 'Environment',
       icon: 'code',
-      action: createNewGlobalEnvironment,
+      action: () => createNewGlobalEnvironment('navbar'),
     },
   ];
 
@@ -308,6 +335,17 @@ const Component = () => {
     <ErrorBoundary>
       <Fragment>
         <OrganizationTabList showActiveStatus={false} />
+        <div className="px-4 pt-4">
+          <FirstRequestCreation
+            greetingName={greetingName}
+            collectionItems={collectionItems}
+            selectedCollectionId={selectedCollectionId}
+            onSelectedCollectionChange={setSelectedCollectionId}
+            onCreateCollection={() => {
+              setNewWorkspaceModalState({ scope: 'collection', isOpen: true, redirect: false, source: 'home-page' });
+            }}
+          />
+        </div>
         {activeProject ? (
           <div className="flex w-full flex-col overflow-hidden">
             {billing.isActive ? null : (
@@ -520,7 +558,7 @@ const Component = () => {
                     <div className="flex w-full flex-col items-center justify-center gap-4">
                       <ProjectEmptyView
                         onCreateRequestCollectionWithRequest={createNewCollectionWithRequest}
-                        onCreateDesignDocument={createNewDocument}
+                        onCreateDesignDocument={() => createNewDocument('empty-state')}
                         onImportFrom={() => setImportModalType('file')}
                       />
                       {createNewWorkspaceFetcher.data?.error && (
@@ -668,10 +706,18 @@ const Component = () => {
             project={activeProject}
             storageRules={storageRules}
             scope={newWorkspaceModalState.scope}
+            onCreateWorkspace={workspaceId => {
+              if (newWorkspaceModalState.scope === 'collection' && newWorkspaceModalState.redirect === false) {
+                setSelectedCollectionId(workspaceId);
+              }
+            }}
+            redirectAfterCreate={newWorkspaceModalState.redirect}
+            source={newWorkspaceModalState.source}
             onOpenChange={isOpen => {
               setNewWorkspaceModalState({
                 scope: newWorkspaceModalState.scope,
                 isOpen,
+                redirect: newWorkspaceModalState.redirect,
               });
             }}
           />

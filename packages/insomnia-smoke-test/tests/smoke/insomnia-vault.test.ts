@@ -45,7 +45,7 @@ test.describe('Vault key actions', () => {
     await expect.soft(modal).toBeVisible();
     const vaultKeyValueInModal = await modal.getByTestId('VaultKeyDisplayPanel').innerText();
     expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
-    await page.getByText('OK').click();
+    await page.getByText('OK', { exact: true }).click();
     const vaultKeyValue = page.getByTestId('VaultKeyDisplayPanel');
     await expect.soft(vaultKeyValue).toHaveText(vaultKeyValueInModal);
   });

@@ -1,7 +1,7 @@
+import { models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
-import { models, services } from '~/insomnia-data';
 import { getMainVCS } from '~/main/cloud-sync/vcs';
 import {
   initializeLocalBackendProjectAndMarkForSync,
@@ -14,7 +14,7 @@ vi.mock('~/common/organization-storage-rules', () => ({
   fetchAndCacheOrganizationStorageRule: vi.fn(),
 }));
 
-vi.mock('~/insomnia-data', () => ({
+vi.mock('insomnia-data', () => ({
   services: {
     workspace: {
       getById: vi.fn(),

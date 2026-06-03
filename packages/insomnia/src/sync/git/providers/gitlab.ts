@@ -2,6 +2,8 @@ import { createHash, randomBytes } from 'node:crypto';
 
 import { shell } from 'electron';
 import { net } from 'electron/main';
+import type { BaseGitCredentialsV2, GitCredentials, GitCredentialsV2 } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
@@ -11,8 +13,6 @@ import {
   INSOMNIA_GITLAB_REDIRECT_URI,
   PLAYWRIGHT_TEST,
 } from '~/common/constants';
-import type { BaseGitCredentialsV2, GitCredentials, GitCredentialsV2 } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { expiresAtFromOAuthExpiresIn } from '~/sync/git/utils';
 
 import type {
