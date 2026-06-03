@@ -116,17 +116,26 @@ test.describe('Environment Editor', () => {
     await bodyEditor.focus();
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.type('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
-    // Submit and wait for the JSON modal to close before proceeding
+    // Submit and wait for the JSON modal to fully close before proceeding to the environment editor
     await page.getByRole('button', { name: 'Modal Submit' }).click();
-    await expect.soft(page.getByRole('dialog', { name: 'Modal' })).toBeHidden();
+    await page.getByRole('dialog', { name: 'Modal' }).waitFor({ state: 'hidden' });
 
     // Close the environment editor and wait for the dialog to disappear before navigating
     await page.getByRole('button', { name: 'Close', exact: true }).click();
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
-    await page.getByLabel('Manage collection environments').press('Escape');
+    // dismiss the environment picker dropdown
+    await page.locator('body').click();
+    try {
+      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
+    } catch {
+      await page.keyboard.press('Escape');
+    }
+
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
 
+    // wait for a response before switching to the console
+    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toBeVisible();
     await page.getByRole('tab', { name: 'Console' }).click();
     // check new environment value
     await expect.soft(page.getByText('kvstring')).toBeVisible();
