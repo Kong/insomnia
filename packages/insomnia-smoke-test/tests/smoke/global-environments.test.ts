@@ -30,7 +30,7 @@ test.describe('Global Environments', () => {
     await page.getByRole('heading', { name: '2 environment variables are' }).click();
     await page.getByRole('button', { name: 'Cancel' }).click();
     await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a global environment').click();
+    await page.getByPlaceholder('Choose a project environment').click();
     await page.getByRole('option', { name: 'global-environment' }).click();
     await page.getByText('New Environment').click();
     await page.locator('body').click();

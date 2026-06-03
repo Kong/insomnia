@@ -140,7 +140,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     // activate existing global private vault environment from import
     await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a global environment').click();
+    await page.getByPlaceholder('Choose a project environment').click();
     await page.getByRole('option', { name: 'New Global Vault Environment' }).click();
     await page.getByRole('option', { name: 'New Environment' }).click();
     await page.getByText('Base Environment1').click();
@@ -162,7 +162,7 @@ test.describe('Check vault used in environment', () => {
 
     // activate global private vault environment from import
     await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a global environment').click();
+    await page.getByPlaceholder('Choose a project environment').click();
     await page.getByRole('option', { name: 'Global env workspace with secret vault' }).click();
     await page.getByText('global vault env with secret').click();
 

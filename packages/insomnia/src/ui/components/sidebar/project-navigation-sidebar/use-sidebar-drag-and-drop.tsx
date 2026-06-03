@@ -63,7 +63,7 @@ function canDrop(
     if (realDropItem) {
       if (realDropItem.kind === 'project') {
         const dropToAnotherProject = dragItem.project._id !== realDropItem.doc._id;
-        // only allow move collection and design workspace into another project
+        // only allow moving collection and design workspace into another project
         if (dropToAnotherProject && !allowCrossProjectDropWorkspaceScope.includes(dragWorkspaceScope)) {
           return false;
         }
@@ -81,7 +81,7 @@ function canDrop(
           );
         }
         const dropToAnotherProject = dragItem.project._id !== realDropItem.project._id;
-        // only allow move collection and design workspace into another project
+        // only allow moving collection and design workspace into another project
         if (dropToAnotherProject && !allowCrossProjectDropWorkspaceScope.includes(dragWorkspaceScope)) {
           return false;
         }
