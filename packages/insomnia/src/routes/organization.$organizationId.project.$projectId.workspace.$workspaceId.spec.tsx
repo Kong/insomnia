@@ -272,17 +272,6 @@ const Component = ({ params }: Route.ComponentProps) => {
   }, [selectedRulesetPath, rulesetContent]);
 
   useEffect(() => {
-    // The main process periodically re-checks remote "extends" for upstream changes. When this
-    // project's ruleset changes, re-run lint so the new (re-compiled) ruleset is applied.
-    return window.main.on('spectral-ruleset.updated', (_event, payload: { projectId: string }) => {
-      if (payload?.projectId !== projectId) {
-        return;
-      }
-      editor.current?.tryToSetOption('lint', { ...lintOptions });
-    });
-  }, [projectId]);
-
-  useEffect(() => {
     if (lintErrors.length > 0 || lintWarnings.length > 0) {
       setIsLintPaneOpen(true);
     }

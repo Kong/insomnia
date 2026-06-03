@@ -39,7 +39,6 @@ import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
-import * as spectralRulesetRefresh from './main/spectral-ruleset-refresh';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
@@ -140,8 +139,6 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
-  // Periodically re-check remote spectral "extends" for upstream changes and re-lint.
-  spectralRulesetRefresh.init();
   // recursive = ignore already exists error
   await fs.mkdir(path.join(dataPath, 'responses'), { recursive: true });
 });

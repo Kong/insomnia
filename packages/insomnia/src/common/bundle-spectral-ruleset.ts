@@ -82,7 +82,7 @@ function parseRemoteExtendsUrl(entry: string, base?: URL): URL {
 async function assertSafeRemoteUrl(url: URL): Promise<void> {
   const hostname = url.hostname.toLowerCase();
   if (url.protocol !== 'https:') {
-    throw new Error(`Remote "extends" URL must use https: ${url.href}`);
+    throw new Error(`Remote "extends" URL ${url.href} must use https`);
   }
   if (!hostname || isPrivateOrLoopbackHost(hostname)) {
     throw new Error(`Remote "extends" URL targets a disallowed host: ${url.href}`);
@@ -266,7 +266,13 @@ async function flattenRuleset(
       continue;
     }
     // Local file paths are recursively loaded and flattened.
-    const childRuleset = await flattenRuleset(path.resolve(baseDir, entry), nextVisited, depth + 1, rootDir, inlineRemote);
+    const childRuleset = await flattenRuleset(
+      path.resolve(baseDir, entry),
+      nextVisited,
+      depth + 1,
+      rootDir,
+      inlineRemote,
+    );
     if (childRuleset.extends) {
       remainingExtends.push(...childRuleset.extends);
     }
