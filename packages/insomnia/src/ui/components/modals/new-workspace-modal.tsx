@@ -272,7 +272,7 @@ export const NewWorkspaceModal = ({
                             placeholder={workspaceData.name ? safeToUseInsomniaFileName(workspaceData.name) : 'name'}
                             className="w-full outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
                           />
-                          <span className="pointer-events-none w-min truncate opacity-0 [grid-area:input]">
+                          <span className="pointer-events-none truncate opacity-0 [grid-area:input]">
                             {safeToUseInsomniaFileName(workspaceData.fileName || workspaceData.name || 'name')}
                           </span>
                           <span className="text-(--hl) [grid-area:extension]">.yaml</span>
