@@ -382,7 +382,7 @@ export const RequestGroupActionsDropdown = ({
                 ?.action()
             }
             items={requestGroupActionItems}
-            className="h-full min-w-12 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+            className="h-full min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
           >
             {section => (
               <MenuSection className="flex flex-1 flex-col">
