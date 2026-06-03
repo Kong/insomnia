@@ -345,18 +345,22 @@ test.describe('runner features tests', () => {
     await expect.soft(page.getByTestId('runner-test-result-iteration-3')).toBeHidden();
   });
 
-  test('settings: can turn off logs', async ({ page, insomnia }) => {
+  test('can turn off logs via settings', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
       actionName: 'Run Collection',
       workspaceName: 'Runner',
     });
 
+    // wait for the request row to be ready before selecting it
+    await page.locator('.runner-request-list-printLogs').waitFor({ state: 'visible' });
     await page.locator('.runner-request-list-printLogs').click();
     await page.getByRole('tab', { name: 'advanced' }).click();
     await page.locator('input[name="enable-log"]').click();
 
-    // send
-    await page.getByRole('button', { name: 'Run', exact: true }).click();
+    // Run becomes enabled only once a request is selected; selecting printLogs above enables it
+    const runButton = page.getByRole('button', { name: 'Run', exact: true });
+    await runButton.waitFor({ state: 'visible' });
+    await runButton.click();
 
     // verify there's no log
     await page.getByText('1 / 1').first().click();
@@ -367,7 +371,7 @@ test.describe('runner features tests', () => {
     await page.locator('input[name="enable-log"]').click();
 
     // send
-    await page.getByRole('button', { name: 'Run', exact: true }).click();
+    await runButton.click();
 
     // verify there's a log
     await page.getByText('1 / 1').first().click();
