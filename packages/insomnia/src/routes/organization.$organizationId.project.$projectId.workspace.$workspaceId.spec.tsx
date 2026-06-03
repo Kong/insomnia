@@ -270,7 +270,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     registerCodeMirrorLint(rulesetContent);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-  }, [selectedRulesetPath, rulesetContent]);
+  }, [rulesetContent]);
 
   useEffect(() => {
     if (lintErrors.length > 0 || lintWarnings.length > 0) {
@@ -468,6 +468,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             organizationId,
             projectId,
           });
+          await window.main.deleteCompiledRuleset({ projectId });
           setSelectedRulesetPath('');
         }
       },

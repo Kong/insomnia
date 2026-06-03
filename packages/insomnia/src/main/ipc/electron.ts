@@ -176,7 +176,7 @@ export type HandleChannels =
   | 'timeline.appendToFile'
   | 'timeline.getPath'
   | 'writeFile'
-  | 'deleteRulesetFile'
+  | 'deleteCompiledRuleset'
   | 'writeResponseBodyToFile'
   | 'vault.encryptSecretValue'
   | 'vault.decryptSecretValue'
