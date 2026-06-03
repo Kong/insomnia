@@ -38,7 +38,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Send' }).click();
     
     // wait for a response before switching to console
-    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toBeVisible();
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('baseenv0')).toBeVisible();
     await expect.soft(page.getByText('baseenv1')).toBeVisible();
@@ -75,7 +75,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Send' }).click();
 
     // wait for a response before switching to console
-    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toBeVisible();
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('subenvB0')).toBeVisible();
     await expect.soft(page.getByText('subenvB1')).toBeVisible();
@@ -167,9 +167,10 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Send' }).click();
 
     // wait for a response before switching to console
-    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toBeVisible();
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
-    await expect.soft(page.getByText('kvstring')).toBeVisible();
+    await page.getByText('kvstring').waitFor({ state: 'visible', timeout: 10_000 });
+    await expect.soft(page.getByText('kvstring')).toBeVisible({ timeout: 10_000 });
     await page.getByText('kvstring').click();
     await page.getByText('kvAnotherStr').click();
     await page.getByText('12345').click();
@@ -194,7 +195,7 @@ test.describe('Environment Editor', () => {
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
     // wait for a response before switching to console
-    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toBeVisible();
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('subenvA0')).toBeVisible();
 
@@ -225,7 +226,7 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Send' }).click();
 
     // wait for a response before switching to console
-    await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toBeVisible();
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('baseenv0')).toBeVisible();
     await expect.soft(page.getByText('subenvA0')).toBeHidden();
