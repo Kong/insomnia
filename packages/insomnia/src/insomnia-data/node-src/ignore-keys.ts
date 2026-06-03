@@ -1,5 +1,3 @@
-// TODO: remove this file after git-vcs is fully migrated to insomnia-data
-
 import type { BaseModel, ProjectLintRuleset, Workspace } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 

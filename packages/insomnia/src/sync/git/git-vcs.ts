@@ -6,12 +6,12 @@ import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
-import type { GitAuthor, GitRemoteConfig } from '~/insomnia-data';
+import type { AutoResolvedConflict, GitAuthor, GitRemoteConfig, MergeConflict } from '~/insomnia-data';
+import { RESOLUTION_SOURCE } from '~/insomnia-data';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 
 import { hasSignificantChanges } from '../../common/significant-diff-detection';
-import { type AutoResolvedConflict, type MergeConflict, RESOLUTION_SOURCE } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';

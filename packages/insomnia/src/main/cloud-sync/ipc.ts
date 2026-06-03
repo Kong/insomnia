@@ -11,7 +11,7 @@ import type {
   StageEntry,
   Status,
   StatusCandidate,
-} from '~/sync/types';
+} from '~/insomnia-data';
 
 import type { Operation } from '../../common/database';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';

@@ -2,12 +2,13 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { baseModelSchema, workspaceModelSchema } from '../../../../sync/__schemas__/model-schemas';
-import { projectSchema } from '../../../../sync/__schemas__/type-schemas';
-import { shouldIgnoreKey } from '../../../../sync/ignore-keys';
-import { deterministicStringify } from '../../../../sync/lib/deterministic-stringify';
-import type { BackendProject } from '../../../../sync/types';
-import MemoryDriver from '../store/drivers/memory-driver';
+import type { BackendProject } from '~/insomnia-data';
+import { deterministicStringify } from '~/insomnia-data/common';
+
+import { baseModelSchema, workspaceModelSchema } from '../../__schemas__/model-schemas';
+import { projectSchema } from '../../__schemas__/type-schemas';
+import { shouldIgnoreKey } from '../../services/helpers/ignore-keys';
+import MemoryDriver from '../../store/drivers/memory-driver';
 import { chunkArray, VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);

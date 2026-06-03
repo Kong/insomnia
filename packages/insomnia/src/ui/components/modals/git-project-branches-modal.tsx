@@ -13,12 +13,12 @@ import {
 } from 'react-aria-components';
 import { useParams, useRevalidator } from 'react-router';
 
+import type { MergeConflict } from '~/insomnia-data';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectDeleteBranchActionFetcher } from '~/routes/git.branch.delete';
 import { useGitProjectNewBranchActionFetcher } from '~/routes/git.branch.new';
 import { useGitProjectBranchesLoaderFetcher } from '~/routes/git.branches';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
-import type { MergeConflict } from '~/sync/types';
 import { SyncMergeModal } from '~/ui/components/modals/sync-merge-modal';
 
 import { PromptButton } from '../base/prompt-button';

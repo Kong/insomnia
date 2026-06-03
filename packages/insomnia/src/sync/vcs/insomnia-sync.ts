@@ -1,6 +1,7 @@
+import type { MergeConflict } from '~/insomnia-data';
+
 import { showModal } from '../../ui/components/modals';
 import { SyncMergeModal } from '../../ui/components/modals/sync-merge-modal';
-import type { MergeConflict } from '../types';
 
 let hasRegisteredConflictListener = false;
 

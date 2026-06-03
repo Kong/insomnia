@@ -1,6 +1,8 @@
 import { database, type Operation } from '~/common/database';
 import type {
   ApiSpec,
+  BackendProject,
+  Compare,
   Environment,
   GrpcRequest,
   McpRequest,
@@ -10,13 +12,13 @@ import type {
   Request,
   RequestGroup,
   SocketIORequest,
+  StatusCandidate,
   UnitTest,
   UnitTestSuite,
   WebSocketRequest,
   Workspace,
 } from '~/insomnia-data';
 import { models, services } from '~/insomnia-data';
-import type { BackendProject, Compare, StatusCandidate } from '~/sync/types';
 import { invariant } from '~/utils/invariant';
 
 type PushPull = 'push' | 'pull';

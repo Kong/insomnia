@@ -16,12 +16,12 @@ import {
 import { useParams } from 'react-router';
 import { stringify } from 'yaml';
 
+import type { StageEntry, Status, StatusCandidate } from '~/insomnia-data';
 import { models } from '~/insomnia-data';
 import { useInsomniaSyncCreateSnapshotActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.create-snapshot';
 import { useInsomniaSyncStageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.stage';
 import { useInsomniaSyncUnstageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';
 
-import type { StageEntry, Status, StatusCandidate } from '../../../sync/types';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 

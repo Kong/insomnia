@@ -2,11 +2,8 @@ import crypto from 'node:crypto';
 
 import clone from 'clone';
 
-import type { BaseModel } from '~/insomnia-data';
-
-import { deleteKeys, resetKeys } from '../../../sync/ignore-keys';
-import { deterministicStringify } from '../../../sync/lib/deterministic-stringify';
 import type {
+  BaseModel,
   Branch,
   Compare,
   DocumentKey,
@@ -18,7 +15,10 @@ import type {
   StageEntry,
   StatusCandidate,
   StatusCandidateMap,
-} from '../../../sync/types';
+} from '~/insomnia-data';
+import { deterministicStringify } from '~/insomnia-data/common';
+
+import { deleteKeys, resetKeys } from '../ignore-keys';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {

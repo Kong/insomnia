@@ -22,10 +22,12 @@ import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
 import type {
+  AutoResolvedConflict,
   BaseModel,
   GitProject,
   GitRemoteProviderType,
   GitRepository,
+  MergeConflict,
   Workspace,
   WorkspaceMeta,
   WorkspaceScope,
@@ -65,7 +67,6 @@ import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client'
 import { createElectronNotifier, RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
-import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
 import { invariant } from '../utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';

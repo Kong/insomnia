@@ -12,9 +12,9 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
 import { models, services } from '~/insomnia-data';
+import { workspaceModelSchema } from '~/insomnia-data/node';
 
 import { database as db } from '../../../common/database';
-import { workspaceModelSchema } from '../../__schemas__/model-schemas';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
 import { NeDBClient } from '../ne-db-client';
 import { assertAsyncError } from './util';

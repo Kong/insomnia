@@ -16,10 +16,10 @@ import { parse, stringify } from 'yaml';
 import { extractErrorMessages } from '~/common/import';
 import { InsomniaFileSchema } from '~/common/import-v5-parser';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
+import { type MergeConflict, RESOLUTION_SOURCE } from '~/insomnia-data';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 
-import { type MergeConflict, RESOLUTION_SOURCE } from '../../../sync/types';
 import { AnalyticsEvent } from '../../analytics';
 import { MergeEditor } from '../.client/codemirror/merge-editor';
 import { DiffEditor } from '../diff-view-editor';

@@ -8,16 +8,10 @@ import clone from 'clone';
 import { runVcsGraphQL } from 'insomnia-api';
 
 import { PLAYWRIGHT_TEST } from '~/common/constants';
-import type { BaseModel } from '~/insomnia-data';
-
-import * as crypt from '../../../account/crypt';
-import * as session from '../../../account/session';
-import type { Operation } from '../../../common/database';
-import { generateId } from '../../../common/misc';
 import type {
   BackendProject,
   BackendProjectWithTeams,
-  BackendProjectWithTeamsAndTeamProjectId,
+  BaseModel,
   Branch,
   DocumentKey,
   Head,
@@ -27,10 +21,14 @@ import type {
   Stage,
   StageEntry,
   StatusCandidate,
-} from '../../../sync/types';
-import Store from './store';
-import type { BaseDriver } from './store/drivers/base';
-import compress from './store/hooks/compress';
+} from '~/insomnia-data';
+import { services } from '~/insomnia-data';
+import { generateId } from '~/insomnia-data/common';
+
+import { decryptAESToBuffer, decryptRSAWithJWK, encryptAESBuffer, encryptRSAWithJWK } from '../crypt';
+import Store from '../store';
+import type { BaseDriver } from '../store/drivers/base';
+import compress from '../store/hooks/compress';
 import {
   compareBranches,
   generateCandidateMap,
@@ -50,6 +48,11 @@ type ConflictHandler = (
   conflicts: MergeConflict[],
   labels: { ours: string; theirs: string },
 ) => Promise<MergeConflict[]>;
+
+interface Operation {
+  upsert?: BaseModel[];
+  remove?: BaseModel[];
+}
 
 // breaks one array into multiple arrays of size chunkSize
 export function chunkArray<T>(arr: T[], chunkSize: number) {
@@ -101,7 +104,7 @@ export class VCS {
     return '';
   }
   _store: Store;
-  _driver: BaseDriver;
+  _driver: BaseDriver; // TODO remove it
   // stored by key `/projects/${project.id}/meta.json`
   _backendProject: BackendProject | null;
   _conflictHandler?: ConflictHandler | null;
@@ -201,43 +204,6 @@ export class VCS {
       id: backend.id,
       name: backend.name,
       rootDocumentId: backend.rootDocumentId,
-      // A backend project is guaranteed to exist on exactly one team
-      team: backend.teams[0],
-    }));
-  }
-
-  async remoteBackendProjectsOfTeam({ teamId }: { teamId: string }) {
-    console.log(`[remoteBackendProjectsOfTeam] Fetching remote workspaces for teamId=${teamId}`);
-
-    const { projects } = await this._runGraphQL<{ projects: BackendProjectWithTeamsAndTeamProjectId[] }>(
-      `
-        query ($teamId: ID, $allProjects: Boolean) {
-          projects(teamId: $teamId, allProjects: $allProjects) {
-            id
-            name
-            rootDocumentId
-            teamProjectId
-            teams {
-              id
-              name
-            }
-          }
-        }
-      `,
-      {
-        teamId,
-        allProjects: true,
-      },
-      'projects',
-    );
-
-    console.log(`[remoteBackendProjectsOfTeam] Fetched ${projects.length} remote workspaces`);
-
-    return projects.map(backend => ({
-      id: backend.id,
-      name: backend.name,
-      rootDocumentId: backend.rootDocumentId,
-      teamProjectId: backend.teamProjectId,
       // A backend project is guaranteed to exist on exactly one team
       team: backend.teams[0],
     }));
@@ -1120,7 +1086,7 @@ export class VCS {
 
       for (const blob of blobs) {
         const encryptedResult = JSON.parse(blob.content);
-        result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
+        result[blob.id] = decryptAESToBuffer(symmetricKey, encryptedResult);
       }
     }
 
@@ -1174,7 +1140,7 @@ export class VCS {
         throw new Error(`Failed to get blob id=${id}`);
       }
 
-      const encryptedResult = crypt.encryptAESBuffer(symmetricKey, content);
+      const encryptedResult = encryptAESBuffer(symmetricKey, content);
       batch.push({
         id,
         content: JSON.stringify(encryptedResult, null, 2),
@@ -1295,7 +1261,7 @@ export class VCS {
       teamKeys.push({
         autoLinked,
         accountId,
-        encSymmetricKey: crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
+        encSymmetricKey: encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
       });
     }
 
@@ -1356,7 +1322,7 @@ export class VCS {
     }
 
     const encSymmetricKey = await this._queryBackendProjectKey();
-    const symmetricKeyStr = crypt.decryptRSAWithJWK(privateKey, encSymmetricKey);
+    const symmetricKeyStr = decryptRSAWithJWK(privateKey, encSymmetricKey);
     return JSON.parse(symmetricKeyStr);
   }
 
@@ -1391,8 +1357,8 @@ export class VCS {
   }
 
   async _assertSession() {
-    const { accountId, id, publicKey, symmetricKey } = await session.getUserSession();
-    const privateKey = await session.getPrivateKey();
+    const { accountId, id, publicKey, symmetricKey } = await services.userSession.get();
+    const privateKey = await services.userSession.getPrivateKey();
     if (!id) {
       throw new Error('Not logged in');
     }

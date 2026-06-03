@@ -9,3 +9,6 @@ export * as models from './models';
 
 // services
 export { services, initServices, type Services } from './services';
+
+// service related types and constants
+export * from './services/types';
