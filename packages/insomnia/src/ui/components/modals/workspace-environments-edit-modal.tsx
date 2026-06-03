@@ -1,4 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models } from 'insomnia-data';
 import React, { Fragment, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -20,8 +22,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { Environment, EnvironmentKvPairData } from '~/insomnia-data';
-import { EnvironmentKvPairDataType, EnvironmentType, models } from '~/insomnia-data';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
@@ -145,6 +145,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
           workspaceId,
           params: {
             isPrivate: false,
+            source: 'environment-editor',
           },
         });
       },
@@ -161,6 +162,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
           workspaceId,
           params: {
             isPrivate: true,
+            source: 'environment-editor',
           },
         });
       },
@@ -554,7 +556,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                 </div>
                 <Button
                   onPress={close}
-                  className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
+                  isDisabled={updateEnvironmentFetcher.state !== 'idle'}
+                  className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline aria-disabled:opacity-50"
                 >
                   Close
                 </Button>

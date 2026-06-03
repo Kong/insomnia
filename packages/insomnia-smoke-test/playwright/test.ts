@@ -41,6 +41,7 @@ interface EnvOptions {
   INSOMNIA_VAULT_KEY: string;
   INSOMNIA_VAULT_SALT: string;
   INSOMNIA_VAULT_SRP_SECRET: string;
+  KONNECT_API_URL: string;
 }
 
 interface AESMessage {
@@ -95,6 +96,7 @@ export const test = baseTest.extend<{
       INSOMNIA_VAULT_KEY: userConfig.vaultKey || '',
       INSOMNIA_VAULT_SALT: userConfig.vaultSalt || '',
       INSOMNIA_VAULT_SRP_SECRET: userConfig.vaultSrpSecret || '',
+      KONNECT_API_URL: echoServer,
       ...(userConfig.session ? { INSOMNIA_SESSION: JSON.stringify(userConfig.session) } : {}),
     };
     const { ELECTRON_RUN_AS_NODE: _ignored, ...launchEnv } = process.env;
@@ -158,9 +160,6 @@ export const test = baseTest.extend<{
     const page = await app.firstWindow({ timeout: 60_000 });
 
     await page.waitForLoadState();
-
-    // Seed a fake Konnect PAT so konnect-enabled UI renders in all tests
-    await page.evaluate(() => (window as any).main.secretStorage.setSecret('konnectPat', 'kpat_test'));
 
     await use(page);
   },

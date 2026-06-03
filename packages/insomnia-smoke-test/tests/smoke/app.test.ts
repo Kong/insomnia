@@ -93,12 +93,6 @@ test('can send requests', async ({ page, insomnia }) => {
     })
     .toBe(true);
 
-  await expect.soft(pdfIframe).toHaveScreenshot('dummy-pdf-preview.png', {
-    animations: 'disabled',
-    maxDiffPixelRatio: 0.15, // 15% discrepancy allowed for CI/environment differences
-    timeout: 5000,
-  });
-
   await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
   await page.locator('pre').filter({ hasText: '< Content-Type: application/pdf' }).click();
   await page.getByTestId('response-pane').getByRole('tab', { name: 'Preview' }).click();

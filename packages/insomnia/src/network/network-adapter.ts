@@ -2,11 +2,8 @@
 // Vite production inlines process.type='renderer' so Rollup tree-shakes the node branch.
 import type * as AdapterType from './network-adapter.renderer';
 
- 
 const impl = (
-  (process as any).type === 'renderer'
-    ? require('./network-adapter.renderer')
-    : require(/* @vite-ignore */ './network-adapter.node')
+  (process as any).type === 'renderer' ? require('./network-adapter.renderer') : require('./network-adapter.node')
 ) as typeof AdapterType;
 
 export const {

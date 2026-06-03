@@ -1,6 +1,5 @@
+import type { Cookie } from 'insomnia-data';
 import { Cookie as ToughCookie, CookieJar, type CookieJSON } from 'tough-cookie';
-
-import type { Cookie } from '~/insomnia-data';
 
 /**
  * Get a list of cookie objects from a request.jar()

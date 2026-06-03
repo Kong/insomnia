@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
 
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from '~/insomnia-data';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
@@ -172,6 +172,7 @@ const sync: SyncBridgeAPI = {
   pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
   push: (...args) => invokeSyncMethod('push', ...args),
   remoteBackendProjects: (...args) => invokeSyncMethod('remoteBackendProjects', ...args),
+  remoteBackendProjectsOfTeam: (...args) => invokeSyncMethod('remoteBackendProjectsOfTeam', ...args),
   removeBackendProjectsForRoot: (...args) => invokeSyncMethod('removeBackendProjectsForRoot', ...args),
   removeBranch: (...args) => invokeSyncMethod('removeBranch', ...args),
   removeRemoteBranch: (...args) => invokeSyncMethod('removeRemoteBranch', ...args),
@@ -342,6 +343,12 @@ const main: Window['main'] = {
         port.postMessage({ ...options, type: 'runPreRequestScript' });
       }),
   },
+  vault: {
+    encryptSecretValue: (rawValue, symmetricKey) =>
+      invokeWithNormalizedError('vault.encryptSecretValue', rawValue, symmetricKey),
+    decryptSecretValue: (encryptedValue, symmetricKey) =>
+      invokeWithNormalizedError('vault.decryptSecretValue', encryptedValue, symmetricKey),
+  },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     invokeWithNormalizedError('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   syncNewWorkspaceIfNeeded: options => invokeWithNormalizedError('syncNewWorkspaceIfNeeded', options),
@@ -363,6 +370,9 @@ const main: Window['main'] = {
       useDynamicMockResponses,
       mockServerAdditionalFiles,
     ),
+  generateCodeSnippet: (options: { har: object; target: string; client: string }) =>
+    invokeWithNormalizedError('generateCodeSnippet', options),
+  getCodeSnippetTargets: () => invokeWithNormalizedError('getCodeSnippetTargets'),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
     invokeWithNormalizedError('generateCommitsFromDiff', input),
   generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>
@@ -437,6 +447,42 @@ const database: Window['database'] = {
   invoke: (fnName, ...args) => invokeWithNormalizedError('database.invoke', fnName, ...args),
 };
 
+const env: Window['env'] = {
+  // GitLab OAuth — redirect URI, client ID, and API URL allow dev/enterprise overrides
+  INSOMNIA_GITLAB_REDIRECT_URI: process.env.INSOMNIA_GITLAB_REDIRECT_URI,
+  INSOMNIA_GITLAB_CLIENT_ID: process.env.INSOMNIA_GITLAB_CLIENT_ID,
+  INSOMNIA_GITLAB_API_URL: process.env.INSOMNIA_GITLAB_API_URL,
+  // E2E sentinel: switches analytics to dev keys and forces vertical layout in settings
+  PLAYWRIGHT_TEST: process.env.PLAYWRIGHT_TEST,
+  // E2E fixtures: pre-seed auth state so tests bypass login/key-derivation UI
+  INSOMNIA_SKIP_ONBOARDING: process.env.INSOMNIA_SKIP_ONBOARDING,
+  INSOMNIA_SESSION: process.env.INSOMNIA_SESSION,
+  INSOMNIA_SECRET_KEY: process.env.INSOMNIA_SECRET_KEY,
+  INSOMNIA_PUBLIC_KEY: process.env.INSOMNIA_PUBLIC_KEY,
+  // E2E vault fixtures: pre-seed deterministic salt/key/SRP secret
+  INSOMNIA_VAULT_SALT: process.env.INSOMNIA_VAULT_SALT,
+  INSOMNIA_VAULT_KEY: process.env.INSOMNIA_VAULT_KEY,
+  INSOMNIA_VAULT_SRP_SECRET: process.env.INSOMNIA_VAULT_SRP_SECRET,
+  // App environment: gates dev features and selects analytics keys
+  INSOMNIA_ENV: process.env.INSOMNIA_ENV,
+  // Injected at build time; shown in the About screen
+  BUILD_DATE: process.env.BUILD_DATE,
+  // Windows portable binary sentinel: presence disables auto-updates
+  PORTABLE_EXECUTABLE_DIR: process.env.PORTABLE_EXECUTABLE_DIR,
+  // OAuth flow URL overrides for dev/staging environments
+  OAUTH_REDIRECT_URL: process.env.OAUTH_REDIRECT_URL,
+  OAUTH_RELAY_URL: process.env.OAUTH_RELAY_URL,
+  // Service URL overrides: allow dev/CI to target local or staging backends
+  INSOMNIA_API_URL: process.env.INSOMNIA_API_URL,
+  INSOMNIA_MOCK_API_URL: process.env.INSOMNIA_MOCK_API_URL,
+  INSOMNIA_AI_URL: process.env.INSOMNIA_AI_URL,
+  KONNECT_API_URL: process.env.KONNECT_API_URL,
+  INSOMNIA_APP_WEBSITE_URL: process.env.INSOMNIA_APP_WEBSITE_URL,
+  // GitHub API URL overrides for GitHub Enterprise targets
+  INSOMNIA_GITHUB_REST_API_URL: process.env.INSOMNIA_GITHUB_REST_API_URL,
+  INSOMNIA_GITHUB_API_URL: process.env.INSOMNIA_GITHUB_API_URL,
+};
+
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);
@@ -447,6 +493,7 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('path', path);
   contextBridge.exposeInMainWorld('database', database);
   contextBridge.exposeInMainWorld('_dataServices', servicesProxy);
+  contextBridge.exposeInMainWorld('env', env);
 } else {
   window.main = main;
   window.dialog = dialog;
@@ -457,4 +504,5 @@ if (process.contextIsolated) {
   window.path = path;
   window.database = database;
   window._dataServices = servicesProxy;
+  window.env = env;
 }

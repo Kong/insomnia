@@ -1,4 +1,6 @@
 import type { StorageRules } from 'insomnia-api';
+import type { ApiSpec, Project, WorkspaceScope } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -21,8 +23,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { ApiSpec, Project, WorkspaceScope } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';
@@ -57,6 +57,7 @@ export const NewWorkspaceModal = ({
   sourceApiSpec,
   onCreateWorkspace,
   redirectAfterCreate = true,
+  source,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -66,6 +67,7 @@ export const NewWorkspaceModal = ({
   redirectAfterCreate?: boolean;
   scope: WorkspaceScope;
   sourceApiSpec?: ApiSpec;
+  source?: string;
 }) => {
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
 
@@ -172,6 +174,7 @@ export const NewWorkspaceModal = ({
         apiSpecContents: sourceApiSpec.contents,
       }),
       redirectAfterCreate,
+      ...(source && { source }),
     });
   };
 

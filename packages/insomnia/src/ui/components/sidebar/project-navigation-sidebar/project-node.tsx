@@ -1,7 +1,7 @@
 import type { StorageRules } from 'insomnia-api';
+import { models } from 'insomnia-data';
 import { Button } from 'react-aria-components';
 
-import { models } from '~/insomnia-data';
 import { ProjectDropdown, type WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 
 import { AvatarGroup } from '../../avatar';

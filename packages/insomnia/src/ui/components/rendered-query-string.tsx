@@ -1,7 +1,4 @@
 import classNames from 'classnames';
-import { type FC, useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-aria-components';
-
 import type {
   Request,
   RequestAuthentication,
@@ -9,8 +6,11 @@ import type {
   RequestParameter,
   SocketIORequest,
   WebSocketRequest,
-} from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { type FC, useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-aria-components';
+
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 

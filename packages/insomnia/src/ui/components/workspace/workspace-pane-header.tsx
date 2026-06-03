@@ -1,8 +1,8 @@
+import { type McpRequest, models } from 'insomnia-data';
 import { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { isNotNullOrUndefined } from '~/common/misc';
-import { type McpRequest, models } from '~/insomnia-data';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '~/ui/analytics';

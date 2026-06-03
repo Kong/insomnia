@@ -124,13 +124,13 @@ export class Environment {
    * 
    * @throws Will throw an error if template is not a string or object.
    */
-  replaceIn = (template: string | object) => {
+  replaceIn = async (template: string | object) => {
     if (typeof template === 'object') {
       template = template.toString();
     } else if (typeof template !== 'string') {
       throw new TypeError('The template must be a string or an object');
     }
-    
+
     return getInterpolator().render(template, this.toObject());
   };
 
@@ -329,7 +329,7 @@ export class Variables {
    * 
    * @throws Will throw an error if template is not a string or object.
    */
-  replaceIn = (template: string | object) => {
+  replaceIn = async (template: string | object) => {
     if (typeof template === 'object') {
       template = template.toString();
     } else if (typeof template !== 'string') {

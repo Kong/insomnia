@@ -1,7 +1,3 @@
-import { useState } from 'react';
-import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useParams } from 'react-router';
-
 import type {
   GrpcRequest,
   McpRequest,
@@ -10,8 +6,12 @@ import type {
   SocketIORequest,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { useState } from 'react';
+import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { useParams } from 'react-router';
+
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '~/ui/components/dropdowns/request-group-actions-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';

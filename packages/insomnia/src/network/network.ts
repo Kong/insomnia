@@ -1,6 +1,3 @@
-import clone from 'clone';
-import orderedJSON from 'json-order';
-
 import type {
   CaCertificate,
   ClientCertificate,
@@ -22,9 +19,11 @@ import type {
   UserUploadEnvironment,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { EnvironmentType, models, services } from '~/insomnia-data';
-import { invariant, serializeNDJSON } from '~/insomnia-data/common';
+} from 'insomnia-data';
+import { EnvironmentType, models, services } from 'insomnia-data';
+import { invariant, serializeNDJSON } from 'insomnia-data/common';
+import orderedJSON from 'json-order';
+
 import {
   appendTimelineLines,
   appendToTimelineOnError,
@@ -45,7 +44,6 @@ import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeader
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promise';
-import * as pluginRequest from '../plugins/context/request';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -65,6 +63,7 @@ export interface SendActionRuntime {
 
 export const getOrInheritAuthentication = ({
   request,
+  // requestGroups is supposed to be of order leaf to root
   requestGroups,
 }: {
   request: Request | WebSocketRequest | SocketIORequest;
@@ -75,9 +74,9 @@ export const getOrInheritAuthentication = ({
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
-  const closestParentFolderWithAuth = [...requestGroups]
-    .reverse()
-    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+  const closestParentFolderWithAuth = requestGroups.find(
+    ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
+  );
   const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
@@ -97,7 +96,7 @@ export function getOrInheritHeaders({
   const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
   // parent folders, then child folders, then request
-  const headerContexts = [...requestGroups.reverse(), request];
+  const headerContexts = [...requestGroups].reverse().concat(request);
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
@@ -799,7 +798,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
 }) => {
   const { request, context } = renderResult;
   try {
-    return await _applyRequestPluginHooks(request, context);
+    return await applyRequestHooks(request, context);
   } catch {
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
@@ -951,7 +950,19 @@ export const responseTransform = async (
     return response;
   }
   console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`);
-  return await _applyResponsePluginHooks(response, renderedRequest, context);
+  try {
+    return await applyResponseHooks(response, renderedRequest, context);
+  } catch (err) {
+    console.log('[plugin] Response hook failed', err, response);
+    return {
+      url: renderedRequest.url,
+      error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
+      elapsedTime: 0, // 0 because this path is hit during plugin calls
+      statusMessage: 'Error',
+      settingSendCookies: renderedRequest.settingSendCookies,
+      settingStoreCookies: renderedRequest.settingStoreCookies,
+    };
+  }
 };
 export function getAuthQueryParams(authentication: RequestAuthentication) {
   if (authentication.disabled) {
@@ -1040,50 +1051,6 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
     return finalUrl;
   }
 };
-
-export async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, renderedContext: Record<string, any>) {
-  const newRenderedRequest = clone(renderedRequest);
-
-  // Apply built-in default-headers hook in the renderer (no IPC needed)
-  const { request: reqCtx } = pluginRequest.init(newRenderedRequest, renderedContext);
-  const defaultHeaders = reqCtx.getEnvironmentVariable('DEFAULT_HEADERS');
-  if (defaultHeaders && typeof defaultHeaders === 'object' && !Array.isArray(defaultHeaders)) {
-    for (const name of Object.keys(defaultHeaders)) {
-      const value = (defaultHeaders as Record<string, any>)[name];
-      if (reqCtx.hasHeader(name)) {
-        console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
-      } else if (value === 'null') {
-        reqCtx.removeHeader(name);
-        console.log(`[header] Remove default header ${name}`);
-      } else {
-        reqCtx.setHeader(name, value);
-        console.log(`[header] Set default header ${name}: ${value}`);
-      }
-    }
-  }
-
-  return applyRequestHooks(newRenderedRequest, renderedContext);
-}
-
-export async function _applyResponsePluginHooks(
-  response: ResponsePatch,
-  renderedRequest: RenderedRequest,
-  renderedContext: Record<string, any>,
-): Promise<ResponsePatch> {
-  try {
-    return await applyResponseHooks(response, renderedRequest, renderedContext);
-  } catch (err) {
-    console.log('[plugin] Response hook failed', err, response);
-    return {
-      url: renderedRequest.url,
-      error: `[plugin] Response hook failed err=${err instanceof Error ? err.message : String(err)}`,
-      elapsedTime: 0, // 0 because this path is hit during plugin calls
-      statusMessage: 'Error',
-      settingSendCookies: renderedRequest.settingSendCookies,
-      settingStoreCookies: renderedRequest.settingStoreCookies,
-    };
-  }
-}
 
 export const defaultSendActionRuntime: SendActionRuntime = {
   appendTimeline: appendTimelineLines,

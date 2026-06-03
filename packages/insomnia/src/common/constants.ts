@@ -1,4 +1,4 @@
-import type { MockServer } from '~/insomnia-data';
+import type { MockServer } from 'insomnia-data';
 import {
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
@@ -8,15 +8,16 @@ import {
   isWindows,
   METHOD_GET,
   platform,
-} from '~/insomnia-data/common';
+} from 'insomnia-data/common';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 
-// Vite is filtering out process.env variables that are not prefixed with VITE_.
+// In the renderer (nodeIntegration disabled) env vars come from the preload via window.env.
+// In the inso CLI and main process, fall back to process.env.
 const ENV = 'env';
 
-const env = process[ENV];
+const env = typeof window !== 'undefined' && window.env ? window.env : process[ENV];
 
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
@@ -37,7 +38,8 @@ export const getProductName = () => appConfig.productName;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
+// Must specify full `process.env.INSOMNIA_ENV` here because esbuild define is a build-time replacement and won't inject to runtime
+export const getAppEnvironment = () => env.INSOMNIA_ENV || process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () =>
   appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
@@ -46,7 +48,8 @@ export const getCioWriteKey = () =>
   appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].writeKey;
 export const getCioSiteId = () =>
   appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].siteId;
-export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
+// Must specify full `process.env.BUILD_DATE` here because esbuild define is a build-time replacement and won't inject to runtime
+export const getAppBuildDate = () => new Date((env.BUILD_DATE || process.env.BUILD_DATE) ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () =>
   encodeURIComponent(
@@ -62,7 +65,7 @@ export function updatesSupported() {
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows && process.env['PORTABLE_EXECUTABLE_DIR']) {
+  if (isWindows && env.PORTABLE_EXECUTABLE_DIR) {
     return false;
   }
 
@@ -210,7 +213,7 @@ export const HTTP_METHODS = [
 export const METHOD_GRPC = 'GRPC';
 
 // Content Types
-export { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON } from '~/insomnia-data/common';
+export { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON } from 'insomnia-data/common';
 export const CONTENT_TYPE_PLAINTEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'application/yaml';

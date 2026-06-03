@@ -6,10 +6,10 @@ import {
   type OAuthTokens,
 } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { BrowserWindow, ipcMain } from 'electron';
+import type { RequestAuthentication } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
 import { getOauthRedirectUrl } from '~/common/constants';
-import type { RequestAuthentication } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import type { ConnectionContext } from '~/main/mcp/common';
 import { encryptOAuthUrl } from '~/main/network/o-auth-2/get-token';

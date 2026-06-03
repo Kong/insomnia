@@ -18,7 +18,7 @@ import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '.
 import { docsPlugins } from '../../../common/documentation';
 import type { SerializablePlugin } from '../../../plugins/bridge-types';
 import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
-import { reload } from '../../../templating/index';
+import { reload } from '../../../templating/renderer-safe';
 import { validatePluginName } from '../../../utils/plugin-name';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';
@@ -126,32 +126,6 @@ export const Plugins: FC = () => {
       <p className="notice info no-margin-top">
         Plugins is still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
-
-      <div className="notice warning margin-bottom text-left">
-        <div className="selectable force-pre-wrap flex flex-col gap-2">
-          <p>
-            Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain
-            disabled.
-          </p>
-          <Checkbox
-            aria-label="Allow elevated access for plugins"
-            slot={null}
-            isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
-            onChange={isSelected => {
-              patchSettings({ pluginsAllowElevatedAccess: isSelected });
-            }}
-            className="group flex h-full items-center gap-2 p-0"
-          >
-            <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
-              <Icon
-                icon="check"
-                className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
-              />
-            </div>
-            <span className="text-sm font-semibold">Allow elevated access for plugins</span>
-          </Checkbox>
-        </div>
-      </div>
 
       <div className="flex flex-col gap-6">
         {(error || installPluginErrMsg) && (

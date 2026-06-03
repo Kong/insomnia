@@ -1,7 +1,3 @@
-import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
-import { scopeToLabelMap } from '~/common/get-workspace-label';
-import { isNotNullOrUndefined } from '~/common/misc';
-import { descendingNumberSort } from '~/common/sorting';
 import {
   type ApiSpec,
   database,
@@ -17,7 +13,12 @@ import {
   type Workspace,
   type WorkspaceMeta,
   type WorkspaceScope,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+
+import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
+import { scopeToLabelMap } from '~/common/get-workspace-label';
+import { isNotNullOrUndefined } from '~/common/misc';
+import { descendingNumberSort } from '~/common/sorting';
 
 export interface InsomniaFile {
   id: string;
@@ -327,6 +328,10 @@ export const getAllRemoteBackendProjectsByProjectId = async ({
   organizationId: string;
 }) => {
   return window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId });
+};
+
+export const getAllRemoteBackendProjectsOfOrg = async ({ organizationId }: { organizationId: string }) => {
+  return window.main.sync.remoteBackendProjectsOfTeam({ teamId: organizationId });
 };
 
 export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspaces: Workspace[]) =>

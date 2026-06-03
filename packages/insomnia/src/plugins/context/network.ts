@@ -1,7 +1,5 @@
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
-
-import type { Request, ResponseHeader } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import {
@@ -11,24 +9,7 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
-import type { PluginTemplateTagContext } from '../../templating/types';
-
-type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
-  Partial<Pick<Request, 'body' | 'authentication'>>;
-export interface NodeCurlRequestOptions {
-  request: NodeCurlRequestType;
-  caCertficatePath?: string;
-}
-export interface NodeCurlResponseType {
-  body: string;
-  code: number;
-  reason: string;
-  status: string;
-  responseTime: number;
-  headers: ResponseHeader[];
-  json: () => any;
-  ok?: boolean;
-}
+import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '../../templating/types';
 
 export function init(): {
   network: PluginTemplateTagContext['network'];

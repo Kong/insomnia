@@ -15,13 +15,13 @@ import {
   screen,
   shell,
 } from 'electron';
+import { isLinux, isMac } from 'insomnia-data/common';
 
-import { isLinux, isMac } from '~/insomnia-data/common';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import { invariant } from '../utils/invariant';
-import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';

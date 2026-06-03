@@ -1,7 +1,7 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import { models } from 'insomnia-data';
 
 import { Icon } from '~/basic-components/icon';
-import { models } from '~/insomnia-data';
 import { getMethodShortHand, getRequestBadgeClassName } from '~/ui/components/tags/method-tag';
 
 export const getBadgeClassName = (colorKey: string) =>

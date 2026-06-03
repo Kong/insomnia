@@ -3,10 +3,9 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
+import { models, services } from 'insomnia-data';
+import { HttpVersions } from 'insomnia-data/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { models, services } from '~/insomnia-data';
-import { HttpVersions } from '~/insomnia-data/common';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
@@ -1095,6 +1094,32 @@ describe('getCurrentUrl for tough-cookie', () => {
     ];
     const finalUrl = 'http://mergemyshit.dev';
     expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/biscuit');
+  });
+});
+
+describe('getOrInheritAuthentication', () => {
+  it('should prefer the closest parent folder auth over higher-level folder auth', () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'basic', username: 'closest', password: 'closest-pass' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({
+      type: 'basic',
+      username: 'closest',
+      password: 'closest-pass',
+    });
+  });
+
+  it("should stop inheritance when the closest parent folder auth is { type: 'none' }", () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'none' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({ type: 'none' });
   });
 });
 

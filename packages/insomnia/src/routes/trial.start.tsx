@@ -1,6 +1,6 @@
 import { startTrial } from 'insomnia-api';
+import { services } from 'insomnia-data';
 
-import { services } from '~/insomnia-data';
 import { syncCurrentPlan } from '~/ui/organization-utils';
 import { createFetcherSubmitHook } from '~/utils/router';
 

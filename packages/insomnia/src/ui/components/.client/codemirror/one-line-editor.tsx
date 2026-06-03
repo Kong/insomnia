@@ -3,16 +3,16 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codemirror';
+import type { KeyCombination } from 'insomnia-data/common';
+import { isMac } from 'insomnia-data/common';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import * as reactUse from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import type { KeyCombination } from '~/insomnia-data/common';
-import { isMac } from '~/insomnia-data/common';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/index';
+import { getTagDefinitions } from '~/templating/renderer-safe';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
 import { extractNunjucksTagFromCoords } from '~/templating/utils';
 import { showModal } from '~/ui/components/modals';
@@ -219,7 +219,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       codeMirror.current?.setValue(defaultValue || '');
       // Clear history so we can't undo the initial set
       codeMirror.current?.clearHistory();
-      // Setup nunjucks listeners
+      // Setup Liquid template listeners
       if (handleRender && !settings.nunjucksPowerUserMode) {
         codeMirror.current?.enableNunjucksTags(
           handleRender,
@@ -228,7 +228,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           id,
         );
       }
-      // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       defaultValue,
@@ -244,7 +243,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       getKeyMap,
       settings.hotKeyRegistry,
       settings.nunjucksPowerUserMode,
-      settings.pluginsAllowElevatedAccess,
       settings.showVariableSourceAndValue,
       eventListeners,
       id,
@@ -392,12 +390,12 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           event.preventDefault();
           const pluginTemplateTags = await plugins.getTemplateTags();
           const target = event.target as HTMLElement;
-          // right click on nunjucks tag
+          // right click on Liquid template tag
           if (target?.classList?.contains('nunjucks-tag')) {
             const { clientX, clientY } = event;
             const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
             if (nunjucksTag) {
-              // show context menu for nunjucks tag
+              // show context menu for Liquid template tag
               window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
             }
           } else {

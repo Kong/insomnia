@@ -1,7 +1,5 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
 
-import type { Cookie } from 'tough-cookie';
-
 import type {
   CloudProviderCredential,
   CookieJar,
@@ -13,16 +11,45 @@ import type {
   Request,
   RequestGroup,
   Response,
+  ResponseHeader,
   Services,
   SocketIORequest,
   UserUploadEnvironment,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
+} from 'insomnia-data';
+import type { Cookie } from 'tough-cookie';
 
-import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
-import type { PluginStore } from '../plugins/context/store';
-import type { extractNunjucksTagFromCoords } from './utils';
+type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
+  Partial<Pick<Request, 'body' | 'authentication'>>;
+export interface NodeCurlRequestOptions {
+  request: NodeCurlRequestType;
+  caCertficatePath?: string;
+}
+export interface NodeCurlResponseType {
+  body: string;
+  code: number;
+  reason: string;
+  status: string;
+  responseTime: number;
+  headers: ResponseHeader[];
+  json: () => any;
+  ok?: boolean;
+}
+
+export interface PluginStore {
+  hasItem(arg0: string): Promise<boolean>;
+  setItem(arg0: string, arg1: string): Promise<void>;
+  getItem(arg0: string): Promise<string | null>;
+  removeItem(arg0: string): Promise<void>;
+  clear(): Promise<void>;
+  all(): Promise<
+    {
+      key: string;
+      value: string;
+    }[]
+  >;
+}
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
 export type PluginToMainAPIPaths =
@@ -104,7 +131,9 @@ export type RenderContextOptions = BaseRenderContextOptions &
 
 export type NunjucksTagContextMenuAction = 'edit' | 'delete';
 
-export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
+export interface nunjucksTagContextMenuOptions {
+  range: { from: { line: number; ch: number }; to: { line: number; ch: number } };
+  template: string;
   type: NunjucksTagContextMenuAction;
 }
 

@@ -653,4 +653,8 @@ export default function setup(app: Application) {
       isAllowed: true,
     });
   });
+
+  app.get('/v2/control-planes', (_req, res) => {
+    res.status(200).json({ data: [] });
+  });
 }

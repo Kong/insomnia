@@ -1,9 +1,9 @@
+import type { SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 
 import { recordProjectRecentRequest } from '~/common/project';
-import type { SocketIORequest, WebSocketRequest } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
@@ -60,10 +60,10 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     );
 
     const generateConnectParams = useCallback(async () => {
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
+      // Render any Liquid template tags in the url/headers/authentication settings/cookies
 
       const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
+      // Render any Liquid template tags in the url/headers/authentication settings/cookies
       const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
         request,
         environmentId,

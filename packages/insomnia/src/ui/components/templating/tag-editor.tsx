@@ -1,11 +1,11 @@
 import classnames from 'classnames';
 import clone from 'clone';
+import type { BaseModel, CloudProviderCredential, Request, RequestGroup, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import type { BaseModel, CloudProviderCredential, Request, RequestGroup, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
@@ -13,7 +13,7 @@ import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString, SECURITY_SETTINGS_PATH_LABEL } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
 import { plugins } from '../../../plugins/renderer-bridge';
-import * as templating from '../../../templating';
+import * as templating from '../../../templating/renderer-safe';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';

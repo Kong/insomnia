@@ -58,8 +58,6 @@ npm -v
   `insomnia/`                ← Main Electron app
     `src/`
       `common/`              ← Shared utils, settings types
-      `models/`              ← Data model definitions
-      `insomnia-data/`       ← Model defaults, init(), NeDB db implementation, business logic
       `routes/`              ← React Router files (clientLoader/clientAction)
       `ui/`                  ← React components, hooks, `insomnia-fetch.ts`
       `main/`                ← Electron IPC handlers, `preload.ts`
@@ -67,6 +65,7 @@ npm -v
       `sync/`                ← Git/VCS sync
       `network/`             ← Request execution engine
       `templating/`          ← Nunjucks rendering (Web Worker)
+  `insomnia-data/`           ← Data models, services, NeDB implementation, shared data utilities
   `insomnia-api/`            ← Cloud API client
   `insomnia-inso/`           ← CLI tool
   `insomnia-testing/`        ← Test framework

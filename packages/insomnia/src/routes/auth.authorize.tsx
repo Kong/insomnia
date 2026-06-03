@@ -1,9 +1,9 @@
 import { getVault } from 'insomnia-api';
+import { services } from 'insomnia-data';
 import { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';

@@ -1,7 +1,7 @@
+import type { Request } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { useEffect, useMemo, useRef } from 'react';
 
-import type { Request } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import type { RequestRow } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
 import { invariant } from '~/utils/invariant';

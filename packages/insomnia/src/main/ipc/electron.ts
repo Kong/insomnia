@@ -20,6 +20,8 @@ export type HandleChannels =
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
+  | 'generateCodeSnippet'
+  | 'getCodeSnippetTargets'
   | 'generateMockRouteDataFromSpec'
   | 'generateCommitsFromDiff'
   | 'generateMcpSamplingResponse'
@@ -168,7 +170,9 @@ export type HandleChannels =
   | 'timeline.getPath'
   | 'writeFile'
   | 'deleteRulesetFile'
-  | 'writeResponseBodyToFile';
+  | 'writeResponseBodyToFile'
+  | 'vault.encryptSecretValue'
+  | 'vault.decryptSecretValue';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -297,7 +301,7 @@ export function registerElectronHandlers() {
       },
     ) => {
       const { key, nunjucksTag, pluginTemplateTags = [] } = options;
-      const sendNunjuckTagContextMsg = (type: NunjucksTagContextMenuAction) => {
+      const sendLiquidTagContextMsg = (type: NunjucksTagContextMenuAction) => {
         event.sender.send('nunjucks-context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
       };
       try {
@@ -305,7 +309,7 @@ export function registerElectronHandlers() {
           ? [
               {
                 label: 'Edit',
-                click: () => sendNunjuckTagContextMsg('edit'),
+                click: () => sendLiquidTagContextMsg('edit'),
               },
               {
                 label: 'Copy',
@@ -317,12 +321,12 @@ export function registerElectronHandlers() {
                 label: 'Cut',
                 click: () => {
                   clipboard.writeText(nunjucksTag.template);
-                  sendNunjuckTagContextMsg('delete');
+                  sendLiquidTagContextMsg('delete');
                 },
               },
               {
                 label: 'Delete',
-                click: () => sendNunjuckTagContextMsg('delete'),
+                click: () => sendLiquidTagContextMsg('delete'),
               },
               { type: 'separator' },
             ]

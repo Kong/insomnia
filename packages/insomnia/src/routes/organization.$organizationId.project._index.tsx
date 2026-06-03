@@ -1,3 +1,5 @@
+import type { GitRepository, Project } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import type { LoaderFunctionArgs } from 'react-router';
@@ -6,8 +8,6 @@ import { href, redirect, useParams } from 'react-router';
 import { logout } from '~/account/session';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { getProjectsWithGitRepositories } from '~/common/project';
-import type { GitRepository, Project } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { ProjectModal } from '~/ui/components/modals/project-modal';

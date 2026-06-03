@@ -1,9 +1,9 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
+import type { WorkspaceScope } from 'insomnia-data';
 import { useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
-import type { WorkspaceScope } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { showModal } from '~/ui/components/modals';
@@ -32,15 +32,16 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: WorkspaceScope;
     isOpen: boolean;
+    source?: string;
   } | null>({
     scope: 'collection',
     isOpen: false,
   });
-  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
-  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
-  const createNewMockServer = () => setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
-  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
-  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true });
+  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar' });
+  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source: 'sidebar' });
+  const createNewMockServer = () => setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source: 'sidebar' });
+  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source: 'sidebar' });
+  const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source: 'sidebar' });
 
   const newRequestFetcher = useRequestNewActionFetcher();
   const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
@@ -268,6 +269,7 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
           project={project}
           storageRules={storageRules}
           scope={newWorkspaceModalState.scope}
+          source={newWorkspaceModalState.source}
           onOpenChange={isOpen => {
             setNewWorkspaceModalState({
               scope: newWorkspaceModalState.scope,

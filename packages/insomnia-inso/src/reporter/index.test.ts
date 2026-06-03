@@ -1,6 +1,5 @@
+import type { RequestTestResult } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import type { RequestTestResult } from '~/insomnia-data';
 
 import { logTestResult, logTestResultSummary, reporterTypes } from './index';
 

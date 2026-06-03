@@ -1,4 +1,3 @@
-import { database, type Operation } from '~/common/database';
 import type {
   ApiSpec,
   Environment,
@@ -14,8 +13,10 @@ import type {
   UnitTestSuite,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+
+import { database, type Operation } from '~/common/database';
 import type { BackendProject, Compare, StatusCandidate } from '~/sync/types';
 import { invariant } from '~/utils/invariant';
 

@@ -1,9 +1,9 @@
 import path from 'node:path';
 
 import { app } from 'electron';
+import { services } from 'insomnia-data';
 
 import { LLM_BACKENDS } from '~/common/constants';
-import { services } from '~/insomnia-data';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
 
@@ -18,6 +18,7 @@ export interface LLMConfig {
   apiKey?: string;
   url?: string;
   baseURL?: string;
+  maxTokens?: number;
   temperature?: number;
   topP?: number;
   topK?: number;
@@ -61,6 +62,7 @@ export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLM
       case 'temperature':
       case 'topP':
       case 'topK':
+      case 'maxTokens':
       case 'repeatPenalty': {
         config[field] = Number.parseFloat(value);
         break;

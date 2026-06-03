@@ -1,12 +1,12 @@
+import type { Environment, RequestPathParameter, WebSocketRequest } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { deconstructQueryStringToParams } from 'insomnia-data/common';
 import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { Environment, RequestPathParameter, WebSocketRequest } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { deconstructQueryStringToParams } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
@@ -83,7 +83,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
     init();
   }, [request._id]);
 
-  // NOTE: Nunjucks interpolation can throw errors
+  // NOTE: Liquid template interpolation can throw errors
   const interpolateOpenAndSend = async (payload: string) => {
     try {
       const renderedMessage = await tryToInterpolateRequestOrShowRenderErrorModal({ request, environmentId, payload });

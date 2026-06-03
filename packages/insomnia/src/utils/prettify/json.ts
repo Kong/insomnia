@@ -4,7 +4,7 @@ const STATE_IN_NUN_COM = 'nuncom';
 const STATE_IN_STRING = 'string';
 const STATE_NONE = 'none';
 
-const NUNJUCKS_OPEN_STATES: {
+const LIQUID_OPEN_STATES: {
   '{{': typeof STATE_IN_NUN_VAR;
   '{%': typeof STATE_IN_NUN_TAG;
   '{#': typeof STATE_IN_NUN_COM;
@@ -15,7 +15,7 @@ const NUNJUCKS_OPEN_STATES: {
   '{#': STATE_IN_NUN_COM,
 };
 
-const NUNJUCKS_CLOSE_STATES: {
+const LIQUID_CLOSE_STATES: {
   '}}': typeof STATE_IN_NUN_VAR;
   '%}': typeof STATE_IN_NUN_TAG;
   '#}': typeof STATE_IN_NUN_COM;
@@ -98,8 +98,8 @@ export const jsonPrettify = (json?: string | object, indentChars = '\t', replace
     }
 
     // Close Nunjucks states
-    if (Object.values(NUNJUCKS_CLOSE_STATES).includes(state)) {
-      const closeState = NUNJUCKS_CLOSE_STATES[nextTwo];
+    if (Object.values(LIQUID_CLOSE_STATES).includes(state)) {
+      const closeState = LIQUID_CLOSE_STATES[nextTwo];
       if (closeState) {
         state = STATE_NONE;
         // Put comments on their own lines
@@ -117,7 +117,7 @@ export const jsonPrettify = (json?: string | object, indentChars = '\t', replace
     // ~~~~~~~~~~~~~~~~~~~~~~ //
 
     // Open Nunjucks states
-    const nextState = NUNJUCKS_OPEN_STATES[nextTwo];
+    const nextState = LIQUID_OPEN_STATES[nextTwo];
     if (nextState) {
       state = nextState;
       newJson += nextTwo;

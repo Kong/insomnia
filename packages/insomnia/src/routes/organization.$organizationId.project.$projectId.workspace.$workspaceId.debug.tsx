@@ -1,6 +1,19 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import type {
+  ChangeBufferEvent,
+  Environment,
+  GrpcRequest,
+  Project,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+  Workspace,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -30,19 +43,6 @@ import * as reactUse from 'react-use';
 
 import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { generateId } from '~/common/misc';
-import type {
-  ChangeBufferEvent,
-  Environment,
-  GrpcRequest,
-  Project,
-  Request,
-  RequestGroup,
-  SocketIORequest,
-  WebSocketRequest,
-  Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import { useRootLoaderData } from '~/root';
 import {
@@ -493,7 +493,7 @@ const Debug = () => {
       req,
       metrics: {
         source: 'sidebar',
-      }
+      },
     });
 
   const reorderFetcher = useDebugReorderActionFetcher();
@@ -774,7 +774,7 @@ const Debug = () => {
   const tabNavigate = useTabNavigate();
 
   return (
-    <div className="new-sidebar h-full w-full text-(--color-font)">
+    <div className="new-sidebar flex h-full w-full flex-col text-(--color-font)">
       <div className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
@@ -786,7 +786,7 @@ const Debug = () => {
         ref={sidebarPanelRef}
         autoSaveId="insomnia-sidebar"
         id={WORKSPACE_CONTENT_WRAPPER}
-        className="new-sidebar h-full w-full text-(--color-font)"
+        className="new-sidebar min-h-0 flex-1 text-(--color-font)"
         direction="horizontal"
       >
         {/* Design page has a collection view with legacy collection list */}

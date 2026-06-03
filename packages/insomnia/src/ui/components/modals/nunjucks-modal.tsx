@@ -1,6 +1,5 @@
+import type { Workspace } from 'insomnia-data';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-
-import type { Workspace } from '~/insomnia-data';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

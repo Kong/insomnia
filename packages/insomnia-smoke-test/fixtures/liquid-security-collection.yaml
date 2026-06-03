@@ -1,0 +1,212 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: LiquidJS Security Collection
+meta:
+  id: wrk_liquid_security_001
+  created: 1748000000000
+  modified: 1748000000000
+collection:
+  # ── 1. Environment variable rendering ─────────────────────────────────────
+  - url: http://127.0.0.1:4010/echo
+    name: Env Var Rendering
+    meta:
+      id: req_liquid_env_001
+      created: 1748000000001
+      modified: 1748000000001
+      isPrivate: false
+      sortKey: -1748000000001
+    method: POST
+    body:
+      mimeType: text/plain
+      text: "{{ _.greeting }} {{ _.target }} req-ENV1"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies: { send: true, store: true }
+      rebuildPath: true
+
+  # ── 2. Control flow — if/elsif/else ───────────────────────────────────────
+  - url: http://127.0.0.1:4010/echo
+    name: Control Flow If
+    meta:
+      id: req_liquid_ctrl_001
+      created: 1748000000002
+      modified: 1748000000002
+      isPrivate: false
+      sortKey: -1748000000002
+    method: POST
+    body:
+      mimeType: text/plain
+      text: "{% if _.role == 'admin' %}elevated-req-CTRL{% elsif _.role == 'user' %}standard-req-CTRL{% else %}none-req-CTRL{% endif %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies: { send: true, store: true }
+      rebuildPath: true
+
+  # ── 3. Iteration — for loop over env array ────────────────────────────────
+  - url: http://127.0.0.1:4010/echo
+    name: For Loop Iteration
+    meta:
+      id: req_liquid_loop_001
+      created: 1748000000003
+      modified: 1748000000003
+      isPrivate: false
+      sortKey: -1748000000003
+    method: POST
+    body:
+      mimeType: text/plain
+      text: "{% for item in _.items %}[{{ item }}]{% endfor %} req-LOOP"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies: { send: true, store: true }
+      rebuildPath: true
+
+  # ── 4. Template injection defense ─────────────────────────────────────────
+  # The env var `injection` holds a string that looks like a template.
+  # It must be rendered as a literal string, not re-evaluated.
+  - url: http://127.0.0.1:4010/echo
+    name: Template Injection Defense
+    meta:
+      id: req_liquid_inject_001
+      created: 1748000000004
+      modified: 1748000000004
+      isPrivate: false
+      sortKey: -1748000000004
+    method: POST
+    body:
+      mimeType: text/plain
+      text: "{{ _.injection }}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies: { send: true, store: true }
+      rebuildPath: true
+
+  # ── 5. Blocked include tag ────────────────────────────────────────────────
+  - url: http://127.0.0.1:4010/echo
+    name: Blocked Include Tag
+    meta:
+      id: req_liquid_include_001
+      created: 1748000000005
+      modified: 1748000000005
+      isPrivate: false
+      sortKey: -1748000000005
+    method: POST
+    body:
+      mimeType: text/plain
+      text: "{% include sensitive.txt %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies: { send: true, store: true }
+      rebuildPath: true
+
+  # ── 6. Blocked render tag ─────────────────────────────────────────────────
+  - url: http://127.0.0.1:4010/echo
+    name: Blocked Render Tag
+    meta:
+      id: req_liquid_render_001
+      created: 1748000000006
+      modified: 1748000000006
+      isPrivate: false
+      sortKey: -1748000000006
+    method: POST
+    body:
+      mimeType: text/plain
+      text: "{% render 'snippet' %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies: { send: true, store: true }
+      rebuildPath: true
+
+  # ── 7. Blocked layout tag ─────────────────────────────────────────────────
+  - url: http://127.0.0.1:4010/echo
+    name: Blocked Layout Tag
+    meta:
+      id: req_liquid_layout_001
+      created: 1748000000007
+      modified: 1748000000007
+      isPrivate: false
+      sortKey: -1748000000007
+    method: POST
+    body:
+      mimeType: text/plain
+      text: "{% layout 'base' %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies: { send: true, store: true }
+      rebuildPath: true
+
+  # ── 8. assign + unless control flow ──────────────────────────────────────
+  - url: http://127.0.0.1:4010/echo
+    name: Assign And Unless
+    meta:
+      id: req_liquid_unless_001
+      created: 1748000000008
+      modified: 1748000000008
+      isPrivate: false
+      sortKey: -1748000000008
+    method: POST
+    body:
+      mimeType: text/plain
+      text: "{% assign prefix = 'Bearer' %}{% unless _.token == '' %}{{ prefix }} {{ _.token }}{% endunless %} req-AUTH"
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies: { send: true, store: true }
+      rebuildPath: true
+
+environments:
+  name: Base Environment
+  meta:
+    id: env_liquid_security_001
+    created: 1748000000000
+    modified: 1748000000000
+    isPrivate: false
+  data:
+    greeting: Hello
+    target: world
+    role: user
+    items:
+      - alpha
+      - beta
+      - gamma
+    injection: "{{ _.secret }}"
+    secret: MUST_NOT_LEAK
+    token: abc123

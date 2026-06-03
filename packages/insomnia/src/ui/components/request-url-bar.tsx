@@ -1,3 +1,5 @@
+import type { Request, RequestGroup } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
@@ -5,8 +7,6 @@ import * as reactUse from 'react-use';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
 import { recordProjectRecentRequest } from '~/common/project';
-import type { Request, RequestGroup } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -191,7 +191,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           const startListening = async () => {
             const environmentId = activeEnvironment._id;
             const workspaceId = activeWorkspace._id;
-            // Render any nunjucks tags in the url/headers/authentication settings/cookies
+            // Render any Liquid template tags in the url/headers/authentication settings/cookies
             const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
             const ancestors = await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type]);

@@ -52,10 +52,14 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        // Resolve network-adapter to the renderer variant so both client and server
+        // Resolve these adapters to their renderer variants so both client and server
         // builds inline the module directly (avoids runtime require() in server bundle).
+        // These must appear before the '~' catch-all so the specific path wins.
         '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
+        '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
+        // Shim Node's `path` module for browser-safe dependencies (e.g. mime-types uses path.extname).
+        'path': path.resolve(__dirname, './src/path-shim.ts'),
       },
     },
     plugins: [
@@ -66,7 +70,7 @@ export default defineConfig(({ mode }) => {
         modules: [
           'electron',
           ...externalDependencies,
-          ...builtinModules.filter(m => m !== 'buffer'),
+          ...builtinModules.filter(m => m !== 'buffer' && m !== 'path'),
           ...builtinModules.map(m => `node:${m}`),
         ],
       }),

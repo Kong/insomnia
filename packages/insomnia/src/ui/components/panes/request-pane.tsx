@@ -1,12 +1,12 @@
+import type { RequestParameter, Settings } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { deconstructQueryStringToParams, getContentTypeFromHeaders } from 'insomnia-data/common';
 import React, { type FC, Fragment, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { RequestParameter, Settings } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
-import { deconstructQueryStringToParams, getContentTypeFromHeaders } from '~/insomnia-data/common';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getAuthObjectOrNull } from '../../../network/authentication';
