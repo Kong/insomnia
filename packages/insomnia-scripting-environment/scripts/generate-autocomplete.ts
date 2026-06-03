@@ -1,5 +1,5 @@
 // Regenerate src/autocomplete-snippets.json from the live scripting API.
-// Run from the package root: node --experimental-strip-types scripts/generate-autocomplete.ts
+// Run from the package root: npm run generate:autocomplete
 //
 // This script instantiates the scripting classes in Node.js (where tough-cookie is fine)
 // and walks the object graph to derive autocomplete snippets. The output is committed as a
@@ -7,25 +7,19 @@
 //
 // Re-run this script whenever the public scripting API surface changes.
 
-import { writeFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { writeFileSync } from 'fs';
+import path from 'path';
 
-// These imports are Node.js-only (via tough-cookie etc.) — safe here, never in the renderer.
-
-const {
-  CookieObject,
-  Environment,
-  Execution,
-  InsomniaObject,
-  Request: ScriptRequest,
-  RequestInfo,
-  Response: ScriptResponse,
-  Url,
-  Variables,
-  Vault,
-} = require('../src/objects/index.ts');
-
+// Import directly from source files to avoid pulling in send-request.ts (which
+// transitively imports the Electron-only libcurl native addon via the main package).
+const { CookieObject } = require('../src/objects/cookies.ts');
+const { Environment, Variables, Vault } = require('../src/objects/environments.ts');
+const { Execution } = require('../src/objects/execution.ts');
+const { InsomniaObject } = require('../src/objects/insomnia.ts');
+const { Request: ScriptRequest } = require('../src/objects/request.ts');
+const { RequestInfo } = require('../src/objects/request-info.ts');
+const { Response: ScriptResponse } = require('../src/objects/response.ts');
+const { Url } = require('../src/objects/urls.ts');
 const { ParentFolders } = require('../src/objects/folders.ts');
 
 interface Snippet {
@@ -130,6 +124,6 @@ const insomnia = new InsomniaObject({
 
 const snippets = walk(insomnia, 'insomnia');
 
-const outputPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/autocomplete-snippets.json');
+const outputPath = path.join(__dirname, '../src/autocomplete-snippets.json');
 writeFileSync(outputPath, JSON.stringify(snippets, null, 2) + '\n');
 console.log(`Wrote ${snippets.length} snippets to src/autocomplete-snippets.json`);

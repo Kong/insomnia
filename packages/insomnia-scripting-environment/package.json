@@ -9,7 +9,7 @@
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test": "vitest run",
     "type-check": "tsc --project tsconfig.json",
-    "generate:autocomplete": "node --experimental-strip-types scripts/generate-autocomplete.ts"
+    "generate:autocomplete": "esr scripts/generate-autocomplete.ts"
   },
   "repository": {
     "type": "git",

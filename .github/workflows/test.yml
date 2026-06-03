@@ -53,6 +53,14 @@ jobs:
       - name: Unit Tests
         run: npm test
 
+      - name: Check autocomplete snippets are up to date
+        run: |
+          npm run generate:autocomplete -w insomnia-scripting-environment
+          if ! git diff --exit-code packages/insomnia-scripting-environment/src/autocomplete-snippets.json; then
+            echo "::error::autocomplete-snippets.json is out of date. Run 'npm run generate:autocomplete -w insomnia-scripting-environment' and commit the result."
+            exit 1
+          fi
+
       - name: Checkout base branch (cycle comparison)
         if: github.event_name == 'pull_request' && always()
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
