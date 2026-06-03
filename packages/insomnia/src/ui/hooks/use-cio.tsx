@@ -85,11 +85,16 @@ export const useCio = () => {
     // Logged out (or not yet logged in): clear any prior Customer.io identity so
     // later events aren't attributed to the previous account (INS-2678).
     if (!currentUserId) {
-      if (identifiedUserId) {
+      // A queued identify must be dropped too, otherwise logging out before the
+      // SDK finishes initializing would re-identify the previous user once it
+      // loads. Always clear the markers; only reset the SDK if there was an
+      // active or queued identity to clear.
+      const hadIdentity = Boolean(identifiedUserId || pendingIdentify);
+      lastIdentifiedUser.current = null;
+      identifiedUserId = null;
+      pendingIdentify = null;
+      if (hadIdentity) {
         globalAnalyticsInstance?.reset();
-        lastIdentifiedUser.current = null;
-        identifiedUserId = null;
-        pendingIdentify = null;
       }
       return;
     }
