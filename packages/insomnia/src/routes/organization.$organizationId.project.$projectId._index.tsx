@@ -342,7 +342,12 @@ const Component = () => {
             selectedCollectionId={selectedCollectionId}
             onSelectedCollectionChange={setSelectedCollectionId}
             onCreateCollection={() => {
-              setNewWorkspaceModalState({ scope: 'collection', isOpen: true, redirect: false, source: 'home-page' });
+              setNewWorkspaceModalState({
+                scope: 'collection',
+                isOpen: true,
+                redirect: false,
+                source: 'first-request-pane',
+              });
             }}
           />
         </div>
@@ -707,8 +712,14 @@ const Component = () => {
             storageRules={storageRules}
             scope={newWorkspaceModalState.scope}
             onCreateWorkspace={workspaceId => {
-              if (newWorkspaceModalState.scope === 'collection' && newWorkspaceModalState.redirect === false) {
+              if (
+                newWorkspaceModalState.scope === 'collection' &&
+                newWorkspaceModalState.source === 'first-request-pane'
+              ) {
                 setSelectedCollectionId(workspaceId);
+                window.main.trackAnalyticsEvent({
+                  event: AnalyticsEvent.firstRequestPaneCollectionChanged,
+                });
               }
             }}
             redirectAfterCreate={newWorkspaceModalState.redirect}
