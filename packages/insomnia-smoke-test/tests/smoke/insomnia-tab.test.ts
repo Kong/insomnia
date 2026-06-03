@@ -76,7 +76,9 @@ test.describe('multiple-tab feature test', () => {
 
     await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Create in project').click();
-    await page.getByLabel('Request collection', { exact: true }).click();
+    const collectionOption = page.getByLabel('Request collection', { exact: true });
+    await collectionOption.waitFor({ state: 'visible' });
+    await collectionOption.click();
     await page.getByPlaceholder('Enter a name for your Request Collection').fill('Test add tab collection');
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.getByLabel('Tab Plus').click();
