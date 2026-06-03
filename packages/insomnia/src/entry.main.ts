@@ -50,9 +50,9 @@ const dataPath =
   path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
 
 app.setPath('userData', dataPath);
-initElectronStorage(dataPath);
 
 initializeLogging();
+initElectronStorage(dataPath);
 
 initializeSentry();
 
