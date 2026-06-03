@@ -28,7 +28,6 @@ export const generate = (suites: TestSuite[]) => {
   return lines.join('\n');
 };
 
-
 const generateSuiteLines = (n: number, suite?: TestSuite | null) => {
   if (!suite) {
     return [];
