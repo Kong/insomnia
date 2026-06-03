@@ -18,7 +18,6 @@ import {
   RESPONSE_CODE_REASONS,
 } from '~/common/constants';
 import { database as db } from '~/common/database';
-import { getResponseCookiesFromHeaders } from '~/main/har';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
@@ -85,7 +84,6 @@ const mockContentTypes = [
 ];
 export const isInMockContentTypeList = (contentType: string): boolean =>
   Boolean(contentType && mockContentTypes.includes(contentType));
-
 // mockbin expect a HAR response structure
 export const mockRouteToHar = async ({
   statusCode,
@@ -106,7 +104,7 @@ export const mockRouteToHar = async ({
     statusText: statusText || RESPONSE_CODE_REASONS[+statusCode] || '',
     httpVersion: 'HTTP/1.1',
     headers: validHeaders,
-    cookies: await getResponseCookiesFromHeaders(validHeaders),
+    cookies: await window.main.cookies.getResponseCookiesFromHeaders(validHeaders),
     content: {
       size: Buffer.byteLength(body),
       mimeType,

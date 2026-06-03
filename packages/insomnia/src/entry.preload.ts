@@ -122,6 +122,7 @@ const cookies: CookiesBridgeAPI = {
   toString: cookie => invokeWithNormalizedError('cookies.toString', cookie),
   getCookiesForUrl: args => invokeWithNormalizedError('cookies.getCookiesForUrl', args),
   addSetCookies: args => invokeWithNormalizedError('cookies.addSetCookies', args),
+  getResponseCookiesFromHeaders: headers => invokeWithNormalizedError('cookies.getResponseCookiesFromHeaders', headers),
 };
 
 const grpc: gRPCBridgeAPI = {

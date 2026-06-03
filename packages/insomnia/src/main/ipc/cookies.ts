@@ -1,6 +1,8 @@
+import type * as Har from 'har-format';
 import type { Cookie } from 'insomnia-data';
 import { Cookie as ToughCookie, CookieJar } from 'tough-cookie';
 
+import { getResponseCookiesFromHeaders } from '../har';
 import { ipcMainHandle } from './electron';
 
 type CookieInput = Cookie | string;
@@ -102,6 +104,7 @@ export interface CookiesBridgeAPI {
   toString: (cookie: CookieInput) => Promise<string>;
   getCookiesForUrl: (args: { cookies: Cookie[]; url: string }) => Promise<Cookie[]>;
   addSetCookies: (args: AddSetCookiesArgs) => Promise<AddSetCookiesResult>;
+  getResponseCookiesFromHeaders: (headers: Har.Cookie[]) => Promise<Har.Cookie[]>;
 }
 
 export function registerCookieHandlers() {
@@ -119,5 +122,8 @@ export function registerCookieHandlers() {
   });
   ipcMainHandle('cookies.addSetCookies', (_, args: AddSetCookiesArgs) => {
     return addSetCookiesToToughCookieJar(args);
+  });
+  ipcMainHandle('cookies.getResponseCookiesFromHeaders', (_, headers: { name: string; value: string }[]) => {
+    return getResponseCookiesFromHeaders(headers);
   });
 }

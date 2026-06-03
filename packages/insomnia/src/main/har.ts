@@ -306,16 +306,18 @@ async function getRequestCookies(renderedRequest: RenderedRequest): Promise<Har.
   return domainCookies.map(mapCookieToHar);
 }
 
-export async function getResponseCookiesFromHeaders(headers: Har.Cookie[]): Promise<Har.Cookie[]> {
+export function getResponseCookiesFromHeaders(headers: Har.Cookie[]): Har.Cookie[] {
   const setCookieHeaders = getSetCookieHeaders(headers);
-  const results: Har.Cookie[] = [];
-  for (const harCookie of setCookieHeaders) {
-    const cookie = parseCookie(harCookie.value || '');
+  const cookies: Har.Cookie[] = [];
+
+  for (const header of setCookieHeaders) {
+    const cookie = parseCookie(header.value);
     if (cookie) {
-      results.push(mapCookieToHar(cookie));
+      cookies.push(mapCookieToHar(cookie));
     }
   }
-  return results;
+
+  return cookies;
 }
 
 async function getResponseCookies(response: Response): Promise<Har.Cookie[]> {
