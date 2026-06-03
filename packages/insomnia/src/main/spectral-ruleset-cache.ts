@@ -4,37 +4,36 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
-import { compileSpectralRuleset } from '~/common/bundle-spectral-ruleset';
+import { compileSpectralRulesetFromContent } from '~/common/bundle-spectral-ruleset';
 
-// The compiled ruleset is a URL-free, fully-inlined object derived from a stored source
-// ruleset. It is cached under userData (never inside a git repo) so the lint worker reads an
-// object with no remote references — there is nothing left for it to fetch, which closes the
-// validate-then-use race in the linting pipeline.
-const CACHE_DIR_NAME = 'lint-cache';
+const lastWrittenHash = new Map<string, string>();
 
-export function contentHash(content: string): string {
-  return createHash('sha256').update(content, 'utf8').digest('hex');
+// Derives the on-disk path where the compiled ruleset for a project is written.
+// Keyed by projectId so different projects never collide.
+export function compiledRulesetPathFor(projectId: string): string {
+  const base = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
+  return path.join(base, 'projects', projectId, '.spectral.yaml');
 }
 
-// Derives the on-disk path for the compiled artifact of a given source ruleset. Keyed by a hash
-// of the resolved source path so different projects/rulesets never collide. The basename is kept
-// as `.spectral.yaml` to satisfy any downstream path expectations.
-export function compiledRulesetPathFor(sourcePath: string): string {
-  const key = contentHash(path.resolve(sourcePath));
-  return path.join(app.getPath('userData'), CACHE_DIR_NAME, key, '.spectral.yaml');
-}
-
-// Compiles a source ruleset (fetching + validating + inlining any remote extends) and writes the
-// result to its compiled-cache path. Returns the compiled path, content, and a content hash for
-// change detection. Throws if the source is missing or fails validation.
-export async function writeCompiledRuleset(sourcePath: string): Promise<{
+// Compiles raw ruleset content and writes the flattened result to the project's compiled path.
+// Skips recompilation if the content hasn't changed since the last write (keyed by projectId).
+// Throws if compilation fails.
+export async function writeCompiledRuleset(
+  projectId: string,
+  rulesetContent: string,
+): Promise<{
   compiledPath: string;
-  content: string;
-  hash: string;
 }> {
-  const content = await compileSpectralRuleset(sourcePath);
-  const compiledPath = compiledRulesetPathFor(sourcePath);
+  const compiledPath = compiledRulesetPathFor(projectId);
+  const hash = createHash('sha256').update(rulesetContent).digest('hex');
+  if (lastWrittenHash.get(projectId) === hash) {
+    console.info('Ruleset content unchanged since last compilation, skipping write');
+    return { compiledPath };
+  }
+  const compiled = await compileSpectralRulesetFromContent(rulesetContent);
+  console.info('Creating flattened Spectral ruleset at', compiledPath);
   await fs.promises.mkdir(path.dirname(compiledPath), { recursive: true });
-  await fs.promises.writeFile(compiledPath, content, 'utf8');
-  return { compiledPath, content, hash: contentHash(content) };
+  await fs.promises.writeFile(compiledPath, compiled, 'utf8');
+  lastWrittenHash.set(projectId, hash);
+  return { compiledPath };
 }

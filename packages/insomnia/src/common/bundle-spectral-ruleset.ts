@@ -154,29 +154,12 @@ async function validateRemoteExtends(url: URL, visited: Set<string>, depth: numb
   }
 }
 
-// Fetches a remote "extends" URL and fully inlines it into a self-contained ruleset object.
-// Unlike validateRemoteExtends (which preserves the URL for Spectral to fetch later), this
-// fetches the content (SSRF-guarded), validates it (blocking the "functions" RCE vector and
-// prototype pollution), recursively flattens any nested remote/relative extends, and merges
-// everything into a single object. Built-in spectral identifiers (spectral:oas, …) are the only
-// entries preserved in "extends"; no remote URLs remain. This is the basis for the compiled
-// ruleset the lint worker consumes, eliminating the second (unguarded) fetch that created the
-// validate-then-use race.
-async function flattenRemoteExtends(url: URL, visited: Set<string>, depth: number): Promise<Ruleset> {
-  if (depth > MAX_EXTENDS_DEPTH) {
-    throw new Error(`"extends" nested too deeply (max ${MAX_EXTENDS_DEPTH}) at ${url.href}`);
-  }
-  if (visited.has(url.href)) {
-    throw new Error(`"extends" cycle detected at ${url.href}`);
-  }
-
-  const ruleset = await readRemoteRuleset(url);
-  const validation = validateSpectralRuleset(YAML.stringify(ruleset));
-  if (!validation.isValid) {
-    throw new Error(`Remote ruleset at "${url.href}" failed validation: ${validation.error}`);
-  }
-
-  const nextVisited = new Set(visited).add(url.href);
+// Fully inlines a parsed ruleset object into a self-contained ruleset with no remote URLs.
+// Recursively fetches any remote "extends" entries (SSRF-guarded + validated), merges their
+// rules, and keeps only built-in identifiers (spectral:oas, …) in "extends". This is the basis
+// for the compiled ruleset the lint worker consumes, eliminating the validate-then-use race.
+// baseUrl is used to resolve relative URLs found inside remote rulesets; pass null at the top level.
+async function flattenRemoteExtends(ruleset: Ruleset, baseUrl: URL | null, visited: Set<string>, depth: number): Promise<Ruleset> {
   const flattened: Ruleset = {};
   const builtinExtends: string[] = [];
 
@@ -186,20 +169,29 @@ async function flattenRemoteExtends(url: URL, visited: Set<string>, depth: numbe
         `Failed to process "extends" entry ${JSON.stringify(entry)}: tuple format (e.g. [path, severity]) is not supported. Use a plain string instead.`,
       );
     }
-    // Built-in identifiers (spectral:oas, …) are resolved by Spectral locally; carry through.
     if (ALLOWED_EXTENDS_IDENTIFIERS.includes(entry)) {
       builtinExtends.push(entry);
       continue;
     }
-    // Nested remote/relative URL — resolve against the current URL and flatten recursively.
-    const child = await flattenRemoteExtends(parseRemoteExtendsUrl(entry, url), nextVisited, depth + 1);
-    if (child.extends) {
-      builtinExtends.push(...child.extends);
+    const url = parseRemoteExtendsUrl(entry, baseUrl ?? undefined);
+    if (depth > MAX_EXTENDS_DEPTH) {
+      throw new Error(`"extends" nested too deeply (max ${MAX_EXTENDS_DEPTH}) at ${url.href}`);
     }
-    mergeInto(flattened, child); // later extends entries override earlier ones
+    if (visited.has(url.href)) {
+      throw new Error(`"extends" cycle detected at ${url.href}`);
+    }
+    const remote = await readRemoteRuleset(url);
+    const validation = validateSpectralRuleset(YAML.stringify(remote));
+    if (!validation.isValid) {
+      throw new Error(`Remote ruleset at "${url.href}" failed validation: ${validation.error}`);
+    }
+    const child = await flattenRemoteExtends(remote, url, new Set(visited).add(url.href), depth + 1);
+    if (child.extends) {
+      builtinExtends.push(...(child.extends as string[]));
+    }
+    mergeInto(flattened, child);
   }
 
-  // Apply this remote ruleset's own rules on top; parent rules override child rules of the same name.
   const ownOverrides: Ruleset = { ...ruleset };
   delete ownOverrides.extends;
   mergeInto(flattened, ownOverrides);
@@ -220,7 +212,6 @@ async function flattenRuleset(
   visited: Set<string>,
   depth: number,
   rootDir: string,
-  inlineRemote: boolean,
 ): Promise<Ruleset> {
   const absolute = path.resolve(filePath);
   assertAllowed(absolute, visited, depth, rootDir);
@@ -248,17 +239,6 @@ async function flattenRuleset(
     }
     // Remote URL extends.
     if (!entry.startsWith('./') && !entry.startsWith('../') && !path.isAbsolute(entry)) {
-      if (inlineRemote) {
-        // Compile mode: fetch + validate + fully inline the remote content so the lint worker
-        // never re-fetches it (eliminates the validate-then-use race). Built-in identifiers
-        // surfaced by the remote ruleset are preserved.
-        const remoteRuleset = await flattenRemoteExtends(parseRemoteExtendsUrl(entry), nextVisited, depth + 1);
-        if (remoteRuleset.extends) {
-          remainingExtends.push(...remoteRuleset.extends);
-        }
-        mergeInto(flattenedRuleset, remoteRuleset);
-        continue;
-      }
       // Bundle mode: validate upfront (SSRF + content checks), then preserve the URL in "extends"
       // as the pollable source. The compile step inlines it before linting.
       await validateRemoteExtends(parseRemoteExtendsUrl(entry), nextVisited, depth + 1);
@@ -271,7 +251,6 @@ async function flattenRuleset(
       nextVisited,
       depth + 1,
       rootDir,
-      inlineRemote,
     );
     if (childRuleset.extends) {
       remainingExtends.push(...childRuleset.extends);
@@ -294,11 +273,11 @@ async function flattenRuleset(
 // single ruleset, validates all remote "extends" URLs (SSRF + content), validates the merged
 // output for disallowed keys (e.g. "functions"), and returns the result as a YAML string.
 // The output is safe to STORE: local content is fully merged, remote URLs have been pre-vetted
-// and are preserved in "extends" as the pollable source. Use compileSpectralRuleset to produce
-// the URL-free object that is actually linted.
+// and are preserved in "extends" as the pollable source. Use compileSpectralRulesetFromContent
+// to produce the URL-free object that is actually linted.
 export async function bundleSpectralRuleset(sourcePath: string): Promise<string> {
   const rootDir = path.dirname(path.resolve(sourcePath));
-  const flattenedRuleset = await flattenRuleset(sourcePath, new Set(), 0, rootDir, /* inlineRemote */ false);
+  const flattenedRuleset = await flattenRuleset(sourcePath, new Set(), 0, rootDir);
   const yaml = YAML.stringify(flattenedRuleset);
   const validation = validateSpectralRuleset(yaml);
   if (!validation.isValid) {
@@ -307,16 +286,18 @@ export async function bundleSpectralRuleset(sourcePath: string): Promise<string>
   return yaml;
 }
 
-// Entry point for ruleset processing at lint time. Behaves like bundleSpectralRuleset but also
-// fetches, validates, and fully inlines remote "extends" URLs, leaving only built-in identifiers
-// (spectral:oas, …) in "extends". The returned YAML is a single self-contained object with no
-// remote references, so the lint worker has nothing left to fetch — closing the validate-then-use
-// race that allowed a server to serve clean content to the validator and malicious content to the
-// worker.
-export async function compileSpectralRuleset(sourcePath: string): Promise<string> {
-  const rootDir = path.dirname(path.resolve(sourcePath));
-  const flattenedRuleset = await flattenRuleset(sourcePath, new Set(), 0, rootDir, /* inlineRemote */ true);
-  const yaml = YAML.stringify(flattenedRuleset);
+// Entry point for ruleset processing at lint time. Accepts raw ruleset content (as stored in NeDB)
+// where local extends are already flattened and only remote URLs remain. Fetches, validates, and
+// fully inlines all remote "extends" URLs via flattenRemoteExtends, leaving only built-in
+// identifiers (spectral:oas, …). The returned YAML has no remote references, so the lint worker
+// has nothing left to fetch — closing the validate-then-use race.
+export async function compileSpectralRulesetFromContent(rulesetContent: string): Promise<string> {
+  const parsed = YAML.parse(rulesetContent);
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Ruleset must be an object at the top level.');
+  }
+  const result = await flattenRemoteExtends(parsed as Ruleset, null, new Set(), 0);
+  const yaml = YAML.stringify(result);
   const validation = validateSpectralRuleset(yaml);
   if (!validation.isValid) {
     throw new Error(`Invalid Spectral ruleset: ${validation.error}`);

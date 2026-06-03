@@ -222,12 +222,13 @@ const Component = ({ params }: Route.ComponentProps) => {
   const lintErrors = lintMessages.filter(message => message.type === 'error');
   const lintWarnings = lintMessages.filter(message => message.type === 'warning');
 
-  const registerCodeMirrorLint = (rulesetPath: string) => {
+  const registerCodeMirrorLint = (rulesetContent: string) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
       try {
         const { diagnostics, error, cancelled } = await window.main.lintSpec({
           documentContent: contents,
-          rulesetPath,
+          projectId,
+          rulesetContent,
         });
         if (cancelled) {
           return [];
@@ -266,7 +267,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   };
 
   useEffect(() => {
-    registerCodeMirrorLint(selectedRulesetPath);
+    registerCodeMirrorLint(rulesetContent);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
   }, [selectedRulesetPath, rulesetContent]);
@@ -278,35 +279,10 @@ const Component = ({ params }: Route.ComponentProps) => {
   }, [lintErrors.length, lintWarnings.length]);
 
   useEffect(() => {
-    const syncRuleset = async () => {
-      if (gitSyncRulesetPath) {
-        setSelectedRulesetPath(rulesetContent ? gitSyncRulesetPath : '');
-      } else if (rulesetContent) {
-        // Cloud sync: ensure rulesetContent is on disk at rulesetWritePath
-        try {
-          const existing = await window.main.insecureReadFile({ path: rulesetWritePath });
-          // file exists but there is new content, we should update the file with the new content
-          if (existing !== rulesetContent) {
-            await window.main.writeFile({ path: rulesetWritePath, content: rulesetContent });
-          }
-          setSelectedRulesetPath(rulesetWritePath);
-        } catch (err) {
-          // File does not exist, we should create it with the rulesetContent
-          const isFileNotFound = err instanceof Error && err.message.includes('ENOENT');
-          if (isFileNotFound) {
-            await window.main.writeFile({ path: rulesetWritePath, content: rulesetContent });
-            setSelectedRulesetPath(rulesetWritePath);
-          }
-        }
-      } else {
-        // No ruleset content, ensure file is deleted
-        await window.main.deleteRulesetFile({ path: rulesetWritePath });
-        setSelectedRulesetPath('');
-      }
-    };
-
-    syncRuleset();
-  }, [rulesetContent, rulesetWritePath, gitSyncRulesetPath]);
+    setSelectedRulesetPath(
+      isConnectedGitProject && gitSyncRulesetPath ? gitSyncRulesetPath : rulesetContent ? rulesetWritePath : '',
+    );
+  }, [gitSyncRulesetPath, isConnectedGitProject, rulesetWritePath, rulesetContent]);
 
   reactUse.useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
@@ -463,11 +439,6 @@ const Component = ({ params }: Route.ComponentProps) => {
     }
 
     await updateProjectRuleset({ organizationId, projectId, rulesetContent: content });
-    if (!gitSyncRulesetPath) {
-      // cloud/local: no RepoFileWatcher — write the file to disk so Spectral can lint against it.
-      // git projects: the RepoFileWatcher mirrors the ProjectLintRuleset record to .spectral.yaml automatically.
-      await window.main.writeFile({ path: rulesetWritePath, content });
-    }
 
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.uploadLintRulesetClicked,
@@ -497,9 +468,6 @@ const Component = ({ params }: Route.ComponentProps) => {
             organizationId,
             projectId,
           });
-          if (!gitSyncRulesetPath) {
-            await window.main.deleteRulesetFile({ path: rulesetWritePath });
-          }
           setSelectedRulesetPath('');
         }
       },

@@ -16,93 +16,84 @@ vi.mock('electron', () => ({
 }));
 
 vi.mock('~/common/bundle-spectral-ruleset', () => ({
-  compileSpectralRuleset: vi.fn(),
+  compileSpectralRulesetFromContent: vi.fn(),
 }));
 
 import fs from 'node:fs';
 
-import { compileSpectralRuleset } from '~/common/bundle-spectral-ruleset';
+import { compileSpectralRulesetFromContent } from '~/common/bundle-spectral-ruleset';
 
-import { compiledRulesetPathFor, contentHash, writeCompiledRuleset } from '../spectral-ruleset-cache';
+import { compiledRulesetPathFor, writeCompiledRuleset } from '../spectral-ruleset-cache';
 
 const mockMkdir = vi.mocked(fs.promises.mkdir) as ReturnType<typeof vi.fn>;
 const mockWriteFile = vi.mocked(fs.promises.writeFile) as ReturnType<typeof vi.fn>;
-const mockCompile = vi.mocked(compileSpectralRuleset);
-
-describe('contentHash', () => {
-  it('returns a hex string', () => {
-    const hash = contentHash('hello');
-    expect(hash).toMatch(/^[0-9a-f]{64}$/);
-  });
-
-  it('returns the same hash for the same input', () => {
-    expect(contentHash('same')).toBe(contentHash('same'));
-  });
-
-  it('returns different hashes for different inputs', () => {
-    expect(contentHash('a')).not.toBe(contentHash('b'));
-  });
-});
+const mockCompile = vi.mocked(compileSpectralRulesetFromContent);
 
 describe('compiledRulesetPathFor', () => {
-  it('returns a path inside userData/lint-cache', () => {
-    const result = compiledRulesetPathFor('/some/ruleset.yaml');
-    expect(result).toContain('/fake/userData');
-    expect(result).toContain('lint-cache');
+  it('returns a path inside userData/projects/{projectId}', () => {
+    const result = compiledRulesetPathFor('proj_123');
+    expect(result).toBe(path.join('/fake/userData', 'projects', 'proj_123', '.spectral.yaml'));
   });
 
-  it('ends with .spectral.yaml', () => {
-    const result = compiledRulesetPathFor('/some/ruleset.yaml');
-    expect(result).toMatch(/\.spectral\.yaml$/);
-  });
-
-  it('produces different paths for different source paths', () => {
-    const a = compiledRulesetPathFor('/project-a/ruleset.yaml');
-    const b = compiledRulesetPathFor('/project-b/ruleset.yaml');
+  it('produces different paths for different project IDs', () => {
+    const a = compiledRulesetPathFor('proj_aaa');
+    const b = compiledRulesetPathFor('proj_bbb');
     expect(a).not.toBe(b);
-  });
-
-  it('produces the same path for the same source path regardless of relative vs absolute', () => {
-    const absolute = compiledRulesetPathFor(path.resolve('/some/ruleset.yaml'));
-    const result = compiledRulesetPathFor('/some/ruleset.yaml');
-    expect(result).toBe(absolute);
   });
 });
 
 describe('writeCompiledRuleset', () => {
-  it('returns the compiled path, content, and a matching hash', async () => {
+  it('writes the compiled content to the project path', async () => {
     const compiled = 'rules:\n  r:\n    given: "$"\n    then:\n      function: truthy\n';
     mockCompile.mockResolvedValueOnce(compiled);
 
-    const { compiledPath, content, hash } = await writeCompiledRuleset('/fake/ruleset.yaml');
+    const { compiledPath } = await writeCompiledRuleset('proj_write', 'extends:\n  - spectral:oas\n');
 
-    expect(content).toBe(compiled);
-    expect(hash).toBe(contentHash(compiled));
-    expect(compiledPath).toBe(compiledRulesetPathFor('/fake/ruleset.yaml'));
+    expect(compiledPath).toBe(compiledRulesetPathFor('proj_write'));
+    expect(mockWriteFile).toHaveBeenCalledWith(compiledPath, compiled, 'utf8');
   });
 
-  it('creates the cache directory before writing', async () => {
+  it('creates the project directory before writing', async () => {
     mockCompile.mockResolvedValueOnce('rules: {}');
 
-    await writeCompiledRuleset('/fake/ruleset.yaml');
+    await writeCompiledRuleset('proj_mkdir', 'extends:\n  - spectral:oas\n');
 
-    expect(mockMkdir).toHaveBeenCalledWith(path.dirname(compiledRulesetPathFor('/fake/ruleset.yaml')), {
-      recursive: true,
-    });
+    expect(mockMkdir).toHaveBeenCalledWith(
+      path.dirname(compiledRulesetPathFor('proj_mkdir')),
+      { recursive: true },
+    );
   });
 
-  it('writes the compiled content to the cache path', async () => {
-    const compiled = 'rules: {}';
-    mockCompile.mockResolvedValueOnce(compiled);
-
-    await writeCompiledRuleset('/fake/ruleset.yaml');
-
-    expect(mockWriteFile).toHaveBeenCalledWith(compiledRulesetPathFor('/fake/ruleset.yaml'), compiled, 'utf8');
-  });
-
-  it('propagates errors thrown by compileSpectralRuleset', async () => {
+  it('propagates errors thrown by compileSpectralRulesetFromContent', async () => {
     mockCompile.mockRejectedValueOnce(new Error('compile failed'));
 
-    await expect(writeCompiledRuleset('/fake/bad.yaml')).rejects.toThrow('compile failed');
+    await expect(writeCompiledRuleset('proj_error', 'bad content')).rejects.toThrow('compile failed');
+  });
+
+  it('skips recompilation when called again with the same content', async () => {
+    const content = 'extends:\n  - spectral:oas\n';
+    mockCompile.mockResolvedValueOnce('rules: {}');
+
+    await writeCompiledRuleset('proj_skip', content);
+    mockWriteFile.mockClear();
+    mockCompile.mockClear();
+
+    await writeCompiledRuleset('proj_skip', content);
+
+    expect(mockCompile).not.toHaveBeenCalled();
+    expect(mockWriteFile).not.toHaveBeenCalled();
+  });
+
+  it('recompiles when content changes', async () => {
+    mockCompile.mockResolvedValueOnce('rules: {}');
+    await writeCompiledRuleset('proj_change', 'extends:\n  - spectral:oas\n');
+
+    mockCompile.mockClear();
+    mockWriteFile.mockClear();
+    mockCompile.mockResolvedValueOnce('rules: {updated: true}');
+    await writeCompiledRuleset('proj_change', 'extends:\n  - spectral:oas\nrules: {}\n');
+
+    expect(mockCompile).toHaveBeenCalledTimes(1);
+    expect(mockWriteFile).toHaveBeenCalledTimes(1);
   });
 });

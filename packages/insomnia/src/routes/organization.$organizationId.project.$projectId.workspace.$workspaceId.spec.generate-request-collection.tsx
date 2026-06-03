@@ -1,5 +1,5 @@
 import type { IRuleResult } from '@stoplight/spectral-core';
-import { models, services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
@@ -22,19 +22,12 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   invariant(workspace, 'Workspace not found');
 
-  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
-
   const isLintError = (result: IRuleResult) => result.severity === 0;
 
-  const gitRepositoryId = models.project.isConnectedGitProject(project)
-    ? models.project.getEffectiveRepoId(project)
-    : workspaceMeta?.gitRepositoryId;
+  const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
+  const rulesetContent = projectLintRuleset?.rulesetContent ?? '';
 
-  const rulesetPath = gitRepositoryId
-    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
-    : '';
-
-  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, projectId, rulesetContent });
   if (error) {
     throw error;
   }

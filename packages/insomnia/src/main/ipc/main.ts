@@ -265,7 +265,8 @@ export interface RendererToMainBridgeAPI {
   }) => void;
   lintSpec: (options: {
     documentContent: string;
-    rulesetPath: string;
+    projectId: string;
+    rulesetContent: string;
   }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
   bundleSpectralRuleset: (options: { sourcePath: string }) => Promise<{ content?: string; error?: string }>;
   createPlugin: (options: { pluginName: string; mainJs: string }) => Promise<void>;
@@ -471,32 +472,19 @@ export function registerMainHandlers() {
       return { error: err instanceof Error ? err.message : String(err) };
     }
   });
-  ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
-    const { documentContent } = options;
-    let { rulesetPath } = options;
-
-    //defensive validation for ruleset file before spawning the spectral lint worker
-    if (rulesetPath) {
-      const safePath = resolveSafeRulesetPath(rulesetPath);
-      if (!safePath) {
-        return { error: 'Invalid ruleset path' };
-      }
-      rulesetPath = safePath;
-
+  ipcMainHandle('lintSpec', async (_, options: { documentContent: string; projectId: string; rulesetContent: string }) => {
+    const { documentContent, projectId, rulesetContent } = options;
+    let rulesetPath = '';
+    if (rulesetContent) {
       try {
         // Compile the ruleset (flattens local extends, fetches + validates + fully inlines remote
         // extends, blocking SSRF and disallowed keys such as "functions") into a URL-free object
         // written to a cache path under userData. The worker is pointed at that compiled object so
         // it has nothing left to fetch — closing the validate-then-use race.
-        const { compiledPath } = await writeCompiledRuleset(rulesetPath);
+        const { compiledPath } = await writeCompiledRuleset(projectId, rulesetContent);
         rulesetPath = compiledPath;
       } catch (err) {
-        // Fall back to the default OAS ruleset
-        if (err && (err as NodeJS.ErrnoException).code === 'ENOENT') {
-          rulesetPath = '';
-        } else {
-          return { error: err instanceof Error ? err.message : String(err) };
-        }
+        return { error: err instanceof Error ? err.message : String(err) };
       }
     }
 
