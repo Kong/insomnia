@@ -7,8 +7,8 @@
 //
 // Re-run this script whenever the public scripting API surface changes.
 
-import { writeFileSync } from 'fs';
-import path from 'path';
+import { writeFileSync } from 'node:fs';
+import path from 'node:path';
 
 // Import directly from source files to avoid pulling in send-request.ts (which
 // transitively imports the Electron-only libcurl native addon via the main package).

@@ -590,7 +590,7 @@ test.describe('pre-request features tests', () => {
     const tableEditBtn = page.getByLabel('Table Edit');
     await expect.soft(tableEditBtn).toBeEnabled();
     await tableEditBtn.click();
-    const dialog = page.getByRole('dialog');
+    const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Close' }) });
     await expect.soft(dialog).toBeVisible();
     await dialog.getByRole('button', { name: 'Close' }).click();
     await page.locator('body').click();
