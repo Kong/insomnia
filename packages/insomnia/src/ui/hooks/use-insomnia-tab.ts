@@ -1,9 +1,9 @@
 import type { Organization } from 'insomnia-api';
+import type { Project, Request, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 
-import type { Project, Request, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 

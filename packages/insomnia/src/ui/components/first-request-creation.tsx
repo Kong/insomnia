@@ -1,11 +1,11 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { Request } from 'insomnia-data';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
 import { getProjectRecentRequests, type RecentProjectRequest } from '~/common/project';
-import type { Request } from '~/insomnia-data';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';

@@ -6,7 +6,7 @@ import {
   newDefaultRegistry,
   type Settings as BaseSettings,
   UpdateChannel,
-} from '~/insomnia-data/common';
+} from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
 

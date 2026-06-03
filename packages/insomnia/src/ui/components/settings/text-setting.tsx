@@ -1,6 +1,6 @@
+import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type ChangeEventHandler, type FC, type InputHTMLAttributes, useCallback } from 'react';
 
-import type { SettingsOfType } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 
 import { useSettingsPatcher } from '../../hooks/use-request';

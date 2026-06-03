@@ -95,9 +95,9 @@ Renderer services path:
 ### Main
 
 ```ts
-import { initDatabase, initServices } from '~/insomnia-data';
+import { initDatabase, initServices } from 'insomnia-data';
 import { mainDatabase } from '~/main/database.main';
-import { servicesNodeImpl } from '~/insomnia-data/node';
+import { servicesNodeImpl } from 'insomnia-data/node';
 
 await initDatabase(mainDatabase);
 initServices(servicesNodeImpl);
@@ -106,7 +106,7 @@ initServices(servicesNodeImpl);
 ### Renderer
 
 ```ts
-import { initDatabase, initServices } from '~/insomnia-data';
+import { initDatabase, initServices } from 'insomnia-data';
 import { clientDatabase } from '~/ui/database.client';
 
 await initDatabase(clientDatabase);
@@ -116,8 +116,8 @@ initServices(window._dataServices);
 ### Inso / Node
 
 ```ts
-import { initDatabase, initServices } from '~/insomnia-data';
-import { createNedbDatabase, servicesNodeImpl } from '~/insomnia-data/node';
+import { initDatabase, initServices } from 'insomnia-data';
+import { createNedbDatabase, servicesNodeImpl } from 'insomnia-data/node';
 
 await initDatabase(createNedbDatabase());
 initServices(servicesNodeImpl);
@@ -126,7 +126,7 @@ initServices(servicesNodeImpl);
 ### Consuming
 
 ```ts
-import { services, models, type Request } from '~/insomnia-data';
+import { services, models, type Request } from 'insomnia-data';
 
 const mcpRequest = await services.mcpRequest.create({ url: 'http://localhost:3000' });
 const all = await services.mcpRequest.all();

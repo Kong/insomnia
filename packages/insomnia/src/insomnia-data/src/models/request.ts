@@ -14,9 +14,8 @@
  */
 
 import { getOperationAST, OperationTypeNode, parse } from 'graphql';
-
-import type { OAuth1SignatureMethod } from '~/insomnia-data/common';
-import { CONTENT_TYPE_GRAPHQL, METHOD_GET } from '~/insomnia-data/common';
+import type { OAuth1SignatureMethod } from 'insomnia-data/common';
+import { CONTENT_TYPE_GRAPHQL, METHOD_GET } from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';

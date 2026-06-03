@@ -1,9 +1,9 @@
+import type { ResponseTimelineEntry } from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
-import type { ResponseTimelineEntry } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
-import { PREVIEW_MODE_SOURCE } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 

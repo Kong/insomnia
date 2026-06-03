@@ -3,10 +3,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 
+import type { Response } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import type { Response } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 
 import { initModel } from './index';
 

@@ -1,3 +1,4 @@
+import type { WorkspaceScope } from 'insomnia-data';
 import React, { type FC } from 'react';
 import {
   Button,
@@ -14,7 +15,6 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import type { WorkspaceScope } from '~/insomnia-data';
 import { useGitProjectMigrateLegacyInsomniaFolderActionFetcher } from '~/routes/git.migrate-legacy-insomnia-folder-to-file';
 
 import {

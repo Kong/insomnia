@@ -3,13 +3,13 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codemirror';
+import type { KeyCombination } from 'insomnia-data/common';
+import { isMac } from 'insomnia-data/common';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import * as reactUse from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import type { KeyCombination } from '~/insomnia-data/common';
-import { isMac } from '~/insomnia-data/common';
 import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { getTagDefinitions } from '~/templating/renderer-safe';

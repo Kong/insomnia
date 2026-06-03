@@ -1,8 +1,8 @@
+import type { RequestGroup } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useNavigate, useParams } from 'react-router';
 
-import type { RequestGroup } from '~/insomnia-data';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 

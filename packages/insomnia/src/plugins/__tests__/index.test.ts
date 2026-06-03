@@ -8,7 +8,7 @@ vi.mock('~/templating/liquid-extension-worker', () => ({
 vi.mock('../context/app', () => ({ init: vi.fn().mockReturnValue({ app: {} }) }));
 vi.mock('../context/store', () => ({ init: vi.fn().mockReturnValue({ store: {} }) }));
 vi.mock('../context/network', () => ({ init: vi.fn().mockReturnValue({ network: {} }) }));
-vi.mock('~/insomnia-data', () => ({
+vi.mock('insomnia-data', () => ({
   services: {
     settings: { get: vi.fn() },
     request: { getById: vi.fn() },
@@ -20,6 +20,8 @@ vi.mock('~/insomnia-data', () => ({
     helpers: { getResponseBodyBuffer: vi.fn() },
   },
 }));
+
+import { services } from 'insomnia-data';
 
 import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
 
@@ -340,8 +342,8 @@ describe('executePluginMainAction', () => {
   it('propagates rejections from the IPC call', async () => {
     vi.mocked(fetchFromTemplateWorkerDatabase).mockRejectedValue(new Error('IPC failure'));
 
-    await expect(
-      executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' }),
-    ).rejects.toThrow('IPC failure');
+    await expect(executePluginMainAction({ pluginName: bundlePluginName, actionName: 'doThing' })).rejects.toThrow(
+      'IPC failure',
+    );
   });
 });

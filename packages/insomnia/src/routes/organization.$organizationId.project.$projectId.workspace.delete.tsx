@@ -1,7 +1,7 @@
+import type { Project, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import type { Project, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import { AnalyticsEvent } from '~/ui/analytics';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { invariant } from '~/utils/invariant';

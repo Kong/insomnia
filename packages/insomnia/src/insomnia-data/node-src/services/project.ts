@@ -1,5 +1,5 @@
-import type { Project, Query } from '~/insomnia-data';
-import { database as db, models } from '~/insomnia-data';
+import type { Project, Query } from 'insomnia-data';
+import { database as db, models } from 'insomnia-data';
 
 const { type } = models.project;
 

@@ -7,12 +7,12 @@ import electron, { app, BrowserWindow, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
+import type { Project, RemoteProject, Stats } from 'insomnia-data';
+import { database, initDatabase, initServices, models, services } from 'insomnia-data';
+import { isMac } from 'insomnia-data/common';
+import { servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
-import type { Project, RemoteProject, Stats } from '~/insomnia-data';
-import { database, initDatabase, initServices, models, services } from '~/insomnia-data';
-import { isMac } from '~/insomnia-data/common';
-import { servicesNodeImpl } from '~/insomnia-data/node';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';

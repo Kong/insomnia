@@ -12,11 +12,6 @@
  *
  */
 
-import { parse, stringify } from 'yaml';
-
-import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
-import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
-import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 import type {
   ApiSpec,
   BaseModel,
@@ -38,8 +33,13 @@ import type {
   WebSocketRequest,
   Workspace,
   WorkspaceScope,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { parse, stringify } from 'yaml';
+
+import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
+import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
+import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
 import { maskVaultEnvironmentData } from '~/utils/environment-utils';
 import { invariant } from '~/utils/invariant';
 

@@ -1,4 +1,4 @@
-import type { BaseModel } from '~/insomnia-data';
+import type { BaseModel } from 'insomnia-data';
 
 export interface Team {
   id: string;

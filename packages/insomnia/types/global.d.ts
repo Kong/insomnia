@@ -3,7 +3,7 @@ import type { HiddenBrowserWindowToMainBridgeAPI } from '../src/hidden-window-pr
 import type { RendererToMainBridgeAPI } from '../src/main/ipc/main';
 import type { DatabaseBridgeAPI } from '../src/main/ipc/database';
 import type { DiffMatchPatch, DiffOp } from 'diff-match-patch-ts';
-import type { Services } from '~/insomnia-data';
+import type { Services } from 'insomnia-data';
 
 type RendererEnv = {
   INSOMNIA_GITLAB_REDIRECT_URI: string | undefined;

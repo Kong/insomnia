@@ -1,6 +1,3 @@
-import { database } from '~/common/database';
-import { fuzzyMatchAll } from '~/common/misc';
-import { sortMethodMap } from '~/common/sorting';
 import type {
   GrpcRequest,
   GrpcRequestMeta,
@@ -13,9 +10,13 @@ import type {
   WebSocketRequest,
   WebSocketRequestMeta,
   Workspace,
-} from '~/insomnia-data';
-import type { BaseModel } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
+} from 'insomnia-data';
+import type { BaseModel } from 'insomnia-data';
+import { models } from 'insomnia-data';
+
+import { database } from '~/common/database';
+import { fuzzyMatchAll } from '~/common/misc';
+import { sortMethodMap } from '~/common/sorting';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
 export interface SlimRequestDoc extends BaseModel {

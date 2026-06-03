@@ -79,7 +79,7 @@ export function getContentDispositionHeader<T extends Header>(headers: T[]): T |
   return matches.length ? matches[0] : null;
 }
 
-export { generateId } from '~/insomnia-data/common';
+export { generateId } from 'insomnia-data/common';
 
 export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
   return new Promise<void>(resolve => setTimeout(resolve, milliseconds));

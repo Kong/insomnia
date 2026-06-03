@@ -1,4 +1,4 @@
-import type { RequestBody } from '~/insomnia-data';
+import type { RequestBody } from 'insomnia-data';
 
 import * as misc from '../../common/misc';
 import type { RenderedRequest } from '../../templating/types';

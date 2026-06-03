@@ -1,7 +1,7 @@
+import type { ThemeSettings } from 'insomnia-data';
 import { useCallback, useEffect, useState } from 'react';
 import * as reactUse from 'react-use';
 
-import type { ThemeSettings } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 

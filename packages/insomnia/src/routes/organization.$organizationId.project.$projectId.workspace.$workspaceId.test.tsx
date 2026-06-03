@@ -1,4 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { UnitTestSuite } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { Suspense, useLayoutEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -17,8 +19,6 @@ import { Route as RouteComponent, Routes, useFetchers, useLoaderData, useParams 
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { database } from '~/common/database';
-import type { UnitTestSuite } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useRootLoaderData } from '~/root';
 import { useTestSuiteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.delete';
 import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';

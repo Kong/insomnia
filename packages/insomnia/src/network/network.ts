@@ -1,5 +1,3 @@
-import orderedJSON from 'json-order';
-
 import type {
   CaCertificate,
   ClientCertificate,
@@ -21,9 +19,11 @@ import type {
   UserUploadEnvironment,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { EnvironmentType, models, services } from '~/insomnia-data';
-import { invariant, serializeNDJSON } from '~/insomnia-data/common';
+} from 'insomnia-data';
+import { EnvironmentType, models, services } from 'insomnia-data';
+import { invariant, serializeNDJSON } from 'insomnia-data/common';
+import orderedJSON from 'json-order';
+
 import {
   appendTimelineLines,
   appendToTimelineOnError,

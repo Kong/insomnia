@@ -1,7 +1,6 @@
 import electron from 'electron';
-
-import type { DataStoreOptions, IDatabase } from '~/insomnia-data';
-import { createNedbDatabase, flushChangesImpl } from '~/insomnia-data/node';
+import type { DataStoreOptions, IDatabase } from 'insomnia-data';
+import { createNedbDatabase, flushChangesImpl } from 'insomnia-data/node';
 
 export const mainDatabase: IDatabase = createNedbDatabase(nedbDatabase => ({
   ...nedbDatabase,

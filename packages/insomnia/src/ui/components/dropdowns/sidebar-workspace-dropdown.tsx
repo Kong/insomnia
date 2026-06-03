@@ -4,6 +4,9 @@ import {
   exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
+import type { Project, Workspace } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useState } from 'react';
 import {
   Button,
@@ -25,9 +28,6 @@ import {
 } from 'react-aria-components';
 import { href } from 'react-router';
 
-import type { Project, Workspace } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
-import type { PlatformKeyCombinations } from '~/insomnia-data/common';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
@@ -431,7 +431,9 @@ export const SidebarWorkspaceDropdown = ({
               {({ close }) => (
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between gap-2">
-                    <Heading className="text-2xl">Delete {getWorkspaceLabel(workspace).singular}</Heading>
+                    <Heading className="text-2xl">
+                      {project.konnectControlPlaneId ? 'Remove' : 'Delete'} {getWorkspaceLabel(workspace).singular}
+                    </Heading>
                     <Button
                       className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       onPress={close}
@@ -450,9 +452,20 @@ export const SidebarWorkspaceDropdown = ({
                     <input type="hidden" name="workspaceId" value={workspaceId} />
                     <div>
                       <p className="line-clamp-5">
-                        This will permanently delete the{' '}
-                        <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
-                        {getWorkspaceLabel(workspace).singular}
+                        {project.konnectControlPlaneId ? (
+                          <>
+                            Do you wish to remove your local copy of the{' '}
+                            <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
+                            {getWorkspaceLabel(workspace).singular}? This will not affect anything in Konnect, or any
+                            other users.
+                          </>
+                        ) : (
+                          <>
+                            This will permanently delete the{' '}
+                            <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
+                            {getWorkspaceLabel(workspace).singular}
+                          </>
+                        )}
                       </p>
                       {models.project.isRemoteProject(project) && (
                         <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
@@ -493,7 +506,7 @@ export const SidebarWorkspaceDropdown = ({
                         aria-label="Delete Workspace"
                         className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                       >
-                        Delete
+                        {project.konnectControlPlaneId ? 'Remove' : 'Delete'}
                       </Button>
                     </div>
                   </deleteWorkspaceFetcher.Form>

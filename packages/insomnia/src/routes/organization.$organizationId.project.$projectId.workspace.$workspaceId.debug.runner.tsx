@@ -1,3 +1,10 @@
+import type {
+  ResponseTimelineEntry,
+  RunnerResultPerRequest,
+  RunnerTestResult,
+  UserUploadEnvironment,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -22,13 +29,6 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
-import type {
-  ResponseTimelineEntry,
-  RunnerResultPerRequest,
-  RunnerTestResult,
-  UserUploadEnvironment,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import type { TimingStep } from '~/main/network/request-timing';
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';

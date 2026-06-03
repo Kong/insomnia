@@ -1,6 +1,5 @@
+import type { CookieJar } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
-
-import type { CookieJar } from '~/insomnia-data';
 
 /** Ensure every cookie has an ID property */
 function migrateCookieId(cookieJar: CookieJar) {

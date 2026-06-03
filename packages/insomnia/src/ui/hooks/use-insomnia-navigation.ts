@@ -1,6 +1,3 @@
-import { useCallback, useMemo } from 'react';
-import { href, matchPath, useLocation, useSearchParams } from 'react-router';
-
 import type {
   GrpcRequest,
   McpRequest,
@@ -14,8 +11,10 @@ import type {
   UnitTestSuite,
   WebSocketRequest,
   Workspace,
-} from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { useCallback, useMemo } from 'react';
+import { href, matchPath, useLocation, useSearchParams } from 'react-router';
 
 export type NavigationResource =
   | undefined

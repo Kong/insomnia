@@ -2,9 +2,9 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 
 import { app, type WebContents } from 'electron';
+import type { RemoteProject } from 'insomnia-data';
+import { services } from 'insomnia-data';
 
-import type { RemoteProject } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import type { VCS } from '~/main/cloud-sync/core/vcs';
 import { createVCS } from '~/main/cloud-sync/create-vcs';
 import { pullBackendProject } from '~/main/cloud-sync/pull-backend-project';

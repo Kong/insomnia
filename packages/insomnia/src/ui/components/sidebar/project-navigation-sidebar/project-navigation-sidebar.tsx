@@ -1,5 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
+import type { RequestGroup, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, GridList, GridListItem, Input, SearchField, Tab, TabList, Tabs } from 'react-aria-components';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
@@ -10,8 +12,6 @@ import type { SortOrder } from '~/common/constants';
 import { fuzzyMatchAll } from '~/common/misc';
 import { getAllRemoteBackendProjectsOfOrg, getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
-import type { RequestGroup, Workspace } from '~/insomnia-data';
-import { models, services } from '~/insomnia-data';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
@@ -29,6 +29,7 @@ import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
@@ -1197,12 +1198,13 @@ export const ProjectNavigationSidebar = ({
 export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreateProject: () => void }) => {
   const { organizationId } = useParams() as { organizationId: string };
   const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
+  const { features } = useOrganizationPermissions();
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
+    <div className="haha flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
       <Tabs>
         <SideBarTabList
-          konnectSyncEnabled={false}
+          konnectSyncEnabled={features.konnectSync.enabled}
           isScratchPad={isScratchPad}
           nonKonnectProjectLength={0}
           konnectProjectsLength={0}

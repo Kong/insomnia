@@ -1,6 +1,5 @@
+import { models, services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
-
-import { models, services } from '~/insomnia-data';
 
 import { migrate as migrateWorkspace } from './workspace';
 

@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import clone from 'clone';
+import type { RequestHeader } from 'insomnia-data';
 
-import type { RequestHeader } from '~/insomnia-data';
 import type { RenderedRequest } from '~/templating/types';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';

@@ -2,9 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { services } from 'insomnia-data';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { services } from '~/insomnia-data';
 
 import { database as db } from '../../../common/database';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../git-repo-migration';

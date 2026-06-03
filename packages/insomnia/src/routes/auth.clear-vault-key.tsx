@@ -1,7 +1,7 @@
 import { getVault } from 'insomnia-api';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { services } from '~/insomnia-data';
 import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/utils/router';
 

@@ -1,6 +1,6 @@
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { models, services } from '~/insomnia-data';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';

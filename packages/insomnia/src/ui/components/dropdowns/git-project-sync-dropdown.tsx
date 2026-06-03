@@ -1,4 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { GitProject, GitRepository } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -15,8 +17,6 @@ import {
 import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { GitProject, GitRepository } from '~/insomnia-data';
-import { models } from '~/insomnia-data';
 import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';

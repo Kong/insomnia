@@ -1,5 +1,5 @@
-import type { GrpcRequestMeta } from '~/insomnia-data';
-import { database as db, models } from '~/insomnia-data';
+import type { GrpcRequestMeta } from 'insomnia-data';
+import { database as db, models } from 'insomnia-data';
 
 const { type } = models.grpcRequestMeta;
 const { isGrpcRequestId } = models.grpcRequest;

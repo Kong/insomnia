@@ -1,6 +1,6 @@
+import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import type { SettingsOfType } from '~/insomnia-data/common';
 import { useRootLoaderData } from '~/root';
 
 import { useSettingsPatcher } from '../../hooks/use-request';

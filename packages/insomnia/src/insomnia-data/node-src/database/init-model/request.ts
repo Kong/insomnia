@@ -1,9 +1,9 @@
-import type { Request } from '~/insomnia-data';
+import type { Request } from 'insomnia-data';
 import {
   CONTENT_TYPE_FORM_URLENCODED,
   deconstructQueryStringToParams,
   getContentTypeFromHeaders,
-} from '~/insomnia-data/common';
+} from 'insomnia-data/common';
 
 export function migrate(doc: Request): Request {
   try {

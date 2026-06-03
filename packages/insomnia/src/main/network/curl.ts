@@ -4,11 +4,11 @@ import type { Readable } from 'node:stream';
 
 import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
+import type { CookieJar, RequestAuthentication, RequestHeader, Response } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
-import type { CookieJar, RequestAuthentication, RequestHeader, Response } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import { insecureReadFile } from '~/main/secure-read-file';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';

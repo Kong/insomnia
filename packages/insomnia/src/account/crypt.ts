@@ -1,6 +1,5 @@
+import type { AESMessage } from 'insomnia-data';
 import forge from 'node-forge';
-
-import type { AESMessage } from '~/insomnia-data';
 
 export type { AESMessage };
 

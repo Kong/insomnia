@@ -1,5 +1,5 @@
-import type { GrpcRequest, Project, Request, RequestGroup, WebSocketRequest, Workspace } from '~/insomnia-data';
-import { EnvironmentKvPairDataType, models, services as insoservices } from '~/insomnia-data';
+import type { GrpcRequest, Project, Request, RequestGroup, WebSocketRequest, Workspace } from 'insomnia-data';
+import { EnvironmentKvPairDataType, models, services as insoservices } from 'insomnia-data';
 
 import { database as db } from '../common/database';
 import {

@@ -1,7 +1,7 @@
+import type { Request } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 
-import type { Request } from '~/insomnia-data';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';

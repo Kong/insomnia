@@ -16,14 +16,14 @@ import {
   typeFromAST,
 } from 'graphql';
 import type { Maybe } from 'graphql-language-service';
+import type { Request } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
 import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import * as reactUse from 'react-use';
 
-import type { Request } from '~/insomnia-data';
-import { services } from '~/insomnia-data';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
