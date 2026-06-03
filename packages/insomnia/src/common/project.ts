@@ -104,50 +104,52 @@ interface CachedProjectRecentRequest {
   workspaceId: string;
 }
 
+interface CachedProjectRecentRequestsPayload {
+  recentRequests: CachedProjectRecentRequest[];
+  updatedAt: number;
+}
+
 // Keep a small buffer beyond the 3 visible items so Jump back in stays populated after deletions.
 const MAX_RECENT_PROJECT_REQUESTS = 5;
 const RECENT_PROJECT_REQUESTS_STORAGE_KEY_PREFIX = 'recent-project-requests';
+// we conly want to keep recent requests for a week
+const RECENT_PROJECT_REQUESTS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const getRecentProjectRequestsStorageKey = (projectId: string) =>
   `${RECENT_PROJECT_REQUESTS_STORAGE_KEY_PREFIX}:${projectId}`;
 
-const writeCachedProjectRecentRequests = (projectId: string, recentRequests: CachedProjectRecentRequest[]) => {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return;
-  }
-
-  const trimmedRecentRequests = recentRequests.slice(0, MAX_RECENT_PROJECT_REQUESTS);
-
-  const storageKey = getRecentProjectRequestsStorageKey(projectId);
-
-  if (trimmedRecentRequests.length === 0) {
-    window.localStorage.removeItem(storageKey);
-    return;
-  }
-
-  window.localStorage.setItem(storageKey, JSON.stringify(trimmedRecentRequests));
+const removeCachedProjectRecentRequests = (projectId: string) => {
+  window.localStorage.removeItem(getRecentProjectRequestsStorageKey(projectId));
 };
 
-export const getCachedProjectRecentRequests = (projectId?: string): CachedProjectRecentRequest[] => {
-  if (!projectId || typeof window === 'undefined' || !window.localStorage) {
-    return [];
-  }
-
+export const getCachedProjectRecentRequests = (projectId: string): CachedProjectRecentRequest[] => {
   try {
-    const storedRequestIds = window.localStorage.getItem(getRecentProjectRequestsStorageKey(projectId));
+    const storedRecentRequests = window.localStorage.getItem(getRecentProjectRequestsStorageKey(projectId));
 
-    if (!storedRequestIds) {
+    if (!storedRecentRequests) {
       return [];
     }
 
-    const parsedRequestIds = JSON.parse(storedRequestIds);
+    const payload = JSON.parse(storedRecentRequests) as Partial<CachedProjectRecentRequestsPayload>;
 
-    if (!Array.isArray(parsedRequestIds)) {
+    if (
+      !payload ||
+      typeof payload !== 'object' ||
+      !Array.isArray(payload.recentRequests) ||
+      typeof payload.updatedAt !== 'number'
+    ) {
+      removeCachedProjectRecentRequests(projectId);
       return [];
     }
 
-    return parsedRequestIds as CachedProjectRecentRequest[];
+    if (Date.now() - payload.updatedAt > RECENT_PROJECT_REQUESTS_TTL_MS) {
+      removeCachedProjectRecentRequests(projectId);
+      return [];
+    }
+
+    return payload.recentRequests.slice(0, MAX_RECENT_PROJECT_REQUESTS);
   } catch {
+    removeCachedProjectRecentRequests(projectId);
     return [];
   }
 };
@@ -166,13 +168,18 @@ export const recordProjectRecentRequest = ({
   }
 
   const existingRecentRequests = getCachedProjectRecentRequests(projectId);
-  writeCachedProjectRecentRequests(projectId, [
-    { requestId, workspaceId },
-    ...existingRecentRequests.filter(storedRequest => storedRequest.requestId !== requestId),
-  ]);
+  const payload: CachedProjectRecentRequestsPayload = {
+    recentRequests: [
+      { requestId, workspaceId },
+      ...existingRecentRequests.filter(storedRequest => storedRequest.requestId !== requestId),
+    ].slice(0, MAX_RECENT_PROJECT_REQUESTS),
+    updatedAt: Date.now(),
+  };
+
+  window.localStorage.setItem(getRecentProjectRequestsStorageKey(projectId), JSON.stringify(payload));
 };
 
-export const getProjectRecentRequests = async (projectId?: string) => {
+export const getProjectRecentRequests = async (projectId: string) => {
   const cachedRecentRequests = getCachedProjectRecentRequests(projectId);
 
   if (!projectId || cachedRecentRequests.length === 0) {
