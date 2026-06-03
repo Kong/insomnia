@@ -5,17 +5,7 @@ import { models, services } from 'insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
-
-async function decryptAESString(
-  symmetricKey: string | JsonWebKey,
-  encryptedResult: AESMessage,
-): Promise<string> {
-  if (typeof window !== 'undefined' && window.main?.crypt?.decryptAES) {
-    return window.main.crypt.decryptAES(symmetricKey, encryptedResult);
-  }
-  const crypt = await import('./crypt');
-  return crypt.decryptAES(symmetricKey, encryptedResult);
-}
+import { decryptAES } from '../utils/crypt-adapter';
 
 export interface SessionData {
   accountId: string;
@@ -38,7 +28,7 @@ export async function absorbKey(sessionId: string, key: string) {
   ]);
   const { public_key: publicKey, enc_private_key: encPrivateKey, enc_symmetric_key: encSymmetricKey } = keys;
   const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
-  const symmetricKeyStr = await decryptAESString(key, JSON.parse(encSymmetricKey));
+  const symmetricKeyStr = await decryptAES(key, JSON.parse(encSymmetricKey));
 
   // Store the information for later
   await setSessionData(
@@ -70,7 +60,7 @@ export async function getPrivateKey() {
     throw new Error("Can't get private key: session is missing keys.");
   }
 
-  const privateKeyStr = await decryptAESString(symmetricKey, encPrivateKey);
+  const privateKeyStr = await decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr) as JsonWebKey;
 }
 

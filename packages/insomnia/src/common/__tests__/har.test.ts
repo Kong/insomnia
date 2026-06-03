@@ -12,7 +12,7 @@ vi.mock('~/network/network-adapter', () => ({
   applyRequestHooks: (request: any) => Promise.resolve(request),
   applyResponseHooks: (response: any) => Promise.resolve(response),
 }));
-vi.mock('~/utils/vault-adapter', () => ({
+vi.mock('~/utils/crypt-adapter', () => ({
   decryptSecretValue: (value: any) => value,
   encryptSecretValue: (value: any) => value,
 }));

@@ -17,7 +17,7 @@ import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
 import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network';
 
-vi.mock('~/utils/vault-adapter', () => ({
+vi.mock('~/utils/crypt-adapter', () => ({
   decryptSecretValue: (value: any) => value,
   encryptSecretValue: (value: any) => value,
 }));

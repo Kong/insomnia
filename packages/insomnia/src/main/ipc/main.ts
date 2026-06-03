@@ -42,8 +42,8 @@ import * as crypt from '../../account/crypt';
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
 import type { RenderedRequest } from '../../templating/types';
+import { decryptSecretValue, encryptSecretValue } from '../../utils/crypt-adapter';
 import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '../../utils/sealedbox';
-import { decryptSecretValue, encryptSecretValue } from '../../utils/vault-adapter';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {

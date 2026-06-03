@@ -1,3 +1,8 @@
+import type { AESMessage } from '../account/crypt';
+
+export const decryptAES = (symmetricKey: string | JsonWebKey, encryptedResult: AESMessage): Promise<string> =>
+  window.main.crypt.decryptAES(symmetricKey, encryptedResult);
+
 export const encryptSecretValue = async (rawValue: string, symmetricKey: JsonWebKey): Promise<string> => {
   if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
     return rawValue;
