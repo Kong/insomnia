@@ -17,6 +17,8 @@ import {
 } from 'electron';
 import { isLinux, isMac } from 'insomnia-data/common';
 
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
+
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import { invariant } from '../utils/invariant';
@@ -200,8 +202,9 @@ export function createWindow(): ElectronBrowserWindow {
       preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
       nodeIntegration: false,
-      nodeIntegrationInWorker: false,
+      nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs
       webviewTag: true,
+      // TODO: enable context isolation
       contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',
     },
@@ -267,6 +270,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: `${MNEMONIC_SYM}Preferences`,
         click: () => {
+          trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
           mainBrowserWindow.webContents?.send('toggle-preferences');
         },
       },
