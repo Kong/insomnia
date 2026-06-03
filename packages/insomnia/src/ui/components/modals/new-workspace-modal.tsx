@@ -1,7 +1,7 @@
 import type { StorageRules } from 'insomnia-api';
 import type { ApiSpec, Project, WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Collection,
@@ -104,6 +104,9 @@ export const NewWorkspaceModal = ({
     mockServerAdditionalFiles: [],
     mockServerDynamicResponses: false,
   });
+
+  // Once the user manually edits the file name we stop deriving it from the name.
+  const [hasEditedFileName, setHasEditedFileName] = useState(false);
 
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const prevCreateNewWorkspaceFetcherState = useRef(createNewWorkspaceFetcher.state);
