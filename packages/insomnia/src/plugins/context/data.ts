@@ -1,10 +1,9 @@
 import type { Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
-import { exportWorkspacesHAR } from '../../common/har';
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
-
+import { exportWorkspacesHAR } from '../../main/har';
 
 interface InsomniaExport {
   workspace?: Workspace;

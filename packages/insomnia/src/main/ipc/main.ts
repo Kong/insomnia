@@ -16,6 +16,7 @@ import {
   utilityProcess,
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
+import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import iconv from 'iconv-lite';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services, TestResults } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -26,6 +27,13 @@ import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
+import {
+  exportHarCurrentRequest,
+  exportHarRequest,
+  exportHarWithRequest,
+  exportRequestsHAR,
+  exportWorkspacesHAR,
+} from '~/main/har';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
@@ -283,6 +291,19 @@ export interface RendererToMainBridgeAPI {
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
   generateCodeSnippet: (options: { har: object; target: string; client: string }) => Promise<string>;
   getCodeSnippetTargets: () => Promise<{ key: string; title: string; clients: { key: string; title: string }[] }[]>;
+  exportHarWithRequest: (options: {
+    requestId: string;
+    environmentId?: string;
+    addContentLength?: boolean;
+  }) => Promise<any>;
+  exportHarRequest: (options: {
+    requestId: string;
+    environmentOrWorkspaceId: string;
+    addContentLength?: boolean;
+  }) => Promise<any>;
+  exportHarCurrentRequest: (options: { requestId: string; responseId: string }) => Promise<any>;
+  exportRequestsHAR: (options: { requests: any[]; includePrivateDocs?: boolean }) => Promise<string>;
+  exportWorkspacesHAR: (options: { workspaces: any[]; includePrivateDocs?: boolean }) => Promise<string>;
   generateCommitsFromDiff: (
     input: Parameters<GenerateCommitsFromDiffFunction>[0],
   ) => Promise<
@@ -525,14 +546,47 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('generateCodeSnippet', async (_, options: { har: object; target: string; client: string }) => {
-    const { HTTPSnippet } = await import('httpsnippet');
     const snippet = new HTTPSnippet(options.har as any);
     return snippet.convert(options.target, options.client) || '';
   });
 
   ipcMainHandle('getCodeSnippetTargets', async () => {
-    const { availableTargets } = await import('httpsnippet');
     return availableTargets();
+  });
+
+  ipcMainHandle(
+    'exportHarWithRequest',
+    async (_, options: { requestId: string; environmentId?: string; addContentLength?: boolean }) => {
+      const request = await services.request.getById(options.requestId);
+      if (!request) {
+        throw new Error(`Request ${options.requestId} not found`);
+      }
+      return exportHarWithRequest(request, options.environmentId, options.addContentLength);
+    },
+  );
+
+  ipcMainHandle(
+    'exportHarRequest',
+    async (_, options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) => {
+      return exportHarRequest(options.requestId, options.environmentOrWorkspaceId, options.addContentLength);
+    },
+  );
+
+  ipcMainHandle('exportHarCurrentRequest', async (_, options: { requestId: string; responseId: string }) => {
+    const request = await services.request.getById(options.requestId);
+    const response = await services.response.getById(options.responseId);
+    if (!request || !response) {
+      throw new Error('Request or response not found');
+    }
+    return exportHarCurrentRequest(request, response);
+  });
+
+  ipcMainHandle('exportRequestsHAR', async (_, options: { requests: any[]; includePrivateDocs?: boolean }) => {
+    return exportRequestsHAR(options.requests, options.includePrivateDocs);
+  });
+
+  ipcMainHandle('exportWorkspacesHAR', async (_, options: { workspaces: any[]; includePrivateDocs?: boolean }) => {
+    return exportWorkspacesHAR(options.workspaces, options.includePrivateDocs);
   });
 
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {

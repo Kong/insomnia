@@ -18,7 +18,7 @@ import {
   RESPONSE_CODE_REASONS,
 } from '~/common/constants';
 import { database as db } from '~/common/database';
-import { getResponseCookiesFromHeaders } from '~/common/har';
+import { getResponseCookiesFromHeaders } from '~/main/har';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';

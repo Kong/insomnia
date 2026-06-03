@@ -405,6 +405,16 @@ const main: Window['main'] = {
   generateCodeSnippet: (options: { har: object; target: string; client: string }) =>
     invokeWithNormalizedError('generateCodeSnippet', options),
   getCodeSnippetTargets: () => invokeWithNormalizedError('getCodeSnippetTargets'),
+  exportHarWithRequest: (options: { requestId: string; environmentId?: string; addContentLength?: boolean }) =>
+    invokeWithNormalizedError('exportHarWithRequest', options),
+  exportHarRequest: (options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) =>
+    invokeWithNormalizedError('exportHarRequest', options),
+  exportHarCurrentRequest: (options: { requestId: string; responseId: string }) =>
+    invokeWithNormalizedError('exportHarCurrentRequest', options),
+  exportRequestsHAR: (options: { requests: any[]; includePrivateDocs?: boolean }) =>
+    invokeWithNormalizedError('exportRequestsHAR', options),
+  exportWorkspacesHAR: (options: { workspaces: any[]; includePrivateDocs?: boolean }) =>
+    invokeWithNormalizedError('exportWorkspacesHAR', options),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
     invokeWithNormalizedError('generateCommitsFromDiff', input),
   generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>

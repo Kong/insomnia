@@ -21,8 +21,8 @@ import type { Cookie, Request, Response } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
-import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
-import { getRenderedRequestAndContext } from '../render';
+import { getRenderedRequestAndContext } from '../../common/render';
+import { exportHar, exportHarResponse, exportHarWithRequest } from '../../main/har';
 
 let cookieBridge: any;
 

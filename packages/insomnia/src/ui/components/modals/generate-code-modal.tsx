@@ -1,12 +1,11 @@
-import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import type { Request } from 'insomnia-data';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import type { HTTPSnippetClient, HTTPSnippetTarget } from '~/types/code-snippet';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
-import { exportHarWithRequest } from '../../../common/har';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -89,7 +88,11 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       const addContentLength = Boolean(
         (TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key),
       );
-      const har = await exportHarWithRequest(request, props.environmentId, addContentLength);
+      const har = await window.main.exportHarWithRequest({
+        requestId: request._id,
+        environmentId: props.environmentId,
+        addContentLength,
+      });
       if (har) {
         const cmd = await window.main.generateCodeSnippet({
           har,
