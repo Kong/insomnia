@@ -230,10 +230,11 @@ const openWebSocketConnection = async (
       }
     }
 
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
-    if (!request.disableUserAgentHeader && lowerCasedEnabledHeaders['user-agent'] === undefined) {
+    if (!request.disableUserAgentHeader && !hasUserAgentHeader) {
       lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
     }
     const settings = await services.settings.get();

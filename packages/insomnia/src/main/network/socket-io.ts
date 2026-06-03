@@ -287,10 +287,11 @@ const openSocketIOConnection = async (
     const headers = options.headers;
     const url = options.url;
 
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
-    if (!request.disableUserAgentHeader && lowerCasedEnabledHeaders['user-agent'] === undefined) {
+    if (!request.disableUserAgentHeader && !hasUserAgentHeader) {
       lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
     }
 

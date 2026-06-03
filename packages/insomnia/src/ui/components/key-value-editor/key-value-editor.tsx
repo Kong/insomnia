@@ -354,13 +354,17 @@ export const KeyValueEditor: FC<Props> = ({
                   />
                 </div>
                 {valueEditor}
-                <ToggleButton
-                  className={`${pair.canDisable ? 'flex' : 'invisible'} aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset`}
-                  onChange={isSelected => onReadOnlyDisabledChange?.(lowerName, !isSelected)}
-                  isSelected={!isPairDisabled}
-                >
-                  <Icon icon={isPairDisabled ? 'square' : 'check-square'} />
-                </ToggleButton>
+                {pair.canDisable && onReadOnlyDisabledChange ? (
+                  <ToggleButton
+                    className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                    onChange={isSelected => onReadOnlyDisabledChange(lowerName, !isSelected)}
+                    isSelected={!isPairDisabled}
+                  >
+                    <Icon icon={isPairDisabled ? 'square' : 'check-square'} />
+                  </ToggleButton>
+                ) : (
+                  <div aria-hidden="true" className="aspect-square h-7" />
+                )}
                 {showDescription && (
                   <div className="relative flex h-full w-full flex-1 px-2">
                     <OneLineEditor
