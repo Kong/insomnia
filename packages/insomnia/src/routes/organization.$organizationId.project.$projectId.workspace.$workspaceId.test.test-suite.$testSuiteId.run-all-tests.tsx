@@ -1,6 +1,6 @@
-import type { UnitTest } from 'insomnia-data';
+import type { TestResults, UnitTest } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { generate, type Test, type TestResults } from 'insomnia-testing';
+import { generate, type Test } from 'insomnia-testing/src/generate/generate';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
@@ -49,7 +49,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: workspaceId,
     });
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRunAll, properties: { organizationId, projectId } });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.unitTestRunAll,
+      properties: { organizationId, projectId },
+    });
 
     return redirect(
       href(
@@ -90,7 +93,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: workspaceId,
     });
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRunAll, properties: { organizationId, projectId } });
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.unitTestRunAll,
+      properties: { organizationId, projectId },
+    });
 
     return redirect(
       href(

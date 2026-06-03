@@ -17,9 +17,9 @@ import {
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from 'insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services, TestResults } from 'insomnia-data';
 import { services } from 'insomnia-data';
-import type { TestResults } from 'insomnia-testing';
+import { runTests } from 'insomnia-testing/src/run/run';
 
 import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
 import { AI_PLUGIN_NAME } from '~/common/constants';
@@ -884,7 +884,6 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('run-tests', async (_, src: string) => {
-    const { runTests } = await import('insomnia-testing');
     const sendRequest = getSendRequestCallback();
     return runTests(src, { sendRequest });
   });

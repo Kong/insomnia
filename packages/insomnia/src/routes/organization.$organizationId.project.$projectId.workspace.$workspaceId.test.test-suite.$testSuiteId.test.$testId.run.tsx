@@ -1,6 +1,6 @@
-import type { UnitTest } from 'insomnia-data';
+import type { TestResults, UnitTest } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { generate, type Test, type TestResults } from 'insomnia-testing';
+import { generate, type Test } from 'insomnia-testing/src/generate/generate';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';

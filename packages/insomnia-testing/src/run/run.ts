@@ -7,7 +7,6 @@ import * as chai from 'chai';
 import type { Reporter, ReporterConstructor } from 'mocha';
 import Mocha from 'mocha';
 
-import type { TestResults } from './entities';
 import type { InsomniaOptions } from './insomnia';
 import { Insomnia } from './insomnia';
 import { JavaScriptReporter } from './javascript-reporter';
