@@ -89,13 +89,13 @@ export const useCio = () => {
       // SDK finishes initializing would re-identify the previous user once it
       // loads. Always clear the markers; only reset the SDK if there was an
       // active or queued identity to clear.
-      const hadIdentity = Boolean(identifiedUserId || pendingIdentify);
-      lastIdentifiedUser.current = null;
-      identifiedUserId = null;
-      pendingIdentify = null;
+      const hadIdentity = Boolean(pendingIdentify || lastIdentifiedUser.current || identifiedUserId);
       if (hadIdentity) {
         globalAnalyticsInstance?.reset();
       }
+      lastIdentifiedUser.current = null;
+      identifiedUserId = null;
+      pendingIdentify = null;
       return;
     }
 
