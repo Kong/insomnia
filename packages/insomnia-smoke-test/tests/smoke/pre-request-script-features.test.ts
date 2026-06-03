@@ -587,7 +587,17 @@ test.describe('pre-request features tests', () => {
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByLabel('Table Edit').click();
     await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
-    await page.locator('body').click();
+    
+    // wait for the Manage Environments modal to fully close
+    await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
+
+    // try to dismiss the environment picker dropdown normally; fall back to Escape if it is still open
+    await page.locator('body').click();    
+    try {
+      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
+    } catch {
+      await page.keyboard.press('Escape');
+    }
 
     // send request
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
