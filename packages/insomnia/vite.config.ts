@@ -10,7 +10,7 @@ import { defineConfig, type ResolvedConfig } from 'vite';
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
 //These will be excluded from the bundle and remain as runtime dependencies
-export const externalDependencies = ['@apidevtools/swagger-parser', 'mocha', 'tough-cookie'];
+const externalDependencies = ['@apidevtools/swagger-parser', 'mocha', 'tough-cookie'];
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
 
@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'esnext',
       sourcemap: true,
-      rollupOptions: {
+      rolldownOptions: {
         external: ['@getinsomnia/node-libcurl'],
       },
     },
@@ -88,7 +88,7 @@ const NODE_BUILTIN_REPORT_ENV = 'INSOMNIA_NODE_IMPORT_REPORT';
 const NODE_BUILTIN_REPORT_FILE = path.resolve(__dirname, '.reports', 'renderer-node-imports.json');
 const VIRTUAL_NODE_PREFIX = 'virtual:external:node:';
 
-export const normalizeModuleIdForFs = (id: string) => {
+const normalizeModuleIdForFs = (id: string) => {
   const suffixIndex = id.search(/[?#]/);
   return suffixIndex === -1 ? id : id.slice(0, suffixIndex);
 };

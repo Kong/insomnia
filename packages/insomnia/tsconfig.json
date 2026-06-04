@@ -13,14 +13,12 @@
     "module": "ESNext",
     "sourceMap": true,
     /* import resolution */
-    "baseUrl": ".",
     "rootDirs": [".", "./.react-router/types"],
     "paths": {
       "~/*": ["./src/*"]
     },
     /* Runs in the DOM */
     "lib": ["ES2023", "DOM.Iterable", "DOM"],
-    "jsx": "preserve",
     /* Strictness */
     "strict": true,
     "noImplicitReturns": true,
