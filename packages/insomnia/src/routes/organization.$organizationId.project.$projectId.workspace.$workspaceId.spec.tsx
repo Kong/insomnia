@@ -435,7 +435,8 @@ const Component = ({ params }: Route.ComponentProps) => {
     }
 
     const RULESET_MAX_BYTES = 1 * 1024 * 1024; // 1 MB
-    if (Buffer.byteLength(content, 'utf8') > RULESET_MAX_BYTES) {
+    const byteLength = new TextEncoder().encode(content).byteLength;
+    if (byteLength > RULESET_MAX_BYTES) {
       showError({
         title: 'Ruleset Too Large',
         message: 'The selected ruleset exceeds the maximum allowed size of 1 MB.',
