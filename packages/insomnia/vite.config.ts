@@ -7,7 +7,7 @@ import { defaultServerConditions, defineConfig } from 'vite';
 
 import pkg from './package.json';
 //These will be excluded from the bundle and remain as runtime dependencies
-export const externalDependencies = ['@apidevtools/swagger-parser', 'mocha'];
+export const externalDependencies = [];
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
   const browserSafeBuiltinModules = new Set(['assert', 'buffer', 'events', 'path', 'util']);
@@ -77,7 +77,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
       // Allows us to import modules that will be resolved by Node's require() function.
       // e.g. import fs from 'fs'; will get transformed to const fs = require('fs'); so that it works in the renderer process.
-      // This is necessary because we use nodeIntegration: true in the renderer process and allow importing modules from node.
+      // Still needed: renderer files (plugins/index.ts, sync/git/providers/*.ts) import `electron` as a value,
+      // and non-browser-safe node builtins must not be bundled into the renderer. The plugin converts
+      // these to require() calls, which resolve correctly because contextIsolation is currently false.
       electronNodeRequire({
         modules: [
           'electron',
@@ -94,10 +96,10 @@ export default defineConfig(({ mode }) => {
     },
     // The Electron renderer is browser-like even in React Router's SSR (server) build.
     // Vite's DEFAULT_SERVER_CONDITIONS excludes "browser", so packages with a
-    // "browser" exports condition (e.g. insomnia-testing) would otherwise resolve to
-    // their full Node entry point in the server bundle — pulling in Node-only modules
-    // like mocha. Prepending "browser" here keeps the server bundle consistent with
-    // the client build while retaining all other default server conditions.
+    // "browser" exports condition would otherwise resolve to their full Node entry point
+    // in the server bundle — pulling in Node-only modules. Prepending "browser" here
+    // keeps the server bundle consistent with the client build while retaining all other
+    // default server conditions.
     ssr: {
       resolve: {
         conditions: ['browser', ...defaultServerConditions],
