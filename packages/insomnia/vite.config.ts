@@ -57,19 +57,16 @@ export default defineConfig(({ mode }) => {
         '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
         '~/utils/crypt-adapter': path.resolve(__dirname, './src/utils/crypt-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
-        // Shim Node's `path` module for browser-safe dependencies (e.g. mime-types uses path.extname).
+        // mime-types uses path.extname
         'path': path.resolve(__dirname, './src/path-shim.ts'),
         'node:path': path.resolve(__dirname, './src/path-shim.ts'),
-        // Shim Node's `assert` module for browser-safe dependencies that still use runtime invariants.
-        'assert': path.resolve(__dirname, '../../node_modules/assert'),
-        'node:assert': path.resolve(__dirname, '../../node_modules/assert'),
-        // Shim Node's `events` module for browser-safe dependencies (e.g. jshint uses EventEmitter).
+        // jshint uses EventEmitter
         'events': path.resolve(__dirname, '../../node_modules/events'),
         'node:events': path.resolve(__dirname, '../../node_modules/events'),
-        // Shim Node's `util` module for browser-safe dependencies (e.g. tough-cookie uses util.inherits).
+        // jshint uses util
         'util': path.resolve(__dirname, '../../node_modules/util'),
         'node:util': path.resolve(__dirname, '../../node_modules/util'),
-        // Buffer is also browser-safe in this renderer bundle, so keep it bundled instead of externalized.
+        // isomorphic-git/sha.js/safe-buffer use Buffer
         'buffer': path.resolve(__dirname, '../../node_modules/buffer'),
         'node:buffer': path.resolve(__dirname, '../../node_modules/buffer'),
       },
