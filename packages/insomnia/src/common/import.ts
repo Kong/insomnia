@@ -91,12 +91,8 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    const readFileProcessFork = async (path: string) =>
-      process.type === 'renderer'
-        ? window.main.insecureReadFile({ path })
-        : (await import('../main/secure-read-file')).insecureReadFile(path);
-
-    return readFileProcessFork(path);
+    const { insecureReadFile } = await import('~/utils/read-file-adapter');
+    return insecureReadFile(path);
   }
   // Treat everything else as raw text
   const content = decodeURIComponent(uri);

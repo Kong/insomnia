@@ -55,8 +55,10 @@ export default defineConfig(({ mode }) => {
         // Short-circuit the adapter wrappers to the renderer implementation directly.
         // These must appear before the '~' catch-all so the specific path wins.
         '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
+        '~/network/curl-request-adapter': path.resolve(__dirname, './src/network/curl-request-adapter.renderer'),
         '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
         '~/utils/crypt-adapter': path.resolve(__dirname, './src/utils/crypt-adapter.renderer'),
+        '~/utils/read-file-adapter': path.resolve(__dirname, './src/utils/read-file-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
         // mime-types uses path.extname
         'path': path.resolve(__dirname, './src/path-shim.ts'),

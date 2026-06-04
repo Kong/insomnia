@@ -55,32 +55,32 @@ npm -v
 ## Repository Structure
 
 `packages/`
-  `insomnia/`                ← Main Electron app
-    `src/`
-      `common/`              ← Shared utils, settings types
-      `routes/`              ← React Router files (clientLoader/clientAction)
-      `ui/`                  ← React components, hooks, `insomnia-fetch.ts`
-      `main/`                ← Electron IPC handlers, `preload.ts`
-      `account/`             ← Auth, session, encryption
-      `sync/`                ← Git/VCS sync
-      `network/`             ← Request execution engine
-      `templating/`          ← Nunjucks rendering (Web Worker)
-  `insomnia-data/`           ← Data models, services, NeDB implementation, shared data utilities
-  `insomnia-api/`            ← Cloud API client
-  `insomnia-inso/`           ← CLI tool
-  `insomnia-testing/`        ← Test framework
+`insomnia/` ← Main Electron app
+`src/`
+`common/` ← Shared utils, settings types
+`routes/` ← React Router files (clientLoader/clientAction)
+`ui/` ← React components, hooks, `insomnia-fetch.ts`
+`main/` ← Electron IPC handlers, `preload.ts`
+`account/` ← Auth, session, encryption
+`sync/` ← Git/VCS sync
+`network/` ← Request execution engine
+`templating/` ← Nunjucks rendering (Web Worker)
+`insomnia-data/` ← Data models, services, NeDB implementation, shared data utilities
+`insomnia-api/` ← Cloud API client
+`insomnia-inso/` ← CLI tool
+`insomnia-testing/` ← Test framework
 
 ## Data Model Hierarchy
 
 Organization
-  → Project (local | remote/cloud | git-backed)
-    → Workspace (scope: 'collection' | 'design')
-      → Base Environment (auto-created: use `models.environment.getOrCreateForParentId(workspaceId)`)
-        → Sub-Environments
-      → Cookie Jar (auto-created)
-      → Request Group (folders)
-        → Request (HTTP, GraphQL, gRPC, WebSocket, Socket.IO)
-      → Request (can be direct child of workspace)
+→ Project (local | remote/cloud | git-backed)
+→ Workspace (scope: 'collection' | 'design')
+→ Base Environment (auto-created: use `models.environment.getOrCreateForParentId(workspaceId)`)
+→ Sub-Environments
+→ Cookie Jar (auto-created)
+→ Request Group (folders)
+→ Request (HTTP, GraphQL, gRPC, WebSocket, Socket.IO)
+→ Request (can be direct child of workspace)
 **Note:** A Workspace with `scope: 'collection'` IS the collection.
 
 ## Key Patterns
@@ -90,6 +90,7 @@ Organization
 - **Database Buffering:** Always buffer bulk writes (`database.bufferChangesIndefinitely()`, then `flushChanges()`). Unbuffered writes fire UI revalidation per operation, causing severe lag.
 - **State Management:** Use Router loaders/actions and NeDB for persistent state. Use React `useState`/context for ephemeral UI state (No Redux/Zustand).
 - **Electron IPC:** For main↔renderer communication, define handlers in `src/main/ipc/`, expose in `src/main/preload.ts`, and update `window.main` in `src/global.d.ts`.
+- **Renderer/Node Adapter:** When an API must behave differently in the renderer vs node/inso, create a `.renderer.ts` + `.node.ts` file pair and a `.ts` shim that re-exports from `.renderer`. Add a Vite alias in `vite.config.ts` pointing the `~/path/foo-adapter` import at the `.renderer` file. The esbuild node build automatically rewrites `.renderer` → `.node` via the existing `renderer-to-node` plugin — no per-adapter esbuild config needed. Do **not** use `process.type` checks: they bundle both variants and `process.type` is `undefined` in inso. Examples: `src/network/network-adapter.*`, `src/utils/crypt-adapter.*`.
 - **Templates:** Nunjucks runs in a Web Worker (`src/templating/`). Use `{{ _.variable_name }}`.
 - **Models:** Follow CRUD via `models.<type>` (e.g., `create()`, `update()`).
 - **HTTP Calls:** Use `insomniaFetch()` for Insomnia backend APIs. Use plain `fetch()` for external/third-party APIs.
