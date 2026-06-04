@@ -2,111 +2,29 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import electron from 'electron';
-import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest, Workspace } from 'insomnia-data';
+import type { Request, RequestGroup, Workspace } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
 import type { PluginConfigMap } from 'insomnia-data/common';
 
 import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
 
-import type { ParsedApiSpec } from '../common/api-specs';
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
-import type { PluginTemplateTag, RenderPurpose } from '../templating/types';
-import type { PluginTheme } from './misc';
+import type { RenderPurpose } from '../templating/types';
 import themes from './themes';
-
-export interface Plugin {
-  name: string;
-  description: string;
-  version: string;
-  directory: string;
-  config: { disabled: boolean };
-  module: {
-    templateTags?: PluginTemplateTag[];
-    requestHooks?: ((requestContext: any) => void)[];
-    responseHooks?: ((responseContext: any) => void)[];
-    themes?: PluginTheme[];
-    requestGroupActions?: OmitInternal<RequestGroupAction>[];
-    requestActions?: OmitInternal<RequestAction>[];
-    workspaceActions?: OmitInternal<WorkspaceAction>[];
-    documentActions?: OmitInternal<DocumentAction>[];
-    // Plugin actions which will be executed in main process(node integration) context. For internal use only, not for public plugins
-    unsafePluginMainActions?: OmitInternal<PluginAction>[];
-  };
-}
-
-type OmitInternal<T> = Omit<T, keyof { plugin: Plugin }>;
-export type TemplateTag = { plugin: Plugin } & {
-  templateTag: PluginTemplateTag;
-};
-
-export type RequestGroupAction = { plugin: Plugin } & {
-  action: (
-    context: Record<string, any>,
-    models: {
-      requestGroup: RequestGroup;
-      requests: (Request | GrpcRequest | WebSocketRequest)[];
-    },
-  ) => void | Promise<void>;
-  label: string;
-  icon?: string;
-};
-
-export type RequestAction = { plugin: Plugin } & {
-  action: (
-    context: Record<string, any>,
-    models: {
-      requestGroup?: RequestGroup;
-      request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
-    },
-  ) => void | Promise<void>;
-  label: string;
-  icon?: string;
-};
-
-export type WorkspaceAction = { plugin: Plugin } & {
-  action: (
-    context: Record<string, any>,
-    models: {
-      workspace: Workspace;
-      requestGroups: RequestGroup[];
-      requests: Request[];
-    },
-  ) => void | Promise<void>;
-  label: string;
-  icon?: string;
-};
-
-export type DocumentAction = { plugin: Plugin } & {
-  action: (context: Record<string, any>, documents: ParsedApiSpec) => void | Promise<void>;
-  label: string;
-  hideAfterClick?: boolean;
-};
-
-export type PluginAction = { plugin: Plugin } & {
-  name: string;
-  description?: string;
-  action: (context: Record<string, any>, params?: any) => Promise<any>;
-};
-
-type RequestHookCallback = (context: any) => void;
-
-export type RequestHook = { plugin: Plugin } & {
-  hook: RequestHookCallback;
-};
-
-type ResponseHookCallback = (context: any) => void;
-export type ResponseHook = { plugin: Plugin } & {
-  hook: ResponseHookCallback;
-};
-
-export type Theme = { plugin: Plugin } & {
-  theme: PluginTheme;
-};
-
-export type ColorScheme = 'default' | 'light' | 'dark';
+import type {
+  DocumentAction,
+  Plugin,
+  RequestAction,
+  RequestGroupAction,
+  RequestHook,
+  ResponseHook,
+  TemplateTag,
+  Theme,
+  WorkspaceAction,
+} from './types';
 
 let plugins: Plugin[] | null | undefined = null;
 
@@ -231,7 +149,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
   return plugins;
 }
 
-export function getBundlePluginMap() {
+function getBundlePluginMap() {
   const appBundlePlugins = getAppBundlePlugins();
   const bundlePluginMap: Record<string, Plugin> = {};
   appBundlePlugins.forEach(({ name: pluginName }) => {

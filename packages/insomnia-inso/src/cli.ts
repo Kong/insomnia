@@ -23,7 +23,8 @@ import type {
 import { initServices, models } from 'insomnia-data';
 import { deserializeNDJSON } from 'insomnia-data/common';
 import { servicesNodeImpl } from 'insomnia-data/node';
-import { generate, runTestsCli } from 'insomnia-testing';
+import { generate } from 'insomnia-testing/src/generate/generate';
+import { runTestsCli } from 'insomnia-testing/src/run/run';
 import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';

@@ -16,19 +16,29 @@ import {
   utilityProcess,
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
+import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import iconv from 'iconv-lite';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services } from 'insomnia-data';
+import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services, TestResults } from 'insomnia-data';
 import { services } from 'insomnia-data';
+import { runTests } from 'insomnia-testing/src/run/run';
 
 import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
+import {
+  exportHarCurrentRequest,
+  exportHarRequest,
+  exportHarWithRequest,
+  exportRequestsHAR,
+  exportWorkspacesHAR,
+} from '~/main/har';
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
+import { getSendRequestCallback } from '~/network/unit-test-feature';
 import type {
   GenerateCommitsFromDiffFunction,
   GenerateMcpSamplingResponseFunction,
@@ -36,10 +46,12 @@ import type {
   ModelConfig,
 } from '~/plugins/types';
 
+import * as crypt from '../../account/crypt';
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
 import type { RenderedRequest } from '../../templating/types';
-import { decryptSecretValue,encryptSecretValue } from '../../utils/vault';
+import { decryptSecretValue, encryptSecretValue } from '../../utils/crypt-adapter';
+import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '../../utils/sealedbox';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
@@ -68,6 +80,7 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { registerPluginIpcHandlers } from '../plugin-window';
+import type { CookiesBridgeAPI } from './cookies';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
@@ -181,6 +194,7 @@ const appendToTimeline = async (_: unknown, options: { timelinePath: string; dat
 };
 
 export interface RendererToMainBridgeAPI {
+  runTests: (src: string) => Promise<TestResults>;
   loginStateChange: (isLoggedIn: boolean) => void;
   openInBrowser: (url: string) => void;
   restart: () => void;
@@ -224,6 +238,7 @@ export interface RendererToMainBridgeAPI {
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
+  cookies: CookiesBridgeAPI;
   webSocket: WebSocketBridgeAPI;
   socketIO: SocketIOBridgeAPI;
   mcp: McpBridgeAPI;
@@ -276,6 +291,19 @@ export interface RendererToMainBridgeAPI {
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
   generateCodeSnippet: (options: { har: object; target: string; client: string }) => Promise<string>;
   getCodeSnippetTargets: () => Promise<{ key: string; title: string; clients: { key: string; title: string }[] }[]>;
+  exportHarWithRequest: (options: {
+    requestId: string;
+    environmentId?: string;
+    addContentLength?: boolean;
+  }) => Promise<any>;
+  exportHarRequest: (options: {
+    requestId: string;
+    environmentOrWorkspaceId: string;
+    addContentLength?: boolean;
+  }) => Promise<any>;
+  exportHarCurrentRequest: (options: { requestId: string; responseId: string }) => Promise<any>;
+  exportRequestsHAR: (options: { requests: any[]; includePrivateDocs?: boolean }) => Promise<string>;
+  exportWorkspacesHAR: (options: { workspaces: any[]; includePrivateDocs?: boolean }) => Promise<string>;
   generateCommitsFromDiff: (
     input: Parameters<GenerateCommitsFromDiffFunction>[0],
   ) => Promise<
@@ -294,6 +322,27 @@ export interface RendererToMainBridgeAPI {
   vault: {
     encryptSecretValue: (rawValue: string, symmetricKey: JsonWebKey) => Promise<string>;
     decryptSecretValue: (encryptedValue: string, symmetricKey: JsonWebKey) => Promise<string>;
+  };
+  crypt: {
+    encryptRSAWithJWK: (publicKeyJWK: JsonWebKey, plaintext: string) => Promise<string>;
+    decryptRSAWithJWK: (privateJWK: JsonWebKey, encryptedBlob: string) => Promise<string>;
+    encryptAESBuffer: (
+      jwkOrKey: string | JsonWebKey,
+      buff: number[],
+      additionalData?: string,
+    ) => Promise<crypt.AESMessage>;
+    encryptAES: (
+      jwkOrKey: string | JsonWebKey,
+      plaintext: string,
+      additionalData?: string,
+    ) => Promise<crypt.AESMessage>;
+    decryptAES: (jwkOrKey: string | JsonWebKey, encryptedResult: crypt.AESMessage) => Promise<string>;
+    decryptAESToBuffer: (jwkOrKey: string | JsonWebKey, encryptedResult: crypt.AESMessage) => Promise<number[]>;
+    generateAES256Key: () => Promise<JsonWebKey>;
+  };
+  sealedBox: {
+    keyPair: () => Promise<{ publicKey: Uint8Array; secretKey: Uint8Array }>;
+    open: (sealedbox: Uint8Array, pk: Uint8Array, sk: Uint8Array) => Promise<Uint8Array | null>;
   };
   timeline: {
     getPath: (responseId: string) => Promise<string>;
@@ -497,14 +546,47 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('generateCodeSnippet', async (_, options: { har: object; target: string; client: string }) => {
-    const { HTTPSnippet } = await import('httpsnippet');
     const snippet = new HTTPSnippet(options.har as any);
     return snippet.convert(options.target, options.client) || '';
   });
 
   ipcMainHandle('getCodeSnippetTargets', async () => {
-    const { availableTargets } = await import('httpsnippet');
     return availableTargets();
+  });
+
+  ipcMainHandle(
+    'exportHarWithRequest',
+    async (_, options: { requestId: string; environmentId?: string; addContentLength?: boolean }) => {
+      const request = await services.request.getById(options.requestId);
+      if (!request) {
+        throw new Error(`Request ${options.requestId} not found`);
+      }
+      return exportHarWithRequest(request, options.environmentId, options.addContentLength);
+    },
+  );
+
+  ipcMainHandle(
+    'exportHarRequest',
+    async (_, options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) => {
+      return exportHarRequest(options.requestId, options.environmentOrWorkspaceId, options.addContentLength);
+    },
+  );
+
+  ipcMainHandle('exportHarCurrentRequest', async (_, options: { requestId: string; responseId: string }) => {
+    const request = await services.request.getById(options.requestId);
+    const response = await services.response.getById(options.responseId);
+    if (!request || !response) {
+      throw new Error('Request or response not found');
+    }
+    return exportHarCurrentRequest(request, response);
+  });
+
+  ipcMainHandle('exportRequestsHAR', async (_, options: { requests: any[]; includePrivateDocs?: boolean }) => {
+    return exportRequestsHAR(options.requests, options.includePrivateDocs);
+  });
+
+  ipcMainHandle('exportWorkspacesHAR', async (_, options: { workspaces: any[]; includePrivateDocs?: boolean }) => {
+    return exportWorkspacesHAR(options.workspaces, options.includePrivateDocs);
   });
 
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {
@@ -821,6 +903,43 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('vault.decryptSecretValue', (_, encryptedValue: string, symmetricKey: JsonWebKey) => {
     return decryptSecretValue(encryptedValue, symmetricKey);
+  });
+
+  ipcMainHandle('crypt.encryptRSAWithJWK', (_, publicKeyJWK: JsonWebKey, plaintext: string) => {
+    return crypt.encryptRSAWithJWK(publicKeyJWK, plaintext);
+  });
+  ipcMainHandle('crypt.decryptRSAWithJWK', (_, privateJWK: JsonWebKey, encryptedBlob: string) => {
+    return crypt.decryptRSAWithJWK(privateJWK, encryptedBlob);
+  });
+  ipcMainHandle(
+    'crypt.encryptAESBuffer',
+    (_, jwkOrKey: string | JsonWebKey, buff: number[], additionalData?: string) => {
+      return crypt.encryptAESBuffer(jwkOrKey, Buffer.from(buff), additionalData);
+    },
+  );
+  ipcMainHandle('crypt.encryptAES', (_, jwkOrKey: string | JsonWebKey, plaintext: string, additionalData?: string) => {
+    return crypt.encryptAES(jwkOrKey, plaintext, additionalData);
+  });
+  ipcMainHandle('crypt.decryptAES', (_, jwkOrKey: string | JsonWebKey, encryptedResult: crypt.AESMessage) => {
+    return crypt.decryptAES(jwkOrKey, encryptedResult);
+  });
+  ipcMainHandle('crypt.decryptAESToBuffer', (_, jwkOrKey: string | JsonWebKey, encryptedResult: crypt.AESMessage) => {
+    return Array.from(crypt.decryptAESToBuffer(jwkOrKey, encryptedResult));
+  });
+  ipcMainHandle('crypt.generateAES256Key', _ => {
+    return crypt.generateAES256Key();
+  });
+
+  ipcMainHandle('sealedbox.keyPair', _ => {
+    return sealedboxKeyPair();
+  });
+  ipcMainHandle('sealedbox.open', (_, sealedbox: Uint8Array, pk: Uint8Array, sk: Uint8Array) => {
+    return sealedboxOpen(sealedbox, pk, sk);
+  });
+
+  ipcMainHandle('run-tests', async (_, src: string) => {
+    const sendRequest = getSendRequestCallback();
+    return runTests(src, { sendRequest });
   });
 
   registerPluginIpcHandlers();

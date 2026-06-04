@@ -41,7 +41,6 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { BrowserWindow } from 'electron';
 import type { Workspace, WorkspaceMeta } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import YAML from 'yaml';
@@ -1080,20 +1079,4 @@ export class RepoFileWatcherRegistry {
     }
     return watcher.getProblems();
   }
-}
-
-/** Default notifier that broadcasts to all Electron BrowserWindows. */
-export function createElectronNotifier(): WatcherNotifier {
-  return {
-    onDbSynced: () => {
-      for (const w of BrowserWindow.getAllWindows()) {
-        w.webContents.send('git.db-synced');
-      }
-    },
-    onProblemsChanged: payload => {
-      for (const w of BrowserWindow.getAllWindows()) {
-        w.webContents.send('git.file-problems-changed', payload);
-      }
-    },
-  };
 }

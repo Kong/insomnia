@@ -9,6 +9,7 @@ import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
+import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
@@ -115,6 +116,15 @@ const mcp: McpBridgeAPI = {
   },
 };
 
+const cookies: CookiesBridgeAPI = {
+  fromJSON: cookie => invokeWithNormalizedError('cookies.fromJSON', cookie),
+  parse: cookie => invokeWithNormalizedError('cookies.parse', cookie),
+  toString: cookie => invokeWithNormalizedError('cookies.toString', cookie),
+  getCookiesForUrl: args => invokeWithNormalizedError('cookies.getCookiesForUrl', args),
+  addSetCookies: args => invokeWithNormalizedError('cookies.addSetCookies', args),
+  getResponseCookiesFromHeaders: headers => invokeWithNormalizedError('cookies.getResponseCookiesFromHeaders', headers),
+};
+
 const grpc: gRPCBridgeAPI = {
   start: options => ipcRenderer.send('grpc.start', options),
   sendMessage: options => ipcRenderer.send('grpc.sendMessage', options),
@@ -124,6 +134,7 @@ const grpc: gRPCBridgeAPI = {
   loadMethods: options => invokeWithNormalizedError('grpc.loadMethods', options),
   loadMethodsFromReflection: options => invokeWithNormalizedError('grpc.loadMethodsFromReflection', options),
   writeProtoFile: protoFileId => invokeWithNormalizedError('grpc.writeProtoFile', protoFileId),
+  validateProtoFile: filePath => invokeWithNormalizedError('grpc.validateProtoFile', filePath),
 };
 
 const secretStorage: secretStorageBridgeAPI = {
@@ -278,6 +289,7 @@ const main: Window['main'] = {
     invokeWithNormalizedError('installPlugin', lookupName, allowScopedPackageNames),
   createPlugin: options => invokeWithNormalizedError('createPlugin', options),
   initializeWorkspaceBackendProject: options => invokeWithNormalizedError('initializeWorkspaceBackendProject', options),
+  runTests: src => invokeWithNormalizedError('run-tests', src),
   curlRequest: options => invokeWithNormalizedError('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => invokeWithNormalizedError('writeFile', options),
@@ -303,6 +315,7 @@ const main: Window['main'] = {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
+  cookies,
   webSocket,
   socketIO,
   mcp,
@@ -349,6 +362,26 @@ const main: Window['main'] = {
     decryptSecretValue: (encryptedValue, symmetricKey) =>
       invokeWithNormalizedError('vault.decryptSecretValue', encryptedValue, symmetricKey),
   },
+  crypt: {
+    encryptRSAWithJWK: (publicKeyJWK: JsonWebKey, plaintext: string) =>
+      invokeWithNormalizedError('crypt.encryptRSAWithJWK', publicKeyJWK, plaintext),
+    decryptRSAWithJWK: (privateJWK: JsonWebKey, encryptedBlob: string) =>
+      invokeWithNormalizedError('crypt.decryptRSAWithJWK', privateJWK, encryptedBlob),
+    encryptAESBuffer: (jwkOrKey: string | JsonWebKey, buff: number[], additionalData?: string) =>
+      invokeWithNormalizedError('crypt.encryptAESBuffer', jwkOrKey, buff, additionalData),
+    encryptAES: (jwkOrKey: string | JsonWebKey, plaintext: string, additionalData?: string) =>
+      invokeWithNormalizedError('crypt.encryptAES', jwkOrKey, plaintext, additionalData),
+    decryptAES: (jwkOrKey: string | JsonWebKey, encryptedResult: object) =>
+      invokeWithNormalizedError('crypt.decryptAES', jwkOrKey, encryptedResult),
+    decryptAESToBuffer: (jwkOrKey: string | JsonWebKey, encryptedResult: object) =>
+      invokeWithNormalizedError('crypt.decryptAESToBuffer', jwkOrKey, encryptedResult),
+    generateAES256Key: () => invokeWithNormalizedError('crypt.generateAES256Key'),
+  },
+  sealedBox: {
+    keyPair: () => invokeWithNormalizedError('sealedbox.keyPair'),
+    open: (sealedbox: Uint8Array, pk: Uint8Array, sk: Uint8Array) =>
+      invokeWithNormalizedError('sealedbox.open', sealedbox, pk, sk),
+  },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     invokeWithNormalizedError('extractJsonFileFromPostmanDataDumpArchive', archivePath),
   syncNewWorkspaceIfNeeded: options => invokeWithNormalizedError('syncNewWorkspaceIfNeeded', options),
@@ -373,6 +406,16 @@ const main: Window['main'] = {
   generateCodeSnippet: (options: { har: object; target: string; client: string }) =>
     invokeWithNormalizedError('generateCodeSnippet', options),
   getCodeSnippetTargets: () => invokeWithNormalizedError('getCodeSnippetTargets'),
+  exportHarWithRequest: (options: { requestId: string; environmentId?: string; addContentLength?: boolean }) =>
+    invokeWithNormalizedError('exportHarWithRequest', options),
+  exportHarRequest: (options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean }) =>
+    invokeWithNormalizedError('exportHarRequest', options),
+  exportHarCurrentRequest: (options: { requestId: string; responseId: string }) =>
+    invokeWithNormalizedError('exportHarCurrentRequest', options),
+  exportRequestsHAR: (options: { requests: any[]; includePrivateDocs?: boolean }) =>
+    invokeWithNormalizedError('exportRequestsHAR', options),
+  exportWorkspacesHAR: (options: { workspaces: any[]; includePrivateDocs?: boolean }) =>
+    invokeWithNormalizedError('exportWorkspacesHAR', options),
   generateCommitsFromDiff: (input: { diff: string; recent_commits: string }) =>
     invokeWithNormalizedError('generateCommitsFromDiff', input),
   generateMcpSamplingResponse: (parameters: Parameters<GenerateMcpSamplingResponseFunction>[0]) =>

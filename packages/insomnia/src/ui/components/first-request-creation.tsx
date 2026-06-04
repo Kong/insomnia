@@ -1,11 +1,13 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Request } from 'insomnia-data';
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from 'insomnia-data/common';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
 import { getProjectRecentRequests, type RecentProjectRequest } from '~/common/project';
+import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -67,12 +69,19 @@ interface QuickStartItem {
   onClick: () => void | Promise<void>;
 }
 
+interface RecentRequestsState {
+  projectId: string;
+  requests: RecentProjectRequest[];
+}
+
 interface FirstRequestCreationProps {
   greetingName: string;
   collectionItems: CollectionItem[];
   selectedCollectionId: string | null;
   onSelectedCollectionChange: (collectionId: string | null) => void;
   onCreateCollection: () => void;
+  onCreateDesignDocument: () => void;
+  onImportFrom: () => void;
 }
 
 export const FirstRequestCreation = ({
@@ -81,6 +90,8 @@ export const FirstRequestCreation = ({
   selectedCollectionId,
   onSelectedCollectionChange,
   onCreateCollection,
+  onCreateDesignDocument,
+  onImportFrom,
 }: FirstRequestCreationProps) => {
   const navigate = useNavigate();
   const { organizationId, projectId } = useParams() as {
@@ -94,13 +105,15 @@ export const FirstRequestCreation = ({
   createWorkspaceFetcherRef.current = createWorkspaceFetcher;
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [requestInput, setRequestInput] = useState('');
-  const [recentRequests, setRecentRequests] = useState<RecentProjectRequest[]>([]);
+  const [recentRequests, setRecentRequests] = useState<RecentRequestsState>({ projectId, requests: [] });
+  const [isRequestInputFocused, setIsRequestInputFocused] = useState(false);
   const [curlParseError, setCurlParseError] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
   const trimmedInput = requestInput.trim();
   const isCreatingRequest = createRequestFetcher.state !== 'idle';
   const selectedCollection = collectionItems.find(collection => collection.id === selectedCollectionId) ?? null;
-  const shouldShowJumpBackIn = recentRequests.length >= 3;
+  const currentProjectRecentRequests = recentRequests.projectId === projectId ? recentRequests.requests : [];
+  const shouldShowJumpBackIn = currentProjectRecentRequests.length >= 3;
 
   const ensureWorkspaceId = async () => {
     if (selectedCollectionId) {
@@ -237,7 +250,7 @@ export const FirstRequestCreation = ({
         return;
       }
 
-      setRecentRequests(nextRecentRequests);
+      setRecentRequests({ projectId, requests: nextRecentRequests });
     };
 
     loadRecentRequests();
@@ -342,8 +355,31 @@ export const FirstRequestCreation = ({
       icon: <SvgIcon icon="graphql" />,
       onClick: handleCreateGithubLookupRequest,
     },
+    {
+      id: 'create-openapi-spec',
+      label: 'Create OpenAPI spec',
+      icon: <Icon icon="file" className="text-(--font-size-xl)" />,
+      onClick: onCreateDesignDocument,
+    },
+    {
+      id: 'import-files',
+      label: 'Import files',
+      icon: <Icon icon="file-import" className="text-(--font-size-xl)" />,
+      onClick: () => {
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.importStarted,
+          properties: {
+            source: 'first-request-pane-example',
+          },
+        });
+        onImportFrom();
+      },
+    },
   ];
 
+  const { settings } = useRootLoaderData()!;
+  const keyComb = getPlatformKeyCombinations(settings.hotKeyRegistry.request_createHTTP)[0];
+  const shortcutDisplay = constructKeyCombinationDisplay(keyComb, false);
   return (
     <>
       <div className="rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,var(--hl-md)_0%,var(--hl-xs)_100%),radial-gradient(100%_100.41%_at_100%_99.92%,var(--hl-md)_0%,var(--hl-xs)_100%)] p-px">
@@ -357,15 +393,19 @@ export const FirstRequestCreation = ({
               : `We have a sneaking suspicion that you came here to send a request, so let’s get started!`}
           </p>
           <div className="mt-8 w-[50%] min-w-100">
-            <div className="flex aspect-540/127 flex-col overflow-hidden rounded-lg border border-[#3F3F46] bg-(--color-bg) shadow-[0_0_0_4px_#0044F433]">
+            <div
+              className={`flex aspect-540/127 flex-col overflow-hidden rounded-lg border border-(--hl-md) bg-(--color-bg) ${isRequestInputFocused ? 'shadow-[0_0_0_4px_#0044F433]' : ''}`}
+            >
               <div className="flex-1 px-4 pt-3 pb-2">
                 <textarea
                   ref={inputRef}
                   autoFocus
                   aria-label="Request endpoint or cURL input"
                   className="text-md h-full w-full flex-1 resize-none font-mono"
-                  placeholder="Enter an endpoint URL or paste cURL, or ⌘N for a new blank request"
+                  placeholder={`Enter an endpoint URL or paste cURL, or ${shortcutDisplay} for a new blank request`}
                   value={requestInput}
+                  onFocus={() => setIsRequestInputFocused(true)}
+                  onBlur={() => setIsRequestInputFocused(false)}
                   onChange={event => {
                     setCurlParseError(false);
                     setRequestInput(event.target.value);
@@ -414,7 +454,7 @@ export const FirstRequestCreation = ({
                         New Collection
                       </Button>
                     }
-                    triggerClassName="h-8 rounded-md px-3 text-sm"
+                    triggerClassName="h-8 rounded-md px-3 text-sm data-[focus-visible=true]:!ring-0"
                     popoverClassName="w-[240px]"
                     dialogClassName="w-[240px]"
                     renderTrigger={selectedItem => (
@@ -446,12 +486,11 @@ export const FirstRequestCreation = ({
               <div className="mt-2 text-xs text-[#FF5631]">Invalid cURL. Verify your input and try again.</div>
             )}
             <div className="my-6 px-4">
-              <p className="text-sm font-semibold text-(--hl)">
-                {shouldShowJumpBackIn ? 'Jump back in' : 'Not sure where to start?'}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {shouldShowJumpBackIn
-                  ? recentRequests.map(recentRequest => (
+              {shouldShowJumpBackIn ? (
+                <>
+                  <p className="text-sm font-semibold text-(--hl)">Jump back in</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {currentProjectRecentRequests.map(recentRequest => (
                       <Button
                         key={recentRequest.request._id}
                         variant="outlined"
@@ -466,8 +505,14 @@ export const FirstRequestCreation = ({
                         <ResourceIcon resource={recentRequest.request} />
                         <span className="max-w-[18rem] truncate">{recentRequest.request.name}</span>
                       </Button>
-                    ))
-                  : quickStartItems.map(item => (
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-(--hl)">Not sure where to start?</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {quickStartItems.map(item => (
                       <Button
                         key={item.id}
                         variant="outlined"
@@ -487,7 +532,9 @@ export const FirstRequestCreation = ({
                         <span>{item.label}</span>
                       </Button>
                     ))}
-              </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

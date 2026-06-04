@@ -18,7 +18,6 @@ import type {
   WebSocketRequest,
   Workspace,
 } from 'insomnia-data';
-import type { Cookie } from 'tough-cookie';
 
 type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
   Partial<Pick<Request, 'body' | 'authentication'>>;
@@ -49,6 +48,17 @@ export interface PluginStore {
       value: string;
     }[]
   >;
+}
+
+export interface SerializedCookie {
+  key?: string;
+  value?: string;
+  domain?: string;
+  path?: string;
+  expires?: string | Date;
+  httpOnly?: boolean;
+  secure?: boolean;
+  hostOnly?: boolean;
 }
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
@@ -320,7 +330,7 @@ export interface PluginTemplateTagContext {
       oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
       cookieJar: {
         getOrCreateForParentId: (parentId: string) => Promise<CookieJar>;
-        getCookiesForUrl: (parentId: string, url: string) => Promise<Cookie[]>;
+        getCookiesForUrl: (parentId: string, url: string) => Promise<SerializedCookie[]>;
       };
       response: {
         getLatestForRequestId: Services['response']['getLatestForRequestId'];

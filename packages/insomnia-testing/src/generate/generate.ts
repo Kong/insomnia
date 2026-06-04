@@ -1,5 +1,3 @@
-import { writeFile } from 'node:fs';
-
 import { escapeJsStr, indent } from './util';
 
 export interface Test {
@@ -28,19 +26,6 @@ export const generate = (suites: TestSuite[]) => {
   }
 
   return lines.join('\n');
-};
-
-export const generateToFile = async (filepath: string, suites: TestSuite[]) => {
-  return new Promise<void>((resolve, reject) => {
-    const js = generate(suites);
-    return writeFile(filepath, js, err => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
 };
 
 const generateSuiteLines = (n: number, suite?: TestSuite | null) => {

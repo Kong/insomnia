@@ -584,38 +584,32 @@ test.describe('pre-request features tests', () => {
     await insomnia.navigationSidebar.clickRequestOrFolder('update kv pair environment');
     // switch to table view environment
     await page.getByLabel('Manage Environments').click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
-    await page.getByLabel('Table Edit').click();
-
-    // scope Close to the Manage Environments modal; fall back to Escape if the button is still disabled or the modal doesn't close
-    const manageEnvModal = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Manage Environments' }) });
-    const closeButton = manageEnvModal.getByRole('button', { name: 'Close' });
-    await closeButton.waitFor({ state: 'visible' });
-    try {
-      await closeButton.click();
-      await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden', timeout: 5000 });
-    } catch {
-      await page.keyboard.press('Escape');
-      await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
-    }
-
-    // try to dismiss the environment picker dropdown normally; fall back to Escape if it is still open
-    await page.locator('body').click();    
-    try {
-      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
-    } catch {
-      await page.keyboard.press('Escape');
-    }
+    const manageBtn = page.getByRole('button', { name: 'Manage collection environments' });
+    await expect.soft(manageBtn).toBeEnabled();
+    await manageBtn.click();
+    const tableEditBtn = page.getByLabel('Table Edit');
+    await expect.soft(tableEditBtn).toBeEnabled();
+    await tableEditBtn.click();
+    const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Close' }) });
+    await expect.soft(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    await page.locator('body').click();
 
     // send request
-    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    const sendBtn = page.getByTestId('request-pane').getByRole('button', { name: 'Send' });
+    await expect.soft(sendBtn).toBeEnabled();
+    await sendBtn.click();
 
     // verify response
     await expect.soft(statusTag).toContainText('200 OK');
 
     // verify table environments have been updated
-    await page.getByRole('button', { name: 'Manage Environments' }).click();
-    await page.getByRole('button', { name: 'Manage collection environments' }).click();
+    const verifyManageBtn = page.getByRole('button', { name: 'Manage Environments' });
+    await expect.soft(verifyManageBtn).toBeEnabled();
+    await verifyManageBtn.click();
+    const verifyCollectionBtn = page.getByRole('button', { name: 'Manage collection environments' });
+    await expect.soft(verifyCollectionBtn).toBeEnabled();
+    await verifyCollectionBtn.click();
     await page.getByText('__environment_type').click();
     await page.getByText('__environment_value_kv').click();
     await page.getByText('http://url-from-script').click();

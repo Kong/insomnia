@@ -37,7 +37,7 @@ import 'codemirror/addon/merge/merge.js';
 
 // for the code that uses this yaml parser, see https://github.com/codemirror/CodeMirror/blob/master/addon/lint/yaml-lint.js
 import * as jsyaml from 'js-yaml';
-global.jsyaml = jsyaml;
+globalThis.jsyaml = jsyaml;
 import 'codemirror/addon/lint/yaml-lint';
 /**/
 import 'codemirror/keymap/vim';

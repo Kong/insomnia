@@ -8,7 +8,7 @@ export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => {
   return new Promise(resolve => {
     cookieJar.store.getAllCookies((err, cookies) => {
       if (err) {
-        console.warn('Failed to get cookies form jar', err);
+        console.warn('Failed to get cookies from jar', err);
         resolve([]);
       } else {
         // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance

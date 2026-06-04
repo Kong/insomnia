@@ -12,7 +12,6 @@ import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.pr
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getMockServiceURL } from '../../../common/constants';
-import { exportHarCurrentRequest } from '../../../common/har';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
@@ -385,7 +384,10 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath || !activeRequest) {
                 return;
               }
-              const data = await exportHarCurrentRequest(activeRequest, activeResponse);
+              const data = await window.main.exportHarCurrentRequest({
+                requestId: activeRequest._id,
+                responseId: activeResponse._id,
+              });
               const har = JSON.stringify(data, null, '\t');
 
               await window.main.writeFile({

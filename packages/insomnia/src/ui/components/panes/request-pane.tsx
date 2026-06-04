@@ -368,7 +368,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   uniquenessKey={`${activeRequest._id}:pre-request-script`}
                   defaultValue={activeRequest.preRequestScript || ''}
                   onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
-                  settings={settings}
                   onSnippetAdded={snippetName => {
                     window.main.trackAnalyticsEvent({
                       event: AnalyticsEvent.requestScriptsPreScriptSnippetAdded,
@@ -384,7 +383,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   uniquenessKey={`${activeRequest._id}:after-response-script`}
                   defaultValue={activeRequest.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequest(requestId, { afterResponseScript })}
-                  settings={settings}
                   onSnippetAdded={snippetName => {
                     window.main.trackAnalyticsEvent({
                       event: AnalyticsEvent.requestScriptsPostScriptSnippetAdded,

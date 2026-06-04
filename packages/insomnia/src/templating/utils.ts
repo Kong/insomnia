@@ -1,7 +1,7 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 import { models, services } from 'insomnia-data';
 
-import { decryptSecretValue } from '~/utils/vault-crypto';
+import { decryptSecretValue } from '~/utils/crypt-adapter';
 
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
@@ -137,7 +137,11 @@ export function decodeEncoding<T>(value: T) {
   const results = value.match(/^b64::(.+)::46b$/);
 
   if (results) {
-    return Buffer.from(results[1], 'base64').toString('utf8');
+    if (typeof Buffer !== 'undefined') {
+      return Buffer.from(results[1], 'base64').toString('utf8');
+    }
+    // Fallback for browser environments
+    return atob(results[1]);
   }
 
   return value;

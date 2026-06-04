@@ -2,7 +2,7 @@ import type { Liquid } from 'liquidjs';
 
 import { localTemplateTags } from '~/templating/local-template-tags';
 
-import type { TemplateTag } from '../plugins';
+import type { TemplateTag } from '../plugins/types';
 import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from './constants';
 import { buildLiquidEngine, stripLiquidComments } from './liquid-engine';
 import { createLiquidTagWorker, fetchFromTemplateWorkerDatabase } from './liquid-extension-worker';

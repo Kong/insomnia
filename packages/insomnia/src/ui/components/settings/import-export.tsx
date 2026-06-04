@@ -1,7 +1,6 @@
 import { format } from 'date-fns';
 import { getProductName } from 'insomnia/src/common/constants';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
-import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
 import { AnalyticsEvent } from 'insomnia/src/ui/analytics';
@@ -170,10 +169,10 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             if (!fileName) {
               return;
             }
-            const stringifiedExport = await exportWorkspacesHAR(
-              workspacesForActiveProject,
-              shouldExportPrivateEnvironments,
-            );
+            const stringifiedExport = await window.main.exportWorkspacesHAR({
+              workspaces: workspacesForActiveProject,
+              includePrivateDocs: shouldExportPrivateEnvironments,
+            });
 
             await writeExportedFileToFileSystem(fileName, stringifiedExport);
 
@@ -332,7 +331,10 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
       try {
         switch (selectedFormat) {
           case VALUE_HAR: {
-            stringifiedExport = await exportRequestsHAR(requests, shouldExportPrivateEnvironments);
+            stringifiedExport = await window.main.exportRequestsHAR({
+              requests,
+              includePrivateDocs: shouldExportPrivateEnvironments,
+            });
             break;
           }
 

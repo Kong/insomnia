@@ -1,18 +1,17 @@
-import fs from 'node:fs';
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
-import * as ts from 'typescript';
-import { defineConfig, type ResolvedConfig } from 'vite';
+import { defaultServerConditions, defineConfig } from 'vite';
 
 import pkg from './package.json';
-import { electronNodeRequire } from './vite-plugin-electron-node-require';
 //These will be excluded from the bundle and remain as runtime dependencies
-export const externalDependencies = ['@apidevtools/swagger-parser', 'mocha', 'tough-cookie'];
+export const externalDependencies = ['@apidevtools/swagger-parser', 'mocha'];
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
+  const browserSafeBuiltinModules = new Set(['assert', 'buffer', 'events', 'path', 'util']);
+  const nodeBuiltinModules = builtinModules.filter(m => !browserSafeBuiltinModules.has(m));
 
   return {
     define: {
@@ -52,14 +51,27 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        // Resolve these adapters to their renderer variants so both client and server
-        // builds inline the module directly (avoids runtime require() in server bundle).
+        // Short-circuit the adapter wrappers to the renderer implementation directly.
         // These must appear before the '~' catch-all so the specific path wins.
         '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
         '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
+        '~/utils/crypt-adapter': path.resolve(__dirname, './src/utils/crypt-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
         // Shim Node's `path` module for browser-safe dependencies (e.g. mime-types uses path.extname).
         'path': path.resolve(__dirname, './src/path-shim.ts'),
+        'node:path': path.resolve(__dirname, './src/path-shim.ts'),
+        // Shim Node's `assert` module for browser-safe dependencies that still use runtime invariants.
+        'assert': path.resolve(__dirname, '../../node_modules/assert'),
+        'node:assert': path.resolve(__dirname, '../../node_modules/assert'),
+        // Shim Node's `events` module for browser-safe dependencies (e.g. jshint uses EventEmitter).
+        'events': path.resolve(__dirname, '../../node_modules/events'),
+        'node:events': path.resolve(__dirname, '../../node_modules/events'),
+        // Shim Node's `util` module for browser-safe dependencies (e.g. tough-cookie uses util.inherits).
+        'util': path.resolve(__dirname, '../../node_modules/util'),
+        'node:util': path.resolve(__dirname, '../../node_modules/util'),
+        // Buffer is also browser-safe in this renderer bundle, so keep it bundled instead of externalized.
+        'buffer': path.resolve(__dirname, '../../node_modules/buffer'),
+        'node:buffer': path.resolve(__dirname, '../../node_modules/buffer'),
       },
     },
     plugins: [
@@ -70,269 +82,142 @@ export default defineConfig(({ mode }) => {
         modules: [
           'electron',
           ...externalDependencies,
-          ...builtinModules.filter(m => m !== 'buffer' && m !== 'path'),
-          ...builtinModules.map(m => `node:${m}`),
+          ...nodeBuiltinModules,
+          ...nodeBuiltinModules.map(m => `node:${m}`),
         ],
       }),
       reactRouter(),
       tailwindcss(),
-      DetectNodeBuiltinImports(),
     ],
     worker: {
       format: 'es',
     },
+    // The Electron renderer is browser-like even in React Router's SSR (server) build.
+    // Vite's DEFAULT_SERVER_CONDITIONS excludes "browser", so packages with a
+    // "browser" exports condition (e.g. insomnia-testing) would otherwise resolve to
+    // their full Node entry point in the server bundle — pulling in Node-only modules
+    // like mocha. Prepending "browser" here keeps the server bundle consistent with
+    // the client build while retaining all other default server conditions.
+    ssr: {
+      resolve: {
+        conditions: ['browser', ...defaultServerConditions],
+      },
+    },
   };
 });
+import { createRequire } from 'node:module';
 
-const NODE_BUILTIN_REPORT_ENV = 'INSOMNIA_NODE_IMPORT_REPORT';
-const NODE_BUILTIN_REPORT_FILE = path.resolve(__dirname, '.reports', 'renderer-node-imports.json');
-const VIRTUAL_NODE_PREFIX = 'virtual:external:node:';
+import type { Plugin } from 'vite';
 
-export const normalizeModuleIdForFs = (id: string) => {
-  const suffixIndex = id.search(/[?#]/);
-  return suffixIndex === -1 ? id : id.slice(0, suffixIndex);
-};
-
-type ImportKind = 'dynamic-import' | 'export' | 'import' | 'require';
-
-interface ImportLocation {
-  column: number;
-  kind: ImportKind;
-  line: number;
-  statement: string;
+export interface Options {
+  modules: string[];
 }
 
-interface NodeBuiltinImportRecord {
-  builtin: string;
-  importer: string;
-  locations: ImportLocation[];
-  rawSpecifiers: string[];
-}
-
-function DetectNodeBuiltinImports() {
-  const builtins = new Set(builtinModules);
-  let isSsrBuild = false;
-  const records = new Map<string, NodeBuiltinImportRecord>();
-  const reportEnabled = process.env[NODE_BUILTIN_REPORT_ENV] === '1';
-  const seenTransforms = new Set<string>();
-
-  const normalizeSpecifier = (source: string) => {
-    const strippedSource = source.startsWith(VIRTUAL_NODE_PREFIX) ? source.slice(VIRTUAL_NODE_PREFIX.length) : source;
-    return strippedSource.startsWith('node:') ? strippedSource.slice(5) : strippedSource;
-  };
-
-  const mergeLocations = (existing: ImportLocation[], incoming: ImportLocation[]) => {
-    const seen = new Set(
-      existing.map(location => `${location.kind}:${location.line}:${location.column}:${location.statement}`),
-    );
-
-    for (const location of incoming) {
-      const key = `${location.kind}:${location.line}:${location.column}:${location.statement}`;
-      if (!seen.has(key)) {
-        existing.push(location);
-        seen.add(key);
-      }
-    }
-  };
-
-  const getScriptKind = (filePath: string) => {
-    if (filePath.endsWith('.tsx')) {
-      return ts.ScriptKind.TSX;
-    }
-
-    if (filePath.endsWith('.ts')) {
-      return ts.ScriptKind.TS;
-    }
-
-    if (filePath.endsWith('.jsx')) {
-      return ts.ScriptKind.JSX;
-    }
-
-    return ts.ScriptKind.JS;
-  };
-
-  const getStatementText = (sourceFile: ts.SourceFile, node: ts.Node) => {
-    return node
-      .getText(sourceFile)
-      .split('\n')
-      .map(line => line.trim())
-      .join(' ');
-  };
-
-  const addLocation = (
-    locationsByBuiltin: Map<string, { locations: ImportLocation[]; rawSpecifiers: Set<string> }>,
-    specifier: string,
-    sourceFile: ts.SourceFile,
-    node: ts.Node,
-    kind: ImportKind,
-  ) => {
-    const normalizedSpecifier = normalizeSpecifier(specifier);
-    if (!builtins.has(normalizedSpecifier)) {
-      return;
-    }
-
-    const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
-    const location: ImportLocation = {
-      line: line + 1,
-      column: character + 1,
-      kind,
-      statement: getStatementText(sourceFile, node),
-    };
-
-    const entry = locationsByBuiltin.get(normalizedSpecifier) ?? { locations: [], rawSpecifiers: new Set<string>() };
-    entry.locations.push(location);
-    entry.rawSpecifiers.add(specifier);
-    locationsByBuiltin.set(normalizedSpecifier, entry);
-  };
-
-  const collectNodeBuiltinImports = (importer: string, sourceText: string) => {
-    const locationsByBuiltin = new Map<string, { locations: ImportLocation[]; rawSpecifiers: Set<string> }>();
-    const sourceFile = ts.createSourceFile(importer, sourceText, ts.ScriptTarget.Latest, true, getScriptKind(importer));
-
-    const visit = (node: ts.Node) => {
-      if (ts.isImportDeclaration(node) && !node.importClause?.isTypeOnly && ts.isStringLiteral(node.moduleSpecifier)) {
-        addLocation(locationsByBuiltin, node.moduleSpecifier.text, sourceFile, node, 'import');
-      }
-
-      if (
-        ts.isExportDeclaration(node) &&
-        !node.isTypeOnly &&
-        node.moduleSpecifier &&
-        ts.isStringLiteral(node.moduleSpecifier)
-      ) {
-        addLocation(locationsByBuiltin, node.moduleSpecifier.text, sourceFile, node, 'export');
-      }
-
-      if (
-        ts.isCallExpression(node) &&
-        ts.isIdentifier(node.expression) &&
-        node.expression.text === 'require' &&
-        node.arguments.length > 0 &&
-        ts.isStringLiteral(node.arguments[0])
-      ) {
-        addLocation(locationsByBuiltin, node.arguments[0].text, sourceFile, node, 'require');
-      }
-
-      if (
-        ts.isCallExpression(node) &&
-        node.expression.kind === ts.SyntaxKind.ImportKeyword &&
-        node.arguments.length > 0 &&
-        ts.isStringLiteral(node.arguments[0])
-      ) {
-        addLocation(locationsByBuiltin, node.arguments[0].text, sourceFile, node, 'dynamic-import');
-      }
-
-      ts.forEachChild(node, visit);
-    };
-
-    visit(sourceFile);
-    return locationsByBuiltin;
-  };
-
-  const recordNodeBuiltinImports = (importer: string, sourceText: string) => {
-    const relativeImporter = path.relative(process.cwd(), importer);
-    const importsByBuiltin = collectNodeBuiltinImports(importer, sourceText);
-
-    for (const [builtin, entry] of importsByBuiltin) {
-      const recordKey = `${relativeImporter}::${builtin}`;
-      const existingRecord = records.get(recordKey);
-
-      if (existingRecord) {
-        mergeLocations(existingRecord.locations, entry.locations);
-        for (const rawSpecifier of entry.rawSpecifiers) {
-          if (!existingRecord.rawSpecifiers.includes(rawSpecifier)) {
-            existingRecord.rawSpecifiers.push(rawSpecifier);
-          }
-        }
-      } else {
-        records.set(recordKey, {
-          builtin,
-          importer: relativeImporter,
-          locations: [...entry.locations],
-          rawSpecifiers: [...entry.rawSpecifiers],
-        });
-      }
-    }
-
-    if (importsByBuiltin.size === 0) {
-      return;
-    }
-  };
-
-  const writeReport = () => {
-    const report = [...records.values()]
-      .sort((left, right) => left.importer.localeCompare(right.importer) || left.builtin.localeCompare(right.builtin))
-      .map(record => ({
-        builtin: record.builtin,
-        importer: record.importer,
-        locations: record.locations.sort((left, right) => left.line - right.line || left.column - right.column),
-        rawSpecifiers: [...record.rawSpecifiers].sort(),
-      }));
-
-    fs.mkdirSync(path.dirname(NODE_BUILTIN_REPORT_FILE), { recursive: true });
-    fs.writeFileSync(
-      NODE_BUILTIN_REPORT_FILE,
-      JSON.stringify(
-        {
-          generatedAt: new Date().toISOString(),
-          recordCount: report.length,
-          records: report,
-        },
-        null,
-        2,
-      ),
-    );
-
-    if (report.length === 0) {
-      console.warn(
-        `No renderer Node builtin imports found. Report written to ${path.relative(process.cwd(), NODE_BUILTIN_REPORT_FILE)}`,
-      );
-      return;
-    }
-
-    console.warn('Renderer Node builtin import report:');
-    for (const record of report) {
-      const locationSummary = record.locations
-        .map(location => `${location.line}:${location.column} ${location.kind}`)
-        .join(', ');
-      console.warn(`- ${record.importer}`);
-      console.warn(`  ${record.builtin} via ${record.rawSpecifiers.join(', ')} at ${locationSummary}`);
-    }
-    console.warn(`Report written to ${path.relative(process.cwd(), NODE_BUILTIN_REPORT_FILE)}`);
-  };
+/**
+ * Allows Vite to import modules that will be resolved by Node's require() function.
+ */
+export function electronNodeRequire(options: Options): Plugin {
+  const { modules = [] } = options;
+  const getExternalId = (id: string) => id.split('virtual:external:')[1]?.split('?')[0];
 
   return {
-    name: 'detect-node-builtin-imports',
-    enforce: 'pre' as const,
+    name: 'vite-plugin-electron-node-require',
+    config(conf, env) {
+      // If the plugin is used in SSR mode, we don't need to do anything
+      if (env.isSsrBuild) {
+        return conf;
+      }
+      // Exclude the modules from Vite's dependency optimization (pre-bundling)
+      conf.optimizeDeps = {
+        ...conf.optimizeDeps,
+        exclude: [...(conf.optimizeDeps?.exclude ? conf.optimizeDeps.exclude : []), ...modules],
+      };
 
-    configResolved(config: ResolvedConfig) {
-      isSsrBuild = Boolean(config.build.ssr);
+      // Create aliases for the modules so that we can resolve them with this plugin
+      conf.resolve ??= {};
+      conf.resolve.alias = {
+        ...conf.resolve.alias,
+        ...Object.fromEntries(modules.map(e => [e, `virtual:external:${e}`])),
+      };
+
+      // Ignore the modules from Rollup's commonjs plugin so that we can resolve them with this plugin
+      conf.build ??= {};
+      conf.build.commonjsOptions ??= {};
+      conf.build.commonjsOptions.ignore = [...modules];
+
+      return conf;
     },
+    resolveId(id, _importer, options) {
+      const externalId = getExternalId(id);
 
-    transform(code: string, id: string, options?: { ssr?: boolean }) {
-      if (!reportEnabled) return null;
-      if (isSsrBuild) return null;
-      if (options?.ssr) return null;
-      if (id.includes('node_modules')) return null;
-      const normalizedId = normalizeModuleIdForFs(id);
-      if (!path.isAbsolute(normalizedId) || !fs.existsSync(normalizedId)) return null;
-      if (seenTransforms.has(normalizedId)) return null;
+      if (externalId && modules.includes(externalId)) {
+        if (options.ssr) {
+          return null;
+        }
+        // Return a virtual module ID so that Vite knows to use this plugin to resolve the module
+        // The \0 is a special convention by Rollup to indicate that the module is virtual and should not be resolved by other plugins
+        return `\0${id}`;
+      }
 
-      seenTransforms.add(normalizedId);
-      recordNodeBuiltinImports(normalizedId, code);
+      // Return null to indicate that this plugin should not resolve the module
       return null;
     },
+    load(id, options) {
+      if (id.includes('virtual:external:')) {
+        const externalId = getExternalId(id);
 
-    closeBundle() {
-      if (isSsrBuild) {
-        return;
+        if (!externalId) {
+          return null;
+        }
+
+        // We need to handle electron because it's different when required in the renderer process
+        if (externalId === 'electron') {
+          return `
+            const electron = require('electron');
+            export { electron as default };
+            export const BrowserWindow = electron.BrowserWindow;
+            export const clipboard = electron.clipboard;
+            export const contextBridge = electron.contextBridge;
+            export const crashReporter = electron.crashReporter;
+            export const dialog = electron.dialog;
+            export const ipcRenderer = electron.ipcRenderer;
+            export const nativeImage = electron.nativeImage;
+            export const shell = electron.shell;
+            export const webFrame = electron.webFrame;
+            export const deprecate = electron.deprecate;
+          `;
+        }
+
+        const nodeRequire = createRequire(import.meta.url);
+        const exports = Object.keys(nodeRequire(externalId));
+
+        // Filter out the exports that are valid javascript variable keywords:
+        const validExports = exports.filter(e => {
+          try {
+            new Function(`const ${e} = true`);
+            return true;
+          } catch {
+            return false;
+          }
+        });
+
+        if (options?.ssr) {
+          return [
+            `import requiredModule from '${externalId}';`,
+            `${validExports.map(e => `export const ${e} = requiredModule.${e};`).join('\n')}`,
+            `${exports.includes('default') ? 'export default requiredModule.default;' : 'export default requiredModule'}`,
+          ].join('\n');
+        }
+
+        return [
+          `const requiredModule = require('${externalId}');`,
+          `${validExports.map(e => `export const ${e} = requiredModule.${e};`).join('\n')}`,
+          `${exports.includes('default') ? 'export default requiredModule.default;' : 'export default requiredModule'}`,
+        ].join('\n');
       }
 
-      if (!reportEnabled) {
-        return;
-      }
-
-      writeReport();
+      // Return null to indicate that this plugin should not resolve the module
+      return null;
     },
   };
 }

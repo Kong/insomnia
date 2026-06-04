@@ -10,7 +10,6 @@ import type {
   UserUploadEnvironment,
 } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
-import { extension as mimeExtension } from 'mime-types';
 import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -314,7 +313,7 @@ export const sendActionImplementation = async (options: {
     const header = getContentDispositionHeader(responsePatch.headers || []);
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
-      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
+      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.unknown`;
     await writeToDownloadPath(
       window.path.join(requestMeta.downloadPath, name),
       responsePatch,

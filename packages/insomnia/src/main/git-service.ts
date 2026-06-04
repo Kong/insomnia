@@ -16,7 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { app } from 'electron/main';
+import { app, BrowserWindow } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
 import type {
   BaseModel,
@@ -62,7 +62,7 @@ import GitVCS, {
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
 import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client';
-import { createElectronNotifier, RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
+import { RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
@@ -80,6 +80,21 @@ initializeGitRemoteProviders();
  * does not appear on top of the interactive resolver.
  */
 const suppressedConflictRepos = new Set<string>();
+
+function createElectronNotifier(): WatcherNotifier {
+  return {
+    onDbSynced: () => {
+      for (const w of BrowserWindow.getAllWindows()) {
+        w.webContents.send('git.db-synced');
+      }
+    },
+    onProblemsChanged: payload => {
+      for (const w of BrowserWindow.getAllWindows()) {
+        w.webContents.send('git.file-problems-changed', payload);
+      }
+    },
+  };
+}
 
 const _electronNotifier = createElectronNotifier();
 const conflictFilteringNotifier: WatcherNotifier = {

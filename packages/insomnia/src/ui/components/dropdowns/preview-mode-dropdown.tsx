@@ -3,7 +3,6 @@ import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from 'insomnia
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
-import { exportHarCurrentRequest } from '../../../common/har';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -35,7 +34,10 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
       return;
     }
 
-    const data = await exportHarCurrentRequest(activeRequest, activeResponse);
+    const data = await window.main.exportHarCurrentRequest({
+      requestId: activeRequest._id,
+      responseId: activeResponse._id,
+    });
     const har = JSON.stringify(data, null, '\t');
 
     const { filePath } = await window.dialog.showSaveDialog({

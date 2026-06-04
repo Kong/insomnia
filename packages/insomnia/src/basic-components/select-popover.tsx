@@ -109,18 +109,15 @@ export function SelectPopover<T extends SelectPopoverItem>({
             items={[...items]}
             selectedKeys={selectedKey === null || selectedKey === undefined ? [] : [selectedKey]}
             selectionMode="single"
+            disallowEmptySelection
             onSelectionChange={keys => {
               if (keys === 'all' || !keys) {
                 return;
               }
 
-              const [nextKey] = keys.values();
+              const [key] = keys.values();
 
-              if (nextKey === undefined) {
-                return;
-              }
-
-              onSelectionChange(nextKey);
+              onSelectionChange(key);
               setOpen(false);
             }}
             renderEmptyState={() => (emptyState ? <div className="p-3 text-sm text-(--hl)">{emptyState}</div> : null)}
@@ -134,6 +131,11 @@ export function SelectPopover<T extends SelectPopoverItem>({
                 id={item.id}
                 textValue={item.textValue ?? item.label}
                 isDisabled={item.isDisabled}
+                onPress={() => {
+                  if (String(item.id) === String(selectedKey)) {
+                    setOpen(false);
+                  }
+                }}
                 className={twMerge(
                   'flex min-h-8 w-full items-center gap-2 rounded-sm px-2 text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold',
                   itemClassName,

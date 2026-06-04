@@ -30,6 +30,7 @@ import {
   applyRequestHooks,
   applyResponseHooks,
   executeCurlRequest,
+  extractCookies,
   getAuthHeader,
   getTimelinePath,
   runScript,
@@ -43,7 +44,7 @@ import { database as db } from '../common/database';
 import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeaders } from '../common/misc';
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
-import type { HeaderResult, ResponsePatch } from '../main/network/libcurl-promise';
+import type { ResponsePatch } from '../main/network/libcurl-promise';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -52,7 +53,6 @@ import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { filterClientCertificates } from './certificate';
 import type { TransformedExecuteScriptContext } from './concurrency';
-import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
@@ -893,12 +893,12 @@ export async function sendCurlAndWriteTimeline(
   // todo: move to main process
   debugTimeline.forEach(entry => timeline.push(entry));
   // transform output
-  const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(
-    headerResults,
-    renderedRequest.cookieJar,
-    finalUrl,
-    renderedRequest.settingStoreCookies,
-  );
+  const { cookies, rejectedCookies, totalSetCookies } = await extractCookies({
+    setCookieStrings: headerResults.flatMap(({ headers }: any) => getSetCookiesFromResponseHeaders(headers)),
+    currentUrl: getCurrentUrl({ headerResults, finalUrl }),
+    cookieJar: renderedRequest.cookieJar,
+    settingStoreCookies: renderedRequest.settingStoreCookies,
+  });
   rejectedCookies.forEach(errorMessage =>
     timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
   );
@@ -1004,34 +1004,6 @@ export const transformUrl = (
   const socketPath = (match && match[2]) || '';
   const socketUrl = (match && match[3]) || '';
   return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
-};
-
-const extractCookies = async (
-  headerResults: HeaderResult[],
-  cookieJar: any,
-  finalUrl: string,
-  settingStoreCookies: boolean,
-) => {
-  // add set-cookie headers to file(cookiejar) and database
-  if (settingStoreCookies) {
-    // supports many set-cookies over many redirects
-    const redirects: string[][] = headerResults.map(({ headers }: any) => getSetCookiesFromResponseHeaders(headers));
-    const setCookieStrings: string[] = redirects.flat();
-    const totalSetCookies = setCookieStrings.length;
-    if (totalSetCookies) {
-      const currentUrl = getCurrentUrl({ headerResults, finalUrl });
-      const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({
-        setCookieStrings,
-        currentUrl,
-        cookieJar,
-      });
-      const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
-      if (hasCookiesToPersist) {
-        return { cookies, rejectedCookies, totalSetCookies };
-      }
-    }
-  }
-  return { cookies: [], rejectedCookies: [], totalSetCookies: 0 };
 };
 
 export const getSetCookiesFromResponseHeaders = (headers: any[]) => getSetCookieHeaders(headers).map(h => h.value);

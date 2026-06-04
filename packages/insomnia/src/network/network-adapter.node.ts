@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import clone from 'clone';
-import type { RequestHeader } from 'insomnia-data';
+import type { Cookie, RequestHeader } from 'insomnia-data';
 
 import type { RenderedRequest } from '~/templating/types';
 
@@ -18,6 +18,7 @@ import * as pluginResponse from '../plugins/context/response';
 import * as pluginStore from '../plugins/context/store';
 import { runScript as executeScript } from '../script-executor';
 import { applyDefaultHeaders } from './apply-default-headers';
+import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 export const getTimelinePath = async (responseId: string): Promise<string> => {
   const electron = require('electron') as { app: { getPath: (name: string) => string } };
@@ -41,6 +42,30 @@ export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHea
   getAuthHeaderFromMain(r, u);
 
 export const executeCurlRequest = (options: CurlRequestOptions): Promise<CurlRequestOutput> => curlRequest(options);
+
+export async function extractCookies({
+  setCookieStrings,
+  currentUrl,
+  cookieJar,
+  settingStoreCookies,
+}: {
+  setCookieStrings: string[];
+  currentUrl: string;
+  cookieJar: { cookies: Cookie[] };
+  settingStoreCookies: boolean;
+}) {
+  if (!settingStoreCookies || !setCookieStrings.length) {
+    return { cookies: [], rejectedCookies: [], totalSetCookies: 0 };
+  }
+
+  const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({
+    setCookieStrings,
+    currentUrl,
+    cookieJar,
+  });
+
+  return { cookies, rejectedCookies, totalSetCookies: setCookieStrings.length };
+}
 
 export const runScript = (options: {
   script: string;

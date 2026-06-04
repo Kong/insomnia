@@ -1,10 +1,9 @@
-import type { UnitTest } from 'insomnia-data';
+import type { TestResults, UnitTest } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { generate, runTests, type Test, type TestResults } from 'insomnia-testing';
+import { generate, type Test } from 'insomnia-testing/src/generate/generate';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import { getSendRequestCallback } from '~/network/unit-test-feature';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
 import { createFetcherSubmitHook } from '~/utils/router';
@@ -28,8 +27,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   ];
   const src = generate([{ name: 'My Suite', suites: [], tests }]);
 
-  const sendRequest = getSendRequestCallback();
-
   let results: TestResults = {
     failures: [],
     passes: [],
@@ -48,7 +45,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   };
 
   try {
-    results = await runTests(src, { sendRequest });
+    results = await window.main.runTests(src);
     const testResult = await services.unitTestResult.create({
       results,
       parentId: unitTest.parentId,

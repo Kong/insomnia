@@ -16,12 +16,18 @@ import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
+  | 'run-tests'
   | 'authorizeUserInDefaultBrowser'
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
   | 'generateCodeSnippet'
   | 'getCodeSnippetTargets'
+  | 'exportHarWithRequest'
+  | 'exportHarRequest'
+  | 'exportHarCurrentRequest'
+  | 'exportRequestsHAR'
+  | 'exportWorkspacesHAR'
   | 'generateMockRouteDataFromSpec'
   | 'generateCommitsFromDiff'
   | 'generateMcpSamplingResponse'
@@ -83,6 +89,7 @@ export type HandleChannels =
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
   | 'grpc.writeProtoFile'
+  | 'grpc.validateProtoFile'
   | 'initializeWorkspaceBackendProject'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
@@ -172,7 +179,22 @@ export type HandleChannels =
   | 'deleteRulesetFile'
   | 'writeResponseBodyToFile'
   | 'vault.encryptSecretValue'
-  | 'vault.decryptSecretValue';
+  | 'vault.decryptSecretValue'
+  | 'crypt.encryptRSAWithJWK'
+  | 'crypt.decryptRSAWithJWK'
+  | 'crypt.encryptAESBuffer'
+  | 'crypt.encryptAES'
+  | 'crypt.decryptAES'
+  | 'crypt.decryptAESToBuffer'
+  | 'crypt.generateAES256Key'
+  | 'sealedbox.keyPair'
+  | 'sealedbox.open'
+  | 'cookies.fromJSON'
+  | 'cookies.parse'
+  | 'cookies.toString'
+  | 'cookies.getCookiesForUrl'
+  | 'cookies.addSetCookies'
+  | 'cookies.getResponseCookiesFromHeaders';
 
 export const ipcMainHandle = (
   channel: HandleChannels,

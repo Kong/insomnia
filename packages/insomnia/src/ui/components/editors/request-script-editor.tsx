@@ -1,5 +1,4 @@
 import type { Snippet } from 'codemirror';
-import type { Settings } from 'insomnia-data';
 import React, { type FC, useRef } from 'react';
 import {
   Button,
@@ -16,19 +15,7 @@ import {
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
-import {
-  CookieObject,
-  Environment,
-  Execution,
-  InsomniaObject,
-  Request as ScriptRequest,
-  RequestInfo,
-  Response as ScriptResponse,
-  Url,
-  Variables,
-  Vault,
-} from '../../../../../insomnia-scripting-environment/src/objects';
-import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
+import autocompleteSnippets from '../../../../../insomnia-scripting-environment/src/autocomplete-snippets.json';
 import { Icon } from '../icon';
 
 interface Props {
@@ -36,7 +23,6 @@ interface Props {
   defaultValue: string;
   uniquenessKey: string;
   className?: string;
-  settings: Settings;
   onSnippetAdded?: (snippetName: string) => void;
 }
 
@@ -146,58 +132,6 @@ const lintOptions = {
   // https://jshint.com/docs/options/#esversion
   esversion: 11,
 };
-
-// TODO: We probably don't want to expose every property like .toObject() so we need a way to filter those out
-// or make those properties private
-// TODO: introduce this functionality for other objects, such as Url, UrlMatchPattern and so on
-// TODO: introduce function arguments
-// TODO: provide snippets for environment keys if possible
-function getRequestScriptSnippets(insomniaObject: InsomniaObject, path: string): Snippet[] {
-  let snippets: Snippet[] = [];
-
-  const refs = new Set();
-  const insomniaRecords = insomniaObject as Record<string, any>;
-
-  for (const key in insomniaObject) {
-    const isPrivate = typeof key === 'string' && key.startsWith('_');
-    if (isPrivate) {
-      continue;
-    }
-
-    const value = insomniaRecords[key];
-
-    if (typeof key === 'object') {
-      if (refs.has(value)) {
-        // avoid cyclic referring
-        continue;
-      } else {
-        refs.add(value);
-      }
-    }
-
-    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-      snippets.push({
-        displayValue: `${path}.${value}`,
-        name: `${path}.${key}`,
-        value: `${path}.${key}`,
-      });
-    } else if (typeof value === 'function') {
-      snippets.push({
-        displayValue: `${path}.${key}()`,
-        name: `${path}.${key}()`,
-        value: `${path}.${key}()`,
-      });
-    } else if (Array.isArray(value)) {
-      for (const item of value) {
-        snippets = snippets.concat(getRequestScriptSnippets(item, `${path}.${key}`));
-      }
-    } else {
-      snippets = snippets.concat(getRequestScriptSnippets(value, `${path}.${key}`));
-    }
-  }
-
-  return snippets;
-}
 
 interface SnippetMenuItem {
   id: string;
@@ -538,7 +472,6 @@ export const RequestScriptEditor: FC<Props> = ({
   defaultValue,
   onChange,
   uniquenessKey,
-  settings,
   onSnippetAdded,
 }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
@@ -558,71 +491,7 @@ export const RequestScriptEditor: FC<Props> = ({
     onSnippetAdded?.(snippet);
   };
 
-  const req = new ScriptRequest({
-    url: new Url('http://placeholder.com'),
-  });
-  // TODO(george): Add more to this object to provide improved autocomplete
-  const requestScriptSnippets = getRequestScriptSnippets(
-    new InsomniaObject({
-      globals: new Environment('globals', {}),
-      baseGlobals: new Environment('baseGlobals', {}),
-      iterationData: new Environment('iterationData', {}),
-      environment: new Environment('environment', {}),
-      baseEnvironment: new Environment('baseEnvironment', {}),
-      variables: new Variables({
-        baseGlobalVars: new Environment('baseGlobals', {}),
-        globalVars: new Environment('globals', {}),
-        environmentVars: new Environment('environment', {}),
-        collectionVars: new Environment('collection', {}),
-        iterationDataVars: new Environment('data', {}),
-        folderLevelVars: [], // folderLevelVars
-        localVars: new Environment('data', {}),
-      }),
-      vault: settings.enableVaultInScripts ? new Vault('vault', {}, settings.enableVaultInScripts) : undefined,
-      request: req,
-      response: new ScriptResponse({
-        code: 200,
-        reason: 'OK',
-        header: [
-          { key: 'header1', value: 'val1' },
-          { key: 'header2', value: 'val2' },
-        ],
-        cookie: [
-          { key: 'header1', value: 'val1' },
-          { key: 'header2', value: 'val2' },
-        ],
-        body: '{"key": 888}',
-        stream: undefined,
-        responseTime: 100,
-        originalRequest: req,
-      }),
-      settings,
-      clientCertificates: [],
-      cookies: new CookieObject({
-        _id: '',
-        type: 'CookieJar',
-        parentId: '',
-        modified: 0,
-        created: 0,
-        isPrivate: false,
-        name: '',
-        cookies: [],
-      }),
-      requestInfo: new RequestInfo({
-        // @TODO - Look into this event name when we introduce iteration data
-        eventName: 'prerequest',
-        iteration: 1,
-        iterationCount: 1,
-        requestName: '',
-        requestId: '',
-      }),
-      execution: new Execution({
-        location: ['path'],
-      }),
-      parentFolders: new ParentFolders([]),
-    }),
-    'insomnia',
-  );
+  const requestScriptSnippets = autocompleteSnippets as Snippet[];
 
   return (
     <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
