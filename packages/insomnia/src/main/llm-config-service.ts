@@ -18,6 +18,7 @@ export interface LLMConfig {
   apiKey?: string;
   url?: string;
   baseURL?: string;
+  maxTokens?: number;
   temperature?: number;
   topP?: number;
   topK?: number;
@@ -61,6 +62,7 @@ export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLM
       case 'temperature':
       case 'topP':
       case 'topK':
+      case 'maxTokens':
       case 'repeatPenalty': {
         config[field] = Number.parseFloat(value);
         break;

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Services } from '../../';
+import type { Services } from '../../src';
 
 const loadServicesModule = async () => {
   vi.resetModules();

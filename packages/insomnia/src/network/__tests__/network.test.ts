@@ -1097,6 +1097,32 @@ describe('getCurrentUrl for tough-cookie', () => {
   });
 });
 
+describe('getOrInheritAuthentication', () => {
+  it('should prefer the closest parent folder auth over higher-level folder auth', () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'basic', username: 'closest', password: 'closest-pass' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({
+      type: 'basic',
+      username: 'closest',
+      password: 'closest-pass',
+    });
+  });
+
+  it("should stop inheritance when the closest parent folder auth is { type: 'none' }", () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'none' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({ type: 'none' });
+  });
+});
+
 describe('getOrInheritHeaders', () => {
   it('should combine headers', () => {
     const requestGroups = [{ headers: [{ name: 'foo', value: 'bar' }] }, { headers: [{ name: 'baz', value: 'qux' }] }];

@@ -23,15 +23,10 @@ const generalRestrictedImportPatterns = [
     group: ['./**/insomnia-data', './**/insomnia-data/**', '../**/insomnia-data', '../**/insomnia-data/**'],
     message: "Please use 'insomnia-data' instead of relative paths",
   },
-  // Only allow insomnia-data and insomnia-data/node
+  // Only allow supported insomnia-data entrypoints
   {
     regex: '^insomnia-data/(?!node($|/)|common($|/)).+',
     message: "Only 'insomnia-data', 'insomnia-data/node' and 'insomnia-data/common' are allowed",
-  },
-  // Only allow insomnia-data, not allow ~/insomnia-data anymore
-  {
-    regex: '^~/insomnia-data(/.*)?$',
-    message: "Please use 'insomnia-data' instead of '~/insomnia-data'",
   },
 ];
 const rendererNodeMigrationOffenders = [

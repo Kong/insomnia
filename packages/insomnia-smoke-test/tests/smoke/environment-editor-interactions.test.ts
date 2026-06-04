@@ -11,56 +11,78 @@ test.describe('Environment Editor', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    // Create the environment (which will become active on creation)
-    // await page.getByLabel("Select an environment").click();
+
+    // wait for import dialog to close before proceeding
+    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+
+    // create a new shared environment (becomes active on creation)
     await page.getByRole('button', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
     await page.getByRole('menuitemradio', { name: 'Shared Environment' }).press('Enter');
+
+    // wait for the new row to appear before clicking it
+    await page.getByRole('row', { name: 'New Environment' }).waitFor({ state: 'visible' });
     await page.getByRole('row', { name: 'New Environment' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+    
+    // wait for the Manage Environments dialog to close before interacting with the picker
+    await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
 
+    // select the new environment then dismiss the picker
     await page.getByRole('option', { name: 'New Environment' }).press('Enter');
     await page.getByRole('option', { name: 'New Environment' }).press('Escape');
 
-    // Send a request check variables defaulted to base env since new env is empty
+    // send request: verify variables fall back to base env (new env is empty)
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
-
+    
+    // wait for a response before switching to console
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
-    await page.getByText('baseenv0').click();
-    await page.getByText('baseenv1').click();
+    await expect.soft(page.getByText('baseenv0')).toBeVisible();
+    await expect.soft(page.getByText('baseenv1')).toBeVisible();
 
-    // duplicate
+    // duplicate ExampleA and rename the copy to Gandalf
     await page.getByRole('button', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByRole('row', { name: 'ExampleA' }).getByLabel('Environment Actions').click();
     await page.getByText('Duplicate').click();
+
+    // wait for the duplicated row to appear before clicking it
+    await page.getByLabel('Environments', { exact: true }).getByText('ExampleA (Copy)').waitFor({ state: 'visible' });
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA (Copy)').click();
 
-    // Rename the environment
+    // rename ExampleB to Gandalf
     await page.getByRole('row', { name: 'ExampleB' }).locator('[data-editable=true]').dblclick();
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').fill('Gandalf');
     await page.getByRole('row', { name: 'ExampleB' }).locator('input').press('Enter');
 
+    // wait for the row to reflect the new name before closing
+    await page.getByRole('row', { name: 'Gandalf' }).waitFor({ state: 'visible' });
+
     await page.getByRole('button', { name: 'Close', exact: true }).click();
 
+    // wait for the Manage Environments dialog to close before interacting with the picker
+    await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
+
+    // select Gandalf then dismiss the picker
     await page.getByRole('option', { name: 'Gandalf' }).press('Enter');
     await page.getByRole('option', { name: 'Gandalf' }).press('Escape');
 
-    // Send a request check variables defaulted to base env since new env is empty
+    // send request: verify Gandalf sub-env variables are active
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
-    // await page.waitForTimeout(60000);
     await page.getByRole('button', { name: 'Send' }).click();
 
+    // wait for a response before switching to console
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
-    await page.getByText('subenvB0').click();
-    await page.getByText('subenvB1').click();
+    await expect.soft(page.getByText('subenvB0')).toBeVisible();
+    await expect.soft(page.getByText('subenvB1')).toBeVisible();
 
-    // Rename the environment
+    // add new variables to Gandalf via JSON editor
     await page.getByRole('button', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
-    // add a new string environment variable
     await page.locator('pre').filter({ hasText: '"exampleNumber": 2222,' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
@@ -68,68 +90,87 @@ test.describe('Environment Editor', () => {
     await dialog.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
     await dialog.getByTestId('CodeEditor').getByRole('textbox').fill('"testString":"Gandalf",');
 
-    // Blur the editor before closing so the debounce flush is triggered by the button's mousedown
+    // blur the editor before closing so the debounce flush is triggered by the button's mousedown
     await dialog.getByRole('button', { name: 'Close' }).click();
-    // Wait for the dialog to be gone before navigating away
-    await expect.soft(page.getByRole('heading', { name: 'Manage Environments' })).toBeHidden();
+    
+    // wait for the Manage Environments dialog to fully close before navigating
+    await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
     await page.getByLabel('Manage collection environments').press('Escape');
+
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
 
-    //Switch to table view and edit environment
+    // switch to table view and edit Gandalf environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
-    // Explicitly select Gandalf so table edits target the correct sub-environment
+
+    // explicitly select Gandalf so table edits target the correct sub-environment
     await page.getByLabel('Environments', { exact: true }).getByText('Gandalf').click();
-    // switch table view
     await page.getByRole('button', { name: 'Table Edit' }).click();
     const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
-    // disable row
+
+    // disable the first row and verify the opacity change
     await page.getByRole('button', { name: 'Disable Row' }).first().click();
     let firstRow = kvTable.getByRole('option').first();
-    // check row has been disabled
     await expect.soft(firstRow).toHaveCSS('opacity', '0.4');
-    // delete all items
-    await page.getByRole('dialog').getByRole('button', { name: 'Delete All' }).dblclick();
-    // check items have been deleted
-    await expect.soft(kvTable.getByRole('option').nth(2)).toBeHidden();
 
+    // delete all rows and wait for the list to clear
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete All' }).dblclick();
+    await kvTable.getByRole('option').nth(2).waitFor({ state: 'hidden' });
+
+    // add first row: exampleString = kvstring
     firstRow = kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleString');
-    // Clicking the value cell blurs the key cell, triggering its debounce flush
+
+    // clicking the value cell blurs the key cell, triggering its debounce flush
     await firstRow.getByTestId('OneLineEditor').nth(1).click();
     await page.keyboard.type('kvstring');
-    // Clicking Add Row blurs the value cell; wait for the new row to confirm the state settled
+
+    // add second row: exampleObject (JSON type)
+    // clicking Add Row blurs the value cell; wait for the new row before interacting
     await page.getByRole('button', { name: 'Add Row' }).click();
     const secondRow = kvTable.getByRole('option').nth(1);
-    await expect.soft(secondRow).toBeVisible();
+    await secondRow.waitFor({ state: 'visible' });
     await secondRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleObject');
-    // Clicking Type Selection blurs the key cell, triggering its debounce flush
+
+    // clicking Type Selection blurs the key cell, triggering its debounce flush
     await secondRow.getByRole('button', { name: 'Type Selection' }).click();
     await page.getByRole('menuitemradio', { name: 'JSON' }).click();
     await secondRow.getByRole('button', { name: 'Edit JSON' }).click();
-    // wait for modal to show
-    await expect.soft(page.getByRole('dialog').getByTestId('CodeEditor')).toBeVisible();
+    
+    // wait for the JSON modal before typing
+    await page.getByRole('dialog').getByTestId('CodeEditor').waitFor({ state: 'visible' });
     const bodyEditor = page.getByRole('dialog').getByTestId('CodeEditor').getByRole('textbox');
-    // move cursor right and input json string
     await bodyEditor.focus();
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.type('{"anotherString":"kvAnotherStr","anotherNumber": 12345}');
-    // Submit and wait for the JSON modal to close before proceeding
+    
+    // submit and wait for the JSON modal to fully close before proceeding
     await page.getByRole('button', { name: 'Modal Submit' }).click();
-    await expect.soft(page.getByRole('dialog', { name: 'Modal' })).toBeHidden();
+    await page.getByRole('dialog', { name: 'Modal' }).waitFor({ state: 'hidden' });
 
-    // Close the environment editor and wait for the dialog to disappear before navigating
+    // close the environment editor and wait for it to disappear
     await page.getByRole('button', { name: 'Close', exact: true }).click();
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
-    await page.getByLabel('Manage collection environments').press('Escape');
+
+    // dismiss the environment picker dropdown if it appeared
+    await page.locator('body').click();
+    try {
+      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
+    } catch {
+      await page.keyboard.press('Escape');
+    }
+
+    // send request and verify the new table-edited environment values
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
 
+    // wait for a response before switching to console
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
-    // check new environment value
-    await expect.soft(page.getByText('kvstring')).toBeVisible();
+    await page.getByText('kvstring').waitFor({ state: 'visible', timeout: 10_000 });
+    await expect.soft(page.getByText('kvstring')).toBeVisible({ timeout: 10_000 });
     await page.getByText('kvstring').click();
     await page.getByText('kvAnotherStr').click();
     await page.getByText('12345').click();
@@ -142,37 +183,50 @@ test.describe('Environment Editor', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    // wait for import dialog to close before proceeding
+    await page.getByRole('dialog').waitFor({ state: 'hidden' });
 
-    // Activate ExampleA environment
+    // activate ExampleA environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
     await page.getByRole('option', { name: 'ExampleA' }).press('Enter');
     await page.getByRole('option', { name: 'ExampleA' }).press('Escape');
 
-    // Send request and verify ExampleA overrides are active
+    // send request: verify ExampleA overrides are active
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
+    // wait for a response before switching to console
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('subenvA0')).toBeVisible();
 
-    // Open env editor, select ExampleA, switch to table view, disable exampleString
+    // open env editor, select ExampleA, switch to table view, disable exampleString
     await page.getByRole('button', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByLabel('Environments', { exact: true }).getByText('ExampleA').click();
     await page.getByRole('button', { name: 'Table Edit' }).click();
     const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
-    // Find and disable the exampleString row
     const exampleStringRow = kvTable.getByRole('option').filter({ hasText: 'exampleString' });
     await exampleStringRow.getByRole('button', { name: 'Disable Row' }).click();
     await expect.soft(exampleStringRow).toHaveCSS('opacity', '0.4');
 
-    // Close the editor and wait for it to disappear
+    // close the editor and wait for it to fully disappear
     await page.getByRole('button', { name: 'Close', exact: true }).click();
-    await expect.soft(page.getByRole('heading', { name: 'Manage Environments' })).toBeHidden();
-    await page.getByLabel('Manage collection environments').press('Escape');
+    await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
 
-    // Send request — disabled sub-env variable should fall back to base environment
+    // dismiss the environment picker dropdown if it appeared
+    await page.locator('body').click();
+    try {
+      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
+    } catch {
+      await page.keyboard.press('Escape');
+    }
+
+    // send request: disabled sub-env variable should fall back to base environment
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     await page.getByRole('button', { name: 'Send' }).click();
+
+    // wait for a response before switching to console
+    await page.locator('[data-testid="response-status-tag"]:visible').waitFor({ state: 'visible', timeout: 25_000 });
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('baseenv0')).toBeVisible();
     await expect.soft(page.getByText('subenvA0')).toBeHidden();

@@ -91,7 +91,7 @@ export type { WorkspaceMeta } from './workspace-meta';
 export type { MockRoute } from './mock-route';
 export type { MockServer } from './mock-server';
 export type { UnitTest } from './unit-test';
-export type { UnitTestResult } from './unit-test-result';
+export type { UnitTestResult, TestResult, TestResults } from './unit-test-result';
 export type { UnitTestSuite } from './unit-test-suite';
 export type { SocketIOPayload } from './socket-io-payload';
 export type { BaseSocketIORequest, SocketIOEventListener, SocketIORequest } from './socket-io-request';

@@ -468,7 +468,7 @@ export const createNedbDatabase = <O = initOptions>(
       return docWithDefaults;
     },
 
-    /** get all ancestors of specified types of a document including the original */
+    /** get all ancestors of specified types of a document including the original, the order of the returned array is leaf to root */
     withAncestors: async function <T extends BaseModel>(doc: T | undefined, types: AllTypes[] = []) {
       if (!doc) {
         return [];

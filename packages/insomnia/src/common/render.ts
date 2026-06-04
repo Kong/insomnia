@@ -536,6 +536,7 @@ export async function getRenderedRequestAndContext({
 }> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(models.workspace.isWorkspace);
+  // requestGroups is of order leaf to root
   const requestGroups = ancestors.filter(isRequestGroup);
 
   const parentId = workspace ? workspace._id : 'n/a';

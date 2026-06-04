@@ -63,7 +63,6 @@
     "@rjsf/core": "6.0.0-beta.15",
     "@rjsf/utils": "6.0.0-beta.15",
     "@rjsf/validator-ajv8": "6.0.0-beta.15",
-    "@seald-io/nedb": "^4.1.1",
     "@sentry/electron": "^6.5.0",
     "@stoplight/spectral-core": "^1.22.0",
     "@stoplight/spectral-formats": "^1.8.2",

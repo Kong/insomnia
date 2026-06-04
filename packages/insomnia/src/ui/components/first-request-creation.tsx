@@ -8,13 +8,13 @@ import { SelectPopover } from '~/basic-components/select-popover';
 import { getProjectRecentRequests, type RecentProjectRequest } from '~/common/project';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { createKeybindingsHandler, useKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
 import { Tooltip } from '~/ui/components/tooltip';
 import { getBadgeClassName, ResourceIcon } from '~/ui/components/workspace/resource-icon';
-import { useIsLightTheme } from '~/ui/hooks/theme';
 import { setDefaultProtocol } from '~/utils/url/protocol';
 
 import { Icon } from './icon';
@@ -113,6 +113,7 @@ export const FirstRequestCreation = ({
       name: 'My first collection',
       scope: 'collection',
       redirectAfterCreate: false,
+      source: 'first-request-pane',
     });
 
     const createdWorkspace = createWorkspaceFetcherRef.current.data;
@@ -130,7 +131,6 @@ export const FirstRequestCreation = ({
       });
       return null;
     }
-    console.log('Created workspace', createdWorkspace.workspaceId);
     return createdWorkspace.workspaceId;
   };
 
@@ -147,6 +147,7 @@ export const FirstRequestCreation = ({
         name: 'My first collection',
         scope: 'collection',
         withRequest: true,
+        source: 'first-request-pane',
       });
       return;
     }
@@ -156,6 +157,9 @@ export const FirstRequestCreation = ({
       workspaceId: selectedCollectionId,
       parentId: selectedCollectionId,
       requestType: 'HTTP',
+      metrics: {
+        source: 'first-request-pane',
+      },
     });
   };
 
@@ -189,6 +193,9 @@ export const FirstRequestCreation = ({
           parentId: workspaceId,
           requestType: 'From Curl',
           req,
+          metrics: {
+            source: 'first-request-pane',
+          },
         });
 
         return;
@@ -202,6 +209,9 @@ export const FirstRequestCreation = ({
         requestType: 'HTTP',
         req: {
           url: normalizeRequestUrl(trimmedInput),
+        },
+        metrics: {
+          source: 'first-request-pane',
         },
       });
     } catch (error) {
@@ -244,6 +254,7 @@ export const FirstRequestCreation = ({
       name: 'Notion MCP Server',
       scope: 'mcp',
       mcpServerUrl: NOTION_MCP_SERVER_URL,
+      source: 'first-request-pane',
     });
   };
 
@@ -263,6 +274,9 @@ export const FirstRequestCreation = ({
       req: {
         url: 'https://pokeapi.co/api/v2/pokemon/ditto',
         name: 'List a pokemon',
+      },
+      metrics: {
+        source: 'first-request-pane',
       },
     });
   };
@@ -294,6 +308,9 @@ export const FirstRequestCreation = ({
         req: {
           ...req,
           name: 'Lookup GitHub repository',
+        },
+        metrics: {
+          source: 'first-request-pane',
         },
       });
     } catch (error) {
@@ -327,18 +344,10 @@ export const FirstRequestCreation = ({
     },
   ];
 
-  const isLightTheme = useIsLightTheme();
-  const wrapperClassName = isLightTheme
-    ? 'w-full rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#999999_0%,#DDDDDD_100%),radial-gradient(100%_100.41%_at_100%_99.92%,#999999_0%,#DDDDDD_100%)] p-px'
-    : 'w-full rounded-sm bg-[radial-gradient(100%_100.41%_at_100%_99.92%,#4C4C4C_0%,rgba(3,3,3,0)_100%),radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,#4C4C4C_0%,rgba(3,3,3,0)_100%)] p-px';
-  const wrapperSurfaceClassName = isLightTheme
-    ? 'flex w-full flex-col items-center rounded-[inherit] bg-[#FFFFFF] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(96,48,191,0.2)_100%] px-6 pt-8 pb-5'
-    : 'flex w-full flex-col items-center rounded-[inherit] bg-[#1B1B1B] bg-linear-[360deg,rgba(27,27,27,0)_27.2%,rgba(165,151,248,0.2)_100%] px-6 pt-8 pb-5';
-
   return (
     <>
-      <div className={wrapperClassName}>
-        <div className={wrapperSurfaceClassName}>
+      <div className="rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,var(--hl-md)_0%,var(--hl-xs)_100%),radial-gradient(100%_100.41%_at_100%_99.92%,var(--hl-md)_0%,var(--hl-xs)_100%)] p-px">
+        <div className="flex w-full flex-col items-center rounded-sm bg-(--color-bg) bg-[linear-gradient(180deg,rgba(var(--color-surprise-rgb),0.2)_0%,color-mix(in_srgb,var(--color-bg)_0%,transparent)_72.8%)] px-6 pt-8 pb-5">
           <h2 className="text-center text-2xl leading-none font-semibold">
             {shouldShowJumpBackIn ? `Welcome back, ${greetingName}!` : `Welcome, ${greetingName}!`}
           </h2>
@@ -374,7 +383,15 @@ export const FirstRequestCreation = ({
                     size="md"
                     variant="text"
                     icon={<Icon className="text-lg" icon="paperclip" />}
-                    onPress={() => setIsImportModalOpen(true)}
+                    onPress={() => {
+                      window.main.trackAnalyticsEvent({
+                        event: AnalyticsEvent.importStarted,
+                        properties: {
+                          source: 'first-request-pane',
+                        },
+                      });
+                      setIsImportModalOpen(true);
+                    }}
                   />
                 </Tooltip>
                 <div className="flex items-center gap-2">
@@ -384,7 +401,12 @@ export const FirstRequestCreation = ({
                     ariaLabel="Select target collection"
                     items={collectionItems}
                     selectedKey={selectedCollectionId}
-                    onSelectionChange={key => onSelectedCollectionChange(key ? String(key) : null)}
+                    onSelectionChange={key => {
+                      onSelectedCollectionChange(key ? String(key) : null);
+                      window.main.trackAnalyticsEvent({
+                        event: AnalyticsEvent.firstRequestPaneCollectionChanged,
+                      });
+                    }}
                     title="Where should we put your request?"
                     emptyState="You have no collections, so a new one will be created for you by default."
                     footer={
@@ -446,7 +468,21 @@ export const FirstRequestCreation = ({
                       </Button>
                     ))
                   : quickStartItems.map(item => (
-                      <Button key={item.id} variant="outlined" size="md" className="px-2" onPress={item.onClick}>
+                      <Button
+                        key={item.id}
+                        variant="outlined"
+                        size="md"
+                        className="px-2"
+                        onPress={() => {
+                          window.main.trackAnalyticsEvent({
+                            event: AnalyticsEvent.firstRequestPaneExampleClicked,
+                            properties: {
+                              name: item.label,
+                            },
+                          });
+                          item.onClick();
+                        }}
+                      >
                         {item.icon}
                         <span>{item.label}</span>
                       </Button>

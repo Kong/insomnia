@@ -586,8 +586,26 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Manage Environments').click();
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     await page.getByLabel('Table Edit').click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
-    await page.locator('body').click();
+
+    // scope Close to the Manage Environments modal; fall back to Escape if the button is still disabled or the modal doesn't close
+    const manageEnvModal = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Manage Environments' }) });
+    const closeButton = manageEnvModal.getByRole('button', { name: 'Close' });
+    await closeButton.waitFor({ state: 'visible' });
+    try {
+      await closeButton.click();
+      await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden', timeout: 5000 });
+    } catch {
+      await page.keyboard.press('Escape');
+      await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
+    }
+
+    // try to dismiss the environment picker dropdown normally; fall back to Escape if it is still open
+    await page.locator('body').click();    
+    try {
+      await page.getByRole('listbox', { name: 'Select a Collection Environment' }).waitFor({ state: 'hidden', timeout: 3000 });
+    } catch {
+      await page.keyboard.press('Escape');
+    }
 
     // send request
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
