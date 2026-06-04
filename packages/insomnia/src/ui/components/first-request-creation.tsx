@@ -69,6 +69,11 @@ interface QuickStartItem {
   onClick: () => void | Promise<void>;
 }
 
+interface RecentRequestsState {
+  projectId: string;
+  requests: RecentProjectRequest[];
+}
+
 interface FirstRequestCreationProps {
   greetingName: string;
   collectionItems: CollectionItem[];
@@ -100,14 +105,15 @@ export const FirstRequestCreation = ({
   createWorkspaceFetcherRef.current = createWorkspaceFetcher;
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [requestInput, setRequestInput] = useState('');
-  const [recentRequests, setRecentRequests] = useState<RecentProjectRequest[]>([]);
+  const [recentRequests, setRecentRequests] = useState<RecentRequestsState>({ projectId, requests: [] });
   const [isRequestInputFocused, setIsRequestInputFocused] = useState(false);
   const [curlParseError, setCurlParseError] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
   const trimmedInput = requestInput.trim();
   const isCreatingRequest = createRequestFetcher.state !== 'idle';
   const selectedCollection = collectionItems.find(collection => collection.id === selectedCollectionId) ?? null;
-  const shouldShowJumpBackIn = recentRequests.length >= 3;
+  const currentProjectRecentRequests = recentRequests.projectId === projectId ? recentRequests.requests : [];
+  const shouldShowJumpBackIn = currentProjectRecentRequests.length >= 3;
 
   const ensureWorkspaceId = async () => {
     if (selectedCollectionId) {
@@ -244,7 +250,7 @@ export const FirstRequestCreation = ({
         return;
       }
 
-      setRecentRequests(nextRecentRequests);
+      setRecentRequests({ projectId, requests: nextRecentRequests });
     };
 
     loadRecentRequests();
@@ -359,7 +365,15 @@ export const FirstRequestCreation = ({
       id: 'import-files',
       label: 'Import files',
       icon: <Icon icon="file-import" className="text-(--font-size-xl)" />,
-      onClick: onImportFrom,
+      onClick: () => {
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.importStarted,
+          properties: {
+            source: 'first-request-pane-example',
+          },
+        });
+        onImportFrom();
+      },
     },
   ];
 
@@ -472,12 +486,11 @@ export const FirstRequestCreation = ({
               <div className="mt-2 text-xs text-[#FF5631]">Invalid cURL. Verify your input and try again.</div>
             )}
             <div className="my-6 px-4">
-              <p className="text-sm font-semibold text-(--hl)">
-                {shouldShowJumpBackIn ? 'Jump back in' : 'Not sure where to start?'}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {shouldShowJumpBackIn
-                  ? recentRequests.map(recentRequest => (
+              {shouldShowJumpBackIn ? (
+                <>
+                  <p className="text-sm font-semibold text-(--hl)">Jump back in</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {currentProjectRecentRequests.map(recentRequest => (
                       <Button
                         key={recentRequest.request._id}
                         variant="outlined"
@@ -492,8 +505,14 @@ export const FirstRequestCreation = ({
                         <ResourceIcon resource={recentRequest.request} />
                         <span className="max-w-[18rem] truncate">{recentRequest.request.name}</span>
                       </Button>
-                    ))
-                  : quickStartItems.map(item => (
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-(--hl)">Not sure where to start?</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {quickStartItems.map(item => (
                       <Button
                         key={item.id}
                         variant="outlined"
@@ -513,7 +532,9 @@ export const FirstRequestCreation = ({
                         <span>{item.label}</span>
                       </Button>
                     ))}
-              </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

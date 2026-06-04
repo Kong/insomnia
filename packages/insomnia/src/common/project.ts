@@ -106,14 +106,10 @@ interface CachedProjectRecentRequest {
 
 interface CachedProjectRecentRequestsPayload {
   recentRequests: CachedProjectRecentRequest[];
-  updatedAt: number;
 }
 
-// Keep a small buffer beyond the 3 visible items so Jump back in stays populated after deletions.
 const MAX_RECENT_PROJECT_REQUESTS = 5;
 const RECENT_PROJECT_REQUESTS_STORAGE_KEY_PREFIX = 'recent-project-requests';
-// we conly want to keep recent requests for a week
-const RECENT_PROJECT_REQUESTS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const getRecentProjectRequestsStorageKey = (projectId: string) =>
   `${RECENT_PROJECT_REQUESTS_STORAGE_KEY_PREFIX}:${projectId}`;
@@ -132,17 +128,7 @@ export const getCachedProjectRecentRequests = (projectId: string): CachedProject
 
     const payload = JSON.parse(storedRecentRequests) as Partial<CachedProjectRecentRequestsPayload>;
 
-    if (
-      !payload ||
-      typeof payload !== 'object' ||
-      !Array.isArray(payload.recentRequests) ||
-      typeof payload.updatedAt !== 'number'
-    ) {
-      removeCachedProjectRecentRequests(projectId);
-      return [];
-    }
-
-    if (Date.now() - payload.updatedAt > RECENT_PROJECT_REQUESTS_TTL_MS) {
+    if (!payload || typeof payload !== 'object' || !Array.isArray(payload.recentRequests)) {
       removeCachedProjectRecentRequests(projectId);
       return [];
     }
@@ -173,7 +159,6 @@ export const recordProjectRecentRequest = ({
       { requestId, workspaceId },
       ...existingRecentRequests.filter(storedRequest => storedRequest.requestId !== requestId),
     ].slice(0, MAX_RECENT_PROJECT_REQUESTS),
-    updatedAt: Date.now(),
   };
 
   window.localStorage.setItem(getRecentProjectRequestsStorageKey(projectId), JSON.stringify(payload));
