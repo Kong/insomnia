@@ -581,7 +581,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
    * Prepare auth callback for isomorphic-git
    * Converts GitLab OAuth token to format expected by isomorphic-git
    */
-  authCallback(credential: GitCredentials): GitAuth {
+  authCallback(credential: GitCredentials, _url?: string, _repoPath?: string): GitAuth {
     if (!isGitCredentialsV2(credential) || credential.provider !== 'gitlab') {
       throw new Error('Invalid credential type for GitLab provider');
     }

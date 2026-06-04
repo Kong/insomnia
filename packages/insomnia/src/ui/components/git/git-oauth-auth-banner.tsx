@@ -30,7 +30,7 @@ export const GitOauthAuthBanner: FC<{
   /** Errors from `git.loadGitRepository` (or similar) when the repo fails to load. */
   repoLoadErrors?: string[];
   provider: {
-    type: 'github' | 'gitlab' | 'custom';
+    type: 'github' | 'gitlab' | 'custom' | 'native';
     displayName: string;
     iconName?: IconProp;
   };

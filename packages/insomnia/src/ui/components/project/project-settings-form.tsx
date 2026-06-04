@@ -399,7 +399,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               <GitConnectionInfo
                 gitRepository={gitRepository}
                 providerInfo={selectedProvider}
-                authorName={selectedCredential?.author.name || selectedCredential?.author.email}
+                authorName={selectedCredential?.author?.name || selectedCredential?.author?.email}
                 projectId={project!._id}
               />
               <GitOauthAuthBanner
@@ -420,7 +420,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                       onOpenChange={setIsEmailSelectOpen}
                       isOpen={isEmailSelectOpen}
                       aria-label="Author Email"
-                      selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author.email}
+                      selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author?.email}
                       onSelectionChange={email => {
                         setProjectData(prev => ({
                           ...prev,
@@ -441,7 +441,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                               );
                             }
                             return (
-                              projectData.selectedAuthorEmail || selectedCredential?.author.email || 'Select an email'
+                              projectData.selectedAuthorEmail || selectedCredential?.author?.email || 'Select an email'
                             );
                           }}
                         </SelectValue>
@@ -480,17 +480,17 @@ export const ProjectSettingsForm: FC<Props> = ({
                       <div className="flex">
                         <div className="w-[110px] font-semibold">Author Email</div>
                         <div>
-                          {projectData.selectedAuthorEmail || selectedCredential?.author.email || 'No email available'}
+                          {projectData.selectedAuthorEmail || selectedCredential?.author?.email || 'No email available'}
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
-              ) : selectedCredential?.author.email && !credentialsValidationErrors?.length ? (
+              ) : selectedCredential?.author?.email && !credentialsValidationErrors?.length ? (
                 <div className="text-[12px]">
                   <div className="flex">
                     <div className="w-[110px] font-semibold">Author Email</div>
-                    <div>{selectedCredential?.author.email}</div>
+                    <div>{selectedCredential?.author?.email}</div>
                   </div>
                 </div>
               ) : null}

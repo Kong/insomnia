@@ -254,4 +254,15 @@ export async function runGitCredentialsMigration(): Promise<void> {
   } catch (error) {
     console.error('[git-credentials-migration] Migration failed:', error);
   }
+
+  // Ensure the singleton native credential exists — runs every startup, idempotent
+  await ensureNativeCredentialExists();
+}
+
+async function ensureNativeCredentialExists(): Promise<void> {
+  const existing = await database.findOne<GitCredentials>(models.gitCredentials.type, { provider: 'native' });
+  if (!existing) {
+    await services.gitCredentials.create({ provider: 'native' });
+    console.log('[git-credentials-migration] Created native credential singleton');
+  }
 }
