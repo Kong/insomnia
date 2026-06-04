@@ -275,7 +275,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     registerCodeMirrorLint(rulesetContent);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-  }, [rulesetContent]);
+  }, [rulesetContent, projectId]);
 
   useEffect(() => {
     if (lintErrors.length > 0 || lintWarnings.length > 0) {
@@ -1210,8 +1210,8 @@ const Component = ({ params }: Route.ComponentProps) => {
                                       connected git repository
                                     </span>
                                   )}
-                                  . Any local files referenced via <code className="p-0">extends</code> will be bundled
-                                  into a single ruleset on upload.
+                                  . Any local files or remote URLs referenced via <code className="p-0">extends</code>{' '}
+                                  will be bundled into a single ruleset on upload.
                                 </p>
                               </Fragment>
                             )}

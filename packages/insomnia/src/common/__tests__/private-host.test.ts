@@ -20,6 +20,11 @@ describe('isPrivateOrLoopbackHost', () => {
       expect(isPrivateOrLoopbackHost('127.255.255.255')).toBe(true);
     });
 
+    it('rejects 0.0.0.0/8 unspecified addresses', () => {
+      expect(isPrivateOrLoopbackHost('0.0.0.0')).toBe(true);
+      expect(isPrivateOrLoopbackHost('0.255.255.255')).toBe(true);
+    });
+
     it('rejects IPv6 loopback', () => {
       expect(isPrivateOrLoopbackHost('::1')).toBe(true);
     });
