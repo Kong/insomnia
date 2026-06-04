@@ -45,7 +45,7 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
-import { Toaster } from '~/ui/components/toast-notification';
+import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
@@ -693,6 +693,35 @@ const Root = () => {
       window.main.openDeepLink(pendingDeepLink);
     }
   }, [organizationId]);
+
+  useEffect(() => {
+    const STORAGE_KEY = 'plugin-system-changes-toast-shown';
+    if (localStorage.getItem(STORAGE_KEY)) {
+      return;
+    }
+    plugins.getPlugins().then(allPlugins => {
+      const userPlugins = allPlugins.filter(p => p.directory !== '');
+      if (userPlugins.length > 0) {
+        showToast(
+          {
+            title: 'Plugin system updated',
+            description: (
+              <>
+                Some installed plugins may behave differently.{' '}
+                {/* TODO: replace placeholder URL before shipping */}
+                <a href="https://docs.insomnia.rest/insomnia/plugins" target="_blank" rel="noopener noreferrer" className="underline">
+                  Learn more
+                </a>
+              </>
+            ),
+            status: 'info',
+          },
+          { timeout: null },
+        );
+        localStorage.setItem(STORAGE_KEY, 'true');
+      }
+    });
+  }, []);
 
   return (
     <>
