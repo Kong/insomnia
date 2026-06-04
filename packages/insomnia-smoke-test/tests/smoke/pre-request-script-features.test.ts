@@ -529,7 +529,7 @@ test.describe('pre-request features tests', () => {
 
     // activate global environment
     await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a global environment').click();
+    await page.getByPlaceholder('Choose a project environment').click();
     await page.getByRole('option', { name: 'Script Environment' }).click();
     await page.getByRole('option', { name: 'Base Script Env' }).click();
     await page.locator('body').click();
@@ -541,7 +541,7 @@ test.describe('pre-request features tests', () => {
     await page.getByText('log: baseGlobals base').click();
     // view base environment has been updated
     await page.getByLabel('Manage Environments').click();
-    await page.getByLabel('Manage global environment').click();
+    await page.getByLabel('Manage project environment').click();
     await page.getByLabel('Environment name').getByText('Base Script Env').click();
     const globalBaseEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
     const globalBaseRows = await globalBaseEditor.allInnerTexts();
@@ -567,7 +567,7 @@ test.describe('pre-request features tests', () => {
     await page.getByText('log: baseGlobals base').click();
     // view sub environment has been updated
     await page.getByLabel('Manage Environments').click();
-    await page.getByLabel('Manage global environment').click();
+    await page.getByLabel('Manage project environment').click();
     await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
     const globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
     const globalSubRows = await globalSubEditor.allInnerTexts();

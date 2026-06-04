@@ -25,8 +25,8 @@ test.describe('multiple-tab feature test', () => {
     // active tab sync with the sidebar active request
     await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Create in project').click();
-    await page.getByText('Request collection').waitFor({ state: 'visible' });
-    await page.getByText('Request collection').click();
+    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
+    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
     await page.getByRole('dialog').waitFor({ state: 'visible' });
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
@@ -55,8 +55,8 @@ test.describe('multiple-tab feature test', () => {
     //change icon after change request method
     await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Create in project').click();
-    await page.getByText('Request collection').waitFor({ state: 'visible' });
-    await page.getByText('Request collection').click();
+    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
+    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
     await page.getByRole('dialog').waitFor({ state: 'visible' });
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
@@ -75,8 +75,8 @@ test.describe('multiple-tab feature test', () => {
     //click + button to add a new request
     await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Create in project').click();
-    await page.getByText('Request collection').waitFor({ state: 'visible' });
-    await page.getByText('Request collection').click();
+    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
+    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
     await page.getByRole('dialog').waitFor({ state: 'visible' });
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.getByRole('dialog').waitFor({ state: 'hidden' });
@@ -88,8 +88,8 @@ test.describe('multiple-tab feature test', () => {
 
     await page.getByTestId('workspace-breadcrumb-level-0').click();
     await page.getByLabel('Create in project').click();
-    await page.getByText('Request collection', { exact: true }).waitFor({ state: 'visible' });
-    await page.getByText('Request collection', { exact: true }).click();
+    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
+    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
     await page.getByPlaceholder('Enter a name for your Request Collection').waitFor({ state: 'visible' });
     await page.getByPlaceholder('Enter a name for your Request Collection').fill('Test add tab collection');
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
@@ -106,8 +106,8 @@ test.describe('multiple-tab feature test', () => {
     // close tab after delete a request
     await insomnia.navigationSidebar.selectProject('Personal Workspace');
     await page.getByLabel('Create in project').click();
-    await page.getByText('Request collection').waitFor({ state: 'visible' });
-    await page.getByText('Request collection').click();
+    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
+    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
     await page.getByPlaceholder('Enter a name for your Request Collection').waitFor({ state: 'visible' });
     await page.getByPlaceholder('Enter a name for your Request Collection').fill('Delete request test collection');
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();

@@ -100,7 +100,7 @@ test.describe('after-response script features tests', () => {
     await insomnia.navigationSidebar.clickRequestOrFolder('persist global environment');
     // activate global sub environment
     await page.getByLabel('Manage Environments').click();
-    await page.getByPlaceholder('Choose a global environment').click();
+    await page.getByPlaceholder('Choose a project environment').click();
     await page.getByRole('option', { name: 'Script Environment' }).click();
     await page.getByRole('option', { name: 'Sub Script Env' }).click();
     await page.locator('body').click();
@@ -119,7 +119,7 @@ test.describe('after-response script features tests', () => {
     await page.getByText('log: baseGlobals base').click();
     // view sub environment has been updated
     await page.getByLabel('Manage Environments').click();
-    await page.getByLabel('Manage global environment').click();
+    await page.getByLabel('Manage project environment').click();
     await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
     let globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
     let globalSubRows = await globalSubEditor.allInnerTexts();

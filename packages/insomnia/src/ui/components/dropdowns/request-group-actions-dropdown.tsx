@@ -371,7 +371,7 @@ export const RequestGroupActionsDropdown = ({
         >
           <Icon icon="ellipsis" />
         </Button>
-        <Popover className="flex min-w-max flex-col overflow-y-hidden" triggerRef={triggerRef}>
+        <Popover className="flex min-w-max flex-col overflow-y-hidden" placement="bottom end" triggerRef={triggerRef}>
           <Menu
             aria-label="Request Group Actions Menu"
             selectionMode="single"

@@ -670,40 +670,38 @@ const ProjectNavigationSidebarInner = (
       targetWorkspaceId: string | null,
       dropPosition: 'before' | 'after',
     ) => {
-      setLocalWorkspaceOrders(prev => {
-        const isMoveToDifferentProject = sourceProjectId !== targetProjectId;
-        const workspaces = cachedWorkspacesRef.current.get(targetProjectId) || [];
-        const currentWorkspaceSortOrder = projectWorkspaceSortOrder[targetProjectId] || 'type-manual';
-        // Get the base order of workspace before re-order
-        const baseOrder =
-          // if current order is manual, use the current order in local state or default sort by created time; otherwise use current order to sort
-          currentWorkspaceSortOrder === 'type-manual'
-            ? prev?.[targetProjectId] ||
-              [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b)).map(w => w._id)
-            : [...workspaces].sort((a, b) => sortMethodMap[currentWorkspaceSortOrder](a, b)).map(w => w._id);
-        const reordered = (baseOrder as string[]).filter((id: string) => id !== draggedId);
+      const isMoveToDifferentProject = sourceProjectId !== targetProjectId;
+      const workspaces = cachedWorkspacesRef.current.get(targetProjectId) || [];
+      const currentWorkspaceSortOrder = projectWorkspaceSortOrder[targetProjectId] || 'type-manual';
+      // Get the base order of workspace before re-order
+      const baseOrder =
+        // if current order is manual, use the current order in local state or default sort by created time; otherwise use current order to sort
+        currentWorkspaceSortOrder === 'type-manual'
+          ? localWorkspaceOrders?.[targetProjectId] ||
+            [...workspaces].sort((a, b) => sortMethodMap['created-asc'](a, b)).map(w => w._id)
+          : [...workspaces].sort((a, b) => sortMethodMap[currentWorkspaceSortOrder](a, b)).map(w => w._id);
+      const reordered = (baseOrder as string[]).filter((id: string) => id !== draggedId);
 
-        if (targetWorkspaceId === null) {
-          // Drop workspace into a project, add it to the start of the workspace list
-          reordered.unshift(draggedId);
-        } else {
-          const targetIdx = reordered.indexOf(targetWorkspaceId);
-          if (!isMoveToDifferentProject && targetIdx === -1) return prev;
-          reordered.splice(
-            targetIdx === -1 ? reordered.length : dropPosition === 'before' ? targetIdx : targetIdx + 1,
-            0,
-            draggedId,
-          );
-        }
+      if (targetWorkspaceId === null) {
+        // Drop workspace into a project, add it to the start of the workspace list
+        reordered.unshift(draggedId);
+      } else {
+        const targetIdx = reordered.indexOf(targetWorkspaceId);
+        if (!isMoveToDifferentProject && targetIdx === -1) return;
+        reordered.splice(
+          targetIdx === -1 ? reordered.length : dropPosition === 'before' ? targetIdx : targetIdx + 1,
+          0,
+          draggedId,
+        );
+      }
 
-        if (isMoveToDifferentProject || currentWorkspaceSortOrder !== 'type-manual') {
-          // If the current order is not manual, set the order to manual after re-order to persist the custom order
-          setProjectWorkspaceSortOrder(prev => ({ ...prev, [targetProjectId]: 'type-manual' }));
-        }
-        return { ...prev, [targetProjectId]: reordered };
-      });
+      if (isMoveToDifferentProject || currentWorkspaceSortOrder !== 'type-manual') {
+        // If the current order is not manual, set the order to manual after re-order to persist the custom order
+        setProjectWorkspaceSortOrder(prev => ({ ...prev, [targetProjectId]: 'type-manual' }));
+      }
+      setLocalWorkspaceOrders({ ...localWorkspaceOrders, [targetProjectId]: reordered });
     },
-    [projectWorkspaceSortOrder, setLocalWorkspaceOrders],
+    [projectWorkspaceSortOrder, setLocalWorkspaceOrders, localWorkspaceOrders],
   );
 
   const toggleProjectOrWorkspace = useCallback(
@@ -876,6 +874,7 @@ const ProjectNavigationSidebarInner = (
     organizationId,
     virtualizer,
     onWorkspaceReorder: handleLocalWorkspaceReorder,
+    expandedProjectAndWorkspaceIds,
   });
   const { selectedItemId, routeInfo } = useProjectNavigationSidebarNavigation({
     setActiveTab,

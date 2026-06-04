@@ -1,7 +1,7 @@
 import { type Billing, type CurrentPlan, type FeatureList, type Organization, type User } from 'insomnia-api';
 import type { Settings } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Link, ToggleButton, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
@@ -147,6 +147,51 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
   );
 };
 
+const ScratchPadAuthActions = () => (
+  <>
+    <NavLink
+      to={href('/auth/login')}
+      className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+    >
+      Login
+    </NavLink>
+    <NavLink
+      className="flex items-center justify-center gap-2 rounded-xs bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
+      to={href('/auth/login')}
+    >
+      Sign up for free
+    </NavLink>
+  </>
+);
+
+const LoginUserActions = ({
+  organizationId,
+  isMinimal,
+  user,
+  currentPlan,
+}: {
+  organizationId: string;
+  isMinimal: boolean;
+  user: User;
+  currentPlan?: CurrentPlan;
+}) => {
+  return (
+    <>
+      <PresentUsers />
+      <HeaderInviteButton
+        organizationId={organizationId}
+        className={
+          !isMinimal
+            ? 'border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise)'
+            : 'text-(--color-font)'
+        }
+      />
+      <HeaderPlanIndicator isMinimal={isMinimal} />
+      <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
+    </>
+  );
+};
+
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { organizations, user, currentPlan } = loaderData;
   const { settings } = useRootLoaderData()!;
@@ -211,7 +256,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     organizationId,
   });
 
-  const [isMinimal, setIsMinimal] = reactUse.useLocalStorage('isMinimal', false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = reactUse.useLocalStorage('project-navigation-collapsed', false);
 
   const toggleSidebar = useCallback(
@@ -221,7 +265,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
 
   useEffect(() => {
     return window.main.on('toggle-sidebar', () => {
-      console.log('toggle-sidebar event received, toggling sidebar');
       toggleSidebar();
     });
   }, [toggleSidebar]);
@@ -236,9 +279,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
             <div
               className={`grid-template-app-layout relative grid h-full w-full divide-x divide-solid divide-(--hl-md) bg-(--color-bg)`}
             >
-              <header
-                className={`grid grid-cols-3 items-center border-b border-solid border-(--hl-md) [grid-area:Header] ${isMinimal ? 'hidden' : ''}`}
-              >
+              <header className="grid grid-cols-3 items-center border-b border-solid border-(--hl-md) [grid-area:Header]">
                 <div className="flex items-center gap-2">
                   <div className="flex w-12.5 shrink-0 justify-center py-2">
                     <InsomniaLogo />
@@ -259,7 +300,18 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   {!user ? <GitHubStarsButton /> : null}
                 </div>
                 <CommandPalette />
-                <div />
+                <div className="flex min-w-min items-center justify-end gap-(--padding-sm) space-x-3 p-2">
+                  {user ? (
+                    <LoginUserActions
+                      organizationId={organizationId}
+                      isMinimal={false}
+                      user={user}
+                      currentPlan={currentPlan}
+                    />
+                  ) : (
+                    <ScratchPadAuthActions />
+                  )}
+                </div>
               </header>
               <div className="overflow-hidden border-b border-(--hl-md) [grid-area:Content]">
                 <RunnerProvider>
@@ -308,42 +360,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       </Tooltip>
                     </TooltipTrigger>
                     <TooltipTrigger>
-                      <ToggleButton
-                        className="flex grow-0 items-center justify-center px-2 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs)"
-                        onChange={flag => {
-                          setIsMinimal(!flag);
-                          window.main.trackAnalyticsEvent({
-                            event: AnalyticsEvent.statusbarTopbarToggled,
-                            properties: {
-                              status: !flag ? 'minimal' : 'expanded',
-                            },
-                          });
-                        }}
-                        isSelected={!isMinimal}
-                      >
-                        {({ isSelected }) => {
-                          return (
-                            <svg
-                              width={10}
-                              height={10}
-                              viewBox="0 0 16 16"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="currentColor"
-                              className="rotate-90"
-                            >
-                              {isSelected ? (
-                                <path
-                                  fillRule="evenodd"
-                                  clipRule="evenodd"
-                                  d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
-                                />
-                              ) : (
-                                <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
-                              )}
-                            </svg>
-                          );
-                        }}
-                      </ToggleButton>
                       <Tooltip
                         placement="top"
                         offset={8}
@@ -369,7 +385,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
                       </Tooltip>
                     </TooltipTrigger>
-                    {!isScratchpadWorkspace && hasUntrackedData && !isMinimal ? (
+                    {!isScratchpadWorkspace && hasUntrackedData && (
                       <div>
                         <Button
                           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -384,8 +400,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                           here to view them.
                         </Button>
                       </div>
-                    ) : null}
-                    {!isScratchpadWorkspace && hasUntrackedData && isMinimal ? (
+                    )}
+                    {!isScratchpadWorkspace && hasUntrackedData && (
                       <TooltipTrigger delay={500}>
                         <Button
                           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -406,75 +422,28 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                           We have detected orphaned projects on your computer, click here to view them.
                         </Tooltip>
                       </TooltipTrigger>
-                    ) : null}
-                    {isMinimal && (
+                    )}
+                  </div>
+                  <div className="flex shrink grow basis-1/3 justify-end">
+                    <div className="flex items-center gap-2">
                       <NetworkAndSyncIndicator
                         asyncTaskStatus={asyncTaskStatus}
                         settings={settings}
                         sync={syncOrgsAndProjects}
                       />
-                    )}
-                  </div>
-                  <div className="min-w-30 shrink grow basis-1/3">
-                    {isMinimal && <CommandPalette style={{ width: '100%' }} />}
-                  </div>
-                  <div className="flex shrink grow basis-1/3 justify-end">
-                    <div className="flex items-center gap-2">
-                      {!isMinimal && (
-                        <NetworkAndSyncIndicator
-                          asyncTaskStatus={asyncTaskStatus}
-                          settings={settings}
-                          sync={syncOrgsAndProjects}
-                        />
-                      )}
-                      {!isMinimal && (
-                        <Link>
-                          <a
-                            className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
-                            href="https://konghq.com/"
-                          >
-                            Made with
-                            <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
-                          </a>
-                        </Link>
-                      )}
+
+                      <Link>
+                        <a
+                          className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
+                          href="https://konghq.com/"
+                        >
+                          Made with
+                          <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
+                        </a>
+                      </Link>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div
-                className={`flex items-center justify-end gap-(--padding-sm) self-center justify-self-end border-l-0 p-2 ${isMinimal ? '[grid-area:Statusbar]' : '[grid-area:Header]'}`}
-              >
-                {user ? (
-                  <Fragment>
-                    <PresentUsers />
-                    <HeaderInviteButton
-                      organizationId={organizationId}
-                      className={
-                        isMinimal
-                          ? 'text-(--color-font)'
-                          : 'border border-solid border-(--hl-md) bg-(--color-surprise) font-semibold text-(--color-font-surprise)'
-                      }
-                    />
-                    <HeaderPlanIndicator isMinimal={isMinimal} />
-                    <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
-                  </Fragment>
-                ) : (
-                  <Fragment>
-                    <NavLink
-                      to={href('/auth/login')}
-                      className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                    >
-                      Login
-                    </NavLink>
-                    <NavLink
-                      className="flex items-center justify-center gap-2 rounded-xs bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:bg-[rgba(var(--color-surprise-rgb),0.9)] focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)]"
-                      to={href('/auth/login')}
-                    >
-                      Sign up for free
-                    </NavLink>
-                  </Fragment>
-                )}
               </div>
             </div>
           </div>
