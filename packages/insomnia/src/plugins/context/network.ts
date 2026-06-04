@@ -2,6 +2,7 @@ import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
+import { curlRequest } from '../../network/curl-request-adapter';
 import {
   fetchRequestData,
   responseTransform,
@@ -57,7 +58,6 @@ export function init(): {
         const settings = await services.settings.get();
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
         const { request: originRequest, caCertficatePath = null } = options;
-        const { curlRequest } = await import('~/network/curl-request-adapter');
         const response = await curlRequest({
           requestId: `no-sideEffects-request-${requestId}`,
           req: {

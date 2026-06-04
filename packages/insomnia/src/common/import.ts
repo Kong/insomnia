@@ -23,11 +23,13 @@ import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
+import { insecureReadFile } from '../utils/read-file-adapter';
 import { parseApiSpec, type ParsedApiSpec } from './api-specs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
+import { parseImport } from './parse-import-adapter';
 import { pathWithParamsAsPathParameters } from './path-with-params';
 
 const { isRequest } = models.request;
@@ -91,7 +93,6 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    const { insecureReadFile } = await import('~/utils/read-file-adapter');
     return insecureReadFile(path);
   }
   // Treat everything else as raw text
@@ -190,22 +191,19 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           insomnia5Import = data as ExportedModel[];
           v5Error = error;
         }
-        if (insomnia5Import.length > 0) {
-          result = {
-            type: {
-              id: 'insomnia-5',
-              name: 'Insomnia v5',
-              description: 'Insomnia v5',
-            },
-            data: {
-              resources: insomnia5Import,
-            },
-          };
-        } else {
-          const convertProcessFork =
-            process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
-          result = (await convertProcessFork(importEntry)) as unknown as ConvertResult;
-        }
+        result =
+          insomnia5Import.length > 0
+            ? {
+                type: {
+                  id: 'insomnia-5',
+                  name: 'Insomnia v5',
+                  description: 'Insomnia v5',
+                },
+                data: {
+                  resources: insomnia5Import,
+                },
+              }
+            : ((await parseImport(importEntry)) as unknown as ConvertResult);
       } catch (err: unknown) {
         if (v5Error) {
           const messages = extractErrorMessages(v5Error);

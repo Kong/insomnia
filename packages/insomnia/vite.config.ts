@@ -59,6 +59,7 @@ export default defineConfig(({ mode }) => {
         '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
         '~/utils/crypt-adapter': path.resolve(__dirname, './src/utils/crypt-adapter.renderer'),
         '~/utils/read-file-adapter': path.resolve(__dirname, './src/utils/read-file-adapter.renderer'),
+        '~/common/parse-import-adapter': path.resolve(__dirname, './src/common/parse-import-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
         // mime-types uses path.extname
         'path': path.resolve(__dirname, './src/path-shim.ts'),
