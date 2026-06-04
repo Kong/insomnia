@@ -1,4 +1,3 @@
-import { builtinModules } from 'node:module';
 import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
@@ -9,8 +8,6 @@ import pkg from './package.json';
 //These will be excluded from the bundle and remain as runtime dependencies
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
-  const browserSafeBuiltinModules = new Set(['assert', 'buffer', 'events', 'path', 'util']);
-  const nodeBuiltinModules = builtinModules.filter(m => !browserSafeBuiltinModules.has(m));
 
   return {
     define: {
