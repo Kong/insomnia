@@ -7,7 +7,6 @@ import { defaultServerConditions, defineConfig } from 'vite';
 
 import pkg from './package.json';
 //These will be excluded from the bundle and remain as runtime dependencies
-export const externalDependencies = [];
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
   const browserSafeBuiltinModules = new Set(['assert', 'buffer', 'events', 'path', 'util']);
@@ -47,7 +46,12 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['@getinsomnia/node-libcurl'],
       force: true, // wipe vite cache
-      include: ['codemirror-graphql/utils/SchemaReference', '@stoplight/spectral-core', 'isomorphic-git', 'json-bigint'],
+      include: [
+        'codemirror-graphql/utils/SchemaReference',
+        '@stoplight/spectral-core',
+        'isomorphic-git',
+        'json-bigint',
+      ],
     },
     resolve: {
       alias: {
@@ -59,16 +63,12 @@ export default defineConfig(({ mode }) => {
         '~': path.resolve(__dirname, './src'),
         // mime-types uses path.extname
         'path': path.resolve(__dirname, './src/path-shim.ts'),
-        'node:path': path.resolve(__dirname, './src/path-shim.ts'),
         // jshint uses EventEmitter
         'events': path.resolve(__dirname, '../../node_modules/events'),
-        'node:events': path.resolve(__dirname, '../../node_modules/events'),
         // jshint uses util
         'util': path.resolve(__dirname, '../../node_modules/util'),
-        'node:util': path.resolve(__dirname, '../../node_modules/util'),
         // isomorphic-git/sha.js/safe-buffer use Buffer
         'buffer': path.resolve(__dirname, '../../node_modules/buffer'),
-        'node:buffer': path.resolve(__dirname, '../../node_modules/buffer'),
       },
     },
     plugins: [
@@ -78,12 +78,7 @@ export default defineConfig(({ mode }) => {
       // and non-browser-safe node builtins must not be bundled into the renderer. The plugin converts
       // these to require() calls, which resolve correctly because contextIsolation is currently false.
       electronNodeRequire({
-        modules: [
-          'electron',
-          ...externalDependencies,
-          ...nodeBuiltinModules,
-          ...nodeBuiltinModules.map(m => `node:${m}`),
-        ],
+        modules: ['electron'],
       }),
       reactRouter(),
       tailwindcss(),
