@@ -256,7 +256,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     organizationId,
   });
 
-  const [isMinimal, setIsMinimal] = reactUse.useLocalStorage('isMinimal', false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = reactUse.useLocalStorage('project-navigation-collapsed', false);
 
   const toggleSidebar = useCallback(
@@ -280,9 +279,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
             <div
               className={`grid-template-app-layout relative grid h-full w-full divide-x divide-solid divide-(--hl-md) bg-(--color-bg)`}
             >
-              <header
-                className={`grid grid-cols-3 items-center border-b border-solid border-(--hl-md) [grid-area:Header] ${isMinimal ? 'hidden' : ''}`}
-              >
+              <header className="grid grid-cols-3 items-center border-b border-solid border-(--hl-md) [grid-area:Header]">
                 <div className="flex items-center gap-2">
                   <div className="flex w-12.5 shrink-0 justify-center py-2">
                     <InsomniaLogo />
@@ -363,42 +360,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       </Tooltip>
                     </TooltipTrigger>
                     <TooltipTrigger>
-                      <ToggleButton
-                        className="flex grow-0 items-center justify-center px-2 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs)"
-                        onChange={flag => {
-                          setIsMinimal(!flag);
-                          window.main.trackAnalyticsEvent({
-                            event: AnalyticsEvent.statusbarTopbarToggled,
-                            properties: {
-                              status: !flag ? 'minimal' : 'expanded',
-                            },
-                          });
-                        }}
-                        isSelected={!isMinimal}
-                      >
-                        {({ isSelected }) => {
-                          return (
-                            <svg
-                              width={10}
-                              height={10}
-                              viewBox="0 0 16 16"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="currentColor"
-                              className="rotate-90"
-                            >
-                              {isSelected ? (
-                                <path
-                                  fillRule="evenodd"
-                                  clipRule="evenodd"
-                                  d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
-                                />
-                              ) : (
-                                <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
-                              )}
-                            </svg>
-                          );
-                        }}
-                      </ToggleButton>
                       <Tooltip
                         placement="top"
                         offset={8}
@@ -424,7 +385,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
                       </Tooltip>
                     </TooltipTrigger>
-                    {!isScratchpadWorkspace && hasUntrackedData && !isMinimal ? (
+                    {!isScratchpadWorkspace && hasUntrackedData && (
                       <div>
                         <Button
                           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -439,8 +400,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                           here to view them.
                         </Button>
                       </div>
-                    ) : null}
-                    {!isScratchpadWorkspace && hasUntrackedData && isMinimal ? (
+                    )}
+                    {!isScratchpadWorkspace && hasUntrackedData && (
                       <TooltipTrigger delay={500}>
                         <Button
                           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -461,52 +422,25 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                           We have detected orphaned projects on your computer, click here to view them.
                         </Tooltip>
                       </TooltipTrigger>
-                    ) : null}
-                    {isMinimal && (
+                    )}
+                  </div>
+                  <div className="flex shrink grow basis-1/3 justify-end">
+                    <div className="flex items-center gap-2">
                       <NetworkAndSyncIndicator
                         asyncTaskStatus={asyncTaskStatus}
                         settings={settings}
                         sync={syncOrgsAndProjects}
                       />
-                    )}
-                  </div>
-                  <div className="min-w-30 shrink grow basis-1/3">
-                    {isMinimal && <CommandPalette style={{ width: '100%' }} />}
-                  </div>
-                  <div className="flex shrink grow basis-1/3 justify-end">
-                    <div className="flex items-center gap-2">
-                      {!isMinimal && (
-                        <NetworkAndSyncIndicator
-                          asyncTaskStatus={asyncTaskStatus}
-                          settings={settings}
-                          sync={syncOrgsAndProjects}
-                        />
-                      )}
-                      {!isMinimal && (
-                        <Link>
-                          <a
-                            className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
-                            href="https://konghq.com/"
-                          >
-                            Made with
-                            <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
-                          </a>
-                        </Link>
-                      )}
-                    </div>
-                    <div
-                      className={`flex items-center justify-end gap-(--padding-sm) p-2 ${!isMinimal ? 'hidden' : ''}`}
-                    >
-                      {user ? (
-                        <LoginUserActions
-                          organizationId={organizationId}
-                          isMinimal
-                          user={user}
-                          currentPlan={currentPlan}
-                        />
-                      ) : (
-                        <ScratchPadAuthActions />
-                      )}
+
+                      <Link>
+                        <a
+                          className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
+                          href="https://konghq.com/"
+                        >
+                          Made with
+                          <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
+                        </a>
+                      </Link>
                     </div>
                   </div>
                 </div>
