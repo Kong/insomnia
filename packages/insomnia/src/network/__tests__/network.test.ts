@@ -7,6 +7,7 @@ import { models, services } from 'insomnia-data';
 import { HttpVersions } from 'insomnia-data/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { version } from '../../../package.json';
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
@@ -161,7 +162,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -234,7 +235,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -338,7 +339,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -406,7 +407,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30_000,
         UPLOAD: 1,
         URL: 'http://localhost/',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -502,7 +503,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/',
         UPLOAD: 1,
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -546,7 +547,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30_000,
         URL: 'http://my/path',
         UNIX_SOCKET_PATH: '/my/socket',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -589,7 +590,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost:3000/foo/bar',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -632,7 +633,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         TIMEOUT_MS: 30_000,
         URL: 'http://unix:3000/my/path',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -677,7 +678,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         TIMEOUT_MS: 30_000,
         NETRC: CurlNetrc.Required,
         URL: '',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -796,7 +797,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         SSL_VERIFYPEER: 0, // should disable SSL
         TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },

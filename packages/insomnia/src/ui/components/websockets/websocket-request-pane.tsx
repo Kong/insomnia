@@ -478,6 +478,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             bulk={false}
             isDisabled={readyState}
             requestType="WebSocketRequest"
+            disableUserAgentHeader={activeRequest.disableUserAgentHeader}
           />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">

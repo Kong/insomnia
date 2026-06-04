@@ -36,10 +36,6 @@ exports[`Fixtures > Import curl > complex-input.sh 1`] = `
           "name": "another-header",
           "value": "foo",
         },
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
       ],
       "method": "POST",
       "name": "http://localhost:8000/api/v1/send",
@@ -91,10 +87,6 @@ exports[`Fixtures > Import curl > dollar-sign-input.sh 1`] = `
           "name": "Pragma",
           "value": "no-cache",
         },
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
       ],
       "method": "POST",
       "name": "https://test.dk",
@@ -137,12 +129,7 @@ exports[`Fixtures > Import curl > form-input.sh 1`] = `
           },
         ],
       },
-      "headers": [
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
-      ],
+      "headers": [],
       "method": "POST",
       "name": "https://insomnia.rest/signup",
       "parameters": [],
@@ -237,12 +224,7 @@ exports[`Fixtures > Import curl > get-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
-      ],
+      "headers": [],
       "method": "GET",
       "name": "http://somesite.com/getdata",
       "parameters": [
@@ -274,10 +256,6 @@ exports[`Fixtures > Import curl > header-colon-input.sh 1`] = `
         {
           "name": "X-Something",
           "value": "foo: bar:baz",
-        },
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
         },
       ],
       "method": "GET",
@@ -319,10 +297,6 @@ exports[`Fixtures > Import curl > multi-data-input.sh 1`] = `
           "name": "Content-Type",
           "value": "application/x-www-form-urlencoded",
         },
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
       ],
       "method": "POST",
       "name": "https://insomnia.rest",
@@ -346,12 +320,7 @@ exports[`Fixtures > Import curl > multi-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
-      ],
+      "headers": [],
       "method": "GET",
       "name": "https://insomnia.rest/1/2/3",
       "parameters": [],
@@ -363,12 +332,7 @@ exports[`Fixtures > Import curl > multi-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
-      ],
+      "headers": [],
       "method": "GET",
       "name": "https://insomnia.rest/foo/bar",
       "parameters": [],
@@ -385,10 +349,6 @@ exports[`Fixtures > Import curl > multi-input.sh 1`] = `
           "name": "Cookie",
           "value": "foo=bar",
         },
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
       ],
       "method": "GET",
       "name": "https://insomnia.rest",
@@ -401,12 +361,7 @@ exports[`Fixtures > Import curl > multi-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
-      ],
+      "headers": [],
       "method": "GET",
       "name": "https://insomnia.rest",
       "parameters": [],
@@ -429,12 +384,7 @@ exports[`Fixtures > Import curl > no-url-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
-      ],
+      "headers": [],
       "method": "POST",
       "name": "cURL Import 1",
       "parameters": [],
@@ -460,12 +410,7 @@ exports[`Fixtures > Import curl > question-mark-input.sh 1`] = `
         "mimeType": "",
         "text": "{"query":{"match_all":{}}}",
       },
-      "headers": [
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
-      ],
+      "headers": [],
       "method": "POST",
       "name": "http://192.168.1.1:9200/executions/_search",
       "parameters": [
@@ -494,12 +439,7 @@ exports[`Fixtures > Import curl > simple-url-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
-      ],
+      "headers": [],
       "method": "GET",
       "name": "https://www.google.com",
       "parameters": [],
@@ -522,12 +462,7 @@ exports[`Fixtures > Import curl > url-only-input.sh 1`] = `
       "_type": "request",
       "authentication": {},
       "body": {},
-      "headers": [
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
-        },
-      ],
+      "headers": [],
       "method": "GET",
       "name": "https://insomnia.rest/foo/bar",
       "parameters": [],
@@ -566,10 +501,6 @@ exports[`Fixtures > Import curl > urlencoded-input.sh 1`] = `
         {
           "name": "Content-Type",
           "value": "application/x-www-form-urlencoded",
-        },
-        {
-          "name": "User-Agent",
-          "value": "insomnia/TEST",
         },
       ],
       "method": "POST",

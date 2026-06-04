@@ -23,6 +23,8 @@ import type { SORT_ORDERS } from '~/common/constants';
 import { sortOrderName } from '~/common/constants';
 import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 
 import { Icon } from '../icon';
@@ -48,6 +50,8 @@ interface Props {
   storageRules: StorageRules;
   sortOrder: WorkspaceSortOrder;
   onSortOrderChange: (newOrder: WorkspaceSortOrder) => void;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
 }
 
 interface ProjectActionItem {
@@ -60,7 +64,15 @@ interface ProjectActionItem {
   submenuItems?: Omit<ProjectActionItem, 'icon'>[];
 }
 
-export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules, sortOrder, onSortOrderChange }) => {
+export const ProjectDropdown: FC<Props> = ({
+  project,
+  organizationId,
+  storageRules,
+  sortOrder,
+  onSortOrderChange,
+  isOpen,
+  onOpenChange,
+}) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
   const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
     scope: WorkspaceScope;
@@ -71,6 +83,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
     isOpen: false,
   });
   const { workspaceId } = useParams() as { workspaceId?: string };
+  const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
 
   const deleteProjectFetcher = useProjectDeleteActionFetcher();
 
@@ -94,6 +107,20 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
     setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source: 'sidebar-dropdown' });
 
   const projectActionList: ProjectActionItem[] = [
+    {
+      id: 'import',
+      name: 'Import',
+      icon: 'file-import',
+      action: () => {
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.importStarted,
+          properties: {
+            source: 'project',
+          },
+        });
+        setImportModalType('file');
+      },
+    },
     {
       id: 'settings',
       name: 'Settings',
@@ -151,14 +178,14 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
   const createInProjectActionList: ProjectActionItem[] = [
     {
       id: 'new-collection',
-      name: 'Request collection',
+      name: 'Collection',
       scope: 'collection',
       icon: 'bars',
       action: createNewCollection,
     },
     {
       id: 'new-document',
-      name: 'Design document',
+      name: 'Document',
       scope: 'design',
       icon: 'file',
       action: createNewDocument,
@@ -251,14 +278,19 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
           <Icon icon="circle" className="h-2 w-2" color="var(--color-warning)" />
         </div>
       )}
-      <MenuTrigger>
+      <MenuTrigger
+        isOpen={isOpen}
+        onOpenChange={isOpen => {
+          onOpenChange(isOpen);
+        }}
+      >
         <Button
           aria-label="Project Actions"
           className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
         >
           <Icon icon="ellipsis" />
         </Button>
-        <Popover className="flex min-w-max flex-col overflow-y-hidden">
+        <Popover placement="bottom end" className="flex min-w-44 flex-col overflow-y-hidden">
           <Menu
             aria-label="Project Actions Menu"
             selectionMode="single"
@@ -269,7 +301,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
                 ?.action(project._id, project.name);
             }}
             items={projectDropdownActions}
-            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+            className="min-w-44 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
           >
             {section => (
               <MenuSection className="flex flex-1 flex-col">
@@ -360,6 +392,15 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
               isOpen,
             });
           }}
+        />
+      )}
+      {importModalType && (
+        <ImportModal
+          onHide={() => setImportModalType(null)}
+          projectName={project.name}
+          from={{ type: importModalType }}
+          organizationId={organizationId}
+          defaultProjectId={project._id}
         />
       )}
     </Fragment>

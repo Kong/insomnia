@@ -1,4 +1,3 @@
-import { builtinModules } from 'node:module';
 import path from 'node:path';
 
 import { reactRouter } from '@react-router/dev/vite';
@@ -7,11 +6,8 @@ import { defaultServerConditions, defineConfig } from 'vite';
 
 import pkg from './package.json';
 //These will be excluded from the bundle and remain as runtime dependencies
-export const externalDependencies = ['@apidevtools/swagger-parser', 'mocha'];
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
-  const browserSafeBuiltinModules = new Set(['assert', 'buffer', 'events', 'path', 'util']);
-  const nodeBuiltinModules = builtinModules.filter(m => !browserSafeBuiltinModules.has(m));
 
   return {
     define: {
@@ -47,7 +43,12 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['@getinsomnia/node-libcurl'],
       force: true, // wipe vite cache
-      include: ['codemirror-graphql/utils/SchemaReference', '@stoplight/spectral-core', 'isomorphic-git', 'json-bigint'],
+      include: [
+        'codemirror-graphql/utils/SchemaReference',
+        '@stoplight/spectral-core',
+        'isomorphic-git',
+        'json-bigint',
+      ],
     },
     resolve: {
       alias: {
@@ -57,34 +58,24 @@ export default defineConfig(({ mode }) => {
         '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
         '~/utils/crypt-adapter': path.resolve(__dirname, './src/utils/crypt-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
-        // Shim Node's `path` module for browser-safe dependencies (e.g. mime-types uses path.extname).
+        // mime-types uses path.extname
         'path': path.resolve(__dirname, './src/path-shim.ts'),
-        'node:path': path.resolve(__dirname, './src/path-shim.ts'),
-        // Shim Node's `assert` module for browser-safe dependencies that still use runtime invariants.
-        'assert': path.resolve(__dirname, '../../node_modules/assert'),
-        'node:assert': path.resolve(__dirname, '../../node_modules/assert'),
-        // Shim Node's `events` module for browser-safe dependencies (e.g. jshint uses EventEmitter).
+        // jshint uses EventEmitter
         'events': path.resolve(__dirname, '../../node_modules/events'),
-        'node:events': path.resolve(__dirname, '../../node_modules/events'),
-        // Shim Node's `util` module for browser-safe dependencies (e.g. tough-cookie uses util.inherits).
+        // jshint uses util
         'util': path.resolve(__dirname, '../../node_modules/util'),
-        'node:util': path.resolve(__dirname, '../../node_modules/util'),
-        // Buffer is also browser-safe in this renderer bundle, so keep it bundled instead of externalized.
+        // isomorphic-git/sha.js/safe-buffer use Buffer
         'buffer': path.resolve(__dirname, '../../node_modules/buffer'),
-        'node:buffer': path.resolve(__dirname, '../../node_modules/buffer'),
       },
     },
     plugins: [
       // Allows us to import modules that will be resolved by Node's require() function.
       // e.g. import fs from 'fs'; will get transformed to const fs = require('fs'); so that it works in the renderer process.
-      // This is necessary because we use nodeIntegration: true in the renderer process and allow importing modules from node.
+      // Still needed: renderer files (plugins/index.ts, sync/git/providers/*.ts) import `electron` as a value,
+      // and non-browser-safe node builtins must not be bundled into the renderer. The plugin converts
+      // these to require() calls, which resolve correctly because contextIsolation is currently false.
       electronNodeRequire({
-        modules: [
-          'electron',
-          ...externalDependencies,
-          ...nodeBuiltinModules,
-          ...nodeBuiltinModules.map(m => `node:${m}`),
-        ],
+        modules: ['electron'],
       }),
       reactRouter(),
       tailwindcss(),
@@ -94,10 +85,10 @@ export default defineConfig(({ mode }) => {
     },
     // The Electron renderer is browser-like even in React Router's SSR (server) build.
     // Vite's DEFAULT_SERVER_CONDITIONS excludes "browser", so packages with a
-    // "browser" exports condition (e.g. insomnia-testing) would otherwise resolve to
-    // their full Node entry point in the server bundle — pulling in Node-only modules
-    // like mocha. Prepending "browser" here keeps the server bundle consistent with
-    // the client build while retaining all other default server conditions.
+    // "browser" exports condition would otherwise resolve to their full Node entry point
+    // in the server bundle — pulling in Node-only modules. Prepending "browser" here
+    // keeps the server bundle consistent with the client build while retaining all other
+    // default server conditions.
     ssr: {
       resolve: {
         conditions: ['browser', ...defaultServerConditions],

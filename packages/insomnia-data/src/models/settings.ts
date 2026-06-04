@@ -34,7 +34,6 @@ export function init(): BaseSettings {
     deviceId: null,
     disableHtmlPreviewJs: false,
     disableResponsePreviewLinks: false,
-    disableAppVersionUserAgent: false,
     disableUpdateNotification: false,
     editorFontSize: 11,
     editorIndentSize: 2,

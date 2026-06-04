@@ -306,6 +306,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 bulk={settings.useBulkHeaderEditor}
                 headers={activeRequest.headers}
                 requestType="Request"
+                disableUserAgentHeader={activeRequest.disableUserAgentHeader}
                 onDescriptionToggle={() => {
                   window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestHeadersDescriptionToggled });
                 }}

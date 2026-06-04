@@ -21,6 +21,7 @@ function isPrivateOrLoopbackHost(hostname) {
   if (isIPv4(host)) {
     const [a, b] = host.split('.').map(Number);
     return (
+      a === 0 || // 0.0.0.0/8    unspecified (routes to localhost on most platforms)
       a === 127 || // 127.0.0.0/8  loopback
       a === 10 || // 10.0.0.0/8   private
       (a === 172 && b >= 16 && b <= 31) || // 172.16.0.0/12 private

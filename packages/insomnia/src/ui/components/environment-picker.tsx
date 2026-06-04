@@ -136,9 +136,9 @@ export const EnvironmentPicker = ({
         <Dialog className="grid h-full w-full auto-cols-[min(260px,calc(40vw))_min(260px,calc(40vw))] grid-flow-col divide-x divide-solid divide-(--hl-md) overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none focus:outline-hidden">
           <div className="relative flex h-full w-full flex-1 flex-col overflow-hidden">
             <Heading className="flex h-(--line-height-sm) shrink-0 items-center justify-between gap-2 px-3 py-1 text-sm font-bold text-(--hl)">
-              <span>Global Environments</span>
+              <span>Project Environments</span>
               <Button
-                aria-label="Manage global environment"
+                aria-label="Manage project environment"
                 onPress={() =>
                   selectedGlobalBaseEnvironment &&
                   navigate(
@@ -152,7 +152,7 @@ export const EnvironmentPicker = ({
             </Heading>
             <div>
               <ComboBox
-                aria-label="Global Environment"
+                aria-label="Project Environment"
                 shouldFocusWrap
                 allowsCustomValue={false}
                 menuTrigger="focus"
@@ -176,11 +176,11 @@ export const EnvironmentPicker = ({
                 defaultInputValue={
                   selectedGlobalBaseEnvironment?.workspaceName ||
                   selectedGlobalBaseEnvironment?.name ||
-                  'No Global Environment'
+                  'No Project Environment'
                 }
                 selectedKey={selectedGlobalBaseEnvironmentId || ''}
                 defaultItems={[
-                  { id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' },
+                  { id: '', icon: 'cancel', name: 'No Project Environment', textValue: 'No Project Environment' },
                   ...globalBaseEnvironments.map(baseEnv => {
                     return {
                       id: baseEnv._id,
@@ -193,8 +193,8 @@ export const EnvironmentPicker = ({
               >
                 <div className="group mx-2 my-2 flex items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                   <Input
-                    aria-label="Global Environment"
-                    placeholder="Choose a global environment"
+                    aria-label="Project Environment"
+                    placeholder="Choose a project environment"
                     className="w-full py-1 pr-7 pl-2 placeholder:italic"
                   />
                   <Button className="flex aspect-square items-center justify-center gap-2 truncate rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">

@@ -150,8 +150,10 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Modal Submit' }).click();
     await page.getByRole('dialog', { name: 'Modal' }).waitFor({ state: 'hidden' });
 
-    // close the environment editor and wait for it to disappear
-    await page.getByRole('button', { name: 'Close', exact: true }).click();
+    // wait for the environment update fetcher to finish (Close is disabled while it's in-flight)
+    const closeButton = page.getByRole('button', { name: 'Close', exact: true });
+    await expect.soft(closeButton).toBeEnabled();
+    await closeButton.click();
     await page.getByRole('heading', { name: 'Manage Environments' }).waitFor({ state: 'hidden' });
 
     // dismiss the environment picker dropdown if it appeared

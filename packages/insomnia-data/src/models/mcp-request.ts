@@ -29,6 +29,7 @@ export interface BaseMcpRequest {
   connected: boolean;
   // See: https://nodejs.org/api/tls.html#tlsconnectoptions-callback
   sslValidation: boolean;
+  disableUserAgentHeader: boolean;
 }
 export type McpServerPrimitiveTypes = 'tools' | 'resources' | 'prompts' | 'resourceTemplates';
 
@@ -53,5 +54,6 @@ export function init(): BaseMcpRequest {
     subscribeResources: [],
     connected: false,
     sslValidation: true,
+    disableUserAgentHeader: false,
   };
 }

@@ -54,6 +54,8 @@ interface Props {
   organizationId: string;
   sortOrder?: SortOrder;
   onSortOrderChange: (newSortOrder: SortOrder) => void;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
 }
 
 interface ActionItem {
@@ -80,6 +82,8 @@ export const SidebarWorkspaceDropdown = ({
   organizationId,
   sortOrder,
   onSortOrderChange,
+  isOpen,
+  onOpenChange,
 }: Props) => {
   const projectId = project._id;
   const workspaceId = workspace._id;
@@ -317,7 +321,12 @@ export const SidebarWorkspaceDropdown = ({
 
   return (
     <Fragment>
-      <MenuTrigger>
+      <MenuTrigger
+        isOpen={isOpen}
+        onOpenChange={isOpen => {
+          onOpenChange(isOpen);
+        }}
+      >
         <Button
           aria-label="SideBar Workspace Actions"
           className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"

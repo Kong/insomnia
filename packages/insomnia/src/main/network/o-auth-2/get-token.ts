@@ -19,7 +19,6 @@ import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-
 import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
 import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-storage';
 
-import { version } from '../../../../package.json';
 import { getOauthRedirectUrl, getOauthRelayUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../../common/constants';
 import { type DefaultBrowserRedirectParam, escapeRegex } from '../../../common/misc';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../../network/authentication';
@@ -479,15 +478,11 @@ const sendAccessTokenRequest = async (
   const { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId } =
     initializedData;
 
-  const defaultUserAgentHeader: RequestHeader = { name: 'User-Agent', value: `insomnia/${version}` };
   const defaultHeaders: RequestHeader[] = [
     { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
     { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
   ];
 
-  if (!settings.disableAppVersionUserAgent) {
-    defaultHeaders.push(defaultUserAgentHeader);
-  }
   const newRequest: Request = {
     ...models.request.init(),
     authentication: {

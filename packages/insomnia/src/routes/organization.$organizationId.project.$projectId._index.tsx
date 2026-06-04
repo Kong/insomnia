@@ -282,23 +282,27 @@ const Component = () => {
     id: string;
     name: string;
     icon: IconProp;
+    scope: WorkspaceScope;
     action: () => void;
   }[] = [
     {
       id: 'new-collection',
-      name: 'Request collection',
+      name: 'Collection',
       icon: 'bars',
       action: () => createNewCollection('navbar'),
+      scope: 'collection',
     },
     {
       id: 'new-document',
-      name: 'Design document',
+      name: 'Document',
       icon: 'file',
       action: () => createNewDocument('navbar'),
+      scope: 'design',
     },
     {
       id: 'new-mcp-client',
       name: 'MCP Client',
+      scope: 'mcp',
       icon: ['fac', 'mcp'] as unknown as IconProp,
       action: () => createNewMcpClient('navbar'),
     },
@@ -307,6 +311,7 @@ const Component = () => {
           {
             id: 'new-mock-server',
             name: 'Mock Server',
+            scope: 'mock-server' as WorkspaceScope,
             icon: 'server' as IconName,
             action: () => createNewMockServer('navbar'),
           },
@@ -317,6 +322,7 @@ const Component = () => {
       name: 'Environment',
       icon: 'code',
       action: () => createNewGlobalEnvironment('navbar'),
+      scope: 'environment',
     },
   ];
 
@@ -521,7 +527,11 @@ const Component = () => {
                           className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label={item.name}
                         >
-                          <Icon icon={item.icon} />
+                          <div
+                            className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
+                          >
+                            <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
+                          </div>
                           <span>{item.name}</span>
                         </MenuItem>
                       )}

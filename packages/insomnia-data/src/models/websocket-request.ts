@@ -26,6 +26,7 @@ export interface BaseWebSocketRequest {
   settingSendCookies: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
   settingUseProxy?: boolean;
+  disableUserAgentHeader: boolean;
   konnectRouteKey?: string | null;
   konnectManagedHeaderNames?: string[] | null;
 }
@@ -52,6 +53,7 @@ export const init = (): BaseWebSocketRequest => ({
   settingSendCookies: true,
   settingFollowRedirects: 'global',
   description: '',
+  disableUserAgentHeader: false,
 });
 
 export function rewriteReferences(request: WebSocketRequest, idMapping: Map<string, string>): WebSocketRequest {

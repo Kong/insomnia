@@ -109,8 +109,6 @@ export interface Settings {
 
   disableResponsePreviewLinks: boolean;
 
-  disableAppVersionUserAgent: boolean;
-
   /** If true, Insomnia won’t show a notification when new updates are available. Users can still check for updates in Preferences. */
   disableUpdateNotification: boolean;
 

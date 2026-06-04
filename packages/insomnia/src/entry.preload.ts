@@ -293,7 +293,8 @@ const main: Window['main'] = {
   curlRequest: options => invokeWithNormalizedError('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => invokeWithNormalizedError('writeFile', options),
-  deleteRulesetFile: options => invokeWithNormalizedError('deleteRulesetFile', options),
+  deleteCompiledRuleset: options => invokeWithNormalizedError('deleteCompiledRuleset', options),
+  refreshCompiledRuleset: options => invokeWithNormalizedError('refreshCompiledRuleset', options),
   writeResponseBodyToFile: options => invokeWithNormalizedError('writeResponseBodyToFile', options),
   getAuthHeader: (renderedRequest: RenderedRequest, url: string): Promise<RequestHeader | undefined> =>
     invokeWithNormalizedError('getAuthHeader', renderedRequest, url),

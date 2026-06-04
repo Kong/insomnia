@@ -6,7 +6,6 @@ import {
   CONTENT_TYPE_EVENT_STREAM,
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
-  getAppVersion,
   METHOD_GET,
   METHOD_POST,
 } from '~/common/constants';
@@ -28,18 +27,6 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     metrics?: RequestCreatedMetricsProperties;
   };
 
-  const settings = await services.settings.getOrCreate();
-  const defaultHeaders = settings.disableAppVersionUserAgent
-    ? []
-    : [
-        {
-          name: 'User-Agent',
-          value: `insomnia/${getAppVersion()}`,
-          description: '',
-          disabled: false,
-        },
-      ];
-
   let activeRequestId;
   if (requestType === 'HTTP') {
     activeRequestId = (
@@ -48,7 +35,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
         method: METHOD_GET,
         name: req?.name || 'New Request',
         url: req?.url || '',
-        headers: defaultHeaders,
+        headers: [],
       })
     )._id;
   }
@@ -65,7 +52,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       await services.request.create({
         parentId: parentId || workspaceId,
         method: METHOD_POST,
-        headers: [...defaultHeaders, { name: 'Content-Type', value: CONTENT_TYPE_JSON }],
+        headers: [{ name: 'Content-Type', value: CONTENT_TYPE_JSON }],
         body: {
           mimeType: CONTENT_TYPE_GRAPHQL,
           text: req?.body?.text || '',
@@ -82,7 +69,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
         parentId: parentId || workspaceId,
         method: METHOD_GET,
         url: '',
-        headers: [...defaultHeaders, { name: 'Accept', value: CONTENT_TYPE_EVENT_STREAM }],
+        headers: [{ name: 'Accept', value: CONTENT_TYPE_EVENT_STREAM }],
         name: 'New Event Stream',
       })
     )._id;
@@ -92,7 +79,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       await services.webSocketRequest.create({
         parentId: parentId || workspaceId,
         name: 'New WebSocket Request',
-        headers: defaultHeaders,
+        headers: [],
       })
     )._id;
   }
@@ -101,7 +88,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       await services.socketIORequest.create({
         parentId: parentId || workspaceId,
         name: 'New Socket.IO Request',
-        headers: defaultHeaders,
+        headers: [],
       })
     )._id;
   }

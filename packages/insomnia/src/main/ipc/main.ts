@@ -38,6 +38,11 @@ import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
+import {
+  deleteCompiledRuleset,
+  invalidateCompiledRulesetCache,
+  writeCompiledRuleset,
+} from '~/main/spectral-ruleset-cache';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 import type {
   GenerateCommitsFromDiffFunction,
@@ -112,18 +117,6 @@ const readDir = async (_: unknown, options: { path: string }) => {
   } catch (err) {
     throw new Error(`Failed to read directory: ${err}`);
   }
-};
-
-const resolveSafeRulesetPath = (rulesetPath: string): string | null => {
-  const userDataDir = path.resolve(app.getPath('userData'));
-  const resolved = path.resolve(rulesetPath);
-  const rel = path.relative(userDataDir, resolved);
-  const insideUserData = rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
-  if (!insideUserData || path.basename(resolved) !== '.spectral.yaml') {
-    return null;
-  }
-
-  return resolved;
 };
 
 const writeResponseBodyToFile = async (
@@ -213,7 +206,8 @@ export interface RendererToMainBridgeAPI {
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
-  deleteRulesetFile: (options: { path: string }) => Promise<void>;
+  deleteCompiledRuleset: (options: { projectId: string }) => Promise<void>;
+  refreshCompiledRuleset: (options: { projectId: string; rulesetContent: string }) => Promise<{ compiledPath: string }>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
     destinationPath: string;
@@ -264,7 +258,8 @@ export interface RendererToMainBridgeAPI {
   }) => void;
   lintSpec: (options: {
     documentContent: string;
-    rulesetPath: string;
+    projectId: string;
+    rulesetContent: string;
   }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
   bundleSpectralRuleset: (options: { sourcePath: string }) => Promise<{ content?: string; error?: string }>;
   createPlugin: (options: { pluginName: string; mainJs: string }) => Promise<void>;
@@ -441,19 +436,12 @@ export function registerMainHandlers() {
       throw new Error(err);
     }
   });
-  ipcMainHandle('deleteRulesetFile', async (_, options: { path: string }) => {
-    const safePath = resolveSafeRulesetPath(options.path);
-    if (!safePath) {
-      throw new Error('Invalid ruleset path');
-    }
-    try {
-      await fs.promises.unlink(safePath);
-    } catch (err) {
-      if (err?.code === 'ENOENT') {
-        return;
-      }
-      throw err instanceof Error ? err : new Error(String(err));
-    }
+  ipcMainHandle('deleteCompiledRuleset', async (_, options: { projectId: string }) => {
+    await deleteCompiledRuleset(options.projectId);
+  });
+  ipcMainHandle('refreshCompiledRuleset', async (_, options: { projectId: string; rulesetContent: string }) => {
+    invalidateCompiledRulesetCache(options.projectId);
+    return writeCompiledRuleset(options.projectId, options.rulesetContent);
   });
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
@@ -470,80 +458,72 @@ export function registerMainHandlers() {
       return { error: err instanceof Error ? err.message : String(err) };
     }
   });
-  ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
-    const { documentContent } = options;
-    let { rulesetPath } = options;
-
-    //defensive validation for ruleset file before spawning the spectral lint worker
-    if (rulesetPath) {
-      const safePath = resolveSafeRulesetPath(rulesetPath);
-      if (!safePath) {
-        return { error: 'Invalid ruleset path' };
-      }
-      rulesetPath = safePath;
-
-      try {
-        // Validate the ruleset (flattens local extends, checks remote URLs for SSRF and
-        // disallowed keys such as "functions") before passing the path to the lint worker.
-        // Result is discarded — validation only; the original file is not modified.
-        await bundleSpectralRuleset(rulesetPath);
-      } catch (err) {
-        // Fall back to the default OAS ruleset
-        if (err && (err as NodeJS.ErrnoException).code === 'ENOENT') {
-          rulesetPath = '';
-        } else {
+  ipcMainHandle(
+    'lintSpec',
+    async (_, options: { documentContent: string; projectId: string; rulesetContent: string }) => {
+      const { documentContent, projectId, rulesetContent } = options;
+      let rulesetPath = '';
+      if (rulesetContent) {
+        try {
+          // Compile the ruleset (flattens local extends, fetches + validates + fully inlines remote
+          // extends, blocking SSRF and disallowed keys such as "functions") into a URL-free object
+          // written to a cache path under userData. The worker is pointed at that compiled object so
+          // it has nothing left to fetch — closing the validate-then-use race.
+          const { compiledPath } = await writeCompiledRuleset(projectId, rulesetContent);
+          rulesetPath = compiledPath;
+        } catch (err) {
           return { error: err instanceof Error ? err.message : String(err) };
         }
       }
-    }
 
-    return new Promise((resolve, reject) => {
-      // Use a filescoped variable to store and terminate the last open
-      // This ensures we use a last in first out type of process management
-      // We only care about the most recent lint request
-      if (lintProcess) {
-        lintProcess.kill();
-      }
-
-      lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
-
-      let process: UtilityProcess | null = lintProcess!;
-
-      // defends against ReDoS via pattern function regex. We terminate the lintProcess worker if it exceeds a reasonable time limit (30s) so it does not pin a CPU core indefinitely.
-      const LINT_WORKER_TIMEOUT_MS = 30_000;
-      const timeoutHandle = setTimeout(() => {
-        if (process) {
-          console.warn(`[lint-process] exceeded ${LINT_WORKER_TIMEOUT_MS / 1000}s limit; terminating.`);
-          process.kill();
-          process = null;
-          resolve({
-            error: `Linting exceeded the ${LINT_WORKER_TIMEOUT_MS / 1000}s time limit and was terminated. The ruleset or specification may contain a deeply nested schema.`,
-          });
+      return new Promise((resolve, reject) => {
+        // Use a filescoped variable to store and terminate the last open
+        // This ensures we use a last in first out type of process management
+        // We only care about the most recent lint request
+        if (lintProcess) {
+          lintProcess.kill();
         }
-      }, LINT_WORKER_TIMEOUT_MS);
 
-      process.on('exit', code => {
-        console.log('[lint-process] exited with code:', code);
-        clearTimeout(timeoutHandle);
-        resolve({ cancelled: true });
+        lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
+
+        let process: UtilityProcess | null = lintProcess!;
+
+        // defends against ReDoS via pattern function regex. We terminate the lintProcess worker if it exceeds a reasonable time limit (30s) so it does not pin a CPU core indefinitely.
+        const LINT_WORKER_TIMEOUT_MS = 30_000;
+        const timeoutHandle = setTimeout(() => {
+          if (process) {
+            console.warn(`[lint-process] exceeded ${LINT_WORKER_TIMEOUT_MS / 1000}s limit; terminating.`);
+            process.kill();
+            process = null;
+            resolve({
+              error: `Linting exceeded the ${LINT_WORKER_TIMEOUT_MS / 1000}s time limit and was terminated. The ruleset or specification may contain a deeply nested schema.`,
+            });
+          }
+        }, LINT_WORKER_TIMEOUT_MS);
+
+        process.on('exit', code => {
+          console.log('[lint-process] exited with code:', code);
+          clearTimeout(timeoutHandle);
+          resolve({ cancelled: true });
+        });
+
+        process.on('message', msg => {
+          clearTimeout(timeoutHandle);
+          resolve(msg);
+          process?.kill();
+          process = null;
+        });
+
+        process.on('error', err => {
+          console.error('[lint-process] error:', err);
+          clearTimeout(timeoutHandle);
+          reject({ error: err.toString() });
+        });
+
+        process.postMessage({ documentContent, rulesetPath });
       });
-
-      process.on('message', msg => {
-        clearTimeout(timeoutHandle);
-        resolve(msg);
-        process?.kill();
-        process = null;
-      });
-
-      process.on('error', err => {
-        console.error('[lint-process] error:', err);
-        clearTimeout(timeoutHandle);
-        reject({ error: err.toString() });
-      });
-
-      process.postMessage({ documentContent, rulesetPath });
-    });
-  });
+    },
+  );
 
   ipcMainHandle('generateCodeSnippet', async (_, options: { har: object; target: string; client: string }) => {
     const snippet = new HTTPSnippet(options.har as any);

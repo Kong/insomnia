@@ -33,7 +33,7 @@ test.describe('Git Sync', () => {
   // then opens History and verifies the commit appears in the log.
   test('Commit and check history', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectProjectDropdownOption({
-      actionName: 'Request collection',
+      actionName: 'Collection',
       projectName: GIT_PROJECT_NAME,
     });
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
@@ -73,7 +73,7 @@ test.describe('Git Sync', () => {
     await page.getByTestId('close-git-project-branches-modal').click();
     await page.getByTestId('git-project-branches-modal-overlay').waitFor({ state: 'hidden' });
     await insomnia.navigationSidebar.selectProjectDropdownOption({
-      actionName: 'Request collection',
+      actionName: 'Collection',
       projectName: GIT_PROJECT_NAME,
     });
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
@@ -107,7 +107,7 @@ test.describe('Git Sync', () => {
   // Verifies the "Push completed" toast appears, confirming a successful push.
   test('Push committed changes to remote', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectProjectDropdownOption({
-      actionName: 'Request collection',
+      actionName: 'Collection',
       projectName: GIT_PROJECT_NAME,
     });
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
@@ -158,7 +158,7 @@ test.describe('Git Sync', () => {
   // indicating all changes were discarded.
   test('Discard all unstaged changes', async ({ page, insomnia }) => {
     await insomnia.navigationSidebar.selectProjectDropdownOption({
-      actionName: 'Request collection',
+      actionName: 'Collection',
       projectName: GIT_PROJECT_NAME,
     });
     await page.getByRole('textbox', { name: 'Name', exact: true }).click();
