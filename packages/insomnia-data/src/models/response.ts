@@ -34,7 +34,7 @@ export interface BaseResponse {
   headers: ResponseHeader[];
   bodyPath: string;
   // if body is less than 5MB, it's stored in memory
-  bodyBuffer?: Buffer;
+  bodyBuffer?: Uint8Array;
   // Actual bodies are stored on the filesystem
   timelinePath: string;
   // Actual timelines are stored on the filesystem

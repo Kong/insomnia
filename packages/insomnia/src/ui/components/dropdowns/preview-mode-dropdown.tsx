@@ -3,6 +3,8 @@ import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from 'insomnia
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
+import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
+
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -81,7 +83,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     if (filePath && activeResponse.bodyBuffer) {
       await window.main.writeFile({
         path: filePath,
-        content: headers + '\n' + activeResponse.bodyBuffer.toString('utf8') || '',
+        content: headers + '\n' + bodyBufferToUtf8(activeResponse.bodyBuffer) || '',
       });
     }
   }, [activeRequest, activeResponse]);

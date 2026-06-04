@@ -14,6 +14,7 @@ import {
 } from 'react-aria-components';
 
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { utf8ByteLength } from '~/utils/utf8-bytes';
 
 import { describeByteSize, generateId } from '../../../common/misc';
 import { FileInputButton } from '../base/file-input-button';
@@ -131,7 +132,7 @@ export const KeyValueEditor: FC<Props> = ({
 
       const isFile = 'type' in pair && pair.type === 'file';
       const isMultiline = 'type' in pair && pair.type === 'text' && pair.multiline;
-      const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+      const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
 
       let valueEditor = (
         <div className="relative flex h-full w-full flex-1 px-2">
@@ -291,7 +292,7 @@ export const KeyValueEditor: FC<Props> = ({
           {pair => {
             const isFile = pair.type === 'file';
             const isMultiline = pair.type === 'text' && pair.multiline;
-            const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+            const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
             const lowerName = pair.name.toLowerCase();
             const isPairDisabled = !!readOnlyDisabledByName?.[lowerName];
 
@@ -394,7 +395,7 @@ export const KeyValueEditor: FC<Props> = ({
           {pair => {
             const isFile = pair.type === 'file';
             const isMultiline = pair.type === 'text' && pair.multiline;
-            const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+            const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
             const isOnlyTextAllowed = !allowFile && !allowMultiline;
 
             let valueEditor = (

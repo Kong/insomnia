@@ -3,6 +3,7 @@ import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { utf8ByteLength } from '~/utils/utf8-bytes';
 
 import { describeByteSize } from '../../../common/misc';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
@@ -78,7 +79,7 @@ export const Row: FC<Props> = ({
 
   const isFile = pair.type === 'file';
   const isMultiline = pair.type === 'text' && pair.multiline;
-  const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+  const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
 
   return (
     <li onKeyDown={onKeydown} onClick={onClick} className={classes}>

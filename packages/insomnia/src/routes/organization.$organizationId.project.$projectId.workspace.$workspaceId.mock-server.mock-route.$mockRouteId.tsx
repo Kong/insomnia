@@ -33,6 +33,7 @@ import { EmptyStatePane } from '~/ui/components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '~/ui/components/panes/pane';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { invariant } from '~/utils/invariant';
+import { utf8ByteLength } from '~/utils/utf8-bytes';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
@@ -65,7 +66,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     // Oversized responses are handled in the response-viewer.tsx for now
     if (!isOversizedResponse) {
       const buffer = await services.helpers.getResponseBodyBuffer(activeResponse);
-      activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+      activeResponse.bodyBuffer = typeof buffer === 'string' ? undefined : buffer;
     }
   }
   return {
@@ -106,7 +107,7 @@ export const mockRouteToHar = async ({
     headers: validHeaders,
     cookies: await window.main.cookies.getResponseCookiesFromHeaders(validHeaders),
     content: {
-      size: Buffer.byteLength(body),
+      size: utf8ByteLength(body),
       mimeType,
       text: body,
       compression: 0,
