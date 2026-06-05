@@ -6,6 +6,7 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import type { Part } from '~/main/multipart-buffer-to-array';
+import { utf8StringFromBytes } from '~/utils/utf8-bytes';
 
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals/index';
@@ -16,7 +17,7 @@ import { ResponseViewer } from './response-viewer';
 interface Props {
   download: (...args: any[]) => any;
   responseId: string;
-  bodyBuffer: Buffer | null;
+  bodyBuffer: Uint8Array | null;
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
@@ -105,7 +106,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
     try {
       await window.main.writeFile({
         path: filePath,
-        content: selectedPart.value.toString('utf8'),
+        content: utf8StringFromBytes(selectedPart.value),
       });
     } catch (err) {
       console.warn('Failed to save multipart to file', err);
@@ -198,7 +199,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
           error={null}
           filter={filter}
           filterHistory={filterHistory}
-          bodyBuffer={Buffer.from(selectedPart?.value || '')}
+          bodyBuffer={selectedPart?.value ?? new Uint8Array(0)}
           key={`${responseId}::${selectedPart?.id}`}
           previewMode={PREVIEW_MODE_FRIENDLY}
           responseId={`${responseId}[${selectedPart?.id}]`}

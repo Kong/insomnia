@@ -2,6 +2,7 @@ import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 import { models, services } from 'insomnia-data';
 
 import { decryptSecretValue } from '~/utils/crypt-adapter';
+import { base64ToUtf8, utf8ToBase64 } from '~/utils/utf8-bytes';
 
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
@@ -122,7 +123,7 @@ export function encodeEncoding<T>(value: T, encoding?: 'base64') {
   }
 
   if (encoding === 'base64') {
-    const encodedValue = Buffer.from(value, 'utf8').toString('base64');
+    const encodedValue = utf8ToBase64(value);
     return `b64::${encodedValue}::46b`;
   }
 
@@ -137,11 +138,7 @@ export function decodeEncoding<T>(value: T) {
   const results = value.match(/^b64::(.+)::46b$/);
 
   if (results) {
-    if (typeof Buffer !== 'undefined') {
-      return Buffer.from(results[1], 'base64').toString('utf8');
-    }
-    // Fallback for browser environments
-    return atob(results[1]);
+    return base64ToUtf8(results[1]);
   }
 
   return value;
