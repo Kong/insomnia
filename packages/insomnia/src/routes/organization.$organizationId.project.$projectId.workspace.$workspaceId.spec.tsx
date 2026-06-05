@@ -626,6 +626,216 @@ const Component = ({ params }: Route.ComponentProps) => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
+  const specEditor = (
+    <div className="relative flex h-full w-full overflow-hidden">
+      <CodeEditor
+        id="spec-editor"
+        key={uniquenessKey}
+        showPrettifyButton
+        ref={editor}
+        lintOptions={lintOptions}
+        mode={apiSpec.contents ? 'openapi' : undefined}
+        defaultValue={apiSpec.contents || ''}
+        onChange={onCodeEditorChange}
+        uniquenessKey={uniquenessKey}
+      />
+      {apiSpec.contents ? null : (
+        <DesignEmptyState
+          onImport={value => {
+            updateApiSpec({
+              organizationId,
+              projectId,
+              workspaceId,
+              contents: value,
+              fromTemplate: true,
+            });
+          }}
+        />
+      )}
+    </div>
+  );
+
+  const lintToolbar = (
+    <div className="flex flex-wrap items-center gap-2 border-b border-solid border-(--hl-md) p-(--padding-sm)">
+      <TooltipTrigger delay={0}>
+        <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
+        <div className="inline-flex items-center gap-2">
+          <span>
+            {selectedRulesetPath ? (
+              <Button
+                aria-label="View selected ruleset content"
+                className="underline"
+                onPress={() => setIsViewRulesetModalOpen(true)}
+              >
+                Custom Ruleset
+              </Button>
+            ) : (
+              'Default OAS Ruleset'
+            )}
+          </span>
+          {selectedRulesetPath ? (
+            <>
+              {rulesetHasRemoteExtendsEntries && (
+                <TooltipTrigger delay={0}>
+                  <Button
+                    aria-label="Refresh ruleset from remote sources"
+                    isDisabled={isRefreshing}
+                    onPress={handleRefreshRuleset}
+                    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
+                  >
+                    <Icon icon={isRefreshing ? 'spinner' : 'rotate'} className={isRefreshing ? 'animate-spin' : ''} />
+                  </Button>
+                  <Tooltip
+                    placement="top end"
+                    offset={8}
+                    className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                  >
+                    <p>Recompile ruleset, including re-fetching any referenced remote entries.</p>
+                    {rulesetLastCompiledAt && (
+                      <p className="mt-1">{`Last updated ${new Date(rulesetLastCompiledAt).toLocaleString()}`}.</p>
+                    )}
+                  </Tooltip>
+                </TooltipTrigger>
+              )}
+              <TooltipTrigger delay={0}>
+                <Button
+                  aria-label="Remove custom ruleset"
+                  onPress={handleUnselectSpectralFile}
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                >
+                  <Icon icon="xmark" />
+                </Button>
+                <Tooltip
+                  placement="top end"
+                  offset={8}
+                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                >
+                  <p>Clear custom ruleset and use default OAS ruleset</p>
+                </Tooltip>
+              </TooltipTrigger>
+            </>
+          ) : (
+            <Button
+              aria-label="Upload custom ruleset"
+              onPress={handleSelectSpectralFile}
+              className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+            >
+              <Icon icon="upload" />
+            </Button>
+          )}
+        </div>
+        <Tooltip
+          placement="top end"
+          offset={8}
+          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+        >
+          <div>
+            {selectedRulesetPath ? (
+              <Fragment>
+                <p className="mb-2">Using ruleset from</p>
+                <code className="block p-0 break-all whitespace-pre-wrap">{selectedRulesetPath}</code>
+              </Fragment>
+            ) : (
+              <Fragment>
+                <p>
+                  Upload a custom Spectral ruleset
+                  {isConnectedGitProject && (
+                    <span>
+                      {' '}
+                      or add a <code className="p-0">.spectral.yaml</code> file to the root of your connected git
+                      repository
+                    </span>
+                  )}
+                  . Any local files or remote URLs referenced via <code className="p-0">extends</code> will be bundled
+                  into a single ruleset on upload.
+                </p>
+              </Fragment>
+            )}
+          </div>
+        </Tooltip>
+      </TooltipTrigger>
+      <span className="flex-1" />
+      <div className="flex items-center gap-2">
+        {lintErrors.length > 0 && (
+          <div className="flex items-center gap-2 select-none">
+            <Icon icon="circle-xmark" className="text-(--color-danger)" />
+          </div>
+        )}
+        {lintWarnings.length > 0 && (
+          <div className="flex items-center gap-2 select-none">
+            <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
+          </div>
+        )}
+        {apiSpec.contents && (
+          <div className="flex items-center gap-2 select-none">
+            {lintMessages.length === 0 && <Icon icon="check-square" className="text-(--color-success)" />}
+            {lintMessages.length === 0 ? (
+              'No lint problems'
+            ) : (
+              <Button onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
+                <span className="underline">
+                  {lintErrors.length} {lintErrors.length === 1 ? 'error' : 'errors'}, {lintWarnings.length}{' '}
+                  {lintWarnings.length === 1 ? 'warning' : 'warnings'}
+                </span>
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const listBox = (
+    <ListBox
+      className="flex-1 overflow-y-auto select-none"
+      items={groupedLintMessages.map((message, index) => ({
+        ...message,
+        id: index,
+        value: message,
+      }))}
+    >
+      {item => (
+        <ListBoxItem
+          className="cursor flex cursor-pointer flex-col text-xs outline-hidden transition-colors hover:bg-(--hl-sm)"
+          id={`lint-message-${item.id}`}
+          onAction={() => {
+            setExpandedCodes(prev =>
+              prev.includes(item.code) ? prev.filter(c => c !== item.code) : [...prev, item.code],
+            );
+          }}
+        >
+          <div className="flex items-center gap-2 p-(--padding-sm) hover:bg-(--hl-sm)">
+            <Icon icon={expandedCodes.includes(item.code) ? 'chevron-down' : 'chevron-right'} className="h-2.5 w-2.5" />
+            <Icon
+              className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
+              icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
+            />
+            <span className="truncate">
+              {item.code}: {item.message}
+            </span>
+          </div>
+          {expandedCodes.includes(item.code) && (
+            <div className="mt-1 flex flex-col gap-0.5">
+              {item.occurences.map(occurence => (
+                <button
+                  key={occurence.line}
+                  className="flex gap-2 p-(--padding-sm) pl-[22px] text-left hover:bg-(--hl-sm)"
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleScrollToLintMessage(occurence);
+                  }}
+                >
+                  <span className="shrink-0 underline">Ln {occurence.line + 1}</span>
+                  {occurence.path && <span className="truncate opacity-60">{occurence.path}</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </ListBoxItem>
+      )}
+    </ListBox>
+  );
+
   return (
     <div className="flex h-full flex-col">
       <OrganizationTabList />
@@ -1135,233 +1345,20 @@ const Component = ({ params }: Route.ComponentProps) => {
         <Panel className="flex flex-col">
           <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
             <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
-              <div className="flex h-full w-full flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
-                <div className="relative flex flex-1 shrink-0 basis-1/2 overflow-hidden">
-                  <CodeEditor
-                    id="spec-editor"
-                    key={uniquenessKey}
-                    showPrettifyButton
-                    ref={editor}
-                    lintOptions={lintOptions}
-                    // only set the openapi mode if there are contents
-                    mode={apiSpec.contents ? 'openapi' : undefined}
-                    defaultValue={apiSpec.contents || ''}
-                    onChange={onCodeEditorChange}
-                    uniquenessKey={uniquenessKey}
-                  />
-                  {apiSpec.contents ? null : (
-                    <DesignEmptyState
-                      onImport={value => {
-                        updateApiSpec({
-                          organizationId,
-                          projectId,
-                          workspaceId,
-                          contents: value,
-                          fromTemplate: true,
-                        });
-                      }}
-                    />
-                  )}
-                </div>
-                {apiSpec.contents ? (
-                  <div
-                    className={`flex ${isLintPaneOpen ? '' : 'h-(--line-height-sm)'} box-border flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden`}
-                  >
-                    <div className="flex flex-wrap items-center gap-2 p-(--padding-sm)">
-                      <TooltipTrigger delay={0}>
-                        <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-                        <div className="inline-flex items-center gap-2">
-                          <span>
-                            {selectedRulesetPath ? (
-                              <>
-                                <Button
-                                  aria-label="View selected ruleset content"
-                                  className="underline"
-                                  onPress={() => setIsViewRulesetModalOpen(true)}
-                                >
-                                  Custom Ruleset
-                                </Button>
-                              </>
-                            ) : (
-                              'Default OAS Ruleset'
-                            )}
-                          </span>
-                          {selectedRulesetPath ? (
-                            <>
-                              {rulesetHasRemoteExtendsEntries && (
-                                <TooltipTrigger delay={0}>
-                                  <Button
-                                    aria-label="Refresh ruleset from remote sources"
-                                    isDisabled={isRefreshing}
-                                    onPress={handleRefreshRuleset}
-                                    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
-                                  >
-                                    <Icon
-                                      icon={isRefreshing ? 'spinner' : 'rotate'}
-                                      className={isRefreshing ? 'animate-spin' : ''}
-                                    />
-                                  </Button>
-                                  <Tooltip
-                                    placement="top end"
-                                    offset={8}
-                                    className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                                  >
-                                    <p>
-                                      This ruleset references a remote file. Fetch changes to recompile with latest
-                                      updates.
-                                    </p>
-                                    {rulesetLastCompiledAt && (
-                                      <p className="mt-1">
-                                        {`Last updated ${new Date(rulesetLastCompiledAt).toLocaleString()}`}.
-                                      </p>
-                                    )}
-                                  </Tooltip>
-                                </TooltipTrigger>
-                              )}
-                              <TooltipTrigger delay={0}>
-                                <Button
-                                  aria-label="Remove custom ruleset"
-                                  onPress={handleUnselectSpectralFile}
-                                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                                >
-                                  <Icon icon="xmark" />
-                                </Button>
-                                <Tooltip
-                                  placement="top end"
-                                  offset={8}
-                                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                                >
-                                  <p>Clear custom ruleset and use default OAS ruleset</p>
-                                </Tooltip>
-                              </TooltipTrigger>
-                            </>
-                          ) : (
-                            <Button
-                              aria-label="Upload custom ruleset"
-                              onPress={handleSelectSpectralFile}
-                              className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                            >
-                              <Icon icon="upload" />
-                            </Button>
-                          )}
-                        </div>
-                        <Tooltip
-                          placement="top end"
-                          offset={8}
-                          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                        >
-                          <div>
-                            {selectedRulesetPath ? (
-                              <Fragment>
-                                <p className="mb-2">Using ruleset from</p>
-                                <code className="block p-0 break-all whitespace-pre-wrap">{selectedRulesetPath}</code>
-                              </Fragment>
-                            ) : (
-                              <Fragment>
-                                <p>
-                                  Upload a custom Spectral ruleset
-                                  {isConnectedGitProject && (
-                                    <span>
-                                      {' '}
-                                      or add a <code className="p-0">.spectral.yaml</code> file to the root of your
-                                      connected git repository
-                                    </span>
-                                  )}
-                                  . Any local files or remote URLs referenced via <code className="p-0">extends</code>{' '}
-                                  will be bundled into a single ruleset on upload.
-                                </p>
-                              </Fragment>
-                            )}
-                          </div>
-                        </Tooltip>
-                      </TooltipTrigger>
-                      <span className="flex-1" />
-                      <div className="flex items-center gap-2">
-                        {lintErrors.length > 0 && (
-                          <div className="flex items-center gap-2 select-none">
-                            <Icon icon="circle-xmark" className="text-(--color-danger)" />
-                          </div>
-                        )}
-                        {lintWarnings.length > 0 && (
-                          <div className="flex items-center gap-2 select-none">
-                            <Icon icon="triangle-exclamation" className="text-(--color-warning)" />
-                          </div>
-                        )}
-                        {apiSpec.contents && (
-                          <div className="flex items-center gap-2 select-none">
-                            {lintMessages.length === 0 && (
-                              <Icon icon="check-square" className="text-(--color-success)" />
-                            )}
-                            {lintMessages.length === 0 ? (
-                              'No lint problems'
-                            ) : (
-                              <Button onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
-                                <span className="underline">
-                                  {lintErrors.length} {lintErrors.length === 1 ? 'error' : 'errors'},{' '}
-                                  {lintWarnings.length} {lintWarnings.length === 1 ? 'warning' : 'warnings'}
-                                </span>
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </div>
+              <PanelGroup direction="vertical" className="h-full w-full">
+                <Panel defaultSize={80} minSize={20} className="relative overflow-hidden">
+                  {specEditor}
+                </Panel>
+                <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
+                <Panel defaultSize={5} minSize={5} className="flex flex-col overflow-hidden">
+                  {apiSpec.contents ? (
+                    <div className="box-border flex h-full flex-col">
+                      {lintToolbar}
+                      {isLintPaneOpen && listBox}
                     </div>
-                    {isLintPaneOpen && (
-                      <ListBox
-                        className="flex-1 overflow-y-auto select-none"
-                        items={groupedLintMessages.map((message, index) => ({
-                          ...message,
-                          id: index,
-                          value: message,
-                        }))}
-                      >
-                        {item => (
-                          <ListBoxItem
-                            className="cursor flex cursor-pointer flex-col text-xs outline-hidden transition-colors hover:bg-(--hl-sm)"
-                            id={`lint-message-${item.id}`}
-                            onAction={() => {
-                              setExpandedCodes(prev =>
-                                prev.includes(item.code) ? prev.filter(c => c !== item.code) : [...prev, item.code],
-                              );
-                            }}
-                          >
-                            <div className="flex items-center gap-2 p-(--padding-sm) hover:bg-(--hl-sm)">
-                              <Icon
-                                icon={expandedCodes.includes(item.code) ? 'chevron-down' : 'chevron-right'}
-                                className="h-2.5 w-2.5"
-                              />
-                              <Icon
-                                className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
-                                icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
-                              />
-                              <span className="truncate">
-                                {item.code}: {item.message}
-                              </span>
-                            </div>
-                            {expandedCodes.includes(item.code) && (
-                              <div className="mt-1 flex flex-col gap-0.5">
-                                {item.occurences.map(occurence => (
-                                  <button
-                                    key={occurence.line}
-                                    className="flex gap-2 p-(--padding-sm) pl-[22px] text-left hover:bg-(--hl-sm)"
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleScrollToLintMessage(occurence);
-                                    }}
-                                  >
-                                    <span className="shrink-0 underline">Ln {occurence.line + 1}</span>
-                                    {occurence.path && <span className="truncate opacity-60">{occurence.path}</span>}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </ListBoxItem>
-                        )}
-                      </ListBox>
-                    )}
-                  </div>
-                ) : null}
-              </div>
+                  ) : null}
+                </Panel>
+              </PanelGroup>
             </Panel>
             {isSpecPaneOpen && (
               <>
