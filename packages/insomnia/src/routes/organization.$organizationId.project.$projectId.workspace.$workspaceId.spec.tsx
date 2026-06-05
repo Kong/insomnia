@@ -146,6 +146,14 @@ interface LintMessage {
   message: string;
   line: number;
   range: IRuleResult['range'];
+  code: string;
+  path: string;
+}
+interface GroupedLintMessage {
+  code: string;
+  type: 'error' | 'warning' | 'info';
+  message: string;
+  occurences: { line: number; range: IRuleResult['range']; path: string }[];
 }
 
 interface SpecActionItem {
@@ -200,6 +208,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     useLoaderData<typeof clientLoader>();
 
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
+  const [expandedCodes, setExpandedCodes] = useState<string[]>([]);
 
   const editor = useRef<CodeEditorHandle>(null);
   const { submit: updateApiSpec } = useSpecUpdateActionFetcher();
@@ -238,61 +247,86 @@ const Component = ({ params }: Route.ComponentProps) => {
     }
   }, [rulesetContent]);
 
+  const groupedLintMessages = useMemo<GroupedLintMessage[]>(() => {
+    const map = new Map<string, GroupedLintMessage>();
+    for (const msg of lintMessages) {
+      const key = `${msg.code}:${msg.message}`;
+      const existing = map.get(key);
+      if (existing) {
+        existing.occurences.push({ line: msg.line, range: msg.range, path: msg.path });
+      } else {
+        map.set(key, {
+          code: msg.code ?? '',
+          type: msg.type,
+          message: msg.message,
+          occurences: [{ line: msg.line, range: msg.range, path: msg.path }],
+        });
+      }
+    }
+
+    return Array.from(map.values());
+  }, [lintMessages]);
+
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
 
   const lintErrors = lintMessages.filter(message => message.type === 'error');
   const lintWarnings = lintMessages.filter(message => message.type === 'warning');
 
-  const registerCodeMirrorLint = (rulesetContent: string) => {
-    CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
-      try {
-        const { diagnostics, error, cancelled } = await window.main.lintSpec({
-          documentContent: contents,
-          projectId,
-          rulesetContent,
-        });
-        if (cancelled) {
-          return [];
-        }
-        if (error) {
-          console.log('Handled error detected while linting:', error);
+  const registerCodeMirrorLint = useCallback(
+    (rulesetContent: string) => {
+      CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
+        try {
+          const { diagnostics, error, cancelled } = await window.main.lintSpec({
+            documentContent: contents,
+            projectId,
+            rulesetContent,
+          });
+          if (cancelled) {
+            return [];
+          }
+          if (error) {
+            console.log('Handled error detected while linting:', error);
+            showError({
+              title: 'Linting Error',
+              message: `An error occurred while linting the OpenAPI specification: ${error}`,
+            });
+            return [];
+          }
+          const lintResult = diagnostics?.map(({ severity, code, message, range, path }) => {
+            return {
+              from: CodeMirror.Pos(range.start.line, range.start.character),
+              to: CodeMirror.Pos(range.end.line, range.end.character),
+              code: String(code),
+              message,
+              severity: ['error', 'warning'][severity] ?? 'info',
+              type: (['error', 'warning'][severity] ?? 'info') as LintMessage['type'],
+              range,
+              line: range.start.line,
+              path: path.join('.'),
+            };
+          });
+          setLintMessages?.(lintResult || []);
+          return lintResult;
+        } catch (error) {
+          // return a rejected promise so that codemirror do nothing
+          console.log('Unhandled error while linting:', error);
           showError({
             title: 'Linting Error',
             message: `An error occurred while linting the OpenAPI specification: ${error}`,
           });
           return [];
         }
-        const lintResult = diagnostics?.map(({ severity, code, message, range }) => {
-          return {
-            from: CodeMirror.Pos(range.start.line, range.start.character),
-            to: CodeMirror.Pos(range.end.line, range.end.character),
-            message: `${code} ${message}`,
-            severity: ['error', 'warning'][severity] ?? 'info',
-            type: (['error', 'warning'][severity] ?? 'info') as LintMessage['type'],
-            range,
-            line: range.start.line,
-          };
-        });
-        setLintMessages?.(lintResult || []);
-        return lintResult;
-      } catch (error) {
-        // return a rejected promise so that codemirror do nothing
-        console.log('Unhandled error while linting:', error);
-        showError({
-          title: 'Linting Error',
-          message: `An error occurred while linting the OpenAPI specification: ${error}`,
-        });
-        return [];
-      }
-    });
-  };
+      });
+    },
+    [projectId],
+  );
 
   useEffect(() => {
     registerCodeMirrorLint(rulesetContent);
     // when first time into document editor, the lint helper register later than codemirror init, we need to trigger lint through execute setOption
     editor.current?.tryToSetOption('lint', { ...lintOptions });
-  }, [rulesetContent, projectId]);
+  }, [rulesetContent, projectId, registerCodeMirrorLint]);
 
   useEffect(() => {
     if (lintErrors.length > 0 || lintWarnings.length > 0) {
@@ -339,14 +373,11 @@ const Component = ({ params }: Route.ComponentProps) => {
   );
 
   const handleScrollToLintMessage = useCallback(
-    (notice: LintMessage) => {
+    (occurrence: GroupedLintMessage['occurences'][number]) => {
       if (!editor.current) {
         return;
       }
-      if (!notice.range) {
-        return;
-      }
-      const { start, end } = notice.range;
+      const { start, end } = occurrence.range;
       editor.current.scrollToSelection(start.character, end.character, start.line, end.line);
     },
     [editor],
@@ -1278,25 +1309,52 @@ const Component = ({ params }: Route.ComponentProps) => {
                     {isLintPaneOpen && (
                       <ListBox
                         className="flex-1 overflow-y-auto select-none"
-                        onAction={index => {
-                          const listIndex = Number.parseInt(index.toString(), 10);
-                          const lintMessage = lintMessages[listIndex];
-                          handleScrollToLintMessage(lintMessage);
-                        }}
-                        items={lintMessages.map((message, index) => ({
+                        items={groupedLintMessages.map((message, index) => ({
                           ...message,
                           id: index,
                           value: message,
                         }))}
                       >
                         {item => (
-                          <ListBoxItem className="flex items-center gap-2 p-(--padding-sm) text-xs outline-hidden transition-colors even:bg-(--hl-xs) focus-within:bg-(--hl-md) data-focused:bg-(--hl-md)">
-                            <Icon
-                              className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
-                              icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
-                            />
-                            <span className="truncate">{item.message}</span>
-                            <span className="shrink-0 text-(--hl-lg)">[Ln {item.line}]</span>
+                          <ListBoxItem
+                            className="cursor flex cursor-pointer flex-col gap-1 gap-2 p-(--padding-sm) text-xs outline-hidden transition-colors hover:bg-(--hl-sm)"
+                            id={`lint-message-${item.id}`}
+                            onAction={() => {
+                              setExpandedCodes(prev =>
+                                prev.includes(item.code) ? prev.filter(c => c !== item.code) : [...prev, item.code],
+                              );
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon
+                                icon={expandedCodes.includes(item.code) ? 'chevron-down' : 'chevron-right'}
+                                className="h-2.5 w-2.5"
+                              />
+                              <Icon
+                                className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
+                                icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
+                              />
+                              <span className="truncate">
+                                {item.code}: {item.message}
+                              </span>
+                            </div>
+                            {expandedCodes.includes(item.code) && (
+                              <div className="mt-1 flex flex-col gap-0.5">
+                                {item.occurences.map(occurence => (
+                                  <button
+                                    key={occurence.line}
+                                    className="flex gap-2 text-left hover:opacity-80"
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleScrollToLintMessage(occurence);
+                                    }}
+                                  >
+                                    <span className="shrink-0 underline">Ln {occurence.line + 1}</span>
+                                    {occurence.path && <span className="truncate opacity-60">{occurence.path}</span>}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </ListBoxItem>
                         )}
                       </ListBox>
