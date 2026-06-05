@@ -250,7 +250,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const groupedLintMessages = useMemo<GroupedLintMessage[]>(() => {
     const map = new Map<string, GroupedLintMessage>();
     for (const msg of lintMessages) {
-      const key = `${msg.code}:${msg.message}`;
+      const key = msg.code;
       const existing = map.get(key);
       if (existing) {
         existing.occurences.push({ line: msg.line, range: msg.range, path: msg.path });
