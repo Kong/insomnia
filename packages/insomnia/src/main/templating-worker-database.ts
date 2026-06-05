@@ -2,7 +2,7 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
 import os from 'node:os';
 
-import { shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -307,5 +307,36 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       }
     }
     throw new Error(`Unsupported action named ${actionName} for plugin ${pluginName}`);
+  },
+  'app.alert': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.dialog': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    if (!focusedWindow) return null;
+    const label = body.options?.label ?? body.title;
+    const defaultValue = body.options?.defaultValue ?? '';
+    return focusedWindow.webContents.executeJavaScript(
+      `window.prompt(${JSON.stringify(label)}, ${JSON.stringify(defaultValue)})`
+    );
+  },
+  'app.getPath': async (body: { name: string }) => {
+    return app.getPath(body.name as Parameters<typeof app.getPath>[0]);
+  },
+  'app.showSaveDialog': async (body: { options?: { defaultPath?: string } }) => {
+    const result = await dialog.showSaveDialog(body.options ?? {});
+    return result.canceled ? null : result.filePath;
+  },
+  'app.clipboard.readText': async () => {
+    return clipboard.readText();
+  },
+  'app.clipboard.writeText': async (body: { text: string }) => {
+    clipboard.writeText(body.text);
+  },
+  'app.clipboard.clear': async () => {
+    clipboard.clear();
   },
 };
