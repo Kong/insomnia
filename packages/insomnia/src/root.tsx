@@ -23,6 +23,7 @@ import {
 } from 'react-router';
 import { useLatest } from 'react-use';
 
+import { isLoggedIn } from '~/account/session';
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import { createPlugin } from '~/plugins/create';
 import { setTheme } from '~/plugins/misc';
@@ -699,27 +700,29 @@ const Root = () => {
     if (localStorage.getItem(STORAGE_KEY)) {
       return;
     }
-    plugins.getPlugins().then(allPlugins => {
-      const userPlugins = allPlugins.filter(p => p.directory !== '');
-      if (userPlugins.length > 0) {
-        showToast(
-          {
-            title: 'Plugin system updated',
-            description: (
-              <>
-                Some installed plugins may behave differently.{' '}
-                {/* TODO: replace placeholder URL before shipping */}
-                <a href="https://docs.insomnia.rest/insomnia/plugins" target="_blank" rel="noopener noreferrer" className="underline">
-                  Learn more
-                </a>
-              </>
-            ),
-            status: 'info',
-          },
-          { timeout: null },
-        );
-        localStorage.setItem(STORAGE_KEY, 'true');
-      }
+    isLoggedIn().then(loggedIn => {
+      if (!loggedIn) return;
+      plugins.getPlugins().then(allPlugins => {
+        const userPlugins = allPlugins.filter(p => p.directory !== '');
+        if (userPlugins.length > 0) {
+          showToast(
+            {
+              title: 'Plugin system updated',
+              description: (
+                <>
+                  You are running at least one plug-in that may be impacted.{' '}
+                  <a href="https://docs.insomnia.rest/insomnia/plugins" target="_blank" rel="noopener noreferrer" className="underline">
+                    Learn more
+                  </a>
+                </>
+              ),
+              status: 'info',
+            },
+            { timeout: null },
+          );
+          localStorage.setItem(STORAGE_KEY, 'true');
+        }
+      });
     });
   }, []);
 
