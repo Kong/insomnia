@@ -1,10 +1,11 @@
 import { extension as mimeExtension } from 'mime-types';
 
 import { jsonPrettify } from '~/utils/prettify/json';
+import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
 
 export async function downloadResponseBody(
   activeRequest: { name: string } | null | undefined,
-  activeResponse: { contentType: string; bodyBuffer?: Buffer | null } | null | undefined,
+  activeResponse: { contentType: string; bodyBuffer?: Uint8Array | null } | null | undefined,
   prettify: boolean,
 ) {
   if (!activeResponse || !activeRequest) {
@@ -26,9 +27,9 @@ export async function downloadResponseBody(
   if (prettify && contentType.includes('json')) {
     await window.main.writeFile({
       path: outputPath,
-      content: jsonPrettify(activeResponse.bodyBuffer?.toString('utf8')) || '',
+      content: jsonPrettify(bodyBufferToUtf8(activeResponse.bodyBuffer)) || '',
     });
     return;
   }
-  await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer ?? Buffer.alloc(0) });
+  await window.main.writeFile({ path: outputPath, content: activeResponse.bodyBuffer ?? new Uint8Array(0) });
 }

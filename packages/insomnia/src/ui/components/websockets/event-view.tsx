@@ -3,6 +3,7 @@ import React, { type FC, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
 
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { utf8StringFromBytes } from '~/utils/utf8-bytes';
 
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
@@ -23,7 +24,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   // Best effort to parse the binary data as a string
   try {
     if ('data' in event && typeof event.data === 'object' && 'data' in event.data && Array.isArray(event.data.data)) {
-      raw = Buffer.from(event.data.data).toString();
+      raw = utf8StringFromBytes(new Uint8Array(event.data.data));
     }
   } catch (err) {
     console.error('Failed to parse event data to string, defaulting to JSON.stringify', err);
