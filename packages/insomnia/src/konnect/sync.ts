@@ -1,6 +1,8 @@
 import type { GrpcRequest, Project, Request, RequestGroup, WebSocketRequest, Workspace } from 'insomnia-data';
 import { EnvironmentKvPairDataType, models, services as insoservices } from 'insomnia-data';
 
+import { getKonnectDeploymentType } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-project-icon/konnect-project-icon-utils';
+
 import { database as db } from '../common/database';
 import {
   fetchAllControlPlanes,
@@ -599,10 +601,15 @@ async function syncControlPlane(
   // Upsert project for this control plane
   let project = existingProjectsByKonnectId.get(controlPlane.id);
   if (project) {
-    if (project.name !== controlPlane.name || project.konnectClusterType !== controlPlane.config.cluster_type) {
+    if (
+      project.name !== controlPlane.name ||
+      project.konnectClusterType !== controlPlane.config.cluster_type ||
+      getKonnectDeploymentType(controlPlane) !== project.konnectDeploymentType
+    ) {
       project = await insoservices.project.update(project, {
         name: controlPlane.name,
         konnectClusterType: controlPlane.config.cluster_type,
+        konnectDeploymentType: getKonnectDeploymentType(controlPlane),
       });
       acc.controlPlaneCounts.updated++;
     }
@@ -612,6 +619,7 @@ async function syncControlPlane(
       name: controlPlane.name,
       konnectControlPlaneId: controlPlane.id,
       konnectClusterType: controlPlane.config.cluster_type,
+      konnectDeploymentType: getKonnectDeploymentType(controlPlane),
     });
     existingProjectsByKonnectId.set(controlPlane.id, project);
     acc.controlPlaneCounts.created++;

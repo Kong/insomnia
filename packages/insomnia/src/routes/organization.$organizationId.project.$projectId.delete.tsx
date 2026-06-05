@@ -50,7 +50,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
 
     // If the deleted project is a Konnect project, navigate to another Konnect project
-    // (most recent from history, or first remaining) to keep the user on the Konnect tab.
     if (project.konnectControlPlaneId) {
       const remainingKonnectProjects = (
         await database.find<Project>(models.project.type, { parentId: organizationId })
