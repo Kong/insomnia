@@ -15,7 +15,8 @@ export function utf8StringFromBytes(bytes: Uint8Array): string {
 export function latin1BytesFromString(value: string): Uint8Array {
   const bytes = new Uint8Array(value.length);
   for (let i = 0; i < value.length; i++) {
-    bytes[i] = (value.codePointAt(i) ?? 0) & 0xff;
+    // eslint-disable-next-line unicorn/prefer-code-point -- charCodeAt for latin1 for accuracy
+    bytes[i] = value.charCodeAt(i) & 0xff;
   }
   return bytes;
 }
