@@ -1317,7 +1317,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       >
                         {item => (
                           <ListBoxItem
-                            className="cursor flex cursor-pointer flex-col gap-1 gap-2 p-(--padding-sm) text-xs outline-hidden transition-colors hover:bg-(--hl-sm)"
+                            className="cursor flex cursor-pointer flex-col text-xs outline-hidden transition-colors hover:bg-(--hl-sm)"
                             id={`lint-message-${item.id}`}
                             onAction={() => {
                               setExpandedCodes(prev =>
@@ -1325,7 +1325,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                               );
                             }}
                           >
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 p-(--padding-sm) hover:bg-(--hl-sm)">
                               <Icon
                                 icon={expandedCodes.includes(item.code) ? 'chevron-down' : 'chevron-right'}
                                 className="h-2.5 w-2.5"
@@ -1343,7 +1343,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                                 {item.occurences.map(occurence => (
                                   <button
                                     key={occurence.line}
-                                    className="flex gap-2 text-left hover:opacity-80"
+                                    className="flex gap-2 p-(--padding-sm) pl-[22px] text-left hover:bg-(--hl-sm)"
                                     onClick={e => {
                                       e.stopPropagation();
                                       handleScrollToLintMessage(occurence);
