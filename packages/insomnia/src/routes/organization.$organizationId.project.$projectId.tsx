@@ -97,17 +97,15 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 
   try {
-    const organization = await services.organization.get(organizationId);
+    if (accountId) {
+      const firstAccountLandingKey = `firstAccountLandingHandled:${accountId}`;
 
-    if (accountId && organization && models.organization.isPersonalOrganization(organization)) {
-      const firstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
-
-      if (!window.localStorage.getItem(firstPersonalOrgLandingKey)) {
-        window.localStorage.setItem(firstPersonalOrgLandingKey, 'true');
+      if (!window.localStorage.getItem(firstAccountLandingKey)) {
+        window.localStorage.setItem(firstAccountLandingKey, 'true');
       }
     }
   } catch (error) {
-    console.log('[organizations] Failed to load Organizations', error);
+    console.log('[organizations] Failed to set first account landing flag', error);
   }
 
   const fallbackLearningFeature = {

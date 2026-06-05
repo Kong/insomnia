@@ -145,7 +145,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     organization &&
     userSession.accountId &&
     models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
-  const isPersonalOrg = organization && models.organization.isPersonalOrganization(organization);
   const greetingName = userSession.firstName || userSession.email.split('@')[0] || 'there';
   const collectionItems = useMemo(
     () =>
@@ -397,8 +396,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   <p className="text-base">
                     <Icon icon="exclamation-triangle" className="mr-2" />
                     {isUserOwner
-                      ? `Your ${isPersonalOrg ? 'personal account' : 'organization'} has unpaid past invoices. Please enter a new payment method to continue using Insomnia.`
-                      : 'This organization has unpaid past invoices. Please ask the organization owner to enter a new payment method to continue using Insomnia.'}
+                      ? 'Your space has unpaid past invoices. Please enter a new payment method to continue using Insomnia.'
+                      : 'This space has unpaid past invoices. Please ask the space owner to enter a new payment method to continue using Insomnia.'}
                   </p>
                   {isUserOwner && (
                     <a
