@@ -59,6 +59,8 @@
     "@stoplight/types": "^14.1.1",
     "commander": "^12.1.0",
     "consola": "^3.4.2",
+    "fast-string-width": "^3.0.2",
+    "is-unicode-supported": "^2.1.0",
     "cosmiconfig": "^9.0.0",
     "enquirer": "^2.4.1",
     "picocolors": "^1.1.1",
