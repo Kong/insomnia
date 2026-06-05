@@ -25,6 +25,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import * as reactUse from 'react-use';
 
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
@@ -186,7 +187,7 @@ const fetchGraphQLSchemaForRequest = async ({
     }
     const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     if (bodyBuffer) {
-      const { data, errors } = JSON.parse(bodyBuffer.toString());
+      const { data, errors } = JSON.parse(bodyBufferToUtf8(bodyBuffer));
       if (errors?.length) {
         return { schemaFetchError: errors[0] };
       }

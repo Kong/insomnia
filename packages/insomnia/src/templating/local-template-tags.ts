@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import type { TemplateTag } from 'insomnia/src/plugins/types';
 import type { PluginTemplateTag } from 'insomnia/src/templating/types';
 import { invariant } from 'insomnia/src/utils/invariant';
+import { utf8StringFromBytes } from 'insomnia/src/utils/utf8-bytes';
 import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
 
@@ -673,7 +674,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             return context.util.decode(bodyBuffer, charset);
           } catch (err) {
             console.warn('[response] Failed to decode body', err);
-            return bodyBuffer.toString();
+            return utf8StringFromBytes(bodyBuffer);
           }
         }
         if (field === 'header') {
@@ -698,7 +699,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             body = await context.util.decode(bodyBuffer, charset);
           } catch (err) {
             console.warn('[response] Failed to decode body', err);
-            body = bodyBuffer.toString();
+            body = utf8StringFromBytes(bodyBuffer);
           }
 
           if (sanitizedFilter.indexOf('$') === 0) {

@@ -1,10 +1,11 @@
 import type { RequestHeader } from 'insomnia-data';
 
+import { bytesToBase64, latin1BytesFromString, utf8ToBase64 } from '~/utils/utf8-bytes';
+
 export function getBasicAuthHeader(username?: string | null, password?: string | null, encoding = 'utf8') {
   const name = 'Authorization';
   const header = `${username || ''}:${password || ''}`;
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-  const authString = Buffer.from(header, encoding).toString('base64');
+  const authString = encoding === 'latin1' ? bytesToBase64(latin1BytesFromString(header)) : utf8ToBase64(header);
   const value = `Basic ${authString}`;
   const requestHeader: RequestHeader = {
     name,
