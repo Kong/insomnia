@@ -153,7 +153,7 @@ interface GroupedLintMessage {
   code: string;
   type: 'error' | 'warning' | 'info';
   message: string;
-  occurences: { line: number; range: IRuleResult['range']; path: string }[];
+  occurrences: { line: number; range: IRuleResult['range']; path: string }[];
 }
 
 interface SpecActionItem {
@@ -253,13 +253,13 @@ const Component = ({ params }: Route.ComponentProps) => {
       const key = msg.code;
       const existing = map.get(key);
       if (existing) {
-        existing.occurences.push({ line: msg.line, range: msg.range, path: msg.path });
+        existing.occurrences.push({ line: msg.line, range: msg.range, path: msg.path });
       } else {
         map.set(key, {
           code: msg.code ?? '',
           type: msg.type,
           message: msg.message,
-          occurences: [{ line: msg.line, range: msg.range, path: msg.path }],
+          occurrences: [{ line: msg.line, range: msg.range, path: msg.path }],
         });
       }
     }
@@ -373,7 +373,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   );
 
   const handleScrollToLintMessage = useCallback(
-    (occurrence: GroupedLintMessage['occurences'][number]) => {
+    (occurrence: GroupedLintMessage['occurrences'][number]) => {
       if (!editor.current) {
         return;
       }
@@ -788,16 +788,16 @@ const Component = ({ params }: Route.ComponentProps) => {
   const listBox = (
     <ListBox
       className="flex-1 overflow-y-auto select-none"
-      items={groupedLintMessages.map((message, index) => ({
+      items={groupedLintMessages.map(message => ({
         ...message,
-        id: index,
+        id: message.code,
         value: message,
       }))}
     >
       {item => (
         <ListBoxItem
           className="cursor flex cursor-pointer flex-col text-xs outline-hidden transition-colors hover:bg-(--hl-sm)"
-          id={`lint-message-${item.id}`}
+          id={`lint-message-${item.code}`}
           onAction={() => {
             setExpandedCodes(prev =>
               prev.includes(item.code) ? prev.filter(c => c !== item.code) : [...prev, item.code],
@@ -816,17 +816,17 @@ const Component = ({ params }: Route.ComponentProps) => {
           </div>
           {expandedCodes.includes(item.code) && (
             <div className="mt-1 flex flex-col gap-0.5">
-              {item.occurences.map(occurence => (
+              {item.occurrences.map(occurrence => (
                 <button
-                  key={occurence.line}
+                  key={`${occurrence.line}-${occurrence.path}`}
                   className="flex gap-2 p-(--padding-sm) pl-[22px] text-left hover:bg-(--hl-sm)"
                   onClick={e => {
                     e.stopPropagation();
-                    handleScrollToLintMessage(occurence);
+                    handleScrollToLintMessage(occurrence);
                   }}
                 >
-                  <span className="shrink-0 underline">Ln {occurence.line + 1}</span>
-                  {occurence.path && <span className="truncate opacity-60">{occurence.path}</span>}
+                  <span className="shrink-0 underline">Ln {occurrence.line + 1}</span>
+                  {occurrence.path && <span className="truncate opacity-60">{occurrence.path}</span>}
                 </button>
               ))}
             </div>
