@@ -351,6 +351,19 @@ const ProjectNavigationSidebarInner = (
     setCopiedReason(null);
     if (result?.success) {
       setLastSyncedAt(Date.now());
+      // Navigate to and expand the first Konnect project after a successful sync
+      const allProjects = await services.project.list({ organizationId });
+      const sortedKonnectProjects = models.project.sortProjects(
+        allProjects.filter(p => p.konnectControlPlaneId != null),
+      );
+      const firstKonnectProject = sortedKonnectProjects[0];
+      if (firstKonnectProject) {
+        navigate(`/organization/${organizationId}/project/${firstKonnectProject._id}`);
+        setExpandedProjectAndWorkspaceIds(prev => {
+          const ids = prev || [];
+          return ids.includes(firstKonnectProject._id) ? ids : [...ids, firstKonnectProject._id];
+        });
+      }
     }
   };
   syncKonnectProjectsAndNotifyRef.current = syncKonnectProjectsAndNotify;
@@ -975,7 +988,12 @@ const ProjectNavigationSidebarInner = (
                     <Icon icon="stop-circle" />
                   </Button>
                 ) : (
-                  <TooltipTrigger delay={300} onOpenChange={isOpen => { if (isOpen) setTooltipNow(Date.now()); }}>
+                  <TooltipTrigger
+                    delay={300}
+                    onOpenChange={isOpen => {
+                      if (isOpen) setTooltipNow(Date.now());
+                    }}
+                  >
                     <Button
                       aria-label="Sync Konnect"
                       onPress={handleSync}
@@ -988,7 +1006,9 @@ const ProjectNavigationSidebarInner = (
                       placement="bottom"
                       className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-1.5 text-xs text-(--color-font) shadow-lg select-none"
                     >
-                      {lastSyncedAt ? `Last synced: ${getRelativeTimeString(lastSyncedAt, tooltipNow)}` : 'Not yet synced'}
+                      {lastSyncedAt
+                        ? `Last synced: ${getRelativeTimeString(lastSyncedAt, tooltipNow)}`
+                        : 'Not yet synced'}
                     </Tooltip>
                   </TooltipTrigger>
                 )}
