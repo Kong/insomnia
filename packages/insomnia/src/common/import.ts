@@ -92,7 +92,7 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
     const readFileProcessFork = async (path: string) =>
-      process.type === 'renderer'
+      __IS_RENDERER__
         ? window.main.insecureReadFile({ path })
         : (await import('../main/secure-read-file')).insecureReadFile(path);
 
@@ -207,7 +207,9 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           };
         } else {
           const convertProcessFork =
-            process.type === 'renderer' ? window.main.parseImport : (await import('../main/importers/convert')).convert;
+            __IS_RENDERER__
+              ? window.main.parseImport
+              : (await import('../main/importers/convert')).convert;
           result = (await convertProcessFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
