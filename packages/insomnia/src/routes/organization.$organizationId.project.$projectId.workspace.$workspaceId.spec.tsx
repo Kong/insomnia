@@ -222,6 +222,22 @@ const Component = ({ params }: Route.ComponentProps) => {
     [projectId],
   );
 
+  const rulesetHasRemoteExtendsEntries = useMemo(() => {
+    if (!rulesetContent) return false;
+
+    try {
+      const parsedRuleset = YAML.parse(rulesetContent);
+      if (!parsedRuleset.extends) return false;
+
+      const formattedRulesetExtendsEntries = Array.isArray(parsedRuleset.extends)
+        ? parsedRuleset.extends
+        : [parsedRuleset.extends];
+      return formattedRulesetExtendsEntries.some((entry: string) => entry.startsWith('https://'));
+    } catch {
+      return false;
+    }
+  }, [rulesetContent]);
+
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
 
@@ -1141,31 +1157,36 @@ const Component = ({ params }: Route.ComponentProps) => {
                           </span>
                           {selectedRulesetPath ? (
                             <>
-                              <TooltipTrigger delay={0}>
-                                <Button
-                                  aria-label="Refresh ruleset from remote sources"
-                                  isDisabled={isRefreshing}
-                                  onPress={handleRefreshRuleset}
-                                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
-                                >
-                                  <Icon
-                                    icon={isRefreshing ? 'spinner' : 'rotate'}
-                                    className={isRefreshing ? 'animate-spin' : ''}
-                                  />
-                                </Button>
-                                <Tooltip
-                                  placement="top end"
-                                  offset={8}
-                                  className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                                >
-                                  <p>Recompile ruleset, including re-fetching any referenced remote entries.</p>
-                                  {rulesetLastCompiledAt && (
-                                    <p className="mt-1">
-                                      {`Last updated ${new Date(rulesetLastCompiledAt).toLocaleString()}`}.
+                              {rulesetHasRemoteExtendsEntries && (
+                                <TooltipTrigger delay={0}>
+                                  <Button
+                                    aria-label="Refresh ruleset from remote sources"
+                                    isDisabled={isRefreshing}
+                                    onPress={handleRefreshRuleset}
+                                    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
+                                  >
+                                    <Icon
+                                      icon={isRefreshing ? 'spinner' : 'rotate'}
+                                      className={isRefreshing ? 'animate-spin' : ''}
+                                    />
+                                  </Button>
+                                  <Tooltip
+                                    placement="top end"
+                                    offset={8}
+                                    className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                                  >
+                                    <p>
+                                      This ruleset references a remote file. Fetch changes to recompile with latest
+                                      updates.
                                     </p>
-                                  )}
-                                </Tooltip>
-                              </TooltipTrigger>
+                                    {rulesetLastCompiledAt && (
+                                      <p className="mt-1">
+                                        {`Last updated ${new Date(rulesetLastCompiledAt).toLocaleString()}`}.
+                                      </p>
+                                    )}
+                                  </Tooltip>
+                                </TooltipTrigger>
+                              )}
                               <TooltipTrigger delay={0}>
                                 <Button
                                   aria-label="Remove custom ruleset"
