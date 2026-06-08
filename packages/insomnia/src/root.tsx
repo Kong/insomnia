@@ -711,7 +711,7 @@ const Root = () => {
               description: (
                 <>
                   You are running at least one plug-in that may be impacted.{' '}
-                  <a href="https://docs.insomnia.rest/insomnia/plugins" target="_blank" rel="noopener noreferrer" className="underline">
+                  <a href="https://insomnia.rest/breaking-changes" target="_blank" rel="noopener noreferrer" className="underline">
                     Learn more
                   </a>
                 </>
