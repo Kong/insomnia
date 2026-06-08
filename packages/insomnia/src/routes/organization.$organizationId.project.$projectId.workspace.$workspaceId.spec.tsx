@@ -2,7 +2,7 @@ import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { models, services } from 'insomnia-data';
 import type { OpenAPIV3 } from 'openapi-types';
-import { Fragment, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -657,11 +657,11 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const lintToolbar = (
     <div className="flex flex-wrap items-center gap-2 border-b border-solid border-(--hl-md) p-(--padding-sm)">
-      <TooltipTrigger delay={0}>
+      <div className="inline-flex items-center gap-2">
         <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-        <div className="inline-flex items-center gap-2">
-          <span>
-            {selectedRulesetPath ? (
+        {selectedRulesetPath ? (
+          <>
+            <TooltipTrigger delay={0}>
               <Button
                 aria-label="View selected ruleset content"
                 className="underline"
@@ -669,74 +669,70 @@ const Component = ({ params }: Route.ComponentProps) => {
               >
                 Custom Ruleset
               </Button>
-            ) : (
-              'Default OAS Ruleset'
-            )}
-          </span>
-          {selectedRulesetPath ? (
-            <>
-              {rulesetHasRemoteExtendsEntries && (
-                <TooltipTrigger delay={0}>
-                  <Button
-                    aria-label="Refresh ruleset from remote sources"
-                    isDisabled={isRefreshing}
-                    onPress={handleRefreshRuleset}
-                    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
-                  >
-                    <Icon icon={isRefreshing ? 'spinner' : 'rotate'} className={isRefreshing ? 'animate-spin' : ''} />
-                  </Button>
-                  <Tooltip
-                    placement="top end"
-                    offset={8}
-                    className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                  >
-                    <p>Recompile ruleset, including re-fetching any referenced remote entries.</p>
-                    {rulesetLastCompiledAt && (
-                      <p className="mt-1">{`Last updated ${new Date(rulesetLastCompiledAt).toLocaleString()}`}.</p>
-                    )}
-                  </Tooltip>
-                </TooltipTrigger>
-              )}
+              <Tooltip
+                placement="top end"
+                offset={8}
+                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+              >
+                <p className="mb-2">Using ruleset from</p>
+                <code className="block p-0 break-all whitespace-pre-wrap">{selectedRulesetPath}</code>
+              </Tooltip>
+            </TooltipTrigger>
+            {rulesetHasRemoteExtendsEntries && (
               <TooltipTrigger delay={0}>
                 <Button
-                  aria-label="Remove custom ruleset"
-                  onPress={handleUnselectSpectralFile}
-                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  aria-label="Refresh ruleset from remote sources"
+                  isDisabled={isRefreshing}
+                  onPress={handleRefreshRuleset}
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                 >
-                  <Icon icon="xmark" />
+                  <Icon icon={isRefreshing ? 'spinner' : 'rotate'} className={isRefreshing ? 'animate-spin' : ''} />
                 </Button>
                 <Tooltip
                   placement="top end"
                   offset={8}
                   className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                 >
-                  <p>Clear custom ruleset and use default OAS ruleset</p>
+                  <p>Recompile ruleset, including re-fetching any referenced remote entries.</p>
+                  {rulesetLastCompiledAt && (
+                    <p className="mt-1">{`Last updated ${new Date(rulesetLastCompiledAt).toLocaleString()}`}.</p>
+                  )}
                 </Tooltip>
               </TooltipTrigger>
-            </>
-          ) : (
-            <Button
-              aria-label="Upload custom ruleset"
-              onPress={handleSelectSpectralFile}
-              className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-            >
-              <Icon icon="upload" />
-            </Button>
-          )}
-        </div>
-        <Tooltip
-          placement="top end"
-          offset={8}
-          className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-        >
-          <div>
-            {selectedRulesetPath ? (
-              <Fragment>
-                <p className="mb-2">Using ruleset from</p>
-                <code className="block p-0 break-all whitespace-pre-wrap">{selectedRulesetPath}</code>
-              </Fragment>
-            ) : (
-              <Fragment>
+            )}
+            <TooltipTrigger delay={0}>
+              <Button
+                aria-label="Remove custom ruleset"
+                onPress={handleUnselectSpectralFile}
+                className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+              >
+                <Icon icon="xmark" />
+              </Button>
+              <Tooltip
+                placement="top end"
+                offset={8}
+                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+              >
+                <p>Clear custom ruleset and use default OAS ruleset</p>
+              </Tooltip>
+            </TooltipTrigger>
+          </>
+        ) : (
+          <>
+            <span>Default OAS Ruleset</span>
+            <TooltipTrigger delay={0}>
+              <Button
+                aria-label="Upload custom ruleset"
+                onPress={handleSelectSpectralFile}
+                className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+              >
+                <Icon icon="upload" />
+              </Button>
+              <Tooltip
+                placement="top end"
+                offset={8}
+                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+              >
                 <p>
                   Upload a custom Spectral ruleset
                   {isConnectedGitProject && (
@@ -749,11 +745,11 @@ const Component = ({ params }: Route.ComponentProps) => {
                   . Any local files or remote URLs referenced via <code className="p-0">extends</code> will be bundled
                   into a single ruleset on upload.
                 </p>
-              </Fragment>
-            )}
-          </div>
-        </Tooltip>
-      </TooltipTrigger>
+              </Tooltip>
+            </TooltipTrigger>
+          </>
+        )}
+      </div>
       <span className="flex-1" />
       <div className="flex items-center gap-2">
         {lintErrors.length > 0 && (
