@@ -285,7 +285,7 @@ export const FirstRequestCreation = ({
       parentId: workspaceId,
       requestType: 'HTTP',
       req: {
-        url: 'https://pokeapi.co/api/v2/pokemon/ditto',
+        url: 'https://pokeapi.co/api/v2/pokemon?offset=10&limit=10',
         name: 'List a pokemon',
       },
       metrics: {
