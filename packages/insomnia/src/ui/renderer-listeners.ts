@@ -36,11 +36,11 @@ window.main.on('plugins.uiDialog', (_, options: Record<string, any>) => {
   window.showWrapper?.(options);
 });
 
-window.main.on('plugins.uiPrompt', (_, id: string, options: Record<string, any>) => {
+window.main.on('ui.prompt', (_, id: string, options: Record<string, any>) => {
   window.showPrompt?.({
     ...options,
     onComplete: (value: string) => {
-      window.main.notifyPluginPromptResult(id, value);
+      window.main.notifyPromptResult(id, value);
     },
     onHide: () => {},
   });

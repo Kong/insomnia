@@ -313,7 +313,7 @@ export interface RendererToMainBridgeAPI {
   >;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
-  notifyPluginPromptResult: (id: string, value: string | null) => void;
+  notifyPromptResult: (id: string, value: string | null) => void;
   vault: {
     encryptSecretValue: (rawValue: string, symmetricKey: JsonWebKey) => Promise<string>;
     decryptSecretValue: (encryptedValue: string, symmetricKey: JsonWebKey) => Promise<string>;

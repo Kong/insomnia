@@ -145,7 +145,6 @@ export type HandleChannels =
   | 'plugins.hasResponseHooks'
   | 'plugins.reloadPlugins'
   | 'plugins.runTemplateTagAction'
-  | 'plugins.uiPrompt'
   | 'openPath'
   | 'parseImport'
   | 'readCurlResponse'
