@@ -3,7 +3,8 @@ const path = require('node:path');
 
 const binary = path.resolve('binaries/inso');
 const lintFixture = path.resolve('src/commands/fixtures/openapi-spec.yaml');
-const env = { ...process.env, CI: '' };
+const env = { ...process.env };
+delete env.CI;
 
 const commands = [['--help'], ['lint', 'spec', lintFixture]];
 
