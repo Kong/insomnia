@@ -4,7 +4,7 @@ import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 export default defineConfig({
   define: {
-    '__IS_RENDERER__': JSON.stringify(false),
+    __IS_RENDERER__: JSON.stringify(false),
   },
   test: {
     setupFiles: ['./setup-vitest.ts'],

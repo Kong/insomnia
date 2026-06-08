@@ -65,6 +65,7 @@ beforeEach(() => {
   vi.mocked(insomniaApi.getEncryptionKeys).mockResolvedValue(mockEncryptionKeys);
   vi.mocked(crypt.decryptAES).mockReturnValue(JSON.stringify(MOCK_SYMMETRIC_KEY));
 
+  vi.stubGlobal('__IS_RENDERER__', true);
   vi.stubGlobal('window', {
     main: {
       loginStateChange: vi.fn(),
