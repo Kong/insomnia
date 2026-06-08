@@ -208,7 +208,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     useLoaderData<typeof clientLoader>();
 
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
-  const [expandedCodes, setExpandedCodes] = useState<string[]>([]);
+  const [expandedLintMessageCodes, setExpandedLintMessageCodes] = useState<string[]>([]);
 
   const editor = useRef<CodeEditorHandle>(null);
   const { submit: updateApiSpec } = useSpecUpdateActionFetcher();
@@ -799,13 +799,16 @@ const Component = ({ params }: Route.ComponentProps) => {
           className="cursor flex cursor-pointer flex-col text-xs outline-hidden transition-colors hover:bg-(--hl-sm)"
           id={`lint-message-${item.code}`}
           onAction={() => {
-            setExpandedCodes(prev =>
+            setExpandedLintMessageCodes(prev =>
               prev.includes(item.code) ? prev.filter(c => c !== item.code) : [...prev, item.code],
             );
           }}
         >
           <div className="flex items-center gap-2 p-(--padding-sm) hover:bg-(--hl-sm)">
-            <Icon icon={expandedCodes.includes(item.code) ? 'chevron-down' : 'chevron-right'} className="h-2.5 w-2.5" />
+            <Icon
+              icon={expandedLintMessageCodes.includes(item.code) ? 'chevron-down' : 'chevron-right'}
+              className="h-2.5 w-2.5"
+            />
             <Icon
               className={item.type === 'error' ? 'text-(--color-danger)' : 'text-(--color-warning)'}
               icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
@@ -814,7 +817,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               {item.code}: {item.message}
             </span>
           </div>
-          {expandedCodes.includes(item.code) && (
+          {expandedLintMessageCodes.includes(item.code) && (
             <div className="mt-1 flex flex-col gap-0.5">
               {item.occurrences.map(occurrence => (
                 <button
