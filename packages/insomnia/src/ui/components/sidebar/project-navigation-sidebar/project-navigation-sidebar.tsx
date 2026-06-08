@@ -44,6 +44,7 @@ import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
+import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-env-onboarding';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
@@ -345,12 +346,17 @@ const ProjectNavigationSidebarInner = (
   }, [organizationId, cloudSyncProjectIdsKey]);
 
   const syncKonnectProjectsAndNotify = async () => {
+    const isFirstSync = lastSyncedAt == null;
     const result = await startSync(organizationId);
     setLastSyncResult(result ?? null);
     setShowSyncDetails(false);
     setCopiedReason(null);
     if (result?.success) {
       setLastSyncedAt(Date.now());
+      // Show environment onboarding after first successful sync
+      if (isFirstSync) {
+        setShowEnvOnboarding(true);
+      }
       // Navigate to and expand the first Konnect project after a successful sync
       const allProjects = await services.project.list({ organizationId });
       const sortedKonnectProjects = models.project.sortProjects(
@@ -944,6 +950,21 @@ const ProjectNavigationSidebarInner = (
   const [showSyncDetails, setShowSyncDetails] = useState(false);
   const [copiedReason, setCopiedReason] = useState<string | null>(null);
   const [tooltipNow, setTooltipNow] = useState(Date.now());
+  const [showEnvOnboarding, setShowEnvOnboarding] = useState(false);
+  const [envOnboardingNode, setEnvOnboardingNode] = useState<HTMLDivElement | null>(null);
+  // Find the first environment workspace in the visible konnect projects for onboarding highlight
+  const onboardingEnvWorkspaceId = useMemo(() => {
+    if (!showEnvOnboarding) return null;
+    const envItem = flatItems.find(
+      item => item.kind === 'workspace' && item.doc.scope === 'environment' && !item.hidden,
+    );
+    return envItem?.doc._id ?? null;
+  }, [showEnvOnboarding, flatItems]);
+
+  const dismissEnvOnboarding = useCallback(() => {
+    setShowEnvOnboarding(false);
+  }, []);
+
   const skippedRoutesByReason = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const { routeName, reason, serviceName } of lastSyncResult?.skippedRoutes ?? []) {
@@ -1088,6 +1109,10 @@ const ProjectNavigationSidebarInner = (
                             { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
                           );
                         }
+                        // Dismiss onboarding when user navigates to the highlighted environment
+                        if (docId === onboardingEnvWorkspaceId) {
+                          dismissEnvOnboarding();
+                        }
                       } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
                         if (
                           routeInfo?.resourceId === docId &&
@@ -1146,6 +1171,8 @@ const ProjectNavigationSidebarInner = (
                             });
                           }
                         }}
+                        highlighted={item.doc._id === onboardingEnvWorkspaceId}
+                        nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
                       />
                     )}
 
@@ -1275,7 +1302,12 @@ const ProjectNavigationSidebarInner = (
         <KonnectSettingsModal
           onClose={() => setShowKonnectConfigModal(false)}
           syncKonnectProjectsAndNotifyRef={syncKonnectProjectsAndNotifyRef}
+          onDisconnect={() => setLastSyncedAt(null)}
         />
+      )}
+
+      {onboardingEnvWorkspaceId && envOnboardingNode && (
+        <KonnectEnvOnboarding triggerElement={envOnboardingNode} onDismiss={dismissEnvOnboarding} />
       )}
     </div>
   );

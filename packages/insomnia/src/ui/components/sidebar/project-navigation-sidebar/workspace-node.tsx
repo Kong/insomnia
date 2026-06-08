@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type Ref, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import type { SortOrder } from '~/common/constants';
@@ -21,9 +21,18 @@ interface WorkspaceNodeProps {
 
   sortOrder: SortOrder;
   onSortOrderChange: (newSortOrder: SortOrder) => void;
+  highlighted?: boolean;
+  nodeRef?: Ref<HTMLDivElement> | ((node: HTMLDivElement | null) => void);
 }
 
-export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: WorkspaceNodeProps) => {
+export const WorkspaceNode = ({
+  item,
+  sortOrder,
+  onToggle,
+  onSortOrderChange,
+  highlighted,
+  nodeRef,
+}: WorkspaceNodeProps) => {
   const { doc, collapsed, project, organizationId } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
@@ -31,7 +40,8 @@ export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: 
 
   return (
     <div
-      className={`${ROW_CLASS} group`}
+      ref={nodeRef}
+      className={`${ROW_CLASS} group ${highlighted ? 'rounded-xs ring-2 ring-(--color-surprise) ring-inset' : ''}`}
       style={{ paddingLeft: '2em' }}
       data-testid={`workspace-node-${workspaceName}`}
       data-project={project.name}
