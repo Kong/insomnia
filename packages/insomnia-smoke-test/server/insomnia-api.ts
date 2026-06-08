@@ -91,18 +91,20 @@ const organizations = [
   },
 ];
 
-let organizationFeatures = {
-  features: {
-    gitSync: {
-      enabled: true,
-    },
-    bulkImport: {
-      enabled: true,
-    },
-    konnectSync: {
-      enabled: true,
-    },
+const defaultOrganizationFeatures = {
+  gitSync: {
+    enabled: true,
   },
+  bulkImport: {
+    enabled: true,
+  },
+  konnectSync: {
+    enabled: true,
+  },
+};
+
+let organizationFeatures = {
+  features: { ...defaultOrganizationFeatures },
 };
 
 const v3User = {
@@ -477,9 +479,14 @@ export default function setup(app: Application) {
     res.status(200).send(organizationFeatures);
   });
 
-  // Test Utility Endpoint - Allows altering features at runtime
+  // Test Utility Endpoint - Allows altering features at runtime.
+  // Merge partial overrides over the complete default set so a test that only
+  // toggles a subset of features cannot drop the others (e.g. bulkImport) and
+  // alter later tests sharing this server process.
   app.post('/v1/test-utils/organizations/features', json(), (req, res) => {
-    organizationFeatures = req.body;
+    organizationFeatures = {
+      features: { ...defaultOrganizationFeatures, ...req.body?.features },
+    };
     res.status(200).send();
   });
 
