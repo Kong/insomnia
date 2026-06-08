@@ -36,11 +36,11 @@ export function _testOnlySetPlugins(p: Plugin[] | null) {
 // window and main process; the inso CLI exposes it via `global.require`, so we use it when present
 // to ensure plugin modules load in all three runtimes.
 function getNodeRequire(): NodeRequire {
-  const globalRequire = (global as typeof global & { require?: NodeRequire }).require;
-  if (globalRequire) {
-    return globalRequire;
+  const globalRequire = (global as typeof global & { require?: unknown }).require;
+  if (typeof globalRequire === 'function') {
+    return globalRequire as NodeRequire;
   }
-  if (typeof require !== 'undefined') {
+  if (typeof require === 'function') {
     return require;
   }
   throw new Error('No require function available to load plugin modules');
