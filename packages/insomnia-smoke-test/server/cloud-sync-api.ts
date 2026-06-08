@@ -14,9 +14,7 @@ export interface AESMessage {
 }
 
 function jwkToKeyBuf(jwkOrKey: string | JsonWebKey): Buffer {
-  return typeof jwkOrKey === 'string'
-    ? Buffer.from(jwkOrKey, 'hex')
-    : Buffer.from(jwkOrKey.k || '', 'base64url');
+  return typeof jwkOrKey === 'string' ? Buffer.from(jwkOrKey, 'hex') : Buffer.from(jwkOrKey.k || '', 'base64url');
 }
 
 export function decryptAESBuffer(jwkOrKey: string | JsonWebKey, msg: AESMessage): Buffer {
@@ -352,6 +350,41 @@ const getSnapshotsForProject = (projectId: string) => {
   return [...originalSnapshots, ...addedSnapshots];
 };
 
+// Empty payloads matching the live API responses
+const emptyQueryData: Record<string, unknown> = {
+  projects: [],
+  project: null,
+  branches: [],
+  branch: null,
+  snapshots: [],
+  blobs: [],
+  blobsMissing: { missing: [] },
+  projectKey: null,
+  teamMemberKeys: { memberKeys: [] },
+};
+const emptyMutationData: Record<string, unknown> = {
+  projectArchive: true,
+  branchRemove: true,
+  snapshotsCreate: [],
+  blobsCreate: { count: 0 },
+  projectCreate: null,
+};
+
+const disabledCloudSyncResponse = (query?: string) => {
+  if (!query) {
+    return { data: {} };
+  }
+  try {
+    const operation = parse(query).definitions[0] as OperationDefinitionNode;
+    const operationName = (operation.selectionSet.selections[0] as FieldNode).name.value;
+    const table = operation.operation === 'mutation' ? emptyMutationData : emptyQueryData;
+    const value = operationName in table ? table[operationName] : null;
+    return { data: { [operationName]: value } };
+  } catch {
+    return { data: {} };
+  }
+};
+
 export default function setup(app: Application) {
   app.post('/__test-config/cloud-sync', json(), (req, res) => {
     const { enabled = false } = req.body ?? {};
@@ -384,10 +417,11 @@ export default function setup(app: Application) {
 
   // handling response for all graphql requests
   app.post('/graphql', json(), (req, res) => {
+    const { query, variables } = req.body ?? {};
+
     if (!cloudSyncApiEnabled) {
-      return res.status(200).send();
+      return res.status(200).json(disabledCloudSyncResponse(query));
     }
-    const { query, variables } = req.body;
 
     try {
       // Parse the GraphQL query using the graphql package
