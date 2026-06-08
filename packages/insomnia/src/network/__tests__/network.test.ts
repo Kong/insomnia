@@ -18,11 +18,6 @@ import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
 import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network';
 
-vi.mock('~/utils/crypt-adapter', () => ({
-  decryptSecretValue: (value: any) => value,
-  encryptSecretValue: (value: any) => value,
-}));
-
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
 describe('getAuthQueryParams', () => {

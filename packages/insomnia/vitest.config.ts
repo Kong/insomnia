@@ -14,7 +14,6 @@ export default defineConfig({
     },
     exclude: ['src/routes/**.*.tsx', '.react-router', 'node_modules'],
     alias: {
-      '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.node'),
       '~': path.resolve(__dirname, './src'),
       'electron/main': 'electron',
     },
