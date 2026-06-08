@@ -1,5 +1,9 @@
 import { mkdirSync } from 'node:fs';
 
+declare global {
+  var __PLAYWRIGHT_OPEN_DIALOG_QUEUE__: { filePaths: string[]; canceled: boolean }[] | undefined;
+}
+
 import type {
   IpcMainEvent,
   IpcMainInvokeEvent,
@@ -16,12 +20,18 @@ import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
+  | 'run-tests'
   | 'authorizeUserInDefaultBrowser'
   | 'authorizeUserInWindow'
   | 'backup'
   | 'cancelAuthorizationInDefaultBrowser'
   | 'generateCodeSnippet'
   | 'getCodeSnippetTargets'
+  | 'exportHarWithRequest'
+  | 'exportHarRequest'
+  | 'exportHarCurrentRequest'
+  | 'exportRequestsHAR'
+  | 'exportWorkspacesHAR'
   | 'generateMockRouteDataFromSpec'
   | 'generateCommitsFromDiff'
   | 'generateMcpSamplingResponse'
@@ -83,6 +93,7 @@ export type HandleChannels =
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
   | 'grpc.writeProtoFile'
+  | 'grpc.validateProtoFile'
   | 'initializeWorkspaceBackendProject'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
@@ -169,10 +180,26 @@ export type HandleChannels =
   | 'timeline.appendToFile'
   | 'timeline.getPath'
   | 'writeFile'
-  | 'deleteRulesetFile'
+  | 'deleteCompiledRuleset'
+  | 'refreshCompiledRuleset'
   | 'writeResponseBodyToFile'
   | 'vault.encryptSecretValue'
-  | 'vault.decryptSecretValue';
+  | 'vault.decryptSecretValue'
+  | 'crypt.encryptRSAWithJWK'
+  | 'crypt.decryptRSAWithJWK'
+  | 'crypt.encryptAESBuffer'
+  | 'crypt.encryptAES'
+  | 'crypt.decryptAES'
+  | 'crypt.decryptAESToBuffer'
+  | 'crypt.generateAES256Key'
+  | 'sealedbox.keyPair'
+  | 'sealedbox.open'
+  | 'cookies.fromJSON'
+  | 'cookies.parse'
+  | 'cookies.toString'
+  | 'cookies.getCookiesForUrl'
+  | 'cookies.addSetCookies'
+  | 'cookies.getResponseCookiesFromHeaders';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -406,6 +433,14 @@ export function registerElectronHandlers() {
     });
   });
   ipcMainHandle('showOpenDialog', async (_, options: OpenDialogOptions) => {
+    // Playwright test hook: consume queued responses set via `electronApp.evaluate`
+    // instead of opening the native dialog. See packages/insomnia-smoke-test.
+    if (process.env.PLAYWRIGHT === 'true') {
+      const queue = globalThis.__PLAYWRIGHT_OPEN_DIALOG_QUEUE__;
+      if (queue && queue.length > 0) {
+        return queue.shift();
+      }
+    }
     const { filePaths, canceled } = await dialog.showOpenDialog(options);
     return { filePaths, canceled };
   });

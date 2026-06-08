@@ -18,6 +18,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 
+import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import { filterClientCertificates } from '../../network/certificate';
@@ -286,9 +287,13 @@ const openSocketIOConnection = async (
     const headers = options.headers;
     const url = options.url;
 
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+    if (!request.disableUserAgentHeader && !hasUserAgentHeader) {
+      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+    }
 
     // attach cookies to the request
     if (request.settingSendCookies && options.cookieJar.cookies.length) {

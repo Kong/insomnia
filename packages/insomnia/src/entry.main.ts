@@ -26,6 +26,7 @@ import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { registerGitServiceAPI } from './main/git-service';
+import { registerCookieHandlers } from './main/ipc/cookies';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
@@ -50,9 +51,9 @@ const dataPath =
   path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
 
 app.setPath('userData', dataPath);
-initElectronStorage(dataPath);
 
 initializeLogging();
+initElectronStorage(dataPath);
 
 initializeSentry();
 
@@ -89,6 +90,7 @@ app.on('ready', async () => {
   registerMainHandlers();
   registerPathHandlers();
   registergRPCHandlers();
+  registerCookieHandlers();
   registerGitServiceAPI();
   registerLLMConfigServiceAPI();
   registerWebSocketHandlers();

@@ -11,7 +11,7 @@ import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { oas } from '@stoplight/spectral-rulesets';
 import { fetch as spectralFetch } from '@stoplight/spectral-runtime';
 import { DiagnosticSeverity } from '@stoplight/types';
-import { bundleSpectralRuleset } from 'insomnia/src/common/bundle-spectral-ruleset';
+import { bundleSpectralRuleset, compileSpectralRulesetFromContent } from 'insomnia/src/common/bundle-spectral-ruleset';
 import { isPrivateOrLoopbackHost } from 'insomnia/src/common/private-host';
 
 import { InsoError } from '../errors';
@@ -92,15 +92,17 @@ export async function lintSpecification({
   let ruleset = oas;
   try {
     if (rulesetFileName) {
-      // Flatten all local extends and validate remote extends (SSRF + disallowed keys)
-      // before any content reaches Spectral.
-      const bundledContent = await bundleSpectralRuleset(rulesetFileName);
-      // bundleAndLoadRuleset requires a file path, so write the pre-validated bundle to
-      // a uniquely-named temp directory and clean it up immediately after loading.
+      // Step 1: flatten local extends and validate remote URLs (SSRF + disallowed keys).
+      const bundled = await bundleSpectralRuleset(rulesetFileName);
+      // Step 2: fetch + fully inline remote extends so bundleAndLoadRuleset has nothing to fetch,
+      // closing the validate-then-use race.
+      const compiledContent = await compileSpectralRulesetFromContent(bundled);
+      // bundleAndLoadRuleset requires a file path, so write the compiled object to a
+      // uniquely-named temp directory and clean it up immediately after loading.
       const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'spectral-'));
       try {
         const tempRulesetPath = path.join(tempDir, '.spectral.yaml');
-        await fs.promises.writeFile(tempRulesetPath, bundledContent, { encoding: 'utf8' });
+        await fs.promises.writeFile(tempRulesetPath, compiledContent, { encoding: 'utf8' });
         ruleset = await bundleAndLoadRuleset(tempRulesetPath, { fs, fetch: spectralFetch });
       } finally {
         await fs.promises.rm(tempDir, { recursive: true, force: true });

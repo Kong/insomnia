@@ -19,7 +19,7 @@ vi.mock('node:dns/promises', () => ({
 import dns from 'node:dns/promises';
 import fs from 'node:fs';
 
-import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
+import { bundleSpectralRuleset, compileSpectralRulesetFromContent } from '~/common/bundle-spectral-ruleset';
 
 const mockReadFile = vi.mocked(fs.promises.readFile) as MockedFunction<(path: string) => Promise<string>>;
 
@@ -400,7 +400,7 @@ rules:
       // ...but that remote itself extends an http:// localhost URL.
       vi.mocked(fetch).mockResolvedValueOnce(rulesetResponse(`extends:\n  - "http://localhost:8000/exec.yaml"\n`));
 
-      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('Remote "extends" URL must use https:');
+      await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('must use https');
     });
 
     it('rejects a functions: key inside a nested remote ruleset', async () => {
@@ -415,5 +415,85 @@ rules:
 
       await expect(bundleSpectralRuleset('/fake/ruleset.yaml')).rejects.toThrow('failed validation');
     });
+  });
+});
+
+describe('compileSpectralRulesetFromContent', () => {
+  it('fully inlines remote ruleset content and drops the URL', async () => {
+    const content = `
+extends:
+  - "https://example.com/remote.yaml"
+rules:
+  local-rule:
+    given: "$.info"
+    severity: warn
+    then:
+      function: truthy
+`;
+    vi.mocked(fetch).mockResolvedValue(rulesetResponse(`rules:${VALID_RULE}`));
+
+    const result = await compileSpectralRulesetFromContent(content);
+    expect(result).toContain('local-rule');
+    expect(result).toContain('remote-rule');
+    expect(result).not.toContain('https://example.com/remote.yaml');
+  });
+
+  it('recursively inlines nested remote extends', async () => {
+    vi.mocked(fetch).mockImplementation(async (input: any) => {
+      const href = String(input);
+      if (href === 'https://example.com/a.yaml') {
+        return rulesetResponse(`extends:\n  - "./b.yaml"\nrules:${VALID_RULE}`);
+      }
+      if (href === 'https://example.com/b.yaml') {
+        return rulesetResponse(
+          `rules:\n  nested-rule:\n    given: "$.servers"\n    severity: warn\n    then:\n      function: truthy\n`,
+        );
+      }
+      throw new Error(`Unexpected fetch call: ${href}`);
+    });
+
+    const result = await compileSpectralRulesetFromContent(`extends:\n  - "https://example.com/a.yaml"\n`);
+    expect(result).toContain('remote-rule');
+    expect(result).toContain('nested-rule');
+    expect(result).not.toContain('https://example.com');
+  });
+
+  it('preserves built-in identifiers surfaced by a remote ruleset', async () => {
+    vi.mocked(fetch).mockResolvedValue(rulesetResponse(`extends:\n  - spectral:oas\nrules:${VALID_RULE}`));
+
+    const result = await compileSpectralRulesetFromContent(`extends:\n  - "https://example.com/remote.yaml"\n`);
+    expect(result).toContain('spectral:oas');
+    expect(result).toContain('remote-rule');
+    expect(result).not.toContain('https://example.com/remote.yaml');
+  });
+
+  it('rejects a remote ruleset that declares custom functions (RCE vector)', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      rulesetResponse(`functions:\n  - exec\nrules:\n  env-check:\n    given: "$"\n    then:\n      function: exec\n`),
+    );
+
+    await expect(
+      compileSpectralRulesetFromContent(`extends:\n  - "https://example.com/exec.yaml"\n`),
+    ).rejects.toThrow('failed validation');
+  });
+
+  it('rejects a non-https remote extends without fetching', async () => {
+    await expect(
+      compileSpectralRulesetFromContent(`extends:\n  - "http://example.com/remote.yaml"\n`),
+    ).rejects.toThrow('must use https');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('rejects a remote extends pointing at a loopback host without fetching', async () => {
+    await expect(
+      compileSpectralRulesetFromContent(`extends:\n  - "https://127.0.0.1/remote.yaml"\n`),
+    ).rejects.toThrow('disallowed host');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('rejects content that is not an object at the top level', async () => {
+    await expect(compileSpectralRulesetFromContent(`- item1\n- item2\n`)).rejects.toThrow(
+      'must be an object at the top level',
+    );
   });
 });

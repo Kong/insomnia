@@ -1,11 +1,22 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
-import { analyzeMetafile, build, type BuildOptions, context } from 'esbuild';
+import { analyzeMetafile, build, type BuildOptions, context, type Plugin } from 'esbuild';
 
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
 const isDebug = Boolean(process.env.DEBUG);
 const version = process.env.VERSION || 'dev';
+// Redirects *.renderer imports to their *.node equivalents for node/CLI builds.
+const rendererToNodePlugin: Plugin = {
+  name: 'renderer-to-node',
+  setup(build) {
+    build.onResolve({ filter: /\.renderer$/ }, args => ({
+      path: path.resolve(args.resolveDir, args.path.replace('.renderer', '.node') + '.ts'),
+    }));
+  },
+};
+
 const config: BuildOptions = {
   outfile: './dist/index.js',
   bundle: true,
@@ -20,6 +31,7 @@ const config: BuildOptions = {
     electron: '../insomnia/send-request/electron',
   },
   plugins: [
+    rendererToNodePlugin,
     // taken from https://github.com/tjx666/awesome-vscode-extension-boilerplate/blob/main/scripts/esbuild.ts
     {
       name: 'umd2esm',

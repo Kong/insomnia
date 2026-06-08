@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { vi } from 'vitest';
 
-import { generate } from '../generate';
-import { runTests } from '../run';
+import { generate } from '../generate/generate';
+import { runTests } from '../run/run';
 
 describe('integration', () => {
   it('generates and runs basic tests', async () => {

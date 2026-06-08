@@ -281,7 +281,7 @@ export function filterCollection(collection: Child[], filter: string): Child[] {
 
 // Common tailwind classes
 export const ROW_CLASS =
-  'relative flex h-(--line-height-xs) w-full items-center gap-1 overflow-hidden text-[rgba(var(--color-font-rgb),0.8)] outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font) pr-4';
+  'relative flex h-(--line-height-xs) w-full items-center gap-1 overflow-hidden text-[rgba(var(--color-font-rgb),0.8)] outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-aria-selected:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font) pr-4';
 
 export const ACTIVE_BORDER_CLASS =
   'absolute top-0 left-0 h-full w-0.5 bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)';

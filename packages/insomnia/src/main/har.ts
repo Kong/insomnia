@@ -1,19 +1,20 @@
 import type * as Har from 'har-format';
-import type { BaseModel, Environment, Request, RequestGroup, Response, Workspace } from 'insomnia-data';
+import type { BaseModel, Cookie, Environment, Request, RequestGroup, Response, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
+import { getAuthHeader } from '~/main/network/get-auth-header';
+import { secureReadFile } from '~/main/secure-read-file';
 import { applyRequestHooks } from '~/network/network-adapter';
 
+import { getAppVersion } from '../common/constants';
+import { database } from '../common/database';
+import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from '../common/misc';
+import { getRenderedRequestAndContext } from '../common/render';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest } from '../templating/types';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import { smartEncodeUrl } from '../utils/url/querystring';
-import { getAppVersion } from './constants';
-import { jarFromCookies } from './cookies';
-import { database } from './database';
-import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
-import { getRenderedRequestAndContext } from './render';
 
 const { isRequest } = models.request;
 
@@ -207,7 +208,7 @@ export async function exportHarResponse(response?: Response) {
     status: response.statusCode,
     statusText: response.statusMessage,
     httpVersion: 'HTTP/1.1',
-    cookies: getResponseCookies(response),
+    cookies: await getResponseCookies(response),
     headers: getResponseHeaders(response),
     content: await getResponseContent(response),
     redirectURL: '',
@@ -274,10 +275,6 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
 
   // Set auth header if we have it
   if (!hasAuthHeader(renderedRequest.headers)) {
-    const getAuthHeader =
-      process.type === 'renderer'
-        ? window.main.getAuthHeader
-        : (await import('../main/network/get-auth-header')).getAuthHeader;
     const header = await getAuthHeader(renderedRequest, url);
 
     if (header) {
@@ -292,7 +289,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
     method: renderedRequest.method,
     url,
     httpVersion: 'HTTP/1.1',
-    cookies: getRequestCookies(renderedRequest),
+    cookies: await getRequestCookies(renderedRequest),
     headers: getRequestHeaders(renderedRequest),
     queryString: getRequestQueryString(renderedRequest),
     postData: await getRequestPostData(renderedRequest),
@@ -301,37 +298,33 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
   };
   return harRequest;
 }
-
-function getRequestCookies(renderedRequest: RenderedRequest) {
-  // filter out invalid cookies to avoid getCookiesSync complaining
-  const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-  const domainCookies = renderedRequest.url ? jar.getCookiesSync(renderedRequest.url) : [];
-  const harCookies: Har.Cookie[] = domainCookies.map(mapCookie);
-  return harCookies;
+async function getRequestCookies(renderedRequest: RenderedRequest): Promise<Har.Cookie[]> {
+  if (!renderedRequest.url) {
+    return [];
+  }
+  const domainCookies = getCookiesForUrl(renderedRequest.cookieJar.cookies, renderedRequest.url);
+  return domainCookies.map(mapCookieToHar);
 }
 
-export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
-  return getSetCookieHeaders(headers).reduce((accumulator, harCookie) => {
-    let cookie: null | undefined | ToughCookie = null;
+export function getResponseCookiesFromHeaders(headers: Har.Cookie[]): Har.Cookie[] {
+  const setCookieHeaders = getSetCookieHeaders(headers);
+  const cookies: Har.Cookie[] = [];
 
-    try {
-      cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
-    } catch {}
-
-    if (cookie === null || cookie === undefined) {
-      return accumulator;
+  for (const header of setCookieHeaders) {
+    const cookie = parseCookie(header.value);
+    if (cookie) {
+      cookies.push(mapCookieToHar(cookie));
     }
+  }
 
-    return [...accumulator, mapCookie(cookie)];
-  }, [] as Har.Cookie[]);
+  return cookies;
 }
 
-function getResponseCookies(response: Response) {
+async function getResponseCookies(response: Response): Promise<Har.Cookie[]> {
   const headers = response.headers.filter(Boolean);
   return getResponseCookiesFromHeaders(headers);
 }
-
-function mapCookie(cookie: ToughCookie) {
+function mapCookieToHar(cookie: Cookie): Har.Cookie {
   const harCookie: Har.Cookie = {
     name: cookie.key,
     value: cookie.value,
@@ -371,6 +364,27 @@ function mapCookie(cookie: ToughCookie) {
   }
 
   return harCookie;
+}
+
+function getCookiesForUrl(cookies: Cookie[], url: string): Cookie[] {
+  try {
+    // Simplified cookie filtering - just returns cookies matching the domain
+    return cookies.filter(c => {
+      if (!c.domain) return true;
+      return url.includes(c.domain);
+    });
+  } catch {
+    return [];
+  }
+}
+
+function parseCookie(cookieString: string): Cookie | null {
+  try {
+    const parsed = ToughCookie.parse(cookieString, { loose: true });
+    return parsed?.toJSON() as Cookie | null;
+  } catch {
+    return null;
+  }
 }
 
 async function getResponseContent(response: Response) {
@@ -416,7 +430,7 @@ async function getRequestPostData(renderedRequest: RenderedRequest): Promise<Har
   let body;
   if (renderedRequest.body.fileName) {
     try {
-      const text = await window.main.secureReadFile({ path: renderedRequest.body.fileName });
+      const text = await secureReadFile(renderedRequest.body.fileName);
 
       body = {
         text,

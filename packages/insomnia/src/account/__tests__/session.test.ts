@@ -24,6 +24,9 @@ vi.mock('../crypt', () => ({
 
 interface MockWindowMain {
   loginStateChange: ReturnType<typeof vi.fn>;
+  crypt: {
+    decryptAES: ReturnType<typeof vi.fn>;
+  };
 }
 
 const getWindowMain = () => (window as unknown as { main: MockWindowMain }).main;
@@ -62,7 +65,14 @@ beforeEach(() => {
   vi.mocked(insomniaApi.getEncryptionKeys).mockResolvedValue(mockEncryptionKeys);
   vi.mocked(crypt.decryptAES).mockReturnValue(JSON.stringify(MOCK_SYMMETRIC_KEY));
 
-  vi.stubGlobal('window', { main: { loginStateChange: vi.fn() } });
+  vi.stubGlobal('window', {
+    main: {
+      loginStateChange: vi.fn(),
+      crypt: {
+        decryptAES: vi.fn().mockReturnValue(JSON.stringify(MOCK_SYMMETRIC_KEY)),
+      },
+    },
+  });
 });
 
 describe('absorbKey', () => {
@@ -76,7 +86,7 @@ describe('absorbKey', () => {
   it('decrypts the symmetric key using the provided raw key and encSymmetricKey', async () => {
     await absorbKey(SESSION_ID, RAW_KEY);
 
-    expect(crypt.decryptAES).toHaveBeenCalledWith(RAW_KEY, MOCK_ENC_SYMMETRIC_KEY);
+    expect(getWindowMain().crypt.decryptAES).toHaveBeenCalledWith(RAW_KEY, MOCK_ENC_SYMMETRIC_KEY);
   });
 
   it('stores session data with mapped fields from profile and encryption keys', async () => {
@@ -123,7 +133,9 @@ describe('absorbKey', () => {
 describe('getPrivateKey', () => {
   it('decrypts and returns the private key from session, and throws when keys are missing', async () => {
     const mockPrivateKey = { kty: 'RSA', d: 'private' };
-    vi.mocked(crypt.decryptAES).mockReturnValue(JSON.stringify(mockPrivateKey));
+    (getWindowMain().crypt.decryptAES as ReturnType<typeof vi.fn>).mockReturnValue(
+      JSON.stringify(mockPrivateKey),
+    );
 
     await setSessionData(
       SESSION_ID,
@@ -138,7 +150,7 @@ describe('getPrivateKey', () => {
 
     const privateKey = await getPrivateKey();
 
-    expect(crypt.decryptAES).toHaveBeenCalledWith(MOCK_SYMMETRIC_KEY, MOCK_ENC_PRIVATE_KEY);
+    expect(getWindowMain().crypt.decryptAES).toHaveBeenCalledWith(MOCK_SYMMETRIC_KEY, MOCK_ENC_PRIVATE_KEY);
     expect(privateKey).toEqual(mockPrivateKey);
 
     await setSessionData(

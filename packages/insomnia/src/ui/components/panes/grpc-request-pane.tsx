@@ -123,6 +123,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       const renderedWithCertificates = {
         ...rendered,
         rejectUnauthorized: settings.validateSSL,
+        disableUserAgentHeader: activeRequest.disableUserAgentHeader,
         ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
           ? {
               clientCert: clientCert,
@@ -335,6 +336,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     rendered = {
                       ...rendered,
                       rejectUnauthorized: settings.validateSSL,
+                      disableUserAgentHeader: activeRequest.disableUserAgentHeader,
                       ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
                         ? {
                             clientCert: clientCert,

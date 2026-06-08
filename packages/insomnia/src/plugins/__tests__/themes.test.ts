@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import type { Plugin } from '../index';
 // No mock of '../themes' here — this file tests the built-in theme baseline.
 import { _testOnlySetPlugins, getThemes } from '../index';
+import type { Plugin } from '../types';
 
 const makePlugin = (overrides: Partial<Plugin> = {}): Plugin => ({
   name: 'test-plugin',

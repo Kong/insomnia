@@ -8,7 +8,8 @@
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test": "vitest run",
-    "type-check": "tsc --project tsconfig.json"
+    "type-check": "tsc --project tsconfig.json",
+    "generate:autocomplete": "esr scripts/generate-autocomplete.ts"
   },
   "repository": {
     "type": "git",

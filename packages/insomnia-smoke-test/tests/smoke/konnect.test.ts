@@ -33,7 +33,7 @@ test.describe('Konnect sidebar tab', () => {
     });
 
     test('hides the Konnect tab', async ({ page }) => {
-      await page.reload();
+      await page.reload({ waitUntil: 'networkidle' });
       await expect.soft(page.getByTestId('sidebar-tab-konnect')).toBeHidden();
     });
   });

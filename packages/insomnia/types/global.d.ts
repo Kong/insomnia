@@ -63,6 +63,7 @@ declare global {
 }
 
 declare const __DEV__: boolean;
+declare const __IS_RENDERER__: boolean;
 
 declare namespace NodeJS {
   interface Global {

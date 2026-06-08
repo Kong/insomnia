@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import type { SortOrder } from '~/common/constants';
@@ -25,6 +26,7 @@ interface WorkspaceNodeProps {
 export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: WorkspaceNodeProps) => {
   const { doc, collapsed, project, organizationId } = item;
   const { name: workspaceName, _id: workspaceId, scope: workspaceScope } = doc;
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const isCollection = workspaceScope === 'collection';
 
   return (
@@ -33,6 +35,10 @@ export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: 
       style={{ paddingLeft: '2em' }}
       data-testid={`workspace-node-${workspaceName}`}
       data-project={project.name}
+      onContextMenu={e => {
+        e.preventDefault();
+        setIsContextMenuOpen(true);
+      }}
     >
       <span className={ACTIVE_BORDER_CLASS} />
       <span className={`${GUIDE_LINE_CSS} group-hover/tree:bg-(--hl-sm)`} style={{ left: '1.5em' }} />
@@ -60,6 +66,8 @@ export const WorkspaceNode = ({ item, sortOrder, onToggle, onSortOrderChange }: 
           sortOrder={sortOrder}
           organizationId={organizationId}
           onSortOrderChange={onSortOrderChange}
+          isOpen={isContextMenuOpen}
+          onOpenChange={setIsContextMenuOpen}
         />
       </div>
     </div>

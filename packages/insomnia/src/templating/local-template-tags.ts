@@ -1,7 +1,8 @@
 import { format } from 'date-fns';
-import type { TemplateTag } from 'insomnia/src/plugins';
+import type { TemplateTag } from 'insomnia/src/plugins/types';
 import type { PluginTemplateTag } from 'insomnia/src/templating/types';
 import { invariant } from 'insomnia/src/utils/invariant';
+import { utf8StringFromBytes } from 'insomnia/src/utils/utf8-bytes';
 import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
 
@@ -673,7 +674,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             return context.util.decode(bodyBuffer, charset);
           } catch (err) {
             console.warn('[response] Failed to decode body', err);
-            return bodyBuffer.toString();
+            return utf8StringFromBytes(bodyBuffer);
           }
         }
         if (field === 'header') {
@@ -698,7 +699,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             body = await context.util.decode(bodyBuffer, charset);
           } catch (err) {
             console.warn('[response] Failed to decode body', err);
-            body = bodyBuffer.toString();
+            body = utf8StringFromBytes(bodyBuffer);
           }
 
           if (sanitizedFilter.indexOf('$') === 0) {
@@ -747,30 +748,34 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             let results: { outer: string; inner: string | null }[] = [];
 
             // Functions return plain strings, numbers, or a boolean—depending on the function.
-            if (typeof selectedValues === 'string' || typeof selectedValues === 'number' || typeof selectedValues === 'boolean') {
+            if (
+              typeof selectedValues === 'string' ||
+              typeof selectedValues === 'number' ||
+              typeof selectedValues === 'boolean'
+            ) {
               const str = String(selectedValues);
               results = [{ outer: str, inner: str }];
             } else {
               results = (selectedValues as Node[])
-              .filter(
-                sv =>
-                  sv.nodeType === Node.ATTRIBUTE_NODE ||
-                  sv.nodeType === Node.ELEMENT_NODE ||
-                  sv.nodeType === Node.TEXT_NODE,
-              )
-              .map(selectedValue => {
-                const outer = selectedValue.toString().trim();
-                if (selectedValue.nodeType === Node.ATTRIBUTE_NODE) {
-                  return { outer, inner: selectedValue.nodeValue };
-                }
-                if (selectedValue.nodeType === Node.ELEMENT_NODE) {
-                  return { outer, inner: selectedValue.childNodes.toString() };
-                }
-                if (selectedValue.nodeType === Node.TEXT_NODE) {
-                  return { outer, inner: selectedValue.toString().trim() };
-                }
-                return { outer, inner: null };
-              });
+                .filter(
+                  sv =>
+                    sv.nodeType === Node.ATTRIBUTE_NODE ||
+                    sv.nodeType === Node.ELEMENT_NODE ||
+                    sv.nodeType === Node.TEXT_NODE,
+                )
+                .map(selectedValue => {
+                  const outer = selectedValue.toString().trim();
+                  if (selectedValue.nodeType === Node.ATTRIBUTE_NODE) {
+                    return { outer, inner: selectedValue.nodeValue };
+                  }
+                  if (selectedValue.nodeType === Node.ELEMENT_NODE) {
+                    return { outer, inner: selectedValue.childNodes.toString() };
+                  }
+                  if (selectedValue.nodeType === Node.TEXT_NODE) {
+                    return { outer, inner: selectedValue.toString().trim() };
+                  }
+                  return { outer, inner: null };
+                });
             }
 
             if (results.length === 0) {

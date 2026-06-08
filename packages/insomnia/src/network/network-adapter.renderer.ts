@@ -1,4 +1,4 @@
-import type { RequestHeader } from 'insomnia-data';
+import type { Cookie, RequestHeader } from 'insomnia-data';
 
 import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
 import type { RenderedRequest } from '~/templating/types';
@@ -21,6 +21,30 @@ export const getAuthHeader = (r: RenderedRequest, u: string): Promise<RequestHea
   window.main.getAuthHeader(r, u);
 
 export const executeCurlRequest = (options: CurlRequestOptions) => cancellableCurlRequest(options);
+
+export async function extractCookies({
+  setCookieStrings,
+  currentUrl,
+  cookieJar,
+  settingStoreCookies,
+}: {
+  setCookieStrings: string[];
+  currentUrl: string;
+  cookieJar: { cookies: Cookie[] };
+  settingStoreCookies: boolean;
+}) {
+  if (!settingStoreCookies || !setCookieStrings.length) {
+    return { cookies: [], rejectedCookies: [], totalSetCookies: 0 };
+  }
+
+  const { cookies, rejectedCookies } = await window.main.cookies.addSetCookies({
+    setCookieStrings,
+    currentUrl,
+    cookieJar: cookieJar.cookies,
+  });
+
+  return { cookies, rejectedCookies, totalSetCookies: setCookieStrings.length };
+}
 
 export const runScript = (options: {
   script: string;

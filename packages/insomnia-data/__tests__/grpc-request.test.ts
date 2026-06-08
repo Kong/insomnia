@@ -22,6 +22,7 @@ describe('init()', () => {
       },
       metaSortKey: -1_478_795_580_200,
       isPrivate: false,
+      disableUserAgentHeader: false,
     });
   });
 });
@@ -55,6 +56,7 @@ describe('create()', () => {
       },
       metaSortKey: -1_478_795_580_200,
       isPrivate: false,
+      disableUserAgentHeader: false,
       type: 'GrpcRequest',
     };
     expect(request).toEqual(expected);

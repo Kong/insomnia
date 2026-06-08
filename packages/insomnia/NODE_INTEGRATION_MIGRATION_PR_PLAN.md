@@ -1,123 +1,85 @@
 # Node Integration Migration PR Plan
 
-This document tracks the renderer `nodeIntegration: false` migration. The original PR-by-PR plan in this file was written when the baseline contained ~30 entries and many subsystems still owned filesystem and crypto code in renderer-reachable modules. Most of those candidates have since landed via other workstreams. This refresh reflects the actual current state of `packages/insomnia/src/`.
+This document tracks the renderer `nodeIntegration: false` migration for the main `BrowserWindow`, and the follow-on work to harden the preload surface before flipping `contextIsolation`.
 
-## Goal
+## Status
 
-Flip the main BrowserWindow in `src/main/window-utils.ts:199-208` from `nodeIntegration: true` to `nodeIntegration: false`. Phase 2 (later) flips `contextIsolation: false` to `true`. The hidden BrowserWindow keeps `nodeIntegration: true` for plugin and script execution.
+**Phase 1 is complete.** `nodeIntegration: false` landed in `src/main/window-utils.ts` (commit `e4f9d8f3b`). The hidden BrowserWindow retains `nodeIntegration: true` for plugin and script execution.
 
-## Guardrails (already in place)
+Phase 2 (flip `contextIsolation: false` → `true`) is the next milestone.
 
-- Renderer import analyzer in `vite.config.ts`
-- Baseline comparison in `scripts/check-renderer-node-imports.ts`
-- Baseline snapshot in `config/renderer-node-import-baseline.json`
-- CI via `npm run check:renderer-node-imports`
+---
 
-Note: both `config/renderer-node-import-baseline.json` and `.reports/renderer-node-imports.json` are stale relative to the working tree. Run `npm run update:renderer-node-import-baseline` before opening the next PR.
+## What was done (high level)
 
-## What is actually left (verified against current code)
+| Area | Work |
+|---|---|
+| **Import guardrails** | Renderer import analyzer (`vite.config.ts`), baseline snapshot (`config/renderer-node-import-baseline.json`), CI via `npm run check:renderer-node-imports` |
+| **Network / route cleanup** | `response-operations.ts` → `insomnia-data/node-src/`; `url-matches-cert-host.ts`, `require-interceptor.ts`, `import.ts` cleaned |
+| **Third-party Node deps** | `mime-types` → `common/mime.ts` (Web API); `iconv-lite` → `TextDecoder`; `tough-cookie` and `@grpc/grpc-js` moved behind IPC |
+| **Plugin system** | Phase 1a (PR #9889): all plugin execution IPC-bridged to hidden BrowserWindow; Phase 1b (PR #9998): plugin imports removed from vite renderer bundle |
+| **Vault crypto** | `utils/vault-crypto.ts` rewritten as a thin IPC adapter — `encryptSecretValue`/`decryptSecretValue` delegate to `window.main.vault.*` in main (`main/ipc/main.ts:819`) |
+| **Env var preload** | `entry.preload.ts` collects all required env vars at preload time and exposes them as `window.env`; `common/constants.ts` reads `window.env` first, falls back to `process.env` for CLI/main |
+| **The flag** | `nodeIntegration: true` → `false` in `window-utils.ts` (Phase 1 complete) |
 
-Seven files in `packages/insomnia/src/` still import Node builtins:
+---
 
-| File | Builtins | Notes |
-|---|---|---|
-| `src/plugins/index.ts` | `fs`, `path` | Plugin discovery |
-| `src/plugins/create.ts` | `fs`, `path` | Plugin filesystem writes |
-| `src/plugins/context/response.ts` | `fs`, `zlib`, `stream` (type only) | Plugin response API |
-| `src/utils/plugin.ts` | `fs`, `path` | Plugin helpers |
-| `src/network/network.ts` | `fs`, `path` | Request execution pipeline |
-| `src/script-executor.ts` | `fs/promises` | Script execution file IO |
-| `src/templating/base-extension.ts` | `crypto`, `os` | Templating bootstrap |
+## Next steps (Phase 2 pre-work)
 
-Plus two carve-out modules under `packages/insomnia-testing/src/` (`generate/generate.ts`, `run/run.ts`) which the analyzer counts but which are not loaded by the renderer at runtime — they ship with the CLI.
+Phase 2 goal: flip `contextIsolation: false` → `true`. The preload already branches on `process.contextIsolated` to use `contextBridge.exposeInMainWorld` — but several surface areas need a second pass before that branch is exercised in production.
 
-## Already completed since the original plan
+### PR F: Vault adapter — move crypto to renderer (Web Crypto)
 
-No follow-up action needed for any of these:
+Current state: `vault-crypto.ts` is an IPC passthrough to `window.main.vault.*`. Every encrypt/decrypt call crosses the IPC boundary, adding latency and coupling.
 
-- PRs 1–3 of the original plan (route path/fs cleanup, shared helper cleanup) — merged
-- Response archival — `response-operations.ts` migrated to `insomnia-data/node-src/`
-- `src/network/url-matches-cert-host.ts` — cleaned
-- `src/scripting/require-interceptor.ts` — cleaned
-- OAuth token crypto — files moved out of renderer-reachable paths
-- Sync storage / VCS — moved to main / `insomnia-data`
-- gRPC `proto-directory-loader.tsx` — moved (only `write-proto-file.ts` still lives in `src/network/grpc/`; verify before assuming clean)
-- Import parsing (`src/common/import.ts`) — cleaned
-- Plugin execution (Phase 1a of the plugin POC) — PR #9889 plus follow-ups; all plugin invocations now cross an IPC bridge to a hidden BrowserWindow
+Proposed: replace the IPC delegation with a pure Web Crypto (`crypto.subtle`) implementation directly in the renderer. AES-GCM is natively available; the key material (`JsonWebKey`) already lives in the renderer. The IPC handlers in `main/ipc/main.ts:819-822` and the `vault.encryptSecretValue` / `vault.decryptSecretValue` entries in `main/ipc/electron.ts:175-176` can be removed once this lands.
 
-## Remaining PRs
+This also removes a privileged write-capable IPC channel from the preload surface, which is a security win ahead of the contextIsolation flip.
 
-### PR A: Plugins (largest cluster)
+Risk: medium — touch vault key derivation and encrypt/decrypt paths; needs test coverage for the Web Crypto implementation.
 
-Files: `src/plugins/index.ts`, `src/plugins/create.ts`, `src/plugins/context/response.ts`, `src/utils/plugin.ts`.
+### PR G: Second pass — preloaded env variables
 
-This is Phase 1b of the plugin POC (`PLUGIN_SYSTEM_POC.md`). Phase 1a already routes plugin *execution* through `window.main.plugins.*` IPC into a hidden BrowserWindow. Phase 1b moves plugin *discovery, loading, and the response context helper* fully into that hidden window so the renderer holds only metadata and bridge proxies. Re-use the existing `window.main.plugins.*` channel surface; do not invent a parallel discovery bridge.
+Current state: `entry.preload.ts` snapshots all env vars at preload time and exposes them as `window.env`. `common/constants.ts` reads `window.env` with a `process.env` fallback. This works today because `contextIsolation: false` means the `else` branch (`window.env = env`) is taken.
 
-Risk: high. Longest renderer code path that survived the earlier cleanup.
+Issues to address before the contextIsolation flip:
 
-Suggested reviewers: Plugins/templating, Electron/runtime.
+1. **`src/insomnia-data/src/models/settings.ts:25`** — reads `process.env.PLAYWRIGHT_TEST` directly. Will be `undefined` (or throw) in a context-isolated renderer. Should read from `window.env.PLAYWRIGHT_TEST` or receive the value via a model initialisation argument.
+2. **`constants.ts` fallback** — the `process[ENV]` fallback is intentional for the CLI, but in the renderer it should be a hard read from `window.env` (no fallback) so misconfiguration fails loudly rather than silently reading stale process env.
+3. **`entry.preload.ts` surface audit** — review which env vars are actually needed by the renderer vs. the preload vs. the CLI, and drop anything not required from `window.env` (principle of least privilege).
+4. **`plugins/index.ts:207,214`** — uses `process.env['HOME']` and `process.env['INSOMNIA_DATA_PATH']`. These run inside the hidden BrowserWindow which keeps `nodeIntegration: true`, so they are safe, but worth annotating explicitly.
 
-### PR B: `src/network/network.ts`
+Risk: low–medium. Mostly mechanical; risky only if any env var read is missed.
 
-Last network offender. Two options:
+---
 
-1. Lift `fs` / `path` use to a narrow main-side helper (`writeMultipartBody`, `resolveBodyFilePath`, etc.) exposed via existing `window.main` surface.
-2. Or finish the pipeline-to-main move: push `sendCurlAndWriteTimeline`, `tryToInterpolateRequest`, and `tryToExecute*Script` into main and let the renderer call a single `window.main.executeRequest`. Cleaner endpoint, much larger PR.
+## Still outstanding (pre-Phase-2)
 
-Recommendation: do option 1 to unblock the flag flip; defer option 2 to post-flip cleanup.
+These were scoped out of the Phase 1 PRs and are still needed before the contextIsolation flip:
 
-Risk: medium.
+| Item | Notes |
+|---|---|
+| `src/plugins/index.ts`, `src/plugins/create.ts`, `src/utils/plugin.ts` | Still import `fs`/`path`. Safe for now (run in hidden window), but the import baseline should reflect that explicitly. |
+| `src/plugins/context/response.ts` | `fs`, `zlib`, `stream` — same as above. |
+| `src/network/network.ts` | `fs`/`path` for multipart body and cert resolution. Candidate for a narrow `window.main` helper or deferral to post-Phase-2 cleanup. |
+| `src/script-executor.ts` | One `appendFile` (`node:fs/promises`). Move behind `window.main.scriptLog.append` bridge. |
+| `src/templating/base-extension.ts` | `crypto`, `os` — replace with Web Crypto and `window.main` os-info helper. |
+| `packages/insomnia-testing` carve-out | `generate/generate.ts`, `run/run.ts` counted by analyzer but never loaded by renderer. Add to allow-list. |
 
-Suggested reviewers: Network/gRPC, Electron/runtime.
-
-### PR C: `src/script-executor.ts`
-
-One `appendFile` from `node:fs/promises`. Move the file-write behind an existing or new narrow `window.main.scriptLog.append` bridge. Keep the rest of script orchestration in place.
-
-Risk: low.
-
-Suggested reviewers: Plugins/templating, Electron/runtime.
-
-### PR D: `src/templating/base-extension.ts`
-
-Replace `crypto` hashing with Web Crypto (`crypto.subtle`) where the algorithm allows, or expose a `window.main.hash` helper for legacy algorithms. Replace `os.hostname()` / `os.userInfo()` with values fetched once from main on startup and cached in renderer.
-
-Risk: low.
-
-Suggested reviewers: Plugins/templating, Electron/runtime.
-
-### PR E: inso carve-out
-
-Decide between:
-
-(a) adding `packages/insomnia-testing` to the analyzer's allow-list — it never runs in the renderer; or
-(b) restructuring the package so the renderer-imported entrypoint does not transitively pull `run.ts` / `generate.ts`.
-
-Option (a) is simpler and matches reality.
-
-Risk: low.
-
-Suggested reviewers: Electron/runtime, repo maintainers.
-
-## The flip
-
-After PRs A–E land and the baseline file is empty (or reduced to intentionally allowed entries):
-
-- **File:** `src/main/window-utils.ts:199-208`
-- **Change:** `nodeIntegration: true` → `false`. Leave `contextIsolation: false` for now (Phase 2). Keep `nodeIntegrationInWorker: false` (already correct — protects the Nunjucks worker sandbox). Hidden window stays on `nodeIntegration: true`.
-- **Audit:** any preload surface added during the migration, particularly anything that writes to disk on behalf of the renderer (e.g. `writeResponseBodyToFile`).
+---
 
 ## Verification
 
-- After each offender-removing PR: re-run `npm run update:renderer-node-import-baseline`, confirm the baseline shrinks, and commit the refreshed JSON in the same PR.
 - Per-PR: `npm run lint`, `npm run type-check`, `npm test`.
-- Before the flag flip: full smoke run (`npm run test:smoke:dev`) covering plugin load, send-request, gRPC, OAuth, scripting, templating.
-- After the flag flip: in a dev build, confirm `typeof process === 'undefined'` (or `process.type === undefined`) in the main renderer DevTools console, and that the hidden window still has full Node access. Re-run smoke.
+- After vault adapter lands: regression test encrypt/decrypt round-trip in a dev build; confirm no IPC calls to `vault.*` in DevTools.
+- After env var second pass: confirm `window.env` is populated and `process.env` is inaccessible in a contextIsolation-enabled build.
+- Before Phase 2 flag flip: full smoke run (`npm run test:smoke:dev`) covering plugin load, send-request, gRPC, OAuth, scripting, templating.
+- After Phase 2 flag flip: in a dev build, confirm `typeof process === 'undefined'` in the renderer DevTools console; confirm hidden window retains full Node access.
 
-## Exit criteria
+## Exit criteria (Phase 2)
 
-1. The analyzer report contains no renderer Node builtin imports outside explicit allow-list entries.
-2. `config/renderer-node-import-baseline.json` is empty or only contains intentionally permitted entries.
-3. The main BrowserWindow runs with `nodeIntegration: false` without renderer regressions.
-4. Security audit of any new preload surface introduced during the migration is complete.
-5. Stretch follow-up: tighten `vite.config.ts` to fail rather than baseline; remove the baseline file entirely.
+1. `contextIsolation: false` → `true` in `window-utils.ts` without renderer regressions.
+2. All `window.env` reads in renderer code go through the contextBridge path; no renderer code touches `process.env` directly.
+3. Vault crypto runs in the renderer via Web Crypto; IPC vault handlers removed from preload surface.
+4. Security audit of the preload `contextBridge` surface complete (only necessary channels exposed).
+5. Stretch: tighten `vite.config.ts` to fail (not baseline) on any new Node import in renderer code.

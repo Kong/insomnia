@@ -39,9 +39,12 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     }
 
     await services.stats.incrementDeletedRequestsForDescendents(project);
+    await services.projectLintRuleset.remove(projectId);
     await services.project.remove(project);
 
     await database.flushChanges(bufferId);
+
+    await window.main.deleteCompiledRuleset({ projectId });
 
     project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
 

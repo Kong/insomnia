@@ -1,18 +1,13 @@
-// Runtime adapter selection: renderer uses IPC bridge, node uses libcurl directly.
-// Vite production inlines process.type='renderer' so Rollup tree-shakes the node branch.
-import type * as AdapterType from './network-adapter.renderer';
-
-const impl = (
-  (process as any).type === 'renderer' ? require('./network-adapter.renderer') : require('./network-adapter.node')
-) as typeof AdapterType;
-
-export const {
+// Imports the renderer implementation by default.
+// esbuild node builds alias this to network-adapter.node via the renderer-to-node plugin.
+export {
   getTimelinePath,
   appendToTimelineOnError,
   appendTimelineLines,
   getAuthHeader,
   executeCurlRequest,
+  extractCookies,
   runScript,
   applyRequestHooks,
   applyResponseHooks,
-} = impl;
+} from './network-adapter.renderer';

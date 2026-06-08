@@ -2,12 +2,13 @@ import type { ThemeSettings } from 'insomnia-data';
 import { useCallback, useEffect, useState } from 'react';
 import * as reactUse from 'react-use';
 
+import type { PluginTheme } from '~/plugins/bridge-types';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 
-import { type ColorScheme } from '../../plugins';
-import { applyColorScheme, getColorScheme, type PluginTheme } from '../../plugins/misc';
+import { applyColorScheme, getColorScheme } from '../../plugins/misc';
 import { plugins } from '../../plugins/renderer-bridge';
+import { type ColorScheme } from '../../plugins/types';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {

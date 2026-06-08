@@ -32,6 +32,7 @@ export interface BaseSocketIORequest {
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
   settingPath?: string;
+  disableUserAgentHeader: boolean;
   eventListeners: SocketIOEventListener[];
 }
 
@@ -54,6 +55,7 @@ export const init = (): BaseSocketIORequest => ({
   settingSendCookies: true,
   settingPath: undefined,
   description: '',
+  disableUserAgentHeader: false,
   eventListeners: [],
 });
 

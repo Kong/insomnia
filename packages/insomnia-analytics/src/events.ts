@@ -136,6 +136,8 @@ export enum AnalyticsEvent {
   projectSwitched = 'project-switched',
   organizationSwitched = 'organization-switched',
   uploadLintRulesetClicked = 'upload-lint-ruleset-clicked',
+  firstRequestPaneExampleClicked = 'first-request-pane-example-clicked',
+  firstRequestPaneCollectionChanged = 'first-request-pane-collection-changed',
 }
 
 export enum InsoEvent {

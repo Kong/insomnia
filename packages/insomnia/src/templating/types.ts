@@ -18,7 +18,6 @@ import type {
   WebSocketRequest,
   Workspace,
 } from 'insomnia-data';
-import type { Cookie } from 'tough-cookie';
 
 type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
   Partial<Pick<Request, 'body' | 'authentication'>>;
@@ -51,6 +50,17 @@ export interface PluginStore {
   >;
 }
 
+export interface SerializedCookie {
+  key?: string;
+  value?: string;
+  domain?: string;
+  path?: string;
+  expires?: string | Date;
+  httpOnly?: boolean;
+  secure?: boolean;
+  hostOnly?: boolean;
+}
+
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
 export type PluginToMainAPIPaths =
   | 'readFile'
@@ -79,7 +89,15 @@ export type PluginToMainAPIPaths =
   | 'network.sendRequestWithoutSideEffects'
   | 'plugin.getBundlePluginTemplateTags'
   | 'plugin.executeBundlePluginTag'
-  | 'plugin.executeBundlePluginMainAction';
+  | 'plugin.executeBundlePluginMainAction'
+  | 'app.alert'
+  | 'app.dialog'
+  | 'app.prompt'
+  | 'app.getPath'
+  | 'app.showSaveDialog'
+  | 'app.clipboard.readText'
+  | 'app.clipboard.writeText'
+  | 'app.clipboard.clear';
 
 export type RenderedRequest = Request & {
   cookies: {
@@ -260,20 +278,20 @@ interface PromptModalOptions {
 }
 
 export interface AppContext {
-  alert: (title: string, message?: string) => void;
+  alert: (title: string, message?: string) => Promise<void>;
   dialog: (
     title: string,
     body: HTMLElement,
     options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean },
-  ) => void;
+  ) => Promise<void>;
   prompt: (
     title: string,
     options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>,
   ) => Promise<string>;
-  getPath: (name: string) => string;
+  getPath: (name: string) => Promise<string>;
   getInfo: () => { version: string; platform: NodeJS.Platform };
   showSaveDialog: (options?: { defaultPath?: string }) => Promise<string | null>;
-  clipboard: { readText(): string; writeText(text: string): void; clear(): void };
+  clipboard: { readText(): Promise<string>; writeText(text: string): Promise<void>; clear(): Promise<void> };
 }
 export interface PluginTemplateTagContext {
   app: AppContext;
@@ -320,7 +338,7 @@ export interface PluginTemplateTagContext {
       oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
       cookieJar: {
         getOrCreateForParentId: (parentId: string) => Promise<CookieJar>;
-        getCookiesForUrl: (parentId: string, url: string) => Promise<Cookie[]>;
+        getCookiesForUrl: (parentId: string, url: string) => Promise<SerializedCookie[]>;
       };
       response: {
         getLatestForRequestId: Services['response']['getLatestForRequestId'];

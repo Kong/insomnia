@@ -14,7 +14,7 @@ import { database as db } from '../common/database';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
-import type { Plugin } from '../plugins/index';
+import type { Plugin } from '../plugins/types';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import { decodeEncoding, tokenizeArgs } from './utils';
 
@@ -96,7 +96,7 @@ export function createLiquidTag(
               getCookiesForUrl: async (parentId: string, url: string) => {
                 const cookies = await services.cookieJar.getOrCreateForParentId(parentId);
                 const jar = jarFromCookies(cookies.cookies);
-                return jar.getCookiesSync(url);
+                return jar.getCookiesSync(url).map(c => c.toJSON());
               },
             },
             response: {

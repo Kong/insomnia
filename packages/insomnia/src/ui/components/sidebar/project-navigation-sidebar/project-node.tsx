@@ -1,5 +1,6 @@
 import type { StorageRules } from 'insomnia-api';
 import { models } from 'insomnia-data';
+import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { ProjectDropdown, type WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
@@ -20,8 +21,18 @@ interface ProjectNodeProps {
 export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrderChange }: ProjectNodeProps) => {
   const { doc, collapsed, organizationId } = item;
   const { name: projectName, presence, _id: projectId } = doc;
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+
   return (
-    <div className={ROW_CLASS} style={{ paddingLeft: '1em' }} data-testid={`project-node-${projectName}`}>
+    <div
+      onContextMenu={e => {
+        e.preventDefault();
+        setIsContextMenuOpen(true);
+      }}
+      className={ROW_CLASS}
+      style={{ paddingLeft: '1em' }}
+      data-testid={`project-node-${projectName}`}
+    >
       <span className={ACTIVE_BORDER_CLASS} />
       <Button slot="drag" className="hidden" />
       <Button
@@ -51,6 +62,8 @@ export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrd
           storageRules={storageRules}
           sortOrder={sortOrder}
           onSortOrderChange={onSortOrderChange}
+          isOpen={isContextMenuOpen}
+          onOpenChange={setIsContextMenuOpen}
         />
       )}
     </div>

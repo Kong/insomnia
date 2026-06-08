@@ -1,10 +1,11 @@
 import { getEncryptionKeys, getUserProfile, logout as logoutAPI } from 'insomnia-api';
 import type { GitRepository, Project, WorkspaceMeta } from 'insomnia-data';
+import type { AESMessage } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
-import * as crypt from './crypt';
+import { decryptAES } from '../utils/crypt-adapter';
 
 export interface SessionData {
   accountId: string;
@@ -14,7 +15,7 @@ export interface SessionData {
   lastName: string;
   symmetricKey: JsonWebKey;
   publicKey: JsonWebKey;
-  encPrivateKey: crypt.AESMessage;
+  encPrivateKey: AESMessage;
 }
 
 /** Creates a session from a sessionId and derived symmetric key. */
@@ -27,7 +28,7 @@ export async function absorbKey(sessionId: string, key: string) {
   ]);
   const { public_key: publicKey, enc_private_key: encPrivateKey, enc_symmetric_key: encSymmetricKey } = keys;
   const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
-  const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
+  const symmetricKeyStr = await decryptAES(key, JSON.parse(encSymmetricKey));
 
   // Store the information for later
   await setSessionData(
@@ -41,7 +42,9 @@ export async function absorbKey(sessionId: string, key: string) {
     JSON.parse(encPrivateKey),
   );
 
-  window.main.loginStateChange(true);
+  if (typeof window !== 'undefined' && window.main?.loginStateChange) {
+    window.main.loginStateChange(true);
+  }
 }
 
 export async function getPrivateKey() {
@@ -57,7 +60,7 @@ export async function getPrivateKey() {
     throw new Error("Can't get private key: session is missing keys.");
   }
 
-  const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
+  const privateKeyStr = await decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr) as JsonWebKey;
 }
 
@@ -92,7 +95,9 @@ export async function logout(clearCredentials = false) {
   if (clearCredentials) {
     await _removeAllCredentials();
   }
-  window.main.loginStateChange(false);
+  if (typeof window !== 'undefined' && window.main?.loginStateChange) {
+    window.main.loginStateChange(false);
+  }
 }
 
 /** Set data for the new session and store it encrypted with the sessionId */
@@ -104,7 +109,7 @@ export async function setSessionData(
   email: string,
   symmetricKey: JsonWebKey,
   publicKey: JsonWebKey,
-  encPrivateKey: crypt.AESMessage,
+  encPrivateKey: AESMessage,
 ) {
   const sessionData: SessionData = {
     id,

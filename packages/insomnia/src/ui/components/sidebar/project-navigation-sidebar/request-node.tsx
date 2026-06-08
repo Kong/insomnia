@@ -252,6 +252,10 @@ export const RequestNode = ({ item, onToggleFolder, className }: RequestNodeProp
           ? `pinned-request-node-${getRequestNameOrFallback(doc)}`
           : `request-node-${getRequestNameOrFallback(doc)}`
       }
+      onContextMenu={e => {
+        e.preventDefault();
+        setIsContextMenuOpen(true);
+      }}
       data-project={project.name}
       data-workspace={workspace.name}
       data-selected={isSelected}

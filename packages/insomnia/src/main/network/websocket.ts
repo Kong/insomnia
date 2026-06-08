@@ -22,6 +22,7 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
 
+import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
@@ -229,9 +230,13 @@ const openWebSocketConnection = async (
       }
     }
 
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+    if (!request.disableUserAgentHeader && !hasUserAgentHeader) {
+      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+    }
     const settings = await services.settings.get();
     const start = performance.now();
 

@@ -34,7 +34,7 @@ describe('downloadResponseBody', () => {
 
       await downloadResponseBody(
         null,
-        { contentType: 'application/json', bodyBuffer: Buffer.from('{}') },
+        { contentType: 'application/json', bodyBuffer: new TextEncoder().encode('{}') },
         false,
       );
 
@@ -50,7 +50,7 @@ describe('downloadResponseBody', () => {
 
       await downloadResponseBody(
         { name: 'My Request' },
-        { contentType: 'application/json', bodyBuffer: Buffer.from('{}') },
+        { contentType: 'application/json', bodyBuffer: new TextEncoder().encode('{}') },
         false,
       );
 
@@ -60,20 +60,20 @@ describe('downloadResponseBody', () => {
   });
 
   describe('prettify branch (prettify=true, JSON content-type)', () => {
-    it('writes a prettified JSON string, not a Buffer', async () => {
+    it('writes a prettified JSON string, not raw bytes', async () => {
       mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.json' });
       const rawJson = '{"b":2,"a":1}';
 
       await downloadResponseBody(
         { name: 'My Request' },
-        { contentType: 'application/json', bodyBuffer: Buffer.from(rawJson) },
+        { contentType: 'application/json', bodyBuffer: new TextEncoder().encode(rawJson) },
         true,
       );
 
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { path, content } = mockWriteFile.mock.calls[0][0];
       expect(path).toBe('/tmp/out.json');
-      // content must be a formatted string, not a Buffer
+      // content must be a formatted string, not raw bytes
       expect(typeof content).toBe('string');
       expect(content).toContain('"b": 2');
       expect(content).toContain('"a": 1');
@@ -81,10 +81,10 @@ describe('downloadResponseBody', () => {
   });
 
   describe('raw-bytes branch (default)', () => {
-    it('writes the raw Buffer when prettify is false, preserving binary content', async () => {
+    it('writes raw bytes when prettify is false, preserving binary content', async () => {
       mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.png' });
       // PNG magic bytes — would be corrupted by a UTF-8 round-trip
-      const binaryData = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+      const binaryData = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
       await downloadResponseBody(
         { name: 'My Request' },
@@ -95,13 +95,13 @@ describe('downloadResponseBody', () => {
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { path, content } = mockWriteFile.mock.calls[0][0];
       expect(path).toBe('/tmp/out.png');
-      expect(Buffer.isBuffer(content)).toBe(true);
+      expect(content).toBeInstanceOf(Uint8Array);
       expect(content).toEqual(binaryData);
     });
 
-    it('writes the raw Buffer when prettify is true but the content-type is not JSON', async () => {
+    it('writes raw bytes when prettify is true but the content-type is not JSON', async () => {
       mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.txt' });
-      const textData = Buffer.from('Hello, World!');
+      const textData = new TextEncoder().encode('Hello, World!');
 
       await downloadResponseBody(
         { name: 'My Request' },
@@ -111,11 +111,11 @@ describe('downloadResponseBody', () => {
 
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { content } = mockWriteFile.mock.calls[0][0];
-      expect(Buffer.isBuffer(content)).toBe(true);
+      expect(content).toBeInstanceOf(Uint8Array);
       expect(content).toEqual(textData);
     });
 
-    it('writes an empty Buffer when bodyBuffer is null', async () => {
+    it('writes empty bytes when bodyBuffer is null', async () => {
       mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.bin' });
 
       await downloadResponseBody(
@@ -126,7 +126,7 @@ describe('downloadResponseBody', () => {
 
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { content } = mockWriteFile.mock.calls[0][0];
-      expect(Buffer.isBuffer(content)).toBe(true);
+      expect(content).toBeInstanceOf(Uint8Array);
       expect(content.length).toBe(0);
     });
   });

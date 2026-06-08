@@ -21,7 +21,6 @@ import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizati
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 
-import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import type { SerializableActionMeta } from '../../../plugins/bridge-types';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
@@ -147,7 +146,10 @@ export const RequestActionsDropdown = ({
 
   const copyAsCurl = async () => {
     try {
-      const har = await exportHarRequest(request._id, workspaceId);
+      const har = await window.main.exportHarRequest({
+        requestId: request._id,
+        environmentOrWorkspaceId: workspaceId,
+      });
       if (!har) {
         return;
       }
@@ -333,7 +335,7 @@ export const RequestActionsDropdown = ({
         >
           <Icon icon="ellipsis" />
         </Button>
-        <Popover className="flex min-w-max flex-col overflow-y-hidden" triggerRef={triggerRef}>
+        <Popover className="flex min-w-max flex-col overflow-y-hidden" placement="bottom end" triggerRef={triggerRef}>
           <Menu
             aria-label="Request Actions Menu"
             selectionMode="single"

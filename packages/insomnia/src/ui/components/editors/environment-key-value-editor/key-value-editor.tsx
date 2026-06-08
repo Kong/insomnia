@@ -19,8 +19,8 @@ import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-edito
 import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
+import { decryptSecretValue, encryptSecretValue } from '../../../../utils/crypt-adapter';
 import { base64decode } from '../../../../utils/vault';
-import { decryptSecretValue, encryptSecretValue } from '../../../../utils/vault-crypto';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import { showModal } from '../../modals';
@@ -96,9 +96,16 @@ export const EnvironmentKVEditor = ({
         }
       })
       .catch(console.error);
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET).map(p => ({ id: p.id, value: p.value }))), vaultKey]);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    JSON.stringify(
+      kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET).map(p => ({ id: p.id, value: p.value })),
+    ),
+    vaultKey,
+  ]);
 
   const commonItemTypes = [
     {

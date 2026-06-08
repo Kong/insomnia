@@ -11,7 +11,6 @@ import * as pluginNetwork from './context/network';
 import * as pluginRequest from './context/request';
 import * as pluginResponse from './context/response';
 import * as pluginStore from './context/store';
-import type { Plugin } from './index';
 import {
   executePluginMainAction,
   getActivePlugins,
@@ -27,6 +26,7 @@ import {
   getWorkspaceActions,
   reloadPlugins,
 } from './index';
+import type { Plugin } from './types';
 
 export type PluginInvokeMethod =
   | 'getThemes'

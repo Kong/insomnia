@@ -2,19 +2,9 @@ import Color from 'color';
 import type { ThemeSettings } from 'insomnia-data';
 import { getAppDefaultTheme } from 'insomnia-data/common';
 
-import type {
-  HexColor,
-  PluginTheme,
-  RGBAColor,
-  RGBColor,
-  StylesThemeBlocks,
-  ThemeBlock,
-  ThemeColor,
-  ThemeInner,
-} from './bridge-types';
-export type { HexColor, PluginTheme, RGBAColor, RGBColor, StylesThemeBlocks, ThemeBlock, ThemeColor, ThemeInner };
-import type { ColorScheme } from './index';
+import type { PluginTheme, ThemeBlock } from './bridge-types';
 import { plugins } from './renderer-bridge';
+import type { ColorScheme } from './types';
 
 export interface CompleteStyleBlock {
   background: Required<Required<ThemeBlock>['background']>;

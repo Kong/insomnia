@@ -269,12 +269,12 @@ export const TagEditor: FC<Props> = props => {
         </Link>
       </div>
     ) : (
-      <textarea className="danger" value={error || 'Error'} readOnly rows={5} />
+      <textarea aria-label="Live Preview" className="danger" value={error || 'Error'} readOnly rows={5} />
     );
   } else if (rendering) {
-    previewElement = <textarea value="rendering..." readOnly rows={5} />;
+    previewElement = <textarea aria-label="Live Preview" value="rendering..." readOnly rows={5} />;
   } else {
-    previewElement = <textarea value={finalPreview || 'error'} readOnly rows={5} />;
+    previewElement = <textarea aria-label="Live Preview" value={finalPreview || 'error'} readOnly rows={5} />;
   }
 
   return (
