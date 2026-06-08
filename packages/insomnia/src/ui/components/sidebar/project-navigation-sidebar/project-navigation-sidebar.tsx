@@ -14,7 +14,18 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Button, GridList, GridListItem, Input, SearchField, Tab, TabList, Tabs } from 'react-aria-components';
+import {
+  Button,
+  GridList,
+  GridListItem,
+  Input,
+  SearchField,
+  Tab,
+  TabList,
+  Tabs,
+  Tooltip,
+  TooltipTrigger,
+} from 'react-aria-components';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
@@ -73,6 +84,23 @@ export interface ProjectNavigationSidebarHandle {
 }
 
 export type ProjectNavigationSidebarTabId = 'projects' | 'konnect';
+
+function getRelativeTimeString(timestamp: number, now: number = Date.now()): string {
+  const seconds = Math.floor((now - timestamp) / 1000);
+  if (seconds < 60) {
+    return `${seconds}s ago`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes}m ${seconds % 60}s ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours}h ${minutes % 60}m ago`;
+  }
+  const days = Math.floor(hours / 24);
+  return `${days}d ${hours % 24}h ago`;
+}
 
 const SidebarSearchField = ({
   value,
@@ -202,6 +230,10 @@ const ProjectNavigationSidebarInner = (
   );
   const isProjectTabActive = activeTab === 'projects';
   const { syncing, progress, startSync, cancelSync } = useKonnectSync();
+  const [lastSyncedAt, setLastSyncedAt] = reactUse.useLocalStorage<number | null>(
+    `${organizationId}:konnect-last-synced-at`,
+    null,
+  );
 
   const nonKonnectProjects = projects.filter(p => !p.konnectControlPlaneId);
   const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
@@ -317,6 +349,9 @@ const ProjectNavigationSidebarInner = (
     setLastSyncResult(result ?? null);
     setShowSyncDetails(false);
     setCopiedReason(null);
+    if (result?.success) {
+      setLastSyncedAt(Date.now());
+    }
   };
   syncKonnectProjectsAndNotifyRef.current = syncKonnectProjectsAndNotify;
 
@@ -895,6 +930,7 @@ const ProjectNavigationSidebarInner = (
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
   const [showSyncDetails, setShowSyncDetails] = useState(false);
   const [copiedReason, setCopiedReason] = useState<string | null>(null);
+  const [tooltipNow, setTooltipNow] = useState(Date.now());
   const skippedRoutesByReason = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const { routeName, reason, serviceName } of lastSyncResult?.skippedRoutes ?? []) {
@@ -939,14 +975,22 @@ const ProjectNavigationSidebarInner = (
                     <Icon icon="stop-circle" />
                   </Button>
                 ) : (
-                  <Button
-                    aria-label="Sync Konnect"
-                    onPress={handleSync}
-                    className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
-                  >
-                    <Icon icon="refresh" />
-                    Sync
-                  </Button>
+                  <TooltipTrigger delay={300} onOpenChange={isOpen => { if (isOpen) setTooltipNow(Date.now()); }}>
+                    <Button
+                      aria-label="Sync Konnect"
+                      onPress={handleSync}
+                      className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                    >
+                      <Icon icon="refresh" />
+                      Sync
+                    </Button>
+                    <Tooltip
+                      placement="bottom"
+                      className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-1.5 text-xs text-(--color-font) shadow-lg select-none"
+                    >
+                      {lastSyncedAt ? `Last synced: ${getRelativeTimeString(lastSyncedAt, tooltipNow)}` : 'Not yet synced'}
+                    </Tooltip>
+                  </TooltipTrigger>
                 )}
                 <Button
                   aria-label="Konnect settings"
