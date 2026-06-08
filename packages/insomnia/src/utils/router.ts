@@ -108,9 +108,9 @@ export const getInitialEntry = async () => {
       }
     }
 
-    const hasSeenOnboardingV12 = Boolean(window.localStorage.getItem('hasSeenOnboardingV12'));
+    const hasSeenOnboardingV13 = Boolean(window.localStorage.getItem('hasSeenOnboardingV13'));
 
-    if (!hasSeenOnboardingV12) {
+    if (!hasSeenOnboardingV13) {
       return href('/onboarding/*', {
         '*': '',
       });
