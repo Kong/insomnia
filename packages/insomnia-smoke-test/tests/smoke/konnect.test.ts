@@ -10,8 +10,7 @@ test.describe('Konnect sidebar tab', () => {
     await page.getByRole('button', { name: 'Configure' }).click();
     await page.getByLabel('Personal Access Token').fill('kpat_test');
     await page.getByRole('button', { name: 'Connect & Sync' }).click();
-    await expect.soft(page.getByText('Connected')).toBeVisible();
-    await page.getByRole('button', { name: 'Close' }).click();
+    await expect.soft(page.getByRole('heading', { name: 'Kong Konnect settings' })).toBeHidden();
 
     await expect.soft(page.getByRole('button', { name: 'Sync Konnect' })).toBeVisible();
 
