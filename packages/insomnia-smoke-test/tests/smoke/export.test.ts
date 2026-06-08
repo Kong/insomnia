@@ -13,7 +13,7 @@ import {
 } from '../../playwright/utils';
 
 test.describe('Export', () => {
-  test.slow();
+  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   const FIXTURE_FILES = [
     'export/Collection-A-wrk_829522b5e8dc4f37b7529db150315cd4.yaml',

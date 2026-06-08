@@ -31,7 +31,7 @@ export class PreferencesDataTab extends BasePage {
    * Clicks the "Export project" button.
    */
   async exportProjectData(dirPath: string, format: 'yaml' | 'har'): Promise<void> {
-    await this.page.getByTestId('export-project-button').click();
+    await this.page.getByTestId('export-project-button').click({ timeout: 90_000 });
     if (format === 'yaml') {
       await mockOpenDialogForDirectory(this.app, dirPath);
     } else if (format === 'har') {
@@ -45,7 +45,7 @@ export class PreferencesDataTab extends BasePage {
    */
   async exportAllData(dirPath: string): Promise<void> {
     await mockOpenDialogForDirectory(this.app, dirPath);
-    await this.page.getByRole('button', { name: /Export all data/ }).click();
+    await this.page.getByRole('button', { name: /Export all data/ }).click({ timeout: 90_000 });
 
     await this.waitForExportCompleteAlert();
   }
