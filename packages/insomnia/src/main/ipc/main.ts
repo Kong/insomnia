@@ -204,8 +204,8 @@ export interface RendererToMainBridgeAPI {
   installPlugin: typeof installPlugin;
   initializeWorkspaceBackendProject: typeof initializeWorkspaceBackendProject;
   parseImport: typeof convert;
-  multipartBufferToArray: (options: { bodyBuffer: Buffer; contentType: string }) => Promise<Part[]>;
-  writeFile: (options: { path: string; content: string | Buffer }) => Promise<string>;
+  multipartBufferToArray: (options: { bodyBuffer: Uint8Array | null; contentType: string }) => Promise<Part[]>;
+  writeFile: (options: { path: string; content: string | Uint8Array }) => Promise<string>;
   deleteCompiledRuleset: (options: { projectId: string }) => Promise<void>;
   refreshCompiledRuleset: (options: { projectId: string; rulesetContent: string }) => Promise<{ compiledPath: string }>;
   writeResponseBodyToFile: (options: {
@@ -377,12 +377,7 @@ export function registerMainHandlers() {
       throw new TypeError(`Unknown service method: ${serviceName}.${methodName}`);
     }
     const result = await (fn as (...args: unknown[]) => unknown).call(service, ...args);
-    // Tag Buffer results before contextBridge serializes them as plain Uint8Array,
-    // so the preload can distinguish them from intentional Uint8Array returns.
-    if (Buffer.isBuffer(result)) {
-      return { __type: 'Buffer', data: Array.from(result as Buffer) };
-    }
-    return result;
+    return Buffer.isBuffer(result) ? new Uint8Array(result) : result;
   });
   ipcMainHandle('multipartBufferToArray', async (_, options) => {
     return multipartBufferToArray(options);
@@ -426,7 +421,7 @@ export function registerMainHandlers() {
       return initializeWorkspaceBackendProject(options);
     },
   );
-  ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Buffer }) => {
+  ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Uint8Array }) => {
     try {
       const dir = path.dirname(options.path);
       await fs.promises.mkdir(dir, { recursive: true });

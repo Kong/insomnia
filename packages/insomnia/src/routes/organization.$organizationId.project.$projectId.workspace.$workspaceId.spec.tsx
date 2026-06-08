@@ -62,6 +62,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { utf8ByteLength } from '~/utils/utf8-bytes';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
 
@@ -435,8 +436,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     }
 
     const RULESET_MAX_BYTES = 1 * 1024 * 1024; // 1 MB
-    const byteLength = new TextEncoder().encode(content).byteLength;
-    if (byteLength > RULESET_MAX_BYTES) {
+    if (utf8ByteLength(content) > RULESET_MAX_BYTES) {
       showError({
         title: 'Ruleset Too Large',
         message: 'The selected ruleset exceeds the maximum allowed size of 1 MB.',

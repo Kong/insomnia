@@ -83,6 +83,8 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
   const fileName = gitFilePath?.split('/').pop() || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
 
+  const [fileNameValue, setFileNameValue] = useState<string>(safeToUseInsomniaFileName(fileName || ''));
+
   return (
     <ModalOverlay
       isOpen
@@ -144,30 +146,31 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     <TextField
                       name="fileName"
                       isRequired
-                      validate={fileName => {
+                      value={safeToUseInsomniaFileName(fileNameValue || '')}
+                      onChange={setFileNameValue}
+                      validate={inputValue => {
                         if (
                           selectedFolderChildren
                             .filter(name => name !== fileName)
-                            .includes(safeToUseInsomniaFileNameWithExt(fileName))
+                            .includes(safeToUseInsomniaFileNameWithExt(inputValue))
                         ) {
                           return 'A file with the same name already exists in the selected folder';
                         }
 
                         return null;
                       }}
-                      defaultValue={safeToUseInsomniaFileName(fileName || '')}
                       className="group relative flex w-full max-w-full shrink-0 flex-col gap-2 overflow-hidden"
                     >
                       <Label className="group relative flex flex-col gap-2 overflow-hidden">
                         <span className="text-sm text-(--hl)">File name</span>
 
-                        <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
+                        <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-2 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                           <Input
                             placeholder={workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name'}
-                            className="w-full min-w-[3ch] outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
+                            className="w-full outline-hidden [grid-area:input] placeholder:italic focus:outline-hidden"
                           />
-                          <span className="-z-10 w-min truncate opacity-0 [grid-area:input]">
-                            {safeToUseInsomniaFileName(fileName || workspace.name || 'name')}
+                          <span className="pointer-events-none truncate opacity-0 [grid-area:input]">
+                            {safeToUseInsomniaFileName(fileNameValue) || (workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name')}
                           </span>
                           <span className="text-(--hl) [grid-area:extension]">.yaml</span>
                         </div>
