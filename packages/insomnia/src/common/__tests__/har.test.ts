@@ -2,15 +2,19 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('~/network/network-adapter', () => ({
-  getTimelinePath: () => Promise.resolve(''),
-  appendToTimelineOnError: () => Promise.resolve(),
-  appendTimelineLines: () => Promise.resolve(),
-  getAuthHeader: () => Promise.resolve(),
-  executeCurlRequest: () => Promise.resolve({}),
-  runScript: () => Promise.resolve({}),
-  applyRequestHooks: (request: any) => Promise.resolve(request),
-  applyResponseHooks: (response: any) => Promise.resolve(response),
+vi.mock('~/common/runtime', () => ({
+  getRuntime: () => ({
+    network: {
+      getTimelinePath: () => Promise.resolve(''),
+      appendToTimelineOnError: () => Promise.resolve(),
+      appendTimelineLines: () => Promise.resolve(),
+      getAuthHeader: () => Promise.resolve(),
+      executeCurlRequest: () => Promise.resolve({}),
+      runScript: () => Promise.resolve({}),
+      applyRequestHooks: (request: any) => Promise.resolve(request),
+      applyResponseHooks: (response: any) => Promise.resolve(response),
+    },
+  }),
 }));
 vi.mock('~/utils/crypt-adapter', () => ({
   decryptSecretValue: (value: any) => value,

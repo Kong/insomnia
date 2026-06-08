@@ -3,9 +3,9 @@ import type { BaseModel, Cookie, Environment, Request, RequestGroup, Response, W
 import { models, services } from 'insomnia-data';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
+import { getRuntime } from '~/common/runtime';
 import { getAuthHeader } from '~/main/network/get-auth-header';
 import { secureReadFile } from '~/main/secure-read-file';
-import { applyRequestHooks } from '~/network/network-adapter';
 
 import { getAppVersion } from '../common/constants';
 import { database } from '../common/database';
@@ -245,7 +245,7 @@ export async function exportHarRequest(requestId: string, environmentOrWorkspace
 export async function exportHarWithRequest(request: Request, environmentId?: string, addContentLength = false) {
   try {
     const renderResult = await getRenderedRequestAndContext({ request, environment: environmentId });
-    const renderedRequest = await applyRequestHooks(renderResult.request, renderResult.context);
+    const renderedRequest = await getRuntime().network.applyRequestHooks(renderResult.request, renderResult.context);
     parseGraphQLReqeustBody(renderedRequest);
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {

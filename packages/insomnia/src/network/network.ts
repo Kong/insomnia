@@ -24,17 +24,7 @@ import { EnvironmentType, models, services } from 'insomnia-data';
 import { invariant, serializeNDJSON } from 'insomnia-data/common';
 import orderedJSON from 'json-order';
 
-import {
-  appendTimelineLines,
-  appendToTimelineOnError,
-  applyRequestHooks,
-  applyResponseHooks,
-  executeCurlRequest,
-  extractCookies,
-  getAuthHeader,
-  getTimelinePath,
-  runScript,
-} from '~/network/network-adapter';
+import { getRuntime } from '~/common/runtime';
 import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type { ExecutionOption, RequestContext } from '../../../insomnia-scripting-environment/src/objects';
@@ -150,7 +140,7 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const caCert = await services.caCertificate.getByParentId(workspaceId);
   const responseId = generateId('res');
-  const timelinePath = await getTimelinePath(responseId);
+  const timelinePath = await getRuntime().network.getTimelinePath(responseId);
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
 
@@ -213,7 +203,7 @@ export const fetchRequestData = async (
   const caCert = await services.caCertificate.getByParentId(workspaceId);
 
   const responseId = generateId('res');
-  const timelinePath = await getTimelinePath(responseId);
+  const timelinePath = await getRuntime().network.getTimelinePath(responseId);
 
   return {
     request,
@@ -252,7 +242,7 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   invariant(settings, 'failed to create settings');
 
   const responseId = generateId('res');
-  const timelinePath = await getTimelinePath(responseId);
+  const timelinePath = await getRuntime().network.getTimelinePath(responseId);
 
   return {
     environment,
@@ -514,7 +504,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
   }
 
   try {
-    const output = await runScript({
+    const output = await getRuntime().network.runScript({
       script,
       context: {
         request,
@@ -647,7 +637,7 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
       parentFolders: output.parentFolders,
     };
   } catch (err) {
-    await appendToTimelineOnError(
+    await getRuntime().network.appendToTimelineOnError(
       timelinePath,
       serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
     );
@@ -798,7 +788,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
 }) => {
   const { request, context } = renderResult;
   try {
-    return await applyRequestHooks(request, context);
+    return await getRuntime().network.applyRequestHooks(request, context);
   } catch {
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
@@ -858,7 +848,7 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const authHeader = await getAuthHeader(renderedRequest, finalUrl);
+  const authHeader = await getRuntime().network.getAuthHeader(renderedRequest, finalUrl);
   const requestOptions = {
     requestId,
     req: renderedRequest,
@@ -870,7 +860,7 @@ export async function sendCurlAndWriteTimeline(
     authHeader,
   };
 
-  const output = await executeCurlRequest(requestOptions);
+  const output = await getRuntime().network.executeCurlRequest(requestOptions);
 
   if ('error' in output) {
     if (runtime) {
@@ -893,7 +883,7 @@ export async function sendCurlAndWriteTimeline(
   // todo: move to main process
   debugTimeline.forEach(entry => timeline.push(entry));
   // transform output
-  const { cookies, rejectedCookies, totalSetCookies } = await extractCookies({
+  const { cookies, rejectedCookies, totalSetCookies } = await getRuntime().network.extractCookies({
     setCookieStrings: headerResults.flatMap(({ headers }: any) => getSetCookiesFromResponseHeaders(headers)),
     currentUrl: getCurrentUrl({ headerResults, finalUrl }),
     cookieJar: renderedRequest.cookieJar,
@@ -951,7 +941,7 @@ export const responseTransform = async (
   }
   console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`);
   try {
-    return await applyResponseHooks(response, renderedRequest, context);
+    return await getRuntime().network.applyResponseHooks(response, renderedRequest, context);
   } catch (err) {
     console.log('[plugin] Response hook failed', err, response);
     return {
@@ -1025,5 +1015,5 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
 };
 
 export const defaultSendActionRuntime: SendActionRuntime = {
-  appendTimeline: appendTimelineLines,
+  appendTimeline: (timelinePath, logs) => getRuntime().network.appendTimelineLines(timelinePath, logs),
 };
