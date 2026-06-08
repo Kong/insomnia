@@ -55,7 +55,6 @@ export default defineConfig(({ mode }) => {
       alias: {
         // Short-circuit the adapter wrappers to the renderer implementation directly.
         // These must appear before the '~' catch-all so the specific path wins.
-        '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
         '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
         '~/utils/crypt-adapter': path.resolve(__dirname, './src/utils/crypt-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
