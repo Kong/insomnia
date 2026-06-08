@@ -42,7 +42,7 @@ export async function absorbKey(sessionId: string, key: string) {
     JSON.parse(encPrivateKey),
   );
 
-  if (typeof window !== 'undefined' && window.main?.loginStateChange) {
+  if (__IS_RENDERER__) {
     window.main.loginStateChange(true);
   }
 }
@@ -95,7 +95,7 @@ export async function logout(clearCredentials = false) {
   if (clearCredentials) {
     await _removeAllCredentials();
   }
-  if (typeof window !== 'undefined' && window.main?.loginStateChange) {
+  if (__IS_RENDERER__) {
     window.main.loginStateChange(false);
   }
 }
