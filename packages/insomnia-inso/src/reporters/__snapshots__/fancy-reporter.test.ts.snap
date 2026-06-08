@@ -1,0 +1,189 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`FancyReporter > character-formats \`backticks\` and _underscores_ 1`] = `
+{
+  "stderr": "",
+  "stdout": "ℹ use foo and bar properly
+",
+}
+`;
+
+exports[`FancyReporter > falls back to logObj.icon for types without a built-in icon 1`] = `
+{
+  "stderr": "",
+  "stdout": "★ hello
+",
+}
+`;
+
+exports[`FancyReporter > formats Error args with stack 1`] = `
+{
+  "stderr": "
+ ERROR  boom
+      at <stack-frame>
+
+",
+  "stdout": "",
+}
+`;
+
+exports[`FancyReporter > formats chained Error.cause 1`] = `
+{
+  "stderr": "
+ ERROR  outer
+      at <stack-frame>
+
+  [cause]: inner
+      at <stack-frame>
+
+",
+  "stdout": "",
+}
+`;
+
+exports[`FancyReporter > honors the badge override on the log object 1`] = `
+{
+  "stderr": "",
+  "stdout": "
+ INFO  hello
+
+",
+}
+`;
+
+exports[`FancyReporter > honors the badge override on the log object 2`] = `
+{
+  "stderr": "✖ hello
+",
+  "stdout": "",
+}
+`;
+
+exports[`FancyReporter > preserves additional lines after the first 1`] = `
+{
+  "stderr": "",
+  "stdout": "ℹ line one
+line two
+line three
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: box 1`] = `
+{
+  "stderr": "",
+  "stdout": "box hello from box
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: debug 1`] = `
+{
+  "stderr": "",
+  "stdout": "⚙ hello from debug
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: error 1`] = `
+{
+  "stderr": "
+ ERROR  hello from error
+
+",
+  "stdout": "",
+}
+`;
+
+exports[`FancyReporter > renders log type: fail 1`] = `
+{
+  "stderr": "",
+  "stdout": "✖ hello from fail
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: fatal 1`] = `
+{
+  "stderr": "
+ FATAL  hello from fatal
+
+",
+  "stdout": "",
+}
+`;
+
+exports[`FancyReporter > renders log type: info 1`] = `
+{
+  "stderr": "",
+  "stdout": "ℹ hello from info
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: log 1`] = `
+{
+  "stderr": "",
+  "stdout": "hello from log
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: ready 1`] = `
+{
+  "stderr": "",
+  "stdout": "✔ hello from ready
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: start 1`] = `
+{
+  "stderr": "",
+  "stdout": "◐ hello from start
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: success 1`] = `
+{
+  "stderr": "",
+  "stdout": "✔ hello from success
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: trace 1`] = `
+{
+  "stderr": "",
+  "stdout": "→ hello from trace
+      at <stack-frame>
+",
+}
+`;
+
+exports[`FancyReporter > renders log type: warn 1`] = `
+{
+  "stderr": "
+ WARN  hello from warn
+
+",
+  "stdout": "",
+}
+`;
+
+exports[`FancyReporter > renders tag and date in a two-column layout when columns are wide 1`] = `
+{
+  "stderr": "",
+  "stdout": "ℹ hello                                                                                                cli 12:34:56 PM
+",
+}
+`;
+
+exports[`FancyReporter > renders tag inline when columns is 0 1`] = `
+{
+  "stderr": "",
+  "stdout": "[cli] ℹ hello
+",
+}
+`;
