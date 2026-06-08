@@ -129,7 +129,8 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Make sure the default directories exist
     const pluginPath = path.resolve(
-      process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
+      process.env['INSOMNIA_DATA_PATH'] ||
+        (typeof window !== 'undefined' && window.app != null ? window : electron).app.getPath('userData'),
       'plugins',
     );
 
@@ -299,7 +300,7 @@ export function getPluginCommonContext({
     ...pluginNetwork.init(),
     util: {
       openInBrowser: async (url: string) =>
-        process.type === 'renderer' || process.type === 'worker'
+        typeof window !== 'undefined' && window.main != null
           ? window.main.openInBrowser(url)
           : electron.shell.openExternal(url),
       models: {

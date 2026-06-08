@@ -4,7 +4,7 @@ import { invariant } from 'insomnia/src/utils/invariant';
 import { platform } from 'insomnia-data/common';
 
 // TODO: consider how this would work in a webworker context
-const isRenderer = process.type === 'renderer';
+const isRenderer = typeof window !== 'undefined';
 
 export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContext } => ({
   app: {

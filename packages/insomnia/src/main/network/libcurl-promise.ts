@@ -1,7 +1,3 @@
-// NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
-// Related issue https://github.com/JCMais/node-libcurl/issues/155
-import { invariant } from '../../utils/invariant';
-invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';

@@ -58,7 +58,7 @@ export function init(): {
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
         const { request: originRequest, caCertficatePath = null } = options;
         const curlRequest =
-          process.type === 'renderer' || process.type === 'worker'
+          typeof window !== 'undefined' && window.main != null
             ? window.main.curlRequest
             : // when exeucted in Inso;
               (await import('../../main/network/libcurl-promise')).curlRequest;
