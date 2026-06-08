@@ -8,12 +8,12 @@ const isRenderer = process.type === 'renderer';
 
 export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContext } => ({
   app: {
-    alert: (title: string, message?: string) => {
+    alert: async (title: string, message?: string) => {
       if (isRenderer) {
         return window.showAlert({ title, message });
       }
     },
-    dialog: (title, body, options = {}) => {
+    dialog: async (title, body, options = {}) => {
       if (isRenderer) {
         window.showWrapper({
           ...options,
@@ -41,7 +41,7 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
       });
     },
 
-    getPath: (name: string) => {
+    getPath: async (name: string) => {
       invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
       return window.app.getPath('desktop');
     },
@@ -63,9 +63,9 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
     },
 
     clipboard: {
-      readText: () => window.clipboard.readText(),
-      writeText: text => window.clipboard.writeText(text),
-      clear: () => window.clipboard.clear(),
+      readText: async () => window.clipboard.readText(),
+      writeText: async (text: string) => window.clipboard.writeText(text),
+      clear: async () => window.clipboard.clear(),
     },
   },
 });
