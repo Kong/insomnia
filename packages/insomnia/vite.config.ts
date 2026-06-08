@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
   return {
     define: {
       '__DEV__': JSON.stringify(__DEV__),
+      '__IS_RENDERER__': JSON.stringify(true),
       'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.INSOMNIA_ENV': JSON.stringify(mode),
       // Only apply in production builds: Rollup does text substitution (safe).
