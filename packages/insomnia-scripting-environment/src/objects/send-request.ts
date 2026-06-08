@@ -19,7 +19,7 @@ export async function sendRequest(
     try {
       const requestOptions = requestToCurlOptions(request, settings);
       const nodejsCurlRequest =
-        typeof window !== 'undefined' && window.bridge != null
+        __IS_RENDERER__ && window.bridge != null
           ? window.bridge.curlRequest
           : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
 

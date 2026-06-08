@@ -18,6 +18,8 @@ import electron from 'electron';
 import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
+import { invariant } from '~/utils/invariant';
+
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
