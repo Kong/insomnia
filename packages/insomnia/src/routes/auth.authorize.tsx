@@ -9,7 +9,7 @@ import { getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
 import { validateVaultKey } from '~/ui/vault-key.client';
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 import { getVaultKeyFromStorage } from '~/utils/vault';
 
 import type { Route } from './+types/auth.authorize';
@@ -65,7 +65,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
 export const useAuthorizeActionFetcher = createFetcherSubmitHook(
   submit => (data: { code: string }) => {
-    submit(data, {
+    submit(addScopeField({ scopes: ['root'], data }), {
       action: href('/auth/authorize'),
       method: 'POST',
       encType: 'application/json',

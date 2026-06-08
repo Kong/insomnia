@@ -2,7 +2,7 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/cloud-credentials.$cloudCredentialId.delete';
 
@@ -18,16 +18,13 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 export const useDeleteCloudCredentialActionFetcher = createFetcherSubmitHook(
   submit =>
     ({ cloudCredentialId }: { cloudCredentialId: string }) => {
-      return submit(
-        {},
-        {
-          method: 'POST',
-          action: href('/cloud-credentials/:cloudCredentialId/delete', {
-            cloudCredentialId,
-          }),
-          encType: 'application/json',
-        },
-      );
+      return submit(addScopeField({ scopes: ['root'], data: {} }), {
+        method: 'POST',
+        action: href('/cloud-credentials/:cloudCredentialId/delete', {
+          cloudCredentialId,
+        }),
+        encType: 'application/json',
+      });
     },
   clientAction,
 );

@@ -3,7 +3,7 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { showToast } from '~/ui/components/toast-notification';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.clear-vault-key';
 
@@ -34,7 +34,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
 export const useClearVaultKeyFetcher = createFetcherSubmitHook(
   submit => (data: { organizations: string[]; sessionId: string }) => {
-    submit(data, {
+    submit(addScopeField({ scopes: ['root'], data }), {
       action: href('/auth/clear-vault-key'),
       method: 'POST',
       encType: 'application/json',

@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
 import { createVaultKey } from '~/ui/vault-key.client';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.create-vault-key';
 
@@ -11,7 +11,10 @@ export async function clientAction(_args: Route.ClientActionArgs) {
 
 export const useCreateVaultKeyFetcher = createFetcherSubmitHook(
   submit => () => {
-    submit({}, { action: href('/auth/create-vault-key'), method: 'POST' });
+    submit(addScopeField({ scopes: ['root'], data: {} }), {
+      action: href('/auth/create-vault-key'),
+      method: 'POST',
+    });
   },
   clientAction,
 );

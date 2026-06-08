@@ -5,7 +5,7 @@ import { href } from 'react-router';
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import { plugins } from '~/plugins/renderer-bridge';
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/cloud-credentials.$cloudCredentialId.update';
 
@@ -48,7 +48,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 export const useUpdateCloudCredentialActionFetcher = createFetcherSubmitHook(
   submit =>
     ({ cloudCredentialId, patch }: { cloudCredentialId: string; patch: Partial<CloudProviderCredential> }) => {
-      return submit(JSON.stringify(patch), {
+      return submit(JSON.stringify(addScopeField({ scopes: ['root'], data: patch })), {
         method: 'POST',
         action: href('/cloud-credentials/:cloudCredentialId/update', {
           cloudCredentialId,

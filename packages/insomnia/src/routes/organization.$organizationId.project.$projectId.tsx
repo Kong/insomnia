@@ -30,6 +30,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
+import { createShouldRevalidateByScopes } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
@@ -61,6 +62,7 @@ const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeatu
 };
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+  console.log(`[loader] organization.$organizationId.project.$projectId`);
   const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
   invariant(organizationId, 'Organization ID is required');
@@ -130,6 +132,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     learningFeaturePromise,
   };
 }
+
+export const shouldRevalidate = createShouldRevalidateByScopes({
+  dataScopes: ['project'],
+});
 
 export function useProjectLoaderData() {
   return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId');

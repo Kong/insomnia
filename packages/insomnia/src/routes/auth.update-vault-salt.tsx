@@ -2,7 +2,7 @@ import { getVault } from 'insomnia-api';
 import { services } from 'insomnia-data';
 import { type ActionFunctionArgs, href } from 'react-router';
 
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction(_args: ActionFunctionArgs) {
   try {
@@ -21,7 +21,10 @@ export async function clientAction(_args: ActionFunctionArgs) {
 
 export const useUpdateVaultSaltFetcher = createFetcherSubmitHook(
   submit => () => {
-    return submit({}, { action: href('/auth/update-vault-salt'), method: 'POST' });
+    return submit(addScopeField({ scopes: ['root'], data: {} }), {
+      action: href('/auth/update-vault-salt'),
+      method: 'POST',
+    });
   },
   clientAction,
 );

@@ -28,18 +28,18 @@ import { MarkdownEditor } from '../markdown-editor';
 interface Props {
   onClose: () => void;
   workspace: Workspace;
-  mockServer?: MockServer | null;
   gitFilePath?: string | null;
   project?: Project;
 }
 
-export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockServer, onClose }: Props) => {
+export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, onClose }: Props) => {
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
   };
   const [description, setDescription] = useState<string>(workspace.description);
+  const [mockServer, setMockServer] = useState<MockServer | null>(null);
 
   const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
@@ -53,6 +53,17 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
       gitRepoTreeFetcher.load({ projectId: project._id });
     }
   }, [project, gitRepoTreeFetcher]);
+
+  useEffect(() => {
+    async function loadMockServer() {
+      if (models.workspace.isMockServer(workspace)) {
+        const mockServer = await services.mockServer.getByParentId(workspace._id);
+        mockServer && setMockServer(mockServer);
+      }
+    }
+
+    loadMockServer();
+  }, [workspace]);
 
   const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
 

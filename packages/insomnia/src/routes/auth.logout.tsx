@@ -1,7 +1,7 @@
 import { href, redirect } from 'react-router';
 
 import { logout } from '~/account/session';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.logout';
 
@@ -18,7 +18,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 export const useLogoutFetcher = createFetcherSubmitHook(
   submit =>
     (data: LogoutData = {}) => {
-      return submit(JSON.stringify(data), {
+      return submit(JSON.stringify(addScopeField({ scopes: ['root'], data })), {
         action: href('/auth/logout'),
         method: 'POST',
         encType: 'application/json',

@@ -2,7 +2,7 @@ import { services } from 'insomnia-data';
 import { type ActionFunctionArgs, href } from 'react-router';
 
 import { saveVaultKey, validateVaultKey } from '~/ui/vault-key.client';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 export async function clientAction({ request }: ActionFunctionArgs) {
   const { vaultKey, saveVaultKey: saveVaultKeyLocally = false } = await request.json();
@@ -34,7 +34,7 @@ export const useValidateVaultKeyActionFetcher = createFetcherSubmitHook(
     ({ vaultKey, saveVaultKey = false }: { vaultKey: string; saveVaultKey?: boolean }) => {
       const url = href('/auth/validate-vault-key');
 
-      return submit(JSON.stringify({ vaultKey, saveVaultKey }), {
+      return submit(JSON.stringify(addScopeField({ scopes: ['root'], data: { vaultKey, saveVaultKey } })), {
         action: url,
         method: 'POST',
         encType: 'application/json',

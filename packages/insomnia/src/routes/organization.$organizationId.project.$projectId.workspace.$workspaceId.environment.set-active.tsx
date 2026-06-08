@@ -2,7 +2,7 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 
@@ -36,9 +36,10 @@ export const useSetActiveEnvironmentFetcher = createFetcherSubmitHook(
       environmentId: string;
     }) => {
       return submit(
-        {
-          environmentId,
-        },
+        addScopeField({
+          scopes: ['workspace'],
+          data: { environmentId },
+        }),
         {
           method: 'POST',
           action: href(

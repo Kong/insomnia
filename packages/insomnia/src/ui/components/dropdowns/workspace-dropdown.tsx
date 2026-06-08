@@ -56,7 +56,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
     workspaceId: string;
   };
   invariant(organizationId, 'Expected organizationId');
-  const { activeWorkspace, activeWorkspaceMeta, activeProject, activeMockServer } = useWorkspaceLoaderData()!;
+  const { activeWorkspace, activeWorkspaceMeta, activeProject } = useWorkspaceLoaderData()!;
 
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -401,7 +401,6 @@ export const WorkspaceDropdown: FC<{}> = () => {
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={activeWorkspace}
-          mockServer={activeMockServer}
           project={activeProject}
           gitFilePath={activeWorkspaceMeta?.gitFilePath}
           onClose={() => setIsSettingsModalOpen(false)}

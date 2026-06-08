@@ -22,6 +22,7 @@ import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import { createShouldRevalidateByScopes } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 export default Outlet;
@@ -81,7 +82,14 @@ const getResponseOperations = (request: Request | WebSocketRequest | SocketIOReq
   return services.response;
 };
 
+export const shouldRevalidate = createShouldRevalidateByScopes({
+  dataScopes: ['request'],
+});
+
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+  console.log(
+    `[loader] organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId`,
+  );
   const { organizationId, projectId, requestId, workspaceId } = params;
 
   const activeWorkspace = await services.workspace.getById(workspaceId);

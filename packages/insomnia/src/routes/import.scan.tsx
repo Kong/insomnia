@@ -11,7 +11,7 @@ import {
 import type { ImportEntry } from '~/main/importers/entities';
 import { AnalyticsEvent, trackImportEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 export const scanImportResources = async (data: {
   source: ImportSourceType;
@@ -174,10 +174,17 @@ export async function clientAction({ request }: ActionFunctionArgs) {
 
 export const useScanResourcesFetcher = createFetcherSubmitHook(
   submit => (data: FormData | HTMLFormElement) => {
-    return submit(data, {
-      action: href('/import/scan'),
-      method: 'POST',
-    });
+    const formData = data instanceof HTMLFormElement ? new FormData(data) : data;
+    return submit(
+      addScopeField({
+        scopes: [],
+        data: formData,
+      }),
+      {
+        action: href('/import/scan'),
+        method: 'POST',
+      },
+    );
   },
   clientAction,
 );

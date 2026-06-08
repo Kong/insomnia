@@ -5,7 +5,7 @@ import { href } from 'react-router';
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import { plugins } from '~/plugins/renderer-bridge';
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/cloud-credentials.create';
 
@@ -54,7 +54,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
 export const useCreateCloudCredentialActionFetcher = createFetcherSubmitHook(
   submit => (data: CreateCloudCredentialsData) => {
-    return submit(JSON.stringify(data), {
+    return submit(JSON.stringify(addScopeField({ scopes: ['root'], data })), {
       method: 'POST',
       action: href('/cloud-credentials/create'),
       encType: 'application/json',

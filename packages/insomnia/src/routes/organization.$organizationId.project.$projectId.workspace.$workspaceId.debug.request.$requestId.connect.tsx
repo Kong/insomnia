@@ -12,7 +12,7 @@ import { href } from 'react-router';
 import type { RenderedRequest } from '~/templating/types';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 
@@ -168,12 +168,19 @@ export const useRequestConnectActionFetcher = createFetcherSubmitHook(
           requestId,
         },
       );
-
-      return submit(JSON.stringify(connectParams), {
-        action: url,
-        method: 'POST',
-        encType: 'application/json',
-      });
+      return submit(
+        JSON.stringify(
+          addScopeField({
+            scopes: ['request'],
+            data: connectParams,
+          }),
+        ),
+        {
+          action: url,
+          method: 'POST',
+          encType: 'application/json',
+        },
+      );
     },
   clientAction,
 );

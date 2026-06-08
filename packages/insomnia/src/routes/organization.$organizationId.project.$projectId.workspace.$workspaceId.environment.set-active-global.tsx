@@ -2,7 +2,7 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global';
 
@@ -47,10 +47,16 @@ export const useEnvironmentSetActiveGlobalActionFetcher = createFetcherSubmitHoo
       const formData = new FormData();
       formData.set('environmentId', environmentId);
 
-      return submit(formData, {
-        action: url,
-        method: 'POST',
-      });
+      return submit(
+        addScopeField({
+          scopes: ['workspace'],
+          data: formData,
+        }),
+        {
+          action: url,
+          method: 'POST',
+        },
+      );
     },
   clientAction,
 );

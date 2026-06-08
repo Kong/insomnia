@@ -49,6 +49,7 @@ import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
+import { createShouldRevalidateByScopes } from '~/utils/router';
 
 import type { Route } from './+types/root';
 
@@ -199,23 +200,26 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
 
 export interface RootLoaderData {
   settings: Settings;
-  workspaceCount: number;
   userSession: UserSession;
 }
+
+export const shouldRevalidate = createShouldRevalidateByScopes({
+  dataScopes: ['root'],
+  defaultShouldRevalidate: false,
+});
 
 export const useRootLoaderData = () => {
   return useRouteLoaderData<typeof clientLoader>('root');
 };
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
+  console.log(`[loader] root`);
   const settings = await services.settings.get();
-  const workspaceCount = await services.workspace.count();
   const userSession = await services.userSession.get();
   const cloudCredentials = await services.cloudCredential.all();
 
   return {
     settings,
-    workspaceCount,
     userSession,
     cloudCredentials,
   };

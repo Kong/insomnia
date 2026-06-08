@@ -31,7 +31,7 @@ import {
 import { AnalyticsEvent, type ImportAttribution, importAttributionKey } from '~/ui/analytics';
 import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 
@@ -461,19 +461,27 @@ export const useDebugRequestSendActionFetcher = createFetcherSubmitHook(
       requestId: string;
       params: { shouldPromptForPathAfterResponse?: boolean; ignoreUndefinedEnvVariable?: boolean };
     }) => {
-      return submit(JSON.stringify(params), {
-        method: 'POST',
-        action: href(
-          `/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/send`,
-          {
-            organizationId,
-            projectId,
-            workspaceId,
-            requestId,
-          },
+      return submit(
+        JSON.stringify(
+          addScopeField({
+            scopes: ['request'],
+            data: params,
+          }),
         ),
-        encType: 'application/json',
-      });
+        {
+          method: 'POST',
+          action: href(
+            `/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/send`,
+            {
+              organizationId,
+              projectId,
+              workspaceId,
+              requestId,
+            },
+          ),
+          encType: 'application/json',
+        },
+      );
     },
   clientAction,
 );

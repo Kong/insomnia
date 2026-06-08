@@ -2,7 +2,7 @@ import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
 
@@ -72,11 +72,19 @@ export const useRequestResponseDeleteActionFetcher = createFetcherSubmitHook(
         },
       );
 
-      return submit(JSON.stringify({ responseId }), {
-        action: url,
-        method: 'POST',
-        encType: 'application/json',
-      });
+      return submit(
+        JSON.stringify(
+          addScopeField({
+            scopes: ['request'],
+            data: { responseId },
+          }),
+        ),
+        {
+          action: url,
+          method: 'POST',
+          encType: 'application/json',
+        },
+      );
     },
   clientAction,
 );

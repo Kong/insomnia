@@ -2,7 +2,9 @@ import type { Organization } from 'insomnia-api';
 import type { GitProject, GitRepository, Project } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
-import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
+import { href, matchPath, type PathMatch, type ShouldRevalidateFunctionArgs, useFetcher } from 'react-router';
+
+import { isValidJSONString } from '~/utils/string-check';
 
 import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
 
@@ -11,6 +13,8 @@ export const enum AsyncTask {
   MigrateProjects,
   SyncProjects,
 }
+
+export type RouteScopes = 'organization' | 'project' | 'workspace';
 
 const getMatchParams = (location: string) => {
   const workspaceMatch = matchPath(
@@ -199,3 +203,107 @@ export const createFetcherLoadHook =
       load,
     } as Override<typeof fetcher, { load: ReturnType<T> }>;
   };
+
+// The scope here is used to determine which loaders to revalidate after a successful action submission.
+// root matches to root.tsx for global data like user session, settings, and workspace count, which are used across the app and most likely to be updated by an action.
+// organization matches to organization.tsx for new global organization, user and current plan data (by default cached in local storage).
+// project matches to organization.$organizationId.project.$projectId.tsx for all projects and its child workspace data
+// workspace matches to organization.$organizationId.project.$projectId.workspace.$workspaceId.tsx for current workspace data(including meta) and its child data (environment, certificates, api spec, mock server, requests).
+// request matches to organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.tsx for request data (request, request meat, responses, request versions, mock server and routers).
+export type submitRevalidateDataScope = 'root' | 'organization' | 'project' | 'workspace' | 'request';
+
+const SCOPE_TO_REVALIDATE_FIELD = '__INSOMNIA_REVALIDATE_SCOPES__';
+
+export const createShouldRevalidateByScopes = ({
+  dataScopes,
+  params,
+  defaultShouldRevalidate,
+}: {
+  // The scopes that should trigger revalidation when included in the form data of a submission
+  dataScopes: submitRevalidateDataScope[];
+  // The route params that should trigger revalidation when changed.
+  params?: string[];
+  defaultShouldRevalidate?: boolean;
+}) => {
+  const getScopesFromSubmission = (args: ShouldRevalidateFunctionArgs): submitRevalidateDataScope[] | null => {
+    const { formData, json, text } = args;
+    if (formData && formData.has(SCOPE_TO_REVALIDATE_FIELD)) {
+      const scopesJsonStr = formData.get(SCOPE_TO_REVALIDATE_FIELD);
+      if (typeof scopesJsonStr === 'string' && isValidJSONString(scopesJsonStr)) {
+        const scopes = JSON.parse(scopesJsonStr);
+        if (Array.isArray(scopes)) {
+          return scopes as submitRevalidateDataScope[];
+        }
+      }
+    }
+
+    if (json && typeof json === 'object' && SCOPE_TO_REVALIDATE_FIELD in json) {
+      return json[SCOPE_TO_REVALIDATE_FIELD] as submitRevalidateDataScope[];
+    }
+
+    // JSON-encoded object
+    if (typeof text === 'string') {
+      try {
+        const parsed = JSON.parse(text);
+        if (typeof parsed === 'object' && SCOPE_TO_REVALIDATE_FIELD in parsed) {
+          return parsed[SCOPE_TO_REVALIDATE_FIELD] as submitRevalidateDataScope[];
+        }
+      } catch {
+        // Ignore JSON parse errors
+      }
+    }
+
+    return null;
+  };
+
+  const shouldRevalidate = (args: ShouldRevalidateFunctionArgs) => {
+    const { currentParams, nextParams, formMethod, defaultShouldRevalidate: defaultShouldRevalidateArg } = args;
+
+    if (!formMethod || formMethod.toUpperCase() === 'GET') {
+      return defaultShouldRevalidateArg;
+    }
+
+    if (params) {
+      // If any of the specified params are different between current and next, we should revalidate
+      for (const param of params) {
+        if (currentParams[param] !== nextParams[param]) {
+          return true;
+        }
+      }
+      // If params are specified but none of them are different, we should not revalidate regardless of form data
+      return false;
+    }
+    const scopes = getScopesFromSubmission(args);
+    if (Array.isArray(scopes)) {
+      if (scopes.length === 0) {
+        // If the form data explicitly includes an empty scopes array, it will bypass revalidation when they know the changes won't affect the current page.
+        return false;
+      }
+      // If the form data includes scopes and any of them match the scopes for this shouldRevalidate function, then we should revalidate
+      return scopes.some(scope => dataScopes.includes(scope));
+    }
+    return defaultShouldRevalidate ?? defaultShouldRevalidateArg;
+  };
+  return shouldRevalidate;
+};
+
+export const addScopeField = ({
+  scopes,
+  data,
+}: {
+  scopes: submitRevalidateDataScope[];
+  data: Record<string, any> | FormData;
+}) => {
+  if (data instanceof FormData) {
+    const newFormData = new FormData();
+    for (const [key, value] of data.entries()) {
+      newFormData.append(key, value);
+    }
+    newFormData.append(SCOPE_TO_REVALIDATE_FIELD, JSON.stringify(scopes));
+    return newFormData;
+  }
+  return {
+    ...data,
+    [SCOPE_TO_REVALIDATE_FIELD]: scopes,
+  };
+};
