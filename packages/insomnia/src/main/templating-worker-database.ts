@@ -339,5 +339,3 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     clipboard.clear();
   },
 };
-
-// Register IPC handler for prompt results from the renderer
