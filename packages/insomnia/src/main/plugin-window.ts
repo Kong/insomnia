@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import { app, BrowserWindow, ipcMain } from 'electron';
 
+import { getMainWindow } from './window-utils';
+
 let pluginWindow: BrowserWindow | null = null;
 let windowReady = false;
 const pendingRequests = new Map<
@@ -67,9 +69,6 @@ export function getBridgeMetricsSnapshot() {
   };
 }
 
-function getMainWindow() {
-  return BrowserWindow.getAllWindows().find(w => !w.isDestroyed() && w.getTitle() === 'Insomnia');
-}
 
 // Registered once so that persistent `ipcMain.on` handlers don't accumulate across window recreations.
 let ipcListenersRegistered = false;

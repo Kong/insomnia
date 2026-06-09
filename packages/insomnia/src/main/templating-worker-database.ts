@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import crypto from 'node:crypto';
 import os from 'node:os';
 
-import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron';
+import { app, clipboard, dialog, ipcMain, shell } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -20,6 +20,7 @@ import { type Plugin, type TemplateTag } from '../plugins/types';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
 import { secureReadFile } from './secure-read-file';
+import { getMainWindow } from './window-utils';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 const promptPendingRequests = new Map<string, (value: string | null) => void>();
@@ -317,7 +318,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
   },
   'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
-    const mainWindow = BrowserWindow.getAllWindows().find(w => !w.isDestroyed() && w.getTitle() === 'Insomnia');
+    const mainWindow = getMainWindow();
     if (!mainWindow) return null;
 
     const label = body.options?.label ?? body.title;
@@ -358,7 +359,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
 
 // Register IPC handler for prompt results from the renderer
 ipcMain.on('app.promptResult', (event, { id, value }: { id: string; value: string | null }) => {
-  const mainWindow = BrowserWindow.getAllWindows().find(w => !w.isDestroyed() && w.getTitle() === 'Insomnia');
+  const mainWindow = getMainWindow();
   if (!mainWindow || event.sender !== mainWindow.webContents) {
     return;
   }
