@@ -3,6 +3,8 @@ import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
 import { initServices } from 'insomnia-data';
 
 import type { RequestContext } from '../../insomnia-scripting-environment/src/objects';
+import { initRuntime } from './common/runtime';
+import { rendererRuntime } from './common/runtime/runtime.renderer';
 import { runScript } from './scripting/run-script';
 import { type ScriptSecurityPolicy } from './scripting/sandbox';
 
@@ -27,6 +29,7 @@ if (!window._dataServices) {
 initServices(window._dataServices);
 // Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
 delete window._dataServices;
+initRuntime(rendererRuntime);
 
 window.bridge.onmessage(
   async (data: { script: string; context: RequestContext }, callback: ({ error }: { error: string }) => void) => {

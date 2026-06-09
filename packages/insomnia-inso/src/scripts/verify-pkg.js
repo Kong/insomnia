@@ -1,20 +1,31 @@
-const spawn = require('child_process').spawn;
-const resolve = require('path').resolve;
-const basePath = resolve('binaries/inso');
-const childProcess = spawn(basePath, ['--help']);
-childProcess.stdout.on('data', data => {
-  console.log(`stdout: ${data}`);
-});
-childProcess.stderr.on('data', data => {
-  console.log(`stderr: ${data}`);
-});
-childProcess.on('error', err => {
-  console.error(`Error: ${err.message}`);
-});
-childProcess.on('exit', (code, signal) => {
-  if (code !== 0) {
-    console.error(`Child process exited with code ${code} and signal ${signal}`);
-  } else {
-    console.log('Child process finished successfully');
+const { spawnSync } = require('node:child_process');
+const path = require('node:path');
+
+const binary = path.resolve('binaries/inso');
+const lintFixture = path.resolve('src/commands/fixtures/openapi-spec.yaml');
+const env = { ...process.env };
+delete env.CI;
+
+const commands = [['--help'], ['lint', 'spec', lintFixture]];
+
+for (const args of commands) {
+  const result = spawnSync(binary, args, { env, encoding: 'utf8' });
+
+  if (result.error) {
+    console.error(`Failed to run ${binary} ${args.join(' ')}: ${result.error.message}`);
+    process.exit(1);
   }
-});
+
+  if (result.status !== 0) {
+    console.error(`Command failed (exit ${result.status}): ${binary} ${args.join(' ')}`);
+    if (result.stdout) {
+      console.error(result.stdout);
+    }
+    if (result.stderr) {
+      console.error(result.stderr);
+    }
+    process.exit(result.status ?? 1);
+  }
+}
+
+console.log('Packaged binary smoke tests passed');

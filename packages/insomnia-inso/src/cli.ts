@@ -10,6 +10,8 @@ import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
+import { initRuntime } from 'insomnia/src/common/runtime';
+import { nodeRuntime } from 'insomnia/src/common/runtime/runtime.node';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import { configureFetch } from 'insomnia-api';
 import type {
@@ -50,6 +52,7 @@ import { generateDocumentation } from './scripts/docs';
 import { getAppDataDir, getDefaultProductName } from './util';
 
 initServices(servicesNodeImpl);
+initRuntime(nodeRuntime);
 
 export interface GlobalOptions {
   ci: boolean;
