@@ -70,7 +70,7 @@ export const KonnectEnvOnboarding = ({ triggerElement, onDismiss }: KonnectEnvOn
           <Icon icon="close" />
         </button>
       </div>
-      <p className="mt-2 text-xs text-(--hl)">
+      <p className="mt-2 text-sm text-(--hl)">
         Your requests have been automatically set with a{' '}
         <code className="rounded-xs bg-(--hl-xs) px-1 py-0.5 font-bold text-(--color-font)">proxy_url</code> environment
         variable for quick testing against different deployment stages. Enter it here before testing your gateway
