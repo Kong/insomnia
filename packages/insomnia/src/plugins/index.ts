@@ -32,6 +32,20 @@ export function _testOnlySetPlugins(p: Plugin[] | null) {
   plugins = p;
 }
 
+// The native `require` is in scope inside the bundled CommonJS that runs in the Electron plugin
+// window and main process; the inso CLI exposes it via `global.require`, so we use it when present
+// to ensure plugin modules load in all three runtimes.
+function getNodeRequire(): NodeRequire {
+  const globalRequire = (global as typeof global & { require?: unknown }).require;
+  if (typeof globalRequire === 'function') {
+    return globalRequire as NodeRequire;
+  }
+  if (typeof require === 'function') {
+    return require;
+  }
+  throw new Error('No require function available to load plugin modules');
+}
+
 export async function init() {
   await reloadPlugins();
 }
@@ -75,15 +89,17 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
           continue;
         }
 
+        const nodeRequire = getNodeRequire();
+
         // Now delete the require cache for this module, ensuring we're deleting only the relevant entries
-        for (const cachePath of Object.keys(global.require.cache)) {
+        for (const cachePath of Object.keys(nodeRequire.cache)) {
           // Check if the cache path starts with the safe module path
           if (cachePath.startsWith(safeModulePath)) {
-            delete global.require.cache[cachePath];
+            delete nodeRequire.cache[cachePath];
           }
         }
 
-        const pluginJson = global.require(packageJSONPath);
+        const pluginJson = nodeRequire(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
         if (!('insomnia' in pluginJson)) {
@@ -91,7 +107,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         }
 
         // Delete require cache entry and re-require
-        const module = global.require(modulePath);
+        const module = nodeRequire(modulePath);
 
         pluginMap[pluginJson.name] = {
           name: pluginJson.name,
@@ -165,7 +181,7 @@ function getBundlePluginMap() {
         bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
       }
       console.log('[plugin] Loading bundled plugin %s from %s', pluginName, bundlePluginPath);
-      const module = global.require(bundlePluginPath);
+      const module = getNodeRequire()(bundlePluginPath);
       bundlePluginMap[pluginName] = {
         name: pluginName,
         description: `Insomnia bundled plugin for ${pluginName}`,
