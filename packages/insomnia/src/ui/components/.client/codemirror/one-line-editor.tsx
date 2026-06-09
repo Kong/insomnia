@@ -316,16 +316,33 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     reactUse.useMount(() => {
       initEditor();
       if (autoFocus && !readOnly) {
-        // Defer to the next frame so we win against focus management from an enclosing React Aria
-        // ListBox, which otherwise restores DOM focus to the row right after we focus the editor.
-        requestAnimationFrame(() => {
-          if (!codeMirror.current) {
+        onAutoFocus?.();
+        // An enclosing React Aria ListBox (params/headers/environment grids) restores DOM focus to
+        // the row right after we focus the editor, and a single deferred focus loses that race on
+        // slower/headless machines. So we re-assert focus across a short window, re-grabbing only when
+        // focus was bounced to a non-editable element (the row) — never when the user moved to another
+        // field — until the editor holds focus or the window elapses.
+        const deadline = Date.now() + 500;
+        const ensureFocus = () => {
+          const cm = codeMirror.current;
+          if (!cm) {
             return;
           }
-          codeMirror.current.focus();
-          codeMirror.current.getDoc().setCursor(codeMirror.current.getDoc().lineCount(), 0);
-          onAutoFocus?.();
-        });
+          if (!cm.hasFocus()) {
+            const active = document.activeElement as HTMLElement | null;
+            const userMovedToAnotherField =
+              !!active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+            if (userMovedToAnotherField) {
+              return;
+            }
+            cm.focus();
+            cm.getDoc().setCursor(cm.getDoc().lineCount(), 0);
+          }
+          if (Date.now() < deadline) {
+            requestAnimationFrame(ensureFocus);
+          }
+        };
+        requestAnimationFrame(ensureFocus);
       }
     });
 
