@@ -787,13 +787,11 @@ const Component = ({ params }: Route.ComponentProps) => {
       items={groupedLintMessages.map(message => ({
         ...message,
         id: message.code,
-        value: message,
       }))}
     >
       {item => (
         <ListBoxItem
           className="cursor flex cursor-pointer flex-col text-xs outline-hidden transition-colors hover:bg-(--hl-sm)"
-          id={`lint-message-${item.code}`}
           onAction={() => {
             setExpandedLintMessageCodes(prev =>
               prev.includes(item.code) ? prev.filter(c => c !== item.code) : [...prev, item.code],
@@ -816,17 +814,14 @@ const Component = ({ params }: Route.ComponentProps) => {
           {expandedLintMessageCodes.includes(item.code) && (
             <div className="mt-1 flex flex-col gap-0.5">
               {item.occurrences.map(occurrence => (
-                <button
+                <Button
                   key={`${occurrence.line}-${occurrence.path}`}
                   className="flex gap-2 p-(--padding-sm) pl-[22px] text-left hover:bg-(--hl-sm)"
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleScrollToLintMessage(occurrence);
-                  }}
+                  onPress={() => handleScrollToLintMessage(occurrence)}
                 >
                   <span className="shrink-0 underline">Ln {occurrence.line + 1}</span>
                   {occurrence.path && <span className="truncate opacity-60">{occurrence.path}</span>}
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -1348,15 +1343,17 @@ const Component = ({ params }: Route.ComponentProps) => {
                 <Panel defaultSize={80} minSize={20} className="relative overflow-hidden">
                   {specEditor}
                 </Panel>
-                <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
-                <Panel defaultSize={5} minSize={5} className="flex flex-col overflow-hidden">
-                  {apiSpec.contents ? (
-                    <div className="box-border flex h-full flex-col">
-                      {lintToolbar}
-                      {isLintPaneOpen && listBox}
-                    </div>
-                  ) : null}
-                </Panel>
+                {apiSpec.contents ? (
+                  <>
+                    <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
+                    <Panel defaultSize={5} minSize={5} className="flex flex-col overflow-hidden">
+                      <div className="box-border flex h-full flex-col">
+                        {lintToolbar}
+                        {isLintPaneOpen && listBox}
+                      </div>
+                    </Panel>
+                  </>
+                ) : null}
               </PanelGroup>
             </Panel>
             {isSpecPaneOpen && (
