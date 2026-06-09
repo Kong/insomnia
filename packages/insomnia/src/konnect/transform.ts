@@ -79,7 +79,7 @@ export function extractRegionFromEndpoint(endpoint: string): string {
 /**
  * Names of the proxy environment variables Konnect sync manages.
  * On first sync, values are auto-filled from the control plane's `proxy_urls`
- * when available; otherwise created as empty strings for manual entry.
+ * when available.
  *
  * - `proxy_host`: host (with port when non-standard), used in http/https/ws/wss URLs.
  * - `grpc_proxy_host`: host:port, used in grpc:// URLs.
