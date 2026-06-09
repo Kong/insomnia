@@ -35,6 +35,11 @@ interface Pair {
   canDisable?: boolean;
 }
 
+// Module-level so it survives the KeyValueEditor remount that the async pair save triggers, and so
+// it isn't prematurely consumed under React StrictMode. Set on "Add", read during render, and cleared
+// only once the new row's Name editor actually focuses itself (via OneLineEditor's onAutoFocus).
+let pendingFocusLastRow = false;
+
 function createEmptyPair() {
   return {
     id: generateId('pair'),
@@ -275,7 +280,8 @@ export const KeyValueEditor: FC<Props> = ({
           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => {
             const id = generateId('pair');
-            upsertPair({ id, name: '', value: '', description: '', disabled: false });
+            pendingFocusLastRow = true;
+            upsertPair(pairsListItems, { id, name: '', value: '', description: '', disabled: false });
           }}
         >
           <Icon icon="plus" /> Add
@@ -442,6 +448,7 @@ export const KeyValueEditor: FC<Props> = ({
             const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
             const isOnlyTextAllowed = !allowFile && !allowMultiline;
             const isBlank = pair.id === blankId;
+            const isLastPair = pair.id === pairsListItems[pairsListItems.length - 1]?.id;
 
             let valueEditor = (
               <OneLineEditor
@@ -520,6 +527,10 @@ export const KeyValueEditor: FC<Props> = ({
                     placeholder={namePlaceholder || 'Name'}
                     defaultValue={pair.name}
                     readOnly={pair.disabled || isDisabled}
+                    autoFocus={pendingFocusLastRow && isLastPair}
+                    onAutoFocus={() => {
+                      pendingFocusLastRow = false;
+                    }}
                     getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
                     onChange={name => {
                       upsertPair({ ...pair, name });

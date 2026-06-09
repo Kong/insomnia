@@ -62,6 +62,9 @@ export interface OneLineEditorProps {
   eventListeners?: EditorEventListener<keyof EditorEventMap>[];
   // NOTE: stable key for caching/restoring undo history across remounts
   uniquenessKey?: string;
+  autoFocus?: boolean;
+  // Called once when the editor focuses itself due to `autoFocus`. Lets callers clear a one-shot flag.
+  onAutoFocus?: () => void;
 }
 
 export interface EditorEventListener<T extends keyof EditorEventMap> {
@@ -88,6 +91,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       onBlur,
       eventListeners,
       uniquenessKey,
+      autoFocus,
+      onAutoFocus,
     },
     ref,
   ) => {
@@ -308,6 +313,19 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     useResizeObserver(editorContainerRef, ({ width }) => {
       if (width && width > 0) {
         initEditor();
+    reactUse.useMount(() => {
+      initEditor();
+      if (autoFocus && !readOnly) {
+        // Defer to the next frame so we win against focus management from an enclosing React Aria
+        // ListBox, which otherwise restores DOM focus to the row right after we focus the editor.
+        requestAnimationFrame(() => {
+          if (!codeMirror.current) {
+            return;
+          }
+          codeMirror.current.focus();
+          codeMirror.current.getDoc().setCursor(codeMirror.current.getDoc().lineCount(), 0);
+          onAutoFocus?.();
+        });
       }
     });
 

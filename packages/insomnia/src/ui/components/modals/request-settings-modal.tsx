@@ -126,6 +126,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
               <label>
                 Name <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
                 <input
+                  autoFocus
                   type="text"
                   placeholder={request?.url || 'My Request'}
                   defaultValue={request?.name}

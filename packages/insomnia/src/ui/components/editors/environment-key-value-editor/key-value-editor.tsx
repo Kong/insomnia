@@ -310,6 +310,8 @@ export const EnvironmentKVEditor = ({
             placeholder={'Input Name'}
             defaultValue={name}
             readOnly={!enabled || disabled}
+            // Focus the Name of the trailing blank row so the editor is ready to type into on open/add.
+            autoFocus={!disabled && itemIndex === kvPairs.length - 1 && name === ''}
             onChange={newName => {
               // check filed names for invalid '$' for '.' sign
               const error = ensureKeyIsValid(newName, true);
