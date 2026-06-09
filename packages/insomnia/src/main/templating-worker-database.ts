@@ -324,8 +324,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
         `window.prompt(${JSON.stringify(label)}, ${JSON.stringify(defaultValue)})`
       );
     } catch (err) {
-      console.error('Failed to execute prompt in renderer:', err);
-      return null;
+      throw new Error(`Prompt is not supported in this context: ${err instanceof Error ? err.message : String(err)}`);
     }
   },
   'app.getPath': async (body: { name: string }) => {
