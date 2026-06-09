@@ -218,7 +218,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
   const gitVersion = useGitVCSVersion();
-  const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
+  const [isLintPaneOpen, setIsLintPaneOpen] = useState(true);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
   const [selectedRulesetPath, setSelectedRulesetPath] = useState<string>('');
 
@@ -658,7 +658,9 @@ const Component = ({ params }: Route.ComponentProps) => {
   );
 
   const lintToolbar = (
-    <div className="flex flex-wrap items-center gap-2 border-b border-solid border-(--hl-md) p-(--padding-sm)">
+    <div
+      className={`flex flex-wrap items-center gap-2 border-solid border-(--hl-md) p-(--padding-sm) ${isLintPaneOpen ? 'border-b' : 'border-t'}`}
+    >
       <div className="inline-flex items-center gap-2">
         <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
         {selectedRulesetPath ? (
@@ -1339,22 +1341,25 @@ const Component = ({ params }: Route.ComponentProps) => {
         <Panel className="flex flex-col">
           <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
             <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
-              <PanelGroup direction="vertical" className="h-full w-full">
-                <Panel defaultSize={80} minSize={20} className="relative overflow-hidden">
-                  {specEditor}
-                </Panel>
-                {apiSpec.contents ? (
-                  <>
-                    <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
-                    <Panel defaultSize={10} minSize={10} className="flex flex-col overflow-hidden">
-                      <div className="box-border flex h-full flex-col">
-                        {lintToolbar}
-                        {isLintPaneOpen && lintMessageList}
-                      </div>
-                    </Panel>
-                  </>
-                ) : null}
-              </PanelGroup>
+              <div className="flex h-full w-full flex-col">
+                <PanelGroup direction="vertical" className="min-h-0 flex-1">
+                  <Panel defaultSize={80} minSize={20} className="relative overflow-hidden">
+                    {specEditor}
+                  </Panel>
+                  {apiSpec.contents && isLintPaneOpen ? (
+                    <>
+                      <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
+                      <Panel defaultSize={20} minSize={10} className="flex flex-col overflow-hidden">
+                        <div className="box-border flex h-full flex-col">
+                          {lintToolbar}
+                          {lintMessageList}
+                        </div>
+                      </Panel>
+                    </>
+                  ) : null}
+                </PanelGroup>
+                {apiSpec.contents && !isLintPaneOpen ? lintToolbar : null}
+              </div>
             </Panel>
             {isSpecPaneOpen && (
               <>
