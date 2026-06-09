@@ -1,4 +1,10 @@
-import { deleteSecret as deleteSecretImpl, getSecret as getSecretImpl, setSecret as setSecretImpl, encryptString as encryptStringImpl, decryptString as decryptStringImpl } from '../main/ipc/secret-storage';
+import {
+  decryptString as decryptStringImpl,
+  deleteSecret as deleteSecretImpl,
+  encryptString as encryptStringImpl,
+  getSecret as getSecretImpl,
+  setSecret as setSecretImpl,
+} from '../main/ipc/secret-storage';
 
 export const setSecret = setSecretImpl;
 export const getSecret = getSecretImpl;
