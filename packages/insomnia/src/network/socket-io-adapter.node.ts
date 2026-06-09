@@ -1,11 +1,10 @@
+const error = new Error('SocketIORuntime not available in node');
 const throwError = () => {
-  throw new Error('SocketIORuntime not available in node');
+  throw error;
 };
 
 export const open = throwError;
-export const close = (_options: { requestId: string }) => {
-  throw new Error('SocketIORuntime not available in node');
-};
+export const close = throwError;
 export const closeAll = throwError;
-export const readyState = { getCurrent: async () => { throw new Error('SocketIORuntime not available in node'); } };
-export const event = { findMany: async () => { throw new Error('SocketIORuntime not available in node'); }, send: throwError, on: throwError, off: throwError };
+export const readyState = { getCurrent: () => Promise.reject(error) };
+export const event = { findMany: () => Promise.reject(error), send: throwError, on: throwError, off: throwError };

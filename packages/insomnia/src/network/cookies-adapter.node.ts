@@ -1,10 +1,9 @@
-const throwError = () => {
-  throw new Error('CookiesRuntime not available in node');
-};
+const error = new Error('CookiesRuntime not available in node');
+const rejectPromise = () => Promise.reject(error);
 
-export const fromJSON = throwError;
-export const parse = throwError;
-export const toString = throwError;
-export const getCookiesForUrl = throwError;
-export const addSetCookies = throwError;
-export const getResponseCookiesFromHeaders = throwError;
+export const fromJSON = rejectPromise;
+export const parse = rejectPromise;
+export const toString = rejectPromise;
+export const getCookiesForUrl = rejectPromise;
+export const addSetCookies = rejectPromise;
+export const getResponseCookiesFromHeaders = rejectPromise;
