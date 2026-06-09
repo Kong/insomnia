@@ -1,6 +1,6 @@
 import type { EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentKvPairDataType } from 'insomnia-data';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   type ButtonProps,
@@ -15,11 +15,11 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import { decryptSecretValue, encryptSecretValue } from '~/runtimes/crypto/crypt-adapter';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
-import { decryptSecretValue, encryptSecretValue } from '~/runtimes/crypto/crypt-adapter';
 import { base64decode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';

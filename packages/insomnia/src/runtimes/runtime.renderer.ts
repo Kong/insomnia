@@ -1,7 +1,7 @@
-import * as networkAdapter from './network/network-adapter.renderer';
-import * as renderAdapter from './templating/render-adapter.renderer';
 import * as cryptAdapter from './crypto/crypt-adapter.renderer';
+import * as networkAdapter from './network/network-adapter.renderer';
 import * as secretStorageAdapter from './secret-storage/secret-storage-adapter.renderer';
+import * as renderAdapter from './templating/render-adapter.renderer';
 import type { RuntimeCapabilities } from './types';
 
 export const rendererRuntime = {
