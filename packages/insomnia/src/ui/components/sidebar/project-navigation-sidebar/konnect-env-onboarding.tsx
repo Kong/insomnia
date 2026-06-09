@@ -62,7 +62,7 @@ export const KonnectEnvOnboarding = ({ triggerElement, onDismiss }: KonnectEnvOn
       role="dialog"
       aria-label="Konnect environment onboarding"
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-3">
         <h3 className="text-sm font-semibold text-(--color-font)">
           Almost ready! Just set your proxy URL for each control plane
         </h3>
