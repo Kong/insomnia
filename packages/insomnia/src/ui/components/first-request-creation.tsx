@@ -285,8 +285,8 @@ export const FirstRequestCreation = ({
       parentId: workspaceId,
       requestType: 'HTTP',
       req: {
-        url: 'https://pokeapi.co/api/v2/pokemon?offset=10&limit=10',
-        name: 'List a pokemon',
+        url: 'https://pokeapi.co/api/v2/pokemon?offset=0&limit=10',
+        name: 'List pokemon',
       },
       metrics: {
         source: 'first-request-pane',
@@ -344,7 +344,7 @@ export const FirstRequestCreation = ({
     },
     {
       id: 'pokemon',
-      label: 'List a pokemon',
+      label: 'List pokemon',
       icon: <span className={getBadgeClassName('GET')}>GET</span>,
       badge: 'GET',
       onClick: handleCreatePokemonRequest,
