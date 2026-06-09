@@ -11,32 +11,6 @@ export const KonnectEnvOnboarding = ({ triggerElement, onDismiss }: KonnectEnvOn
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target as Node) &&
-        triggerElement &&
-        !triggerElement.contains(e.target as Node)
-      ) {
-        onDismiss();
-      }
-    };
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onDismiss();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [onDismiss, triggerElement]);
-
-  useEffect(() => {
     if (!triggerElement) return;
 
     const updatePosition = () => {
@@ -64,7 +38,7 @@ export const KonnectEnvOnboarding = ({ triggerElement, onDismiss }: KonnectEnvOn
     >
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-sm font-semibold text-(--color-font)">
-          Almost ready! Just set your proxy URL for each control plane
+          Almost ready! Just set your proxy host for each control plane
         </h3>
         <button className="shrink-0 text-(--hl) hover:text-(--color-font)" onClick={onDismiss} aria-label="Dismiss">
           <Icon icon="close" />
@@ -72,9 +46,9 @@ export const KonnectEnvOnboarding = ({ triggerElement, onDismiss }: KonnectEnvOn
       </div>
       <p className="mt-2 text-sm text-(--hl)">
         Your requests have been automatically set with a{' '}
-        <code className="rounded-xs bg-(--hl-xs) px-1 py-0.5 font-bold text-(--color-font)">proxy_url</code> environment
-        variable for quick testing against different deployment stages. Enter it here before testing your gateway
-        routes.
+        <code className="rounded-xs bg-(--hl-xs) px-1 py-0.5 font-bold text-(--color-font)">proxy_host</code>{' '}
+        environment variable for quick testing against different deployment stages. Enter it here before testing your
+        gateway routes.
       </p>
       <button
         className="mt-3 rounded-md bg-(--color-surprise) px-4 py-1.5 text-sm font-medium text-(--color-font-surprise) transition-colors hover:opacity-90"
