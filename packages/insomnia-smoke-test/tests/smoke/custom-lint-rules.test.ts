@@ -159,7 +159,7 @@ test.describe('Custom Spectral Lint Rules', () => {
     await uploadRuleset(insomnia, insomnia.page);
 
     // Our custom rule should now fire on Pet Store.
-    await expect.soft(insomnia.page.getByRole('option', { name: new RegExp(RULESET_RULE_NAME) })).toBeVisible({
+    await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({
       timeout: 15_000,
     });
 
@@ -175,7 +175,7 @@ test.describe('Custom Spectral Lint Rules', () => {
     await expect
       .soft(insomnia.page.getByRole('button', { name: 'View selected ruleset content' }))
       .toBeVisible({ timeout: 15_000 });
-    await expect.soft(insomnia.page.getByRole('option', { name: new RegExp(RULESET_RULE_NAME) })).toBeVisible({
+    await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({
       timeout: 15_000,
     });
   });
@@ -186,19 +186,19 @@ test.describe('Custom Spectral Lint Rules', () => {
   test('remove custom ruleset reverts to default OAS, persists after app relaunch', async ({ insomnia }) => {
     await openPetStoreDesignDoc(insomnia.page);
     await uploadRuleset(insomnia, insomnia.page);
-    await expect.soft(insomnia.page.getByRole('option', { name: new RegExp(RULESET_RULE_NAME) })).toBeVisible({
+    await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({
       timeout: 15_000,
     });
 
     await removeRuleset(insomnia.page);
-    await expect.soft(insomnia.page.getByRole('option', { name: new RegExp(RULESET_RULE_NAME) })).toBeHidden();
+    await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeHidden();
     await expect.soft(insomnia.page.getByText('No lint problems')).toBeVisible({ timeout: 15_000 });
 
     await insomnia.relaunch();
     await insomnia.page.getByLabel('My Design Document').first().click();
 
     await expect.soft(insomnia.page.getByText('Default OAS Ruleset')).toBeVisible({ timeout: 15_000 });
-    await expect.soft(insomnia.page.getByRole('option', { name: new RegExp(RULESET_RULE_NAME) })).toBeHidden();
+    await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeHidden();
   });
 
   // ---------------------------------------------------------------------------
@@ -294,7 +294,7 @@ test.describe('Custom Spectral Lint Rules', () => {
         .soft(machineB.page.getByRole('button', { name: 'View selected ruleset content' }))
         .toBeVisible({ timeout: 15_000 });
       await expect
-        .soft(machineB.page.getByRole('option', { name: new RegExp(RULESET_RULE_NAME) }))
+        .soft(machineB.page.getByText(new RegExp(RULESET_RULE_NAME)))
         .toBeVisible({ timeout: 15_000 });
 
       await fetch(`${devServerUrl}/__test-config/cloud-sync/reset`, { method: 'POST' });
@@ -335,7 +335,7 @@ test.describe('Custom Spectral Lint Rules', () => {
         .soft(userB.page.getByRole('button', { name: 'View selected ruleset content' }))
         .toBeVisible({ timeout: 15_000 });
       await expect
-        .soft(userB.page.getByRole('option', { name: new RegExp(RULESET_RULE_NAME) }))
+        .soft(userB.page.getByText(new RegExp(RULESET_RULE_NAME)))
         .toBeVisible({ timeout: 15_000 });
 
       await fetch(`${devServerUrl}/__test-config/cloud-sync/reset`, { method: 'POST' });
