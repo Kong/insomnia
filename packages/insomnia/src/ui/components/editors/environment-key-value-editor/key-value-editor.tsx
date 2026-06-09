@@ -15,7 +15,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
-import { decryptSecretValue, encryptSecretValue } from '~/runtimes/crypto/crypt-adapter';
+import { decryptSecretValue, encryptSecretValue } from '~/runtimes/crypto/crypto-adapter';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 

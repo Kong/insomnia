@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { decryptSecretValue, encryptSecretValue } from './crypt-adapter.node';
+import { decryptSecretValue, encryptSecretValue } from './crypto-adapter.node';
 
 const TEST_AES_KEY: JsonWebKey = {
   kty: 'oct',

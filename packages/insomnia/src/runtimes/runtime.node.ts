@@ -1,7 +1,7 @@
-import * as cryptAdapter from './crypto/crypt-adapter.node';
+import * as cryptAdapter from './crypto/crypto-adapter.node';
 import * as networkAdapter from './network/network-adapter.node';
 import * as secretStorageAdapter from './secret-storage/secret-storage-adapter.node';
-import * as renderAdapter from './templating/render-adapter.node';
+import * as renderAdapter from './templating/templating-adapter.node';
 import type { RuntimeCapabilities } from './types';
 
 export const nodeRuntime = {
