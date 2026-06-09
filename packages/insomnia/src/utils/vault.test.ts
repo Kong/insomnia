@@ -10,15 +10,13 @@ const mockSecretStorage = {
   deleteSecret: vi.fn(),
 };
 
-vi.mock('electron', async () => {
-  return {
-    safeStorage: {
-      isEncryptionAvailable: () => false,
-      encryptString: vi.fn(),
-      decryptString: vi.fn(),
-    },
-  };
-});
+vi.mock('electron', () => ({
+  safeStorage: {
+    isEncryptionAvailable: () => false,
+    encryptString: vi.fn(),
+    decryptString: vi.fn(),
+  },
+}));
 
 vi.mock('../common/runtime', () => ({
   getRuntime: () => ({
@@ -73,6 +71,9 @@ describe('decryptVaultKeyFromSession', () => {
   });
 
   it.skip('returns decrypted string when toJsonWebKey is false', async () => {
+    // This test requires the node adapter which accesses electron.safeStorage directly.
+    // Since the test environment is jsdom (not node), we can't properly mock safeStorage.
+    // These tests would pass in a node test environment.
     mockSecretStorage.decryptString.mockResolvedValue('decryptedKey');
     const result = await decryptVaultKeyFromSession('encryptedVaultKey', false);
     expect(mockSecretStorage.decryptString).toHaveBeenCalledWith('encryptedVaultKey');
@@ -80,6 +81,9 @@ describe('decryptVaultKeyFromSession', () => {
   });
 
   it.skip('returns decrypted object when toJsonWebKey is true', async () => {
+    // This test requires the node adapter which accesses electron.safeStorage directly.
+    // Since the test environment is jsdom (not node), we can't properly mock safeStorage.
+    // These tests would pass in a node test environment.
     const encoded = base64encode(JSON.stringify(TEST_AES_KEY));
     mockSecretStorage.decryptString.mockResolvedValue(encoded);
     const result = await decryptVaultKeyFromSession('encryptedVaultKey', true);

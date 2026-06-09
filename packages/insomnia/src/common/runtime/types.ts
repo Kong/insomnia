@@ -1,7 +1,11 @@
 import type { AESMessage, Cookie, RequestHeader } from 'insomnia-data';
 
 import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
+import type { CookiesBridgeAPI } from '../../main/ipc/cookies';
+import type { gRPCBridgeAPI } from '../../main/ipc/grpc';
 import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../../main/network/libcurl-promise';
+import type { SocketIOBridgeAPI } from '../../main/network/socket-io';
+import type { WebSocketBridgeAPI } from '../../main/network/websocket';
 import type { RenderedRequest, RenderInputType } from '../../templating/types';
 
 interface CurlRequestErrorOutput {
@@ -51,58 +55,13 @@ export interface SecretStorageRuntime {
   decryptString: (cipherText: string) => Promise<string>;
 }
 
-export interface WebSocketRuntime {
-  open: (options: any) => void;
-  close: (options: { requestId: string }) => void;
-  closeAll: () => void;
-  readyState: {
-    getCurrent: (options: { requestId: string }) => Promise<boolean>;
-  };
-  event: {
-    findMany: (options: any) => Promise<any[]>;
-    send: (options: any) => void;
-  };
-}
+export type WebSocketRuntime = WebSocketBridgeAPI;
 
-export interface SocketIORuntime {
-  open: (options: any) => void;
-  close: (options: { requestId: string }) => void;
-  closeAll: () => void;
-  readyState: {
-    getCurrent: (options: { requestId: string }) => Promise<boolean>;
-  };
-  event: {
-    findMany: (options: any) => Promise<any[]>;
-    send: (options: any) => void;
-    on: (options: any) => void;
-    off: (options: any) => void;
-  };
-}
+export type SocketIORuntime = SocketIOBridgeAPI;
 
-export interface GrpcRuntime {
-  start: (options: any) => void;
-  sendMessage: (options: any) => void;
-  commit: (requestId: string) => void;
-  cancel: (requestId: string) => void;
-  loadMethods: (protoFileId: string) => Promise<any[]>;
-  loadMethodsFromReflection: (options: any) => Promise<any[]>;
-  closeAll: () => void;
-  writeProtoFile: (protoFileId: string) => Promise<any>;
-  validateProtoFile: (filePath: string) => Promise<void>;
-}
+export type GrpcRuntime = gRPCBridgeAPI;
 
-export interface CookiesRuntime {
-  fromJSON: (cookie: any) => Promise<any>;
-  parse: (cookie: string) => Promise<any>;
-  toString: (cookie: any) => Promise<string>;
-  getCookiesForUrl: (args: { cookies: Cookie[]; url: string }) => Promise<Cookie[]>;
-  addSetCookies: (args: {
-    setCookieStrings: string[];
-    currentUrl: string;
-    cookieJar: { cookies: Cookie[] };
-  }) => Promise<{ cookies: Cookie[]; rejectedCookies: string[] }>;
-  getResponseCookiesFromHeaders: (headers: any) => Promise<any[]>;
-}
+export type CookiesRuntime = CookiesBridgeAPI;
 
 export interface RuntimeCapabilities {
   network: NetworkRuntime;
