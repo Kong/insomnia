@@ -1,9 +1,9 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 import { models, services } from 'insomnia-data';
 
-import { decryptSecretValue } from '~/utils/crypt-adapter';
 import { base64ToUtf8, utf8ToBase64 } from '~/utils/utf8-bytes';
 
+import { getRuntime } from '../common/runtime';
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
 import { tokenizeArgs } from './tokenize-args';
@@ -161,7 +161,10 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
         // decrypt all secret values under vaultEnvironmentPath property in context
         for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
           const encryptedValue = vaultEnvironmentData[vaultContextKey];
-          vaultEnvironmentData[vaultContextKey] = await decryptSecretValue(encryptedValue, symmetricKey);
+          vaultEnvironmentData[vaultContextKey] = await getRuntime().crypto.decryptSecretValue(
+            encryptedValue,
+            symmetricKey,
+          );
         }
       } else if (isVaultEnabled && !vaultKey) {
         // remove all values under vaultEnvironmentPath if no vault key found

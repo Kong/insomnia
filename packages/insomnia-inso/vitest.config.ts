@@ -4,8 +4,6 @@ export default defineConfig({
   test: {
     hideSkippedTests: true,
     alias: {
-      '~/templating/render-adapter': new URL('../insomnia/src/templating/render-adapter.node.ts', import.meta.url)
-        .pathname,
       '~/': new URL('../insomnia/src/', import.meta.url).pathname,
     },
     env: {

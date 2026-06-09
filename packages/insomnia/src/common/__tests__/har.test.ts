@@ -14,11 +14,15 @@ vi.mock('~/common/runtime', () => ({
       applyRequestHooks: (request: any) => Promise.resolve(request),
       applyResponseHooks: (response: any) => Promise.resolve(response),
     },
+    crypto: {
+      decryptSecretValue: (value: any) => Promise.resolve(value),
+      encryptSecretValue: (value: any) => Promise.resolve(value),
+      decryptAES: (_symmetricKey: any, encryptedResult: any) => Promise.resolve(encryptedResult),
+    },
+    templating: {
+      renderTemplate: async (input: any) => typeof input.input === 'string' ? input.input : null,
+    },
   }),
-}));
-vi.mock('~/utils/crypt-adapter', () => ({
-  decryptSecretValue: (value: any) => value,
-  encryptSecretValue: (value: any) => value,
 }));
 
 import type { Cookie, Request, Response } from 'insomnia-data';
