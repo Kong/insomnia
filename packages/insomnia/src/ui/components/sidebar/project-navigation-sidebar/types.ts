@@ -3,19 +3,13 @@ import type { BaseModel, GitRepository, Project, RequestGroup, Workspace, Worksp
 import type { InsomniaFile } from '~/common/project';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
-export type ProjectWithPresence = Project & {
-  gitRepository?: GitRepository;
-  presence: {
-    key: string;
-    alt: string;
-    src: string;
-  }[];
-};
-
 export interface WorkspaceSummary {
   workspace: Workspace;
   meta: WorkspaceMeta;
 }
+export type ProjectWithGitRepository = Project & {
+  gitRepository?: GitRepository;
+};
 
 interface BaseFlatItem<T extends BaseModel> {
   // database doc associated with this item
@@ -28,14 +22,14 @@ interface BaseFlatItem<T extends BaseModel> {
   organizationId: string;
 }
 
-export interface ProjectFlatItem extends BaseFlatItem<ProjectWithPresence> {
+export interface ProjectFlatItem extends BaseFlatItem<ProjectWithGitRepository> {
   kind: 'project';
 }
 
 export interface WorkspaceFlatItem extends BaseFlatItem<Workspace> {
   kind: 'workspace';
   // parent project
-  project: ProjectWithPresence;
+  project: ProjectWithGitRepository;
 }
 
 // Unsynced workspace in cloud sync project
@@ -50,7 +44,7 @@ export type UnsyncedWorkspaceFlatItem = Omit<BaseFlatItem<any>, 'doc'> &
 export interface CollectionChildFlatItem extends BaseFlatItem<Child['doc']> {
   kind: 'collectionChild';
   // parent project
-  project: ProjectWithPresence;
+  project: Project;
   // parent workspace
   workspace: Workspace;
   // nested children for request group
@@ -77,7 +71,7 @@ export interface EmptyNodeFlatItem {
   hidden: boolean;
   organizationId: string;
   doc: { _id: string; name: string };
-  project: ProjectWithPresence;
+  project: Project;
   workspace?: Workspace;
   requestGroup?: RequestGroup;
   level?: number;
