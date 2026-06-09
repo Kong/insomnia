@@ -1,7 +1,7 @@
 import * as insomniaApi from 'insomnia-api';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as crypt from '../crypt';
+import { getRuntime } from '../../runtimes';
 import {
   absorbKey,
   getCurrentSessionId,
@@ -18,15 +18,12 @@ vi.mock('insomnia-api', () => ({
   logout: vi.fn(),
 }));
 
-vi.mock('../crypt', () => ({
-  decryptAES: vi.fn(),
+vi.mock('../../runtimes', () => ({
+  getRuntime: vi.fn(),
 }));
 
 interface MockWindowMain {
   loginStateChange: ReturnType<typeof vi.fn>;
-  crypt: {
-    decryptAES: ReturnType<typeof vi.fn>;
-  };
 }
 
 const getWindowMain = () => (window as unknown as { main: MockWindowMain }).main;
@@ -63,14 +60,21 @@ const mockUserProfile = {
 beforeEach(() => {
   vi.mocked(insomniaApi.getUserProfile).mockResolvedValue(mockUserProfile);
   vi.mocked(insomniaApi.getEncryptionKeys).mockResolvedValue(mockEncryptionKeys);
-  vi.mocked(crypt.decryptAES).mockReturnValue(JSON.stringify(MOCK_SYMMETRIC_KEY));
+
+  vi.mocked(getRuntime).mockReturnValue({
+    crypto: {
+      decryptAES: vi.fn().mockResolvedValue(JSON.stringify(MOCK_SYMMETRIC_KEY)),
+      encryptSecretValue: vi.fn(),
+      decryptSecretValue: vi.fn(),
+    },
+    network: {} as any,
+    templating: {} as any,
+    secretStorage: {} as any,
+  });
 
   vi.stubGlobal('window', {
     main: {
       loginStateChange: vi.fn(),
-      crypt: {
-        decryptAES: vi.fn().mockReturnValue(JSON.stringify(MOCK_SYMMETRIC_KEY)),
-      },
     },
   });
 });
@@ -86,7 +90,7 @@ describe('absorbKey', () => {
   it('decrypts the symmetric key using the provided raw key and encSymmetricKey', async () => {
     await absorbKey(SESSION_ID, RAW_KEY);
 
-    expect(getWindowMain().crypt.decryptAES).toHaveBeenCalledWith(RAW_KEY, MOCK_ENC_SYMMETRIC_KEY);
+    expect(vi.mocked(getRuntime)().crypto.decryptAES).toHaveBeenCalledWith(RAW_KEY, MOCK_ENC_SYMMETRIC_KEY);
   });
 
   it('stores session data with mapped fields from profile and encryption keys', async () => {
@@ -133,9 +137,7 @@ describe('absorbKey', () => {
 describe('getPrivateKey', () => {
   it('decrypts and returns the private key from session, and throws when keys are missing', async () => {
     const mockPrivateKey = { kty: 'RSA', d: 'private' };
-    (getWindowMain().crypt.decryptAES as ReturnType<typeof vi.fn>).mockReturnValue(
-      JSON.stringify(mockPrivateKey),
-    );
+    vi.mocked(getRuntime)().crypto.decryptAES = vi.fn().mockResolvedValue(JSON.stringify(mockPrivateKey));
 
     await setSessionData(
       SESSION_ID,
@@ -145,12 +147,12 @@ describe('getPrivateKey', () => {
       'a@b.com',
       MOCK_SYMMETRIC_KEY as JsonWebKey,
       MOCK_PUBLIC_KEY as JsonWebKey,
-      MOCK_ENC_PRIVATE_KEY as crypt.AESMessage,
+      MOCK_ENC_PRIVATE_KEY,
     );
 
     const privateKey = await getPrivateKey();
 
-    expect(getWindowMain().crypt.decryptAES).toHaveBeenCalledWith(MOCK_SYMMETRIC_KEY, MOCK_ENC_PRIVATE_KEY);
+    expect(vi.mocked(getRuntime)().crypto.decryptAES).toHaveBeenCalledWith(MOCK_SYMMETRIC_KEY, MOCK_ENC_PRIVATE_KEY);
     expect(privateKey).toEqual(mockPrivateKey);
 
     await setSessionData(
@@ -161,7 +163,7 @@ describe('getPrivateKey', () => {
       '',
       null as unknown as JsonWebKey,
       {} as JsonWebKey,
-      null as unknown as crypt.AESMessage,
+      null as unknown as any,
     );
 
     await expect(getPrivateKey()).rejects.toThrow("Can't get private key: session is missing keys.");
