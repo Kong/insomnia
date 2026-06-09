@@ -51,7 +51,12 @@ const MigrationView = () => {
 
   // After the migration completes, send users straight into the v13 onboarding
   // if they haven't seen it yet; otherwise go to the organization view.
-  const postMigrationPath = window.localStorage.getItem('hasSeenOnboardingV13') ? '/organization' : '/onboarding';
+  // Guard `window` so this stays safe during SSR (entry.server.tsx) — the value is
+  // only read once the completion links render, which only happens client-side.
+  const postMigrationPath =
+    typeof window !== 'undefined' && window.localStorage.getItem('hasSeenOnboardingV13')
+      ? '/organization'
+      : '/onboarding';
 
   return (
     <div className="flex h-full min-h-[500px] w-[600px] flex-col items-center justify-center">
