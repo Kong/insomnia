@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { app, BrowserWindow, ipcMain } from 'electron';
 
+import { requestPromptFromRenderer } from './prompt-bridge';
 import { getMainWindow } from './window-utils';
 
 let pluginWindow: BrowserWindow | null = null;
@@ -14,7 +15,6 @@ const pendingRequests = new Map<
 
 let cachedHasRequestHooks: boolean | null = null;
 let cachedHasResponseHooks: boolean | null = null;
-const promptPendingRequests = new Map<string, (value: string | null) => void>();
 
 // Bridge observability counters.  Kept in-memory and exposed via the
 // `plugins.getBridgeMetrics` IPC handler so devs / smoke tests / support
@@ -108,35 +108,7 @@ function ensureIpcListeners() {
     if (event.sender !== pluginWindow?.webContents) {
       return null;
     }
-    const mainWindow = getMainWindow();
-    if (!mainWindow) {
-      return null;
-    }
-    const id = randomUUID();
-    return new Promise<string | null>(resolve => {
-      const timeout = setTimeout(() => {
-        promptPendingRequests.delete(id);
-        resolve(null);
-      }, 60_000);
-      promptPendingRequests.set(id, value => {
-        clearTimeout(timeout);
-        resolve(value);
-      });
-      mainWindow.webContents.send('plugins.uiPrompt', id, options);
-    });
-  });
-
-  ipcMain.on('plugins.uiPromptResult', (event, { id, value }: { id: string; value: string | null }) => {
-    const mainWindow = getMainWindow();
-    if (!mainWindow || event.sender !== mainWindow.webContents) {
-      return;
-    }
-    const resolve = promptPendingRequests.get(id);
-    if (!resolve) {
-      return;
-    }
-    promptPendingRequests.delete(id);
-    resolve(value);
+    return requestPromptFromRenderer(options as { title: string; label?: string; defaultValue?: string });
   });
 
   ipcMain.on(

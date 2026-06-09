@@ -1,9 +1,8 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
-import { randomUUID } from 'node:crypto';
 import crypto from 'node:crypto';
 import os from 'node:os';
 
-import { app, clipboard, dialog, ipcMain, shell } from 'electron';
+import { app, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -19,11 +18,10 @@ import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } f
 import { type Plugin, type TemplateTag } from '../plugins/types';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
+import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
-import { getMainWindow } from './window-utils';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
-const promptPendingRequests = new Map<string, (value: string | null) => void>();
 
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
@@ -318,25 +316,10 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
   },
   'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
-    const mainWindow = getMainWindow();
-    if (!mainWindow) return null;
-
-    const label = body.options?.label ?? body.title;
-    const defaultValue = body.options?.defaultValue ?? '';
-    const id = randomUUID();
-
-    return new Promise<string | null>(resolve => {
-      const timeout = setTimeout(() => {
-        promptPendingRequests.delete(id);
-        resolve(null);
-      }, 60_000);
-
-      promptPendingRequests.set(id, value => {
-        clearTimeout(timeout);
-        resolve(value);
-      });
-
-      mainWindow.webContents.send('app.prompt', id, { title: body.title, label, defaultValue });
+    return requestPromptFromRenderer({
+      title: body.title,
+      label: body.options?.label ?? body.title,
+      defaultValue: body.options?.defaultValue ?? '',
     });
   },
   'app.getPath': async (body: { name: string }) => {
@@ -358,15 +341,3 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
 };
 
 // Register IPC handler for prompt results from the renderer
-ipcMain.on('app.promptResult', (event, { id, value }: { id: string; value: string | null }) => {
-  const mainWindow = getMainWindow();
-  if (!mainWindow || event.sender !== mainWindow.webContents) {
-    return;
-  }
-  const resolve = promptPendingRequests.get(id);
-  if (!resolve) {
-    return;
-  }
-  promptPendingRequests.delete(id);
-  resolve(value);
-});
