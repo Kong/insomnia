@@ -315,6 +315,9 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
   },
   'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
+    // Prompt is intentionally blocked in the sandboxed renderer context for security reasons.
+    // Templates execute in a web worker, so window.prompt() is not available.
+    // If prompts are needed in templates, use environment variables or other mechanisms instead.
     const focusedWindow = BrowserWindow.getFocusedWindow();
     if (!focusedWindow) return null;
     const label = body.options?.label ?? body.title;
@@ -324,7 +327,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
         `window.prompt(${JSON.stringify(label)}, ${JSON.stringify(defaultValue)})`
       );
     } catch (err) {
-      throw new Error(`Prompt is not supported in this context: ${err instanceof Error ? err.message : String(err)}`);
+      throw new Error(`Prompt is not supported in sandboxed renderer context`);
     }
   },
   'app.getPath': async (body: { name: string }) => {
