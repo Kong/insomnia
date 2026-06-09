@@ -319,9 +319,14 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     if (!focusedWindow) return null;
     const label = body.options?.label ?? body.title;
     const defaultValue = body.options?.defaultValue ?? '';
-    return focusedWindow.webContents.executeJavaScript(
-      `window.prompt(${JSON.stringify(label)}, ${JSON.stringify(defaultValue)})`
-    );
+    try {
+      return await focusedWindow.webContents.executeJavaScript(
+        `window.prompt(${JSON.stringify(label)}, ${JSON.stringify(defaultValue)})`
+      );
+    } catch (err) {
+      console.error('Failed to execute prompt in renderer:', err);
+      return null;
+    }
   },
   'app.getPath': async (body: { name: string }) => {
     return app.getPath(body.name as Parameters<typeof app.getPath>[0]);
