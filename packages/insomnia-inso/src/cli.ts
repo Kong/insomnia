@@ -10,9 +10,9 @@ import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
-import { initRuntime } from 'insomnia/src/common/runtime';
-import { nodeRuntime } from 'insomnia/src/common/runtime/runtime.node';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
+import { initRuntime } from 'insomnia/src/runtimes';
+import { nodeRuntime } from 'insomnia/src/runtimes/runtime.node';
 import { configureFetch } from 'insomnia-api';
 import type {
   Environment,
