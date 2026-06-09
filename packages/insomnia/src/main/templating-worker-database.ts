@@ -1,8 +1,9 @@
 import type { BinaryToTextEncoding } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import crypto from 'node:crypto';
 import os from 'node:os';
 
-import { app, BrowserWindow, clipboard, dialog, shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -21,6 +22,7 @@ import { curlRequest } from './network/libcurl-promise';
 import { secureReadFile } from './secure-read-file';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
+const promptPendingRequests = new Map<string, (value: string | null) => void>();
 
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
@@ -315,20 +317,26 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
   },
   'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
-    // Prompt is intentionally blocked in the sandboxed renderer context for security reasons.
-    // Templates execute in a web worker, so window.prompt() is not available.
-    // If prompts are needed in templates, use environment variables or other mechanisms instead.
-    const focusedWindow = BrowserWindow.getFocusedWindow();
-    if (!focusedWindow) return null;
+    const mainWindow = BrowserWindow.getAllWindows().find(w => !w.isDestroyed() && w.getTitle() === 'Insomnia');
+    if (!mainWindow) return null;
+
     const label = body.options?.label ?? body.title;
     const defaultValue = body.options?.defaultValue ?? '';
-    try {
-      return await focusedWindow.webContents.executeJavaScript(
-        `window.prompt(${JSON.stringify(label)}, ${JSON.stringify(defaultValue)})`
-      );
-    } catch (err) {
-      throw new Error(`Prompt is not supported in sandboxed renderer context`);
-    }
+    const id = randomUUID();
+
+    return new Promise<string | null>(resolve => {
+      const timeout = setTimeout(() => {
+        promptPendingRequests.delete(id);
+        resolve(null);
+      }, 60_000);
+
+      promptPendingRequests.set(id, value => {
+        clearTimeout(timeout);
+        resolve(value);
+      });
+
+      mainWindow.webContents.send('app.prompt', id, { title: body.title, label, defaultValue });
+    });
   },
   'app.getPath': async (body: { name: string }) => {
     return app.getPath(body.name as Parameters<typeof app.getPath>[0]);
@@ -347,3 +355,17 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     clipboard.clear();
   },
 };
+
+// Register IPC handler for prompt results from the renderer
+ipcMain.on('app.promptResult', (event, { id, value }: { id: string; value: string | null }) => {
+  const mainWindow = BrowserWindow.getAllWindows().find(w => !w.isDestroyed() && w.getTitle() === 'Insomnia');
+  if (!mainWindow || event.sender !== mainWindow.webContents) {
+    return;
+  }
+  const resolve = promptPendingRequests.get(id);
+  if (!resolve) {
+    return;
+  }
+  promptPendingRequests.delete(id);
+  resolve(value);
+});

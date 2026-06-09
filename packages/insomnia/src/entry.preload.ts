@@ -444,6 +444,8 @@ const main: Window['main'] = {
   },
   notifyPluginPromptResult: (id: string, value: string | null) =>
     ipcRenderer.send('plugins.uiPromptResult', { id, value }),
+  notifyAppPromptResult: (id: string, value: string | null) =>
+    ipcRenderer.send('app.promptResult', { id, value }),
   timeline: {
     getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
     appendToFile: (options: { timelinePath: string; data: string }) =>

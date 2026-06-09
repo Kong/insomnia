@@ -45,3 +45,15 @@ window.main.on('plugins.uiPrompt', (_, id: string, options: Record<string, any>)
     onHide: () => {},
   });
 });
+
+window.main.on('app.prompt', (_, id: string, options: Record<string, any>) => {
+  window.showPrompt?.({
+    ...options,
+    onComplete: (value: string) => {
+      window.main.notifyAppPromptResult(id, value);
+    },
+    onHide: () => {
+      window.main.notifyAppPromptResult(id, null);
+    },
+  });
+});

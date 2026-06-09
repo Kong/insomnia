@@ -256,6 +256,7 @@ export type MainOnChannels =
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
   | 'plugins.uiPromptResult'
+  | 'app.promptResult'
   | 'writeText';
 
 export type RendererOnChannels =
@@ -264,6 +265,7 @@ export type RendererOnChannels =
   | 'plugins.uiAlert'
   | 'plugins.uiDialog'
   | 'plugins.uiPrompt'
+  | 'app.prompt'
   | 'grpc.data'
   | 'grpc.end'
   | 'grpc.error'
