@@ -145,9 +145,14 @@ export const test = baseTest.extend<{
     // so iterating the live Set would skip un-visited entries.
     for (const live of Array.from(liveApps)) {
       try {
-        await live.close();
+        await Promise.race([
+          live.close(),
+          new Promise<void>((_, reject) => setTimeout(() => reject(new Error('close timeout')), 5000)),
+        ]);
       } catch {
-        // Best-effort: an already-closed app rejects; ignore.
+        try {
+          live.process().kill();
+        } catch {}
       }
     }
   },
