@@ -1346,7 +1346,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                 {apiSpec.contents ? (
                   <>
                     <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
-                    <Panel defaultSize={5} minSize={5} className="flex flex-col overflow-hidden">
+                    <Panel defaultSize={10} minSize={10} className="flex flex-col overflow-hidden">
                       <div className="box-border flex h-full flex-col">
                         {lintToolbar}
                         {isLintPaneOpen && lintMessageList}
