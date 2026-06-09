@@ -10,7 +10,7 @@ const mockSecretStorage = {
   deleteSecret: vi.fn(),
 };
 
-vi.mock('electron', async (importOriginal) => {
+vi.mock('electron', async () => {
   return {
     safeStorage: {
       isEncryptionAvailable: () => false,
