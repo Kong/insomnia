@@ -2,7 +2,7 @@ import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/main/har';
 import { database as db, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('~/common/runtime', () => ({
+vi.mock('~/runtimes', () => ({
   getRuntime: () => ({
     network: {
       getTimelinePath: () => Promise.resolve(''),

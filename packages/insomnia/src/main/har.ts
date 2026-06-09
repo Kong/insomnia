@@ -3,7 +3,7 @@ import type { BaseModel, Cookie, Environment, Request, RequestGroup, Response, W
 import { models, services } from 'insomnia-data';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import { getRuntime } from '~/common/runtime';
+import { getRuntime } from '~/runtimes';
 import { getAuthHeader } from '~/main/network/get-auth-header';
 import { secureReadFile } from '~/main/secure-read-file';
 

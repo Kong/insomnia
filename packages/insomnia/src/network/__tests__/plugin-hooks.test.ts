@@ -13,7 +13,7 @@ Object.defineProperty(globalThis, 'window', {
   configurable: true,
 });
 
-import { applyRequestHooks, applyResponseHooks } from '../network-adapter.renderer';
+import { applyRequestHooks, applyResponseHooks } from '../../runtimes/network/network-adapter.renderer';
 
 const makeRequest = (extra: Record<string, any> = {}) =>
   ({

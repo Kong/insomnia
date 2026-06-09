@@ -3,11 +3,11 @@ import type { Cookie, RequestHeader } from 'insomnia-data';
 import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
 import type { RenderedRequest } from '~/templating/types';
 
-import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
-import type { CurlRequestOptions, ResponsePatch } from '../main/network/libcurl-promise';
-import { applyDefaultHeaders } from './apply-default-headers';
-import { cancellableCurlRequest } from './cancellation';
-import { runScriptConcurrently } from './concurrency';
+import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
+import type { CurlRequestOptions, ResponsePatch } from '../../main/network/libcurl-promise';
+import { applyDefaultHeaders } from '../../network/apply-default-headers';
+import { cancellableCurlRequest } from '../../network/cancellation';
+import { runScriptConcurrently } from '../../network/concurrency';
 
 export const getTimelinePath = (responseId: string): Promise<string> => window.main.timeline.getPath(responseId);
 

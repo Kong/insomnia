@@ -13,8 +13,8 @@ import { isMac } from 'insomnia-data/common';
 import { servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
-import { initRuntime } from '~/common/runtime';
-import { nodeRuntime } from '~/common/runtime/runtime.node';
+import { initRuntime } from '~/runtimes';
+import { nodeRuntime } from '~/runtimes/runtime.node';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';

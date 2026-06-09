@@ -1,8 +1,8 @@
 import { ipcRenderer } from 'electron';
 import { initDatabase, initServices } from 'insomnia-data';
 
-import { initRuntime } from './common/runtime';
-import { rendererRuntime } from './common/runtime/runtime.renderer';
+import { initRuntime } from './runtimes';
+import { rendererRuntime } from './runtimes/runtime.renderer';
 import { pluginWindowDatabase } from './main/database.plugin-window';
 import { invokePluginMethod } from './plugins/invoke-method';
 import { servicesProxy } from './ui/renderer-services-proxy';

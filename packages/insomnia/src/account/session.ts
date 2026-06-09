@@ -5,7 +5,7 @@ import { models, services } from 'insomnia-data';
 
 import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
 import { database } from '../common/database';
-import { decryptAES } from '../utils/crypt-adapter';
+import { decryptAES } from '../runtimes/crypto/crypt-adapter';
 
 export interface SessionData {
   accountId: string;

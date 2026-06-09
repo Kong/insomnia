@@ -8,7 +8,7 @@ import {
   encryptString as encryptStringSync,
   getSecret as getSecretAsync,
   setSecret as setSecretAsync,
-} from '../main/ipc/secret-storage';
+} from '../../main/ipc/secret-storage';
 
 export const setSecret = setSecretAsync;
 export const getSecret = getSecretAsync;
