@@ -351,15 +351,19 @@ test.describe('runner features tests', () => {
       workspaceName: 'Runner',
     });
 
-    // wait for the request row to be ready before selecting it
-    await page.locator('.runner-request-list-printLogs').waitFor({ state: 'visible' });
-    await page.locator('.runner-request-list-printLogs').click();
+    // Select the request via its selection checkbox. The list is a drag-and-drop
+    // GridList, so a plain row click can be read as the start of a drag on slower
+    // CI and swallow the selection toggle — clicking the checkbox is reliable.
+    const printLogsRow = page.locator('.runner-request-list-printLogs');
+    await printLogsRow.waitFor({ state: 'visible' });
+    await printLogsRow.locator('label[slot="selection"]').click();
+
     await page.getByRole('tab', { name: 'advanced' }).click();
     await page.locator('input[name="enable-log"]').click();
 
     // Run becomes enabled only once a request is selected; selecting printLogs above enables it
     const runButton = page.getByRole('button', { name: 'Run', exact: true });
-    await runButton.waitFor({ state: 'visible' });
+    await expect.soft(runButton).toBeEnabled();
     await runButton.click();
 
     // verify there's no log
