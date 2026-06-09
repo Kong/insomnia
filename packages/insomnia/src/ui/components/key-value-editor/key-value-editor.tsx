@@ -35,10 +35,12 @@ interface Pair {
   canDisable?: boolean;
 }
 
-// Module-level so it survives the KeyValueEditor remount that the async pair save triggers, and so
-// it isn't prematurely consumed under React StrictMode. Set on "Add", read during render, and cleared
-// only once the new row's Name editor actually focuses itself (via OneLineEditor's onAutoFocus).
-let pendingFocusLastRow = false;
+// Id of the row whose Name cell should grab focus after an "Add". Module-level so it survives the
+// KeyValueEditor remount that the async pair save triggers, and so it isn't prematurely consumed under
+// React StrictMode. Keying off the specific id (rather than a shared boolean) means only the newly
+// added row can autofocus — never an unrelated row in another mounted KeyValueEditor. Set on "Add",
+// read during render, and cleared once that exact row's Name editor focuses (via onAutoFocus).
+let pendingFocusLastRowId: string | null = null;
 
 function createEmptyPair() {
   return {
@@ -280,7 +282,7 @@ export const KeyValueEditor: FC<Props> = ({
           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => {
             const id = generateId('pair');
-            pendingFocusLastRow = true;
+            pendingFocusLastRowId = id;
             upsertPair(pairsListItems, { id, name: '', value: '', description: '', disabled: false });
           }}
         >
@@ -527,9 +529,11 @@ export const KeyValueEditor: FC<Props> = ({
                     placeholder={namePlaceholder || 'Name'}
                     defaultValue={pair.name}
                     readOnly={pair.disabled || isDisabled}
-                    autoFocus={pendingFocusLastRow && isLastPair}
+                    autoFocus={pair.id === pendingFocusLastRowId}
                     onAutoFocus={() => {
-                      pendingFocusLastRow = false;
+                      if (pendingFocusLastRowId === pair.id) {
+                        pendingFocusLastRowId = null;
+                      }
                     }}
                     getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
                     onChange={name => {
