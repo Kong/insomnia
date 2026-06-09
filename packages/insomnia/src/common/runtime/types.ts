@@ -1,11 +1,7 @@
 import type { AESMessage, Cookie, RequestHeader } from 'insomnia-data';
 
 import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
-import type { CookiesBridgeAPI } from '../../main/ipc/cookies';
-import type { gRPCBridgeAPI } from '../../main/ipc/grpc';
 import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../../main/network/libcurl-promise';
-import type { SocketIOBridgeAPI } from '../../main/network/socket-io';
-import type { WebSocketBridgeAPI } from '../../main/network/websocket';
 import type { RenderedRequest, RenderInputType } from '../../templating/types';
 
 interface CurlRequestErrorOutput {
@@ -55,21 +51,9 @@ export interface SecretStorageRuntime {
   decryptString: (cipherText: string) => Promise<string>;
 }
 
-export type WebSocketRuntime = WebSocketBridgeAPI;
-
-export type SocketIORuntime = SocketIOBridgeAPI;
-
-export type GrpcRuntime = gRPCBridgeAPI;
-
-export type CookiesRuntime = CookiesBridgeAPI;
-
 export interface RuntimeCapabilities {
   network: NetworkRuntime;
   crypto: CryptoRuntime;
   templating: TemplatingRuntime;
   secretStorage: SecretStorageRuntime;
-  webSocket: WebSocketRuntime;
-  socketIO: SocketIORuntime;
-  grpc: GrpcRuntime;
-  cookies: CookiesRuntime;
 }
