@@ -781,24 +781,18 @@ const Component = ({ params }: Route.ComponentProps) => {
     </div>
   );
 
-  const listBox = (
-    <ListBox
-      className="flex-1 overflow-y-auto select-none"
-      items={groupedLintMessages.map(message => ({
-        ...message,
-        id: message.code,
-      }))}
-    >
-      {item => (
-        <ListBoxItem
-          className="cursor flex cursor-pointer flex-col text-xs outline-hidden transition-colors hover:bg-(--hl-sm)"
-          onAction={() => {
-            setExpandedLintMessageCodes(prev =>
-              prev.includes(item.code) ? prev.filter(c => c !== item.code) : [...prev, item.code],
-            );
-          }}
-        >
-          <div className="flex items-center gap-2 p-(--padding-sm) hover:bg-(--hl-sm)">
+  const lintMessageList = (
+    <div className="flex-1 overflow-y-auto select-none">
+      {groupedLintMessages.map(item => (
+        <div key={item.code} className="flex flex-col text-xs">
+          <Button
+            className="flex cursor-pointer items-center gap-2 p-(--padding-sm) outline-hidden transition-colors hover:bg-(--hl-sm)"
+            onPress={() =>
+              setExpandedLintMessageCodes(prev =>
+                prev.includes(item.code) ? prev.filter(c => c !== item.code) : [...prev, item.code],
+              )
+            }
+          >
             <Icon
               icon={expandedLintMessageCodes.includes(item.code) ? 'chevron-down' : 'chevron-right'}
               className="h-2.5 w-2.5"
@@ -810,9 +804,9 @@ const Component = ({ params }: Route.ComponentProps) => {
             <span className="truncate">
               {item.code}: {item.message}
             </span>
-          </div>
+          </Button>
           {expandedLintMessageCodes.includes(item.code) && (
-            <div className="mt-1 flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5">
               {item.occurrences.map(occurrence => (
                 <Button
                   key={`${occurrence.line}-${occurrence.path}`}
@@ -825,9 +819,9 @@ const Component = ({ params }: Route.ComponentProps) => {
               ))}
             </div>
           )}
-        </ListBoxItem>
-      )}
-    </ListBox>
+        </div>
+      ))}
+    </div>
   );
 
   return (
@@ -1349,7 +1343,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                     <Panel defaultSize={5} minSize={5} className="flex flex-col overflow-hidden">
                       <div className="box-border flex h-full flex-col">
                         {lintToolbar}
-                        {isLintPaneOpen && listBox}
+                        {isLintPaneOpen && lintMessageList}
                       </div>
                     </Panel>
                   </>
