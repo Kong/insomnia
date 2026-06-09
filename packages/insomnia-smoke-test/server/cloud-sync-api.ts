@@ -13,9 +13,6 @@ export interface AESMessage {
   ad: string;
 }
 
-<<<<<<< HEAD
-// copy from packages/insomnia/src/account/crypt.ts
-=======
 function jwkToKeyBuf(jwkOrKey: string | JsonWebKey): Buffer {
   return typeof jwkOrKey === 'string' ? Buffer.from(jwkOrKey, 'hex') : Buffer.from(jwkOrKey.k || '', 'base64url');
 }
@@ -31,7 +28,6 @@ export function decryptAESBuffer(jwkOrKey: string | JsonWebKey, msg: AESMessage)
   return Buffer.concat([decipher.update(Buffer.from(msg.d, 'hex')), decipher.final()]);
 }
 
->>>>>>> 32668df4b (fix: load plugins with available require() and align cloud sync mocks with real API (#10046))
 export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, additionalData = ''): AESMessage {
   const _b64UrlToHex = (s: string) => {
     const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
