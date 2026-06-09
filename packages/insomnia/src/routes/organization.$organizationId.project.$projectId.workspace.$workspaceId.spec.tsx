@@ -287,6 +287,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           }
           if (error) {
             console.log('Handled error detected while linting:', error);
+            setLintMessages([]);
             showError({
               title: 'Linting Error',
               message: `An error occurred while linting the OpenAPI specification: ${error}`,
@@ -311,6 +312,7 @@ const Component = ({ params }: Route.ComponentProps) => {
         } catch (error) {
           // return a rejected promise so that codemirror do nothing
           console.log('Unhandled error while linting:', error);
+          setLintMessages([]);
           showError({
             title: 'Linting Error',
             message: `An error occurred while linting the OpenAPI specification: ${error}`,
@@ -784,7 +786,11 @@ const Component = ({ params }: Route.ComponentProps) => {
   const lintMessageList = (
     <div className="flex-1 overflow-y-auto select-none">
       {groupedLintMessages.map(item => (
-        <div key={item.code} className="flex flex-col text-xs">
+        <div
+          key={item.code}
+          className="flex flex-col text-xs"
+          aria-expanded={expandedLintMessageCodes.includes(item.code)}
+        >
           <Button
             className="flex cursor-pointer items-center gap-2 p-(--padding-sm) outline-hidden transition-colors hover:bg-(--hl-sm)"
             onPress={() =>
@@ -809,7 +815,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             <div className="flex flex-col gap-0.5">
               {item.occurrences.map(occurrence => (
                 <Button
-                  key={`${occurrence.line}-${occurrence.path}`}
+                  key={`${occurrence.line}-${occurrence.path}-${occurrence.range.start.line}:${occurrence.range.start.character}-${occurrence.range.end.line}:${occurrence.range.end.character}`}
                   className="flex gap-2 p-(--padding-sm) pl-[22px] text-left hover:bg-(--hl-sm)"
                   onPress={() => handleScrollToLintMessage(occurrence)}
                 >
