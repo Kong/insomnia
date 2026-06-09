@@ -54,7 +54,7 @@ import type {
 import * as crypt from '../../account/crypt';
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
-import { decryptSecretValue, encryptSecretValue } from '../../runtimes/crypto/crypto-adapter';
+import { getRuntime } from '../../runtimes';
 import type { RenderedRequest } from '../../templating/types';
 import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '../../utils/sealedbox';
 import type { AnalyticsEvent } from '../analytics';
@@ -874,10 +874,10 @@ export function registerMainHandlers() {
   ipcMainHandle('timeline.appendToFile', appendToTimeline);
 
   ipcMainHandle('vault.encryptSecretValue', (_, rawValue: string, symmetricKey: JsonWebKey) => {
-    return encryptSecretValue(rawValue, symmetricKey);
+    return getRuntime().crypto.encryptSecretValue(rawValue, symmetricKey);
   });
   ipcMainHandle('vault.decryptSecretValue', (_, encryptedValue: string, symmetricKey: JsonWebKey) => {
-    return decryptSecretValue(encryptedValue, symmetricKey);
+    return getRuntime().crypto.decryptSecretValue(encryptedValue, symmetricKey);
   });
 
   ipcMainHandle('crypt.encryptRSAWithJWK', (_, publicKeyJWK: JsonWebKey, plaintext: string) => {
