@@ -72,7 +72,26 @@ export const useProjectNavigationSidebarNavigation = ({
       }
 
       // update active tab
-      setActiveTab(resources.project.konnectControlPlaneId != null ? 'konnect' : 'projects');
+      const nextTab = resources.project.konnectControlPlaneId != null ? 'konnect' : 'projects';
+      // Don't auto-switch away from 'konnect' tab to 'projects'.
+      // This prevents tab switching when a Konnect project is deleted and fallback navigation
+      // lands on a non-Konnect project (e.g., after deleting the last Konnect project).
+      // Note: useLocalStorage setter doesn't support functional updaters, so read current value directly.
+      if (nextTab === 'projects') {
+        const orgId = routeInfo?.organizationId;
+        const storedTab = orgId ? localStorage.getItem(`${orgId}:sidebar-tab`) : null;
+        let currentTab: string | null = null;
+        try {
+          currentTab = storedTab ? JSON.parse(storedTab) : null;
+        } catch {}
+        if (currentTab === 'konnect') {
+          // Stay on konnect tab
+        } else {
+          setActiveTab(nextTab);
+        }
+      } else {
+        setActiveTab(nextTab);
+      }
 
       const idsToExpand = [resources.project._id];
       if (resources.workspace && models.workspace.isCollection(resources.workspace)) {

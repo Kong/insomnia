@@ -1,5 +1,6 @@
 import { getLearningFeature } from 'insomnia-api';
-import { models, services } from 'insomnia-data';
+import type { Project } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -76,6 +77,28 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const project = await services.project.get(projectId);
 
   if (!project) {
+    // When a project is not found (e.g., after deletion), check if user was on Konnect tab
+    // and try to redirect to another Konnect project to avoid switching tabs
+    const storedTab = localStorage.getItem(`${organizationId}:sidebar-tab`);
+    if (storedTab) {
+      try {
+        const parsedTab = JSON.parse(storedTab);
+        if (parsedTab === 'konnect') {
+          const allProjects = await database.find<Project>(models.project.type, { parentId: organizationId });
+          const konnectProjects = models.project.sortProjects(allProjects.filter(p => p.konnectControlPlaneId != null));
+          if (konnectProjects.length > 0) {
+            return redirect(
+              href('/organization/:organizationId/project/:projectId', {
+                organizationId,
+                projectId: konnectProjects[0]._id,
+              }),
+            );
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
     return redirect(href('/organization/:organizationId', { organizationId }));
   }
 
