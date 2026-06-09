@@ -2,19 +2,27 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('~/network/network-adapter', () => ({
-  getTimelinePath: () => Promise.resolve(''),
-  appendToTimelineOnError: () => Promise.resolve(),
-  appendTimelineLines: () => Promise.resolve(),
-  getAuthHeader: () => Promise.resolve(),
-  executeCurlRequest: () => Promise.resolve({}),
-  runScript: () => Promise.resolve({}),
-  applyRequestHooks: (request: any) => Promise.resolve(request),
-  applyResponseHooks: (response: any) => Promise.resolve(response),
-}));
-vi.mock('~/utils/crypt-adapter', () => ({
-  decryptSecretValue: (value: any) => value,
-  encryptSecretValue: (value: any) => value,
+vi.mock('~/common/runtime', () => ({
+  getRuntime: () => ({
+    network: {
+      getTimelinePath: () => Promise.resolve(''),
+      appendToTimelineOnError: () => Promise.resolve(),
+      appendTimelineLines: () => Promise.resolve(),
+      getAuthHeader: () => Promise.resolve(),
+      executeCurlRequest: () => Promise.resolve({}),
+      runScript: () => Promise.resolve({}),
+      applyRequestHooks: (request: any) => Promise.resolve(request),
+      applyResponseHooks: (response: any) => Promise.resolve(response),
+    },
+    crypto: {
+      decryptSecretValue: (value: any) => Promise.resolve(value),
+      encryptSecretValue: (value: any) => Promise.resolve(value),
+      decryptAES: (_symmetricKey: any, encryptedResult: any) => Promise.resolve(encryptedResult),
+    },
+    templating: {
+      renderTemplate: async (input: any) => typeof input.input === 'string' ? input.input : null,
+    },
+  }),
 }));
 
 import type { Cookie, Request, Response } from 'insomnia-data';

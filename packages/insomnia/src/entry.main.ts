@@ -13,6 +13,8 @@ import { isMac } from 'insomnia-data/common';
 import { servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
+import { initRuntime } from '~/common/runtime';
+import { nodeRuntime } from '~/common/runtime/runtime.node';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
@@ -127,6 +129,7 @@ app.on('ready', async () => {
   await initDatabase(mainDatabase);
   // Initialize services for main process
   initServices(servicesNodeImpl);
+  initRuntime(nodeRuntime);
   await _createModelInstances();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();

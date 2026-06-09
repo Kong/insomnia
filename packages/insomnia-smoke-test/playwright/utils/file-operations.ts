@@ -17,6 +17,11 @@ export function createTempExportDir(): string {
 /**
  * Waits for export files to be created in the directory.
  * Used for project-level exports that don't show an alert.
+ *
+ * Waits not only for the expected number of files to appear, but also for each
+ * file to be non-empty and for its size to stabilise across two polls. Export
+ * writes the file in chunks, so reading the moment the file is created can yield
+ * a truncated file (e.g. `JSON.parse` failing with "Unexpected end of JSON input").
  * @param dirPath - The directory to check for files
  * @param expectedCount - The expected number of files
  * @param timeout - Maximum time to wait in milliseconds (default: 10000)
@@ -24,11 +29,18 @@ export function createTempExportDir(): string {
 export async function waitForExportFiles(dirPath: string, expectedCount: number, timeout = 10_000): Promise<void> {
   const startTime = Date.now();
   const pollInterval = 100;
+  let previousSizes = new Map<string, number>();
 
   while (Date.now() - startTime < timeout) {
     const files = getExportedFiles(dirPath);
     if (files.length >= expectedCount) {
-      return;
+      const currentSizes = new Map(files.map(file => [file, fs.statSync(file).size]));
+      const allNonEmpty = files.every(file => (currentSizes.get(file) ?? 0) > 0);
+      const allStable = files.every(file => previousSizes.get(file) === currentSizes.get(file));
+      if (allNonEmpty && allStable) {
+        return;
+      }
+      previousSizes = currentSizes;
     }
     await new Promise(resolve => setTimeout(resolve, pollInterval));
   }

@@ -77,7 +77,7 @@ export async function applyRequestHooks(
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
   const newRenderedRequest = applyDefaultHeaders(renderedRequest, renderedContext['DEFAULT_HEADERS']);
-  const pluginIndex = require('../plugins/index');
+  const pluginIndex = await import('../plugins/index');
   for (const { plugin, hook } of await pluginIndex.getRequestHooks()) {
     const context = {
       ...(pluginApp.init() as Record<string, any>),
@@ -104,7 +104,7 @@ export async function applyResponseHooks(
 ): Promise<ResponsePatch> {
   const newResponse = clone(response);
   const newRequest = clone(renderedRequest);
-  const pluginIndex = require('../plugins/index');
+  const pluginIndex = await import('../plugins/index');
   for (const { plugin, hook } of await pluginIndex.getResponseHooks()) {
     const context = {
       ...(pluginApp.init() as Record<string, any>),

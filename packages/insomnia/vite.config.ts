@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
   return {
     define: {
       '__DEV__': JSON.stringify(__DEV__),
+      '__IS_RENDERER__': JSON.stringify(true),
       'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.INSOMNIA_ENV': JSON.stringify(mode),
       // Only apply in production builds: Rollup does text substitution (safe).
@@ -52,11 +53,6 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        // Short-circuit the adapter wrappers to the renderer implementation directly.
-        // These must appear before the '~' catch-all so the specific path wins.
-        '~/network/network-adapter': path.resolve(__dirname, './src/network/network-adapter.renderer'),
-        '~/templating/render-adapter': path.resolve(__dirname, './src/templating/render-adapter.renderer'),
-        '~/utils/crypt-adapter': path.resolve(__dirname, './src/utils/crypt-adapter.renderer'),
         '~': path.resolve(__dirname, './src'),
         // mime-types uses path.extname
         'path': path.resolve(__dirname, './src/path-shim.ts'),

@@ -8,6 +8,8 @@ import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
+import { initRuntime } from '~/common/runtime';
+import { rendererRuntime } from '~/common/runtime/runtime.renderer';
 import { database as clientDatabase } from '~/ui/database.client';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
@@ -36,6 +38,7 @@ if (!window._dataServices) {
 initServices(window._dataServices);
 // Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
 delete window._dataServices;
+initRuntime(rendererRuntime);
 
 configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));
 
@@ -60,7 +63,7 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboardingV12', skipOnboarding.toString());
+    window.localStorage.setItem('hasSeenOnboardingV13', skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
