@@ -79,6 +79,11 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
 
     // 'https:' → 'https'
     const protocolWithoutColon = protocol.slice(0, -1);
+    // git's credential protocol expects the path without a leading slash, e.g.
+    // 'https://github.com/owner/repo.git' → 'owner/repo.git'. Supplying it scopes
+    // the lookup so the right credential is returned when a helper stores multiple
+    // entries per host (honoured by helpers that have credential.useHttpPath set).
+    const path = parsed.pathname.replace(/^\/+/, '');
 
     return new Promise(resolve => {
       const output: string[] = [];
@@ -122,7 +127,11 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
 
       proc.stdout.on('data', (data: Buffer) => output.push(data.toString()));
 
-      proc.stdin.write(`protocol=${protocolWithoutColon}\nhost=${host}\n\n`);
+      const attributes = [`protocol=${protocolWithoutColon}`, `host=${host}`];
+      if (path) {
+        attributes.push(`path=${path}`);
+      }
+      proc.stdin.write(`${attributes.join('\n')}\n\n`);
       proc.stdin.end();
     });
   }
