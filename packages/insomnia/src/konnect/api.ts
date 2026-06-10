@@ -23,7 +23,7 @@ export interface KonnectControlPlane {
   config: {
     cluster_type: string;
     control_plane_endpoint: string;
-    cloud_gateway: boolean;
+    cloud_gateway?: boolean;
   };
   proxy_urls: KonnectProxyUrl[] | null;
 }
