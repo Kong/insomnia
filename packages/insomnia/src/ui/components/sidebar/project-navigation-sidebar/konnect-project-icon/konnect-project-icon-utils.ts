@@ -10,7 +10,7 @@ export function getKonnectDeploymentType(controlPlane: KonnectControlPlane): Kon
 
   switch (controlPlaneType) {
     case ControlPlaneType.K8SIngressController: {
-      return null;
+      return 'k8sIngressController';
     }
     case ControlPlaneType.Cloud: {
       return 'dedicatedCloud';

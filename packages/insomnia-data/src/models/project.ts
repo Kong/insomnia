@@ -86,7 +86,7 @@ export const isGitProject = (project: Project): project is GitProject =>
   'gitRepositoryId' in project && (project.gitRepositoryId !== null || isEmptyGitProject(project));
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
 
-export type KonnectDeploymentType = 'selfManaged' | 'serverless' | 'dedicatedCloud' | 'group';
+export type KonnectDeploymentType = 'selfManaged' | 'serverless' | 'dedicatedCloud' | 'group' | 'k8sIngressController';
 
 interface CommonProject {
   name: string;
