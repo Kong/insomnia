@@ -79,14 +79,18 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     return redirect(href('/organization/:organizationId', { organizationId }));
   }
 
-  const organization = await services.organization.get(organizationId);
+  try {
+    const organization = await services.organization.get(organizationId);
 
-  if (accountId && organization && models.organization.isPersonalOrganization(organization)) {
-    const firstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
+    if (accountId && organization && models.organization.isPersonalOrganization(organization)) {
+      const firstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
 
-    if (!window.localStorage.getItem(firstPersonalOrgLandingKey)) {
-      window.localStorage.setItem(firstPersonalOrgLandingKey, 'true');
+      if (!window.localStorage.getItem(firstPersonalOrgLandingKey)) {
+        window.localStorage.setItem(firstPersonalOrgLandingKey, 'true');
+      }
     }
+  } catch (error) {
+    console.log('[organizations] Failed to load Organizations', error);
   }
 
   const fallbackLearningFeature = {
