@@ -21,7 +21,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { type ImperativePanelGroupHandle, type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, redirect, useLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
@@ -218,7 +218,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
   const gitVersion = useGitVCSVersion();
-  const [isLintPaneOpen, setIsLintPaneOpen] = useState(true);
+  const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
   const [selectedRulesetPath, setSelectedRulesetPath] = useState<string>('');
 
@@ -337,6 +337,14 @@ const Component = ({ params }: Route.ComponentProps) => {
   }, [lintErrors.length, lintWarnings.length]);
 
   useEffect(() => {
+    if (isLintPaneOpen) {
+      lintPanelRef.current?.expand();
+    } else {
+      lintPanelRef.current?.collapse();
+    }
+  }, [isLintPaneOpen]);
+
+  useEffect(() => {
     setSelectedRulesetPath(
       isConnectedGitProject && gitSyncRulesetPath && rulesetContent
         ? gitSyncRulesetPath
@@ -424,6 +432,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   };
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
+  const lintPanelRef = useRef<ImperativePanelHandle>(null);
 
   useDocBodyKeyboardShortcuts({
     environment_showEditor: () => setEnvironmentModalOpen(true),
@@ -1342,21 +1351,29 @@ const Component = ({ params }: Route.ComponentProps) => {
           <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
             <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
               <div className="flex h-full w-full flex-col">
-                <PanelGroup direction="vertical" className="min-h-0 flex-1">
+                <PanelGroup autoSaveId="insomnia-spec-vertical" direction="vertical" className="min-h-0 flex-1">
                   <Panel defaultSize={80} minSize={20} className="relative overflow-hidden">
                     {specEditor}
                   </Panel>
-                  {apiSpec.contents && isLintPaneOpen ? (
+                  {apiSpec.contents && (
                     <>
                       <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
-                      <Panel defaultSize={20} minSize={10} className="flex flex-col overflow-hidden">
+                      <Panel
+                        ref={lintPanelRef}
+                        defaultSize={20}
+                        minSize={10}
+                        collapsible
+                        onCollapse={() => setIsLintPaneOpen(false)}
+                        onExpand={() => setIsLintPaneOpen(true)}
+                        className="flex flex-col overflow-hidden"
+                      >
                         <div className="box-border flex h-full flex-col">
                           {lintToolbar}
                           {lintMessageList}
                         </div>
                       </Panel>
                     </>
-                  ) : null}
+                  )}
                 </PanelGroup>
                 {apiSpec.contents && !isLintPaneOpen ? lintToolbar : null}
               </div>
