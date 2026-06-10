@@ -714,12 +714,12 @@ const Root = () => {
               description: (
                 <>
                   You are running at least one plug-in that may be impacted.{' '}
-                  <button
+                  <Button
                     onClick={() => window.main.openInBrowser('https://insomnia.rest/breaking-changes')}
                     className="cursor-pointer border-0 bg-transparent p-0 text-(--color-link) underline"
                   >
                     Learn more
-                  </button>
+                  </Button>
                 </>
               ),
               status: 'info',
