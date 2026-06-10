@@ -1323,7 +1323,7 @@ export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreatePro
   const { features } = useOrganizationPermissions();
 
   return (
-    <div className="haha flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
+    <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
       <Tabs>
         <SideBarTabList
           konnectSyncEnabled={features.konnectSync.enabled}
