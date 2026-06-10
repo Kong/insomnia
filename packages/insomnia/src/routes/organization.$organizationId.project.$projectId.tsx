@@ -1,6 +1,5 @@
 import { getLearningFeature } from 'insomnia-api';
-import type { Project } from 'insomnia-data';
-import { database, models, services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -84,7 +83,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       try {
         const parsedTab = JSON.parse(storedTab);
         if (parsedTab === 'konnect') {
-          const allProjects = await database.find<Project>(models.project.type, { parentId: organizationId });
+          // const allProjects = await database.find<Project>(models.project.type, { parentId: organizationId });
+          const allProjects = await services.project.list({ organizationId });
           const konnectProjects = models.project.sortProjects(allProjects.filter(p => p.konnectControlPlaneId != null));
           if (konnectProjects.length > 0) {
             return redirect(

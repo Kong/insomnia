@@ -1,5 +1,4 @@
 import { deleteTeamProject, isApiError } from 'insomnia-api';
-import type { Project } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
@@ -51,9 +50,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
     // If the deleted project is a Konnect project, navigate to another Konnect project
     if (project.konnectControlPlaneId) {
-      const remainingKonnectProjects = (
-        await database.find<Project>(models.project.type, { parentId: organizationId })
-      ).filter(p => p.konnectControlPlaneId != null && p._id !== projectId);
+      const remainingKonnectProjects = (await services.project.list({ organizationId })).filter(
+        p => p.konnectControlPlaneId != null && p._id !== projectId,
+      );
 
       if (remainingKonnectProjects.length > 0) {
         const targetProject = remainingKonnectProjects[0];
