@@ -166,7 +166,10 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
       </h1>
       <p className="text-(--color-font)">
         Failed to render. Please report to{' '}
-        <a className="font-bold underline" href="https://github.com/Kong/insomnia/issues">
+        <button
+          className="font-bold underline"
+          onClick={() => window.main.openInBrowser('https://github.com/Kong/insomnia/issues')}
+        >
           our Github Issues
         </button>
       </p>
@@ -711,7 +714,10 @@ const Root = () => {
               description: (
                 <>
                   You are running at least one plug-in that may be impacted.{' '}
-                  <button onClick={() => window.main.openInBrowser('https://insomnia.rest/breaking-changes')} className="underline cursor-pointer p-0 border-0 bg-transparent text-(--color-link)">
+                  <button
+                    onClick={() => window.main.openInBrowser('https://insomnia.rest/breaking-changes')}
+                    className="cursor-pointer border-0 bg-transparent p-0 text-(--color-link) underline"
+                  >
                     Learn more
                   </button>
                 </>
