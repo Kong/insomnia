@@ -13,7 +13,7 @@ export const UnsavedChangesConfirmDialog = ({
   <ModalOverlay
     isOpen={isOpen}
     onOpenChange={open => !open && onDismiss()}
-    className="fixed top-0 left-0 z-[200] flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+    className="fixed top-0 left-0 z-[200] flex h-(--visual-viewport-height) w-full items-center justify-center bg-transparent"
   >
     <Modal className="flex w-full max-w-sm flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-6 text-(--color-font) shadow-xl">
       <Dialog className="flex flex-col gap-4 outline-hidden">
@@ -23,13 +23,13 @@ export const UnsavedChangesConfirmDialog = ({
           <Button
             autoFocus
             onPress={onDismiss}
-            className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
+            className="rounded-md border border-solid border-(--hl-md) px-3 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
           >
             No
           </Button>
           <Button
             onPress={onConfirm}
-            className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-sm text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90"
+            className="rounded-md border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-sm text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90"
           >
             Yes
           </Button>
