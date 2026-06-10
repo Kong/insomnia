@@ -667,7 +667,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const lintToolbar = (
     <div
-      className={`flex flex-wrap items-center gap-2 border-solid border-(--hl-md) p-(--padding-sm) ${isLintPaneOpen ? 'border-b' : 'border-t'}`}
+      className={`flex flex-wrap items-center gap-2 border-solid border-(--hl-md) p-(--padding-sm) ${isLintPaneOpen ? 'border-b' : ''}`}
     >
       <div className="inline-flex items-center gap-2">
         <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
@@ -1363,7 +1363,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                         ref={lintPanelRef}
                         id="lint-panel"
                         defaultSize={20}
-                        minSize={10}
+                        minSize={5}
                         collapsible
                         onCollapse={() => setIsLintPaneOpen(false)}
                         onExpand={() => setIsLintPaneOpen(true)}
