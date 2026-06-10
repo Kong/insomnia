@@ -1,8 +1,6 @@
 import type { GrpcRequest, Project, Request, RequestGroup, WebSocketRequest, Workspace } from 'insomnia-data';
 import { EnvironmentKvPairDataType, models, services as insoservices } from 'insomnia-data';
 
-import { getKonnectDeploymentType } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-project-icon/konnect-project-icon-utils';
-
 import { database as db } from '../common/database';
 import {
   fetchAllControlPlanes,
@@ -13,6 +11,7 @@ import {
   type KonnectService,
 } from './api';
 import { applyExpressionFields } from './expression-parser';
+import { getKonnectDeploymentType } from './transform';
 import {
   buildRequestName,
   deriveProxyVarDefaults,
