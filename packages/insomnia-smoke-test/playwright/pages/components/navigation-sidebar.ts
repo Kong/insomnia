@@ -219,13 +219,13 @@ export class NavigationSidebar {
     await this.page.getByRole('menuitemradio', { name: actionName }).click();
   }
 
-  async renameRequestOrFolder(requestName: string, newName: string): Promise<void> {
-    const row = this.requestRow(requestName);
+  async renameRequestOrFolder(requestName: string, newName: string, workspaceName?: string): Promise<void> {
+    const row = this.requestRow(requestName, workspaceName);
     await row.dblclick();
     const input = row.getByRole('textbox');
     await input.fill(newName);
-    // Click outside the input to trigger the blur event
-    await this.root.click();
+    await input.press('Enter');
+    await this.requestRow(newName, workspaceName).waitFor({ state: 'visible' });
   }
 
   async isRequestOrGroupSelected(requestOrGroupName: string): Promise<boolean> {

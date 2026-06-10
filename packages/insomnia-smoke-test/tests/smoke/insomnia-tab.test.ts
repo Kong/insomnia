@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { test } from '../../playwright/test';
 
 test.describe('multiple-tab feature test', () => {
-  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+  test.slow();
 
   test('tabs', async ({ page, insomnia }) => {
     // add tab & close tab
@@ -20,29 +20,24 @@ test.describe('multiple-tab feature test', () => {
     await tab.getByRole('button').click();
     await tab.waitFor({ state: 'hidden' });
     await expect.soft(tab).toBeHidden();
-    await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'first request');
+    await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'first request', 'My first collection');
 
     // active tab sync with the sidebar active request
-    await page.getByTestId('workspace-breadcrumb-level-0').click();
-    await page.getByLabel('Create in project').click();
-    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
-    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
-    await page.getByRole('dialog').waitFor({ state: 'visible' });
-    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await insomnia.projectPage.navigateFromWorkspaceBreadcrumb();
+    await insomnia.projectPage.createCollection('Tab sync collection');
 
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-      workspaceName: 'My Collection',
+      workspaceName: 'Tab sync collection',
       actionName: 'HTTP Request',
     });
     // rename
-    await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'foo');
+    await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'foo', 'Tab sync collection');
 
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
       workspaceName: 'My first collection',
       actionName: 'HTTP Request',
     });
-    await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'bar');
+    await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'bar', 'My first collection');
 
     await insomnia.navigationSidebar.clickRequestOrFolder('bar');
     await insomnia.navigationSidebar.clickRequestOrFolder('foo');
@@ -53,18 +48,14 @@ test.describe('multiple-tab feature test', () => {
     await expect.soft(tabB).toHaveAttribute('data-selected', 'true');
 
     //change icon after change request method
-    await page.getByTestId('workspace-breadcrumb-level-0').click();
-    await page.getByLabel('Create in project').click();
-    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
-    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
-    await page.getByRole('dialog').waitFor({ state: 'visible' });
-    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await insomnia.projectPage.navigateFromWorkspaceBreadcrumb();
+    await insomnia.projectPage.createCollection('Method icon collection');
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
       workspaceName: 'My first collection',
       actionName: 'HTTP Request',
     });
-    await insomnia.navigationSidebar.requestRow('New Request').click({ modifiers: ['ControlOrMeta'] });
+    await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'method request', 'My first collection');
+    await insomnia.navigationSidebar.requestRow('method request').click({ modifiers: ['ControlOrMeta'] });
     await page.getByTestId('tab-close-button').first().click();
     // Move the mouse away to avoid accidentally show the tooltip of the tab which may cover the request method dropdown and cause the click fail
     await page.mouse.move(0, 0);
@@ -73,28 +64,18 @@ test.describe('multiple-tab feature test', () => {
     await page.getByRole('button', { name: 'POST' }).click();
 
     //click + button to add a new request
-    await page.getByTestId('workspace-breadcrumb-level-0').click();
-    await page.getByLabel('Create in project').click();
-    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
-    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
-    await page.getByRole('dialog').waitFor({ state: 'visible' });
-    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-    await page.getByRole('dialog').waitFor({ state: 'hidden' });
-    await page.getByLabel('Tab Plus').click();
+    await insomnia.projectPage.navigateFromWorkspaceBreadcrumb();
+    await insomnia.projectPage.createCollection('Plus button collection');
+    await page.getByLabel('Tab Plus', { exact: true }).click();
     await page.getByRole('menuitem', { name: 'add request to current' }).waitFor({ state: 'visible' });
     await page.getByRole('menuitem', { name: 'add request to current' }).click();
-    await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'foo');
-    await page.getByLabel('Insomnia Tabs').getByLabel('tab-foo', { exact: true }).click();
+    await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'plus request', 'Plus button collection');
+    await page.getByLabel('Insomnia Tabs').getByLabel('tab-plus request', { exact: true }).click();
 
-    await page.getByTestId('workspace-breadcrumb-level-0').click();
-    await page.getByLabel('Create in project').click();
-    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
-    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
-    await page.getByPlaceholder('Enter a name for your Request Collection').waitFor({ state: 'visible' });
-    await page.getByPlaceholder('Enter a name for your Request Collection').fill('Test add tab collection');
-    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-    await page.getByRole('dialog').waitFor({ state: 'hidden' });
-    await page.getByLabel('Tab Plus').click();
+    await page.mouse.move(0, 0);
+    await insomnia.projectPage.navigateFromWorkspaceBreadcrumb();
+    await insomnia.projectPage.createCollection('Test add tab collection');
+    await page.getByLabel('Tab Plus', { exact: true }).click();
     await page.getByRole('menuitem', { name: 'add request to other' }).waitFor({ state: 'visible' });
     await page.getByRole('menuitem', { name: 'add request to other' }).click();
     await page.getByLabel('Select Workspace').waitFor({ state: 'visible' });
@@ -105,13 +86,8 @@ test.describe('multiple-tab feature test', () => {
 
     // close tab after delete a request
     await insomnia.navigationSidebar.selectProject('Personal Workspace');
-    await page.getByLabel('Create in project').click();
-    await page.getByRole('menuitemradio', { name: 'Collection' }).waitFor({ state: 'visible' });
-    await page.getByRole('menuitemradio', { name: 'Collection' }).click();
-    await page.getByPlaceholder('Enter a name for your Request Collection').waitFor({ state: 'visible' });
-    await page.getByPlaceholder('Enter a name for your Request Collection').fill('Delete request test collection');
-    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await insomnia.projectPage.waitForProjectDashboard();
+    await insomnia.projectPage.createCollection('Delete request test collection');
     await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
       workspaceName: 'Delete request test collection',
       actionName: 'HTTP Request',
