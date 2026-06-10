@@ -81,7 +81,13 @@ export const OrganizationSelect = ({
               </SearchField>
             </div>
           )}
-          <ListBox items={filteredOrgs} className="max-h-80 min-w-max overflow-y-auto focus:outline-hidden">
+          <ListBox
+            items={filteredOrgs}
+            className="max-h-80 min-w-max overflow-y-auto focus:outline-hidden"
+            renderEmptyState={() => (
+              <div className="px-(--padding-md) py-2 italic text-(--hl-md)">No matching organizations</div>
+            )}
+          >
             {item => (
               <ListBoxItem
                 id={item.id}
