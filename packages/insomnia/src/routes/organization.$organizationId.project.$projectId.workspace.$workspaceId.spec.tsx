@@ -21,7 +21,13 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { type ImperativePanelGroupHandle, type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import {
+  type ImperativePanelGroupHandle,
+  type ImperativePanelHandle,
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+} from 'react-resizable-panels';
 import { href, redirect, useLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
@@ -330,19 +336,12 @@ const Component = ({ params }: Route.ComponentProps) => {
     editor.current?.tryToSetOption('lint', { ...lintOptions });
   }, [rulesetContent, projectId, registerCodeMirrorLint]);
 
-  useEffect(() => {
-    if (lintErrors.length > 0 || lintWarnings.length > 0) {
-      setIsLintPaneOpen(true);
-    }
-  }, [lintErrors.length, lintWarnings.length]);
-
-  useEffect(() => {
-    if (isLintPaneOpen) {
-      lintPanelRef.current?.expand();
-    } else {
-      lintPanelRef.current?.collapse();
-    }
-  }, [isLintPaneOpen]);
+  // do we want to auto expand if there are errors?
+  // useEffect(() => {
+  //   if (lintErrors.length > 0 || lintWarnings.length > 0) {
+  //     lintPanelRef.current?.expand();
+  //   }
+  // }, [lintErrors.length, lintWarnings.length]);
 
   useEffect(() => {
     setSelectedRulesetPath(
@@ -781,7 +780,9 @@ const Component = ({ params }: Route.ComponentProps) => {
             {lintMessages.length === 0 ? (
               'No lint problems'
             ) : (
-              <Button onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
+              <Button
+                onPress={() => (isLintPaneOpen ? lintPanelRef.current?.collapse() : lintPanelRef.current?.expand())}
+              >
                 <span className="underline">
                   {lintErrors.length} {lintErrors.length === 1 ? 'error' : 'errors'}, {lintWarnings.length}{' '}
                   {lintWarnings.length === 1 ? 'warning' : 'warnings'}
@@ -1352,7 +1353,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
               <div className="flex h-full w-full flex-col">
                 <PanelGroup autoSaveId="insomnia-spec-vertical" direction="vertical" className="min-h-0 flex-1">
-                  <Panel defaultSize={80} minSize={20} className="relative overflow-hidden">
+                  <Panel id="spec-editor" defaultSize={80} minSize={20} className="relative overflow-hidden">
                     {specEditor}
                   </Panel>
                   {apiSpec.contents && (
@@ -1360,6 +1361,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                       <PanelResizeHandle className="h-px w-full bg-(--hl-md)" />
                       <Panel
                         ref={lintPanelRef}
+                        id="lint-panel"
                         defaultSize={20}
                         minSize={10}
                         collapsible
