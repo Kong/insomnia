@@ -54,8 +54,8 @@ import type {
 import * as crypt from '../../account/crypt';
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
+import { getRuntime } from '../../runtimes';
 import type { RenderedRequest } from '../../templating/types';
-import { decryptSecretValue, encryptSecretValue } from '../../utils/crypt-adapter';
 import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '../../utils/sealedbox';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
@@ -313,7 +313,7 @@ export interface RendererToMainBridgeAPI {
   >;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
-  notifyPluginPromptResult: (id: string, value: string | null) => void;
+  notifyPromptResult: (id: string, value: string | null) => void;
   vault: {
     encryptSecretValue: (rawValue: string, symmetricKey: JsonWebKey) => Promise<string>;
     decryptSecretValue: (encryptedValue: string, symmetricKey: JsonWebKey) => Promise<string>;
@@ -874,10 +874,10 @@ export function registerMainHandlers() {
   ipcMainHandle('timeline.appendToFile', appendToTimeline);
 
   ipcMainHandle('vault.encryptSecretValue', (_, rawValue: string, symmetricKey: JsonWebKey) => {
-    return encryptSecretValue(rawValue, symmetricKey);
+    return getRuntime().crypto.encryptSecretValue(rawValue, symmetricKey);
   });
   ipcMainHandle('vault.decryptSecretValue', (_, encryptedValue: string, symmetricKey: JsonWebKey) => {
-    return decryptSecretValue(encryptedValue, symmetricKey);
+    return getRuntime().crypto.decryptSecretValue(encryptedValue, symmetricKey);
   });
 
   ipcMainHandle('crypt.encryptRSAWithJWK', (_, publicKeyJWK: JsonWebKey, plaintext: string) => {

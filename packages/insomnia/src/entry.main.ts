@@ -18,6 +18,8 @@ import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { initRuntime } from '~/runtimes';
+import { nodeRuntime } from '~/runtimes/runtime.node';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
@@ -127,6 +129,7 @@ app.on('ready', async () => {
   await initDatabase(mainDatabase);
   // Initialize services for main process
   initServices(servicesNodeImpl);
+  initRuntime(nodeRuntime);
   await _createModelInstances();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();

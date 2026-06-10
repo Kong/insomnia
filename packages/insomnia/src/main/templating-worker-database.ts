@@ -2,7 +2,7 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
 import os from 'node:os';
 
-import { shell } from 'electron';
+import { app, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -18,6 +18,7 @@ import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } f
 import { type Plugin, type TemplateTag } from '../plugins/types';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
+import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
@@ -307,5 +308,34 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       }
     }
     throw new Error(`Unsupported action named ${actionName} for plugin ${pluginName}`);
+  },
+  'app.alert': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.dialog': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
+    return requestPromptFromRenderer({
+      title: body.title,
+      label: body.options?.label ?? body.title,
+      defaultValue: body.options?.defaultValue ?? '',
+    });
+  },
+  'app.getPath': async (body: { name: string }) => {
+    return app.getPath(body.name as Parameters<typeof app.getPath>[0]);
+  },
+  'app.showSaveDialog': async (body: { options?: { defaultPath?: string } }) => {
+    const result = await dialog.showSaveDialog(body.options ?? {});
+    return result.canceled ? null : result.filePath;
+  },
+  'app.clipboard.readText': async () => {
+    return clipboard.readText();
+  },
+  'app.clipboard.writeText': async (body: { text: string }) => {
+    clipboard.writeText(body.text);
+  },
+  'app.clipboard.clear': async () => {
+    clipboard.clear();
   },
 };

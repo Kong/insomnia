@@ -1,4 +1,3 @@
-import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 import type { ClientCertificate, CookieJar, Request, RequestTestResult, Settings } from 'insomnia-data';
 
 import type { ExecutionOption } from './execution';
@@ -27,8 +26,8 @@ export interface RequestContext {
   settings: Settings;
   clientCertificates: ClientCertificate[];
   cookieJar: CookieJar;
-  // only for the after-response script
-  response?: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError;
+  // Callback types defined elsewhere to avoid circular imports
+  response?: any;
   requestTestResults?: RequestTestResult[];
   requestInfo: RequestInfoOption;
   execution: ExecutionOption;

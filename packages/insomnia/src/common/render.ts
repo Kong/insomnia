@@ -14,9 +14,8 @@ import type {
 import { models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
-import { renderTemplate } from '~/templating/render-adapter';
-
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
+import { getRuntime } from '../runtimes';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating/constants';
 import { RenderError } from '../templating/render-error';
 import type {
@@ -283,7 +282,7 @@ export async function render<T>(
 
       try {
         // @ts-expect-error -- TSCONVERSION
-        input = await renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
+        input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
@@ -291,7 +290,7 @@ export async function render<T>(
         // @ts-expect-error -- TSCONVERSION
         if (input.includes('{%')) {
           // @ts-expect-error -- TSCONVERSION
-          input = await renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
+          input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
         }
       } catch (err) {
         console.log(`Failed to render element ${path}`, input);

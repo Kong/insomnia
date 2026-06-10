@@ -1,6 +1,6 @@
 import type { EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentKvPairDataType } from 'insomnia-data';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   type ButtonProps,
@@ -15,11 +15,11 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import { getRuntime } from '~/runtimes';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
-import { decryptSecretValue, encryptSecretValue } from '../../../../utils/crypt-adapter';
 import { base64decode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
@@ -88,7 +88,7 @@ export const EnvironmentKVEditor = ({
     }
     let cancelled = false;
     Promise.all(
-      secretPairs.map(async p => ({ id: p.id, value: await decryptSecretValue(p.value, symmetricKey as JsonWebKey) })),
+      secretPairs.map(async p => ({ id: p.id, value: await getRuntime().crypto.decryptSecretValue(p.value, symmetricKey as JsonWebKey) })),
     )
       .then(results => {
         if (!cancelled) {
@@ -200,13 +200,13 @@ export const EnvironmentKVEditor = ({
             if (yes) {
               handleItemChange(id, 'type', newType);
               // decrypt and save the value
-              handleItemChange(id, 'value', await decryptSecretValue(originValue, symmetricKey as JsonWebKey));
+              handleItemChange(id, 'value', await getRuntime().crypto.decryptSecretValue(originValue, symmetricKey as JsonWebKey));
             }
           },
         });
       } else if (newType === EnvironmentKvPairDataType.SECRET) {
         // encrypt value if set to secret type
-        handleItemChange(id, 'value', await encryptSecretValue(originValue, symmetricKey as JsonWebKey));
+        handleItemChange(id, 'value', await getRuntime().crypto.encryptSecretValue(originValue, symmetricKey as JsonWebKey));
         handleItemChange(id, 'type', newType);
       } else {
         handleItemChange(id, 'type', newType);
@@ -340,7 +340,7 @@ export const EnvironmentKVEditor = ({
               placeholder="Input Secret"
               value={decryptedValues[id] ?? ''}
               onChange={async newValue => {
-                const encryptedValue = await encryptSecretValue(newValue, symmetricKey as JsonWebKey);
+                const encryptedValue = await getRuntime().crypto.encryptSecretValue(newValue, symmetricKey as JsonWebKey);
                 handleItemChange(id, 'value', encryptedValue);
               }}
             />

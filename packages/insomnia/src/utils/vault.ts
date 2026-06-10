@@ -1,6 +1,7 @@
 import { services } from 'insomnia-data';
 
 import { getInsomniaVaultKey, PLAYWRIGHT_TEST } from '../common/constants';
+import { getRuntime } from '../runtimes';
 
 export const base64encode = (input: string | JsonWebKey) => {
   const inputStr = typeof input === 'string' ? input : JSON.stringify(input);
@@ -36,7 +37,7 @@ export async function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey:
     }
   }
   if (vaultKey) {
-    const decryptedVaultKey = await window.main.secretStorage.decryptString(vaultKey);
+    const decryptedVaultKey = await getRuntime().secretStorage.decryptString(vaultKey);
     if (toJsonWebKey) {
       return base64decode(decryptedVaultKey, true);
     }
@@ -51,15 +52,15 @@ export const saveVaultKeyIfNecessary = async (accountId: string, vaultKey: strin
   const userSetting = await services.settings.getOrCreate();
   const { saveVaultKeyLocally } = userSetting;
   if (saveVaultKeyLocally) {
-    await window.main.secretStorage.setSecret(getVaultSecretKey(accountId), vaultKey);
+    await getRuntime().secretStorage.setSecret(getVaultSecretKey(accountId), vaultKey);
   }
 };
 
 export const getVaultKeyFromStorage = async (accountId: string) => {
-  const savedVaultKey = await window.main.secretStorage.getSecret(getVaultSecretKey(accountId));
+  const savedVaultKey = await getRuntime().secretStorage.getSecret(getVaultSecretKey(accountId));
   return savedVaultKey;
 };
 
 export const deleteVaultKeyFromStorage = async (accountId: string) => {
-  await window.main.secretStorage.deleteSecret(getVaultSecretKey(accountId));
+  await getRuntime().secretStorage.deleteSecret(getVaultSecretKey(accountId));
 };

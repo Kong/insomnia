@@ -18,11 +18,6 @@ import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
 import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network';
 
-vi.mock('~/utils/crypt-adapter', () => ({
-  decryptSecretValue: (value: any) => value,
-  encryptSecretValue: (value: any) => value,
-}));
-
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
 describe('getAuthQueryParams', () => {
@@ -42,20 +37,6 @@ describe('getAuthQueryParams', () => {
   });
 });
 describe('sendCurlAndWriteTimeline()', () => {
-  beforeEach(() => {
-    vi.stubGlobal('window', {
-      main: {
-        timeline: {
-          getPath: (responseId: string) => Promise.resolve(`/tmp/${responseId}.timeline`),
-          appendToFile: vi.fn().mockResolvedValue(null),
-        },
-        getAuthHeader,
-        curlRequest,
-        cancelCurlRequest: vi.fn(),
-      },
-    });
-  });
-
   it('sends a generic request', async () => {
     const workspace = await services.workspace.create();
     const settings = await services.settings.getOrCreate();

@@ -1,50 +1,54 @@
-import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, Route, Routes, useLocation } from 'react-router';
 
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
+import { KongLogo } from '~/ui/components/kong-logo';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
-import generate_mocks from '~/ui/images/onboarding/generate_mocks.png';
-import git_for_all from '~/ui/images/onboarding/git_for_all.png';
-import mcp_client from '~/ui/images/onboarding/mcp_client.png';
-import smart_commits from '~/ui/images/onboarding/smart_commits.png';
+import custom_linting from '~/ui/images/onboarding/custom_linting.png';
+import first_request from '~/ui/images/onboarding/first_request.png';
+import konnect_integration from '~/ui/images/onboarding/konnect_integration.png';
+import sidebar_navigation from '~/ui/images/onboarding/sidebar_navigation.png';
 
 const features = [
   {
-    id: 'mcp_client',
-    icon: ['fac', 'mcp'] as unknown as IconProp,
-    title: 'MCP Client',
-    description:
-      'Test and debug MCP servers with the same workflow you use for APIs including support for oAuth and Dynamic Client Registration.',
-    image: mcp_client,
+    id: 'navigation_ux',
+    icon: <FontAwesomeIcon icon={['fas', 'mouse-pointer']} className="text-xl" />,
+    label: 'Updated sidebar navigation',
+    title: 'Introducing a simpler way to navigate',
+    description: 'The new sidebar experience makes it easier than ever to get to the resources you are working with.',
+    image: sidebar_navigation,
   },
   {
-    id: 'auto_generated_mock_servers',
-    icon: 'server',
-    title: 'Auto-generated mock servers',
+    id: 'konnect_integration',
+    icon: <KongLogo />,
+    label: 'Konnect Integration',
+    title: 'Auto-sync your gateway service routes from Konnect',
     description:
-      'Automatically generate a mock server with executable routes from an OpenAPI spec, URL, or chat-based prompt.',
-    image: generate_mocks,
+      'Get right into testing your gateway configuration in Insomnia with the new Konnect platform integration.',
+    image: konnect_integration,
   },
   {
-    id: 'smart_commits',
-    icon: ['fas', 'code-commit'],
-    title: 'Smart Commits',
+    id: 'first_request_ux',
+    icon: <FontAwesomeIcon icon={['fas', 'add']} className="text-xl" />,
+    label: 'New Create Request Experience',
+    title: 'Need to send a new request? No problem!',
     description:
-      'Spend more time coding and less time cleaning up commits. Automatically create commits and comments from your staged changes using AI.',
-    image: smart_commits,
+      'The new project home page provides you with a quick way to configure and send a new request -- all while saving it automatically for when you need it later.',
+    image: first_request,
   },
   {
-    id: 'git_sync_essentials',
-    icon: ['fab', 'git-alt'],
-    title: 'Git Sync for all plans',
+    id: 'custom_linting',
+    icon: <FontAwesomeIcon icon={['fas', 'file']} className="text-xl" />,
+    label: 'Custom Spec Linting',
+    title: 'Upload custom spec linting rules',
     description:
-      'Now Essentials (free)  plan users can get the full benefits of Git Sync projects for up to 3 plan users.',
-    image: git_for_all,
+      'Now you can user your own spectral linting rules to help you edit API design files in Insomnia with confidence.',
+    image: custom_linting,
   },
 ] satisfies {
   id: string;
-  icon: IconProp;
+  icon: React.ReactNode;
+  label: string;
   title: string;
   description: string;
   image: string;
@@ -56,15 +60,15 @@ const FeatureWizardView = () => {
       <Route
         path="/"
         element={
-          <ul className="grid grid-cols-2 justify-center gap-2 p-4">
+          <ul className="grid grid-cols-2 justify-center gap-2">
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
-                  className="flex h-32 w-full flex-col items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xs) p-4 transition-colors select-none hover:bg-(--hl-sm) hover:no-underline"
+                  className="flex h-34 w-full flex-col items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xs) p-4 transition-colors select-none hover:bg-(--hl-sm) hover:no-underline"
                   to={`/onboarding/${feature.id}`}
                 >
-                  <FontAwesomeIcon icon={feature.icon} className="text-xl" />
-                  <span className="text-center text-sm">{feature.title}</span>
+                  {feature.icon}
+                  <span className="text-center text-sm">{feature.label}</span>
                 </Link>
               </li>
             ))}
@@ -81,7 +85,7 @@ const FeatureWizardView = () => {
               key={feature.id}
               path={feature.id}
               element={
-                <div className="relative flex h-96 flex-col gap-4 bg-(--color-bg) p-4 text-left">
+                <div className="relative flex flex-col gap-4 bg-(--color-bg) p-4 text-left">
                   <h1 className="flex justify-between text-lg">
                     <span>{feature.title}</span>
                     <span>
@@ -89,12 +93,12 @@ const FeatureWizardView = () => {
                       <span className="text-(--hl-xl)">/{features.length}</span>
                     </span>
                   </h1>
-                  <div className="flex flex-1 flex-col items-center gap-3 overflow-y-auto">
-                    <p className="text-sm text-(--color-font)">
+                  <div className="flex flex-1 flex-col items-center gap-3">
+                    <p className="text-md text-(--hl)">
                       <span>{feature.description}</span>
                     </p>
-                    <div className="h-48 flex-1">
-                      <img className="aspect-auto max-h-48" src={feature.image} />
+                    <div className="flex-1 py-2">
+                      <img className="aspect-auto" src={feature.image} />
                     </div>
                     <div className="flex w-full shrink-0 justify-between bg-linear-to-t from-(--color-bg) to-(--color-bg)/80 p-4 text-sm font-normal">
                       {prevPath ? (
@@ -133,13 +137,14 @@ const Component = () => {
     <div className="relative flex h-full w-full bg-(--color-bg) text-left">
       <TrailLinesContainer>
         <div className="flex h-full min-h-[500px] w-[600px] flex-col items-center justify-center">
-          <div className="relative flex h-[500px] w-full flex-col items-center justify-center gap-(--padding-sm) rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-(--padding-lg) pt-12">
+          <div className="relative flex h-auto w-full flex-col items-center justify-center gap-(--padding-sm) rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-(--padding-lg) pt-12">
             <InsomniaLogo className="absolute top-0 left-1/2 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
             <div className="flex h-full flex-col gap-6 text-(--color-font)">
-              <h1 className="text-center text-xl">🚀 Welcome to Insomnia 12!</h1>
-              <div>
-                <p>
-                  This new version of Insomnia is the biggest one ever! Notable new features that we have shipped are:
+              <div className="flex flex-col gap-4 py-4">
+                <h1 className="text-center text-xl">🚀 Welcome to Insomnia 13!</h1>
+                <p className="text-center">
+                  A faster, more connected API workflow with unified navigation, Konnect gateway sync, and custom API
+                  governance support.
                 </p>
               </div>
               <div className="relative w-full flex-1">
@@ -157,7 +162,7 @@ const Component = () => {
                 <Link
                   className="rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                   to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
-                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV12', 'true')}
+                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV13', 'true')}
                 >
                   Continue
                 </Link>
