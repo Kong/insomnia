@@ -336,13 +336,6 @@ const Component = ({ params }: Route.ComponentProps) => {
     editor.current?.tryToSetOption('lint', { ...lintOptions });
   }, [rulesetContent, projectId, registerCodeMirrorLint]);
 
-  // do we want to auto expand if there are errors?
-  // useEffect(() => {
-  //   if (lintErrors.length > 0 || lintWarnings.length > 0) {
-  //     lintPanelRef.current?.expand();
-  //   }
-  // }, [lintErrors.length, lintWarnings.length]);
-
   useEffect(() => {
     setSelectedRulesetPath(
       isConnectedGitProject && gitSyncRulesetPath && rulesetContent
