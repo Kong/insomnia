@@ -40,6 +40,7 @@ const shouldAutoCreateInitialProject = async ({
     }
   } catch (error) {
     console.log('[organizations] Failed to load Organizations', error);
+    return false;
   }
 
   const firstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
