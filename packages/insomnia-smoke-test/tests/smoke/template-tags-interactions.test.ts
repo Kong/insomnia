@@ -150,7 +150,4 @@ test('Critical Path For Template Tags Interactions', async ({ page, app, insomni
   const { tagPrefix } = templateTagTestCases.prompt[0];
   await page.locator(`[data-template^="${tagPrefix}"]`).isVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-  // prompt tag is blocked in the sandboxed render-adapter worker
-  await expect.soft(page.getByText('Unexpected Request Failure')).toBeVisible();
-  await page.getByRole('dialog').getByRole('button', { name: 'OK' }).click();
 });

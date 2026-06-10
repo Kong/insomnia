@@ -6,19 +6,19 @@ import type { Cookie, RequestHeader } from 'insomnia-data';
 
 import type { RenderedRequest } from '~/templating/types';
 
-import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
-import { getAuthHeader as getAuthHeaderFromMain } from '../main/network/get-auth-header';
-import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../main/network/libcurl-promise';
-import { curlRequest } from '../main/network/libcurl-promise';
-import * as pluginApp from '../plugins/context/app';
-import * as pluginData from '../plugins/context/data';
-import * as pluginNetwork from '../plugins/context/network';
-import * as pluginRequest from '../plugins/context/request';
-import * as pluginResponse from '../plugins/context/response';
-import * as pluginStore from '../plugins/context/store';
-import { runScript as executeScript } from '../script-executor';
-import { applyDefaultHeaders } from './apply-default-headers';
-import { addSetCookiesToToughCookieJar } from './set-cookie-util';
+import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
+import { getAuthHeader as getAuthHeaderFromMain } from '../../main/network/get-auth-header';
+import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../../main/network/libcurl-promise';
+import { curlRequest } from '../../main/network/libcurl-promise';
+import { applyDefaultHeaders } from '../../network/apply-default-headers';
+import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
+import * as pluginApp from '../../plugins/context/app';
+import * as pluginData from '../../plugins/context/data';
+import * as pluginNetwork from '../../plugins/context/network';
+import * as pluginRequest from '../../plugins/context/request';
+import * as pluginResponse from '../../plugins/context/response';
+import * as pluginStore from '../../plugins/context/store';
+import { runScript as executeScript } from '../../script-executor';
 
 export const getTimelinePath = async (responseId: string): Promise<string> => {
   const electron = require('electron') as { app: { getPath: (name: string) => string } };
@@ -77,7 +77,7 @@ export async function applyRequestHooks(
   renderedContext: Record<string, any>,
 ): Promise<RenderedRequest> {
   const newRenderedRequest = applyDefaultHeaders(renderedRequest, renderedContext['DEFAULT_HEADERS']);
-  const pluginIndex = await import('../plugins/index');
+  const pluginIndex = await import('../../plugins/index');
   for (const { plugin, hook } of await pluginIndex.getRequestHooks()) {
     const context = {
       ...(pluginApp.init() as Record<string, any>),
@@ -104,7 +104,7 @@ export async function applyResponseHooks(
 ): Promise<ResponsePatch> {
   const newResponse = clone(response);
   const newRequest = clone(renderedRequest);
-  const pluginIndex = await import('../plugins/index');
+  const pluginIndex = await import('../../plugins/index');
   for (const { plugin, hook } of await pluginIndex.getResponseHooks()) {
     const context = {
       ...(pluginApp.init() as Record<string, any>),

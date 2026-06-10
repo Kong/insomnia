@@ -1,8 +1,8 @@
 import type { AESMessage, Cookie, RequestHeader } from 'insomnia-data';
 
-import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
-import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../../main/network/libcurl-promise';
-import type { RenderedRequest, RenderInputType } from '../../templating/types';
+import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
+import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../main/network/libcurl-promise';
+import type { RenderedRequest, RenderInputType } from '../templating/types';
 
 interface CurlRequestErrorOutput {
   statusMessage: string;
@@ -43,8 +43,17 @@ export interface TemplatingRuntime {
   renderTemplate: (input: RenderInputType) => Promise<string | null>;
 }
 
+export interface SecretStorageRuntime {
+  setSecret: (key: string, secret: string) => Promise<void>;
+  getSecret: (key: string) => Promise<string | null>;
+  deleteSecret: (key: string) => Promise<void>;
+  encryptString: (raw: string) => Promise<string>;
+  decryptString: (cipherText: string) => Promise<string>;
+}
+
 export interface RuntimeCapabilities {
   network: NetworkRuntime;
   crypto: CryptoRuntime;
   templating: TemplatingRuntime;
+  secretStorage: SecretStorageRuntime;
 }

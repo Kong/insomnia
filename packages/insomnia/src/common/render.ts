@@ -15,6 +15,7 @@ import { models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
+import { getRuntime } from '../runtimes';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating/constants';
 import { RenderError } from '../templating/render-error';
 import type {
@@ -29,7 +30,6 @@ import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
-import { getRuntime } from './runtime';
 
 const { PATH_PARAMETER_REGEX } = models.request;
 const { isRequestGroup } = models.requestGroup;

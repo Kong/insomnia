@@ -1,7 +1,8 @@
 import * as insomniaApi from 'insomnia-api';
+import type { AESMessage } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as crypt from '../crypt';
+import { getRuntime } from '../../runtimes';
 import {
   absorbKey,
   getCurrentSessionId,
@@ -18,15 +19,12 @@ vi.mock('insomnia-api', () => ({
   logout: vi.fn(),
 }));
 
-vi.mock('../crypt', () => ({
-  decryptAES: vi.fn(),
+vi.mock('../../runtimes', () => ({
+  getRuntime: vi.fn(),
 }));
 
 interface MockWindowMain {
   loginStateChange: ReturnType<typeof vi.fn>;
-  crypt: {
-    decryptAES: ReturnType<typeof vi.fn>;
-  };
 }
 
 const getWindowMain = () => (window as unknown as { main: MockWindowMain }).main;
@@ -63,14 +61,21 @@ const mockUserProfile = {
 beforeEach(() => {
   vi.mocked(insomniaApi.getUserProfile).mockResolvedValue(mockUserProfile);
   vi.mocked(insomniaApi.getEncryptionKeys).mockResolvedValue(mockEncryptionKeys);
-  vi.mocked(crypt.decryptAES).mockReturnValue(JSON.stringify(MOCK_SYMMETRIC_KEY));
+
+  vi.mocked(getRuntime).mockReturnValue({
+    crypto: {
+      decryptAES: vi.fn().mockResolvedValue(JSON.stringify(MOCK_SYMMETRIC_KEY)),
+      encryptSecretValue: vi.fn(),
+      decryptSecretValue: vi.fn(),
+    },
+    network: {} as any,
+    templating: {} as any,
+    secretStorage: {} as any,
+  });
 
   vi.stubGlobal('window', {
     main: {
       loginStateChange: vi.fn(),
-      crypt: {
-        decryptAES: vi.fn().mockReturnValue(JSON.stringify(MOCK_SYMMETRIC_KEY)),
-      },
     },
   });
 });
@@ -86,7 +91,7 @@ describe('absorbKey', () => {
   it('decrypts the symmetric key using the provided raw key and encSymmetricKey', async () => {
     await absorbKey(SESSION_ID, RAW_KEY);
 
-    expect(getWindowMain().crypt.decryptAES).toHaveBeenCalledWith(RAW_KEY, MOCK_ENC_SYMMETRIC_KEY);
+    expect(vi.mocked(getRuntime)().crypto.decryptAES).toHaveBeenCalledWith(RAW_KEY, MOCK_ENC_SYMMETRIC_KEY);
   });
 
   it('stores session data with mapped fields from profile and encryption keys', async () => {
@@ -112,16 +117,7 @@ describe('absorbKey', () => {
 
   it('falls back to current session id when none is provided', async () => {
     // First establish a session so getCurrentSessionId returns something
-    await setSessionData(
-      SESSION_ID,
-      'acct',
-      'A',
-      'B',
-      'a@b.com',
-      {} as JsonWebKey,
-      {} as JsonWebKey,
-      {} as crypt.AESMessage,
-    );
+    await setSessionData(SESSION_ID, 'acct', 'A', 'B', 'a@b.com', {} as JsonWebKey, {} as JsonWebKey, {} as AESMessage);
 
     await absorbKey('', RAW_KEY);
 
@@ -133,9 +129,7 @@ describe('absorbKey', () => {
 describe('getPrivateKey', () => {
   it('decrypts and returns the private key from session, and throws when keys are missing', async () => {
     const mockPrivateKey = { kty: 'RSA', d: 'private' };
-    (getWindowMain().crypt.decryptAES as ReturnType<typeof vi.fn>).mockReturnValue(
-      JSON.stringify(mockPrivateKey),
-    );
+    vi.mocked(getRuntime)().crypto.decryptAES = vi.fn().mockResolvedValue(JSON.stringify(mockPrivateKey));
 
     await setSessionData(
       SESSION_ID,
@@ -145,24 +139,15 @@ describe('getPrivateKey', () => {
       'a@b.com',
       MOCK_SYMMETRIC_KEY as JsonWebKey,
       MOCK_PUBLIC_KEY as JsonWebKey,
-      MOCK_ENC_PRIVATE_KEY as crypt.AESMessage,
+      MOCK_ENC_PRIVATE_KEY,
     );
 
     const privateKey = await getPrivateKey();
 
-    expect(getWindowMain().crypt.decryptAES).toHaveBeenCalledWith(MOCK_SYMMETRIC_KEY, MOCK_ENC_PRIVATE_KEY);
+    expect(vi.mocked(getRuntime)().crypto.decryptAES).toHaveBeenCalledWith(MOCK_SYMMETRIC_KEY, MOCK_ENC_PRIVATE_KEY);
     expect(privateKey).toEqual(mockPrivateKey);
 
-    await setSessionData(
-      '',
-      '',
-      '',
-      '',
-      '',
-      null as unknown as JsonWebKey,
-      {} as JsonWebKey,
-      null as unknown as crypt.AESMessage,
-    );
+    await setSessionData('', '', '', '', '', null as unknown as JsonWebKey, {} as JsonWebKey, null as unknown as any);
 
     await expect(getPrivateKey()).rejects.toThrow("Can't get private key: session is missing keys.");
   });
@@ -170,32 +155,14 @@ describe('getPrivateKey', () => {
 
 describe('isLoggedIn', () => {
   it('returns true when a session id exists', async () => {
-    await setSessionData(
-      SESSION_ID,
-      'acct',
-      'A',
-      'B',
-      'a@b.com',
-      {} as JsonWebKey,
-      {} as JsonWebKey,
-      {} as crypt.AESMessage,
-    );
+    await setSessionData(SESSION_ID, 'acct', 'A', 'B', 'a@b.com', {} as JsonWebKey, {} as JsonWebKey, {} as AESMessage);
     expect(await isLoggedIn()).toBe(true);
   });
 });
 
 describe('logout', () => {
   it('calls the logout API with the current session id', async () => {
-    await setSessionData(
-      SESSION_ID,
-      'acct',
-      'A',
-      'B',
-      'a@b.com',
-      {} as JsonWebKey,
-      {} as JsonWebKey,
-      {} as crypt.AESMessage,
-    );
+    await setSessionData(SESSION_ID, 'acct', 'A', 'B', 'a@b.com', {} as JsonWebKey, {} as JsonWebKey, {} as AESMessage);
 
     await logout();
 
@@ -203,16 +170,7 @@ describe('logout', () => {
   });
 
   it('triggers loginStateChange with false', async () => {
-    await setSessionData(
-      SESSION_ID,
-      'acct',
-      'A',
-      'B',
-      'a@b.com',
-      {} as JsonWebKey,
-      {} as JsonWebKey,
-      {} as crypt.AESMessage,
-    );
+    await setSessionData(SESSION_ID, 'acct', 'A', 'B', 'a@b.com', {} as JsonWebKey, {} as JsonWebKey, {} as AESMessage);
 
     await logout();
 
@@ -222,16 +180,7 @@ describe('logout', () => {
 
   it('does not throw if the API call fails', async () => {
     vi.mocked(insomniaApi.logout).mockRejectedValue(new Error('network error'));
-    await setSessionData(
-      SESSION_ID,
-      'acct',
-      'A',
-      'B',
-      'a@b.com',
-      {} as JsonWebKey,
-      {} as JsonWebKey,
-      {} as crypt.AESMessage,
-    );
+    await setSessionData(SESSION_ID, 'acct', 'A', 'B', 'a@b.com', {} as JsonWebKey, {} as JsonWebKey, {} as AESMessage);
 
     await expect(logout()).resolves.not.toThrow();
   });
@@ -239,16 +188,7 @@ describe('logout', () => {
 
 describe('getCurrentSessionId', () => {
   it('returns the current session id', async () => {
-    await setSessionData(
-      SESSION_ID,
-      'acct',
-      'A',
-      'B',
-      'a@b.com',
-      {} as JsonWebKey,
-      {} as JsonWebKey,
-      {} as crypt.AESMessage,
-    );
+    await setSessionData(SESSION_ID, 'acct', 'A', 'B', 'a@b.com', {} as JsonWebKey, {} as JsonWebKey, {} as AESMessage);
     expect(await getCurrentSessionId()).toBe(SESSION_ID);
   });
 });

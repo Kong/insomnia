@@ -8,8 +8,8 @@ import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
 import { insomniaFetch } from '~/common/insomnia-fetch';
-import { initRuntime } from '~/common/runtime';
-import { rendererRuntime } from '~/common/runtime/runtime.renderer';
+import { initRuntime } from '~/runtimes';
+import { rendererRuntime } from '~/runtimes/runtime.renderer';
 import { database as clientDatabase } from '~/ui/database.client';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 

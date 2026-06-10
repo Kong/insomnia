@@ -6,9 +6,9 @@ import { vi } from 'vitest';
 import { v4Mock } from '../insomnia-data/__mocks__/uuid';
 import { nodeLibcurlMock } from './src/__mocks__/@getinsomnia/node-libcurl';
 import { electronMock } from './src/__mocks__/electron';
-import { initRuntime } from './src/common/runtime';
-import { nodeRuntime } from './src/common/runtime/runtime.node';
 import { mainDatabase } from './src/main/database.main';
+import { initRuntime } from './src/runtimes';
+import { nodeRuntime } from './src/runtimes/runtime.node';
 
 await initDatabase(mainDatabase, { inMemoryOnly: true }, true);
 await initServices(servicesNodeImpl);

@@ -72,7 +72,9 @@ export const test = baseTest.extend<{
       INSOMNIA_GITLAB_API_URL: echoServer + '/gitlab-api',
       INSOMNIA_UPDATES_URL: echoServer || 'https://updates.insomnia.rest',
       INSOMNIA_MOCK_API_URL: 'https://mock-stage.insomnia.run',
-      INSOMNIA_SKIP_ONBOARDING: String(userConfig.skipOnboarding),
+      // Empty string (not "false") so the renderer's `if (skipOnboarding)` guard is falsy
+      // and onboarding flows can be exercised; "false" would be a truthy string.
+      INSOMNIA_SKIP_ONBOARDING: userConfig.skipOnboarding ? 'true' : '',
       INSOMNIA_PUBLIC_KEY: userConfig.publicKey,
       INSOMNIA_SECRET_KEY: userConfig.secretKey,
       INSOMNIA_VAULT_KEY: userConfig.vaultKey || '',
@@ -143,9 +145,14 @@ export const test = baseTest.extend<{
     // so iterating the live Set would skip un-visited entries.
     for (const live of Array.from(liveApps)) {
       try {
-        await live.close();
+        await Promise.race([
+          live.close(),
+          new Promise<void>((_, reject) => setTimeout(() => reject(new Error('close timeout')), 5000)),
+        ]);
       } catch {
-        // Best-effort: an already-closed app rejects; ignore.
+        try {
+          live.process().kill();
+        } catch {}
       }
     }
   },

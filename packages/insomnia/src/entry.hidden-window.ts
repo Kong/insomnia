@@ -3,8 +3,8 @@ import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
 import { initServices } from 'insomnia-data';
 
 import type { RequestContext } from '../../insomnia-scripting-environment/src/objects';
-import { initRuntime } from './common/runtime';
-import { rendererRuntime } from './common/runtime/runtime.renderer';
+import { initRuntime } from './runtimes';
+import { rendererRuntime } from './runtimes/runtime.renderer';
 import { runScript } from './scripting/run-script';
 import { type ScriptSecurityPolicy } from './scripting/sandbox';
 

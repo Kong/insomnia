@@ -3,7 +3,7 @@ import { models, services } from 'insomnia-data';
 
 import { base64ToUtf8, utf8ToBase64 } from '~/utils/utf8-bytes';
 
-import { getRuntime } from '../common/runtime';
+import { getRuntime } from '../runtimes';
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
 import { tokenizeArgs } from './tokenize-args';
