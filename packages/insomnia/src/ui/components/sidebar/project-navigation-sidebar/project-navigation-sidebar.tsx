@@ -86,6 +86,12 @@ export interface ProjectNavigationSidebarHandle {
 
 export type ProjectNavigationSidebarTabId = 'projects' | 'konnect';
 
+function LastSyncedLabel({ lastSyncedAt }: { lastSyncedAt: number | null }) {
+  return lastSyncedAt
+    ? `Last synced: ${getRelativeTimeString(lastSyncedAt, Date.now())}`
+    : 'Not yet synced';
+}
+
 function getRelativeTimeString(timestamp: number, now: number = Date.now()): string {
   const seconds = Math.floor((now - timestamp) / 1000);
   if (seconds < 60) {
@@ -957,7 +963,6 @@ const ProjectNavigationSidebarInner = (
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
   const [showSyncDetails, setShowSyncDetails] = useState(false);
   const [copiedReason, setCopiedReason] = useState<string | null>(null);
-  const [tooltipNow, setTooltipNow] = useState(Date.now());
   const [onboardingEnvWorkspaceId, setOnboardingEnvWorkspaceId] = useState<string | null>(null);
   const [envOnboardingNode, setEnvOnboardingNode] = useState<HTMLDivElement | null>(null);
 
@@ -1009,12 +1014,7 @@ const ProjectNavigationSidebarInner = (
                     <Icon icon="stop-circle" />
                   </Button>
                 ) : (
-                  <TooltipTrigger
-                    delay={300}
-                    onOpenChange={isOpen => {
-                      if (isOpen) setTooltipNow(Date.now());
-                    }}
-                  >
+                  <TooltipTrigger delay={300}>
                     <Button
                       aria-label="Sync Konnect"
                       onPress={handleSync}
@@ -1027,9 +1027,7 @@ const ProjectNavigationSidebarInner = (
                       placement="bottom"
                       className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-1.5 text-xs text-(--color-font) shadow-lg select-none"
                     >
-                      {lastSyncedAt
-                        ? `Last synced: ${getRelativeTimeString(lastSyncedAt, tooltipNow)}`
-                        : 'Not yet synced'}
+                      <LastSyncedLabel lastSyncedAt={lastSyncedAt ?? null} />
                     </Tooltip>
                   </TooltipTrigger>
                 )}
