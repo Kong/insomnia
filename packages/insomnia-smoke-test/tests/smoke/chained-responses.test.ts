@@ -17,6 +17,6 @@ test('can chain multiple requests', async ({ app, page, insomnia }) => {
 
   // third request will call second request which will call first request
   // Wait for the full chain to complete — chained response tags re-send upstream requests
-  await expect.soft(page.getByRole('button', { name: 'Cancel Request' })).toBeHidden({ timeout: 60000 });
+  await expect.soft(page.getByRole('button', { name: 'Cancel Request' })).toBeHidden({ timeout: 60_000 });
   await expect.soft(page.getByTestId('response-pane')).toContainText('first and second and third');
 });
