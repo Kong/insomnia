@@ -1,15 +1,15 @@
 import { useCallback, useState } from 'react';
 
-export function useUnsavedChangesGuard(isDirty: boolean, onClose: () => void) {
+export function useUnsavedChangesGuard(hasUnsavedChanges: boolean, onClose: () => void) {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
   const requestClose = useCallback(() => {
-    if (isDirty) {
+    if (hasUnsavedChanges) {
       setIsConfirmDialogOpen(true);
       return;
     }
     onClose();
-  }, [isDirty, onClose]);
+  }, [hasUnsavedChanges, onClose]);
 
   const confirmClose = useCallback(() => {
     setIsConfirmDialogOpen(false);
