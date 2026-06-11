@@ -1,4 +1,3 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { type Billing, type CurrentPlan, type FeatureList, type Organization, type User } from 'insomnia-api';
 import type { Settings } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
@@ -29,7 +28,6 @@ import { InsomniaEventStreamProvider } from '~/ui/context/app/insomnia-event-str
 import { SidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
-import { dbQueryClient } from '~/ui/db-query-client';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import type { AsyncTask } from '~/utils/router';
 
@@ -317,9 +315,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
               </header>
               <div className="overflow-hidden border-b border-(--hl-md) [grid-area:Content]">
                 <RunnerProvider>
-                  <QueryClientProvider client={dbQueryClient}>
-                    <Outlet />
-                  </QueryClientProvider>
+                  <Outlet />
                 </RunnerProvider>
               </div>
               <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]" data-testid="statusbar">

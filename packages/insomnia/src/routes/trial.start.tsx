@@ -4,9 +4,7 @@ import { services } from 'insomnia-data';
 import { syncCurrentPlan } from '~/ui/organization-utils';
 import { createFetcherSubmitHook } from '~/utils/router';
 
-import type { Route } from './+types/settings.update';
-
-export async function clientAction(_args: Route.ClientActionArgs) {
+export async function clientAction() {
   const { id: sessionId, accountId } = await services.userSession.get();
 
   if (!sessionId || !accountId) {

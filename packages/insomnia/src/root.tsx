@@ -1,4 +1,6 @@
 import { config } from '@fortawesome/fontawesome-svg-core';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import type { IpcRendererEvent } from 'electron';
 import type { Settings, UserSession } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
@@ -19,7 +21,6 @@ import {
   useNavigate,
   useParams,
   useRevalidator,
-  useRouteLoaderData,
 } from 'react-router';
 import { useLatest } from 'react-use';
 
@@ -30,7 +31,6 @@ import { plugins } from '~/plugins/renderer-bridge';
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
-import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
@@ -48,6 +48,8 @@ import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
+import { dbQueryClient } from '~/ui/db-query-client';
+import { useCreateCloudCredential, useSettings, useUserSession } from '~/ui/hooks/data';
 import Modals from '~/ui/modals';
 
 import type { Route } from './+types/root';
@@ -199,25 +201,25 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
 
 export interface RootLoaderData {
   settings: Settings;
-  workspaceCount: number;
   userSession: UserSession;
 }
 
 export const useRootLoaderData = () => {
-  return useRouteLoaderData<typeof clientLoader>('root');
+  const settings = useSettings();
+  const userSession = useUserSession();
+  return {
+    settings,
+    userSession,
+  };
 };
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
-  const workspaceCount = await services.workspace.count();
   const userSession = await services.userSession.get();
-  const cloudCredentials = await services.cloudCredential.all();
 
   return {
     settings,
-    workspaceCount,
     userSession,
-    cloudCredentials,
   };
 }
 
@@ -279,7 +281,10 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <Links />
       </head>
       <body className="size-full">
-        {children}
+        <QueryClientProvider client={dbQueryClient}>
+          {children}
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
         <ScrollRestoration />
         <Scripts />
         <div id="graphql-explorer-container" />
@@ -369,7 +374,7 @@ const Root = () => {
   };
 
   const [importObject, setImportObject] = useState<ImportSource>({ type: 'clipboard', defaultValue: '' });
-  const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
+  const { mutate: createCloudCredentials } = useCreateCloudCredential();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({

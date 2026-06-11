@@ -21,7 +21,7 @@ import { useRequestUpdatePayloadActionFetcher } from '~/routes/organization.$org
 import { useRequestGroupUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId.update';
 import { useRequestGroupUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId.update-meta';
 import { useWorkspaceUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
-import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
+import { useUpdateSettings } from '~/ui/hooks/data';
 
 export const useRequestPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -108,9 +108,9 @@ export const useRequestGroupMetaPatcher = (requestWorkspaceId = '') => {
 };
 
 export const useSettingsPatcher = () => {
-  const fetcher = useSettingsUpdateActionFetcher();
+  const { mutate: patchSettings } = useUpdateSettings();
   return (patch: Partial<Settings>) => {
-    fetcher.submit({ patch });
+    patchSettings(patch);
   };
 };
 
