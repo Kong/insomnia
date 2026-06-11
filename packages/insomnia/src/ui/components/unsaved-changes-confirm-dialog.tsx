@@ -17,8 +17,12 @@ export const UnsavedChangesConfirmDialog = ({
   >
     <Modal className="flex w-full max-w-sm flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-6 text-(--color-font) shadow-xl">
       <Dialog className="flex flex-col gap-4 outline-hidden">
-        <Heading className="text-lg font-semibold">Unsaved changes</Heading>
-        <p className="text-sm">You will lose any unsaved changes. Are you sure you want to cancel?</p>
+        <Heading slot="title" className="text-lg font-semibold">
+          Unsaved changes
+        </Heading>
+        <p slot="description" className="text-sm">
+          You will lose any unsaved changes. Are you sure you want to cancel?
+        </p>
         <div className="flex items-center justify-end gap-2">
           <Button
             autoFocus
