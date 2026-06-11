@@ -442,8 +442,8 @@ const main: Window['main'] = {
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
     getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },
-  notifyPluginPromptResult: (id: string, value: string | null) =>
-    ipcRenderer.send('plugins.uiPromptResult', { id, value }),
+  notifyPromptResult: (id: string, value: string | null) =>
+    ipcRenderer.send('ui.promptResult', { id, value }),
   timeline: {
     getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
     appendToFile: (options: { timelinePath: string; data: string }) =>

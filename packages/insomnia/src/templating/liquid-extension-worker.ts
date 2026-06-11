@@ -49,7 +49,6 @@ export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths
   return result;
 };
 
-const legacyModeErrorMessage = `This version improves the security around plugins by limiting scope of access by default. This may break some plugins which rely on having the same kind of access Insomnia does. You can still grant elevated access to plugins, should your workflow absolutely require it, by navigating to Preferences > Plugins and checking the box enabling elevated access for plugins.`;
 
 function resolveArg(arg: ReturnType<typeof tokenizeArgs>[number], scope: Record<string, any>): any {
   if (arg.type === 'variable') {
@@ -85,32 +84,24 @@ export function createLiquidTagWorker(
 
       const helperContext: PluginTemplateTagContext = {
         app: {
-          alert: () => {
-            throw new Error(legacyModeErrorMessage);
-          },
-          dialog: () => {
-            throw new Error(legacyModeErrorMessage);
-          },
-          prompt: () => {
-            throw new Error(legacyModeErrorMessage);
-          },
-          getPath: () => {
-            throw new Error(legacyModeErrorMessage);
-          },
+          alert: async (title: string, message?: string) =>
+            fetchFromTemplateWorkerDatabase('app.alert', { title, message }),
+          dialog: async (title: string) =>
+            fetchFromTemplateWorkerDatabase('app.dialog', { title }),
+          prompt: async (title: string, options?: { label?: string; defaultValue?: string; submitName?: string; inputType?: string }) =>
+            fetchFromTemplateWorkerDatabase('app.prompt', { title, options }),
+          getPath: async (name: string) =>
+            fetchFromTemplateWorkerDatabase('app.getPath', { name }),
           getInfo: () => ({ version: packageJson.version, platform }),
-          showSaveDialog: async () => {
-            throw new Error(legacyModeErrorMessage);
-          },
+          showSaveDialog: async (options?: { defaultPath?: string }) =>
+            fetchFromTemplateWorkerDatabase('app.showSaveDialog', { options }),
           clipboard: {
-            readText: () => {
-              throw new Error(legacyModeErrorMessage);
-            },
-            writeText: () => {
-              throw new Error(legacyModeErrorMessage);
-            },
-            clear: () => {
-              throw new Error(legacyModeErrorMessage);
-            },
+            readText: async () =>
+              fetchFromTemplateWorkerDatabase('app.clipboard.readText', {}),
+            writeText: async (text: string) =>
+              fetchFromTemplateWorkerDatabase('app.clipboard.writeText', { text }),
+            clear: async () =>
+              fetchFromTemplateWorkerDatabase('app.clipboard.clear', {}),
           },
         },
         store: {
