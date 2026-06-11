@@ -45,11 +45,13 @@ import { showError, showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
+import { PluginInstallModal } from '~/ui/components/modals/plugin-install-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
+import { validatePluginName } from '~/utils/plugin-name';
 
 import type { Route } from './+types/root';
 
@@ -484,38 +486,35 @@ const Root = () => {
         }
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {
-        if (!params.name || params.name.trim() === '') {
+        const name = params.name?.trim();
+        if (!name) {
           return showError({
             title: 'Plugin Install',
             message: 'Plugin name is required',
           });
         }
 
-        return showModal(AskModal, {
-          title: 'Plugin Install',
-          message: (
-            <p className="text-(--hl)">
-              Do you want to install <i className="font-bold text-(--hl)">{params.name}</i>?
-            </p>
-          ),
-          yesText: 'Install',
-          noText: 'Cancel',
-          onDone: async (isYes: boolean) => {
-            if (isYes) {
-              try {
-                // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
-                await window.main.installPlugin(params.name.trim(), true);
-                showModal(SettingsModal, { tab: 'plugins' });
-              } catch (err) {
-                showError({
-                  title: 'Plugin Install',
-                  message: 'Failed to install plugin',
-                  error: err.message,
-                });
-              }
-            }
-          },
-        });
+        // Require login for deep-link installs (mirrors the import deep-link). The replay effect
+        // re-fires pendingDeepLinkAfterAuthorize after login, so the flow resumes automatically.
+        const userSession = await services.userSession.get();
+        if (!userSession.id) {
+          window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
+          window.localStorage.setItem('logoutMessage', 'Please log in to install this plugin.');
+          return navigate(href('/auth/login'));
+        }
+
+        // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
+        const validationError = validatePluginName(name, true);
+        if (validationError) {
+          return showError({
+            title: 'Plugin Install',
+            message: validationError,
+          });
+        }
+
+        // Never install directly from the deep link. Open the review modal where the user can
+        // inspect the package and must explicitly accept the install.
+        return showModal(PluginInstallModal, { name });
       }
       if (urlWithoutParams === 'insomnia://plugins/theme') {
         const parsedTheme = JSON.parse(decodeURIComponent(params.theme));

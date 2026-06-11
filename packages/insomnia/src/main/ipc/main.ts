@@ -68,7 +68,7 @@ import { authorizeUserInWindow } from '../authorize-user-in-window';
 import { backup, restoreBackup } from '../backup';
 import { createPlugin } from '../create-plugin';
 import type { GitServiceAPI } from '../git-service';
-import installPlugin from '../install-plugin';
+import installPlugin, { getPluginPreview } from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
 import { getAuthHeader as getAuthHeaderInMain } from '../network/get-auth-header';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
@@ -202,6 +202,7 @@ export interface RendererToMainBridgeAPI {
   cancelAuthorizationInDefaultBrowser: typeof cancelAuthorizationInDefaultBrowser;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
+  getPluginPreview: typeof getPluginPreview;
   initializeWorkspaceBackendProject: typeof initializeWorkspaceBackendProject;
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Uint8Array | null; contentType: string }) => Promise<Part[]>;
@@ -630,6 +631,10 @@ export function registerMainHandlers() {
 
   ipcMainHandle('installPlugin', (_, lookupName: string, allowScopedPackageNames = false) => {
     return installPlugin(lookupName, allowScopedPackageNames);
+  });
+
+  ipcMainHandle('getPluginPreview', (_, lookupName: string, allowScopedPackageNames = false) => {
+    return getPluginPreview(lookupName, allowScopedPackageNames);
   });
 
   ipcMainOn('restart', () => {

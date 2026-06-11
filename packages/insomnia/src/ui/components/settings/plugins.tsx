@@ -25,6 +25,8 @@ import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
+import { hideAllModals, showModal } from '../modals';
+import { PluginInstallModal } from '../modals/plugin-install-modal';
 import { Tooltip } from '../tooltip';
 import { CreatePluginModal } from './create-plugin-modal';
 
@@ -182,16 +184,9 @@ export const Plugins: FC = () => {
                   className="flex h-full w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
                   isDisabled={isInstallingFromNpm}
                   type="submit"
-                  onPress={async () => {
-                    setState(state => ({ ...state, isInstallingFromNpm: true }));
-
-                    const idleState: Partial<State> = {
-                      isInstallingFromNpm: false,
-                      error: null,
-                      installPluginErrMsg: '',
-                    };
-
-                    const validationError = validatePluginName(npmPluginValue.trim());
+                  onPress={() => {
+                    const name = npmPluginValue.trim();
+                    const validationError = validatePluginName(name);
 
                     if (validationError) {
                       setState(state => ({
@@ -204,22 +199,13 @@ export const Plugins: FC = () => {
                       return;
                     }
 
-                    try {
-                      await window.main.installPlugin(npmPluginValue.trim());
-                      await handleReloadPlugins();
-                      setState(state => ({ ...state, ...idleState, npmPluginValue: '' }));
-                    } catch (err) {
-                      console.error(err);
-                      setState(state => ({
-                        ...state,
-                        ...idleState,
-                        error: err,
-                        installPluginErrMsg: `Failed to install ${npmPluginValue}. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.`,
-                      }));
-                    }
+                    // Close Settings first so only one dimmed overlay shows, then open the review
+                    // modal (it reopens Settings → Plugins when it closes).
+                    hideAllModals();
+                    showModal(PluginInstallModal, { name, returnToSettings: true });
                   }}
                 >
-                  {isInstallingFromNpm ? 'Installing...' : 'Install Plugin'}
+                  Review & Install
                 </Button>
               </div>
             </div>

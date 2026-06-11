@@ -9,9 +9,12 @@ interface Props {
   handleRender?: HandleRender;
   className?: string;
   heading?: string;
+  // When true, all <img> are stripped from the rendered output. Used for untrusted READMEs where
+  // embedded images (often relative paths) would either break or load arbitrary remote resources.
+  forbidImages?: boolean;
 }
 
-export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
+export const MarkdownPreview: FC<Props> = ({ markdown, heading, forbidImages }) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [compiled, setCompiled] = useState('');
   const [error, setError] = useState('');
@@ -20,7 +23,7 @@ export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
     let shouldUpdate = true;
     const fn = async () => {
       try {
-        const compiled = markdownToHTML(markdown);
+        const compiled = markdownToHTML(markdown, forbidImages ? { FORBID_TAGS: ['img'] } : undefined);
         shouldUpdate && setCompiled(compiled);
         shouldUpdate && setError('');
       } catch (err) {
@@ -32,7 +35,7 @@ export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
     return () => {
       shouldUpdate = false;
     };
-  }, [markdown]);
+  }, [markdown, forbidImages]);
   useLayoutEffect(() => {
     if (!divRef.current) {
       return;

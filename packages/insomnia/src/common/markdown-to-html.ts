@@ -1,4 +1,4 @@
-import dompurify from 'dompurify';
+import dompurify, { type Config } from 'dompurify';
 import { marked } from 'marked';
 
 marked.setOptions({
@@ -11,4 +11,4 @@ marked.setOptions({
   mangle: false,
 });
 
-export const markdownToHTML = (input: string) => dompurify.sanitize(marked.parse(input));
+export const markdownToHTML = (input: string, config?: Config) => dompurify.sanitize(marked.parse(input), config);

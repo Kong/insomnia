@@ -287,6 +287,8 @@ const main: Window['main'] = {
   multipartBufferToArray: options => invokeWithNormalizedError('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     invokeWithNormalizedError('installPlugin', lookupName, allowScopedPackageNames),
+  getPluginPreview: (lookupName: string, allowScopedPackageNames = false) =>
+    invokeWithNormalizedError('getPluginPreview', lookupName, allowScopedPackageNames),
   createPlugin: options => invokeWithNormalizedError('createPlugin', options),
   initializeWorkspaceBackendProject: options => invokeWithNormalizedError('initializeWorkspaceBackendProject', options),
   runTests: src => invokeWithNormalizedError('run-tests', src),

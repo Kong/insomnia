@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { cp, lstat, mkdir, mkdtemp, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -10,6 +11,7 @@ import { services } from 'insomnia-data';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';
+import { assertNotLoopbackUrl, isLoopbackHost } from '../common/private-host';
 import { validatePluginName } from '../utils/plugin-name';
 
 // Promisified version of execFile to use async/await
@@ -53,7 +55,45 @@ interface InsomniaPlugin {
   dist: {
     shasum: string;
     tarball: string;
+    // Immutable, verifiable characteristics surfaced for the install review page
+    integrity?: string;
+    unpackedSize?: number;
+    fileCount?: number;
   };
+  dependencies: Record<string, string>;
+  // Email of the package author/publisher, used to derive a Gravatar profile image.
+  authorEmail?: string;
+}
+
+/**
+ * Extracts an email address from an npm "author"/"maintainer" field, which may be an object
+ * ({ name, email }) or a string ("Name <email> (url)").
+ */
+function extractEmail(value: unknown): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  if (typeof value === 'object' && 'email' in value && typeof (value as any).email === 'string') {
+    return (value as any).email;
+  }
+  if (typeof value === 'string') {
+    const match = value.match(/<([^>]+)>/);
+    return match?.[1];
+  }
+  return undefined;
+}
+
+/**
+ * Builds the author's Gravatar URL from their email (the same image npm shows, which it proxies via
+ * /npm-avatar). Uses d=404 so packages whose author has no Gravatar fall back to our own icon
+ * instead of a generated placeholder. Returns undefined when no author email is available.
+ */
+function gravatarUrlFromEmail(email?: string): string | undefined {
+  if (!email) {
+    return undefined;
+  }
+  const hash = createHash('md5').update(email.trim().toLowerCase()).digest('hex');
+  return `https://www.gravatar.com/avatar/${hash}?s=128&d=404`;
 }
 
 /**
@@ -102,16 +142,18 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
 
     // Step 3: Ensure the plugin tarball can be fetched
     try {
-      // After fetching info, check the info.dist.tarball. This prevents downloading from weird hosts.
-      const tarballUrl = new URL(info.dist.tarball);
-      const allowedTarballHostnames = await getAllowedTarballHostnames();
-      if (!allowedTarballHostnames.includes(tarballUrl.hostname)) {
-        throw new Error(`Tarball must come from an allowed host. Got: ${tarballUrl.hostname}`);
-      }
+      // Validate the host allowlist + loopback (with DNS re-resolution) immediately before fetching.
+      await assertTarballUrlAllowed(info.dist.tarball);
 
-      // Fetch the tarball to ensure it's accessible
-      // This is a simple check to ensure the tarball URL is valid and accessible
-      const tarballResponse = await net.fetch(info.dist.tarball);
+      // Reject redirects: a 3xx could otherwise forward the request to an internal host that
+      // bypassed the checks above (the same posture as the remote-ruleset fetcher). Combined with
+      // re-validating the final response URL below, this closes the redirect/rebinding window that
+      // a plain follow-redirects fetch would leave open between the check and the connection.
+      const tarballResponse = await net.fetch(info.dist.tarball, { redirect: 'error' });
+
+      // Re-validate the URL we actually landed on, in case the network layer resolved/redirected
+      // somewhere other than what we validated.
+      await assertTarballUrlAllowed(tarballResponse.url);
 
       // Check if the response is OK (status code 200)
       if (!tarballResponse.ok) {
@@ -205,7 +247,7 @@ export async function runYarnCommand(args: string[], cwd?: string) {
  * Checks if the given npm package is an Insomnia plugin.
  * Verifies that the package contains an "insomnia" attribute.
  */
-export async function getPluginInfo(lookupName: string, allowScopedPackageNames = false) {
+export async function getPluginInfo(lookupName: string, allowScopedPackageNames = false): Promise<InsomniaPlugin> {
   const validationError = validatePluginName(lookupName, allowScopedPackageNames);
 
   if (validationError) {
@@ -240,8 +282,153 @@ export async function getPluginInfo(lookupName: string, allowScopedPackageNames 
     dist: {
       shasum: data.dist.shasum,
       tarball: data.dist.tarball,
+      integrity: data.dist.integrity,
+      unpackedSize: data.dist.unpackedSize,
+      fileCount: data.dist.fileCount,
     },
+    dependencies: data.dependencies ?? {},
+    authorEmail:
+      extractEmail(data.author) ||
+      extractEmail(data._npmUser) ||
+      (Array.isArray(data.maintainers) ? extractEmail(data.maintainers[0]) : undefined),
   };
+}
+
+/**
+ * Immutable, verifiable characteristics of the package that would be installed, surfaced to the
+ * renderer so the user can review exactly what will land on disk before accepting the install.
+ */
+export interface PluginPreview {
+  // Exact resolved npm package name (what actually gets installed)
+  name: string;
+  // From the package's "insomnia" attribute - treated as untrusted plain text in the UI
+  displayName?: string;
+  description?: string;
+  // Raw README markdown - sanitized in the renderer via markdownToHTML (DOMPurify)
+  readme?: string;
+  version: string;
+  publisher?: {
+    name: string;
+    icon?: string;
+  };
+  // Author's Gravatar profile image URL (d=404, so it fails over to the UI's fallback icon when the
+  // author has no Gravatar). Undefined when no author email is published.
+  avatarUrl?: string;
+  npmUrl: string;
+  dist: {
+    shasum: string;
+    integrity?: string;
+    tarball: string;
+    unpackedSize?: number;
+    fileCount?: number;
+  };
+  dependencies: Record<string, string>;
+  // Whether the tarball host is on the install allowlist; if false the UI must disable install.
+  tarballHostAllowed: boolean;
+  // Best-effort npm stats for the review screen (any may be undefined if unavailable).
+  downloads?: number;
+  releaseDate?: string;
+  lastUpdatedAt?: string;
+}
+
+/**
+ * Fetches and verifies a plugin's npm metadata WITHOUT installing anything. Used by the install
+ * review page to display what would be installed. Performs the same SSRF/allowlist checks the real
+ * install does, but never touches the filesystem.
+ */
+export async function getPluginPreview(lookupName: string, allowScopedPackageNames = false): Promise<PluginPreview> {
+  const validationError = validatePluginName(lookupName, allowScopedPackageNames);
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  const info = await getPluginInfo(lookupName, allowScopedPackageNames);
+
+  if (!info.dist?.tarball) {
+    throw new Error('Invalid plugin metadata: missing tarball URL');
+  }
+
+  // Reject tarballs that resolve to the user's own machine (SSRF), incl. DNS rebinding.
+  await assertNotLoopbackUrl(info.dist.tarball);
+
+  const allowedTarballHostnames = await getAllowedTarballHostnames();
+  const tarballHostAllowed = allowedTarballHostnames.includes(new URL(info.dist.tarball).hostname);
+
+  const registryUrl = await getRegistryUrl();
+
+  // README, publish times, and download counts are all best-effort extras for the review screen;
+  // fetch them in parallel and tolerate any of them being unavailable.
+  const [readme, time, downloads] = await Promise.all([
+    fetchPackageReadme(lookupName, registryUrl),
+    fetchPackageTimes(lookupName, registryUrl),
+    fetchMonthlyDownloads(info.name),
+  ]);
+
+  return {
+    name: info.name,
+    displayName: info.insomnia?.displayName,
+    description: info.insomnia?.description,
+    readme,
+    version: info.version,
+    publisher: info.insomnia?.publisher,
+    avatarUrl: gravatarUrlFromEmail(info.authorEmail),
+    npmUrl: `https://www.npmjs.com/package/${info.name}`,
+    dist: {
+      shasum: info.dist.shasum,
+      integrity: info.dist.integrity,
+      tarball: info.dist.tarball,
+      unpackedSize: info.dist.unpackedSize,
+      fileCount: info.dist.fileCount,
+    },
+    dependencies: info.dependencies,
+    tarballHostAllowed,
+    downloads,
+    releaseDate: time?.created,
+    lastUpdatedAt: time?.modified,
+  };
+}
+
+/** Best-effort fetch of a package's README markdown (older packages may not publish one). */
+async function fetchPackageReadme(lookupName: string, registryUrl: string): Promise<string | undefined> {
+  try {
+    const stdout = await runYarnCommand(['info', lookupName, 'readme', '--json', '--registry', registryUrl]);
+    const parsed = JSON.parse(stdout);
+    return typeof parsed?.data === 'string' ? parsed.data : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Best-effort fetch of a package's publish times ({ created, modified } from the registry). */
+async function fetchPackageTimes(
+  lookupName: string,
+  registryUrl: string,
+): Promise<{ created?: string; modified?: string } | undefined> {
+  try {
+    const stdout = await runYarnCommand(['info', lookupName, 'time', '--json', '--registry', registryUrl]);
+    const parsed = JSON.parse(stdout);
+    const time = parsed?.data;
+    if (time && typeof time === 'object') {
+      return { created: time.created, modified: time.modified };
+    }
+  } catch {
+    // Times unavailable.
+  }
+  return undefined;
+}
+
+/** Best-effort fetch of last-month download count from the public npm downloads API. */
+async function fetchMonthlyDownloads(packageName: string): Promise<number | undefined> {
+  try {
+    const res = await net.fetch(`https://api.npmjs.org/downloads/point/last-month/${packageName}`, { redirect: 'error' });
+    if (!res.ok) {
+      return undefined;
+    }
+    const json = await res.json();
+    return typeof json?.downloads === 'number' ? json.downloads : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -484,6 +671,12 @@ export async function getRegistryUrl(): Promise<string> {
         console.warn(`[plugins] npmRegistryUrl must be http/https, got "${parsed.protocol}", using default`);
         return DEFAULT_NPM_REGISTRY;
       }
+      // Reject a registry pointing at the user's own machine (SSRF). Private LAN addresses are
+      // intentionally allowed so internal company registries keep working.
+      if (isLoopbackHost(parsed.hostname)) {
+        console.warn(`[plugins] npmRegistryUrl must not target a loopback host "${parsed.hostname}", using default`);
+        return DEFAULT_NPM_REGISTRY;
+      }
     } catch {
       console.warn(`[plugins] Invalid npmRegistryUrl "${customRegistry}", using default`);
       return DEFAULT_NPM_REGISTRY;
@@ -511,6 +704,22 @@ export async function getAllowedTarballHostnames(): Promise<string[]> {
     }
   }
   return defaultAllowedTarballHostnames;
+}
+
+/**
+ * Throws unless the given tarball URL is both on the host allowlist and does not resolve to a
+ * loopback address (re-resolving DNS to defend against rebinding). Used to gate the actual download
+ * in installPlugin. Call this immediately before each network use and re-check the final response
+ * URL so a redirect/rebinding cannot land on an unvalidated host.
+ */
+export async function assertTarballUrlAllowed(rawUrl: string): Promise<void> {
+  const url = new URL(rawUrl);
+  const allowedTarballHostnames = await getAllowedTarballHostnames();
+  if (!allowedTarballHostnames.includes(url.hostname)) {
+    throw new Error(`Tarball must come from an allowed host. Got: ${url.hostname}`);
+  }
+  // Private LAN addresses are intentionally allowed (e.g. internal company registries).
+  await assertNotLoopbackUrl(rawUrl);
 }
 
 /**

@@ -13,6 +13,7 @@ import { GenerateCodeModal } from './components/modals/generate-code-modal';
 import { GitProjectStagingModal } from './components/modals/git-project-staging-modal';
 import { LogoutModal } from './components/modals/logout-modal';
 import { NunjucksModal } from './components/modals/nunjucks-modal';
+import { PluginInstallModal } from './components/modals/plugin-install-modal';
 import { PromptModal } from './components/modals/prompt-modal';
 import { RequestRenderErrorModal } from './components/modals/request-render-error-modal';
 import { ResponseDebugModal } from './components/modals/response-debug-modal';
@@ -33,6 +34,7 @@ const Modals = () => {
         <PromptModal ref={instance => registerModal(instance, 'PromptModal')} />
         <WrapperModal ref={instance => registerModal(instance, 'WrapperModal')} />
         <AskModal ref={instance => registerModal(instance, 'AskModal')} />
+        <PluginInstallModal ref={instance => registerModal(instance, 'PluginInstallModal')} />
         <SelectModal ref={instance => registerModal(instance, 'SelectModal')} />
         <RequestRenderErrorModal ref={instance => registerModal(instance, 'RequestRenderErrorModal')} />
 

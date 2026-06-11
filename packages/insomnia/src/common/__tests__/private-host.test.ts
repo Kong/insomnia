@@ -1,6 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { isPrivateOrLoopbackHost } from '../private-host';
+import { assertNotLoopbackUrl, isLoopbackHost, isPrivateOrLoopbackHost } from '../private-host';
+
+const lookupMock = vi.hoisted(() => vi.fn());
+
+vi.mock('node:dns/promises', () => ({
+  default: { lookup: lookupMock },
+}));
 
 describe('isPrivateOrLoopbackHost', () => {
   describe('localhost', () => {
@@ -81,5 +87,62 @@ describe('isPrivateOrLoopbackHost', () => {
       expect(isPrivateOrLoopbackHost('not-an-ip')).toBe(false);
       expect(isPrivateOrLoopbackHost('')).toBe(false);
     });
+  });
+});
+
+describe('isLoopbackHost', () => {
+  it('treats localhost and *.localhost as loopback', () => {
+    expect(isLoopbackHost('localhost')).toBe(true);
+    expect(isLoopbackHost('app.localhost')).toBe(true);
+  });
+
+  it('treats 127.0.0.0/8, 0.0.0.0/8 and ::1 as loopback', () => {
+    expect(isLoopbackHost('127.0.0.1')).toBe(true);
+    expect(isLoopbackHost('127.255.255.255')).toBe(true);
+    expect(isLoopbackHost('0.0.0.0')).toBe(true);
+    expect(isLoopbackHost('::1')).toBe(true);
+    expect(isLoopbackHost('[::1]')).toBe(true);
+  });
+
+  it('allows private LAN, link-local and ULA addresses (intentionally not loopback)', () => {
+    expect(isLoopbackHost('10.0.0.5')).toBe(false);
+    expect(isLoopbackHost('172.16.0.1')).toBe(false);
+    expect(isLoopbackHost('192.168.1.2')).toBe(false);
+    expect(isLoopbackHost('169.254.169.254')).toBe(false);
+    expect(isLoopbackHost('fc00::1')).toBe(false);
+    expect(isLoopbackHost('fe80::1')).toBe(false);
+  });
+
+  it('allows public addresses and hostnames', () => {
+    expect(isLoopbackHost('8.8.8.8')).toBe(false);
+    expect(isLoopbackHost('example.com')).toBe(false);
+  });
+});
+
+describe('assertNotLoopbackUrl', () => {
+  afterEach(() => {
+    lookupMock.mockReset();
+  });
+
+  it('rejects a literal loopback host before resolving DNS', async () => {
+    await expect(assertNotLoopbackUrl('http://127.0.0.1:4873/x.tgz')).rejects.toThrow(/loopback/);
+    expect(lookupMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects a host that resolves to a loopback address (DNS rebinding)', async () => {
+    lookupMock.mockResolvedValue([{ address: '127.0.0.1', family: 4 }]);
+    await expect(assertNotLoopbackUrl('https://app.localtest.me/x.tgz')).rejects.toThrow(/loopback/);
+  });
+
+  it('allows a private-LAN registry (resolves to a private address)', async () => {
+    lookupMock.mockResolvedValue([{ address: '10.0.0.5', family: 4 }]);
+    const url = await assertNotLoopbackUrl('http://npm.internal.corp/x.tgz');
+    expect(url.hostname).toBe('npm.internal.corp');
+  });
+
+  it('allows a public registry', async () => {
+    lookupMock.mockResolvedValue([{ address: '104.16.0.1', family: 4 }]);
+    const url = await assertNotLoopbackUrl('https://registry.npmjs.org/x.tgz');
+    expect(url.href).toBe('https://registry.npmjs.org/x.tgz');
   });
 });

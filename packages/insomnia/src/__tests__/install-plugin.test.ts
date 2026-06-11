@@ -72,10 +72,26 @@ vi.mock('../main/analytics', () => ({
   },
 }));
 
+const settingsGetMock = vi.hoisted(() => vi.fn());
+
+vi.mock('insomnia-data', () => ({
+  services: {
+    settings: { get: settingsGetMock },
+  },
+}));
+
+const dnsLookupMock = vi.hoisted(() => vi.fn());
+
+vi.mock('node:dns/promises', () => ({
+  default: { lookup: dnsLookupMock },
+}));
+
 import installPlugin, {
+  assertTarballUrlAllowed,
   buildProxyEnv,
   containsOnlyDeprecationWarnings,
   getPluginInfo,
+  getRegistryUrl,
   hasUnexpectedBinaryData,
   isValidProxyUrl,
   runYarnCommand,
@@ -144,6 +160,7 @@ describe('Plugin Installation', () => {
           shasum: 'abc123',
           tarball: 'https://registry.npmjs.org/test-plugin/-/test-plugin-1.0.0.tgz',
         },
+        dependencies: {},
       };
 
       vi.mocked(getPluginInfo).mockImplementation(() => Promise.resolve(mockPluginInfo));
@@ -175,6 +192,7 @@ describe('Plugin Installation', () => {
           shasum: 'abc123',
           tarball: 'https://malicious-site.com/test-plugin.tgz',
         },
+        dependencies: {},
       };
 
       vi.mocked(getPluginInfo).mockImplementation(() => Promise.resolve(mockPluginInfo));
@@ -242,6 +260,7 @@ describe('Plugin Installation', () => {
             shasum: 'abc123',
             tarball: 'https://registry.npmjs.org/test-plugin/-/test-plugin-1.0.0.tgz',
           },
+          dependencies: {},
         },
       };
 
@@ -266,6 +285,7 @@ describe('Plugin Installation', () => {
             shasum: 'abc123',
             tarball: 'https://registry.npmjs.org/test-plugin/-/test-plugin-1.0.0.tgz',
           },
+          dependencies: {},
         },
       };
 
@@ -280,6 +300,57 @@ describe('Plugin Installation', () => {
       });
 
       await expect(getPluginInfo('insomnia-plugin-test')).rejects.toThrow('not an Insomnia plugin');
+    });
+  });
+
+  describe('getRegistryUrl', () => {
+    it('falls back to the default registry when the custom registry is loopback', async () => {
+      settingsGetMock.mockResolvedValue({ npmRegistryUrl: 'http://localhost:4873' });
+      expect(await getRegistryUrl()).toBe('https://registry.npmjs.org/');
+
+      settingsGetMock.mockResolvedValue({ npmRegistryUrl: 'http://127.0.0.1:4873' });
+      expect(await getRegistryUrl()).toBe('https://registry.npmjs.org/');
+    });
+
+    it('keeps a private-LAN company registry', async () => {
+      settingsGetMock.mockResolvedValue({ npmRegistryUrl: 'http://10.0.0.5:4873' });
+      expect(await getRegistryUrl()).toBe('http://10.0.0.5:4873/');
+    });
+
+    it('keeps a public custom registry and normalizes the trailing slash', async () => {
+      settingsGetMock.mockResolvedValue({ npmRegistryUrl: 'https://npm.example.com' });
+      expect(await getRegistryUrl()).toBe('https://npm.example.com/');
+    });
+
+    it('falls back to the default registry for non-http(s) protocols', async () => {
+      settingsGetMock.mockResolvedValue({ npmRegistryUrl: 'ftp://npm.example.com' });
+      expect(await getRegistryUrl()).toBe('https://registry.npmjs.org/');
+    });
+
+    it('uses the default registry when none is configured', async () => {
+      settingsGetMock.mockResolvedValue({ npmRegistryUrl: '' });
+      expect(await getRegistryUrl()).toBe('https://registry.npmjs.org/');
+    });
+  });
+
+  describe('assertTarballUrlAllowed', () => {
+    beforeEach(() => {
+      settingsGetMock.mockResolvedValue({ npmRegistryUrl: '' });
+    });
+
+    it('rejects a host that is not on the allowlist (before any DNS resolution)', async () => {
+      await expect(assertTarballUrlAllowed('https://evil.example.com/x.tgz')).rejects.toThrow(/allowed host/);
+      expect(dnsLookupMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects an allowlisted host that resolves to loopback (DNS rebinding)', async () => {
+      dnsLookupMock.mockResolvedValue([{ address: '127.0.0.1', family: 4 }]);
+      await expect(assertTarballUrlAllowed('https://registry.npmjs.org/x.tgz')).rejects.toThrow(/loopback/);
+    });
+
+    it('allows an allowlisted host that resolves to a public address', async () => {
+      dnsLookupMock.mockResolvedValue([{ address: '104.16.0.1', family: 4 }]);
+      await expect(assertTarballUrlAllowed('https://registry.npmjs.org/x.tgz')).resolves.toBeUndefined();
     });
   });
 

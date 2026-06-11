@@ -98,6 +98,7 @@ export type HandleChannels =
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'
+  | 'getPluginPreview'
   | 'lintSpec'
   | 'bundleSpectralRuleset'
   | 'llm.clearActiveBackend'
