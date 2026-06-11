@@ -33,9 +33,13 @@ const shouldAutoCreateInitialProject = async ({
     return false;
   }
 
-  const organization = await services.organization.get(organizationId);
-
-  if (!organization || !models.organization.isPersonalOrganization(organization)) {
+  try {
+    const organization = await services.organization.get(organizationId);
+    if (!organization || !models.organization.isPersonalOrganization(organization)) {
+      return false;
+    }
+  } catch (error) {
+    console.log('[organizations] Failed to load Organizations', error);
     return false;
   }
 
