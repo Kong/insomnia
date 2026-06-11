@@ -16,10 +16,14 @@ export function useUnsavedChangesGuard(isDirty: boolean, onClose: () => void) {
     onClose();
   }, [onClose]);
 
+  const dismissClose = useCallback(() => setIsConfirmDialogOpen(false), []);
+
   return {
-    isConfirmDialogOpen,
-    setIsConfirmDialogOpen,
     requestClose,
-    confirmClose,
+    confirmDialogProps: {
+      isOpen: isConfirmDialogOpen,
+      onConfirm: confirmClose,
+      onDismiss: dismissClose,
+    },
   };
 }
