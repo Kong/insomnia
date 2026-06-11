@@ -1585,7 +1585,7 @@ describe('Feature: Collection Naming', () => {
 // ─── Feature: Environment Variable Mapping ────────────────────────────────────
 
 describe('Feature: Environment Variable Mapping', () => {
-  it('Scenario: Sync does not create proxy vars when control plane has no proxy_urls', async () => {
+  it('Scenario: Sync writes empty proxy placeholder vars for manual entry', async () => {
     vi.stubGlobal('fetch', mockFetch([makeCp()], [], []));
 
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
@@ -1593,23 +1593,22 @@ describe('Feature: Environment Variable Mapping', () => {
     const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
     const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
     const kvNames = (env.kvPairData ?? []).map((kv: any) => kv.name);
-    expect(kvNames).not.toContain('proxy_host');
-    expect(kvNames).not.toContain('grpc_proxy_host');
-    expect(kvNames).not.toContain('grpcs_proxy_host');
+    expect(kvNames).toContain('proxy_host');
+    expect(kvNames).toContain('grpc_proxy_host');
+    expect(kvNames).toContain('grpcs_proxy_host');
   });
 
   it('Scenario: Re-sync preserves user-entered proxy values and user-added variables', async () => {
     vi.stubGlobal('fetch', mockFetch([makeCp()], [], []));
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    // User manually adds proxy_host and their own variable
+    // User fills in proxy_host and adds their own variable
     const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
     const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
-    const updatedKvPairs = [
-      ...(env.kvPairData ?? []),
-      { id: 'env_proxy_host', name: 'proxy_host', value: 'myproxy.example.com', type: 'string', enabled: true },
-      { id: 'env_api_key', name: 'api_key', value: 'secret-123', type: 'string', enabled: true },
-    ];
+    const updatedKvPairs = (env.kvPairData ?? []).map((kv: any) =>
+      kv.name === 'proxy_host' ? { ...kv, value: 'myproxy.example.com' } : kv,
+    );
+    updatedKvPairs.push({ id: 'env_api_key', name: 'api_key', value: 'secret-123', type: 'string', enabled: true });
     await insoservices.environment.update(env, { kvPairData: updatedKvPairs });
 
     // Re-sync
@@ -1654,17 +1653,16 @@ describe('Feature: Environment Variable Mapping', () => {
   });
 
   it('Scenario: Sync does not overwrite user-entered proxy values with proxy_urls', async () => {
-    // First sync without proxy_urls → no vars created
+    // First sync without proxy_urls → empty vars
     vi.stubGlobal('fetch', mockFetch([makeCp()], [], []));
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
-    // User manually adds proxy_host
+    // User fills in proxy_host manually
     const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
     const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
-    const updatedKvPairs = [
-      ...(env.kvPairData ?? []),
-      { id: 'env_proxy_host', name: 'proxy_host', value: 'user-chosen.example.com', type: 'string', enabled: true },
-    ];
+    const updatedKvPairs = (env.kvPairData ?? []).map((kv: any) =>
+      kv.name === 'proxy_host' ? { ...kv, value: 'user-chosen.example.com' } : kv,
+    );
     await insoservices.environment.update(env, { kvPairData: updatedKvPairs });
 
     // Re-sync with proxy_urls that would provide a different value
@@ -1687,15 +1685,15 @@ describe('Feature: Environment Variable Mapping', () => {
     expect(proxyHost?.value).toBe('user-chosen.example.com');
   });
 
-  it('Scenario: Re-sync creates proxy vars when proxy_urls become available', async () => {
-    // First sync without proxy_urls → no vars created
+  it('Scenario: Re-sync fills empty proxy vars when proxy_urls become available', async () => {
+    // First sync without proxy_urls → empty vars
     vi.stubGlobal('fetch', mockFetch([makeCp()], [], []));
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
     const envWorkspace = (await db.find(models.workspace.type, { scope: 'environment' }))[0];
     const env = await insoservices.environment.getOrCreateForParentId(envWorkspace._id);
     const proxyHost = (env.kvPairData ?? []).find((kv: any) => kv.name === 'proxy_host');
-    expect(proxyHost).toBeUndefined();
+    expect(proxyHost?.value).toBe('');
 
     // Re-sync with proxy_urls now available
     vi.stubGlobal(
