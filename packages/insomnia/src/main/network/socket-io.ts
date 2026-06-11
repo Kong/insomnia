@@ -1,0 +1,640 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import tls from 'node:tls';
+
+import electron, { BrowserWindow } from 'electron';
+import { HttpProxyAgent } from 'http-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import type {
+  BaseSocketIORequest,
+  CookieJar,
+  RequestAuthentication,
+  RequestHeader,
+  SocketIOResponse,
+} from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
+import { v4 as uuidV4 } from 'uuid';
+
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+
+import { version } from '../../../package.json';
+import { jarFromCookies } from '../../common/cookies';
+import { generateId } from '../../common/misc';
+import { filterClientCertificates } from '../../network/certificate';
+import { invariant } from '../../utils/invariant';
+import { setDefaultProtocol } from '../../utils/url/protocol';
+import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
+import { insecureReadFile, secureReadFile } from '../secure-read-file';
+
+export interface SocketIOpenEvent {
+  _id: string;
+  requestId: string;
+  type: 'open';
+  timestamp: number;
+}
+
+export interface SocketIOMessageEvent {
+  _id: string;
+  requestId: string;
+  direction: 'OUTGOING' | 'INCOMING';
+  type: 'message';
+  timestamp: number;
+  data: any[];
+  eventName: string;
+}
+
+export interface SocketIOErrorEvent {
+  _id: string;
+  requestId: string;
+  type: 'error';
+  timestamp: number;
+  message: string;
+  error: any;
+}
+
+export interface SocketIOCloseEvent {
+  _id: string;
+  requestId: string;
+  type: 'close';
+  timestamp: number;
+  reason: string;
+}
+
+export interface SocketIOListenEvent {
+  _id: string;
+  requestId: string;
+  type: 'addEvent' | 'removeEvent';
+  timestamp: number;
+  eventName: string;
+}
+
+export interface SocketIOInfoEvent {
+  _id: string;
+  requestId: string;
+  type: 'info';
+  timestamp: number;
+  message: string;
+}
+
+export type SocketIOEvent =
+  | SocketIOpenEvent
+  | SocketIOMessageEvent
+  | SocketIOErrorEvent
+  | SocketIOCloseEvent
+  | SocketIOListenEvent
+  | SocketIOInfoEvent;
+
+export type SocketIOEventLog = SocketIOEvent[];
+
+const SocketIOConnections = new Map<string, Socket>();
+const requestIdToResponseIdMap = new Map<string, string>();
+const eventLogFileStreams = new Map<string, fs.WriteStream>();
+const timelineFileStreams = new Map<string, fs.WriteStream>();
+
+const protocolName = 'socketIO';
+const getEventNotificationChannel = (responseId: string) =>
+  `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
+
+const sendToOpenWindows = (channel: string, ...args: unknown[]) => {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) {
+      continue;
+    }
+    window.webContents.send(channel, ...args);
+  }
+};
+
+const writeEventLogAndNotify = ({
+  requestId,
+  data,
+  clearRequestIdMap = false,
+}: {
+  requestId: string;
+  data: any;
+  clearRequestIdMap?: boolean;
+}) => {
+  eventLogFileStreams.get(requestId)?.write(data, () => {
+    const resId = requestIdToResponseIdMap.get(requestId);
+    if (!resId) {
+      return;
+    }
+
+    // notify all renderers of new event has been received
+    const notifyChannel = getEventNotificationChannel(resId);
+    sendToOpenWindows(notifyChannel);
+    if (clearRequestIdMap) {
+      // clean up maps after last event has been written to file
+      requestIdToResponseIdMap.delete(requestId);
+    }
+  });
+};
+
+const buildTimeline = (url: string, path?: string) => {
+  const timeline = [
+    { value: `Connecting to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Handshake path: ${path || '/socket.io'}`, name: 'Text', timestamp: Date.now() },
+    { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+  ];
+  return timeline;
+};
+
+interface OpenSocketIORequestOptions {
+  requestId: string;
+  workspaceId: string;
+  url: string;
+  query: Record<string, string>;
+  headers: RequestHeader[];
+  authentication: RequestAuthentication;
+  cookieJar: CookieJar;
+  path?: string;
+  initialPayload?: string;
+}
+
+const getCertificates = async ({
+  workspaceId,
+  url,
+  requestId,
+}: {
+  workspaceId: string;
+  url: string;
+  requestId: string;
+}) => {
+  // attach certificates to the request
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
+  const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
+  // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  // allow to read the file as it is chosen by user
+  const caCertificate =
+    (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
+
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
+  const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
+  const pemCertificates: string[] = [];
+  const pemCertificateKeys: string[] = [];
+  const pfxCertificates: string[] = [];
+
+  filteredClientCertificates.forEach(clientCertificate => {
+    const { cert, key, pfx } = clientCertificate;
+
+    if (cert) {
+      timelineFileStreams
+        .get(requestId)
+        ?.write(
+          JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n',
+        );
+      pemCertificates.push(fs.readFileSync(cert, 'utf8'));
+    }
+
+    if (key) {
+      timelineFileStreams
+        .get(requestId)
+        ?.write(
+          JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
+        );
+      pemCertificateKeys.push(fs.readFileSync(key, 'utf8'));
+    }
+
+    if (pfx) {
+      timelineFileStreams
+        .get(requestId)
+        ?.write(
+          JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
+        );
+      pfxCertificates.push(fs.readFileSync(pfx, 'utf8'));
+    }
+  });
+
+  return {
+    caCertificate,
+    pemCertificates,
+    pemCertificateKeys,
+    pfxCertificates,
+    passphrase: filteredClientCertificates[0]?.passphrase || '',
+  };
+};
+
+const getProxyAgent = (url: string, httpProxy: string, httpsProxy: string) => {
+  const useHttpsProxy = url.startsWith('wss:') || url.startsWith('https:');
+  return useHttpsProxy
+    ? new HttpsProxyAgent(setDefaultProtocol(httpsProxy))
+    : new HttpProxyAgent(setDefaultProtocol(httpProxy));
+};
+
+const createErrorResponse = async (
+  responseId: string,
+  requestId: string,
+  environmentId: string | null,
+  timelinePath: string,
+  message: string,
+) => {
+  const settings = await services.settings.get();
+  const responsePatch = {
+    _id: responseId,
+    parentId: requestId,
+    environmentId: environmentId,
+    timelinePath,
+    statusMessage: 'Error',
+    error: message,
+  };
+  const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+};
+
+const openSocketIOConnection = async (
+  _event: Electron.IpcMainInvokeEvent,
+  options: OpenSocketIORequestOptions,
+): Promise<void> => {
+  const start = performance.now();
+  const existingConnection = SocketIOConnections.get(options.requestId);
+
+  if (existingConnection) {
+    console.warn('Connection still open');
+    return;
+  }
+
+  const request = await services.socketIORequest.getById(options.requestId);
+  const responseId = generateId('res');
+  if (!request) {
+    return;
+  }
+  const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
+
+  const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
+  eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+  const timelinePath = path.join(responsesDir, responseId + '.timeline');
+  timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
+
+  // fallback to base environment
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(options.workspaceId));
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+  const responseEnvironmentId = environment ? environment._id : null;
+
+  try {
+    if (!options.url) {
+      throw new Error('URL is required');
+    }
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
+
+    const reduceArrayToLowerCaseKeyedDictionary = (
+      acc: Record<string, string>,
+      { name, value }: BaseSocketIORequest['headers'][0],
+    ) => ({ ...acc, [name.toLowerCase() || '']: value || '' });
+    const headers = options.headers;
+    const url = options.url;
+
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
+    const lowerCasedEnabledHeaders = headers
+      .filter(({ name, disabled }) => Boolean(name) && !disabled)
+      .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+    if (!request.disableUserAgentHeader && !hasUserAgentHeader) {
+      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+    }
+
+    // attach cookies to the request
+    if (request.settingSendCookies && options.cookieJar.cookies.length) {
+      const jar = jarFromCookies(options.cookieJar.cookies);
+      const cookieHeader = jar.getCookieStringSync(options.url);
+      lowerCasedEnabledHeaders['cookie'] = cookieHeader;
+    }
+
+    const { caCertificate, pemCertificates, pemCertificateKeys, pfxCertificates, passphrase } = await getCertificates({
+      workspaceId: options.workspaceId,
+      url: options.url,
+      requestId: options.requestId,
+    });
+    const settings = await services.settings.get();
+
+    const socketIOoptions: Partial<ManagerOptions & SocketOptions> = {
+      extraHeaders: lowerCasedEnabledHeaders,
+      query: options.query,
+      ca: caCertificate,
+      passphrase,
+      // @ts-expect-error: Type mismatch for agent field
+      agent: settings.proxyEnabled ? getProxyAgent(url, settings.httpProxy, settings.httpsProxy) : false,
+    };
+
+    if (pfxCertificates.length) {
+      socketIOoptions.pfx = pfxCertificates.join('\n');
+    } else {
+      socketIOoptions.cert = pemCertificates.join('\n');
+      socketIOoptions.key = pemCertificateKeys.join('\n');
+    }
+
+    if (options.authentication && options.authentication.type === 'singleToken' && !options.authentication.disabled) {
+      socketIOoptions.auth = {
+        token: options.authentication.token || '',
+      };
+    }
+
+    if (options.path) {
+      socketIOoptions.path = options.path;
+    }
+
+    const timeline = buildTimeline(url, options.path);
+    timeline.forEach(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+
+    const socket = SocketIOClient(url, socketIOoptions);
+    SocketIOConnections.set(options.requestId, socket);
+    const openedEvents = request.eventListeners.filter(event => event.isOpen && event.eventName);
+
+    socket.on('connect', async () => {
+      sendToOpenWindows(readyStateChannel, socket.connected);
+
+      const openEvent: SocketIOpenEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        type: 'open',
+        timestamp: Date.now(),
+      };
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(openEvent) + '\n' });
+
+      if (!openedEvents.length) {
+        const infoEvent: SocketIOInfoEvent = {
+          _id: uuidV4(),
+          requestId: options.requestId,
+          type: 'info',
+          message: 'Add event listeners to receive messages',
+          timestamp: Date.now(),
+        };
+        writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(infoEvent) + '\n' });
+      }
+
+      const responsePatch: Partial<SocketIOResponse> = {
+        _id: responseId,
+        parentId: request._id,
+        environmentId: responseEnvironmentId,
+        timelinePath,
+        eventLogPath: responseBodyPath,
+        elapsedTime: performance.now() - start,
+        url: url,
+      };
+
+      const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+    });
+
+    const engine = socket.io.engine;
+    engine.once('upgrade', () => {
+      timelineFileStreams
+        .get(request._id)
+        ?.write(
+          JSON.stringify({ value: `Upgraded to ${engine.transport.name}`, name: 'Text', timestamp: Date.now() }) + '\n',
+        );
+    });
+
+    socket.on('disconnect', async (reason, details) => {
+      console.log(reason, details);
+      const closeEvent: SocketIOCloseEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        reason,
+        type: 'close',
+        timestamp: Date.now(),
+      };
+      deleteRequestMaps(request._id, reason, closeEvent);
+      sendToOpenWindows(readyStateChannel, socket.connected);
+    });
+
+    socket.on('connect_error', error => {
+      console.log('connect_error', error.message);
+      socket.close();
+      const errorEvent: SocketIOErrorEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        type: 'error',
+        message: error.message,
+        error,
+        timestamp: Date.now(),
+      };
+      deleteRequestMaps(request._id, error.message, errorEvent);
+      createErrorResponse(
+        responseId,
+        request._id,
+        responseEnvironmentId,
+        timelinePath,
+        error.message || 'Something went wrong',
+      );
+    });
+
+    // listen to all open events when the connection is opened
+    openedEvents.forEach(event => {
+      addSocketIOListener({ eventName: event.eventName, requestId: request._id });
+    });
+  } catch (e) {
+    console.error('unhandled error:', e);
+    const errorEvent: SocketIOErrorEvent = {
+      _id: uuidV4(),
+      requestId: options.requestId,
+      type: 'error',
+      message: e.message,
+      error: e,
+      timestamp: Date.now(),
+    };
+    deleteRequestMaps(request._id, e.message, errorEvent);
+    createErrorResponse(
+      responseId,
+      request._id,
+      responseEnvironmentId,
+      timelinePath,
+      e.message || 'Something went wrong',
+    );
+  }
+};
+
+const deleteRequestMaps = async (
+  requestId: string,
+  message: string,
+  event?: SocketIOCloseEvent | SocketIOErrorEvent,
+) => {
+  if (event) {
+    writeEventLogAndNotify({
+      requestId: requestId,
+      data: JSON.stringify(event) + '\n',
+      clearRequestIdMap: true,
+    });
+  }
+  eventLogFileStreams.get(requestId)?.end();
+  eventLogFileStreams.delete(requestId);
+  timelineFileStreams
+    .get(requestId)
+    ?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineFileStreams.get(requestId)?.end();
+  timelineFileStreams.delete(requestId);
+  SocketIOConnections.delete(requestId);
+};
+
+const getSocketIOReadyState = async (options: { requestId: string }): Promise<boolean> => {
+  return Boolean(SocketIOConnections.get(options.requestId)?.connected);
+};
+
+const sendPayload = async (
+  socket: Socket,
+  options: { requestId: string; eventName: string; args: any[]; ack?: boolean },
+): Promise<void> => {
+  const { eventName = 'message', args, ack } = options;
+  if (!ack) {
+    socket.emit(eventName, ...args);
+  } else {
+    socket.emit(eventName, ...args, (...ack: any[]) => {
+      console.log('ack response', ...ack);
+      const ackEvent: SocketIOMessageEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        data: ack,
+        direction: 'INCOMING',
+        type: 'message',
+        timestamp: Date.now(),
+        eventName,
+      };
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(ackEvent) + '\n' });
+    });
+  }
+
+  const lastMessage: SocketIOMessageEvent = {
+    _id: uuidV4(),
+    requestId: options.requestId,
+    data: args,
+    direction: 'OUTGOING',
+    type: 'message',
+    timestamp: Date.now(),
+    eventName,
+  };
+  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(lastMessage) + '\n' });
+};
+
+const sendWebSocketEvent = async (options: {
+  requestId: string;
+  eventName: string;
+  args: any[];
+  ack?: boolean;
+}): Promise<void> => {
+  const socket = SocketIOConnections.get(options.requestId);
+
+  if (!socket) {
+    console.warn('No socket found for requestId: ' + options.requestId);
+    return;
+  }
+
+  sendPayload(socket, options);
+};
+
+const closeSocketIOConnection = (options: { requestId: string }): void => {
+  const socket = SocketIOConnections.get(options.requestId);
+  if (!socket) {
+    return;
+  }
+  socket.close();
+};
+
+const closeAllSocketIOConnections = (): void => SocketIOConnections.forEach(socket => socket.close());
+
+const addSocketIOListener = (options: { eventName: string; requestId: string }) => {
+  console.log('start listen event:', options.eventName);
+  const socket = SocketIOConnections.get(options.requestId);
+
+  if (!socket) {
+    console.warn('No socket found for requestId: ' + options.requestId);
+    return;
+  }
+
+  const onEvent: SocketIOListenEvent = {
+    _id: uuidV4(),
+    requestId: options.requestId,
+    type: 'addEvent',
+    timestamp: Date.now(),
+    eventName: options.eventName,
+  };
+  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(onEvent) + '\n' });
+
+  socket.on(options.eventName, (...message: any[]) => {
+    console.log('received message', message);
+    const messageEvent: SocketIOMessageEvent = {
+      _id: uuidV4(),
+      requestId: options.requestId,
+      data: message,
+      type: 'message',
+      direction: 'INCOMING',
+      timestamp: Date.now(),
+      eventName: options.eventName,
+    };
+    writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
+  });
+};
+
+const removeSocketIOListener = (options: { eventName: string; requestId: string }) => {
+  console.log('off listen event:', options.eventName);
+  const socket = SocketIOConnections.get(options.requestId);
+
+  if (!socket) {
+    console.warn('No socket found for requestId: ' + options.requestId);
+    return;
+  }
+  const offEvent: SocketIOListenEvent = {
+    _id: uuidV4(),
+    requestId: options.requestId,
+    type: 'removeEvent',
+    timestamp: Date.now(),
+    eventName: options.eventName,
+  };
+  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(offEvent) + '\n' });
+  socket.off(options.eventName);
+};
+
+const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[]> => {
+  const response = await services.socketIOResponse.getById(options.responseId);
+  if (!response || !response.eventLogPath) {
+    return [];
+  }
+  const body = await secureReadFile(response.eventLogPath);
+  return (
+    body
+      .split('\n')
+      .filter(e => e?.trim())
+      // Parse the message
+      .map(e => JSON.parse(e))
+      // Reverse the list of messages so that we get the latest message first
+      .reverse() || []
+  );
+};
+
+export interface SocketIOBridgeAPI {
+  open: (options: OpenSocketIORequestOptions) => void;
+  close: typeof closeSocketIOConnection;
+  closeAll: typeof closeAllSocketIOConnections;
+  readyState: {
+    getCurrent: typeof getSocketIOReadyState;
+  };
+  event: {
+    findMany: typeof findMany;
+    send: typeof sendWebSocketEvent;
+    on: typeof addSocketIOListener;
+    off: typeof removeSocketIOListener;
+  };
+}
+export const registerSocketIOHandlers = () => {
+  ipcMainHandle('socketIO.open', openSocketIOConnection);
+  ipcMainHandle('socketIO.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) =>
+    sendWebSocketEvent(options),
+  );
+  ipcMainHandle('socketIO.readyState', (_, options: Parameters<typeof getSocketIOReadyState>[0]) =>
+    getSocketIOReadyState(options),
+  );
+  ipcMainOn('socketIO.close', (_, options: Parameters<typeof closeSocketIOConnection>[0]) =>
+    closeSocketIOConnection(options),
+  );
+  ipcMainOn('socketIO.closeAll', closeAllSocketIOConnections);
+  ipcMainOn('socketIO.event.on', (_, options: Parameters<typeof addSocketIOListener>[0]) =>
+    addSocketIOListener(options),
+  );
+  ipcMainOn('socketIO.event.off', (_, options: Parameters<typeof removeSocketIOListener>[0]) =>
+    removeSocketIOListener(options),
+  );
+  ipcMainHandle('socketIO.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+};
+
+electron.app.on('window-all-closed', closeAllSocketIOConnections);

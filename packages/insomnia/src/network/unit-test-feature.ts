@@ -1,5 +1,5 @@
-import { stats } from '../models';
-import { getBodyBuffer } from '../models/response';
+import { services } from 'insomnia-data';
+
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import {
   fetchRequestData,
@@ -11,7 +11,7 @@ import {
 
 export function getSendRequestCallback() {
   return async function sendRequest(requestId: string) {
-    stats.incrementExecutedRequests();
+    services.stats.incrementExecutedRequests();
     // NOTE: unit tests will use the UI selected environment
     const {
       request,
@@ -43,7 +43,7 @@ export function getSendRequestCallback() {
       (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
       [],
     );
-    const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
+    const bodyBuffer = (await services.helpers.getResponseBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
     return { status, statusMessage, data, headers, responseTime };
   };

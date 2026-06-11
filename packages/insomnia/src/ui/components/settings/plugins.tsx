@@ -1,9 +1,8 @@
-import * as path from 'node:path';
-
 import React, { type FC, useEffect, useState } from 'react';
 import {
   Button,
   Checkbox,
+  FieldError,
   FileTrigger,
   GridList,
   GridListItem,
@@ -13,14 +12,15 @@ import {
   TextField,
 } from 'react-aria-components';
 
+import { useRootLoaderData } from '~/root';
+
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import type { Plugin } from '../../../plugins/index';
-import { getPlugins } from '../../../plugins/index';
-import { reload } from '../../../templating/index';
-import { validatePluginName } from '../../../utils/plugin';
+import type { SerializablePlugin } from '../../../plugins/bridge-types';
+import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
+import { reload } from '../../../templating/renderer-safe';
+import { validatePluginName } from '../../../utils/plugin-name';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
@@ -28,18 +28,38 @@ import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
 import { CreatePluginModal } from './create-plugin-modal';
 
+const getNpmRegistryUrlValidationError = (url: string): string | null => {
+  if (!url) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return 'Enter a valid HTTP or HTTPS URL.';
+    }
+
+    return null;
+  } catch {
+    return 'Enter a valid HTTP or HTTPS URL.';
+  }
+};
+
 interface State {
-  plugins: Plugin[];
+  plugins: SerializablePlugin[];
   npmPluginValue: string;
   error: Error | null;
   installPluginErrMsg: string;
   isInstallingFromNpm: boolean;
   isRefreshingPlugins: boolean;
   pluginNodeExtraCerts: string;
+  npmRegistryUrl: string;
+  npmRegistryUrlError: string | null;
 }
 
 export const Plugins: FC = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const [showCreatePluginModal, setShowCreatePluginModal] = useState(false);
 
   const [
@@ -51,6 +71,8 @@ export const Plugins: FC = () => {
       isRefreshingPlugins,
       npmPluginValue,
       pluginNodeExtraCerts,
+      npmRegistryUrl,
+      npmRegistryUrlError,
     },
     setState,
   ] = useState<State>({
@@ -61,6 +83,8 @@ export const Plugins: FC = () => {
     isInstallingFromNpm: false,
     isRefreshingPlugins: false,
     pluginNodeExtraCerts: settings.pluginNodeExtraCerts,
+    npmRegistryUrl: settings.npmRegistryUrl,
+    npmRegistryUrlError: null,
   });
 
   // If all plugins are enabled, we show the checked state
@@ -74,13 +98,21 @@ export const Plugins: FC = () => {
   }, [settings.pluginNodeExtraCerts]);
 
   useEffect(() => {
+    setState(state => ({ ...state, npmRegistryUrl: settings.npmRegistryUrl, npmRegistryUrlError: null }));
+  }, [settings.npmRegistryUrl]);
+
+  useEffect(() => {
     handleReloadPlugins();
   }, [settings.pluginConfig]);
 
   async function handleReloadPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
-    // Get and reload plugins
-    const plugins = await getPlugins(true);
+    await pluginsBridge.reloadPlugins();
+    const allPlugins = (await pluginsBridge.getPlugins()) as SerializablePlugin[];
+    const plugins = allPlugins.filter(
+      // Filter out pre-bundled plugins
+      p => p.directory,
+    );
 
     reload();
 
@@ -94,31 +126,6 @@ export const Plugins: FC = () => {
       <p className="notice info no-margin-top">
         Plugins is still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
-
-      <div className="notice warning margin-bottom text-left">
-        <div className="selectable force-pre-wrap flex flex-col gap-2">
-          <p>
-            Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain
-            disabled.
-          </p>
-          <Checkbox
-            slot={null}
-            isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
-            onChange={isSelected => {
-              patchSettings({ pluginsAllowElevatedAccess: isSelected });
-            }}
-            className="group flex h-full items-center gap-2 p-0"
-          >
-            <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
-              <Icon
-                icon="check"
-                className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
-              />
-            </div>
-            <span className="text-sm font-semibold">Allow elevated access for plugins</span>
-          </Checkbox>
-        </div>
-      </div>
 
       <div className="flex flex-col gap-6">
         {(error || installPluginErrMsg) && (
@@ -155,7 +162,7 @@ export const Plugins: FC = () => {
                 <TextField
                   aria-label='"Plugin Name"'
                   isRequired
-                  className="group relative flex max-w-full flex-shrink-0 flex-grow flex-col gap-2 overflow-hidden"
+                  className="group relative flex max-w-full shrink-0 grow flex-col gap-2 overflow-hidden"
                   isDisabled={isInstallingFromNpm}
                   type="text"
                   value={npmPluginValue}
@@ -166,11 +173,11 @@ export const Plugins: FC = () => {
                   <Input
                     placeholder="e.g. insomnia-plugin-example"
                     autoFocus
-                    className="flex h-[--line-height-xs] w-full items-center rounded-[--radius-md] border border-solid border-[--hl-md] bg-[--hl-xxs] p-[--padding-sm] text-[--color-font] focus:border-[--hl-lg] focus:bg-transparent"
+                    className="flex h-(--line-height-xs) w-full items-center rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm) text-(--color-font) focus:border-(--hl-lg) focus:bg-transparent"
                   />
                 </TextField>
                 <Button
-                  className="flex h-full w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
                   isDisabled={isInstallingFromNpm}
                   type="submit"
                   onPress={async () => {
@@ -214,7 +221,7 @@ export const Plugins: FC = () => {
                 </Button>
               </div>
             </div>
-            <Label slot="description" className="p-0 text-sm text-[--hl]">
+            <Label slot="description" className="p-0 text-sm text-(--hl)">
               Plugin name must start with insomnia-plugin-
             </Label>
           </div>
@@ -244,7 +251,7 @@ export const Plugins: FC = () => {
               </Tooltip>
             </div>
             <Label className="p-0 text-sm font-semibold" slot="description">
-              <span className="text-[--hl]">Plugin installation trusted certificates file</span>
+              <span className="text-(--hl)">Plugin installation trusted certificates file</span>
             </Label>
           </div>
 
@@ -253,7 +260,7 @@ export const Plugins: FC = () => {
               <div className="flex w-full items-center justify-center">
                 <label
                   htmlFor="dropzone-file"
-                  className="flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[--hl-md] bg-[--hl-xxs] hover:bg-transparent focus:border-[--hl-lg]"
+                  className="flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-(--hl-md) bg-(--hl-xxs) hover:bg-transparent focus:border-(--hl-lg)"
                 >
                   <FileTrigger
                     allowsMultiple={false}
@@ -270,7 +277,7 @@ export const Plugins: FC = () => {
                     }}
                   >
                     <Button>
-                      <div className="pointer-events-none flex flex-col items-center justify-center p-8 text-[--hl-xl]">
+                      <div className="pointer-events-none flex flex-col items-center justify-center p-8 text-(--hl-xl)">
                         <Icon icon="upload" className="mb-2 h-5 w-5" />
                         <p className="text pointer-events-none mb-2 text-sm">
                           <span className="font-bold">Click to upload</span> or drag and drop
@@ -280,7 +287,7 @@ export const Plugins: FC = () => {
                   </FileTrigger>
                 </label>
               </div>
-              <Label slot="description" className="p-0 text-sm text-[--hl]">
+              <Label slot="description" className="p-0 text-sm text-(--hl)">
                 Supported Formats: ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})
               </Label>
             </div>
@@ -292,15 +299,15 @@ export const Plugins: FC = () => {
                 <TextField
                   name="name"
                   isRequired
-                  className="group relative flex max-w-full flex-shrink-0 flex-grow flex-col gap-2 overflow-hidden"
+                  className="group relative flex max-w-full shrink-0 grow flex-col gap-2 overflow-hidden"
                 >
                   <Input
                     value={pluginNodeExtraCerts}
-                    className="flex h-[--line-height-xs] w-full items-center rounded-[--radius-md] border border-solid border-[--hl-md] bg-[--hl-xxs] p-[--padding-sm] text-[--color-font] focus:border-[--hl-lg] focus:bg-transparent"
+                    className="flex h-(--line-height-xs) w-full items-center rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm) text-(--color-font) focus:border-(--hl-lg) focus:bg-transparent"
                   />
                 </TextField>
                 <Button
-                  className="flex h-[--line-height-xs] items-center justify-center rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-(--line-height-xs) items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-md) text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => {
                     patchSettings({ pluginNodeExtraCerts: '' });
                   }}
@@ -310,6 +317,76 @@ export const Plugins: FC = () => {
               </div>
             </div>
           )}
+        </div>
+        <div className="flex w-full flex-col">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <Label className="text-lg font-bold" slot="label">
+                npm Registry
+              </Label>
+
+              <Tooltip
+                className="cursor-pointer pt-2"
+                message="Set a custom npm registry URL (mirror) for plugin installation. Useful in corporate environments where direct npm access is restricted."
+              >
+                <i className="fa fa-info-circle" />
+              </Tooltip>
+            </div>
+            <Label className="p-0 text-sm font-semibold" slot="description">
+              <span className="text-(--hl)">Custom npm registry URL for plugin installation</span>
+            </Label>
+          </div>
+          <div className="mt-2 flex flex-col gap-2">
+            <div className="flex w-full gap-2">
+              <TextField
+                aria-label="npm Registry URL"
+                className="group relative flex max-w-full shrink-0 grow flex-col gap-2 overflow-hidden"
+                isInvalid={!!npmRegistryUrlError}
+                value={npmRegistryUrl}
+                onChange={value => {
+                  setState(state => ({ ...state, npmRegistryUrl: value, npmRegistryUrlError: null }));
+                }}
+              >
+                <Input
+                  placeholder="https://registry.npmjs.org/"
+                  className={({ isInvalid }) =>
+                    `flex h-(--line-height-xs) w-full items-center rounded-md border border-solid bg-(--hl-xxs) p-(--padding-sm) text-(--color-font) focus:border-(--hl-lg) focus:bg-transparent ${isInvalid ? 'border-(--color-danger)' : 'border-(--hl-md)'}`
+                  }
+                  onBlur={() => {
+                    const trimmedRegistryUrl = npmRegistryUrl.trim();
+                    const validationError = getNpmRegistryUrlValidationError(trimmedRegistryUrl);
+
+                    if (validationError) {
+                      setState(state => ({ ...state, npmRegistryUrlError: validationError }));
+                      return;
+                    }
+
+                    setState(state => ({
+                      ...state,
+                      npmRegistryUrl: trimmedRegistryUrl,
+                      npmRegistryUrlError: null,
+                    }));
+                    patchSettings({ npmRegistryUrl: trimmedRegistryUrl });
+                  }}
+                />
+                <FieldError className="text-xs text-(--color-danger)">{npmRegistryUrlError}</FieldError>
+              </TextField>
+              {npmRegistryUrl && (
+                <Button
+                  className="flex h-(--line-height-xs) items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-md) text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  onPress={() => {
+                    setState(state => ({ ...state, npmRegistryUrl: '', npmRegistryUrlError: null }));
+                    patchSettings({ npmRegistryUrl: '' });
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+            <Label slot="description" className="p-0 text-sm text-(--hl)">
+              Leave empty to use the default npm registry (https://registry.npmjs.org/)
+            </Label>
+          </div>
         </div>
         <Separator className="my-4" />
         <div className="flex w-full flex-col">
@@ -321,7 +398,7 @@ export const Plugins: FC = () => {
             {plugins.length > 0 && (
               <div className="flex flex-1 items-center justify-end gap-2">
                 <Button
-                  className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   isDisabled={isRefreshingPlugins}
                   onPress={() => {
                     handleReloadPlugins();
@@ -331,7 +408,7 @@ export const Plugins: FC = () => {
                 </Button>
 
                 <Button
-                  className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => setShowCreatePluginModal(true)}
                   isDisabled={isRefreshingPlugins}
                 >
@@ -354,25 +431,25 @@ export const Plugins: FC = () => {
                             acc[plugin.name] = { ...plugin.config, disabled: !isSelected };
                             return acc;
                           },
-                          {} as Record<string, Plugin['config']>,
+                          {} as Record<string, SerializablePlugin['config']>,
                         );
 
                         patchSettings({ pluginConfig: { ...settings.pluginConfig, ...config } });
                       }}
                       className="group flex h-full items-center p-0"
                     >
-                      <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                      <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
                         <Icon
                           icon={!isAllPluginsSelected ? 'minus' : 'check'}
-                          className="h-3 w-3 opacity-0 group-data-[indeterminate]:text-[--color-success] group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                          className="h-3 w-3 opacity-0 group-data-indeterminate:text-(--color-success) group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
                         />
                       </div>
                     </Checkbox>
-                    <span className="text-xs font-bold uppercase text-[--hl-xl]">Name</span>
+                    <span className="text-xs font-bold text-(--hl-xl) uppercase">Name</span>
                   </div>
                   <div className="flex items-center gap-6">
-                    <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Version</span>
-                    <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Folder</span>
+                    <span className="w-[10ch] text-center text-xs font-bold text-(--hl-xl) uppercase">Version</span>
+                    <span className="w-[10ch] text-center text-xs font-bold text-(--hl-xl) uppercase">Folder</span>
                   </div>
                 </div>
                 <Separator className="mt-2" />
@@ -385,10 +462,10 @@ export const Plugins: FC = () => {
               className="flex flex-col"
               renderEmptyState={() => (
                 <div className="flex h-36 flex-col items-center">
-                  <h3 className="mt-2 font-semibold text-[--hl-xl]">No plugins</h3>
-                  <p className="mt-1 text-sm text-[--hl-xl]">Get started by creating a new project.</p>
+                  <h3 className="mt-2 font-semibold text-(--hl-xl)">No plugins</h3>
+                  <p className="mt-1 text-sm text-(--hl-xl)">Get started by creating a new project.</p>
                   <Button
-                    className="mt-4 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="mt-4 flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={() => setShowCreatePluginModal(true)}
                     isDisabled={isRefreshingPlugins}
                   >
@@ -398,16 +475,15 @@ export const Plugins: FC = () => {
               )}
             >
               {plugin => {
-                const link = path.resolve(
-                  plugin.name.startsWith('insomnia-plugin-') ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE,
-                  plugin.name,
-                );
+                const link = plugin.name.startsWith('insomnia-plugin-')
+                  ? PLUGIN_HUB_BASE
+                  : NPM_PACKAGE_BASE + '/' + plugin.name;
 
                 return (
                   <GridListItem
                     textValue={plugin.name}
                     id={plugin.name}
-                    className="flex h-[--line-height-sm] items-center gap-2 rounded-sm pl-2 odd:bg-[--hl-xxs]"
+                    className="flex h-(--line-height-sm) items-center gap-2 rounded-xs pl-2 odd:bg-(--hl-xxs)"
                     data-testid={plugin.name}
                   >
                     <div className="flex flex-1 items-center gap-3">
@@ -424,10 +500,10 @@ export const Plugins: FC = () => {
                           });
                         }}
                       >
-                        <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                        <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
                           <Icon
                             icon="check"
-                            className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                            className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
                           />
                         </div>
                       </Checkbox>
@@ -472,22 +548,21 @@ export const Plugins: FC = () => {
         </div>
 
         <div className="mt-2 flex w-full justify-center">
-          <span className="text-sm text-[--hl]">
+          <span className="text-sm text-(--hl)">
             Need more plugins?{' '}
             <Button
-              className="text-[var(--color-surprise)] underline"
+              className="text-(--color-surprise) underline"
               onPress={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
             >
               Browse Plugin Hub
             </Button>{' '}
             or{' '}
             <Button
-              className="text-[var(--color-surprise)] underline"
-              onPress={() =>
-                window.shell.showItemInFolder(
-                  path.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
-                )
-              }
+              className="text-(--color-surprise) underline"
+              onPress={async () => {
+                await window.main.readOrCreateDataDir({ folder: 'plugins' });
+                window.shell.showItemInFolder(window.path.resolve(window.app.getPath('userData'), 'plugins'));
+              }}
             >
               Reveal Plugins Folder
             </Button>{' '}

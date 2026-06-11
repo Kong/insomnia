@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: test chains
 meta:
   id: wrk_99f6f391d4564778a68e3eed275b69d6
@@ -41,8 +42,7 @@ collection:
     method: GET
     body:
       mimeType: text/plain
-      text: "{% response 'body', 'req_2f12c17ddab14f22ae962c73097aa5a1',
-        'b64::JC5kYXRh::46b', 'always', 60 %} and second"
+      text: "{% response 'body', 'req_2f12c17ddab14f22ae962c73097aa5a1', 'b64::JC5kYXRh::46b', 'always', 60 %} and second"
     headers:
       - name: Content-Type
         value: text/plain
@@ -67,8 +67,7 @@ collection:
     method: GET
     body:
       mimeType: text/plain
-      text: "{% response 'body', 'req_2a2e2c0ed386426597388319f608ca6b',
-        'b64::JC5kYXRh::46b', 'always', 60 %} and third"
+      text: "{% response 'body', 'req_2a2e2c0ed386426597388319f608ca6b', 'b64::JC5kYXRh::46b', 'always', 60 %} and third"
     headers:
       - name: Content-Type
         value: text/plain

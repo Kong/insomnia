@@ -198,6 +198,6 @@ describe('test CookieJar', () => {
 
     const upsertedC1 = new Cookie({ key: 'c1', value: 'v1upserted' });
     cookieList.upsert(upsertedC1);
-    expect(cookieList.one('c1')).toEqual(upsertedC1);
+    expect(cookieList.one('c1')).toEqual(upsertedC1.valueOf());
   });
 });

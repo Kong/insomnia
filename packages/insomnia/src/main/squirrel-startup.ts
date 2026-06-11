@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
-import log from '../common/log';
+import log from './log';
 
 function run(args: readonly string[] | undefined, done: (...args: any[]) => void) {
   const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');

@@ -1,12 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { type BaseModel, types as modelTypes } from '../models';
-import * as models from '../models';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import { getBodyBuffer } from '../models/response';
-import type { Settings } from '../models/settings';
+import type { BaseModel, Environment, Settings, UserUploadEnvironment } from 'insomnia-data';
+import { database, initDatabase, services } from 'insomnia-data';
+import { createNedbDatabase } from 'insomnia-data/node';
+
 import {
+  defaultSendActionRuntime,
   fetchRequestData,
   responseTransform,
   sendCurlAndWriteTimeline,
@@ -14,12 +14,14 @@ import {
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
-import { defaultSendActionRuntime } from '../ui/routes/request';
-import { database } from './database';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
-type SettingsOverride = Pick<Settings, 'validateSSL'>;
+interface SettingsOverride {
+  validateSSL?: Settings['validateSSL'];
+  dataFolders?: Settings['dataFolders'];
+  timeout?: Settings['timeout'];
+}
 const wrapAroundIterationOverIterationData = (
   list?: UserUploadEnvironment[],
   currentIteration?: number,
@@ -42,27 +44,31 @@ export async function getSendRequestCallbackMemDb(
   iterationCount?: number,
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
-  await database.init(
-    modelTypes(),
+  await initDatabase(
+    createNedbDatabase(),
     {
       inMemoryOnly: true,
     },
     true,
-    () => {},
   );
+
+  // First, upsert all docs from memDB (which may include Settings from fixtures)
   const docs: BaseModel[] = [];
-
-  const settings = await models.settings.getOrCreate();
-  docs.push({ ...settings, ...settingsOverrides });
-
   for (const type of Object.keys(memDB)) {
     for (const doc of memDB[type]) {
       docs.push(doc);
     }
   }
-
   await database.batchModifyDocs({
     upsert: docs,
+    remove: [],
+  });
+
+  // Now get settings (may come from fixtures) and merge with overrides
+  const settings = await services.settings.getOrCreate();
+  const mergedSettings = { ...settings, ...settingsOverrides };
+  await database.batchModifyDocs({
+    upsert: [mergedSettings],
     remove: [],
   });
 
@@ -90,6 +96,7 @@ export async function getSendRequestCallbackMemDb(
       environment: mutatedContext.environment,
       purpose: 'send',
       extraInfo: undefined,
+      transientVariables: mutatedContext.transientVariables || transientVariables,
       baseEnvironment: mutatedContext.baseEnvironment,
       userUploadEnvironment: mutatedContext.userUploadEnvironment,
       ignoreUndefinedEnvVariable,
@@ -106,6 +113,11 @@ export async function getSendRequestCallbackMemDb(
       requestData.responseId,
     );
     const res = await responseTransform(response, environmentId, renderedRequest, renderedResult.context);
+
+    if (res.error) {
+      throw new Error(res.error);
+    }
+
     const postMutatedContext = await tryToExecuteAfterResponseScript({
       ...requestData,
       ...mutatedContext,
@@ -113,29 +125,20 @@ export async function getSendRequestCallbackMemDb(
       transientVariables: mutatedContext.transientVariables || transientVariables,
       response,
     });
-    // TODO: figure out how to handle this error
     if ('error' in postMutatedContext) {
       console.error(
         '[network] An error occurred while running after-response script for request named:',
         renderedRequest.name,
       );
-      throw {
-        error: postMutatedContext.error,
-        response: await responseTransform(
-          response,
-          requestData.activeEnvironmentId,
-          renderedRequest,
-          renderedResult.context,
-        ),
-      };
+      throw new Error(postMutatedContext.error);
     }
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
 
-    const headers = headerArray?.reduce(
+    const headers = headerArray?.reduce<Record<string, string>>(
       (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
-      [],
+      {},
     );
-    const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
+    const bodyBuffer = (await services.helpers.getResponseBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
     const testResults = [

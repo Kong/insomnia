@@ -1,4 +1,11 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type {
+  AuthTypeAPIKey,
+  AuthTypeAwsIam,
+  AuthTypeBasic,
+  AuthTypeNTLM,
+  RequestAuthentication,
+} from 'insomnia-data';
 import React, { type FC, useCallback } from 'react';
 import {
   Button,
@@ -13,18 +20,13 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { HAWK_ALGORITHM_SHA256 } from '../../../common/constants';
-import type {
-  AuthTypeAPIKey,
-  AuthTypeAwsIam,
-  AuthTypeBasic,
-  AuthTypeNTLM,
-  AuthTypes,
-  RequestAuthentication,
-} from '../../../models/request';
+import {
+  type AuthTypes,
+  GRANT_TYPE_AUTHORIZATION_CODE,
+  HAWK_ALGORITHM_SHA256,
+  SIGNATURE_METHOD_HMAC_SHA1,
+} from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
-import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
-import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 
@@ -145,9 +147,17 @@ interface Props {
   authentication?: RequestAuthentication | {};
   authTypes?: AuthTypes[];
   disabled?: boolean;
+  hideOthers?: boolean;
+  hideInherit?: boolean;
 }
 
-export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTypes, disabled = false }) => {
+export const AuthDropdown: FC<Props> = ({
+  authentication,
+  authTypes = defaultTypes,
+  disabled = false,
+  hideOthers = false,
+  hideInherit = false,
+}) => {
   const { requestId, requestGroupId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -221,9 +231,13 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
       id: 'netrc',
       name: 'Netrc',
     },
+    {
+      id: 'singleToken',
+      name: 'token',
+    },
   ];
 
-  const authTypeSections: {
+  interface Section {
     id: string;
     icon: IconName;
     name: string;
@@ -231,29 +245,39 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
       id: AuthTypes | 'inherit';
       name: string;
     }[];
-  }[] = [
-    {
-      id: 'Other',
-      name: 'Other',
-      icon: 'ellipsis-h',
-      items: [
+  }
+
+  const commonSections: Section = {
+    id: 'Auth Types',
+    name: 'Auth Types',
+    icon: 'lock',
+    items: authTypesItems.filter(item => authTypes.includes(item.id)),
+  };
+
+  const authTypeSections: Section[] = hideOthers
+    ? [commonSections]
+    : [
         {
-          id: 'inherit',
-          name: 'Inherit from parent',
+          id: 'Other',
+          name: 'Other',
+          icon: 'ellipsis-h',
+          items: [
+            ...(hideInherit
+              ? []
+              : [
+                  {
+                    id: 'inherit',
+                    name: 'Inherit from parent',
+                  } as const,
+                ]),
+            {
+              id: 'none',
+              name: 'None',
+            },
+          ],
         },
-        {
-          id: 'none',
-          name: 'None',
-        },
-      ],
-    },
-    {
-      id: 'Auth Types',
-      name: 'Auth Types',
-      icon: 'lock',
-      items: authTypesItems.filter(item => authTypes.includes(item.id)),
-    },
-  ];
+        commonSections,
+      ];
 
   return (
     <Select
@@ -265,35 +289,35 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
       }}
       selectedKey={selectedAuthType}
     >
-      <Button className="flex min-w-[17ch] flex-1 items-center justify-between gap-2 rounded-sm px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+      <Button className="flex min-w-[17ch] flex-1 items-center justify-between gap-2 rounded-xs px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
         <SelectValue className="flex items-center justify-center gap-2 truncate">
           {({ selectedText }) => (
-            <div className="flex items-center gap-2 text-[--hl]">{selectedText || 'Auth Type'}</div>
+            <div className="flex items-center gap-2 text-(--hl)">{selectedText || 'Auth Type'}</div>
           )}
         </SelectValue>
         <Icon icon="caret-down" />
       </Button>
-      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+      <Popover className="flex min-w-[17ch] flex-col overflow-y-hidden">
         <ListBox
           items={authTypeSections}
-          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
         >
           {section => (
             <ListBoxSection>
-              <Header className="flex items-center gap-2 py-1 pl-2 text-xs uppercase text-[--hl]">
+              <Header className="flex items-center gap-2 py-1 pl-2 text-xs text-(--hl) uppercase">
                 <Icon icon={section.icon} /> <span>{section.name}</span>
               </Header>
               <Collection items={section.items}>
                 {item => (
                   <ListBoxItem
-                    className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                    className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                     aria-label={item.name}
                     textValue={item.name}
                   >
                     {({ isSelected }) => (
                       <>
                         <span>{item.name}</span>
-                        {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
+                        {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                       </>
                     )}
                   </ListBoxItem>

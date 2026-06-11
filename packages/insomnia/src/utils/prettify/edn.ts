@@ -159,7 +159,7 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
 
   lines.push(currentLine);
 
-  return lines.map(l => l.join('')).filter(e => e);
+  return lines.map(l => l.join('')).filter(Boolean);
 }
 
 export const ednPrettify = (edn: string) => {

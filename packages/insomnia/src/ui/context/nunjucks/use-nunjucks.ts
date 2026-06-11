@@ -1,12 +1,13 @@
 import { useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
-import { getRenderContext, getRenderContextAncestors, render } from '../../../common/render';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import type { HandleRender, RenderContextOptions } from '../../../templating/types';
-import { getKeys } from '../../../templating/utils';
-import type { RequestLoaderData } from '../../routes/request';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import { getRenderContext, getRenderContextAncestors, render } from '~/common/render';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating/constants';
+import type { HandleRender, RenderContextOptions } from '~/templating/types';
+import { getKeys } from '~/templating/utils';
+
 let getRenderContextPromiseCache: any = {};
 
 export interface UseNunjucksOptions {
@@ -22,11 +23,16 @@ initializeNunjucksRenderPromiseCache();
  * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = (options?: UseNunjucksOptions) => {
-  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData | undefined;
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  // for all types of requests
+  const requestData = useRequestLoaderData();
+  // for request group (folder)
+  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
+  const workspaceData = useWorkspaceLoaderData();
 
   const fetchRenderContext = useCallback(async () => {
-    const ancestors = await getRenderContextAncestors(requestData?.activeRequest || workspaceData?.activeWorkspace);
+    const ancestors = await getRenderContextAncestors(
+      requestData?.activeRequest || activeRequestGroup || workspaceData?.activeWorkspace,
+    );
     return getRenderContext({
       request: requestData?.activeRequest || undefined,
       environment: workspaceData?.activeEnvironment._id,
@@ -38,6 +44,7 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
     workspaceData?.activeWorkspace,
     workspaceData?.activeEnvironment._id,
     options?.renderContext,
+    activeRequestGroup,
   ]);
 
   const handleGetRenderContext = useCallback(

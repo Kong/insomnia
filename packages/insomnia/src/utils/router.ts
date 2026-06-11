@@ -1,11 +1,11 @@
-import { matchPath, type PathMatch } from 'react-router';
+import type { Organization } from 'insomnia-api';
+import type { GitProject, GitRepository, Project } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
+import { useCallback } from 'react';
+import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
-import { database } from '../common/database';
-import * as models from '../models';
-import type { Organization } from '../models/organization';
-import { findPersonalOrganization } from '../models/organization';
-import type { Project } from '../models/project';
-import { scopeToActivity } from '../models/workspace';
+import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
+
 export const enum AsyncTask {
   SyncOrganization,
   MigrateProjects,
@@ -46,30 +46,42 @@ export const getInitialRouteForOrganization = async ({
     const match = getMatchParams(prevOrganizationLocation);
 
     if (match && match.params.organizationId && match.params.projectId) {
-      const existingProject = await models.project.getById(match.params.projectId);
+      const existingProject = await services.project.get(match.params.projectId);
 
       if (existingProject) {
         console.log('Redirecting to last visited project', existingProject._id);
 
         if (match.params.workspaceId && navigateToWorkspace) {
-          const existingWorkspace = await models.workspace.getById(match.params.workspaceId);
+          const existingWorkspace = await services.workspace.getById(match.params.workspaceId);
           if (existingWorkspace) {
-            return `/organization/${match.params.organizationId}/project/${existingProject._id}/workspace/${existingWorkspace._id}/${scopeToActivity(existingWorkspace.scope)}`;
+            return `${href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
+              organizationId: match.params.organizationId,
+              projectId: existingProject._id,
+              workspaceId: existingWorkspace._id,
+            })}/${models.workspace.scopeToActivity(existingWorkspace.scope)}`;
           }
         }
 
-        return `/organization/${match?.params.organizationId}/project/${existingProject._id}`;
+        return href(`/organization/:organizationId/project/:projectId`, {
+          organizationId: match.params.organizationId,
+          projectId: existingProject._id,
+        });
       }
     }
   }
   // 2. if no history, redirect to the first project
-  const firstProject = await database.getWhere<Project>(models.project.type, { parentId: organizationId });
+  const firstProject = await database.findOne<Project>(models.project.type, { parentId: organizationId });
 
   if (firstProject?._id) {
-    return `/organization/${organizationId}/project/${firstProject?._id}`;
+    return href(`/organization/:organizationId/project/:projectId`, {
+      organizationId,
+      projectId: firstProject._id,
+    });
   }
   // 3. if no project, redirect to the project route
-  return `/organization/${organizationId}/project`;
+  return href(`/organization/:organizationId/project`, {
+    organizationId,
+  });
 };
 
 export const getInitialEntry = async () => {
@@ -77,23 +89,44 @@ export const getInitialEntry = async () => {
   // Otherwise if the user is not logged in and has not logged in before, then show the login
   // Otherwise if the user is logged in, then show the organization
   try {
-    const hasSeenOnboardingV11 = Boolean(window.localStorage.getItem('hasSeenOnboardingV11'));
+    const allProjects = await database.find<Project>(models.project.type, {});
+    const gitRepoIds = (
+      allProjects.filter(
+        (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
+      ) as GitProject[]
+    ).map(p => p.gitRepositoryId);
 
-    if (!hasSeenOnboardingV11) {
-      return '/onboarding';
+    if (gitRepoIds.length > 0) {
+      const gitRepos = await database.find<GitRepository>(models.gitRepository.type, {
+        _id: { $in: gitRepoIds },
+      });
+
+      const hasPendingMigrations = gitRepos.some(repo => (repo.repoMigrationVersion ?? 0) < CURRENT_MIGRATION_VERSION);
+      if (hasPendingMigrations) {
+        console.log('Redirecting to git migration');
+        return href('/git-migration/*', { '*': '' });
+      }
+    }
+
+    const hasSeenOnboardingV13 = Boolean(window.localStorage.getItem('hasSeenOnboardingV13'));
+
+    if (!hasSeenOnboardingV13) {
+      return href('/onboarding/*', {
+        '*': '',
+      });
     }
 
     const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
 
-    const user = await models.userSession.getOrCreate();
+    const user = await services.userSession.get();
     if (user.id) {
       const organizations = JSON.parse(
         localStorage.getItem(`${user.accountId}:organizations`) || '[]',
       ) as Organization[];
-      const personalOrganization = findPersonalOrganization(organizations, user.accountId);
+      const personalOrganization = models.organization.findPersonalOrganization(organizations, user.accountId);
       // If the personal org is not found in local storage go fetch from org index loader
       if (!personalOrganization) {
-        return '/organization';
+        return href('/organization');
       }
 
       let organizationId = personalOrganization.id;
@@ -104,7 +137,7 @@ export const getInitialEntry = async () => {
         if (lastVisitedOrganizationId && organizations.find(o => o.id === lastVisitedOrganizationId)) {
           organizationId = lastVisitedOrganizationId;
         }
-      } catch (e) {}
+      } catch {}
 
       return {
         pathname: await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }),
@@ -116,11 +149,53 @@ export const getInitialEntry = async () => {
     }
 
     if (hasUserLoggedInBefore) {
-      return '/auth/login';
+      return href('/auth/login');
     }
 
-    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
-  } catch (e) {
-    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
+    return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
+      organizationId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
+      projectId: models.project.SCRATCHPAD_PROJECT_ID,
+      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
+    });
+  } catch {
+    return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
+      organizationId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
+      projectId: models.project.SCRATCHPAD_PROJECT_ID,
+      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
+    });
   }
 };
+
+type Override<T, R> = Omit<T, keyof R> & R;
+
+export const createFetcherSubmitHook =
+  <T extends (fetcher: ReturnType<typeof useFetcher<A>>['submit']) => any, A extends (...args: any) => unknown>(
+    fn: T,
+    _actionType?: A, // Only used for type inference
+  ) =>
+  (...args: Parameters<typeof useFetcher>) => {
+    const fetcher = useFetcher<A>(...args);
+
+    const submit = useCallback(((...args: any[]) => fn(fetcher.submit)(...args)) as ReturnType<T>, [fetcher.submit]);
+
+    return {
+      ...fetcher,
+      submit,
+    } as Override<typeof fetcher, { submit: ReturnType<T> }>;
+  };
+
+export const createFetcherLoadHook =
+  <T extends (fetcher: ReturnType<typeof useFetcher<A>>['load']) => any, A extends (...args: any) => unknown>(
+    fn: T,
+    _actionType?: A, // Only used for type inference
+  ) =>
+  (...args: Parameters<typeof useFetcher>) => {
+    const fetcher = useFetcher<A>(...args);
+
+    const load = useCallback(((...args: any[]) => fn(fetcher.load)(...args)) as ReturnType<T>, [fetcher.load]);
+
+    return {
+      ...fetcher,
+      load,
+    } as Override<typeof fetcher, { load: ReturnType<T> }>;
+  };

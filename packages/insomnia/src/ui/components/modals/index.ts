@@ -1,8 +1,6 @@
 import { invariant } from '../../../utils/invariant';
 import type { ModalProps } from '../base/modal';
-import { AlertModal, type AlertModalOptions } from './alert-modal';
 import { ErrorModal, type ErrorModalOptions } from './error-modal';
-import { PromptModal, type PromptModalOptions } from './prompt-modal';
 
 interface ModalHandle {
   show: (options: any) => void;
@@ -36,6 +34,7 @@ export function showModal<
   TModalProps extends ModalProps &
     React.RefAttributes<{
       show: (options: any) => void;
+      hide: () => void;
     }>,
 >(modalComponent: ModalComponent<TModalProps>, config?: ModalHandleShowOptions<GetRefHandleFromProps<TModalProps>>) {
   const name = modalComponent.name || modalComponent.displayName;
@@ -44,20 +43,18 @@ export function showModal<
 
   const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
 
-  return modalHandle.show(config);
-}
-
-export function showPrompt(options: PromptModalOptions) {
-  return showModal(PromptModal, options);
-}
-
-export function showAlert(config: AlertModalOptions) {
-  return showModal(AlertModal, config);
+  modalHandle.show(config);
+  return () => {
+    const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
+    if (modalHandle) {
+      modalHandle.hide();
+    }
+  };
 }
 
 export function showError(config: ErrorModalOptions) {
   try {
-    return showModal(ErrorModal, config);
+    showModal(ErrorModal, config);
   } catch (err) {
     console.log('[modal] Cannot show modal', err, config);
   }

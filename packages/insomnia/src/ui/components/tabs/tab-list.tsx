@@ -1,3 +1,5 @@
+import type { BaseModel, MockRoute, Request } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -10,21 +12,24 @@ import {
   type Selection,
   useDragAndDrop,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
+import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
-import * as models from '../../../models/index';
-import type { MockRoute } from '../../../models/mock-route';
-import { isRequest, type Request } from '../../../models/request';
-import { isRequestGroup } from '../../../models/request-group';
-import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
-import { type BaseTab, InsomniaTab, type TabType } from './tab';
+import { type BaseTab, InsomniaTab } from './tab';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 export interface OrganizationTabs {
   tabList: BaseTab[];
@@ -32,23 +37,9 @@ export interface OrganizationTabs {
 }
 
 export const enum TAB_CONTEXT_MENU_COMMAND {
-  CLOSE_ALL = 'Close all',
-  CLOSE_OTHERS = 'Close others',
+  CLOSE_ALL = 'Close All',
+  CLOSE_OTHERS = 'Close Other Tabs',
 }
-
-export const TAB_ROUTER_PATH: Record<TabType, string> = {
-  collection: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug',
-  folder: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId',
-  request: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId',
-  environment: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment',
-  mockServer: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server',
-  runner: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner',
-  document: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec',
-  mockRoute:
-    '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
-  test: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test',
-  testSuite: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/*',
-};
 
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);
@@ -56,8 +47,11 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   const [leftScrollDisable, setLeftScrollDisable] = useState(false);
   const [rightScrollDisable, setRightScrollDisable] = useState(false);
 
-  const requestFetcher = useFetcher();
+  const newRequestFetcher = useRequestNewActionFetcher();
   const { organizationId, projectId } = useParams();
+  const gitFileIssues = useGitFileIssues();
+
+  useInsomniaTab({ organizationId: organizationId || '' });
 
   const {
     changeActiveTab,
@@ -74,14 +68,34 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     moveBefore,
     batchUpdateTabs,
     currentOrgTabs,
+    goToNextTab,
+    goToPreviousTab,
+    reopenClosedTab,
   } = useInsomniaTabContext();
 
   const { tabList, activeTabId } = currentOrgTabs;
+  const issuesByWorkspaceId = gitFileIssues.issuesByWorkspaceId;
+
+  // Register keyboard shortcuts for tab navigation
+  useDocBodyKeyboardShortcuts({
+    tab_nextTab: event => {
+      event.preventDefault();
+      goToNextTab?.();
+    },
+    tab_previousTab: event => {
+      event.preventDefault();
+      goToPreviousTab?.();
+    },
+    tab_reopenClosedTab: event => {
+      event.preventDefault();
+      reopenClosedTab?.();
+    },
+  });
 
   const handleSelectionChange = (keys: Selection) => {
     if (keys !== 'all') {
       const key = [...keys.values()]?.[0] as string;
-      changeActiveTab(key);
+      changeActiveTab(key, { navigate: true });
     }
   };
 
@@ -101,6 +115,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       models.environment.type,
       models.mockRoute.type,
       models.project.type,
+      models.socketIORequest.type,
     ];
     return list.includes(docType);
   };
@@ -109,24 +124,23 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     (docId: string, docType: string) => {
       if (docType === models.project.type) {
         // delete all tabs of this project
-        closeAllTabsUnderProject?.(docId);
-      }
-      if (docType === models.workspace.type) {
+        closeAllTabsUnderProject?.(docId, { removeFromClosedTabs: true });
+      } else if (docType === models.workspace.type) {
         // delete all tabs of this workspace
-        closeAllTabsUnderWorkspace?.(docId);
+        closeAllTabsUnderWorkspace?.(docId, { removeFromClosedTabs: true });
       } else if (docType === models.requestGroup.type) {
         // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
-        batchCloseTabs?.([docId, `runner_${docId}`]);
+        batchCloseTabs?.([docId, `runner_${docId}`], { removeFromClosedTabs: true });
       } else {
         // delete tab by id
-        closeTabById(docId);
+        closeTabById(docId, { removeFromClosedTabs: true });
       }
     },
     [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById],
   );
 
   const handleUpdate = useCallback(
-    async (doc: models.BaseModel, patches: Partial<models.BaseModel>[] = []) => {
+    async (doc: BaseModel, patches: Partial<BaseModel>[] = []) => {
       const patchObj: Record<string, any> = {};
       patches.forEach(patch => {
         Object.assign(patchObj, patch);
@@ -173,20 +187,27 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
       // move request or requestGroup to another collection
       if (patchObj.parentId && !patchObj.metaSortKey && (patchObj.parentId as string).startsWith('wrk_')) {
-        const workspace = await models.workspace.getById(patchObj.parentId);
+        const workspace = await services.workspace.getById(patchObj.parentId);
         if (workspace) {
-          if (isRequest(doc)) {
+          if (
+            isRequest(doc) ||
+            models.grpcRequest.isGrpcRequest(doc) ||
+            models.webSocketRequest.isWebSocketRequest(doc) ||
+            models.socketIORequest.isSocketIORequest(doc)
+          ) {
             updateTabById?.(doc._id, {
               workspaceId: workspace._id,
               workspaceName: workspace.name,
               url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${doc._id}`,
             });
           } else if (isRequestGroup(doc)) {
-            const folderEntities = await database.withDescendants(doc, models.request.type, [
+            const folderEntities = await database.getWithDescendants(doc, [
               models.request.type,
+              models.grpcRequest.type,
+              models.webSocketRequest.type,
+              models.socketIORequest.type,
               models.requestGroup.type,
             ]);
-            console.log('folderEntities:', folderEntities);
             const batchUpdates = [doc, ...folderEntities].map(entity => {
               return {
                 id: entity._id,
@@ -209,24 +230,22 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   useEffect(() => {
     // sync tabList with database
-    const callback = async (changes: ChangeBufferEvent[]) => {
+    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
-        const changeType = change[0];
-        const doc = change[1];
+        const [changeType, doc, patches] = change;
+
         if (needHandleChange(changeType, doc.type)) {
           if (changeType === 'remove') {
             handleDelete(doc._id, doc.type);
           } else if (changeType === 'update') {
-            const patches = change[3];
             handleUpdate(doc, patches);
           }
         }
       }
-    };
-    database.onChange(callback);
+    });
 
     return () => {
-      database.offChange(callback);
+      unsubscribe();
     };
   }, [handleDelete, handleUpdate]);
 
@@ -234,14 +253,16 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     const currentTab = tabList.find(tab => tab.id === activeTabId);
     if (currentTab) {
       const { organizationId, projectId, workspaceId } = currentTab;
-      requestFetcher.submit(
-        { requestType: 'HTTP', parentId: workspaceId },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-          method: 'post',
-          encType: 'application/json',
+      newRequestFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        requestType: 'HTTP',
+        parentId: workspaceId,
+        metrics: {
+          source: 'tab-list',
         },
-      );
+      });
     }
   };
 
@@ -345,20 +366,20 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       }
     },
     renderDropIndicator(target) {
-      return <DropIndicator target={target} className="!border-none outline outline-1 outline-[--color-surprise]" />;
+      return (
+        <DropIndicator target={target} className="border-none! outline-1 outline-(--color-surprise) outline-solid" />
+      );
     },
   });
 
-  if (!tabList.length) {
-    return null;
-  }
+  if (!tabList.length) return null;
 
   return (
-    <div className="box-content flex bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }}>
+    <div className="box-content flex h-(--line-height-sm) bg-(--color-bg)">
       <Button
         onPress={scrollLeft}
         isDisabled={leftScrollDisable}
-        className={`${leftScrollDisable && 'cursor-not-allowed'} border-b border-solid border-[--hl-sm]`}
+        className={`${leftScrollDisable && 'cursor-not-allowed'} border-b border-solid border-(--hl-sm)`}
       >
         <Icon icon="chevron-left" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
@@ -374,41 +395,42 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           disallowEmptySelection
           selectionMode="single"
           selectionBehavior="replace"
-          className="flex h-[41px] w-fit"
+          className="flex h-(--line-height-sm) w-fit"
           dragAndDropHooks={dragAndDropHooks}
           items={tabList}
+          dependencies={[issuesByWorkspaceId]}
           ref={tabListInnerRef}
         >
-          {item => <InsomniaTab tab={item} />}
+          {item => <InsomniaTab tab={item} fileIssue={issuesByWorkspaceId[item.workspaceId]} />}
         </GridList>
       </div>
       <Button
         onPress={scrollRight}
         isDisabled={rightScrollDisable}
-        className={`${rightScrollDisable && 'cursor-not-allowed'} border-b border-solid border-[--hl-sm]`}
+        className={`${rightScrollDisable && 'cursor-not-allowed'} border-b border-solid border-(--hl-sm)`}
       >
         <Icon icon="chevron-right" className={`w-[30px] ${isOverFlow ? 'block' : 'hidden'}`} />
       </Button>
-      <div className="flex flex-shrink-0 flex-grow items-center justify-start border-b border-solid border-[--hl-sm]">
+      <div className="flex shrink-0 grow items-center justify-start border-b border-solid border-(--hl-sm)">
         <MenuTrigger>
           <Button
             aria-label="Tab Plus"
-            className="mx-[10px] h-[20px] w-[20px] text-center hover:bg-[--hl-xs] data-[pressed]:bg-[--hl-sm]"
+            className="mx-[10px] h-[20px] w-[20px] text-center hover:bg-(--hl-xs) data-pressed:bg-(--hl-sm)"
           >
             <Icon icon="plus" className="cursor-pointer" />
           </Button>
           <Popover>
-            <Menu className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none">
+            <Menu className="max-h-[85vh] max-w-lg overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden">
               {currentPage === 'debug' && (
                 <MenuItem
-                  className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
                   onAction={addRequest}
                 >
                   Add request to current collection
                 </MenuItem>
               )}
               <MenuItem
-                className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
+                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold"
                 onAction={addRequestToCollection}
               >
                 Add request to other collection

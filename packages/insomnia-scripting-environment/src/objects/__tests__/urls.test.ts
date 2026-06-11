@@ -38,18 +38,16 @@ describe('test Url object', () => {
       path: ['pathLevel1', 'pathLevel2'],
       port: '777',
       protocol: 'https:',
-      query: [
-        new QueryParam({ key: 'key1', value: 'value1' }),
-        new QueryParam({ key: 'key2', value: 'value2' }),
-        new QueryParam({ key: 'key3', value: 'value3' }),
-      ],
+      query: [new QueryParam({ key: 'key1', value: 'value1' }), new QueryParam({ key: 'key2', value: 'value2' })],
       variables: [new Variable({ key: 'varKey', value: 'varValue' })],
     });
 
     // expect(url.getHost()).toEqual('hostValue.com');
     expect(url.getPath()).toEqual('/pathLevel1/pathLevel2');
-
+    url.addQueryParams([{ key: 'key3', value: 'value3' }]);
     expect(url.getQueryString()).toEqual('key1=value1&key2=value2&key3=value3');
+    url.addQueryParams([{ key: 'key4', value: 'value4', disabled: true }]);
+    expect(url.query.count()).toEqual(4);
     expect(url.getPathWithQuery()).toEqual('/pathLevel1/pathLevel2?key1=value1&key2=value2&key3=value3');
     expect(url.getRemote(true)).toEqual('hostvalue.com:777');
     expect(url.getRemote(false)).toEqual('hostvalue.com:777'); // TODO: add more cases

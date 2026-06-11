@@ -1,0 +1,135 @@
+{
+  "collection": {
+    "_id": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+    "created": 1762508027498,
+    "modified": 1762508027498,
+    "isPrivate": false,
+    "description": "",
+    "metaSortKey": 0,
+    "type": "Workspace",
+    "name": "CLI Run Collection Report Generation",
+    "parentId": "",
+    "scope": "collection"
+  },
+  "environment": {
+    "_id": "env_1072af0c15764cd8875f645b0f2e5ad4",
+    "type": "Environment",
+    "parentId": "env_6aec164bc7c64ffc96c62e06517c5ba6",
+    "created": 1754293170062,
+    "modified": 1762509361180,
+    "name": "New Environment",
+    "isPrivate": true
+  },
+  "proxy": {
+    "proxyEnabled": false,
+    "httpProxy": "",
+    "httpsProxy": "",
+    "noProxy": ""
+  },
+  "executions": [
+    {
+      "request": {
+        "_id": "req_ef809d54e6aa4d72a54593fdeaa14b93",
+        "type": "Request",
+        "parentId": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+        "created": 1754468596942,
+        "modified": 1762509338246,
+        "name": "Request With Auth - API Key",
+        "description": ""
+      },
+      "response": {
+        "status": "OK",
+        "code": 200,
+        "responseTime": 4.039
+      },
+      "tests": [
+        {
+          "testCase": "Check if status is 200",
+          "status": "passed",
+          "executionTime": 0.11487499999998363
+        }
+      ],
+      "iteration": 0
+    },
+    {
+      "request": {
+        "_id": "req_bb9e621055204a13bc9e301fe376748f",
+        "type": "Request",
+        "parentId": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+        "created": 1754297299654,
+        "modified": 1762509360358,
+        "name": "Request With Auth - Basic",
+        "description": ""
+      },
+      "response": {
+        "status": "OK",
+        "code": 200,
+        "responseTime": 0.596
+      },
+      "tests": [
+        {
+          "testCase": "Check if track exists",
+          "status": "passed",
+          "executionTime": 0.03712500000006003
+        }
+      ],
+      "iteration": 0
+    },
+    {
+      "request": {
+        "_id": "req_a7eea21417aa4af2a1c906d5e562a325",
+        "type": "Request",
+        "parentId": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+        "created": 1754293004564,
+        "modified": 1762509152390,
+        "name": "Request With Sensitive Headers",
+        "description": ""
+      },
+      "response": {
+        "status": "OK",
+        "code": 200,
+        "responseTime": 0.404
+      },
+      "tests": [
+        {
+          "testCase": "Check if track exists",
+          "status": "passed",
+          "executionTime": 0.020999999999958163
+        },
+        {
+          "testCase": "Check if status is 200",
+          "status": "passed",
+          "executionTime": 0.04466699999989032
+        },
+        {
+          "testCase": "Check if track exists",
+          "status": "passed",
+          "executionTime": 0.0225830000000542
+        }
+      ],
+      "iteration": 0
+    }
+  ],
+  "timing": {
+    "started": 1762755820632,
+    "completed": 1762755820961,
+    "responseAverage": 1.6796666666666666,
+    "responseMin": 0.404,
+    "responseMax": 4.039
+  },
+  "stats": {
+    "iterations": {
+      "total": 1,
+      "failed": 0
+    },
+    "requests": {
+      "total": 3,
+      "failed": 0
+    },
+    "tests": {
+      "total": 5,
+      "failed": 0
+    }
+  },
+  "error": null
+}

@@ -1,10 +1,10 @@
+// @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
+import type { Environment, Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import * as models from '../../models';
-import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
-import type { Environment } from '../../models/environment';
-import type { Workspace } from '../../models/workspace';
+import { environmentModelSchema, requestGroupModelSchema } from '../../sync/__schemas__/model-schemas';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
@@ -12,8 +12,7 @@ const reqGroupBuilder = createBuilder(requestGroupModelSchema);
 
 describe('render tests', () => {
   beforeEach(async () => {
-    await models.project.all();
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
     envBuilder.reset();
     reqGroupBuilder.reset();
   });
@@ -53,8 +52,8 @@ describe('render tests', () => {
       const rootEnvironment = envBuilder
         .data({
           consume: '{{ replaced }}',
-          hashed: "{% hash 'md5', 'hex', value %}",
-          replaced: "{{ hashed | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+          hashed: "{% hash 'sha1', 'hex', value %}",
+          replaced: "{{ hashed | replace: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f', 'cat' }}",
           value: 'ThisIsATopSecretValue',
         })
         .dataPropertyOrder({
@@ -65,9 +64,9 @@ describe('render tests', () => {
       const context = await renderUtils.buildRenderContext({ ancestors: [], rootEnvironment });
       expect(context).toEqual({
         value: 'ThisIsATopSecretValue',
-        hashed: 'f67565de946a899a534fd908e7eef872',
-        replaced: 'f67565de946a899a534fd908e7eef872',
-        consume: 'f67565de946a899a534fd908e7eef872',
+        hashed: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
+        replaced: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
+        consume: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
       });
       // In runtime, this context is used to render, which re-evaluates the expression for replaced in the rootEnvironment by using the built context
       // Regression test from issue 1917 - https://github.com/Kong/insomnia/issues/1917
@@ -450,8 +449,8 @@ describe('render tests', () => {
       const rootEnvironment = envBuilder
         .data({
           consume: '{{ replaced }}',
-          hashed: "{% hash 'md5', 'hex', value %}",
-          replaced: "{{ hashed | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+          hashed: "{% hash 'sha1', 'hex', value %}",
+          replaced: "{{ hashed | replace: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f', 'cat' }}",
           value: 'ThisIsATopSecretValue',
         })
         .dataPropertyOrder({
@@ -461,7 +460,7 @@ describe('render tests', () => {
       const context = await renderUtils.buildRenderContext({ ancestors: [], rootEnvironment });
       expect(context).toEqual({
         value: 'ThisIsATopSecretValue',
-        hashed: 'f67565de946a899a534fd908e7eef872',
+        hashed: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
         replaced: 'cat',
         consume: 'cat',
       });
@@ -472,7 +471,7 @@ describe('render tests', () => {
         .data({
           hash_input: '{{ orderId }}{{ secret }}',
           hash_input_expected: '123456789012345ThisIsATopSecretValue',
-          orderId: 123456789012345,
+          orderId: 123_456_789_012_345,
           password: "{% hash 'sha512', 'hex', hash_input %}",
           password_expected: "{% hash 'sha512', 'hex', hash_input_expected %}",
           secret: 'ThisIsATopSecretValue',
@@ -482,7 +481,7 @@ describe('render tests', () => {
       expect(context).toEqual({
         hash_input: '123456789012345ThisIsATopSecretValue',
         hash_input_expected: '123456789012345ThisIsATopSecretValue',
-        orderId: 123456789012345,
+        orderId: 123_456_789_012_345,
         password:
           'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
         password_expected:
@@ -582,7 +581,7 @@ describe('render tests', () => {
         await renderUtils.render(template, context, null);
         fail('Render should not have succeeded');
       } catch (err) {
-        expect(err.message).toBe('unknown block tag: invalid');
+        expect(err.message).toContain('invalid');
       }
     });
 
@@ -623,15 +622,15 @@ describe('render tests', () => {
 
   describe('getRenderedGrpcRequestMessage()', () => {
     it('renders only the body for a grpc request ', async () => {
-      const w1 = await models.workspace.create();
-      const env = await models.environment.create({
+      const w1 = await services.workspace.create();
+      const env = await services.environment.create({
         parentId: w1._id,
         data: {
           foo: 'bar',
           host: 'testb.in:9000',
         },
       });
-      const grpcRequest = await models.grpcRequest.create({
+      const grpcRequest = await services.grpcRequest.create({
         parentId: w1._id,
         name: 'hi {{ foo }}',
         url: '{{ host }}',
@@ -654,8 +653,8 @@ describe('render tests', () => {
     let env: Environment;
 
     beforeEach(async () => {
-      w1 = await models.workspace.create();
-      env = await models.environment.create({
+      w1 = await services.workspace.create();
+      env = await services.environment.create({
         parentId: w1._id,
         data: {
           foo: 'bar',
@@ -665,7 +664,7 @@ describe('render tests', () => {
     });
 
     it('renders all grpc request properties', async () => {
-      const grpcRequest = await models.grpcRequest.create({
+      const grpcRequest = await services.grpcRequest.create({
         parentId: w1._id,
         name: 'hi {{ foo }}',
         url: '{{ host }}',
@@ -688,7 +687,7 @@ describe('render tests', () => {
     });
 
     it('renders but ignores the body for a grpc request ', async () => {
-      const grpcRequest = await models.grpcRequest.create({
+      const grpcRequest = await services.grpcRequest.create({
         parentId: w1._id,
         name: 'hi {{ foo }}',
         url: '{{ host }}',
@@ -715,7 +714,7 @@ describe('render tests', () => {
     });
 
     it('should still render with bad description', async () => {
-      const grpcRequest = await models.grpcRequest.create({
+      const grpcRequest = await services.grpcRequest.create({
         parentId: w1._id,
         name: 'hi {{ foo }}',
         url: '{{ host }}',

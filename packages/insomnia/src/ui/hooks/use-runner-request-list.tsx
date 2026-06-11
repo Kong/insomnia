@@ -1,15 +1,21 @@
+import type { Request } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { useEffect, useMemo, useRef } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
-import { isRequest, type Request } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
-import { invariant } from '../../utils/invariant';
-import { useRunnerContext } from '../context/app/runner-context';
-import type { RequestRow } from '../routes/runner';
-import type { Child, WorkspaceLoaderData } from '../routes/workspace';
+import type { RequestRow } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
+import { useRunnerContext } from '~/ui/context/app/runner-context';
+import { invariant } from '~/utils/invariant';
+
+import {
+  type Child,
+  useWorkspaceLoaderData,
+} from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 export const useRunnerRequestList = (organizationId: string, targetFolderId: string, runnerId: string) => {
-  const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { collection } = useWorkspaceLoaderData()!;
   const entityMapRef = useRef(new Map<string, Child>());
 
   const requestRows: RequestRow[] = useMemo(() => {

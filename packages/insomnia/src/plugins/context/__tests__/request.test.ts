@@ -1,8 +1,9 @@
+// @ts-nocheck
+import { services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import * as models from '../../../models';
 import * as plugin from '../request';
 const CONTEXT = {
   user_key: 'my_user_key',
@@ -17,13 +18,13 @@ const CONTEXT = {
 
 describe('init()', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true, () => {});
 
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_1',
       name: 'My Workspace',
     });
-    await models.request.create({
+    await services.request.create({
       _id: 'req_1',
       parentId: 'wrk_1',
       name: 'My Request',
@@ -31,7 +32,7 @@ describe('init()', () => {
   });
 
   it('initializes correctly', async () => {
-    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
+    const result = plugin.init(await services.request.getById('req_1'), CONTEXT);
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'addHeader',
@@ -70,7 +71,7 @@ describe('init()', () => {
   });
 
   it('initializes correctly in read-only mode', async () => {
-    const result = plugin.init(await models.request.getById('req_1'), CONTEXT, true);
+    const result = plugin.init(await services.request.getById('req_1'), CONTEXT, true);
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'getAuthentication',
@@ -98,13 +99,13 @@ describe('init()', () => {
 
 describe('request.*', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true, () => {});
 
-    await models.workspace.create({
+    await services.workspace.create({
       _id: 'wrk_1',
       name: 'My Workspace',
     });
-    await models.request.create({
+    await services.request.create({
       _id: 'req_1',
       parentId: 'wrk_1',
       name: 'My Request',
@@ -139,7 +140,7 @@ describe('request.*', () => {
 
   it('works for basic getters', async () => {
     const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
+    const result = plugin.init(await services.request.getById('req_1'), CONTEXT);
     expect(result.request.getId()).toBe('req_1');
     expect(result.request.getName()).toBe('My Request');
     expect(result.request.getUrl()).toBe('');
@@ -152,7 +153,7 @@ describe('request.*', () => {
   });
 
   it('works for parameters', async () => {
-    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
+    const result = plugin.init(await services.request.getById('req_1'), CONTEXT);
     // getParameters()
     expect(result.request.getParameters()).toEqual([
       {
@@ -184,7 +185,7 @@ describe('request.*', () => {
   });
 
   it('works for headers', async () => {
-    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
+    const result = plugin.init(await services.request.getById('req_1'), CONTEXT);
     // getHeaders()
     expect(result.request.getHeaders()).toEqual([
       {
@@ -216,7 +217,7 @@ describe('request.*', () => {
   });
 
   it('works for cookies', async () => {
-    const request = await models.request.getById('req_1');
+    const request = await services.request.getById('req_1');
     request.cookies = []; // Because the plugin technically needs a RenderedRequest
 
     const result = plugin.init(request, CONTEXT);
@@ -231,7 +232,7 @@ describe('request.*', () => {
   });
 
   it('works for environment', async () => {
-    const request = await models.request.getById('req_1');
+    const request = await services.request.getById('req_1');
     request.cookies = []; // Because the plugin technically needs a RenderedRequest
 
     const result = plugin.init(request, CONTEXT);
@@ -259,7 +260,7 @@ describe('request.*', () => {
   });
 
   it('works for authentication', async () => {
-    const request = await models.request.getById('req_1');
+    const request = await services.request.getById('req_1');
     request.authentication = {}; // Because the plugin technically needs a RenderedRequest
 
     const result = plugin.init(request, CONTEXT);
@@ -274,7 +275,7 @@ describe('request.*', () => {
   });
 
   it('works for request body', async () => {
-    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
+    const result = plugin.init(await services.request.getById('req_1'), CONTEXT);
     expect(result.request.getBody()).toEqual({
       text: 'body',
     });

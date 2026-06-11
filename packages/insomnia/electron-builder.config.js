@@ -4,7 +4,7 @@ const BINARY_PREFIX = 'Insomnia.Core';
 
 /**
  * @type {import('electron-builder').Configuration}
- * @see https://www.electron.build/configuration/configuration
+ * @see https://www.electron.build/configuration
  */
 const config = {
   npmRebuild: false,
@@ -20,7 +20,7 @@ const config = {
     {
       from: './build',
       to: '.',
-      filter: ['**/*'],
+      filter: ['**/*', '!**/*.map'],
     },
     './package.json',
   ],
@@ -33,7 +33,7 @@ const config = {
     },
   ],
   extraMetadata: {
-    main: 'main.min.js', // Override the main path in package.json
+    main: 'entry.main.min.js', // Override the main path in package.json
   },
   fileAssociations: [],
   mac: {
@@ -42,6 +42,7 @@ const config = {
     entitlements: './build/static/entitlements.mac.inherit.plist',
     entitlementsInherit: './build/static/entitlements.mac.inherit.plist',
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
+    x64ArchFiles: '*',
     target: [
       {
         target: 'dmg',
@@ -55,10 +56,35 @@ const config = {
     mergeASARs: false,
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
+      NSLocalNetworkUsageDescription:
+        'Insomnia needs permission to connect to local APIs and development servers such as localhost, 127.0.0.1, or other LAN hosts.',
     },
     // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
     notarize: true,
-    asarUnpack: ['node_modules/@getinsomnia/node-libcurl'],
+    asarUnpack: [
+      'node_modules/@getinsomnia/node-libcurl',
+      'node_modules/@node-llama-cpp/mac-arm64-metal',
+      'node_modules/@node-llama-cpp/mac-x64',
+      'node_modules/@node-llama-cpp/linux-arm64',
+      'node_modules/@node-llama-cpp/linux-armv7l',
+      'node_modules/@node-llama-cpp/linux-x64',
+      'node_modules/@node-llama-cpp/linux-x64-cuda',
+      'node_modules/@node-llama-cpp/linux-x64-cuda-ext',
+      'node_modules/@node-llama-cpp/linux-x64-vulkan',
+      'node_modules/@node-llama-cpp/win-arm64',
+      'node_modules/@node-llama-cpp/win-x64',
+      'node_modules/@node-llama-cpp/win-x64-cuda',
+      'node_modules/@node-llama-cpp/win-x64-cuda-ext',
+      'node_modules/@node-llama-cpp/win-x64-vulkan',
+      'node_modules/@reflink/reflink-darwin-arm64',
+      'node_modules/@reflink/reflink-darwin-x64',
+      'node_modules/@reflink/reflink-linux-arm64-gnu',
+      'node_modules/@reflink/reflink-linux-arm64-musl',
+      'node_modules/@reflink/reflink-linux-x64-gnu',
+      'node_modules/@reflink/reflink-linux-x64-musl',
+      'node_modules/@reflink/reflink-win32-arm64-msvc',
+      'node_modules/@reflink/reflink-win32-x64-msvc',
+    ],
   },
   dmg: {
     window: {
@@ -81,6 +107,10 @@ const config = {
   win: {
     target: [
       {
+        target: 'nsis',
+        arch: ['x64'],
+      },
+      {
         target: 'squirrel',
       },
     ],
@@ -88,6 +118,26 @@ const config = {
       sign: './customSign.js',
       signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
     },
+    publish: {
+      provider: 'generic',
+      url: 'https://updates.insomnia.rest/updates/win/',
+    },
+    generateUpdatesFilesForAllChannels: true,
+  },
+  nsis: {
+    artifactName: `${BINARY_PREFIX}-nsis-\${version}.\${ext}`,
+    include: './scripts/nsisInstall.nsh',
+    oneClick: false,
+    selectPerMachineByDefault: true,
+    allowToChangeInstallationDirectory: true,
+    installerIcon: './build/icon.ico',
+    installerSidebar: './src/icons/nsis-sidebar.bmp',
+    uninstallerSidebar: './src/icons/nsis-sidebar.bmp',
+    uninstallerIcon: './build/icon.ico',
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: 'Insomnia',
+    deleteAppDataOnUninstall: false,
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,

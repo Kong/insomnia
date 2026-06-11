@@ -1,42 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useRouteLoaderData } from 'react-router';
-import { useParams } from 'react-router';
+import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 
-import { type ChangeBufferEvent, database } from '../../common/database';
-import type { BaseModel } from '../../models';
-import type { WorkspaceLoaderData } from '../routes/workspace';
-// We use this hook to determine if the active request has been updated from the system (not the user typing)
-// For example, by pulling a new version from the remote, switching branches, etc.
-export function useActiveRequestSyncVCSVersion() {
-  const [version, setVersion] = useState(0);
-  const { requestId } = useParams() as { requestId: string };
+import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
-  useEffect(() => {
-    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) =>
-      changes.find(([, doc, fromSync]) => requestId === doc._id && fromSync);
-    database.onChange(changes => isRequestUpdatedFromSync(changes) && setVersion(v => v + 1));
-  }, [requestId]);
-
-  return version;
-}
-
-// We use this hook to determine if the active active api-spec has been updated from the system (not the user typing)
-// For example, by pulling a new version from the remote, switching branches, etc.
-export function useActiveApiSpecSyncVCSVersion() {
-  const [version, setVersion] = useState(0);
-  const { activeApiSpec } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  useEffect(() => {
-    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) =>
-      changes.find(([, doc, fromSync]) => activeApiSpec?._id === doc._id && fromSync);
-    database.onChange(changes => isRequestUpdatedFromSync(changes) && setVersion(v => v + 1));
-  }, [activeApiSpec?._id]);
-
-  return version;
-}
-
-// We use this hook to determine if the active workspace has been updated from the Git VCS
-// For example, by pulling a new version from the remote, switching branches, etc.
+// We use this hook to determine if the active workspace should remount editors due to
+// Git/VCS changes or a successful FS watcher sync of the backing YAML file.
 export function useGitVCSVersion() {
-  const { gitRepository } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  return gitRepository?.cachedGitLastCommitTime + '' + gitRepository?.cachedGitRepositoryBranch + '';
+  const workspaceData = useWorkspaceLoaderData();
+  const projectData = useProjectLoaderData();
+  const gitRepository = workspaceData?.gitRepository || projectData?.activeProjectGitRepository;
+  const gitFileLastSyncTime = workspaceData?.activeWorkspaceMeta?.gitFileLastSyncTime;
+
+  return `${gitRepository?.cachedGitLastCommitTime}:${gitRepository?.cachedGitRepositoryBranch}:${gitFileLastSyncTime}`;
 }

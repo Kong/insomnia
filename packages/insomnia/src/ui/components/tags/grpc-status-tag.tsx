@@ -1,8 +1,9 @@
-import { status } from '@grpc/grpc-js';
 import classnames from 'classnames';
 import React, { type FC, memo } from 'react';
 
 import { Tooltip } from '../tooltip';
+
+const GRPC_STATUS_OK = 0;
 
 interface Props {
   statusCode?: number;
@@ -12,8 +13,8 @@ interface Props {
 }
 
 export const GrpcStatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, tooltipDelay }) => {
-  const colorClass = statusCode === status.OK ? 'bg-success' : 'bg-danger';
-  const message = statusCode === status.OK ? 'OK' : statusMessage;
+  const colorClass = statusCode === GRPC_STATUS_OK ? 'bg-success' : 'bg-danger';
+  const message = statusCode === GRPC_STATUS_OK ? 'OK' : statusMessage;
   return (
     <div
       className={classnames('tag', colorClass, {

@@ -1,13 +1,19 @@
+import { getRealTimeCollaborators, type Organization, type UserPresence } from 'insomnia-api';
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
+import { useFetchers, useParams, useRevalidator } from 'react-router';
+import * as reactUse from 'react-use';
 
-import { CDN_INVALIDATION_TTL } from '../../../common/constants';
-import type { Organization } from '../../../models/organization';
-import { insomniaFetch } from '../../../ui/insomniaFetch';
-import { avatarImageCache } from '../../hooks/image-cache';
-import type { ProjectIdLoaderData } from '../../routes/project';
-import { useRootLoaderData } from '../../routes/root';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import { CDN_INVALIDATION_TTL } from '~/common/constants';
+import { useRootLoaderData } from '~/root';
+import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
+import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
+import { useStorageRulesActionFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
+import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
+import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
+import { avatarImageCache } from '~/ui/hooks/image-cache';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
@@ -59,20 +65,24 @@ interface VaultKeyChangeEvent {
   sessionId: string;
 }
 
-export interface UserPresence {
-  acct: string;
-  avatar: string;
-  branch: string;
-  file: string;
-  firstName: string;
-  lastName: string;
-  project: string;
-  team: string;
-}
-
 interface UserPresenceEvent extends UserPresence {
   type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged' | 'StorageRuleChanged';
 }
+
+const isSameWorkspaceWithRemote = async (workspaceId: string | undefined, remoteWorkspaceId: string | undefined) => {
+  if (!workspaceId || !remoteWorkspaceId) {
+    return false;
+  }
+  const currentBackendProject = await window.main.sync.getActiveBackendProject();
+  if (
+    currentBackendProject &&
+    currentBackendProject?.id === remoteWorkspaceId &&
+    currentBackendProject.rootDocumentId === workspaceId
+  ) {
+    return true;
+  }
+  return false;
+};
 
 export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -81,17 +91,21 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     workspaceId: string;
   };
 
-  const { userSession } = useRootLoaderData();
-  const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
+  const { userSession } = useRootLoaderData()!;
+  const projectData = useProjectLoaderData();
+  const workspaceData = useWorkspaceLoaderData();
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
-  const syncOrganizationsFetcher = useFetcher();
-  const syncStorageRuleFetcher = useFetcher();
-  const syncProjectsFetcher = useFetcher();
-  const syncDataFetcher = useFetcher();
-  const clearVaultKeyFetcher = useFetcher();
+  const { submit: syncOrganizationsSubmit } = useOrganizationSyncActionFetcher();
+  const { submit: syncStorageRulesSubmit } = useStorageRulesActionFetcher();
+  const { submit: syncProjectsSubmit } = useOrganizationSyncProjectsActionFetcher();
+  const { submit: syncDataSubmit } = useInsomniaSyncDataActionFetcher();
+  const { submit: clearVaultKeySubmit } = useClearVaultKeyFetcher();
+
+  const latestProjectId = reactUse.useLatest(projectId);
+  const latestWorkspaceId = reactUse.useLatest(workspaceId);
+  const latestRemoteId = reactUse.useLatest(remoteId);
 
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
@@ -99,16 +113,11 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       const sessionId = userSession.id;
       if (sessionId && remoteId) {
         try {
-          const response = await insomniaFetch<{
-            data?: UserPresence[];
-          }>({
-            path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
-            method: 'POST',
+          const response = await getRealTimeCollaborators({
             sessionId,
-            data: {
-              project: remoteId,
-              file: workspaceId,
-            },
+            organizationId: sanitizeTeamId(organizationId),
+            projectRemoteId: remoteId,
+            workspaceId,
           });
 
           const rows = response?.data || [];
@@ -124,15 +133,18 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     updatePresence();
   }, [organizationId, remoteId, userSession.id, workspaceId]);
 
+  const { revalidate } = useRevalidator();
+  const inflightFetchers = useFetchers();
+  const ifInSubmission = inflightFetchers.some(f => f.formMethod === 'POST');
+  const latestInSubmission = reactUse.useLatest(ifInSubmission);
+
   useEffect(() => {
     const sessionId = userSession.id;
     if (sessionId) {
       try {
-        const source = new EventSource(
-          `insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams?sessionId=${sessionId}`,
-        );
+        const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams`);
 
-        source.addEventListener('message', e => {
+        source.addEventListener('message', async e => {
           try {
             const event = JSON.parse(e.data) as
               | UserPresenceEvent
@@ -141,6 +153,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               | BranchDeletedEvent
               | FileChangedEvent
               | VaultKeyChangeEvent;
+            if (event.type === 'FileChanged' || event.type === 'FileDeleted') {
+              // Emit unsynced workspace file change when file changed or deleted event received, so that the workspace list can be updated if needed
+              uiEventBus.emit(CLOUD_SYNC_FILE_CHANGE);
+            }
             if (event.type === 'PresentUserLeave') {
               setPresence(prev =>
                 prev.filter(p => {
@@ -167,73 +183,52 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               if (event.avatar) {
                 window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
-              syncOrganizationsFetcher.submit(
-                {},
-                {
-                  action: '/organization/sync',
-                  method: 'POST',
-                },
-              );
+              syncOrganizationsSubmit();
             } else if (event.type === 'StorageRuleChanged' && event.team && event.team.includes('org_')) {
-              const orgId = event.team;
-
-              syncStorageRuleFetcher.submit(
-                {},
-                {
-                  action: `/organization/${orgId}/sync-storage-rule`,
-                  method: 'POST',
-                },
-              );
+              syncStorageRulesSubmit({
+                organizationId: event.team,
+              });
             } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
-              syncProjectsFetcher.submit(
-                {},
-                {
-                  action: `/organization/${organizationId}/sync-projects`,
-                  method: 'POST',
-                },
-              );
+              syncProjectsSubmit({
+                organizationId,
+              });
             } else if (
               event.type === 'FileDeleted' &&
               event.team === organizationId &&
-              remoteId &&
-              event.project === remoteId
+              latestRemoteId.current &&
+              event.project === latestRemoteId.current &&
+              // we don't need to revalidate if the user is in workspace page
+              !latestWorkspaceId.current
             ) {
-              syncProjectsFetcher.submit(
-                {},
-                {
-                  action: `/organization/${organizationId}/sync-projects`,
-                  method: 'POST',
-                },
-              );
+              if (!latestInSubmission.current) {
+                revalidate();
+              }
             } else if (event.type === 'VaultKeyChanged') {
               const accountId = userSession.accountId;
               const organizations = JSON.parse(
                 localStorage.getItem(`${accountId}:organizations`) || '[]',
               ) as Organization[];
-              clearVaultKeyFetcher.submit(
-                {
-                  organizations: organizations?.map(org => org.id) || [],
-                  sessionId: event.sessionId,
-                },
-                {
-                  action: '/auth/clearVaultKey',
-                  method: 'POST',
-                  encType: 'application/json',
-                },
-              );
+              clearVaultKeySubmit({
+                organizations: organizations?.map(org => org.id) || [],
+                sessionId: event.sessionId,
+              });
             } else if (
-              ['BranchDeleted', 'FileChanged'].includes(event.type) &&
+              (event.type === 'FileChanged' || event.type === 'BranchDeleted') &&
               event.team === organizationId &&
-              remoteId &&
-              event.project === remoteId
+              latestRemoteId.current &&
+              event.project === latestRemoteId.current
             ) {
-              syncDataFetcher.submit(
-                {},
-                {
-                  method: 'POST',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
-                },
-              );
+              // If the file changed is the current workspace, we need to sync it
+              if (await isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
+                syncDataSubmit({
+                  organizationId: organizationId,
+                  projectId: latestProjectId.current,
+                  workspaceId: latestWorkspaceId.current,
+                });
+                // FileChanged could be a new file has been added, we need to revalidate the workspace list
+              } else if (event.type === 'FileChanged' && !latestWorkspaceId.current && !latestInSubmission.current) {
+                revalidate();
+              }
             }
           } catch (e) {
             console.log('[sse] Error parsing response from SSE', e);
@@ -249,17 +244,19 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     }
     return;
   }, [
-    clearVaultKeyFetcher,
+    clearVaultKeySubmit,
+    latestProjectId,
+    latestRemoteId,
+    latestWorkspaceId,
     organizationId,
-    projectId,
-    remoteId,
-    syncDataFetcher,
-    syncOrganizationsFetcher,
-    syncProjectsFetcher,
-    syncStorageRuleFetcher,
+    revalidate,
+    syncDataSubmit,
+    syncOrganizationsSubmit,
+    syncProjectsSubmit,
+    syncStorageRulesSubmit,
     userSession.accountId,
     userSession.id,
-    workspaceId,
+    latestInSubmission,
   ]);
 
   return (

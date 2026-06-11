@@ -1,0 +1,102 @@
+---
+id: input-number
+sidebar_label: 'Input Number'
+sidebar_position: 2
+---
+
+# Input Number
+
+A numeric input component with optional increment/decrement buttons (steppers) built on React Aria's `NumberField` & `Input` component.
+
+## Props
+
+| Prop            | Type                       | Default | Description                                   |
+| --------------- | -------------------------- | ------- | --------------------------------------------- |
+| `label`         | `string`                   | -       | Optional label text displayed above the input |
+| `placeholder`   | `string`                   | -       | Placeholder text shown when input is empty    |
+| `min`           | `number`                   | -       | Minimum allowed value                         |
+| `max`           | `number`                   | -       | Maximum allowed value                         |
+| `step`          | `number`                   | `1`     | Amount to increment/decrement per step        |
+| `value`         | `number`                   | -       | Controlled value                              |
+| `defaultValue`  | `number`                   | -       | Initial value for uncontrolled mode           |
+| `onChange`      | `(value: number) => void`  | -       | Called when value changes                     |
+| `isDisabled`    | `boolean`                  | `false` | Whether the input is disabled                 |
+| `isReadOnly`    | `boolean`                  | `false` | Whether the input is read-only                |
+| `isRequired`    | `boolean`                  | `false` | Whether the input is required                 |
+| `formatOptions` | `Intl.NumberFormatOptions` | -       | Number formatting options                     |
+
+Extends all [React Aria NumberFieldProps](https://react-spectrum.adobe.com/react-aria/NumberField.html#props).
+
+## Usage Examples
+
+### Basic Number Input
+
+```tsx live
+<InputNumber placeholder="Enter a number" />
+```
+
+### With Label
+
+```tsx live
+<InputNumber label="Quantity" placeholder="0" />
+```
+
+### Increase/Decrease Stepper
+
+```tsx live
+<InputNumber step={5} placeholder="Increment by 5" />
+```
+
+The `step` prop defines how much the value changes per click.
+
+### With Min and Max Constraints
+
+```tsx live
+<InputNumber min={0} max={20} placeholder="0-20 only" />
+```
+
+Values outside this range will trigger the invalid state.
+
+### Decimal Numbers
+
+```tsx live
+<InputNumber
+  label="Price"
+  step={0.01}
+  min={0}
+  formatOptions={{
+    style: 'currency',
+    currency: 'USD',
+  }}
+/>
+```
+
+### Percentage Input
+
+```tsx live
+<InputNumber
+  label="Discount"
+  step={5}
+  min={0}
+  max={100}
+  formatOptions={{
+    style: 'percent',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }}
+/>
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-bg`: InputNumber background color
+- `--color-font`: InputNumber text color
+- `--hl-sm`: Standard border color
+- `--hl-md`: Highlight for focus/active
+- `--color-danger`: Error/invalid state color
+
+You can customize these variables in your CSS to theme the input number appearance.

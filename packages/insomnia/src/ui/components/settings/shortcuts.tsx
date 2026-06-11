@@ -1,17 +1,18 @@
-import React, { type FC } from 'react';
-import { Button } from 'react-aria-components';
-
+import type { HotKeyRegistry, KeyboardShortcut, KeyCombination } from 'insomnia-data/common';
 import {
   areSameKeyCombinations,
   constructKeyCombinationDisplay,
   getPlatformKeyCombinations,
   keyboardShortcutDescriptions,
   newDefaultRegistry,
-} from '../../../common/hotkeys';
+} from 'insomnia-data/common';
+import React, { type FC } from 'react';
+import { Button } from 'react-aria-components';
+
+import { useRootLoaderData } from '~/root';
+
 import { generateId } from '../../../common/misc';
-import type { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { Hotkey } from '../hotkey';
@@ -27,7 +28,7 @@ export const isKeyCombinationInRegistry = (
   );
 
 export const Shortcuts: FC = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
   const patchSettings = useSettingsPatcher();
 

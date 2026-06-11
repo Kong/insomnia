@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-
 import type { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
@@ -18,18 +16,21 @@ import {
   typeFromAST,
 } from 'graphql';
 import type { Maybe } from 'graphql-language-service';
+import type { Request } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
 import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useLocalStorage } from 'react-use';
+import * as reactUse from 'react-use';
+
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
-import * as models from '../../../../models';
-import type { Request } from '../../../../models/request';
 import {
   fetchRequestData,
   responseTransform,
@@ -40,7 +41,6 @@ import {
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
-import { CodeEditor, type CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import type { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
@@ -48,6 +48,8 @@ import { Icon } from '../../icon';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
 import { prettifyGraphql } from './prettify-graphql.mjs';
+
+const { useLocalStorage } = reactUse;
 
 // Type guard to ensure loc is non-nullable
 const hasLocation = (
@@ -100,7 +102,8 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
   return JSON.stringify(content);
 }
 
-const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
+const isString = (value?: string): value is string =>
+  typeof value === 'string' || typeof (value as unknown) === 'string';
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode =>
   def.kind === Kind.OPERATION_DEFINITION;
 
@@ -118,7 +121,7 @@ const fetchGraphQLSchemaForRequest = async ({
     return;
   }
 
-  const req = await models.request.getById(requestId);
+  const req = await services.request.getById(requestId);
 
   if (!req) {
     return;
@@ -130,7 +133,7 @@ const fetchGraphQLSchemaForRequest = async ({
       operationName: 'IntrospectionQuery',
     });
 
-    const introspectionRequest = await db.upsert(
+    const introspectionRequest = await db.update(
       Object.assign({}, req, {
         _id: req._id + '.graphql',
         settingMaxTimelineDataSize: 5000,
@@ -182,9 +185,9 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       };
     }
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     if (bodyBuffer) {
-      const { data, errors } = JSON.parse(bodyBuffer.toString());
+      const { data, errors } = JSON.parse(bodyBufferToUtf8(bodyBuffer));
       if (errors?.length) {
         return { schemaFetchError: errors[0] };
       }
@@ -237,7 +240,7 @@ export const GraphQLEditor: FC<Props> = ({
   let requestBody: GraphQLBody;
   try {
     requestBody = JSON.parse(request.body.text || '');
-  } catch (err) {
+  } catch {
     requestBody = { query: '' };
   }
 
@@ -246,7 +249,7 @@ export const GraphQLEditor: FC<Props> = ({
   let documentAST;
   try {
     documentAST = parse(requestBody.query || '');
-  } catch (error) {
+  } catch {
     documentAST = null;
   }
   const operations =
@@ -356,7 +359,7 @@ export const GraphQLEditor: FC<Props> = ({
       // default to first operation when none selected
       let operationName = operations[0] || '';
       if (operations.length && state.body.operationName) {
-        const operationsChanged = state.operations.join() !== operations.join();
+        const operationsChanged = state.operations.join(',') !== operations.join(',');
         const operationNameWasChanged = !operations.includes(state.body.operationName);
         if (operationsChanged && operationNameWasChanged) {
           // preserve selection during name change or fallback to first operation
@@ -428,7 +431,7 @@ export const GraphQLEditor: FC<Props> = ({
     }
     try {
       const filePath = filePaths[0]; // showOpenDialog is single select
-      const file = readFileSync(filePath);
+      const file = await window.main.insecureReadFile({ path: filePath });
       const content = JSON.parse(file.toString());
       if (!content.data) {
         throw new Error('JSON file should have a data field with the introspection results');
@@ -610,13 +613,13 @@ export const GraphQLEditor: FC<Props> = ({
     <>
       <Toolbar
         aria-label="GraphQL toolbar"
-        className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2"
+        className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2"
       >
         <Dropdown
           aria-label="Operations Dropdown"
           isDisabled={!state.operations.length}
           triggerButton={
-            <Button className="btn btn--compact h-full bg-transparent p-[--padding-xs] text-[--hl]">
+            <Button className="btn btn--compact h-full bg-transparent p-(--padding-xs) text-(--hl)">
               {state.body.operationName || 'Operations'}
             </Button>
           }
@@ -630,7 +633,7 @@ export const GraphQLEditor: FC<Props> = ({
         <Dropdown
           aria-label="Schema Dropdown"
           triggerButton={
-            <Button className="btn btn--compact h-full bg-transparent p-[--padding-xs] text-[--hl]">
+            <Button className="btn btn--compact h-full bg-transparent p-(--padding-xs) text-(--hl)">
               <span>
                 schema <i className="fa fa-wrench" />
               </span>
@@ -742,9 +745,9 @@ export const GraphQLEditor: FC<Props> = ({
             lintOptions={graphqlOptions?.lintOptions}
           />
         </Panel>
-        <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
+        <PanelResizeHandle className={'h-px w-full bg-(--hl-md)'} />
         <Panel id="GraphQL Variables editor" className="flex flex-col" minSize={20}>
-          <Heading className="flex h-[--line-height-sm] w-full flex-shrink-0 select-none items-center border-b border-solid border-[--hl-md] px-2 text-[--hl]">
+          <Heading className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2 text-(--hl) select-none">
             Query Variables
             <HelpTooltip className="space-left">
               Variables to use in GraphQL query <br />
@@ -773,16 +776,16 @@ export const GraphQLEditor: FC<Props> = ({
           </div>
         </Panel>
       </PanelGroup>
-      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 select-none items-center overflow-y-auto border-t border-solid border-[--hl-md]">
+      <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-y-auto border-t border-solid border-(--hl-md) select-none">
         <Button
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={beautifyRequestBody}
         >
           Prettify GraphQL
         </Button>
         <span className="flex-1" />
         {!schemaFetchError && (
-          <div className="flex flex-shrink-0 items-center gap-2 px-2 text-sm">
+          <div className="flex shrink-0 items-center gap-2 px-2 text-sm">
             <Icon icon="info-circle" />
             {renderSchemaFetchMessage()}
           </div>
@@ -790,13 +793,13 @@ export const GraphQLEditor: FC<Props> = ({
         {schemaFetchError && (
           <Group className="flex h-full items-center">
             <TooltipTrigger>
-              <Button className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
-                <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
+              <Button className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
+                <Icon icon="exclamation-triangle" className="text-(--color-warning)" />
                 <span>Error fetching Schema</span>
               </Button>
               <Tooltip
                 offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
               >
                 {schemaFetchError.message}
               </Tooltip>

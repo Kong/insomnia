@@ -1,6 +1,7 @@
+import type { Project, RemoteProject } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+
 import { database } from '../../common/database';
-import * as models from '../../models';
-import type { Project, RemoteProject } from '../../models/project';
 
 // Migration:
 // Team ~= Project > Workspaces
@@ -53,7 +54,7 @@ export const migrateProjectsIntoOrganization = async ({
   // Legacy remoteId should be orgId and legacy _id should be remoteId
   for (const remoteProject of legacyRemoteProjects) {
     updatePromises.push(
-      models.project.update(remoteProject, {
+      services.project.update(remoteProject, {
         parentId: remoteProject.remoteId,
         remoteId: remoteProject._id,
       }),
@@ -63,7 +64,7 @@ export const migrateProjectsIntoOrganization = async ({
   // Assign all local projects to personal organization
   for (const localProject of localProjects) {
     updatePromises.push(
-      models.project.update(localProject, {
+      services.project.update(localProject, {
         parentId: personalOrganizationId,
       }),
     );

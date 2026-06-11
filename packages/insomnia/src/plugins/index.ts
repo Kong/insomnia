@@ -2,104 +2,49 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import electron from 'electron';
+import type { Request, RequestGroup, Workspace } from 'insomnia-data';
+import { database as db, models, services } from 'insomnia-data';
+import type { PluginConfigMap } from 'insomnia-data/common';
 
-import type { ParsedApiSpec } from '../common/api-specs';
-import type { PluginConfigMap } from '../common/settings';
-import * as models from '../models';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
-import type { PluginTemplateTag } from '../templating/types';
-import { showError } from '../ui/components/modals/index';
-import type { PluginTheme } from './misc';
+import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
+
+import { getAppBundlePlugins, isDevelopment } from '../common/constants';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginNetwork from '../plugins/context/network';
+import * as pluginStore from '../plugins/context/store';
+import type { RenderPurpose } from '../templating/types';
 import themes from './themes';
-
-export interface Plugin {
-  name: string;
-  description: string;
-  version: string;
-  directory: string;
-  config: { disabled: boolean };
-  module: {
-    templateTags?: PluginTemplateTag[];
-    requestHooks?: ((requestContext: any) => void)[];
-    responseHooks?: ((responseContext: any) => void)[];
-    themes?: PluginTheme[];
-    requestGroupActions?: OmitInternal<RequestGroupAction>[];
-    requestActions?: OmitInternal<RequestAction>[];
-    workspaceActions?: OmitInternal<WorkspaceAction>[];
-    documentActions?: OmitInternal<DocumentAction>[];
-  };
-}
-
-type OmitInternal<T> = Omit<T, keyof { plugin: Plugin }>;
-export type TemplateTag = { plugin: Plugin } & {
-  templateTag: PluginTemplateTag;
-};
-
-export type RequestGroupAction = { plugin: Plugin } & {
-  action: (
-    context: Record<string, any>,
-    models: {
-      requestGroup: RequestGroup;
-      requests: (Request | GrpcRequest | WebSocketRequest)[];
-    },
-  ) => void | Promise<void>;
-  label: string;
-  icon?: string;
-};
-
-export type RequestAction = { plugin: Plugin } & {
-  action: (
-    context: Record<string, any>,
-    models: {
-      requestGroup?: RequestGroup;
-      request: Request | GrpcRequest | WebSocketRequest;
-    },
-  ) => void | Promise<void>;
-  label: string;
-  icon?: string;
-};
-
-export type WorkspaceAction = { plugin: Plugin } & {
-  action: (
-    context: Record<string, any>,
-    models: {
-      workspace: Workspace;
-      requestGroups: RequestGroup[];
-      requests: Request[];
-    },
-  ) => void | Promise<void>;
-  label: string;
-  icon?: string;
-};
-
-export type DocumentAction = { plugin: Plugin } & {
-  action: (context: Record<string, any>, documents: ParsedApiSpec) => void | Promise<void>;
-  label: string;
-  hideAfterClick?: boolean;
-};
-
-type RequestHookCallback = (context: any) => void;
-
-export type RequestHook = { plugin: Plugin } & {
-  hook: RequestHookCallback;
-};
-
-type ResponseHookCallback = (context: any) => void;
-export type ResponseHook = { plugin: Plugin } & {
-  hook: ResponseHookCallback;
-};
-
-export type Theme = { plugin: Plugin } & {
-  theme: PluginTheme;
-};
-
-export type ColorScheme = 'default' | 'light' | 'dark';
+import type {
+  DocumentAction,
+  Plugin,
+  RequestAction,
+  RequestGroupAction,
+  RequestHook,
+  ResponseHook,
+  TemplateTag,
+  Theme,
+  WorkspaceAction,
+} from './types';
 
 let plugins: Plugin[] | null | undefined = null;
+
+export function _testOnlySetPlugins(p: Plugin[] | null) {
+  plugins = p;
+}
+
+// The native `require` is in scope inside the bundled CommonJS that runs in the Electron plugin
+// window and main process; the inso CLI exposes it via `global.require`, so we use it when present
+// to ensure plugin modules load in all three runtimes.
+function getNodeRequire(): NodeRequire {
+  const globalRequire = (global as typeof global & { require?: unknown }).require;
+  if (typeof globalRequire === 'function') {
+    return globalRequire as NodeRequire;
+  }
+  if (typeof require === 'function') {
+    return require;
+  }
+  throw new Error('No require function available to load plugin modules');
+}
 
 export async function init() {
   await reloadPlugins();
@@ -144,15 +89,17 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
           continue;
         }
 
+        const nodeRequire = getNodeRequire();
+
         // Now delete the require cache for this module, ensuring we're deleting only the relevant entries
-        for (const cachePath of Object.keys(global.require.cache)) {
+        for (const cachePath of Object.keys(nodeRequire.cache)) {
           // Check if the cache path starts with the safe module path
           if (cachePath.startsWith(safeModulePath)) {
-            delete global.require.cache[cachePath];
+            delete nodeRequire.cache[cachePath];
           }
         }
 
-        const pluginJson = global.require(packageJSONPath);
+        const pluginJson = nodeRequire(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
         if (!('insomnia' in pluginJson)) {
@@ -160,7 +107,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         }
 
         // Delete require cache entry and re-require
-        const module = global.require(modulePath);
+        const module = nodeRequire(modulePath);
 
         pluginMap[pluginJson.name] = {
           name: pluginJson.name,
@@ -171,14 +118,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
           module: module,
         };
       } catch (err) {
-        showError({
-          title: 'Plugin Error',
-          message:
-            'Failed to load plugin ' +
-            filename +
-            '. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.',
-          error: err,
-        });
+        console.error(`[plugin] Error while loading plugin from ${p}/${filename}:`, err);
       }
     }
   }
@@ -190,11 +130,11 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
   }
 
   if (!plugins) {
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
       .split(':')
-      .filter(p => p)
+      .filter(Boolean)
       .map(p => {
         // Ensure proper resolution of paths and avoid path traversal
         if (p.indexOf('~/') === 0) {
@@ -208,7 +148,6 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
       'plugins',
     );
-    fs.mkdirSync(pluginPath, { recursive: true });
 
     // Also look in node_modules folder in each directory
     const basePaths = [pluginPath, ...extraPaths];
@@ -217,20 +156,65 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Store plugins in a map so that plugins with the same name only get added once
     const pluginMap: Record<string, Plugin> = {};
-
     await traversePluginPath(pluginMap, allPaths, allConfigs);
-    plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
+    const bundlePluginMap = getBundlePluginMap();
+    const fullPluginMap = { ...pluginMap, ...bundlePluginMap };
+    plugins = Object.keys(fullPluginMap).map(name => fullPluginMap[name]);
   }
 
   return plugins;
+}
+
+function getBundlePluginMap() {
+  const appBundlePlugins = getAppBundlePlugins();
+  const bundlePluginMap: Record<string, Plugin> = {};
+  appBundlePlugins.forEach(({ name: pluginName }) => {
+    try {
+      const isExecutedInInso = !process.type;
+      // In Insomnia, the packagePath is just the pluginName
+      let bundlePluginPath = pluginName;
+      if (isExecutedInInso) {
+        // When executed in Inso, the __dirname points to <packageRoot>/packages/insomnia-inso/dist
+        // The bundle plugin module is placed under <packageRoot>/node_module
+        const rootNodeModuleDir = path.resolve(__dirname, '..', '..', '..', 'node_modules');
+        // use require.resolve to reliably get the absolute path to the plugin's entry point
+        bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
+      }
+      console.log('[plugin] Loading bundled plugin %s from %s', pluginName, bundlePluginPath);
+      const module = getNodeRequire()(bundlePluginPath);
+      bundlePluginMap[pluginName] = {
+        name: pluginName,
+        description: `Insomnia bundled plugin for ${pluginName}`,
+        version: 'unknown',
+        directory: '',
+        config: { disabled: false },
+        module: module,
+      };
+    } catch (err) {
+      if (isDevelopment()) {
+        console.warn(
+          `[plugin] Failed to load bundled plugin ${pluginName}. You can ignore this warning if you not developing external vault feature.`,
+          err,
+        );
+      } else {
+        console.error(`Failed to load bundled plugin ${pluginName}`, err);
+      }
+    }
+  });
+  return bundlePluginMap;
 }
 
 export async function reloadPlugins() {
   await getPlugins(true);
 }
 
-async function getActivePlugins(): Promise<Plugin[]> {
+export async function getActivePlugins(): Promise<Plugin[]> {
   return (await getPlugins()).filter(p => !p.config.disabled);
+}
+
+export async function getBundlePlugins(): Promise<Plugin[]> {
+  const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
+  return (await getActivePlugins()).filter(p => p.directory === '' && appBundlePluginNames.includes(p.name));
 }
 
 export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
@@ -318,41 +302,84 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
   return extensions;
 }
 
-export async function getRequestHooks(): Promise<RequestHook[]> {
-  let functions: RequestHook[] = [
-    {
-      plugin: {
-        name: 'default-headers',
-        description: 'Set default headers for all requests',
-        version: '0.0.0',
-        directory: '',
-        config: {
-          disabled: false,
+export function getPluginCommonContext({
+  plugin,
+  renderPurpose,
+}: {
+  plugin: Pick<Plugin, 'name'>;
+  renderPurpose?: RenderPurpose;
+}) {
+  return {
+    ...pluginApp.init(renderPurpose),
+    ...pluginStore.init(plugin),
+    ...pluginNetwork.init(),
+    util: {
+      openInBrowser: async (url: string) =>
+        process.type === 'renderer' || process.type === 'worker'
+          ? window.main.openInBrowser(url)
+          : electron.shell.openExternal(url),
+      models: {
+        request: {
+          getById: services.request.getById,
+          getAncestors: async (request: any) => {
+            const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
+              models.requestGroup.type,
+              models.workspace.type,
+            ]);
+            return ancestors.filter(doc => doc._id !== request._id);
+          },
         },
-        module: {},
-      },
-      hook: context => {
-        const headers = context.request.getEnvironmentVariable('DEFAULT_HEADERS');
-        if (!headers) {
-          return;
-        }
-        for (const name of Object.keys(headers)) {
-          const value = headers[name];
-          if (context.request.hasHeader(name)) {
-            console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
-            continue;
-          }
-          if (value === 'null') {
-            context.request.removeHeader(name);
-            console.log(`[header] Remove default header ${name}`);
-          } else {
-            context.request.setHeader(name, value);
-            console.log(`[header] Set default header ${name}: ${value}`);
-          }
-        }
+        cloudCredential: {
+          getById: services.cloudCredential.getById,
+          update: services.cloudCredential.update,
+        },
+        workspace: {
+          getById: services.workspace.getById,
+        },
+        oAuth2Token: {
+          getByRequestId: services.oAuth2Token.getByParentId,
+        },
+        cookieJar: {
+          getOrCreateForParentId: (parentId: string) => {
+            return services.cookieJar.getOrCreateForParentId(parentId);
+          },
+        },
+        response: {
+          getLatestForRequestId: services.response.getLatestForRequestId,
+          getBodyBuffer: services.helpers.getResponseBodyBuffer,
+        },
+        settings: {
+          get: services.settings.get,
+        },
       },
     },
-  ];
+  };
+}
+
+// Allows Insomnia UI to invoke bundled plugin actions from the main process via IPC.
+// This entry point is only exposed to bundled plugins, not to public/third‑party plugins.
+export async function executePluginMainAction({
+  pluginName,
+  actionName,
+  context,
+  params,
+}: {
+  pluginName: string;
+  actionName: string;
+  context?: Record<string, any>;
+  params?: Record<string, any>;
+}): Promise<any> {
+  const result = await fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginMainAction', {
+    pluginName,
+    actionName,
+    context,
+    params,
+  });
+  return result;
+}
+
+export async function getRequestHooks(): Promise<RequestHook[]> {
+  let functions: RequestHook[] = [];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];

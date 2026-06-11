@@ -1,8 +1,11 @@
+import { type HttpVersion, HttpVersions, isMac, strings, UpdateChannel } from 'insomnia-data/common';
 import React, { type FC, Fragment } from 'react';
+
+import { useRootLoaderData } from '~/root';
+import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import {
   EditorKeyMap,
-  isMac,
   MAX_EDITOR_FONT_SIZE,
   MAX_INTERFACE_FONT_SIZE,
   MIN_EDITOR_FONT_SIZE,
@@ -10,25 +13,22 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
-import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
-import { strings } from '../../../common/strings';
-import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
-import { useRootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { NumberSetting } from './number-setting';
+import { TextArraySetting } from './text-array-setting';
 import { TextSetting } from './text-setting';
 import { VaultKeyPanel } from './vault-key-panel';
 
 export const General: FC = () => {
-  const { settings, userSession } = useRootLoaderData();
+  const { settings, userSession } = useRootLoaderData()!;
   const isLoggedIn = Boolean(userSession.id);
 
   return (
     <div className="relative p-4">
-      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-2 text-lg font-bold">Application</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-2 pb-2 text-lg font-bold">Application</h2>
 
       <div className="">
         <div>
@@ -46,7 +46,7 @@ export const General: FC = () => {
         </div>
         <div>
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
-          {!isMac() && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
+          {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
         </div>
       </div>
@@ -62,7 +62,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">Font</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Font</h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -113,7 +113,7 @@ export const General: FC = () => {
           label="Text Editor Key Map"
           setting="editorKeyMap"
           help={
-            isMac() &&
+            isMac &&
             settings.editorKeyMap === EditorKeyMap.vim && (
               <Fragment>
                 To enable key-repeating with Vim on macOS, see{' '}
@@ -138,7 +138,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">Request / Response</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Request / Response</h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -157,12 +157,6 @@ export const General: FC = () => {
         <div>
           <BooleanSetting label="Disable JS in HTML preview" setting="disableHtmlPreviewJs" />
           <BooleanSetting label="Disable links in response viewer" setting="disableResponsePreviewLinks" />
-
-          <BooleanSetting
-            label="Disable default User-Agent on new requests"
-            setting="disableAppVersionUserAgent"
-            help="If checked, disables adding the default User-Agent header on newly created requests."
-          />
         </div>
       </div>
 
@@ -215,7 +209,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">Security</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Security</h2>
       <div className="form-row pad-top-sm">
         <BooleanSetting
           label="Clear OAuth 2 session on start"
@@ -223,11 +217,8 @@ export const General: FC = () => {
           help="If checked, clears the OAuth session every time Insomnia is relaunched."
         />
         <button
-          className="pointer h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
-          style={{
-            padding: 0,
-          }}
-          onClick={initNewOAuthSession}
+          className="pointer h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-sm) hover:bg-(--hl-xs)"
+          onClick={clearOAuthWindowSessionId}
         >
           Clear OAuth 2 session
         </button>
@@ -241,9 +232,18 @@ export const General: FC = () => {
       </div>
       {isLoggedIn && <VaultKeyPanel />}
 
+      <div className="form-row pad-top-sm">
+        <TextArraySetting
+          label="What folders can Insomnia access?"
+          setting="dataFolders"
+          help="This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to."
+          placeholder="e.g., /Users/folder1"
+        />
+      </div>
+
       {updatesSupported() && (
         <Fragment>
-          <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">Software Updates</h2>
+          <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Software Updates</h2>
           <div className="flex w-full justify-between gap-2">
             <BooleanSetting
               label="Automatically download and install updates"
@@ -274,7 +274,7 @@ export const General: FC = () => {
         </>
       )}
 
-      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">Plugins</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Plugins</h2>
       <TextSetting
         label="Additional Plugin Path"
         setting="pluginPath"
@@ -284,7 +284,7 @@ export const General: FC = () => {
 
       {!isLoggedIn && (
         <>
-          <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">Network Activity</h2>
+          <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Network Activity</h2>
           <BooleanSetting label="Send Anonymous Usage Statistics" setting="enableAnalytics" disabled={isLoggedIn} />
           <div className="py-2 pl-5 text-sm opacity-50">
             Help Kong improve its products by sending anonymous data about features and plugins used, hardware and

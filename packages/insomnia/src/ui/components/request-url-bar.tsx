@@ -1,35 +1,50 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { Button } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router';
-import { useInterval } from 'react-use';
+import type { Request, RequestGroup } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Button, Link } from 'react-aria-components';
+import { useParams, useSearchParams } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
+import { recordProjectRecentRequest } from '~/common/project';
+import { useRootLoaderData } from '~/root';
+import {
+  type ConnectActionParams,
+  useRequestConnectActionFetcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
+import {
+  type SendActionParams,
+  useDebugRequestSendActionFetcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
+import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
-import * as models from '../../models';
-import { vaultEnvironmentRuntimePath } from '../../models/environment';
-import type { Request } from '../../models/request';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '../../models/request';
-import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
+import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { AnalyticsEvent } from '../../ui/analytics';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
-import { SegmentEvent } from '../analytics';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
-import { useRequestPatcher } from '../hooks/use-request';
-import { useRequestMetaPatcher } from '../hooks/use-request';
-import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import type { ConnectActionParams, RequestLoaderData, SendActionParams } from '../routes/request';
-import { useRootLoaderData } from '../routes/root';
-import type { WorkspaceLoaderData } from '../routes/workspace';
+import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
+import { useTimeoutWhen } from '../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
-import { OneLineEditor, type OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
+import { showModal } from './modals';
+import { AlertModal } from './modals/alert-modal';
 import { GenerateCodeModal } from './modals/generate-code-modal';
-import { showAlert, showModal, showPrompt } from './modals/index';
 import { InputVaultKeyModal } from './modals/input-vault-key-modal';
+import { PromptModal } from './modals/prompt-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
+const { isRequestGroup } = models.requestGroup;
+const { isEventStreamRequest, isGraphqlSubscriptionRequest } = models.request;
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
@@ -45,7 +60,7 @@ export interface RequestUrlBarHandle {
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
   ({ handleAutocompleteUrls, uniquenessKey, onPaste }, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const { userSession } = useRootLoaderData();
+    const { userSession } = useRootLoaderData()!;
     const { vaultKey } = userSession;
     const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
     const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
@@ -57,13 +72,32 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
       } else {
         // only for request render error
-        showAlert({
+        const errorMessage = searchParams.get('error') || '';
+        // detects a string to replace with a link to settings
+        const linkText = SECURITY_SETTINGS_PATH_LABEL;
+        const hasLink = errorMessage.endsWith(linkText);
+
+        const modifiedString = hasLink ? errorMessage.slice(0, errorMessage.length - linkText.length) : errorMessage;
+        const close = showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
             <div>
               <p>The request failed due to an unhandled error:</p>
               <code className="wide selectable">
-                <pre>{searchParams.get('error')}</pre>
+                <div className="w-full overflow-y-auto text-wrap">
+                  {modifiedString}
+                  {hasLink && (
+                    <Link
+                      className="cursor-pointer text-(--color-surprise)"
+                      onPress={() => {
+                        close();
+                        showSettingsModal({ tab: 'general' });
+                      }}
+                    >
+                      {linkText}
+                    </Link>
+                  )}
+                </div>
               </code>
             </div>
           ),
@@ -75,13 +109,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       setSearchParams({});
     }
 
-    const { activeWorkspace, activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-    const { settings } = useRootLoaderData();
+    const { activeWorkspace, activeEnvironment } = useWorkspaceLoaderData()!;
+    const { settings } = useRootLoaderData()!;
     const { hotKeyRegistry } = settings;
     const {
       activeRequest,
       activeRequestMeta: { downloadPath },
-    } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+    } = useRequestLoaderData()! as RequestLoaderData;
     const patchRequestMeta = useRequestMetaPatcher();
     const methodDropdownRef = useRef<DropdownHandle>(null);
     const dropdownRef = useRef<DropdownHandle>(null);
@@ -107,8 +141,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     useImperativeHandle(ref, () => ({ focusInput, setUrl }), [focusInput, setUrl]);
 
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
-    const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
-    const fetcher = useFetcher();
+    const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
+    const connectRequestFetcher = useRequestConnectActionFetcher();
+    const sendRequestFetcher = useDebugRequestSendActionFetcher();
 
     const { updateTabById } = useInsomniaTabContext();
 
@@ -118,41 +153,37 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       workspaceId: string;
       requestId: string;
     };
+    const connectSubmit = connectRequestFetcher.submit;
     const connect = useCallback(
       (connectParams: ConnectActionParams) => {
-        fetcher.submit(JSON.stringify(connectParams), {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
-          method: 'post',
-          encType: 'application/json',
+        connectSubmit({
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+          connectParams,
         });
       },
-      [fetcher, organizationId, projectId, requestId, workspaceId],
+      [connectSubmit, organizationId, projectId, requestId, workspaceId],
     );
+    const sendRequestSubmit = sendRequestFetcher.submit;
     const send = useCallback(
-      (sendParams: SendActionParams) => {
-        // file://./../routes/request.tsx#sendAction
-        fetcher.submit(JSON.stringify(sendParams), {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/send`,
-          method: 'post',
-          encType: 'application/json',
+      (params: SendActionParams) => {
+        sendRequestSubmit({
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+          params,
         });
       },
-      [fetcher, organizationId, projectId, requestId, workspaceId],
+      [organizationId, projectId, requestId, sendRequestSubmit, workspaceId],
     );
 
     const sendOrConnect = useCallback(
       async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
         updateTabById?.(requestId, { temporary: false });
-        models.stats.incrementExecutedRequests();
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.requestExecute,
-          properties: {
-            preferredHttpVersion: settings.preferredHttpVersion,
-            // @ts-expect-error -- who cares
-            authenticationType: activeRequest.authentication?.type,
-            mimeType: activeRequest.body.mimeType,
-          },
-        });
+        services.stats.incrementExecutedRequests();
         // reset timeout
         setCurrentTimeout(undefined);
 
@@ -160,8 +191,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           const startListening = async () => {
             const environmentId = activeEnvironment._id;
             const workspaceId = activeWorkspace._id;
-            // Render any nunjucks tags in the url/headers/authentication settings/cookies
-            const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+            // Render any Liquid template tags in the url/headers/authentication settings/cookies
+            const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
             const ancestors = await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type]);
             // check for authentication overrides in parent folders
@@ -187,37 +218,47 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 cookieJar: rendered.workspaceCookieJar,
                 suppressUserAgent: rendered.suppressUserAgent,
               });
+            rendered &&
+              recordProjectRecentRequest({
+                projectId,
+                requestId,
+                workspaceId: activeWorkspace._id,
+              });
           };
           startListening();
           return;
         }
 
         try {
-          send({ requestId, shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable });
+          recordProjectRecentRequest({
+            projectId,
+            requestId,
+            workspaceId: activeWorkspace._id,
+          });
+
+          send({
+            requestId,
+            workspaceId: activeWorkspace._id,
+            projectId,
+            shouldPromptForPathAfterResponse,
+            ignoreUndefinedEnvVariable,
+          });
         } catch (err) {
-          showAlert({
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          showModal(AlertModal, {
             title: 'Unexpected Request Failure',
             message: (
               <div>
                 <p>The request failed due to an unhandled error:</p>
                 <code className="wide selectable">
-                  <pre>{err.message}</pre>
+                  <pre>{errorMessage}</pre>
                 </code>
               </div>
             ),
           });
         }
       },
-      [
-        activeEnvironment._id,
-        activeRequest,
-        activeWorkspace._id,
-        connect,
-        requestId,
-        send,
-        settings.preferredHttpVersion,
-        updateTabById,
-      ],
+      [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, updateTabById, projectId],
     );
 
     useEffect(() => {
@@ -236,7 +277,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       };
     }, [sendOrConnect]);
 
-    useInterval(sendOrConnect, currentInterval && fetcher.state === 'idle' ? currentInterval : null);
+    reactUse.useInterval(
+      sendOrConnect,
+      currentInterval && connectRequestFetcher.state === 'idle' ? currentInterval : null,
+    );
     useTimeoutWhen(sendOrConnect, currentTimeout, !!currentTimeout);
     const patchRequest = useRequestPatcher();
 
@@ -259,7 +303,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     });
 
     const buttonText = isRealtimeRequest ? 'Connect' : downloadPath ? 'Download' : 'Send';
-    const borderRadius = isRealtimeRequest ? 'rounded-sm' : 'rounded-l-sm';
+    const borderRadius = isRealtimeRequest ? 'rounded-xs' : 'rounded-l-sm';
     const { url, method } = activeRequest;
     const isEventStreamOpen = useReadyState({ requestId: activeRequest._id, protocol: 'curl' });
     const isGraphQLSubscriptionOpen = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
@@ -292,7 +336,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             {isCancellable ? (
               <button
                 type="button"
-                className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-[--color-font-surprise]"
+                className="rounded-xs bg-(--color-surprise) px-(--padding-md) text-(--color-font-surprise)"
                 onClick={() => {
                   if (isEventStreamRequest(activeRequest)) {
                     window.main.curl.close({ requestId: activeRequest._id });
@@ -311,7 +355,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               <>
                 <button
                   onClick={() => sendOrConnect()}
-                  className={`bg-[--color-surprise] px-[--padding-md] text-[--color-font-surprise] ${borderRadius}`}
+                  className={`bg-(--color-surprise) px-(--padding-md) text-(--color-font-surprise) ${borderRadius}`}
                   type="button"
                 >
                   {buttonText}
@@ -325,7 +369,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                     closeOnSelect={false}
                     triggerButton={
                       <Button
-                        className="rounded-r-sm bg-[--color-surprise] px-1 text-[--color-font-surprise]"
+                        className="rounded-r-sm bg-(--color-surprise) px-1 text-(--color-font-surprise)"
                         style={{
                           borderTopRightRadius: '0.125rem',
                           borderBottomRightRadius: '0.125rem',
@@ -348,7 +392,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                         <ItemContent
                           icon="code"
                           label="Generate Client Code"
-                          onClick={() => showModal(GenerateCodeModal, { request: activeRequest })}
+                          onClick={() => {
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.requestSendMenuGenerateCodeClicked,
+                            });
+                            showModal(GenerateCodeModal, { request: activeRequest });
+                          }}
                         />
                       </DropdownItem>
                     </DropdownSection>
@@ -357,8 +406,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                         <ItemContent
                           icon="clock-o"
                           label="Send After Delay"
-                          onClick={() =>
-                            showPrompt({
+                          onClick={() => {
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.requestSendMenuSendAfterDelayClicked,
+                            });
+                            showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send After Delay',
                               label: 'Delay in seconds',
@@ -366,16 +418,19 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                               onComplete: seconds => {
                                 setCurrentTimeout(+seconds * 1000);
                               },
-                            })
-                          }
+                            });
+                          }}
                         />
                       </DropdownItem>
                       <DropdownItem aria-label="Repeat on Interval">
                         <ItemContent
                           icon="repeat"
                           label="Repeat on Interval"
-                          onClick={() =>
-                            showPrompt({
+                          onClick={() => {
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.requestSendMenuRepeatAfterIntervalClicked,
+                            });
+                            showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send on Interval',
                               label: 'Interval in seconds',
@@ -385,8 +440,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                                 sendOrConnect();
                                 setCurrentInterval(+seconds * 1000);
                               },
-                            })
-                          }
+                            });
+                          }}
                         />
                       </DropdownItem>
                       {downloadPath ? (
@@ -404,6 +459,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                             icon="download"
                             label="Download After Send"
                             onClick={async () => {
+                              window.main.trackAnalyticsEvent({
+                                event: AnalyticsEvent.requestSendMenuDownloadAfterSendClicked,
+                              });
                               const { canceled, filePaths } = await window.dialog.showOpenDialog({
                                 title: 'Select Download Location',
                                 buttonLabel: 'Select',
@@ -418,7 +476,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                         </DropdownItem>
                       )}
                       <DropdownItem aria-label="Send And Download">
-                        <ItemContent icon="download" label="Send And Download" onClick={() => sendOrConnect(true)} />
+                        <ItemContent
+                          icon="download"
+                          label="Send And Download"
+                          onClick={() => {
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.requestSendMenuSendAndDownloadClicked,
+                            });
+                            sendOrConnect(true);
+                          }}
+                        />
                       </DropdownItem>
                     </DropdownSection>
                   </Dropdown>
@@ -434,7 +501,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               ? '1 environment variable is missing'
               : `${undefinedEnvironmentVariableList?.length} environment variables are missing`
           }
-          okText="Execute anyways"
+          okText="Execute anyway"
           onOk={() => {
             setShowEnvVariableMissingModal(false);
             sendOrConnect(false, true);
@@ -442,14 +509,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           onCancel={() => setShowEnvVariableMissingModal(false)}
         >
           <div>
-            These environment variables have been defined, but have not been valued with in the currently active
-            environment:
+            These environment variables have been defined, but have not been assigned a value within the currently
+            active environment:
             <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
               {undefinedEnvironmentVariableList?.map(item => {
                 return (
                   <div
                     key={item}
-                    className="mr-3 mt-3 rounded-sm bg-[--color-surprise] px-3 py-1 text-[--color-font-surprise]"
+                    className="mt-3 mr-3 rounded-xs bg-(--color-surprise) px-3 py-1 text-(--color-font-surprise)"
                   >
                     {item}
                   </div>
@@ -459,14 +526,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           </div>
           {!vaultKey &&
             undefinedEnvironmentVariableList.some(variableName =>
-              variableName.startsWith(`${vaultEnvironmentRuntimePath}.`),
+              variableName.startsWith(`${models.environment.vaultEnvironmentRuntimePath}.`),
             ) && (
               <div className="mt-4">
                 <p>
                   These are secret environment variables. However, the required vault key has not been provided yet.
                 </p>
                 <Button
-                  className="cursor- py-1 text-[--color-info] underline ring-1 ring-transparent focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="cursor- py-1 text-(--color-info) underline ring-1 ring-transparent focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() => {
                     setShowInputVaultKeyModal(true);
                     setShowEnvVariableMissingModal(false);
@@ -476,12 +543,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                 </Button>
                 <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
                   {undefinedEnvironmentVariableList
-                    ?.filter(variableName => variableName.startsWith(`${vaultEnvironmentRuntimePath}.`))
+                    ?.filter(variableName =>
+                      variableName.startsWith(`${models.environment.vaultEnvironmentRuntimePath}.`),
+                    )
                     .map(item => {
                       return (
                         <div
                           key={item}
-                          className="mr-3 mt-3 rounded-sm bg-[--color-surprise] px-3 py-1 text-[--color-font-surprise]"
+                          className="mt-3 mr-3 rounded-xs bg-(--color-surprise) px-3 py-1 text-(--color-font-surprise)"
                         >
                           {item}
                         </div>

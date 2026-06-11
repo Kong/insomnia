@@ -1,12 +1,16 @@
 import type { queueAsPromised } from 'fastq';
 import * as fastq from 'fastq';
+import type {
+  ClientCertificate,
+  CookieJar,
+  Environment,
+  Request,
+  RequestTestResult,
+  Settings,
+  UserUploadEnvironment,
+} from 'insomnia-data';
 
-import type { RequestContext, RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
-import type { ClientCertificate } from '../models/client-certificate';
-import type { CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { Request } from '../models/request';
-import type { Settings } from '../models/settings';
+import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import { cancellableExecution } from './cancellation';
 
 export interface ExecuteScriptContext {
@@ -51,7 +55,7 @@ interface Task {
 const q: queueAsPromised<Task> = fastq.promise(asyncWorker, 1);
 
 async function asyncWorker(arg: Task): Promise<any> {
-  const timeoutValue = arg.context.settings.timeout || 30000;
+  const timeoutValue = arg.context.settings.timeout || 30_000;
   const timeoutPromise = new Promise<{ error: string }>(resolve =>
     setTimeout(resolve, timeoutValue, { error: `Executing script timeout: ${timeoutValue}` }),
   );

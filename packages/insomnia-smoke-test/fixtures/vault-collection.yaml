@@ -16,7 +16,6 @@ resources:
       text: |-
         {{ _.vault.foo }}
         {{ _.vault.hello }}
-    parameters: []
     headers:
       - name: Content-Type
         value: text/plain
@@ -54,12 +53,6 @@ resources:
       text: |-
         {{ _.vault.secret }}
         {{ _.vault[0] }}
-    parameters:
-      - id: pair_74f9877885a84128b4d5afc0dfc77945
-        name: ""
-        value: ""
-        description: ""
-        disabled: false
     headers:
       - name: Content-Type
         value: text/plain
@@ -99,12 +92,6 @@ resources:
     body:
       mimeType: text/plain
       text: ""
-    parameters:
-      - id: pair_74f9877885a84128b4d5afc0dfc77945
-        name: ""
-        value: ""
-        description: ""
-        disabled: false
     headers:
       - name: Content-Type
         value: text/plain
@@ -139,12 +126,6 @@ resources:
       text: |-
         {{ _.vault.secret }}
         {{ _.vault.v1 }}
-    parameters:
-      - id: pair_74f9877885a84128b4d5afc0dfc77945
-        name: ""
-        value: ""
-        description: ""
-        disabled: false
     headers:
       - name: Content-Type
         value: text/plain

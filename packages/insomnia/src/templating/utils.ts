@@ -1,10 +1,14 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
+import { models, services } from 'insomnia-data';
 
-import { userSession } from '../models';
-import { decryptSecretValue, vaultEnvironmentMaskValue } from '../models/environment';
+import { base64ToUtf8, utf8ToBase64 } from '~/utils/utf8-bytes';
+
+import { getRuntime } from '../runtimes';
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
-import objectPath from './third_party/objectPath';
+import { tokenizeArgs } from './tokenize-args';
+export { tokenizeArgs };
+import objectPath from './third_party/object-path';
 
 /**
  * Get list of paths to all primitive types in nested object
@@ -48,115 +52,23 @@ export function normalizeToDotAndBracketNotation(prefix: string) {
 }
 
 /**
- * Parse a Nunjucks tag string into a usable object
+ * Parse a Liquid template tag string into a usable object
  * @param {string} tagStr - the template string for the tag
  */
 export function tokenizeTag(tagStr: string) {
-  // ~~~~~~~~ //
-  // Sanitize //
-  // ~~~~~~~~ //
   const withoutEnds = tagStr.trim().replace(/^{%/, '').replace(/%}$/, '').trim();
   const nameMatch = withoutEnds.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
   const name = nameMatch ? nameMatch[0] : withoutEnds;
   const argsStr = withoutEnds.slice(name.length);
-  // ~~~~~~~~~~~~~ //
-  // Tokenize Args //
-  // ~~~~~~~~~~~~~ //
-  const args: NunjucksParsedTagArg[] = [];
-  let quotedBy: "'" | '"' | null = null;
-  let currentArg: string | null = null;
-
-  for (let i = 0; i < argsStr.length + 1; i++) {
-    // Adding an "invisible" at the end helps us terminate the last arg
-    const c = argsStr.charAt(i) || ',';
-
-    // Do nothing if we're still on a space or comma
-    if (currentArg === null && c.match(/[\s,]/)) {
-      continue;
-    }
-
-    // Start a new single-quoted string
-    if (currentArg === null && c === "'") {
-      currentArg = '';
-      quotedBy = "'";
-      continue;
-    }
-
-    // Start a new double-quoted string
-    if (currentArg === null && c === '"') {
-      currentArg = '';
-      quotedBy = '"';
-      continue;
-    }
-
-    // Start a new unquoted string
-    if (currentArg === null) {
-      currentArg = c;
-      quotedBy = null;
-      continue;
-    }
-
-    const endQuoted = quotedBy && c === quotedBy;
-    const endUnquoted = !quotedBy && c === ',';
-    const argCompleted = endQuoted || endUnquoted;
-
-    // Append current char to argument
-    if (!argCompleted && currentArg !== null) {
-      if (c === '\\') {
-        // Handle backslashes
-        i += 1;
-        currentArg += argsStr.charAt(i);
-      } else {
-        currentArg += c;
-      }
-    }
-
-    // End current argument
-    if (currentArg !== null && argCompleted) {
-      let arg: NunjucksParsedTagArg;
-
-      if (quotedBy) {
-        arg = {
-          type: 'string',
-          value: currentArg,
-          quotedBy,
-        };
-      } else if (['true', 'false'].includes(currentArg)) {
-        arg = {
-          type: 'boolean',
-          value: currentArg.toLowerCase() === 'true',
-        };
-      } else if (currentArg.match(/^\d*\.?\d*$/)) {
-        arg = {
-          type: 'number',
-          value: currentArg,
-        };
-      } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
-        arg = {
-          type: 'variable',
-          value: currentArg,
-        };
-      } else {
-        arg = {
-          type: 'expression',
-          value: currentArg,
-        };
-      }
-
-      args.push(arg);
-      currentArg = null;
-      quotedBy = null;
-    }
-  }
 
   const parsedTag: NunjucksParsedTag = {
     name,
-    args,
+    args: tokenizeArgs(argsStr),
   };
   return parsedTag;
 }
 
-/** Convert a tokenized tag back into a Nunjucks string */
+/** Convert a tokenized tag back into a Liquid template string */
 export function unTokenizeTag(tagData: NunjucksParsedTag) {
   const args: string[] = [];
 
@@ -178,7 +90,7 @@ export function unTokenizeTag(tagData: NunjucksParsedTag) {
   return `{% ${tagData.name} ${argsStr} %}`;
 }
 
-/** Get the default Nunjucks string for an extension */
+/** Get the default Liquid template string for an extension */
 export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
   const stringArgs: string[] = (args || []).map(argDefinition => {
     if (argDefinition.type === 'enum') {
@@ -188,7 +100,7 @@ export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
       return `'${value}'`;
     }
     if (argDefinition.type === 'number') {
-      return `${parseFloat(argDefinition.defaultValue + '') || 0}`;
+      return `${Number.parseFloat(argDefinition.defaultValue + '') || 0}`;
     }
     if (argDefinition.type === 'boolean') {
       return argDefinition.defaultValue ? 'true' : 'false';
@@ -211,7 +123,7 @@ export function encodeEncoding<T>(value: T, encoding?: 'base64') {
   }
 
   if (encoding === 'base64') {
-    const encodedValue = Buffer.from(value, 'utf8').toString('base64');
+    const encodedValue = utf8ToBase64(value);
     return `b64::${encodedValue}::46b`;
   }
 
@@ -226,7 +138,7 @@ export function decodeEncoding<T>(value: T) {
   const results = value.match(/^b64::(.+)::46b$/);
 
   if (results) {
-    return Buffer.from(results[1], 'base64').toString('utf8');
+    return base64ToUtf8(results[1]);
   }
 
   return value;
@@ -242,23 +154,26 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
   const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
   if (typeof vaultEnvironmentData === 'object') {
     if (shouldDecrypt) {
-      const { vaultKey, vaultSalt } = await userSession.getOrCreate();
+      const { vaultKey, vaultSalt } = await services.userSession.get();
       const isVaultEnabled = !!vaultSalt;
       if (isVaultEnabled && vaultKey) {
         const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;
-        // decrypt all secert values under vaultEnvironmentPath property in context
-        Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+        // decrypt all secret values under vaultEnvironmentPath property in context
+        for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
           const encryptedValue = vaultEnvironmentData[vaultContextKey];
-          vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
-        });
+          vaultEnvironmentData[vaultContextKey] = await getRuntime().crypto.decryptSecretValue(
+            encryptedValue,
+            symmetricKey,
+          );
+        }
       } else if (isVaultEnabled && !vaultKey) {
         // remove all values under vaultEnvironmentPath if no vault key found
         vaultEnvironmentData = {};
       }
     } else {
-      // mask all secert values under vaultEnvironmentPath property in context
+      // mask all secret values under vaultEnvironmentPath property in context
       Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
-        vaultEnvironmentData[vaultContextKey] = vaultEnvironmentMaskValue;
+        vaultEnvironmentData[vaultContextKey] = models.environment.vaultEnvironmentMaskValue;
       });
     }
   }
@@ -279,7 +194,7 @@ export function extractNunjucksTagFromCoords(
       const range = textMarker.find() as MarkerRange;
       return {
         range,
-        // @ts-expect-error __template shoule be property of nunjucks tag markText
+        // @ts-expect-error __template should be property of nunjucks tag markText
         template: textMarker.__template || '',
       };
     }
@@ -287,7 +202,3 @@ export function extractNunjucksTagFromCoords(
 }
 
 export const responseTagRegex = new RegExp('{% *response *.* %}');
-
-export function sanitizeStrForWin32(str: string) {
-  return str.replace(/\\/g, '\\\\\\\\');
-}

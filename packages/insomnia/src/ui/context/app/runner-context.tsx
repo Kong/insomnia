@@ -1,10 +1,11 @@
 import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useEffect } from 'react';
 import type { Selection } from 'react-aria-components';
 
+import type { RequestRow } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
+
 import type { UploadDataType } from '../../components/modals/upload-runner-data-modal';
-import uiEventBus from '../../eventBus';
+import uiEventBus from '../../event-bus';
 import useStateRef from '../../hooks/use-state-ref';
-import type { RequestRow } from '../../routes/runner';
 
 interface RunnerState {
   selectedKeys: Selection;

@@ -1,6 +1,5 @@
 import clone from 'clone';
 import equal from 'deep-equal';
-import _ from 'lodash';
 
 import { getInterpolator } from './interpolator';
 
@@ -62,7 +61,7 @@ export class PropertyBase {
    * @returns The property key without the leading underscore.
    */
   static propertyUnprefixMeta(_value: any, key: string) {
-    return _.trimStart(key, '_');
+    return key.startsWith('_') ? key.slice(1) : key;
   }
 
   // TODO: this is currently implemented by each instance
@@ -110,22 +109,22 @@ export class PropertyBase {
     const parents: PropertyBase[] = [];
 
     while (queue.length > 0) {
-      const ancester = queue.shift();
-      if (!ancester) {
+      const ancestor = queue.shift();
+      if (!ancestor) {
         continue;
       }
 
       // TODO: check options
-      const cloned = clone(ancester);
+      const cloned = clone(ancestor);
       const keepIterating = iterator(cloned);
       parents.push(cloned);
       if (!keepIterating) {
         break;
       }
 
-      const olderAncester = ancester.parent();
-      if (olderAncester) {
-        queue.push(olderAncester);
+      const olderAncestor = ancestor.parent();
+      if (olderAncestor) {
+        queue.push(olderAncestor);
       }
     }
 
@@ -149,7 +148,7 @@ export class PropertyBase {
    *                     If not provided, the traversal stops at the first ancestor that contains the property.
    * @returns The first ancestor that satisfies the search criteria, or `undefined` if no such ancestor is found.
    */
-  findInParents(property: string, customizer?: (ancester: PropertyBase) => boolean): PropertyBase | undefined {
+  findInParents(property: string, customizer?: (ancestor: PropertyBase) => boolean): PropertyBase | undefined {
     const currentParent = this.parent();
     if (!currentParent) {
       return;
@@ -158,12 +157,12 @@ export class PropertyBase {
     const queue: PropertyBase[] = [currentParent];
 
     while (queue.length > 0) {
-      const ancester = queue.shift();
-      if (!ancester) {
+      const ancestor = queue.shift();
+      if (!ancestor) {
         continue;
       }
 
-      const cloned = clone(ancester);
+      const cloned = clone(ancestor);
       const hasProperty = Object.keys(cloned.meta()).includes(property);
       if (!hasProperty) {
         // keep traversing until parent has the property
@@ -181,9 +180,9 @@ export class PropertyBase {
         }
       }
 
-      const olderAncester = ancester.parent();
-      if (olderAncester) {
-        queue.push(olderAncester);
+      const olderAncestor = ancestor.parent();
+      if (olderAncestor) {
+        queue.push(olderAncestor);
       }
     }
 
@@ -273,9 +272,9 @@ export class Property extends PropertyBase {
    * @returns The content string with placeholders replaced by corresponding values from the context.
    * @throws {Error} If the `content` parameter is not a string or if `variables` is not an array.
    */
-  static replaceSubstitutions(content: string, ...variables: object[]): string {
+  static async replaceSubstitutions(content: string, ...variables: object[]): Promise<string> {
     if (!Array.isArray(variables) || typeof content !== 'string') {
-      throw new Error(
+      throw new TypeError(
         "replaceSubstitutions: the first param's type is not string or other parameters are not an array",
       );
     }
@@ -302,9 +301,9 @@ export class Property extends PropertyBase {
    *                 are not provided as an array.
    * @throws {Error} If an error occurs during the substitution process.
    */
-  static replaceSubstitutionsIn(obj: object, ...variables: object[]): object {
+  static async replaceSubstitutionsIn(obj: object, ...variables: object[]): Promise<object> {
     if (!Array.isArray(variables) || typeof obj !== 'object') {
-      throw new Error(
+      throw new TypeError(
         "replaceSubstitutions: the first param's type is not object or other parameters are not an array",
       );
     }
@@ -318,7 +317,7 @@ export class Property extends PropertyBase {
         context = { ...context, ...variable };
       });
 
-      const rendered = getInterpolator().render(content, context);
+      const rendered = await getInterpolator().render(content, context);
       return JSON.parse(rendered);
     } catch (e: any) {
       throw new Error(`replaceSubstitutionsIn: ${e.toString()}`);
@@ -443,7 +442,7 @@ export class PropertyList<T extends Property> {
     if (index <= this.list.length - 1) {
       return this.list[index];
     }
-    return undefined;
+    return;
   }
 
   indexOf(item: string | T) {
@@ -496,11 +495,14 @@ export class PropertyList<T extends Property> {
     for (let i = this.list.length - 1; i >= 0; i--) {
       const record = this.list[i] as Record<string, any>;
       if (record[indexFieldName] === id) {
+        if ('valueOf' in this.list[i] && typeof this.list[i].valueOf === 'function') {
+          return this.list[i].valueOf();
+        }
         return this.list[i];
       }
     }
 
-    return undefined;
+    return;
   }
 
   populate(items: T[]) {
@@ -555,7 +557,7 @@ export class PropertyList<T extends Property> {
     }
 
     const itemIdx = this.indexOf(item);
-    if (itemIdx >= 0) {
+    if (itemIdx !== -1) {
       this.list = [...this.list.splice(0, itemIdx), item, ...this.list.splice(itemIdx + 1)];
       return false;
     }

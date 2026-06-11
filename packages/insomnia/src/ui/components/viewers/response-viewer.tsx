@@ -1,20 +1,37 @@
-import iconv from 'iconv-lite';
-import React, { Fragment, useCallback, useRef, useState } from 'react';
+import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW } from 'insomnia-data/common';
+import { Fragment, useCallback, useRef, useState } from 'react';
 
-import {
-  HUGE_RESPONSE_MB,
-  LARGE_RESPONSE_MB,
-  PREVIEW_MODE_FRIENDLY,
-  PREVIEW_MODE_RAW,
-} from '../../../common/constants';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { bytesToBase64, utf8StringFromBytes } from '~/utils/utf8-bytes';
+
+import { HUGE_RESPONSE_MB, LARGE_RESPONSE_MB } from '../../../common/constants';
 import { unescapeForwardSlash } from '../../../common/misc';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';
 import { ResponseMultipartViewer } from './response-multipart-viewer';
 import { ResponsePDFViewer } from './response-pdf-viewer';
 import { ResponseWebView } from './response-web-view';
+
+const CHARSET_ALIASES: Record<string, string> = {
+  utf8: 'utf8',
+  utf16le: 'utf-16le',
+  ucs2: 'utf-16le',
+  'ucs-2': 'utf-16le',
+  latin1: 'iso-8859-1',
+  binary: 'iso-8859-1',
+  ascii: 'ascii',
+  win1250: 'windows-1250',
+  win1251: 'windows-1251',
+  win1252: 'windows-1252',
+  win1253: 'windows-1253',
+  win1254: 'windows-1254',
+  win1255: 'windows-1255',
+  win1256: 'windows-1256',
+  win1257: 'windows-1257',
+  win1258: 'windows-1258',
+};
 
 let alwaysShowLargeResponses = false;
 
@@ -43,8 +60,8 @@ export interface ResponseViewerProps {
   editorFontSize: number;
   filter: string;
   filterHistory: string[];
-  bodyBuffer?: Buffer;
-  getBody?: (...args: any[]) => Promise<Buffer | string>;
+  bodyBuffer?: Uint8Array;
+  getBody?: (...args: any[]) => Promise<Uint8Array | string>;
   previewMode: string;
   responseId: string;
   url: string;
@@ -74,7 +91,7 @@ export const ResponseViewer = ({
   const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
   const [parseError, setParseError] = useState('');
 
-  const [overSizedBody, setOversizedBody] = useState<Buffer | null>(bodyBuffer || null);
+  const [overSizedBody, setOversizedBody] = useState<Uint8Array | null>(bodyBuffer || null);
 
   const editorRef = useRef<CodeEditorHandle>(null);
 
@@ -83,9 +100,12 @@ export const ResponseViewer = ({
 
     try {
       const buffer = await getBody?.();
-      const bufferOrError = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+      if (typeof buffer === 'string') {
+        setParseError(`Failed reading response from filesystem: ${buffer}`);
+        return setOversizedBody(null);
+      }
 
-      return setOversizedBody(bufferOrError || null);
+      return setOversizedBody(buffer || null);
     } catch (err) {
       setParseError(`Failed reading response from filesystem: ${err.stack}`);
     }
@@ -121,24 +141,22 @@ export const ResponseViewer = ({
     // Apparently users often send JSON with weird content-types like text/plain.
     try {
       if (overSizedBody && overSizedBody.length > 0) {
-        JSON.parse(overSizedBody.toString('utf8'));
+        JSON.parse(utf8StringFromBytes(overSizedBody));
         return 'application/json';
       }
-    } catch (error) {}
+    } catch {}
     // Try to detect HTML in all cases (even if header is set).
     // It is fairly common for webservers to send errors in HTML by default.
     // NOTE: This will probably never throw but I'm not 100% so wrap anyway
     try {
-      const isProbablyHTML = overSizedBody
-        .slice(0, 100)
-        .toString()
+      const isProbablyHTML = utf8StringFromBytes(overSizedBody.slice(0, 100))
         .trim()
         .match(/^<!doctype html.*>/i);
 
       if (lowercasedOriginalContentType.indexOf('text/html') !== 0 && isProbablyHTML) {
         return 'text/html';
       }
-    } catch (error) {}
+    } catch {}
 
     return lowercasedOriginalContentType;
   }, [originalContentType, overSizedBody]);
@@ -149,13 +167,14 @@ export const ResponseViewer = ({
     }
     // Show everything else as "source"
     const match = _getContentType().match(/charset=([\w-]+)/);
-    const charset = match && match.length >= 2 ? match[1] : 'utf-8';
-    // Sometimes iconv conversion fails so fallback to regular buffer
+    const charset = match && match.length >= 2 ? match[1] : 'utf8';
+    const label = CHARSET_ALIASES[charset.toLowerCase()] ?? charset;
+    // Sometimes decoding fails so fallback to regular buffer
     try {
-      return iconv.decode(overSizedBody, charset);
+      return new TextDecoder(label).decode(overSizedBody);
     } catch (err) {
       console.warn('[response] Failed to decode body', err);
-      return overSizedBody.toString();
+      return utf8StringFromBytes(overSizedBody);
     }
   }, [overSizedBody, _getContentType]);
 
@@ -223,7 +242,7 @@ export const ResponseViewer = ({
     // So we try to unescape the forward slashes before passing it to the CodeEditor.
     try {
       bodyStr = unescapeForwardSlash(bodyStr);
-    } catch (err) {}
+    } catch {}
     return (
       <CodeEditor
         id="json-response-viewer"
@@ -242,14 +261,22 @@ export const ResponseViewer = ({
         placeholder="..."
         readOnly
         uniquenessKey={responseId}
-        updateFilter={updateFilter}
+        updateFilter={filter => {
+          updateFilter?.(filter);
+
+          if (filter) {
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.filterCreatedResponseBody,
+            });
+          }
+        }}
       />
     );
   }
 
   if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('image/') === 0) {
     const justContentType = contentType.split(';')[0];
-    const base64Body = overSizedBody.toString('base64');
+    const base64Body = bytesToBase64(overSizedBody);
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
@@ -314,7 +341,7 @@ export const ResponseViewer = ({
 
   if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('audio/') === 0) {
     const justContentType = contentType.split(';')[0];
-    const base64Body = overSizedBody.toString('base64');
+    const base64Body = bytesToBase64(overSizedBody);
     return (
       <div className="vertically-center" key={responseId}>
         <audio controls>
@@ -361,7 +388,15 @@ export const ResponseViewer = ({
       placeholder="..."
       readOnly
       uniquenessKey={responseId}
-      updateFilter={updateFilter}
+      updateFilter={filter => {
+        updateFilter?.(filter);
+
+        if (filter) {
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.filterCreatedResponseBody,
+          });
+        }
+      }}
     />
   );
 };

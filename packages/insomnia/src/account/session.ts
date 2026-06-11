@@ -1,31 +1,11 @@
-import { userSession } from '../models';
-import { insomniaFetch } from '../ui/insomniaFetch';
-import * as crypt from './crypt';
+import { getEncryptionKeys, getUserProfile, logout as logoutAPI } from 'insomnia-api';
+import type { GitRepository, Project, WorkspaceMeta } from 'insomnia-data';
+import type { AESMessage } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 
-type LoginCallback = (isLoggedIn: boolean) => void;
-
-export interface WhoamiResponse {
-  sessionAge: number;
-  sessionExpiry: number;
-  accountId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  created: number;
-  publicKey: string;
-  encSymmetricKey: string;
-  encPrivateKey: string;
-  saltEnc: string;
-  isPaymentRequired: boolean;
-  isTrialing: boolean;
-  isVerified: boolean;
-  isAdmin: boolean;
-  trialEnd: string;
-  planName: string;
-  planId: string;
-  canManageTeams: boolean;
-  maxTeamMembers: number;
-}
+import { AI_PLUGIN_NAME, LLM_BACKENDS } from '../common/constants';
+import { database } from '../common/database';
+import { getRuntime } from '../runtimes';
 
 export interface SessionData {
   accountId: string;
@@ -35,19 +15,20 @@ export interface SessionData {
   lastName: string;
   symmetricKey: JsonWebKey;
   publicKey: JsonWebKey;
-  encPrivateKey: crypt.AESMessage;
-}
-export function onLoginLogout(loginCallback: LoginCallback) {
-  window.main.on('loggedIn', async () => {
-    loginCallback(await isLoggedIn());
-  });
+  encPrivateKey: AESMessage;
 }
 
 /** Creates a session from a sessionId and derived symmetric key. */
 export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
-  const { publicKey, encPrivateKey, encSymmetricKey, email, accountId, firstName, lastName } = await _whoami(sessionId);
-  const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
+  const sessionIdResolved = sessionId || (await getCurrentSessionId());
+  const [profile, keys] = await Promise.all([
+    getUserProfile({ sessionId: sessionIdResolved }),
+    getEncryptionKeys({ sessionId: sessionIdResolved }),
+  ]);
+  const { public_key: publicKey, enc_private_key: encPrivateKey, enc_symmetric_key: encSymmetricKey } = keys;
+  const { email, id: accountId, first_name: firstName, last_name: lastName } = profile;
+  const symmetricKeyStr = await getRuntime().crypto.decryptAES(key, JSON.parse(encSymmetricKey));
 
   // Store the information for later
   await setSessionData(
@@ -61,11 +42,9 @@ export async function absorbKey(sessionId: string, key: string) {
     JSON.parse(encPrivateKey),
   );
 
-  window.main.loginStateChange();
-}
-
-export async function getPublicKey() {
-  return (await getUserSession())?.publicKey;
+  if (typeof window !== 'undefined' && window.main?.loginStateChange) {
+    window.main.loginStateChange(true);
+  }
 }
 
 export async function getPrivateKey() {
@@ -81,12 +60,12 @@ export async function getPrivateKey() {
     throw new Error("Can't get private key: session is missing keys.");
   }
 
-  const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
+  const privateKeyStr = await getRuntime().crypto.decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr) as JsonWebKey;
 }
 
 export async function getCurrentSessionId() {
-  const { id } = await userSession.getOrCreate();
+  const { id } = await services.userSession.get();
   return id;
 }
 
@@ -100,15 +79,11 @@ export async function isLoggedIn() {
 }
 
 /** Log out and delete session data */
-export async function logout() {
+export async function logout(clearCredentials = false) {
   const sessionId = await getCurrentSessionId();
   if (sessionId) {
     try {
-      insomniaFetch({
-        method: 'POST',
-        path: '/auth/logout',
-        sessionId,
-      });
+      await logoutAPI({ sessionId });
     } catch (error) {
       // Not a huge deal if this fails, but we don't want it to prevent the
       // user from signing out.
@@ -116,8 +91,13 @@ export async function logout() {
     }
   }
 
-  _unsetSessionData();
-  window.main.loginStateChange();
+  await _unsetSessionData();
+  if (clearCredentials) {
+    await _removeAllCredentials();
+  }
+  if (typeof window !== 'undefined' && window.main?.loginStateChange) {
+    window.main.loginStateChange(false);
+  }
 }
 
 /** Set data for the new session and store it encrypted with the sessionId */
@@ -129,7 +109,7 @@ export async function setSessionData(
   email: string,
   symmetricKey: JsonWebKey,
   publicKey: JsonWebKey,
-  encPrivateKey: crypt.AESMessage,
+  encPrivateKey: AESMessage,
 ) {
   const sessionData: SessionData = {
     id,
@@ -142,60 +122,126 @@ export async function setSessionData(
     lastName,
   };
 
-  const userData = await userSession.getOrCreate();
-  await userSession.update(userData, sessionData);
+  await services.userSession.update(sessionData);
 
   return sessionData;
 }
 
 /** Update the session data with vault salt and vault key */
 export async function setVaultSessionData(vaultSalt: string, vaultKey: string) {
-  const userData = await userSession.getOrCreate();
-  await userSession.update(userData, { vaultSalt, vaultKey });
+  await services.userSession.update({ vaultSalt, vaultKey });
 }
 
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
 
-async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
-  const response = await insomniaFetch<WhoamiResponse | string>({
-    method: 'GET',
-    path: '/auth/whoami',
-    sessionId: sessionId || (await getCurrentSessionId()),
-  });
-  if (typeof response === 'string') {
-    throw new Error('Unexpected plaintext response: ' + response);
-  }
-  if (response && !response?.encSymmetricKey) {
-    throw new Error('Unexpected response: ' + JSON.stringify(response));
-  }
-  return response;
-}
-
 export async function getUserSession(): Promise<SessionData> {
-  const userData = await userSession.getOrCreate();
+  const userData = await services.userSession.get();
 
   return userData;
 }
 
 async function _unsetSessionData() {
-  await userSession.getOrCreate();
-  await userSession.update(await userSession.getOrCreate(), {
-    id: '',
-    accountId: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    symmetricKey: {} as JsonWebKey,
-    publicKey: {} as JsonWebKey,
-    encPrivateKey: {} as crypt.AESMessage,
-    vaultSalt: '',
-    vaultKey: '',
-  });
+  await services.userSession.remove();
 }
 
+/**
+ * Removes all sensitive data (credentials, keys, tokens, etc.) from disk.
+ *
+ * If any cloud credential is authenticated (key/token provided), it is cleared.
+ *
+ * All Git provider (GitHub, GitLab) credentials are deleted.
+ *
+ * If any custom git repositories are authenticated, the workspace is disconnected and the git
+ * repository is deleted from the database (but it does not remove a checkout from the filesystem).
+ *
+ * If any proxy is authenticated, it is cleared.
+ *
+ * If any LLM provider is authenticated, the API key is removed, and deactivated if active.
+ */
+async function _removeAllCredentials() {
+  const removals: Promise<unknown>[] = [services.gitCredentials.removeAll()];
+
+  const cloudCredentials = await services.cloudCredential.all();
+  for (const cred of cloudCredentials) {
+    if ('credentials' in cred) {
+      removals.push(services.cloudCredential.update(cred, { credentials: undefined }));
+    }
+  }
+
+  for (const backend of LLM_BACKENDS) {
+    const apiKey = await services.pluginData.getByKey(AI_PLUGIN_NAME, `${backend}.apiKey`);
+    if (apiKey) {
+      removals.push(services.pluginData.removeByKey(AI_PLUGIN_NAME, `${backend}.apiKey`));
+      if (backend === (await window.main.llm.getActiveBackend())) {
+        removals.push(window.main.llm.clearActiveBackend());
+      }
+    }
+  }
+
+  const customGitRepos = await services.gitRepository.all();
+  for (const repo of customGitRepos) {
+    if (!repo.credentialsId) continue; // unauthenticated git repositories need not be removed
+    removals.push(_removeGitRepository(repo));
+  }
+
+  const proxySettings = await services.settings.get();
+  if (proxySettings.httpProxy?.includes('@')) {
+    removals.push(services.settings.update(proxySettings, { httpProxy: '' }));
+  }
+  if (proxySettings.httpsProxy?.includes('@')) {
+    removals.push(services.settings.update(proxySettings, { httpsProxy: '' }));
+  }
+
+  await Promise.all(removals);
+}
+
+/*
+ * Removes a git repo from the database and unlinks it from associated projects and workspaces.
+ *
+ * Clearing only the credentials from the git repo would leave the associated workspace in a broken
+ * state where the user would need to manually reset the git repo settings, and that is not
+ * immediately apparent in the UI.
+ *
+ * This way, the user can simply re-connect with their settings.
+ *
+ * Almost identical to resetGitRepoAction in main/git-service.ts, but walks through
+ * each model instance individually to clear them all out.
+ *
+ */
+async function _removeGitRepository(repo: GitRepository) {
+  const queryIds = models.project.getQueryableGitRepositoryIds(repo._id);
+  const projects = await database.find<Project>(models.project.type, { gitRepositoryId: { $in: queryIds } });
+  for (const p of projects) {
+    await services.project.update(p, { gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
+  }
+
+  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, { gitRepositoryId: repo._id });
+  for (const wsMeta of workspaceMetas) {
+    await services.workspaceMeta.update(wsMeta, { gitRepositoryId: null });
+  }
+  await services.gitRepository.remove(repo);
+}
+
+// TODO: v12 remove this function and getLocalStorageDataFromFileOrigin from main
 export async function migrateFromLocalStorage() {
+  if (!window.localStorage.getItem('file-origin-localStorage-migrated')) {
+    console.log('[migration] Migrating localStorage data from file origin');
+    try {
+      const localStorageData = await window.main.getLocalStorageDataFromFileOrigin();
+      if (localStorageData) {
+        for (const [key, value] of Object.entries(localStorageData)) {
+          if (key && value) {
+            localStorage.setItem(key, value);
+          }
+        }
+        localStorage.setItem('file-origin-localStorage-migrated', 'true');
+      }
+    } catch (error) {
+      console.error('[migration] Failed to migrate localStorage data:', error);
+    }
+  }
   const sessionId = window.localStorage.getItem('currentSessionId');
 
   if (!sessionId) {
@@ -212,12 +258,12 @@ export async function migrateFromLocalStorage() {
   try {
     const sessionData = JSON.parse(session) as SessionData;
 
-    const currentUserSession = await userSession.getOrCreate();
+    const currentUserSession = await services.userSession.get();
 
     if (currentUserSession.id) {
       console.warn('Session already exists, skipping migration');
     } else {
-      await userSession.update(currentUserSession, sessionData);
+      await services.userSession.update(sessionData);
     }
   } catch (e) {
     console.error('Failed to parse session data', e);

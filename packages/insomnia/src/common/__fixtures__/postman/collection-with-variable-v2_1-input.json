@@ -1,0 +1,68 @@
+{
+	"info": {
+		"_postman_id": "448e7b5c-554d-4a45-9bd9-aa89d75d10e5",
+		"name": "exportedTest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37339712"
+	},
+	"item": [
+		{
+			"name": "defaultRequest",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-from",
+						"value": "{{from}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://httpbin.org",
+					"protocol": "https",
+					"host": [
+						"httpbin",
+						"org"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "from",
+			"value": "variable",
+			"type": "default"
+		},
+    {
+			"key": "foo",
+			"value": "bar",
+			"type": "default"
+		}
+	]
+}

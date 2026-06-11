@@ -1,26 +1,29 @@
+import { models, services } from 'insomnia-data';
 import { useCallback, useEffect } from 'react';
 
-import * as models from '../../models';
-import { isGrpcRequestId } from '../../models/grpc-request';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from '../../models/request';
-import { isWebSocketRequestId } from '../../models/websocket-request';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
-import uiEventBus from '../eventBus';
+import uiEventBus from '../event-bus';
+
+const { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } = models.request;
 
 // this hook is use for control when to close connections(websocket & SSE & grpc stream & graphql subscription)
 export const useCloseConnection = ({ organizationId }: { organizationId: string }) => {
   const closeConnectionById = async (id: string) => {
-    if (isGrpcRequestId(id)) {
+    if (models.grpcRequest.isGrpcRequestId(id)) {
       window.main.grpc.cancel(id);
-    } else if (isWebSocketRequestId(id)) {
+    } else if (models.webSocketRequest.isWebSocketRequestId(id)) {
       window.main.webSocket.close({ requestId: id });
+    } else if (models.socketIORequest.isSocketIORequestId(id)) {
+      window.main.socketIO.close({ requestId: id });
     } else if (isRequestId(id)) {
-      const request = await models.request.getById(id);
+      const request = await services.request.getById(id);
       if (request && isEventStreamRequest(request)) {
         window.main.curl.close({ requestId: id });
       } else if (request && isGraphqlSubscriptionRequest(request)) {
         window.main.webSocket.close({ requestId: id });
       }
+    } else if (models.mcpRequest.isMcpRequestId(id)) {
+      window.main.mcp.close({ requestId: id });
     }
   };
 
@@ -30,6 +33,7 @@ export const useCloseConnection = ({ organizationId }: { organizationId: string 
       window.main.webSocket.closeAll();
       window.main.grpc.closeAll();
       window.main.curl.closeAll();
+      window.main.mcp.closeAll();
       return;
     }
 
@@ -68,6 +72,8 @@ export const useCloseConnection = ({ organizationId }: { organizationId: string 
       window.main.webSocket.closeAll();
       window.main.grpc.closeAll();
       window.main.curl.closeAll();
+      window.main.socketIO.closeAll();
+      window.main.mcp.closeAll();
     };
   }, [organizationId]);
 };

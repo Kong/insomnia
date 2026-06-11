@@ -1,19 +1,103 @@
-import type { CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { OAuth2Token } from '../models/o-auth-2-token';
-import type { Project } from '../models/project';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import type { getBodyBuffer, getLatestForRequest } from '../models/response';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
-import type { PluginStore } from '../plugins/context';
-import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
-import type { extractNunjucksTagFromCoords } from './utils';
+import type { BinaryToTextEncoding } from 'node:crypto';
+
+import type {
+  CloudProviderCredential,
+  CookieJar,
+  Environment,
+  GrpcRequest,
+  McpRequest,
+  OAuth2Token,
+  Project,
+  Request,
+  RequestGroup,
+  Response,
+  ResponseHeader,
+  Services,
+  SocketIORequest,
+  UserUploadEnvironment,
+  WebSocketRequest,
+  Workspace,
+} from 'insomnia-data';
+
+type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
+  Partial<Pick<Request, 'body' | 'authentication'>>;
+export interface NodeCurlRequestOptions {
+  request: NodeCurlRequestType;
+  caCertficatePath?: string;
+}
+export interface NodeCurlResponseType {
+  body: string;
+  code: number;
+  reason: string;
+  status: string;
+  responseTime: number;
+  headers: ResponseHeader[];
+  json: () => any;
+  ok?: boolean;
+}
+
+export interface PluginStore {
+  hasItem(arg0: string): Promise<boolean>;
+  setItem(arg0: string, arg1: string): Promise<void>;
+  getItem(arg0: string): Promise<string | null>;
+  removeItem(arg0: string): Promise<void>;
+  clear(): Promise<void>;
+  all(): Promise<
+    {
+      key: string;
+      value: string;
+    }[]
+  >;
+}
+
+export interface SerializedCookie {
+  key?: string;
+  value?: string;
+  domain?: string;
+  path?: string;
+  expires?: string | Date;
+  httpOnly?: boolean;
+  secure?: boolean;
+  hostOnly?: boolean;
+}
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
+export type PluginToMainAPIPaths =
+  | 'readFile'
+  | 'nodeOS'
+  | 'decode'
+  | 'encode'
+  | 'request.getById'
+  | 'request.getAncestors'
+  | 'workspace.getById'
+  | 'oAuth2Token.getByRequestId'
+  | 'cookieJar.getOrCreateForParentId'
+  | 'cookieJar.getCookiesForUrl'
+  | 'response.getLatestForRequestId'
+  | 'response.getBodyBuffer'
+  | 'pluginData.hasItem'
+  | 'pluginData.setItem'
+  | 'pluginData.getItem'
+  | 'pluginData.removeItem'
+  | 'pluginData.clear'
+  | 'pluginData.all'
+  | 'cloudCredential.getById'
+  | 'cloudCredential.update'
+  | 'settings.get'
+  | 'openInBrowser'
+  | 'network.sendRequest'
+  | 'network.sendRequestWithoutSideEffects'
+  | 'plugin.getBundlePluginTemplateTags'
+  | 'plugin.executeBundlePluginTag'
+  | 'plugin.executeBundlePluginMainAction'
+  | 'app.alert'
+  | 'app.dialog'
+  | 'app.prompt'
+  | 'app.getPath'
+  | 'app.showSaveDialog'
+  | 'app.clipboard.readText'
+  | 'app.clipboard.writeText'
+  | 'app.clipboard.clear';
 
 export type RenderedRequest = Request & {
   cookies: {
@@ -46,16 +130,28 @@ export interface BaseRenderContextOptions {
   extraInfo?: { requestChain: string[] };
   ignoreUndefinedEnvVariable?: boolean;
 }
-export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
+export type RenderContextAncestor =
+  | Request
+  | GrpcRequest
+  | WebSocketRequest
+  | SocketIORequest
+  | RequestGroup
+  | Workspace
+  | McpRequest
+  | Project;
 
 export type RenderContextOptions = BaseRenderContextOptions &
-  Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest }> & {
+  Partial<
+    BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest }
+  > & {
     ancestors?: RenderContextAncestor[];
   };
 
 export type NunjucksTagContextMenuAction = 'edit' | 'delete';
 
-export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
+export interface nunjucksTagContextMenuOptions {
+  range: { from: { line: number; ch: number }; to: { line: number; ch: number } };
+  template: string;
   type: NunjucksTagContextMenuAction;
 }
 
@@ -163,21 +259,39 @@ export interface BaseRenderContext {
   getProjectId: () => string | undefined;
   [key: string]: any;
 }
+
+interface PromptModalOptions {
+  title: string;
+  defaultValue?: string;
+  submitName?: string;
+  selectText?: boolean;
+  upperCase?: boolean;
+  hint?: string;
+  inputType?: string;
+  placeholder?: string;
+  validate?: (arg0: string) => string;
+  label?: string;
+  hints?: string[];
+  onComplete?: (arg0: string) => Promise<void> | void;
+  onHide?: () => void;
+  onDeleteHint?: (arg0?: string) => void;
+}
+
 export interface AppContext {
-  alert: (title: string, message?: string) => void;
+  alert: (title: string, message?: string) => Promise<void>;
   dialog: (
     title: string,
     body: HTMLElement,
     options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean },
-  ) => void;
+  ) => Promise<void>;
   prompt: (
     title: string,
     options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>,
   ) => Promise<string>;
-  getPath: (name: string) => string;
+  getPath: (name: string) => Promise<string>;
   getInfo: () => { version: string; platform: NodeJS.Platform };
   showSaveDialog: (options?: { defaultPath?: string }) => Promise<string | null>;
-  clipboard: { readText(): string; writeText(text: string): void; clear(): void };
+  clipboard: { readText(): Promise<string>; writeText(text: string): Promise<void>; clear(): Promise<void> };
 }
 export interface PluginTemplateTagContext {
   app: AppContext;
@@ -190,6 +304,7 @@ export interface PluginTemplateTagContext {
         environmentId?: string;
       },
     ): Promise<Response>;
+    sendRequestWithoutSideEffects(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType>;
   };
   context: BaseRenderContext & {
     value: string | number;
@@ -197,18 +312,40 @@ export interface PluginTemplateTagContext {
   meta: { requestId?: string; workspaceId?: string };
   renderPurpose?: RenderPurpose;
   util: {
+    nodeOS: () => Promise<{
+      arch: string;
+      platform: NodeJS.Platform;
+      release: string;
+    }>;
+    readFile: (path: string) => Promise<string>;
+    decode: (buffer: Buffer, encoding?: string) => Promise<string>;
+    encode: (input: string, encoding: BinaryToTextEncoding) => Promise<string>;
     render: (str: string) => string | Promise<string | null>;
+    openInBrowser?: (url: string) => void;
     models: {
       request: {
-        getById: (id: string) => Promise<Request | null>;
+        getById: (id: string) => Promise<Request | undefined>;
         getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
       };
-      workspace: { getById: (id: string) => Promise<Workspace | null> };
-      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | null> };
-      cookieJar: { getOrCreateForParentId: (parentId: string) => Promise<CookieJar> };
+      cloudCredential: {
+        getById: (id: string) => Promise<CloudProviderCredential | undefined>;
+        update: (
+          originCredential: CloudProviderCredential,
+          patch: Partial<CloudProviderCredential>,
+        ) => Promise<CloudProviderCredential>;
+      };
+      workspace: { getById: (id: string) => Promise<Workspace | undefined> };
+      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
+      cookieJar: {
+        getOrCreateForParentId: (parentId: string) => Promise<CookieJar>;
+        getCookiesForUrl: (parentId: string, url: string) => Promise<SerializedCookie[]>;
+      };
       response: {
-        getLatestForRequestId: typeof getLatestForRequest;
-        getBodyBuffer: typeof getBodyBuffer;
+        getLatestForRequestId: Services['response']['getLatestForRequestId'];
+        getBodyBuffer: Services['helpers']['getResponseBodyBuffer'];
+      };
+      settings: {
+        get: Services['settings']['get'];
       };
     };
   };
@@ -235,6 +372,12 @@ export interface PluginTemplateTag {
   actions?: NunjucksActionTag[];
   run: (context: PluginTemplateTagContext, ...arg: any[]) => Promise<any> | any;
   deprecated?: boolean;
-  validate?: (value: any) => string | null;
+  validate?: (value: any) => string | null | boolean;
   priority?: number;
+}
+export interface RenderInputType {
+  input: string;
+  context: BaseRenderContext;
+  path: string;
+  ignoreUndefinedEnvVariable: boolean;
 }

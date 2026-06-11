@@ -48,7 +48,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
   return (
     <Modal ref={modalRef}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
-      <ModalBody className="wide pad">
+      <ModalBody className="wide pad" data-testid="global-select-modal">
         <p>{message}</p>
         <div className="form-control form-control--outlined">
           <select

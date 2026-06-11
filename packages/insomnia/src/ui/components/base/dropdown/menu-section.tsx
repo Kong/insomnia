@@ -1,5 +1,4 @@
 import type { Node } from '@react-types/shared';
-import React from 'react';
 import { useMenuSection, useSeparator } from 'react-aria';
 import type { TreeState } from 'react-stately';
 
@@ -25,7 +24,7 @@ export const MenuSection = <T extends object>({ section, state, closeOnSelect = 
     <li {...itemProps}>
       <div className="mx-10 flex items-center">
         {section.rendered && (
-          <span className="my-2 whitespace-nowrap bg-[--color-bg] pr-4 text-xs uppercase text-[--hl]" {...headingProps}>
+          <span className="my-2 bg-(--color-bg) pr-4 text-xs whitespace-nowrap text-(--hl) uppercase" {...headingProps}>
             {section.rendered}
           </span>
         )}

@@ -4,4 +4,4 @@ build
 # Generated
 src/*.js
 src/*.js.map
-
+.react-router/

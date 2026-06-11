@@ -2,12 +2,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import type { BaseModel, ProtoDirectory, ProtoFile, Workspace } from 'insomnia-data';
+import { models } from 'insomnia-data';
+
 import { database as db } from '../../common/database';
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
-import { isProtoDirectory, type ProtoDirectory } from '../../models/proto-directory';
-import { isProtoFile, type ProtoFile } from '../../models/proto-file';
-import { isWorkspace, type Workspace } from '../../models/workspace';
+
+const { isProtoDirectory } = models.protoDirectory;
+const { isProtoFile } = models.protoFile;
 
 interface WriteResult {
   filePath: string;
@@ -56,9 +57,9 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     // Find the root ancestor directory
     const rootAncestorProtoDirectory = ancestors.find(
       // @ts-expect-error -- TSCONVERSION ancestor workspace can be undefined
-      c => isProtoDirectory(c) && c.parentId === ancestors.find(isWorkspace)._id,
+      c => isProtoDirectory(c) && c.parentId === ancestors.find(models.workspace.isWorkspace)._id,
     );
-    if (!ancestors.find(isWorkspace) || !rootAncestorProtoDirectory) {
+    if (!ancestors.find(models.workspace.isWorkspace) || !rootAncestorProtoDirectory) {
       // should never happen
       return {
         filePath: path.join(
@@ -72,7 +73,7 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
       };
     }
     // Find all descendants of the root ancestor directory
-    const descendants = await db.withDescendants(rootAncestorProtoDirectory);
+    const descendants = await db.getWithDescendants(rootAncestorProtoDirectory);
     const treeRootDirs = await recursiveWriteProtoDirectory(
       rootAncestorProtoDirectory,
       descendants,

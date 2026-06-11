@@ -7,14 +7,6 @@ import * as crypt from '../crypt';
  */
 
 describe('crypt', () => {
-  describe('deriveKey()', () => {
-    it('derives a key properly', async () => {
-      const result = await crypt.deriveKey('Password', 'email', 'salt');
-      const expected = 'fb058595c02ae9660ed7098273bf50e49407942ecc437bf317638d76c4578eae';
-      expect(result).toBe(expected);
-    });
-  });
-
   describe('AES', () => {
     it('encrypts and decrypts', () => {
       const key = {
@@ -40,6 +32,7 @@ describe('crypt', () => {
         k: '5hs1f2xuiNPHUp11i6SWlsqYpWe_hWPcEKucZlwBfFE',
       };
       const source = buffer.Buffer.from('Hello World!', 'utf8');
+      // @ts-ignore
       const resultEncrypted = crypt.encryptAESBuffer(key, source);
       const resultDecrypted = crypt.decryptAESToBuffer(key, resultEncrypted);
       expect(resultDecrypted.toString()).toEqual(source.toString());

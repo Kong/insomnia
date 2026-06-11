@@ -18,8 +18,8 @@ export function isGrpcConnectionError(error: Error) {
 }
 
 export function getGrpcConnectionErrorDetails(error: Error) {
-  let title: string | undefined = undefined;
-  let message: string | undefined = undefined;
+  let title: string | undefined;
+  let message: string | undefined;
   if (!isGrpcConnectionError(error)) {
     return { title, message };
   }

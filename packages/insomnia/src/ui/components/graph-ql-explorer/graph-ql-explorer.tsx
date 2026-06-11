@@ -126,7 +126,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
       const last = state.history[state.history.length - 1] || null;
       return {
         ...state,
-        history: state.history.slice(0, state.history.length - 1),
+        history: state.history.slice(0, -1),
         currentType: last ? last.currentType : undefined,
         currentField: last ? last.currentField : undefined,
       };

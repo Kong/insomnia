@@ -1,5 +1,4 @@
 import classnames from 'classnames';
-import React from 'react';
 import { NavLink } from 'react-router';
 
 interface Props {
@@ -22,7 +21,7 @@ export const DocumentTab = ({ organizationId, projectId, workspaceId, className 
           to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item.id}`}
           className={({ isActive, isPending }) =>
             classnames('rounded-full px-2 text-center', {
-              'bg-[--color-surprise] text-[--color-font-surprise]': isActive,
+              'bg-(--color-surprise) text-(--color-font-surprise)': isActive,
               'animate-pulse': isPending,
             })
           }

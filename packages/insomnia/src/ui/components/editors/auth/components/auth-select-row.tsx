@@ -1,12 +1,18 @@
+import type { RequestAuthentication } from 'insomnia-data';
 import React, { type ChangeEvent, type FC, type ReactNode, useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
-import { toKebabCase } from '../../../../../common/misc';
-import type { RequestAuthentication } from '../../../../../models/request';
-import { getAuthObjectOrNull } from '../../../../../network/authentication';
-import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
-import type { RequestLoaderData } from '../../../../routes/request';
-import type { RequestGroupLoaderData } from '../../../../routes/request-group';
+import { toKebabCase } from '~/common/misc';
+import { getAuthObjectOrNull } from '~/network/authentication';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import {
+  type RequestGroupLoaderData,
+  useRequestGroupLoaderData,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import { useRequestGroupPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
+
 import { AuthRow } from './auth-row';
 
 interface Props {
@@ -21,13 +27,13 @@ interface Props {
 }
 
 export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disabled }) => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const reqData = useRequestLoaderData() as RequestLoaderData;
+  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const patcher = reqData ? patchRequest : patchRequestGroup;
 
-  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const { authentication, _id } = reqData?.activeRequest || groupData?.activeRequestGroup || {};
   const authOrNull = getAuthObjectOrNull(authentication);
   const selectedValue = authOrNull ? authOrNull[property as keyof RequestAuthentication] + '' : options[0].value;
 
@@ -45,7 +51,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
 
   return (
     <AuthRow labelFor={toKebabCase(label)} label={label} help={help} disabled={disabled}>
-      <select id={toKebabCase(label)} onChange={onChange} value={selectedValue}>
+      <select id={toKebabCase(label)} onChange={onChange} value={selectedValue} disabled={disabled}>
         {options.map(({ name, value }) => (
           <option key={value} value={value}>
             {name}

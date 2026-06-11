@@ -1,16 +1,15 @@
-import fs from 'node:fs';
-
+import { models, services } from 'insomnia-data';
+import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from 'insomnia-data/common';
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
 
-import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
-import { exportHarCurrentRequest } from '../../../common/har';
-import * as models from '../../../models';
-import { isRequest } from '../../../models/request';
-import { isResponse } from '../../../models/response';
+import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
+
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
@@ -19,9 +18,7 @@ interface Props {
 }
 
 export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData(
-    'request/:requestId',
-  ) as RequestLoaderData;
+  const { activeRequest, activeRequestMeta, activeResponse } = useRequestLoaderData() as RequestLoaderData;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const patchRequestMeta = useRequestMetaPatcher();
   const handleDownloadPrettify = useCallback(() => download(true), [download]);
@@ -29,12 +26,20 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
   const handleDownloadNormal = useCallback(() => download(false), [download]);
 
   const exportAsHAR = useCallback(async () => {
-    if (!activeResponse || !activeRequest || !isRequest(activeRequest) || !isResponse(activeResponse)) {
+    if (
+      !activeResponse ||
+      !activeRequest ||
+      !models.request.isRequest(activeRequest) ||
+      !models.response.isResponse(activeResponse)
+    ) {
       console.warn('Nothing to download');
       return;
     }
 
-    const data = await exportHarCurrentRequest(activeRequest, activeResponse);
+    const data = await window.main.exportHarCurrentRequest({
+      requestId: activeRequest._id,
+      responseId: activeResponse._id,
+    });
     const har = JSON.stringify(data, null, '\t');
 
     const { filePath } = await window.dialog.showSaveDialog({
@@ -46,20 +51,20 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     if (!filePath) {
       return;
     }
-    const to = fs.createWriteStream(filePath);
-    to.on('error', err => {
-      console.warn('Failed to export har', err);
+
+    await window.main.writeFile({
+      path: filePath,
+      content: har,
     });
-    to.end(har);
   }, [activeRequest, activeResponse]);
 
   const exportDebugFile = useCallback(async () => {
-    if (!activeResponse || !activeRequest || !isResponse(activeResponse)) {
+    if (!activeResponse || !activeRequest || !models.response.isResponse(activeResponse)) {
       console.warn('Nothing to download');
       return;
     }
 
-    const timeline = models.response.getTimeline(activeResponse);
+    const timeline = await services.helpers.getResponseTimeline(activeResponse);
     const headers = timeline
       .filter(v => v.name === 'HeaderIn')
       .map(v => v.value)
@@ -74,14 +79,11 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     if (canceled) {
       return;
     }
-    const readStream = models.response.getBodyStream(activeResponse);
 
-    if (readStream && filePath && typeof readStream !== 'string') {
-      const to = fs.createWriteStream(filePath);
-      to.write(headers);
-      readStream.pipe(to);
-      to.on('error', err => {
-        console.warn('Failed to save full response', err);
+    if (filePath && activeResponse.bodyBuffer) {
+      await window.main.writeFile({
+        path: filePath,
+        content: headers + '\n' + bodyBufferToUtf8(activeResponse.bodyBuffer) || '',
       });
     }
   }, [activeRequest, activeResponse]);
@@ -91,7 +93,7 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     <Dropdown
       aria-label="Preview Mode Dropdown"
       triggerButton={
-        <Button className="text-[--hl]">
+        <Button className="text-(--hl)">
           {getPreviewModeName(previewMode)}
           <i className="fa fa-caret-down space-left" />
         </Button>

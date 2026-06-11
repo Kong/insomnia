@@ -3,8 +3,8 @@ import path from 'node:path';
 
 import YAML from 'yaml';
 
-import type { Database, DbAdapter } from '../index';
-import { emptyDb } from '../index';
+import type { Database, DbAdapter } from '../types';
+import { emptyDb } from '../types';
 
 const gitAdapter: DbAdapter = async (dir, filterTypes) => {
   // Confirm if model directories exist
@@ -15,7 +15,7 @@ const gitAdapter: DbAdapter = async (dir, filterTypes) => {
   let files = null;
   try {
     files = await fs.promises.readdir(insomniaFolder);
-  } catch (error) {
+  } catch {
     if (files?.length === 0) {
       console.error(`.insomnia folder found at "${insomniaFolder}"
         but no files found inside. Ensure your workingDir is correct.`);

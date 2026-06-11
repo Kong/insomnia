@@ -1,7 +1,7 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { describe, expect, it } from 'vitest';
 
-import { baseModelSchema, workspaceModelSchema } from '../../models/__schemas__/model-schemas';
+import { baseModelSchema, workspaceModelSchema } from '../__schemas__/model-schemas';
 import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 
 const baseModelBuilder = createBuilder(baseModelSchema);

@@ -1,36 +1,39 @@
 import classnames from 'classnames';
 import clone from 'clone';
+import type { BaseModel, CloudProviderCredential, Request, RequestGroup, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
-import { useMount } from 'react-use';
+import { Button, Link } from 'react-aria-components';
+import * as reactUse from 'react-use';
+
+import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
-import { delay, fnOrString } from '../../../common/misc';
+import { delay, fnOrString, SECURITY_SETTINGS_PATH_LABEL } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
-import * as models from '../../../models';
-import type { BaseModel } from '../../../models/index';
-import { isRequest, type Request } from '../../../models/request';
-import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
-import type { Workspace } from '../../../models/workspace';
-import * as plugins from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context';
-import * as templating from '../../../templating';
+import { plugins } from '../../../plugins/renderer-bridge';
+import * as templating from '../../../templating/renderer-safe';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
-import { sanitizeStrForWin32 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
-import { localTemplateTags } from './local-template-tags';
+import { ArgConfigSubForm, couldRenderForm } from './tag-editor-arg-sub-form';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
+
+const cloudCredentialModelType = models.cloudCredential.type;
 
 interface Props {
   defaultValue: string;
   onChange: (...args: any[]) => any;
   workspace: Workspace;
   editorId?: string;
+  close: () => void;
 }
 
 interface State {
@@ -78,22 +81,26 @@ export const TagEditor: FC<Props> = props => {
 
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));
-    const allDocs: Record<string, models.BaseModel[]> = {};
+    const allDocs: Record<string, BaseModel[]> = {};
     for (const type of models.types()) {
       allDocs[type] = [];
     }
-    for (const doc of await db.withDescendants(props.workspace, models.request.type)) {
+    const descendants = await db.getWithDescendants(props.workspace, [models.request.type]);
+    for (const doc of descendants) {
       allDocs[doc.type].push(doc);
     }
+    // add global Cloud Credential data
+    allDocs[cloudCredentialModelType] = await services.cloudCredential.all();
+    const requestDocs = allDocs[models.request.type] as (Request | RequestGroup)[] | undefined;
+    const requestGroupDocs = allDocs[models.requestGroup.type] as (Request | RequestGroup)[] | undefined;
     allDocs[models.request.type] = sortRequests(
-      // @ts-expect-error -- type unsoundness
-      (allDocs[models.request.type] || []).concat(allDocs[models.requestGroup.type] || []),
+      (requestDocs || []).concat(requestGroupDocs || []),
       props.workspace._id,
     );
     setState(state => ({ ...state, allDocs, loadingDocs: false }));
   }, [props.workspace]);
 
-  useMount(async () => {
+  reactUse.useMount(async () => {
     const activeTagData = templateUtils.tokenizeTag(props.defaultValue);
     const tagDefinitions = await templating.getTagDefinitions();
     const activeTagDefinition: NunjucksParsedTag | null =
@@ -105,7 +112,7 @@ export const TagEditor: FC<Props> = props => {
     // Fix strings: arg.value expects an escaped value (based on updateArg logic)
     for (const arg of activeTagData.args) {
       if (typeof arg.value === 'string') {
-        arg.value = sanitizeStrForWin32(arg.value);
+        arg.value = arg.value.replace(/\\/g, '\\\\');
       }
     }
     await Promise.all([refreshModels(), update(tagDefinitions, activeTagDefinition, activeTagData, true)]);
@@ -135,7 +142,7 @@ export const TagEditor: FC<Props> = props => {
     }
     // Fix strings
     if (typeof argValue === 'string') {
-      argValue = sanitizeStrForWin32(argValue);
+      argValue = argValue.replace(/\\/g, '\\\\');
     }
     // Ensure all arguments exist
     const defaultArgs = templateUtils.tokenizeTag(
@@ -170,16 +177,16 @@ export const TagEditor: FC<Props> = props => {
   function handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     let argIndex = -1;
     if (event.currentTarget.parentNode instanceof HTMLElement) {
-      const index = event.currentTarget.parentNode?.getAttribute('data-arg-index');
-      argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
+      const index = event.currentTarget.parentNode?.dataset.argIndex;
+      argIndex = typeof index === 'string' ? Number.parseInt(index, 10) : -1;
     }
     // Handle special types
-    if (event.currentTarget.getAttribute('data-encoding') === 'base64') {
+    if (event.currentTarget.dataset.encoding === 'base64') {
       return updateArg(templateUtils.encodeEncoding(event.currentTarget.value, 'base64'), argIndex);
     }
     // Handle normal types
     if (event.currentTarget.type === 'number') {
-      return updateArg(parseFloat(event.currentTarget.value), argIndex);
+      return updateArg(Number.parseFloat(event.currentTarget.value), argIndex);
     } else if (event.currentTarget.type === 'checkbox') {
       return updateArg((event.currentTarget as HTMLInputElement).checked, argIndex);
     }
@@ -246,11 +253,28 @@ export const TagEditor: FC<Props> = props => {
   }
   let previewElement;
   if (error) {
-    previewElement = <textarea className="danger" value={error || 'Error'} readOnly rows={5} />;
+    // detects a string to replace with a link to settings
+    const linkText = SECURITY_SETTINGS_PATH_LABEL;
+    previewElement = error.endsWith(linkText) ? (
+      <div className="danger min-h-[115px] rounded-md border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm)">
+        {error.slice(0, error.length - linkText.length)}
+        <Link
+          className="cursor-pointer text-(--color-surprise)"
+          onPress={() => {
+            props.close();
+            showSettingsModal({ tab: 'general' });
+          }}
+        >
+          {linkText}
+        </Link>
+      </div>
+    ) : (
+      <textarea aria-label="Live Preview" className="danger" value={error || 'Error'} readOnly rows={5} />
+    );
   } else if (rendering) {
-    previewElement = <textarea value="rendering..." readOnly rows={5} />;
+    previewElement = <textarea aria-label="Live Preview" value="rendering..." readOnly rows={5} />;
   } else {
-    previewElement = <textarea value={finalPreview || 'error'} readOnly rows={5} />;
+    previewElement = <textarea aria-label="Live Preview" value={finalPreview || 'error'} readOnly rows={5} />;
   }
 
   return (
@@ -314,20 +338,35 @@ export const TagEditor: FC<Props> = props => {
         const isVariable = argData.type === 'variable';
 
         let argInput;
-        const isVariableAllowed = argDefinition.type !== 'model';
+        let isVariableAllowed = argDefinition.type !== 'model';
         if (!isVariable) {
           if (argDefinition.type === 'string') {
+            const tagDefinitionName = activeTagDefinition.name;
             const placeholder = typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
             const encoding = argDefinition.encoding || 'utf8';
-            argInput = (
-              <input
-                type="text"
-                defaultValue={sanitizeStrForWin32(strValue)}
-                placeholder={placeholder}
-                onChange={handleChange}
-                data-encoding={encoding}
-              />
-            );
+            const needToRenderSubForm = argDefinition.requireSubForm && couldRenderForm(tagDefinitionName);
+            if (needToRenderSubForm) {
+              argInput = (
+                <ArgConfigSubForm
+                  configValue={strValue.replace(/\\\\/g, '\\') || ''}
+                  onChange={(newConfigValue: string) => updateArg(newConfigValue, index)}
+                  activeTagData={activeTagData}
+                  activeTagDefinition={activeTagDefinition}
+                  docs={state.allDocs}
+                />
+              );
+              isVariableAllowed = false;
+            } else {
+              argInput = (
+                <input
+                  type="text"
+                  defaultValue={strValue.replace(/\\\\/g, '\\') || ''}
+                  placeholder={placeholder}
+                  onChange={handleChange}
+                  data-encoding={encoding}
+                />
+              );
+            }
           } else if (argDefinition.type === 'enum') {
             argInput = (
               <select value={strValue} onChange={handleChange}>
@@ -350,12 +389,19 @@ export const TagEditor: FC<Props> = props => {
                 showFileName
                 className="btn btn--clicky btn--super-compact"
                 onChange={path => updateArg(path, index)}
-                path={sanitizeStrForWin32(strValue)}
+                path={strValue.replace(/\\\\/g, '\\')}
                 itemtypes={argDefinition.itemTypes}
                 extensions={argDefinition.extensions}
               />
             );
           } else if (argDefinition.type === 'model') {
+            const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
+            let targetDoc = state.allDocs[modelName];
+            // hard coded here to filter cloud credential data by the provider
+            if (modelName === cloudCredentialModelType) {
+              const providerNameFromArgs = activeTagData.args[0].value;
+              targetDoc = targetDoc.filter(doc => (doc as CloudProviderCredential).provider === providerNameFromArgs);
+            }
             argInput = state.loadingDocs ? (
               <select disabled={state.loadingDocs}>
                 <option>Loading...</option>
@@ -363,28 +409,26 @@ export const TagEditor: FC<Props> = props => {
             ) : (
               <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={handleChange}>
                 <option value="n/a">-- Select Item --</option>
-                {state.allDocs[typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown']?.map(
-                  (doc: any) => {
-                    let namePrefix: string | null = null;
-                    // Show parent folder with name if it's a request
-                    if (isRequest(doc)) {
-                      const requests = state.allDocs[models.request.type] || [];
-                      const request = requests.find(r => r._id === doc._id) as Request;
-                      const method = request && typeof request.method === 'string' ? request.method : 'GET';
-                      const parentId = request ? request.parentId : 'n/a';
-                      const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
-                      const reqGroup = allRequestGroups.find(rg => rg._id === parentId) as RequestGroup | undefined;
-                      const folderName = reqGroup ? `[${typeof reqGroup.name === 'string' ? reqGroup.name : ''}] ` : '';
-                      namePrefix = `${folderName + method} `;
-                    }
-                    return (
-                      <option key={doc._id} value={doc._id}>
-                        {namePrefix}
-                        {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
-                      </option>
-                    );
-                  },
-                )}
+                {targetDoc.map((doc: any) => {
+                  let namePrefix: string | null = null;
+                  // Show parent folder with name if it's a request
+                  if (isRequest(doc)) {
+                    const requests = state.allDocs[models.request.type] || [];
+                    const request = requests.find(r => r._id === doc._id) as Request;
+                    const method = request && typeof request.method === 'string' ? request.method : 'GET';
+                    const parentId = request ? request.parentId : 'n/a';
+                    const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
+                    const reqGroup = allRequestGroups.find(rg => rg._id === parentId) as RequestGroup | undefined;
+                    const folderName = reqGroup ? `[${typeof reqGroup.name === 'string' ? reqGroup.name : ''}] ` : '';
+                    namePrefix = `${folderName + method} `;
+                  }
+                  return (
+                    <option key={doc._id} value={doc._id}>
+                      {namePrefix}
+                      {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
+                    </option>
+                  );
+                })}
               </select>
             );
           } else if (argDefinition.type === 'boolean') {
@@ -523,13 +567,14 @@ export const TagEditor: FC<Props> = props => {
                   className="btn btn--clicky btn--largest"
                   type="button"
                   onClick={async () => {
-                    const pluginTemplateTags = await plugins.getTemplateTags();
-                    const templateTags = [...pluginTemplateTags, ...localTemplateTags] as plugins.TemplateTag[];
-                    const activeTemplateTag = templateTags.find(({ templateTag }) => {
-                      return templateTag.name === state.activeTagData?.name;
-                    });
-                    if (activeTemplateTag) {
-                      await action.run(pluginContexts.store.init(activeTemplateTag.plugin));
+                    const bridgeTags = await plugins.getTemplateTags();
+                    const bridgeTag = bridgeTags.find(t => t.templateTag.name === state.activeTagData?.name);
+                    if (bridgeTag) {
+                      await plugins.runTemplateTagAction({
+                        pluginName: bridgeTag.pluginName,
+                        tagName: bridgeTag.templateTag.name as string,
+                        actionName: action.name,
+                      });
                     }
                     update(state.tagDefinitions, state.activeTagDefinition, state.activeTagData, true);
                   }}

@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import * as os from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import {
   app,
@@ -16,31 +15,27 @@ import {
   screen,
   shell,
 } from 'electron';
+import { isLinux, isMac } from 'insomnia-data/common';
 
-import {
-  getAppBuildDate,
-  getAppVersion,
-  getProductName,
-  isDevelopment,
-  isLinux,
-  isMac,
-  MNEMONIC_SYM,
-} from '../common/constants';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
+
+import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import * as log from '../common/log';
 import { invariant } from '../utils/invariant';
-import ElectronStorage from './electron-storage';
+import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
+import { getLogDirectory } from './log';
+import { createPluginWindow, destroyPluginWindow } from './plugin-window';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
-let electronStorage: ElectronStorage | null = null;
+export function getMainWindow(): ElectronBrowserWindow | null {
+  return browserWindows.get('Insomnia') ?? null;
+}
 let hiddenWindowIsBusy = false;
-
 interface Bounds {
   height?: number;
   width?: number;
@@ -48,9 +43,6 @@ interface Bounds {
   y?: number;
 }
 
-export function init() {
-  initElectronStorage();
-}
 const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => {
   return await new Promise<void>(resolve => {
     // overwrite the closed handler
@@ -82,6 +74,7 @@ export async function createHiddenBrowserWindow() {
     // if window crashed
     const windowWasClosedUnexpectedly = hiddenWindowIsBusy && !isRunning;
     if (windowWasClosedUnexpectedly) {
+      console.log('[main] hidden window was closed unexpectedly');
       hiddenWindowIsBusy = false;
     }
 
@@ -94,11 +87,12 @@ export async function createHiddenBrowserWindow() {
     // if window froze
     const isRunningButUnhealthy = isRunning && !isHealthy;
     if (isRunningButUnhealthy) {
+      console.log('[main] hidden window is busy, stopping it');
       // stop and wait for window close event and sync the map and busy status
       await stopAndWaitForHiddenBrowserWindow(runningHiddenBrowserWindow);
     }
 
-    console.log('[main] hidden window is down, restarting');
+    console.log('[main] hidden window is not running, starting it');
     const hiddenBrowserWindow = new BrowserWindow({
       show: false,
       title: 'HiddenBrowserWindow',
@@ -109,7 +103,7 @@ export async function createHiddenBrowserWindow() {
       webPreferences: {
         contextIsolation: false,
         nodeIntegration: true,
-        preload: path.join(__dirname, 'hidden-window-preload.js'),
+        preload: path.join(__dirname, 'entry.hidden-window-preload.min.js'),
         spellcheck: false,
         devTools: process.env.NODE_ENV === 'development',
       },
@@ -119,16 +113,15 @@ export async function createHiddenBrowserWindow() {
       if (browserWindows.get('HiddenBrowserWindow')) {
         console.log('[main] closing hidden browser window');
         browserWindows.delete('HiddenBrowserWindow');
-        // @TODO: This should be set when the window closed is event is emmited so it's guaranteed to be realiable
+        // @TODO: This should be set when the window closed is event is emitted so it's guaranteed to be reliable
         // There might be other events we need to listen to also
         hiddenWindowIsBusy = false;
       }
     });
 
     const hiddenBrowserWindowPath = path.resolve(__dirname, 'hidden-window.html');
-    const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
-    hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
-    console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
+    hiddenBrowserWindow.loadFile(hiddenBrowserWindowPath);
+    console.log(`[main] Loading ${hiddenBrowserWindowPath}`);
 
     ipcMain.removeHandler('renderer-listener-ready');
     const hiddenWinListenerReady = new Promise<void>(resolve => {
@@ -201,7 +194,7 @@ export function createWindow(): ElectronBrowserWindow {
     backgroundColor: '#2C2C2C',
     fullscreen: fullscreen,
     fullscreenable: true,
-    title: getProductName(),
+    title: `${getProductName()} ${getAppVersion()}`,
     width: width || DEFAULT_WIDTH,
     height: height || DEFAULT_HEIGHT,
     minHeight: MINIMUM_HEIGHT,
@@ -209,10 +202,10 @@ export function createWindow(): ElectronBrowserWindow {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, appLogo),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      nodeIntegration: false,
+      nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs
       webviewTag: true,
       // TODO: enable context isolation
       contextIsolation: false,
@@ -254,8 +247,7 @@ export function createWindow(): ElectronBrowserWindow {
   });
 
   // Load the html of the app.
-  const appPath = path.resolve(__dirname, './index.html');
-  const appUrl = process.env.APP_RENDER_URL || pathToFileURL(appPath).href;
+  const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.local';
 
   console.log(`[main] Loading ${appUrl}`);
 
@@ -281,6 +273,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: `${MNEMONIC_SYM}Preferences`,
         click: () => {
+          trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
           mainBrowserWindow.webContents?.send('toggle-preferences');
         },
       },
@@ -448,7 +441,7 @@ export function createWindow(): ElectronBrowserWindow {
         role: 'minimize',
       },
       // @ts-expect-error -- TSCONVERSION missing in official electron types
-      ...(isMac()
+      ...(isMac
         ? [
             {
               label: `${MNEMONIC_SYM}Close`,
@@ -466,7 +459,7 @@ export function createWindow(): ElectronBrowserWindow {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Help and Support`,
-        ...(isMac() ? {} : { accelerator: 'F1' }),
+        ...(isMac ? {} : { accelerator: 'F1' }),
         click: () => {
           const { protocol } = new URL(docsBase);
           if (protocol === 'http:' || protocol === 'https:') {
@@ -494,7 +487,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: `Show App ${MNEMONIC_SYM}Logs Folder`,
         click: () => {
-          const directory = log.getLogDirectory();
+          const directory = getLogDirectory();
           shell.showItemInFolder(directory);
         },
       },
@@ -519,7 +512,7 @@ export function createWindow(): ElectronBrowserWindow {
   const aboutMenuClickHandler = async () => {
     const copy = 'Copy';
     const ok = 'OK';
-    const buttons = isLinux() ? [copy, ok] : [ok, copy];
+    const buttons = isLinux ? [copy, ok] : [ok, copy];
     const detail = [
       `Version: ${getProductName()} ${getAppVersion()}`,
       `Build date: ${getAppBuildDate()}`,
@@ -547,7 +540,7 @@ export function createWindow(): ElectronBrowserWindow {
     }
   };
 
-  if (isMac()) {
+  if (isMac) {
     // @ts-expect-error -- TSCONVERSION type splitting
     applicationMenu.submenu?.unshift(
       {
@@ -610,20 +603,11 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
       {
-        label: `${MNEMONIC_SYM}Clear a model`,
-        click: () => {
-          mainBrowserWindow.webContents?.send('clear-model');
-        },
-      },
-      {
-        label: `Clear ${MNEMONIC_SYM}all models`,
-        click: () => {
-          mainBrowserWindow.webContents?.send('clear-all-models');
-        },
-      },
-      {
         label: `R${MNEMONIC_SYM}estart`,
-        click: window?.main.restart,
+        click: () => {
+          app.relaunch();
+          app.exit();
+        },
       },
       {
         label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,
@@ -670,29 +654,31 @@ export function createWindow(): ElectronBrowserWindow {
     ],
   };
   const template: MenuItemConstructorOptions[] = [];
-  template.push(applicationMenu);
-  template.push({
-    label: `${MNEMONIC_SYM}File`,
-    submenu: [
-      {
-        label: `${MNEMONIC_SYM}New Window`,
-        click: () => {
-          createWindow();
+  template.push(
+    applicationMenu,
+    {
+      label: `${MNEMONIC_SYM}File`,
+      submenu: [
+        {
+          label: `${MNEMONIC_SYM}New Window`,
+          click: () => {
+            createWindow();
+          },
         },
-      },
-    ],
-  });
-  template.push(editMenu);
-  template.push(viewMenu);
-  template.push(windowMenu);
-  template.push(toolsMenu);
-  template.push(helpMenu);
+      ],
+    },
+    editMenu,
+    viewMenu,
+    windowMenu,
+    toolsMenu,
+    helpMenu,
+  );
 
   if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
     template.push(developerMenu);
   }
 
-  if (isMac()) {
+  if (isMac) {
     Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   } else {
     // setMenu only works for Windows and Linux
@@ -735,6 +721,7 @@ function saveBounds() {
   }
 
   const fullscreen = browserWindow?.isFullScreen();
+  const electronStorage = getElectronStorage();
 
   // Only save the size if we're not in fullscreen
   if (!fullscreen) {
@@ -752,6 +739,7 @@ function getBounds() {
   let maximize = false;
 
   try {
+    const electronStorage = getElectronStorage();
     bounds = electronStorage?.getItem('bounds', {});
     fullscreen = electronStorage?.getItem('fullscreen', false);
     maximize = electronStorage?.getItem('maximize', false);
@@ -773,6 +761,7 @@ const ZOOM_MIN = 0.05;
 
 const getZoomFactor = () => {
   try {
+    const electronStorage = getElectronStorage();
     return electronStorage?.getItem('zoomFactor', ZOOM_DEFAULT);
   } catch (error) {
     // This should never happen, but if it does...!
@@ -794,21 +783,21 @@ export const setZoom = (transformer: (current: number) => number) => () => {
   const actual = Math.min(Math.max(ZOOM_MIN, desired), ZOOM_MAX);
 
   browserWindow.webContents.setZoomLevel(actual);
+  const electronStorage = getElectronStorage();
   electronStorage?.setItem('zoomFactor', actual);
 };
-
-export function initElectronStorage() {
-  const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
-  if (!electronStorage) {
-    electronStorage = new ElectronStorage(electronStoragePath);
-  }
-  return electronStorage;
-}
 
 export function createWindowsAndReturnMain() {
   const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }
+  // Create the plugin window after the main window finishes its initial load so
+  // that Playwright's firstWindow() always returns the main app window. Creating
+  // it on did-finish-load still parses the 12 MB bundle well before any user
+  // plugin call would occur.
+  mainWindow.webContents.once('did-finish-load', () => createPluginWindow());
   return mainWindow;
 }
+
+export { destroyPluginWindow };

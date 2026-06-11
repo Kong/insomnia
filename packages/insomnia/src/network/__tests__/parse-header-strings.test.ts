@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { AUTH_AWS_IAM, CONTENT_TYPE_FORM_DATA } from '../../common/constants';
-import { parseHeaderStrings } from '../../main/network/parse-header-strings';
+import { CONTENT_TYPE_FORM_DATA } from '../../common/constants';
+import { parseHeaderStrings } from '../parse-header-strings';
 
 describe('parseHeaderStrings', () => {
   it('should default with empty inputs', () => {
-    const req = { authentication: {}, body: {}, headers: [] };
-    expect(parseHeaderStrings({ req })).toEqual(['Accept: */*', 'Accept-Encoding:', 'content-type:']);
+    const req = { authentication: {}, body: {}, headers: [], method: 'GET' };
+    expect(parseHeaderStrings({ req, finalUrl: '' })).toEqual(['Accept: */*', 'Accept-Encoding:', 'content-type:']);
   });
 
   it('should disable expect and transfer-encoding with body', () => {
-    const req = { authentication: {}, body: {}, headers: [] };
-    expect(parseHeaderStrings({ req, requestBody: 'test' })).toEqual([
+    const req = { authentication: {}, body: {}, headers: [], method: 'GET' };
+    expect(parseHeaderStrings({ req, requestBody: 'test', finalUrl: '' })).toEqual([
       'Expect:',
       'Transfer-Encoding:',
       'Accept: */*',
@@ -21,8 +21,8 @@ describe('parseHeaderStrings', () => {
   });
 
   it('should add boundary with multipart body path', () => {
-    const req = { authentication: {}, body: { mimeType: CONTENT_TYPE_FORM_DATA }, headers: [] };
-    expect(parseHeaderStrings({ req, requestBodyPath: '/tmp/x.z' })).toEqual([
+    const req = { authentication: {}, body: { mimeType: CONTENT_TYPE_FORM_DATA }, headers: [], method: 'GET' };
+    expect(parseHeaderStrings({ req, requestBodyPath: '/tmp/x.z', finalUrl: '' })).toEqual([
       'Expect:',
       'Transfer-Encoding:',
       'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
@@ -35,10 +35,11 @@ describe('parseHeaderStrings', () => {
     const req = {
       authentication: {
         sessionToken: 'someTokenSomethingSomething',
-        type: AUTH_AWS_IAM,
+        type: 'iam',
       },
       body: {},
       headers: [],
+      method: 'POST',
     };
     const [host, token, date, authorization] = parseHeaderStrings({ req, finalUrl: 'http://x.y' });
     expect(host).toBe('Host: x.y');

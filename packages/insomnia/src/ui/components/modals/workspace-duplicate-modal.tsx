@@ -1,16 +1,15 @@
+import type { BaseModel, Project, Workspace } from 'insomnia-data';
+import { database, models } from 'insomnia-data';
+import { strings } from 'insomnia-data/common';
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useParams } from 'react-router';
+import { href, useNavigate, useParams } from 'react-router';
 
-import { database } from '../../../common/database';
+import { useOrganizationLoaderData } from '~/routes/organization';
+import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
+
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { strings } from '../../../common/strings';
-import { sortProjects } from '../../../models/helpers/project';
-import * as models from '../../../models/index';
-import type { Project } from '../../../models/project';
-import type { Workspace } from '../../../models/workspace';
-import { useOrganizationLoaderData } from '../../routes/organization';
-import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../routes/project';
+import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../../common/get-workspace-label';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -23,27 +22,53 @@ interface WorkspaceDuplicateModalProps extends ModalProps {
 }
 
 export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ workspace, onHide }) => {
-  const { organizationId, projectId: currentProjectId } = useParams();
-  const { organizations } = useOrganizationLoaderData();
+  const { organizationId, projectId: currentProjectId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+  };
+  const organizationData = useOrganizationLoaderData();
   const [selectedOrgId, setSelectedOrgId] = useState(organizationId);
-  const [projectOptions, setProjectOptions] = useState<models.BaseModel[]>([]);
+  const [projectOptions, setProjectOptions] = useState<BaseModel[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [newWorkspaceName, setNewWorkspaceName] = useState(workspace.name);
+  const navigate = useNavigate();
+
   useEffect(() => {
     (async () => {
       const organizationProjects = await database.find<Project>(models.project.type, {
         parentId: selectedOrgId,
       });
-      setProjectOptions(sortProjects(organizationProjects));
+      setProjectOptions(models.project.sortProjects(organizationProjects));
       setSelectedProjectId(organizationProjects[0]?._id || '');
     })();
   }, [selectedOrgId]);
-  const fetcher = useFetcher();
+  const fetcher = useWorkspaceMoveActionFetcher();
 
   const modalRef = useRef<ModalHandle>(null);
   useEffect(() => {
     modalRef.current?.show();
   }, []);
+
+  useEffect(() => {
+    const fetcherResult = fetcher.data;
+    if (
+      fetcherResult &&
+      !('error' in fetcherResult) &&
+      fetcherResult.workspaceId &&
+      fetcherResult.projectId &&
+      fetcherResult.organizationId &&
+      fetcherResult.workspaceScope
+    ) {
+      navigate(
+        `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
+          organizationId: fetcherResult.organizationId,
+          projectId: fetcherResult.projectId,
+          workspaceId: fetcherResult.workspaceId,
+        })}/${models.workspace.scopeToActivity(fetcherResult.workspaceScope)}`,
+      );
+      onHide();
+    }
+  }, [fetcher.data, navigate, onHide]);
 
   const isBtnDisabled = fetcher.state !== 'idle' || !selectedProjectId || !newWorkspaceName;
 
@@ -53,17 +78,20 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
         <ModalHeader>Duplicate file</ModalHeader>
         <ModalBody className="wide">
           <p className="mb-6">You can duplicate the following file to a project:</p>
-          <div className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font]">
+          <div className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font)">
             <div
               className={`${scopeToBgColorMap[workspace.scope]} ${scopeToTextColorMap[workspace.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
             >
               <Icon icon={scopeToIconMap[workspace.scope]} />
             </div>
             <span>{workspace.name}</span>
-            <span className="text-[--hl]">{getWorkspaceLabel(workspace).singular}</span>
+            <span className="text-(--hl)">{getWorkspaceLabel(workspace).singular}</span>
           </div>
           <fetcher.Form
-            action={`/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/duplicate`}
+            action={href('/organization/:organizationId/project/:projectId/workspace/move', {
+              organizationId,
+              projectId: workspace.parentId,
+            })}
             method="post"
             id="workspace-duplicate-form"
             className="wide pad"
@@ -89,7 +117,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
               <label>
                 Organization:
                 <select name="orgId" value={selectedOrgId} onChange={e => setSelectedOrgId(e.target.value)}>
-                  {organizations.map(({ id, display_name }) => (
+                  {organizationData?.organizations.map(({ id, display_name }) => (
                     <option key={id} value={id}>
                       {display_name}
                     </option>

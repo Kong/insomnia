@@ -1,4 +1,5 @@
 type: spec.insomnia.rest/5.0
+schema_version: "5.1"
 name: My Design Document
 meta:
   id: wrk_e9bade4287f34672974d8a5ebfd16948

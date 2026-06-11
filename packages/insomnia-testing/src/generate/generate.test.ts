@@ -1,11 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import nodePath from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 import { generate } from './generate';
 
-const fixturesPath = join(__dirname, 'fixtures');
+const fixturesPath = nodePath.join(__dirname, 'fixtures');
 const fixtures = readdirSync(fixturesPath);
 
 describe('fixtures', () => {
@@ -24,8 +24,8 @@ describe('fixtures', () => {
     it(`Generate ${input}`, async () => {
       expect(typeof input).toBe('string');
       expect(typeof output).toBe('string');
-      const inputContents = readFileSync(join(fixturesPath, input), 'utf8');
-      const outputContents = readFileSync(join(fixturesPath, output), 'utf8');
+      const inputContents = readFileSync(nodePath.join(fixturesPath, input), 'utf8');
+      const outputContents = readFileSync(nodePath.join(fixturesPath, output), 'utf8');
       expect(typeof inputContents).toBe('string');
       expect(typeof outputContents).toBe('string');
       const expected = generate(JSON.parse(inputContents));

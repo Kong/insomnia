@@ -1,23 +1,16 @@
 import { expect, type Page } from '@playwright/test';
 
-import { getFixturePath, loadFixture } from '../../playwright/paths';
+import { getFixturePath } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('runner features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test.beforeEach(async ({ app, page }) => {
-    const text = await loadFixture('runner-collection.yaml');
-    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
-    await page.getByLabel('Import').click();
-    await page.locator('[data-test-id="import-from-clipboard"]').click();
-    await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByTestId('settings-button').click();
+  test.beforeEach(async ({ page, insomnia }) => {
+    await insomnia.projectPage.importFixture('runner-collection.yaml');
+    await insomnia.statusbar.openPreferences();
     await page.getByText('Use vertical layout').click();
     await page.locator('.app').press('Escape');
-    await page.getByLabel('Runner').click();
   });
 
   const verifyResultRows = async (
@@ -35,7 +28,7 @@ test.describe('runner features tests', () => {
     const testResults = page.getByTestId(`runner-test-result-iteration-${iteration}`).getByTestId('test-result-row');
     const testResultCount = await testResults.count();
 
-    expect.soft(expectedTestOrder.length).toEqual(testResultCount);
+    expect.soft(expectedTestOrder).toHaveLength(testResultCount);
 
     for (let i = 0; i < testResultCount; i++) {
       const resultMsg = await testResults.nth(i).textContent();
@@ -57,8 +50,11 @@ test.describe('runner features tests', () => {
     expect.soft(passedResultCount + failedResultCount + skippedResultCount).toEqual(expectedTotal);
   };
 
-  test('run collection runner', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('run collection runner', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     // select requests to test
     await page.locator('.runner-request-list-req1').click();
@@ -72,13 +68,13 @@ test.describe('runner features tests', () => {
       await page.getByText('Req2-Pre-Check').click();
 
       const testResultCounts = await page.locator('.test-result-count').allInnerTexts();
-      expect.soft(testResultCounts.length).toBe(1);
+      expect.soft(testResultCounts).toHaveLength(1);
 
       const countParts = testResultCounts[0].split('/');
-      expect.soft(countParts.length).toBe(2);
+      expect.soft(countParts).toHaveLength(2);
 
-      const summarizedPassedCount = parseInt(countParts[0], 10);
-      const summarizedTotalCount = parseInt(countParts[1], 10);
+      const summarizedPassedCount = Number.parseInt(countParts[0], 10);
+      const summarizedTotalCount = Number.parseInt(countParts[1], 10);
       expect.soft(summarizedPassedCount).toEqual(expectedPassed);
       expect.soft(summarizedTotalCount).toEqual(expectedTotal);
     };
@@ -99,9 +95,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 6, 1, 8, expectedTestOrder);
   });
 
-  test('run collection runner with data upload', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('run collection runner with data upload', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     // upload data
     await page.getByText('Upload Data').click();
     const uploadDataPath = getFixturePath('files/runner-data.json');
@@ -143,9 +141,11 @@ test.describe('runner features tests', () => {
     ]);
   });
 
-  test('run req4 3 times with setNextRequest the pre-request script', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('run req4 3 times with setNextRequest the pre-request script', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     await page.locator('.runner-request-list-req4').click();
 
     // send
@@ -159,9 +159,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
   });
 
-  test('await test works', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('await test works', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     await page.locator('.runner-request-list-await-test').click();
 
     // send
@@ -175,9 +177,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 0, 0, 3, expectedTestOrder, 1);
   });
 
-  test('run req5 3 times with setNextRequest in the after-response script', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('run req5 3 times with setNextRequest in the after-response script', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     await page.locator('.runner-request-list-req5').click();
 
     // send
@@ -191,9 +195,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
   });
 
-  test('skip req01 with setNextRequest', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
-
+  test('skip req01 with setNextRequest', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
     await page.locator('.runner-request-list-req0').click();
     await page.locator('.runner-request-list-req01').click();
     await page.locator('.runner-request-list-req02').click();
@@ -213,8 +219,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 1, 1, 2, expectedTestOrder, 1);
   });
 
-  test('can read variables during whole execution', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('can read variables during whole execution', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     await page.locator('.runner-request-list-set-var1').click();
     await page.locator('.runner-request-list-read-var1').click();
@@ -230,8 +239,11 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
   });
 
-  test('can detect sync and async test failure', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('can detect sync and async test failure', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
     await page.locator('.runner-request-list-async-test').click();
 
@@ -246,15 +258,109 @@ test.describe('runner features tests', () => {
     await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);
   });
 
-  test('settings: can turn off logs', async ({ page }) => {
-    await page.getByTestId('run-collection-btn-quick').click();
+  test('delay input can be cleared to enter a new value', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
 
+    const delayInput = page.locator('input[name="Delay"]');
+
+    // default value should be 0
+    await expect.soft(delayInput).toHaveValue('0');
+
+    // clear the input
+    await delayInput.clear();
+    await expect.soft(delayInput).toHaveValue('');
+
+    // type a new value
+    await delayInput.fill('500');
+    await expect.soft(delayInput).toHaveValue('500');
+  });
+
+  test('running with cleared delay input uses last valid value', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
+
+    const delayInput = page.locator('input[name="Delay"]');
+
+    // set a valid delay
+    await delayInput.fill('100');
+    await expect.soft(delayInput).toHaveValue('100');
+
+    // clear the input without entering a new value
+    await delayInput.clear();
+    await expect.soft(delayInput).toHaveValue('');
+
+    // blur the input - it should restore to last valid value
+    await delayInput.blur();
+    await expect.soft(delayInput).toHaveValue('100');
+  });
+
+  test('iterations input can be cleared to enter a new value', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
+
+    const iterationsInput = page.locator('input[name="Iterations"]');
+
+    // default value should be 1
+    await expect.soft(iterationsInput).toHaveValue('1');
+
+    // clear the input
+    await iterationsInput.clear();
+    await expect.soft(iterationsInput).toHaveValue('');
+
+    // type a new value
+    await iterationsInput.fill('3');
+    await expect.soft(iterationsInput).toHaveValue('3');
+  });
+
+  test('running with cleared iterations input uses last valid value', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
+
+    const iterationsInput = page.locator('input[name="Iterations"]');
+
+    // set a valid iteration count
+    await iterationsInput.fill('2');
+    await expect.soft(iterationsInput).toHaveValue('2');
+
+    // clear the input without entering a new value
+    await iterationsInput.clear();
+    await expect.soft(iterationsInput).toHaveValue('');
+
+    // select a request and run
+    await page.locator('.runner-request-list-req1').click();
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Run' }).click();
+
+    // should have run 2 iterations (last valid value)
+    await expect.soft(page.getByTestId('runner-test-result-iteration-1')).toBeVisible();
+    await expect.soft(page.getByTestId('runner-test-result-iteration-2')).toBeVisible();
+    await expect.soft(page.getByTestId('runner-test-result-iteration-3')).toBeHidden();
+  });
+
+  test('can turn off logs via settings', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Run Collection',
+      workspaceName: 'Runner',
+    });
+
+    // wait for the request row to be ready before selecting it
+    await page.locator('.runner-request-list-printLogs').waitFor({ state: 'visible' });
     await page.locator('.runner-request-list-printLogs').click();
     await page.getByRole('tab', { name: 'advanced' }).click();
     await page.locator('input[name="enable-log"]').click();
 
-    // send
-    await page.getByRole('button', { name: 'Run', exact: true }).click();
+    // Run becomes enabled only once a request is selected; selecting printLogs above enables it
+    const runButton = page.getByRole('button', { name: 'Run', exact: true });
+    await runButton.waitFor({ state: 'visible' });
+    await runButton.click();
 
     // verify there's no log
     await page.getByText('1 / 1').first().click();
@@ -265,7 +371,7 @@ test.describe('runner features tests', () => {
     await page.locator('input[name="enable-log"]').click();
 
     // send
-    await page.getByRole('button', { name: 'Run', exact: true }).click();
+    await runButton.click();
 
     // verify there's a log
     await page.getByText('1 / 1').first().click();

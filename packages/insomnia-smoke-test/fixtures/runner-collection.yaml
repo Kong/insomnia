@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: Runner
 meta:
   id: wrk_6ce725a38255442aa310e9df33bb8eaf

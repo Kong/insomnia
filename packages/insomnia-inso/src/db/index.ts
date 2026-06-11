@@ -1,52 +1,11 @@
 import { stat } from 'node:fs/promises';
 
-import type { CaCertificate } from 'insomnia/src/models/ca-certificate';
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import type { CookieJar } from 'insomnia/src/models/cookie-jar';
-
-import { logger } from '../cli';
+import { logger } from '../logger';
 import gitAdapter from './adapters/git-adapter';
 import insomniaExportAdapter from './adapters/insomnia-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
-import type {
-  ApiSpec,
-  BaseModel,
-  Environment,
-  UnitTest,
-  UnitTestSuite,
-  Workspace,
-  WorkspaceMeta,
-} from './models/types';
-
-export interface Database {
-  ApiSpec: ApiSpec[];
-  Environment: Environment[];
-  Request: BaseModel[];
-  RequestGroup: BaseModel[];
-  Workspace: Workspace[];
-  WorkspaceMeta: WorkspaceMeta[];
-  UnitTestSuite: UnitTestSuite[];
-  UnitTest: UnitTest[];
-  ClientCertificate: ClientCertificate[];
-  CaCertificate: CaCertificate[];
-  CookieJar: CookieJar[];
-}
-
-export const emptyDb = (): Database => ({
-  ApiSpec: [],
-  Environment: [],
-  Request: [],
-  RequestGroup: [],
-  Workspace: [],
-  WorkspaceMeta: [],
-  UnitTest: [],
-  UnitTestSuite: [],
-  ClientCertificate: [],
-  CaCertificate: [],
-  CookieJar: [],
-});
-
-export type DbAdapter = (dir: string, filterTypes?: (keyof Database)[]) => Promise<Database | null>;
+import type { Database } from './types';
+import { emptyDb } from './types';
 
 interface Options {
   pathToSearch: string;
@@ -56,7 +15,7 @@ interface Options {
 export const isFile = async (path: string) => {
   try {
     return (await stat(path)).isFile();
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -87,9 +46,23 @@ export const loadDb = async ({ pathToSearch, filterTypes }: Options) => {
   }
 
   logger.warn(
-    `No git, app data store or Insomnia V4 export file found at path "${pathToSearch}",
-     --workingDir/-w should point to a git repository root, an Insomnia export file or a directory containing Insomnia data.
-      re-run with --verbose to see tracing information`,
+    `Error: No data source found at path "${pathToSearch}".
+  TIP: Use "--workingDir/-w" to specify one of the following:
+    - A Git repository root
+    - An Insomnia export file
+    - A directory containing Insomnia data
+  
+  Examples:
+    1. Using a (legacy) Git repository:
+       $ inso run collection --workingDir /path/to/git-repo
+  
+    2. Using an Insomnia export file or inside a Git project:
+       $ inso run collection --workingDir /path/to/insomnia-file.yaml
+  
+    3. Using a directory with Insomnia app data:
+       $ inso run collection --workingDir /path/to/insomnia-data
+  
+  Re-run with "--verbose" for more details.`,
   );
 
   return emptyDb();

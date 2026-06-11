@@ -1,9 +1,7 @@
 import classnames from 'classnames';
+import type { KeyCombination, PlatformKeyCombinations } from 'insomnia-data/common';
+import { constructKeyCombinationDisplay, getPlatformKeyCombinations, isMac } from 'insomnia-data/common';
 import React, { type FC, memo } from 'react';
-
-import { isMac } from '../../common/constants';
-import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
-import type { KeyCombination, PlatformKeyCombinations } from '../../common/settings';
 
 interface Props {
   /** One of these two must be given. If both is given, keyCombination will be used. */
@@ -46,7 +44,7 @@ export const Hotkey: FC<Props> = memo(({ keyCombination, keyBindings, className,
   }
 
   const classes = {
-    'font-normal': isMac(),
+    'font-normal': isMac,
     'italic': isFallback,
   };
 

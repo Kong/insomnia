@@ -1,13 +1,12 @@
-import { URL } from 'node:url';
-
+import type { ResponseHeader } from 'insomnia-data';
 import React, { type FC, Fragment, useMemo } from 'react';
 
-import type { ResponseHeader } from '../../../models/response';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 
 interface Props {
   headers: ResponseHeader[];
+  onCopyAll?: () => void;
 }
 
 const validateURL = ({ value }: ResponseHeader) => {
@@ -21,7 +20,7 @@ const validateURL = ({ value }: ResponseHeader) => {
 
 const headerAsString = (header: ResponseHeader) => `${header.name}: ${header.value}`;
 
-export const ResponseHeadersViewer: FC<Props> = ({ headers }) => {
+export const ResponseHeadersViewer: FC<Props> = ({ headers, onCopyAll }) => {
   const headersString = useMemo(() => headers.map(headerAsString).join('\n'), [headers]);
 
   return (
@@ -45,7 +44,7 @@ export const ResponseHeadersViewer: FC<Props> = ({ headers }) => {
         </tbody>
       </table>
       <p key="copy" className="pad-top">
-        <CopyButton className="pull-right" content={headersString} />
+        <CopyButton className="pull-right" content={headersString} onClick={onCopyAll} />
       </p>
     </Fragment>
   );

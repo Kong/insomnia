@@ -39,7 +39,7 @@ node-libcurl builds for 3 operating systems and two versions of nodejs. insomnia
 
 ```shell
 # install node version
-node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+npm run install-libcurl-node
 # install electron version
 npm run install-libcurl-electron
 ```
@@ -105,4 +105,24 @@ inso -w <INSO_NEDB_PATH>
 
 # using a binary
 ./packages/insomnia-inso/binaries/insomnia-inso -w <INSO_NEDB_PATH>
+```
+
+## How to debug the bundled assets
+
+```bash
+DEBUG=1 npm run build
+```
+
+This will generate an `artifacts` directory containing information about the bundled assets.
+The meta.json can be uploaded to https://esbuild.github.io/analyze/ to visualize the bundle.
+The bundle-analysis.log can be used to see the dependency tree of the bundle.
+
+## How to generate documents about inso
+
+1. Ensure your node version matches the project `.nvmrc` perhaps with `fnm use` or another version manager.
+1. Run the script below, which will build inso in dev mode in order to use it to generate docs about itself
+1. The docs appear in your vscode diff, or you can look in `./packages/insomnia-inso/reference/` if the version number looks wrong you might need to check what branch you're on, it should be run from develop ideally as the only changes in the release branch should be hotfixes that dont affect inso docs
+
+```sh
+npm i && npm run build -w insomnia-inso && $PWD/packages/insomnia-inso/bin/inso generate-docs
 ```

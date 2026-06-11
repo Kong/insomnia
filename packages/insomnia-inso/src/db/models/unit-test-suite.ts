@@ -1,8 +1,8 @@
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { AutoComplete } from 'enquirer';
 
-import { logger } from '../../cli';
-import type { Database } from '../index';
+import { logger } from '../../logger';
+import type { Database } from '../types';
 import { loadApiSpec } from './api-spec';
 import type { UnitTestSuite } from './types';
 import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
@@ -12,7 +12,7 @@ export const loadUnitTestSuite = (db: Database, identifier: string): UnitTestSui
   // Identifier is for one specific suite; find it
   logger.trace('Load unit test suite with identifier `%s` from data store', identifier);
   const items = db.UnitTestSuite.filter(suite => matchIdIsh(suite, identifier) || suite.name === identifier);
-  logger.trace('Found %d.', items.length);
+  logger.trace('Found %d unit test suite(s).', items.length);
   return ensureSingleOrNone(items, 'unit test suite');
 };
 export const loadTestSuites = (db: Database, identifier: string): UnitTestSuite[] => {

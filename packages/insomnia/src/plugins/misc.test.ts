@@ -1,19 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { PluginTheme } from './misc';
-import { containsNunjucks, validateTheme, validateThemeName } from './misc';
+import type { PluginTheme } from '~/plugins/bridge-types';
 
-describe('containsNunjucks', () => {
+import { containsTemplateSyntax, validateTheme, validateThemeName } from './misc';
+
+describe('containsTemplateSyntax', () => {
   it('will return true if the value contains nunjucks without', () => {
-    expect(containsNunjucks('{{asdf}}')).toBeTruthy();
+    expect(containsTemplateSyntax('{{asdf}}')).toBeTruthy();
   });
 
   it('will return true if the value contains nunjucks with spaces', () => {
-    expect(containsNunjucks('{{ asdf }}')).toBeTruthy();
+    expect(containsTemplateSyntax('{{ asdf }}')).toBeTruthy();
   });
 
   it('will return false if the value contains nunjucks', () => {
-    expect(containsNunjucks('#rgb(1,2,3)')).toBeFalsy();
+    expect(containsTemplateSyntax('#rgb(1,2,3)')).toBeFalsy();
   });
 });
 
@@ -47,6 +48,7 @@ describe('validateTheme', () => {
       displayName,
       theme: {
         background: {
+          // @ts-ignore
           default: nunjucksValue,
           info: '#abcdef',
         },
@@ -67,6 +69,7 @@ describe('validateTheme', () => {
         styles: {
           appHeader: {
             foreground: {
+              // @ts-ignore
               default: nunjucksValue,
               info: '#abcdef',
             },

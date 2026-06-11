@@ -6,7 +6,7 @@ import { getUserEmail } from './test-utils';
 const testUser = getUserEmail();
 
 test('Can invite users in app', async ({ page }) => {
-  await page.getByLabel('Invite collaborators').click();
+  await page.getByLabel('Invite collaborators').filter({ visible: true }).click();
 
   // invite a new member
   await page.getByPlaceholder('Enter emails, separated by').click();
@@ -19,9 +19,8 @@ test('Can invite users in app', async ({ page }) => {
     await organizationMembersSelector.getByRole('option').nth(i).click();
   }
 
-  await page.getByText('Invite collaborators').click();
-
-  await page.getByRole('button', { name: 'Invite', exact: true }).click();
+  await page.locator('.app').press('Escape');
+  await page.getByRole('dialog').getByRole('button', { name: 'Invite' }).click();
 
   const invitationListLocator = page.getByLabel('Invitation list');
   // Check that the new member is in the list

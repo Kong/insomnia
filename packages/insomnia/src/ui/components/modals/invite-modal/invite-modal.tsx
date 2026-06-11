@@ -1,4 +1,19 @@
 import { isAfter } from 'date-fns';
+import {
+  type Collaborator,
+  deleteOrganizationMember,
+  type FeatureList,
+  getOrganizationDetail,
+  getOrganizationFeatures,
+  getOrganizationMemberRoles,
+  getOrganizationRoles,
+  getOrgUserPermissions,
+  type Organization,
+  type Permission,
+  revokeInvitation,
+  type Role,
+  unlinkCollaborator,
+} from 'insomnia-api';
 import React, { type FC, type MutableRefObject, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -12,20 +27,25 @@ import {
   ModalOverlay,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useSearchParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 
-import { getAccountId, getCurrentSessionId } from '../../../../account/session';
-import { getAppWebsiteBaseURL } from '../../../../common/constants';
-import { debounce } from '../../../../common/misc';
-import { invariant } from '../../../../utils/invariant';
-import { SegmentEvent } from '../../../analytics';
-import { insomniaFetch } from '../../../insomniaFetch';
-import type { Collaborator, CollaboratorsListLoaderResult } from '../../../routes/invite';
-import { PromptButton } from '../../base/prompt-button';
-import { Icon } from '../../icon';
-import { showAlert } from '..';
+import { getAccountId, getCurrentSessionId } from '~/account/session';
+import { getAppWebsiteBaseURL } from '~/common/constants';
+import { debounce } from '~/common/misc';
+import { useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
+import { useInviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId';
+import { useReinviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
+import { useCollaboratorsCheckSeatsLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-check-seats';
+import { useOrganizationMemberRolesActionFetcher } from '~/routes/organization.$organizationId.members.$userId.roles';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { PromptButton } from '~/ui/components/base/prompt-button';
+import { Icon } from '~/ui/components/icon';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
+import { showModal } from '~/ui/components/modals/index';
+import { invariant } from '~/utils/invariant';
+
 import { InviteForm } from './invite-form';
-import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
+import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
 
 export function getSearchParamsString(
   searchParams: URLSearchParams,
@@ -51,7 +71,7 @@ const InviteModal: FC<{
   organizationId: string;
   allRoles: Role[];
   currentUserRoleInOrg: Role;
-  orgFeatures: Features;
+  orgFeatures: FeatureList;
   permissionRef: MutableRefObject<Record<Permission, boolean>>;
   isCurrentUserOrganizationOwner: boolean;
   currentUserAccountId: string;
@@ -72,7 +92,7 @@ const InviteModal: FC<{
   const [queryInputString, setQueryInputString] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const collaboratorsListLoader = useFetcher<CollaboratorsListLoaderResult>();
+  const collaboratorsListLoader = useCollaboratorsFetcher();
 
   const page = searchParams.get('page') ? Number(searchParams.get('page')) : 0;
 
@@ -93,66 +113,79 @@ const InviteModal: FC<{
 
   useEffect(() => {
     if (!collaboratorsListLoader.data && collaboratorsListLoader.state === 'idle') {
-      collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
+      collaboratorsListLoader.load({ organizationId, page: 0, per_page: ItemsPerPage });
     }
   }, [collaboratorsListLoader, organizationId]);
 
   const handleSearch = debounce((filter: string) => {
     if (filter.trim() === '') {
-      collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
+      collaboratorsListLoader.load({ organizationId, page: 0, per_page: ItemsPerPage });
       setSearchParams(getSearchParamsString(searchParams, { page: 0, filter: '' }));
     } else {
-      collaboratorsListLoader.load(
-        `/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}&filter=${encodeURIComponent(filter)}`,
-      );
+      collaboratorsListLoader.load({
+        organizationId,
+        page: 0,
+        per_page: ItemsPerPage,
+        filter: encodeURIComponent(filter),
+      });
       setSearchParams(getSearchParamsString(searchParams, { page: 0, filter }));
     }
   }, 500);
 
   const resetCollaboratorsList = () => {
     setQueryInputString('');
-    collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
+    collaboratorsListLoader.load({ organizationId, page: 0, per_page: ItemsPerPage });
     setSearchParams(getSearchParamsString(searchParams, { page: 0, filter: '' }));
   };
 
   const resetCurrentPage = () => {
-    collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=${page}&per_page=${ItemsPerPage}`);
+    collaboratorsListLoader.load({ organizationId, page, per_page: ItemsPerPage });
     setSearchParams(getSearchParamsString(searchParams, { page, filter: queryInputString }));
   };
 
+  const collaboratorsCheckSeatsLoader = useCollaboratorsCheckSeatsLoaderFetcher();
+  const checkSeatsResponseData = collaboratorsCheckSeatsLoader.data;
+  const collaboratorsCheckSeatsLoaderLoad = collaboratorsCheckSeatsLoader.load;
+  useEffect(() => {
+    collaboratorsCheckSeatsLoaderLoad({ organizationId });
+  }, [collaboratorsCheckSeatsLoaderLoad, organizationId]);
+
   return (
     <ModalOverlay
-      isDismissable={true}
+      isDismissable={false}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
+      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-(--color-bg) pt-[70px]"
     >
-      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
-        <Dialog className="relative outline-none">
+      <Modal className="theme--dialog flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-[900px] flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
+        <Dialog className="relative flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
-            <>
+            <div className="flex h-full flex-col overflow-hidden">
               <Heading slot="title" className="mb-[24px] text-[22px] leading-[34px]">
                 Invite collaborators
               </Heading>
-              <Button onPress={close} className="fa fa-times absolute right-0 top-0 text-xl" />
+              <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
               {permissionRef.current?.['create:invitation'] && (
                 <>
                   <InviteForm
                     onInviteCompleted={() => {
                       if (organizationId) {
                         resetCollaboratorsList();
+                        collaboratorsCheckSeatsLoaderLoad({ organizationId });
                       }
                     }}
+                    senderRole={currentUserRoleInOrg}
                     allRoles={allRoles}
+                    checkSeatsResponseData={checkSeatsResponseData}
                   />
-                  <hr className="my-[24px] border" />
+                  <hr className="my-[24px]" />
                 </>
               )}
 
               <div className="mb-[16px] flex justify-between leading-[24px]">
                 <p>WHO HAS ACCESS ({total})</p>
                 <Group
-                  className="flex w-[50%] items-center gap-2 rounded bg-[--hl-xs] px-[8px] py-[4px]"
+                  className="flex w-[50%] items-center gap-2 rounded-sm bg-(--hl-xs) px-[8px] py-[4px]"
                   isDisabled={collaboratorsListLoader.state !== 'idle'}
                 >
                   <i className="fa fa-search" />
@@ -174,66 +207,68 @@ const InviteModal: FC<{
                   )}
                 </Group>
               </div>
-              {collaboratorListError && (
-                <div className="flex h-[200px] items-center justify-center">
-                  <p className="text-[12px] text-[--color-danger] first-letter:capitalize">{collaboratorListError}</p>
-                </div>
-              )}
-              {collaborators?.length === 0 && page === 0 ? (
-                !collaboratorListError && (
+              <div className="flex-1 overflow-y-auto">
+                {collaboratorListError && (
                   <div className="flex h-[200px] items-center justify-center">
-                    <p className="text-[14px] text-[--color-font]">
-                      {queryInputString
-                        ? `No member or team found for the search: "${queryInputString}"`
-                        : 'No members or teams'}
-                    </p>
+                    <p className="text-[12px] text-(--color-danger) first-letter:capitalize">{collaboratorListError}</p>
                   </div>
-                )
-              ) : (
-                <>
-                  <ListBox aria-label="Invitation list" className="flex flex-col gap-1">
-                    {collaborators?.map((member: Collaborator) => (
-                      <MemberListItem
-                        key={member.id}
-                        organizationId={organizationId}
-                        member={member}
-                        currentUserAccountId={currentUserAccountId}
-                        currentUserRoleInOrg={currentUserRoleInOrg}
-                        allRoles={allRoles}
-                        isCurrentUserOrganizationOwner={isCurrentUserOrganizationOwner}
-                        orgFeatures={orgFeatures}
-                        permissionRef={permissionRef}
-                        revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
-                        onResetCurrentPage={resetCurrentPage}
-                        onError={setError}
-                      />
-                    ))}
-                  </ListBox>
-                  <PaginationBar
-                    isPrevDisabled={page === 0}
-                    isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
-                    isHidden={total <= ItemsPerPage && page === 0}
-                    onPrevPress={() => {
-                      collaboratorsListLoader.load(
-                        `/organization/${organizationId}/collaborators?page=${page - 1}&per_page=${ItemsPerPage}`,
-                      );
-                      setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
-                    }}
-                    onNextPress={() => {
-                      collaboratorsListLoader.load(
-                        `/organization/${organizationId}/collaborators?page=${page + 1}&per_page=${ItemsPerPage}`,
-                      );
-                      setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
-                    }}
-                  />
-                  {error && (
-                    <div className="mt-[16px] flex justify-center">
-                      <p className="text-[12px] text-[--color-danger]">{error}</p>
+                )}
+                {collaborators?.length === 0 && page === 0 ? (
+                  !collaboratorListError && (
+                    <div className="flex h-[200px] items-center justify-center">
+                      <p className="text-[14px] text-(--color-font)">
+                        {queryInputString
+                          ? `No member or team found for the search: "${queryInputString}"`
+                          : 'No members or teams'}
+                      </p>
                     </div>
-                  )}
-                </>
-              )}
-            </>
+                  )
+                ) : (
+                  <>
+                    <ListBox aria-label="Invitation list" className="flex flex-col gap-1">
+                      {collaborators?.map((member: Collaborator) => (
+                        <MemberListItem
+                          key={member.id}
+                          organizationId={organizationId}
+                          member={member}
+                          currentUserAccountId={currentUserAccountId}
+                          currentUserRoleInOrg={currentUserRoleInOrg}
+                          allRoles={allRoles}
+                          isCurrentUserOrganizationOwner={isCurrentUserOrganizationOwner}
+                          orgFeatures={orgFeatures}
+                          permissionRef={permissionRef}
+                          revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
+                          onResetCurrentPage={resetCurrentPage}
+                          onError={setError}
+                          onRemoveMember={() => {
+                            collaboratorsCheckSeatsLoaderLoad({ organizationId });
+                          }}
+                        />
+                      ))}
+                    </ListBox>
+                    {error && (
+                      <div className="mt-[16px] flex justify-center">
+                        <p className="text-[12px] text-(--color-danger)">{error}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              <PaginationBar
+                isPrevDisabled={page === 0}
+                isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
+                isHidden={total <= ItemsPerPage && page === 0}
+                onPrevPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
+                  setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
+                }}
+                onNextPress={() => {
+                  collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
+
+                  setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
+                }}
+              />
+            </div>
           )}
         </Dialog>
       </Modal>
@@ -248,11 +283,12 @@ const MemberListItem: FC<{
   currentUserRoleInOrg: Role;
   allRoles: Role[];
   isCurrentUserOrganizationOwner: boolean;
-  orgFeatures: Features;
+  orgFeatures: FeatureList;
   permissionRef: MutableRefObject<Record<Permission, boolean>>;
   revalidateCurrentUserRoleAndPermissionsInOrg: (organizationId: string) => Promise<[void, void]>;
   onResetCurrentPage: () => void;
   onError: (error: string | null) => void;
+  onRemoveMember: () => void;
 }> = ({
   organizationId,
   member,
@@ -265,14 +301,15 @@ const MemberListItem: FC<{
   revalidateCurrentUserRoleAndPermissionsInOrg,
   onResetCurrentPage,
   onError,
+  onRemoveMember,
 }) => {
-  const reinviteCollaboratorFetcher = useFetcher();
+  const reinviteCollaboratorFetcher = useReinviteFetcher();
   const reinviting = reinviteCollaboratorFetcher.state !== 'idle';
 
-  const updateInvitationRoleFetcher = useFetcher();
+  const updateInvitationRoleFetcher = useInviteFetcher();
   const invitationRoleUpdating = updateInvitationRoleFetcher.state !== 'idle';
 
-  const updateMemberRoleFetcher = useFetcher();
+  const updateMemberRoleFetcher = useOrganizationMemberRolesActionFetcher();
   const memberRoleUpdating = updateMemberRoleFetcher.state !== 'idle';
 
   const [isFailed, setIsFailed] = useState(false);
@@ -292,6 +329,7 @@ const MemberListItem: FC<{
     if (
       updateMemberRoleFetcher.data &&
       'error' in updateMemberRoleFetcher.data &&
+      updateMemberRoleFetcher.data.error &&
       updateMemberRoleFetcher.state === 'idle'
     ) {
       onError(updateMemberRoleFetcher.data.error);
@@ -312,17 +350,17 @@ const MemberListItem: FC<{
     <ListBoxItem
       id={isAcceptedMember ? member.metadata.userId : member.id}
       textValue={textValue}
-      className="flex justify-between gap-[16px] rounded-sm px-2 leading-[36px] outline-none odd:bg-[--hl-xs]"
+      className="flex justify-between gap-[16px] rounded-xs px-2 leading-[36px] outline-hidden odd:bg-(--hl-xs)"
     >
       <div className="relative flex grow items-center gap-3 truncate">
         <div className="relative h-[24px] w-[24px]">
           <img
             src={member.picture}
             alt="member image"
-            className="absolute bottom-0 left-0 top-0 m-auto h-[24px] w-[24px] rounded-full"
+            className="absolute top-0 bottom-0 left-0 m-auto h-[24px] w-[24px] rounded-full"
           />
           {member.metadata.groupTotal !== undefined && (
-            <div className="absolute -bottom-1 -right-1 flex h-3 w-auto min-w-3 items-center justify-center rounded-full border border-white bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-100 p-1 text-[--color-font-danger]">
+            <div className="absolute -right-1 -bottom-1 flex h-3 w-auto min-w-3 items-center justify-center rounded-full border border-white bg-(--color-danger) p-1 text-(--color-font-danger)">
               <p className="text-[9px]">{member.metadata.groupTotal}</p>
             </div>
           )}
@@ -330,22 +368,22 @@ const MemberListItem: FC<{
         <div className="flex items-center gap-2">
           <span>{textValue}</span>
           {isGroup && (
-            <span className="inline-flex items-center rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-1.5 py-0.5 text-xs font-medium text-[--color-font-surprise] ring-1 ring-inset ring-[rgba(var(--color-surprise-rgb),1)]">
+            <span className="inline-flex items-center rounded-full bg-(--color-surprise) px-1.5 py-0.5 text-xs font-medium text-(--color-font-surprise) ring-1 ring-[rgba(var(--color-surprise-rgb),1)] ring-inset">
               Team
             </span>
           )}
           {isCurrentUser && (
-            <span className="inline-flex items-center rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-1.5 py-0.5 text-xs font-medium text-[--color-font-surprise] ring-1 ring-inset ring-[rgba(var(--color-surprise-rgb),1)]">
+            <span className="inline-flex items-center rounded-full bg-(--color-surprise) px-1.5 py-0.5 text-xs font-medium text-(--color-font-surprise) ring-1 ring-[rgba(var(--color-surprise-rgb),1)] ring-inset">
               You
             </span>
           )}
           {isPendingMember && !isPendingInvitationExpired && (
-            <span className="inline-flex items-center rounded-full bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-1.5 py-0.5 text-xs font-medium text-[--color-font-warning] ring-1 ring-inset ring-[rgba(var(--color-warning-rgb),1)]">
+            <span className="inline-flex items-center rounded-full bg-(--color-warning) px-1.5 py-0.5 text-xs font-medium text-(--color-font-warning) ring-1 ring-[rgba(var(--color-warning-rgb),1)] ring-inset">
               Invite sent
             </span>
           )}
           {isPendingMember && isPendingInvitationExpired && (
-            <span className="inline-flex items-center rounded-full bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-1.5 py-0.5 text-xs font-medium text-[--color-font-danger] ring-1 ring-inset ring-[rgba(var(--color-danger-rgb),1)]">
+            <span className="inline-flex items-center rounded-full bg-(--color-danger) px-1.5 py-0.5 text-xs font-medium text-(--color-font-danger) ring-1 ring-[rgba(var(--color-danger-rgb),1)] ring-inset">
               Expired
             </span>
           )}
@@ -358,7 +396,7 @@ const MemberListItem: FC<{
             isDisabled={reinviting}
             onPress={async () => {
               if (!permissionRef.current['update:membership']) {
-                showAlert({
+                showModal(AlertModal, {
                   title: 'Permission required',
                   message: "You don't have permission to make this action, please contact the organization owner.",
                 });
@@ -366,16 +404,14 @@ const MemberListItem: FC<{
               }
 
               if (member.metadata.invitationId) {
-                reinviteCollaboratorFetcher.submit(
-                  {},
-                  {
-                    action: `/organization/${organizationId}/invites/${member.metadata.invitationId}/reinvite`,
-                    method: 'POST',
-                  },
-                );
+                reinviteCollaboratorFetcher.submit({
+                  organizationId,
+                  invitationId: member.metadata.invitationId,
+                });
+                window.main.trackAnalyticsEvent({ event: AnalyticsEvent.inviteResent });
               }
             }}
-            className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+            className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
           >
             {reinviting ? <Icon icon="spinner" className="fa-spin fa-1x" /> : <Icon icon="paper-plane" />}
             Resend
@@ -392,31 +428,24 @@ const MemberListItem: FC<{
             isDisabled={
               (isAcceptedMember && memberRoleName === 'owner') || invitationRoleUpdating || memberRoleUpdating
             }
-            isRBACEnabled={Boolean(orgFeatures?.features.orgBasicRbac?.enabled)}
+            isRBACEnabled={Boolean(orgFeatures?.orgBasicRbac?.enabled)}
             isUserOrganizationOwner={isCurrentUserOrganizationOwner}
             hasPermissionToChangeRoles={permissionRef.current['update:membership']}
             className="flex h-6 min-w-[88px] items-center gap-2"
             onRoleChange={async role => {
               if (isAcceptedMember) {
-                updateMemberRoleFetcher.submit(
-                  {
-                    roleId: role.id,
-                  },
-                  {
-                    action: `/organization/${organizationId}/members/${member.metadata.userId}/roles`,
-                    method: 'POST',
-                  },
-                );
+                updateMemberRoleFetcher.submit({
+                  roleId: role.id,
+                  organizationId,
+                  userId: member.metadata.userId!,
+                });
               } else {
-                updateInvitationRoleFetcher.submit(
-                  {
+                member.metadata.invitationId &&
+                  updateInvitationRoleFetcher.submit({
+                    organizationId,
+                    invitationId: member.metadata.invitationId,
                     roleId: role.id,
-                  },
-                  {
-                    action: `/organization/${organizationId}/invites/${member.metadata.invitationId}`,
-                    method: 'POST',
-                  },
-                );
+                  });
               }
             }}
           />
@@ -425,10 +454,10 @@ const MemberListItem: FC<{
           <div className="flex min-w-[88px] items-center justify-center">
             <Button
               aria-label="Manage collaborators"
-              className="pressed:bg-opacity-40 flex min-w-[70px] cursor-pointer items-center justify-center gap-2 rounded-sm bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 bg-clip-padding p-1 text-sm text-[--color-font-surprise] outline-none transition-all hover:bg-opacity-80 focus-visible:ring-2 focus-visible:ring-white/75"
+              className="flex min-w-[70px] cursor-pointer items-center justify-center gap-2 rounded-xs bg-(--color-surprise) bg-clip-padding p-1 text-sm text-(--color-font-surprise) outline-hidden transition-all hover:bg-(--color-surprise)/80 focus-visible:ring-2 focus-visible:ring-white/75 data-pressed:bg-(--color-surprise)/40"
               onPress={() => {
                 if (!permissionRef.current['own:organization']) {
-                  showAlert({
+                  showModal(AlertModal, {
                     title: 'Permission required',
                     message: "You don't have permission to make this action, please contact the organization owner.",
                   });
@@ -446,12 +475,20 @@ const MemberListItem: FC<{
         <PromptButton
           confirmMessage="Confirm"
           ariaLabel={isAcceptedMember || isGroup ? 'Remove' : 'Revoke'}
-          className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+          className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
           doneMessage={isFailed ? 'Failed' : isAcceptedMember || isGroup ? 'Removed' : 'Revoked'}
           disabled={memberRoleName === 'owner' || isCurrentUser}
-          onClick={() => {
-            if (!permissionRef.current['delete:membership']) {
-              showAlert({
+          onClick={async () => {
+            if (isPendingMember && member.metadata.invitationId) {
+              if (!permissionRef.current['delete:invitation']) {
+                showModal(AlertModal, {
+                  title: 'Permission required',
+                  message: "You don't have permission to make this action, please contact the organization owner.",
+                });
+                return;
+              }
+            } else if (!permissionRef.current['delete:membership']) {
+              showModal(AlertModal, {
                 title: 'Permission required',
                 message: "You don't have permission to make this action, please contact the organization owner.",
               });
@@ -462,9 +499,14 @@ const MemberListItem: FC<{
             setIsFailed(false);
 
             if (isAcceptedMember) {
-              deleteMember(organizationId, member.metadata.userId!)
+              deleteOrganizationMember({
+                organizationId,
+                userId: member.metadata.userId!,
+                sessionId: await getCurrentSessionId(),
+              })
                 .then(() => {
                   onResetCurrentPage();
+                  onRemoveMember();
                 })
                 .catch(error => {
                   onError(error.message);
@@ -476,6 +518,8 @@ const MemberListItem: FC<{
               revokeOrganizationInvite(organizationId, member.metadata.invitationId)
                 .then(() => {
                   onResetCurrentPage();
+                  onRemoveMember();
+                  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.inviteRevoked });
                 })
                 .catch(error => {
                   onError(error.message);
@@ -487,6 +531,7 @@ const MemberListItem: FC<{
               unlinkTeam(organizationId, member.id)
                 .then(() => {
                   onResetCurrentPage();
+                  onRemoveMember();
                 })
                 .catch(error => {
                   onError(error.message);
@@ -518,15 +563,15 @@ const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, onPrevPress, 
 
   return (
     <div className="flex flex-col items-end">
-      <div className="flex h-[50px] w-full flex-shrink-0 items-center justify-between">
+      <div className="flex h-[50px] w-full shrink-0 items-center justify-between">
         <Button
           isDisabled={isPrevDisabled}
           aria-label="previous page"
           className="flex h-[25px] items-center justify-center gap-[5px] p-1"
           onPress={onPrevPress}
         >
-          <Icon icon="arrow-left" className="text h-[12px] w-[12px] text-[--color-font] disabled:text-[#00000080]" />
-          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+          <Icon icon="arrow-left" className="text h-[12px] w-[12px] text-(--color-font) disabled:text-[#00000080]" />
+          <p className="m-0 text-[12px] leading-[15px] font-normal text-(--color-font) capitalize disabled:text-[#00000080]">
             Previous
           </p>
         </Button>
@@ -536,10 +581,10 @@ const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, onPrevPress, 
           className="flex h-[25px] items-center justify-center gap-[5px] p-1"
           onPress={onNextPress}
         >
-          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+          <p className="m-0 text-[12px] leading-[15px] font-normal text-(--color-font) capitalize disabled:text-[#00000080]">
             Next
           </p>
-          <Icon icon="arrow-right" className="h-[12px] w-[12px] text-[--color-font] disabled:text-[#00000080]" />
+          <Icon icon="arrow-right" className="h-[12px] w-[12px] text-(--color-font) disabled:text-[#00000080]" />
         </Button>
       </div>
     </div>
@@ -555,29 +600,42 @@ export const InviteModalContainer: FC<{
   const { organizationId } = useParams();
   const [allRoles, setAllRoles] = useState<Role[]>([]);
   const [currentUserRoleInOrg, setCurrentUserRoleInOrg] = useState<Role | null>(null);
-  const [orgFeatures, setOrgFeatures] = useState<Features | null>(null);
+  const [orgFeatures, setOrgFeatures] = useState<FeatureList | null>(null);
   const permissionRef = useRef<Record<Permission, boolean>>();
   const [currentUserAccountId, setCurrentUserAccountId] = useState('');
-  const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationAuth0 | null>(null);
+  const [currentOrgInfo, setCurrentOrgInfo] = useState<Organization | null>(null);
 
   const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
 
-  function getBaseInfo(organizationId: string) {
+  async function getBaseInfo(organizationId: string) {
+    const sessionId = await getCurrentSessionId();
     return Promise.all([
       getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
-      getOrganizationFeatures(organizationId).then(setOrgFeatures),
-      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+      getOrganizationFeatures({
+        organizationId,
+        sessionId,
+      }).then(res => setOrgFeatures(res?.features)),
+      getOrgUserPermissions({
+        organizationId,
+        sessionId,
+      }).then(permissions => {
         permissionRef.current = permissions;
       }),
       getAccountId().then(setCurrentUserAccountId),
-      getOrganization(organizationId).then(setCurrentOrgInfo),
+      getOrganizationDetail({
+        organizationId,
+        sessionId,
+      }).then(setCurrentOrgInfo),
     ]);
   }
 
-  function revalidateCurrentUserRoleAndPermissionsInOrg(organizationId: string) {
+  async function revalidateCurrentUserRoleAndPermissionsInOrg(organizationId: string) {
     return Promise.all([
       getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
-      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+      getOrgUserPermissions({
+        organizationId,
+        sessionId: await getCurrentSessionId(),
+      }).then(permissions => {
         permissionRef.current = permissions;
       }),
     ]);
@@ -588,7 +646,10 @@ export const InviteModalContainer: FC<{
     (async () => {
       if (organizationId) {
         setLoadingOrgInfo(true);
-        await Promise.all([getAllRoles().then(setAllRoles), getBaseInfo(organizationId)]);
+        await Promise.all([
+          getOrganizationRoles({ sessionId: await getCurrentSessionId() }).then(setAllRoles),
+          getBaseInfo(organizationId),
+        ]);
         setLoadingOrgInfo(false);
       }
     })();
@@ -604,7 +665,7 @@ export const InviteModalContainer: FC<{
   // track event when modal is opened
   useEffect(() => {
     if (isOpen) {
-      window.main.trackSegmentEvent({ event: SegmentEvent.inviteTrigger });
+      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.inviteTrigger });
     }
   }, [isOpen]);
 
@@ -638,78 +699,12 @@ function checkPermissionRefType(
   return Boolean(permissionRef.current);
 }
 
-export type Permission =
-  | 'own:organization'
-  | 'read:organization'
-  | 'delete:organization'
-  | 'update:organization'
-  | 'read:membership'
-  | 'delete:membership'
-  | 'update:membership'
-  | 'read:invitation'
-  | 'create:invitation'
-  | 'delete:invitation'
-  | 'create:enterprise_connection'
-  | 'read:enterprise_connection'
-  | 'delete:enterprise_connection'
-  | 'update:enterprise_connection'
-  | 'leave:organization';
-
-export async function getCurrentUserPermissionsInOrg(organizationId: string): Promise<Record<Permission, boolean>> {
-  return insomniaFetch({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/user-permissions`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  });
-}
-
-export interface FeatureStatus {
-  enabled: boolean;
-  reason?: string;
-}
-
-export interface OrgFeatures {
-  gitSync: FeatureStatus;
-  orgBasicRbac: FeatureStatus;
-  cloudSync: FeatureStatus;
-  localVault: FeatureStatus;
-}
-
-export interface Features {
-  features: OrgFeatures;
-}
-
-async function getOrganizationFeatures(organizationId: string): Promise<Features> {
-  return insomniaFetch<Features>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/features`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch org features');
-  });
-}
-
-/** Get all roles */
-export async function getAllRoles(): Promise<Role[]> {
-  return insomniaFetch<Role[]>({
-    method: 'GET',
-    path: '/v1/organizations/roles',
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch roles');
-  });
-}
-
 /** Get current user's role in an organization */
 export async function getCurrentUserRoleInOrg(organizationId: string): Promise<Role> {
-  return insomniaFetch<Role>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/members/${await getAccountId()}/roles`,
+  return getOrganizationMemberRoles({
+    organizationId,
     sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
+    userId: await getAccountId(),
   }).catch(() => {
     throw new Error('Failed to fetch member roles');
   });
@@ -720,62 +715,26 @@ export interface OrganizationBranding {
   colors: string[];
 }
 
-export type OrganizationType = 'personal' | 'team' | 'enterprise';
-
-export interface Metadata {
-  organizationType: OrganizationType;
-  ownerAccountId?: string;
-  description?: string;
-}
-
-export interface OrganizationAuth0 {
-  id: string;
-  name: string;
-  display_name: string;
-  branding: OrganizationBranding;
-  metadata: Metadata;
-}
-
-async function getOrganization(organizationId: string): Promise<OrganizationAuth0> {
-  return insomniaFetch<OrganizationAuth0>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to fetch organization');
-  });
-}
-
-async function deleteMember(organizationId: string, userId: string) {
-  return insomniaFetch<void>({
-    method: 'DELETE',
-    path: `/v1/organizations/${organizationId}/members/${userId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(error => {
-    throw new Error(error ?? 'Failed to remove member from organization');
-  });
-}
-
 async function unlinkTeam(organizationId: string, collaboratorId: string) {
-  return insomniaFetch<void>({
-    method: 'DELETE',
-    path: `/v1/desktop/organizations/${organizationId}/collaborators/${collaboratorId}/unlink`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(error => {
+  try {
+    return await unlinkCollaborator({
+      organizationId,
+      collaboratorId,
+      sessionId: await getCurrentSessionId(),
+    });
+  } catch (error) {
     throw new Error(error ?? 'Failed to unlink team from organization');
-  });
+  }
 }
 
 async function revokeOrganizationInvite(organizationId: string, invitationId: string) {
-  return insomniaFetch<void>({
-    method: 'DELETE',
-    path: `/v1/organizations/${organizationId}/invites/${invitationId}`,
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(error => {
-    throw new Error(error ?? 'Failed to revoke invitation from organization');
-  });
+  try {
+    return revokeInvitation({
+      organizationId,
+      invitationId,
+      sessionId: await getCurrentSessionId(),
+    });
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Failed to revoke invitation from organization');
+  }
 }

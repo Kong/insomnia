@@ -1,5 +1,3 @@
-import { writeFile } from 'node:fs';
-
 import { escapeJsStr, indent } from './util';
 
 export interface Test {
@@ -28,19 +26,6 @@ export const generate = (suites: TestSuite[]) => {
   }
 
   return lines.join('\n');
-};
-
-export const generateToFile = async (filepath: string, suites: TestSuite[]) => {
-  return new Promise<void>((resolve, reject) => {
-    const js = generate(suites);
-    return writeFile(filepath, js, err => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
 };
 
 const generateSuiteLines = (n: number, suite?: TestSuite | null) => {
@@ -91,8 +76,10 @@ const generateTestLines = (num: number, test?: Test | null) => {
   const { defaultRequestId } = test;
 
   if (typeof defaultRequestId === 'string') {
-    lines.push(indent(num, '// Set active request on global insomnia object'));
-    lines.push(indent(num, `insomnia.setActiveRequestId('${defaultRequestId}');`));
+    lines.push(
+      indent(num, '// Set active request on global insomnia object'),
+      indent(num, `insomnia.setActiveRequestId('${defaultRequestId}');`),
+    );
   }
 
   // Add user-defined test source

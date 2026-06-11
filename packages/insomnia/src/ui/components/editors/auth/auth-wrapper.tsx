@@ -1,20 +1,10 @@
+import type { RequestAuthentication } from 'insomnia-data';
 import React, { type FC, type ReactNode } from 'react';
 import { Toolbar } from 'react-aria-components';
 
-import {
-  AUTH_API_KEY,
-  AUTH_ASAP,
-  AUTH_AWS_IAM,
-  AUTH_BASIC,
-  AUTH_BEARER,
-  AUTH_DIGEST,
-  AUTH_HAWK,
-  AUTH_NETRC,
-  AUTH_NTLM,
-  AUTH_OAUTH_1,
-  AUTH_OAUTH_2,
-} from '../../../../common/constants';
-import type { AuthTypes, RequestAuthentication } from '../../../../models/request';
+import type { AuthTypes } from '~/common/constants';
+import { SingleTokenAuth } from '~/ui/components/editors/auth/single-token-auth';
+
 import { getAuthObjectOrNull } from '../../../../network/authentication';
 import { AuthDropdown } from '../../dropdowns/auth-dropdown';
 import { ApiKeyAuth } from './api-key-auth';
@@ -33,36 +23,42 @@ export const AuthWrapper: FC<{
   authentication?: RequestAuthentication | {};
   disabled?: boolean;
   authTypes?: AuthTypes[];
-}> = ({ authentication, disabled = false, authTypes }) => {
+  hideOthers?: boolean;
+  hideInherit?: boolean;
+  showMcpAuthFlow?: boolean;
+  addToHeaderOnly?: boolean;
+}> = ({ authentication, disabled = false, authTypes, hideOthers, hideInherit, showMcpAuthFlow, addToHeaderOnly }) => {
   const type = getAuthObjectOrNull(authentication)?.type || '';
   let authBody: ReactNode = null;
 
-  if (type === AUTH_BASIC) {
+  if (type === 'basic') {
     authBody = <BasicAuth disabled={disabled} />;
-  } else if (type === AUTH_API_KEY) {
-    authBody = <ApiKeyAuth disabled={disabled} />;
-  } else if (type === AUTH_OAUTH_2) {
-    authBody = <OAuth2Auth />;
-  } else if (type === AUTH_HAWK) {
+  } else if (type === 'apikey') {
+    authBody = <ApiKeyAuth disabled={disabled} addToHeaderOnly={addToHeaderOnly} />;
+  } else if (type === 'oauth2') {
+    authBody = <OAuth2Auth showMcpAuthFlow={showMcpAuthFlow} disabled={disabled} />;
+  } else if (type === 'hawk') {
     authBody = <HawkAuth />;
-  } else if (type === AUTH_OAUTH_1) {
+  } else if (type === 'oauth1') {
     authBody = <OAuth1Auth />;
-  } else if (type === AUTH_DIGEST) {
+  } else if (type === 'digest') {
     authBody = <DigestAuth disabled={disabled} />;
-  } else if (type === AUTH_NTLM) {
+  } else if (type === 'ntlm') {
     authBody = <NTLMAuth />;
-  } else if (type === AUTH_BEARER) {
+  } else if (type === 'bearer') {
     authBody = <BearerAuth disabled={disabled} />;
-  } else if (type === AUTH_AWS_IAM) {
+  } else if (type === 'iam') {
     authBody = <AWSAuth />;
-  } else if (type === AUTH_NETRC) {
+  } else if (type === 'netrc') {
     authBody = <NetrcAuth />;
-  } else if (type === AUTH_ASAP) {
+  } else if (type === 'asap') {
     authBody = <AsapAuth />;
+  } else if (type === 'singleToken') {
+    authBody = <SingleTokenAuth disabled={disabled} />;
   } else {
     authBody = (
-      <div className="flex h-full w-full select-none items-center justify-center">
-        <p className="p-4 text-center text-sm text-[--hl]">
+      <div className="flex h-full w-full items-center justify-center select-none">
+        <p className="p-4 text-center text-sm text-(--hl)">
           <i
             className="fa fa-unlock-alt"
             style={{
@@ -80,8 +76,14 @@ export const AuthWrapper: FC<{
 
   return (
     <>
-      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
-        <AuthDropdown authentication={authentication} authTypes={authTypes} />
+      <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
+        <AuthDropdown
+          authentication={authentication}
+          authTypes={authTypes}
+          hideOthers={hideOthers}
+          hideInherit={hideInherit}
+          disabled={disabled}
+        />
       </Toolbar>
       <div className="flex-1 overflow-y-auto">{authBody}</div>
     </>

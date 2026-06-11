@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: After-response Scripts
 meta:
   id: wrk_5033693e76a244d9a19124895c871ed5

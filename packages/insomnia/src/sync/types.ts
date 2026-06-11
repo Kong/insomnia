@@ -1,4 +1,4 @@
-import type { BaseModel } from '../models';
+import type { BaseModel } from 'insomnia-data';
 
 export interface Team {
   id: string;
@@ -9,6 +9,19 @@ export interface BackendProject {
   id: string;
   name: string;
   rootDocumentId: string;
+}
+
+export interface BackendProjectWithTeams extends BackendProject {
+  teams: Team[];
+}
+
+export interface BackendProjectWithTeamsAndTeamProjectId extends BackendProject {
+  teams: Team[];
+  teamProjectId: string;
+}
+
+export interface BackendProjectWithTeam extends BackendProject {
+  team: Team;
 }
 
 export type DocumentKey = string;
@@ -81,6 +94,13 @@ export interface StageEntryModify {
 
 export type StageEntry = StageEntryDelete | StageEntryAdd | StageEntryModify;
 
+export const RESOLUTION_SOURCE = {
+  CHOOSE: 'choose',
+  MANUAL: 'manual',
+} as const;
+
+export type ResolutionSource = (typeof RESOLUTION_SOURCE)[keyof typeof RESOLUTION_SOURCE];
+
 export interface MergeConflict {
   name: string;
   key: DocumentKey;
@@ -89,7 +109,21 @@ export interface MergeConflict {
   mineBlobContent?: BaseModel | null;
   theirsBlob: BlobId | null;
   theirsBlobContent?: BaseModel | null;
+  suggestedMergeResult?: string;
   choose: BlobId | null;
+  mergeResult?: string;
+
+  /**
+   * Indicates the source of the final resolved file content.
+   * - "choose": The user selected one side (mineBlob or theirsBlob) as the final result.
+   * - "manual": The user manually edited and provided the final content in mergeResult.
+   */
+  resolutionSource?: ResolutionSource;
+}
+
+export interface AutoResolvedConflict {
+  filepath: string;
+  action: 'use-theirs' | 'delete';
 }
 
 export type Stage = Record<DocumentKey, StageEntry>;

@@ -6,14 +6,21 @@
     "target": "es2020",
     "allowJs": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
+    "noEmit": true,
     /* Transpiling Options */
     "module": "ESNext",
     "sourceMap": true,
+    /* import resolution */
+    "baseUrl": ".",
+    "rootDirs": [".", "./.react-router/types"],
+    "paths": {
+      "~/*": ["./src/*"]
+    },
     /* Runs in the DOM */
     "lib": ["ES2023", "DOM.Iterable", "DOM"],
-    "jsx": "react",
+    "jsx": "preserve",
     /* Strictness */
     "strict": true,
     "noImplicitReturns": true,
@@ -21,44 +28,22 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    ".eslintrc.js",
-    "config",
-    "esbuild.main.ts",
-    "esbuild.sr.ts",
-    "package.json",
-    "scripts",
-    "src",
-    "vite.config.ts",
-    "vite-plugin-electron-node-require",
-    "**/*.d.ts",
-    "setup-vitest.ts"
-  ],
+  "include": ["types/global.d.ts", "**/*", ".react-router/types/**/*"],
   "exclude": [
-    "bin",
-    "build",
-    "config",
-    "node_modules",
-    "src/coverage",
-    "src/main.min.js",
-    "src/preload.js",
-    "svgr.config.js",
-    "**/*.test.ts",
-    "**/*.test.tsx",
+    "./src/__mocks__/@getinsomnia/node-libcurl.ts",
     "**/__mocks__",
     "**/__snapshots__",
-    "**/__tests__",
-    "**/main.min.js",
+    "**/*.min.js",
     "assets",
     "bin",
+    "build",
+    "dist",
     "config",
     "node_modules",
     "src/coverage",
-    "src/main.min.js",
-    "src/preload.js",
-    "src/hidden-window-preload.js",
-    "./src/__mocks__/@getinsomnia/node-libcurl.ts"
+    "svgr.config.js"
   ]
 }

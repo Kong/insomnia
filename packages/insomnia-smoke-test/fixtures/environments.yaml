@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: environments
 meta:
   id: wrk_ad6bef19552f4dfb897b042548c5fadf

@@ -1,0 +1,67 @@
+import { services } from 'insomnia-data';
+import { href, redirect } from 'react-router';
+
+import { AnalyticsEvent } from '~/ui/analytics';
+import { invariant } from '~/utils/invariant';
+import { createFetcherSubmitHook } from '~/utils/router';
+
+import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
+
+export async function clientAction({ request, params }: Route.ClientActionArgs) {
+  const { organizationId, projectId, workspaceId, mockRouteId } = params;
+  invariant(typeof mockRouteId === 'string', 'Mock route id is required');
+  const mockRoute = await services.mockRoute.getById(mockRouteId);
+  invariant(mockRoute, 'mockRoute not found');
+  const { isSelected } = await request.json();
+
+  await services.mockRoute.remove(mockRoute);
+
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.mockRouteDelete,
+  });
+
+  if (isSelected) {
+    return redirect(
+      href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server', {
+        organizationId,
+        projectId,
+        workspaceId,
+      }),
+    );
+  }
+  return null;
+}
+
+export const useMockRouteDeleteActionFetcher = createFetcherSubmitHook(
+  submit =>
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      mockRouteId,
+      isSelected,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      mockRouteId: string;
+      isSelected: boolean;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId/delete',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          mockRouteId,
+        },
+      );
+
+      return submit(JSON.stringify({ isSelected }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+  clientAction,
+);

@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -11,51 +11,47 @@ import {
   ModalOverlay,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRevalidator } from 'react-router';
+import { useParams, useRevalidator } from 'react-router';
 
-import type { MergeConflict } from '../../../sync/types';
-import {
-  checkGitCanPush,
-  continueMerge,
-  type CreateNewGitBranchResult,
-  type GitBranchesLoaderData,
-  type GitChangesLoaderData,
-  mergeGitBranch,
-} from '../../routes/git-project-actions';
+import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
+import { useGitProjectDeleteBranchActionFetcher } from '~/routes/git.branch.delete';
+import { useGitProjectNewBranchActionFetcher } from '~/routes/git.branch.new';
+import { useGitProjectBranchesLoaderFetcher } from '~/routes/git.branches';
+import { useGitProjectChangesFetcher } from '~/routes/git.changes';
+import type { MergeConflict } from '~/sync/types';
+import { SyncMergeModal } from '~/ui/components/modals/sync-merge-modal';
+
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
-import { showAlert, showModal } from '.';
-import { SyncMergeModal } from './sync-merge-modal';
+import { AlertModal } from './alert-modal';
+import { showModal } from './index';
 
 const LocalBranchItem = ({
   branch,
   isCurrent,
-  organizationId,
   projectId,
-  workspaceId,
   hasUncommittedChanges,
 }: {
   branch: string;
   isCurrent: boolean;
-  organizationId: string;
   projectId: string;
-  workspaceId: string;
   hasUncommittedChanges: boolean;
 }) => {
-  const checkoutBranchFetcher = useFetcher<{} | { error: string }>();
-  const mergeBranchFetcher = useFetcher();
-  const deleteBranchFetcher = useFetcher();
+  const checkoutBranchFetcher = useGitProjectCheckoutBranchActionFetcher();
+
+  const deleteBranchFetcher = useGitProjectDeleteBranchActionFetcher();
+  const { revalidate } = useRevalidator();
 
   useEffect(() => {
     if (
       checkoutBranchFetcher.data &&
-      'error' in checkoutBranchFetcher.data &&
-      checkoutBranchFetcher.data.error &&
+      'errors' in checkoutBranchFetcher.data &&
+      checkoutBranchFetcher.data.errors &&
       checkoutBranchFetcher.state === 'idle'
     ) {
       const error: string =
-        checkoutBranchFetcher.data.error || 'An unexpected error occurred while checking out the branch.';
-      showAlert({
+        checkoutBranchFetcher.data.errors[0] || 'An unexpected error occurred while checking out the branch.';
+      showModal(AlertModal, {
         title: 'Error while checking out branch.',
         message: error,
       });
@@ -64,28 +60,14 @@ const LocalBranchItem = ({
 
   useEffect(() => {
     if (
-      mergeBranchFetcher.data &&
-      'error' in mergeBranchFetcher.data &&
-      mergeBranchFetcher.data.error &&
-      mergeBranchFetcher.state === 'idle'
-    ) {
-      const error: string = mergeBranchFetcher.data.error || 'An unexpected error occurred while merging the branches.';
-      showAlert({
-        title: 'Error while merging branches.',
-        message: error,
-      });
-    }
-  }, [mergeBranchFetcher.data, mergeBranchFetcher.state]);
-
-  useEffect(() => {
-    if (
       deleteBranchFetcher.data &&
-      'error' in deleteBranchFetcher.data &&
-      deleteBranchFetcher.data.error &&
+      'errors' in deleteBranchFetcher.data &&
+      deleteBranchFetcher.data.errors &&
       deleteBranchFetcher.state === 'idle'
     ) {
-      const error: string = deleteBranchFetcher.data.error || 'An unexpected error occurred while deleting the branch.';
-      showAlert({
+      const error: string =
+        deleteBranchFetcher.data.errors[0] || 'An unexpected error occurred while deleting the branch.';
+      showModal(AlertModal, {
         title: 'Error while deleting branch',
         message: error,
       });
@@ -93,8 +75,6 @@ const LocalBranchItem = ({
   }, [deleteBranchFetcher.data, deleteBranchFetcher.state]);
 
   const [errMsg, setErrorMessage] = useState('');
-
-  const { revalidate } = useRevalidator();
 
   return (
     <div className="flex flex-col justify-start">
@@ -106,44 +86,33 @@ const LocalBranchItem = ({
           {branch !== 'master' && (
             <PromptButton
               confirmMessage="Confirm"
-              className="flex min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+              className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               doneMessage="Deleted"
               disabled={isCurrent || branch === 'master'}
               onClick={() => {
                 setErrorMessage('');
-                deleteBranchFetcher.submit(
-                  {
-                    branch,
-                  },
-                  {
-                    method: 'POST',
-                    action: `/organization/${organizationId}/project/${projectId}/git/branch/delete`,
-                  },
-                );
+                deleteBranchFetcher.submit({
+                  branch,
+                  projectId,
+                });
               }}
             >
               <Icon
                 icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'}
-                className={`w-5 text-[--color-danger] ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+                className={`w-5 text-(--color-danger) ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
               />
               Delete
             </PromptButton>
           )}
           <Button
-            className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             isDisabled={isCurrent}
             onPress={() => {
               setErrorMessage('');
-              // file://./../../routes/git-actions.tsx#checkoutGitBranchAction
-              checkoutBranchFetcher.submit(
-                {
-                  branch,
-                },
-                {
-                  method: 'POST',
-                  action: `/organization/${organizationId}/project/${projectId}/git/branch/checkout`,
-                },
-              );
+              checkoutBranchFetcher.submit({
+                branch,
+                projectId,
+              });
             }}
           >
             <Icon
@@ -153,7 +122,7 @@ const LocalBranchItem = ({
             Checkout
           </Button>
           <PromptButton
-            className="flex min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             doneMessage="Merged"
             confirmMessage="Confirm"
             loadingMessage="Merging"
@@ -170,44 +139,48 @@ const LocalBranchItem = ({
               }
 
               try {
-                const result = await mergeGitBranch({
+                const result = await window.main.git.mergeGitBranch({
                   projectId,
                   theirsBranch: branch,
                   allowUncommittedChangesBeforeMerge: true,
                 });
-
                 if ('conflicts' in result) {
                   await new Promise((resolve, reject) => {
                     showModal(SyncMergeModal, {
+                      editorType: 'merge',
                       conflicts: result.conflicts,
                       labels: result.labels,
-                      handleDone: (conflicts?: MergeConflict[]) => {
-                        if (Array.isArray(conflicts) && conflicts.length > 0) {
-                          continueMerge({
+                      onResolveAll: (conflicts: MergeConflict[]) => {
+                        window.main.git
+                          .continueMerge({
                             projectId,
                             handledMergeConflicts: conflicts,
+                            autoResolvedConflicts: result.autoResolvedConflicts,
                             commitMessage: result.commitMessage,
                             commitParent: result.commitParent,
                           })
-                            .then(resolve, reject)
-                            .finally(() => {
-                              checkGitCanPush(workspaceId);
-                              revalidate();
-                            });
-                        } else {
-                          // user aborted merge
-                          reject(new Error('You aborted the merge, no changes were made to working tree.'));
-                        }
+                          .then(resolve, reject)
+                          .finally(() => {
+                            revalidate();
+                          });
+                      },
+                      onCancelUnresolved: () => {
+                        // user aborted merge
+                        window.main.git.abortMerge({ projectId });
+                        // TODO: the abortMerge method provided by isomorphic-git is unreliable
+                        // clean up any partial merges here
+                        reject(
+                          new Error(
+                            'You aborted the merge, some changes may be present in your working tree and staging area, please clean them up manually in the commit panel.',
+                          ),
+                        );
                       },
                     });
                   });
                 }
-
                 if ('errors' in result && result.errors && result.errors?.length > 0) {
                   setErrorMessage(result.errors.join('\n'));
                 }
-
-                checkGitCanPush(workspaceId);
                 revalidate();
               } catch (err) {
                 const errorMessage =
@@ -217,68 +190,50 @@ const LocalBranchItem = ({
               }
             }}
           >
-            <Icon
-              icon={mergeBranchFetcher.state !== 'idle' ? 'spinner' : 'code-merge'}
-              className={`w-5 ${mergeBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-            />
+            <Icon icon={'code-merge'} className={`w-5`} />
             Merge
           </PromptButton>
         </div>
       </div>
-      {errMsg && <div className="whitespace-break-spaces text-right text-[--color-danger]">{errMsg}</div>}
+      {errMsg && <div className="text-right whitespace-break-spaces text-(--color-danger)">{errMsg}</div>}
     </div>
   );
 };
 
-const RemoteBranchItem = ({
-  branch,
-  organizationId,
-  projectId,
-}: {
-  branch: string;
-  isCurrent: boolean;
-  organizationId: string;
-  projectId: string;
-  workspaceId: string;
-}) => {
-  const pullBranchFetcher = useFetcher();
+const RemoteBranchItem = ({ branch, projectId }: { branch: string; isCurrent: boolean; projectId: string }) => {
+  const checkoutBranch = useGitProjectCheckoutBranchActionFetcher();
 
   useEffect(() => {
     if (
-      pullBranchFetcher.data &&
-      'error' in pullBranchFetcher.data &&
-      pullBranchFetcher.data.error &&
-      pullBranchFetcher.state === 'idle'
+      checkoutBranch.data &&
+      checkoutBranch.data?.errors &&
+      checkoutBranch.data.errors.length > 0 &&
+      checkoutBranch.state === 'idle'
     ) {
-      const error: string = pullBranchFetcher.data.error || 'An unexpected error occurred while pulling the branch.';
-      showAlert({
+      const error: string = checkoutBranch.data.errors[0] || 'An unexpected error occurred while pulling the branch.';
+      showModal(AlertModal, {
         title: 'Error while pulling branch.',
         message: error,
       });
     }
-  }, [pullBranchFetcher.data, pullBranchFetcher.state]);
+  }, [checkoutBranch.data, checkoutBranch.state]);
 
   return (
     <div className="flex w-full items-center">
       <span className="flex-1 truncate">{branch}</span>
       <div className="flex items-center gap-2">
         <Button
-          className="flex min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() =>
-            pullBranchFetcher.submit(
-              {
-                branch,
-              },
-              {
-                method: 'POST',
-                action: `/organization/${organizationId}/project/${projectId}/git/branch/checkout`,
-              },
-            )
+            checkoutBranch.submit({
+              projectId,
+              branch,
+            })
           }
         >
           <Icon
-            icon={pullBranchFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'}
-            className={`w-5 ${pullBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
+            icon={checkoutBranch.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'}
+            className={`w-5 ${checkoutBranch.state !== 'idle' ? 'animate-spin' : ''}`}
           />
           Fetch and checkout
         </Button>
@@ -303,14 +258,13 @@ function sortBranches(branchA: string, branchB: string) {
 }
 
 export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, onClose }) => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
-    workspaceId: string;
   };
 
-  const branchesFetcher = useFetcher<GitBranchesLoaderData>();
-  const createBranchFetcher = useFetcher<CreateNewGitBranchResult>();
+  const branchesFetcher = useGitProjectBranchesLoaderFetcher();
+  const createBranchFetcher = useGitProjectNewBranchActionFetcher();
 
   const errors = branchesFetcher.data && 'errors' in branchesFetcher.data ? branchesFetcher.data.errors : [];
   const { remoteBranches, branches: localBranches } =
@@ -324,22 +278,25 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
 
   useEffect(() => {
     if (branchesFetcher.state === 'idle' && !branchesFetcher.data) {
-      branchesFetcher.load(`/organization/${organizationId}/project/${projectId}/git/branches`);
+      branchesFetcher.load({
+        projectId,
+      });
     }
-  }, [branchesFetcher, organizationId, projectId, workspaceId]);
+  }, [branchesFetcher, organizationId, projectId]);
 
   const createNewBranchError =
     createBranchFetcher.data?.errors && createBranchFetcher.data.errors.length > 0
       ? createBranchFetcher.data.errors[0]
       : null;
 
-  const gitChangesFetcher = useFetcher<GitChangesLoaderData>();
+  const gitChangesFetcher = useGitProjectChangesFetcher();
   useEffect(() => {
     if (gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data) {
-      // file://./../../routes/git-actions.tsx#gitChangesLoader
-      gitChangesFetcher.load(`/organization/${organizationId}/project/${projectId}/git/changes`);
+      gitChangesFetcher.load({
+        projectId,
+      });
     }
-  }, [organizationId, projectId, workspaceId, gitChangesFetcher]);
+  }, [projectId, gitChangesFetcher]);
 
   const hasUncommittedChanges = Boolean(
     gitChangesFetcher.data?.changes &&
@@ -353,45 +310,56 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
         !isOpen && onClose();
       }}
       isDismissable
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      data-testid="git-project-branches-modal-overlay"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex max-h-full w-full max-w-4xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="flex max-h-full w-full max-w-4xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-              <div className="flex flex-shrink-0 items-center justify-between gap-2">
+              <div className="flex shrink-0 items-center justify-between gap-2">
                 <Heading slot="title" className="text-2xl">
                   Branches
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
+                  data-testid="close-git-project-branches-modal"
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <createBranchFetcher.Form
-                action={`/organization/${organizationId}/project/${projectId}/git/branch/new`}
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const branch = (formData.get('branch') as string) || '';
+
+                  createBranchFetcher.submit({
+                    projectId,
+                    branch,
+                  });
+                }}
                 method="POST"
-                className="flex flex-shrink-0 flex-col gap-2"
+                className="flex shrink-0 flex-col gap-2"
               >
                 <TextField className="flex flex-col gap-2">
                   <Label className="col-span-4">New branch name:</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       required
-                      className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                      className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                       type="text"
                       name="branch"
                       placeholder="Branch name"
                     />
                     <Button
-                      className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       isDisabled={createBranchFetcher.state !== 'idle'}
                       type="submit"
                     >
@@ -404,17 +372,17 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                   </div>
                 </TextField>
                 {createNewBranchError && (
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-(--color-warning)/50 p-(--padding-sm) text-(--color-font-warning)">
                     <p className="text-base">
                       <Icon icon="exclamation-triangle" className="mr-2" />
                       {createNewBranchError}
                     </p>
                   </div>
                 )}
-              </createBranchFetcher.Form>
+              </form>
 
-              <div className="flex max-h-96 flex-1 select-none flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden rounded border border-solid border-[--hl-sm]">
-                <Heading className="p-2 text-sm font-semibold uppercase text-[--hl]">Local Branches</Heading>
+              <div className="flex max-h-96 flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-hidden rounded-sm border border-solid border-(--hl-sm) select-none">
+                <Heading className="p-2 text-sm font-semibold text-(--hl) uppercase">Local Branches</Heading>
                 <GridList
                   aria-label="Branches list"
                   selectionMode="none"
@@ -424,21 +392,19 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                     name: branch,
                     isCurrent: branch === currentBranch,
                   }))}
-                  className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-sm] overflow-y-auto focus:outline-none data-[empty]:py-0"
+                  className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-y-auto focus:outline-hidden data-empty:py-0"
                 >
                   {item => (
                     <GridListItem
                       id={item.id}
                       key={item.key}
                       textValue={item.name}
-                      className="w-full p-2 transition-colors focus:bg-[--hl-sm] focus:outline-none"
+                      className="w-full p-2 transition-colors focus:bg-(--hl-sm) focus:outline-hidden"
                     >
                       <LocalBranchItem
                         branch={item.name}
                         isCurrent={item.isCurrent}
-                        organizationId={organizationId}
                         projectId={projectId}
-                        workspaceId={workspaceId}
                         hasUncommittedChanges={hasUncommittedChanges}
                       />
                     </GridListItem>
@@ -446,8 +412,8 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                 </GridList>
               </div>
 
-              <div className="flex max-h-96 flex-1 select-none flex-col divide-y divide-solid divide-[--hl-sm] overflow-hidden rounded border border-solid border-[--hl-sm]">
-                <Heading className="p-2 text-sm font-semibold uppercase text-[--hl]">Remote Branches</Heading>
+              <div className="flex max-h-96 flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-hidden rounded-sm border border-solid border-(--hl-sm) select-none">
+                <Heading className="p-2 text-sm font-semibold text-(--hl) uppercase">Remote Branches</Heading>
                 <GridList
                   aria-label="Remote Branches list"
                   selectionMode="none"
@@ -458,26 +424,20 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                     isCurrent: branch === currentBranch,
                   }))}
                   renderEmptyState={() => (
-                    <div className="p-2 text-center text-[--color-font-disabled]">
+                    <div className="p-2 text-center text-(--color-font-disabled)">
                       {isFetchingRemoteBranches ? 'Fetching remote branches...' : 'No remote branches found'}
                     </div>
                   )}
-                  className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-sm] overflow-y-auto focus:outline-none data-[empty]:py-0"
+                  className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-sm) overflow-y-auto focus:outline-hidden data-empty:py-0"
                 >
                   {item => (
                     <GridListItem
                       id={item.id}
                       key={item.key}
                       textValue={item.name}
-                      className="w-full p-2 transition-colors focus:bg-[--hl-sm] focus:outline-none"
+                      className="w-full p-2 transition-colors focus:bg-(--hl-sm) focus:outline-hidden"
                     >
-                      <RemoteBranchItem
-                        branch={item.name}
-                        isCurrent={item.isCurrent}
-                        organizationId={organizationId}
-                        projectId={projectId}
-                        workspaceId={workspaceId}
-                      />
+                      <RemoteBranchItem branch={item.name} isCurrent={item.isCurrent} projectId={projectId} />
                     </GridListItem>
                   )}
                 </GridList>

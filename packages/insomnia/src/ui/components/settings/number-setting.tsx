@@ -1,8 +1,9 @@
+import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type ChangeEventHandler, type FC, type InputHTMLAttributes, useCallback } from 'react';
 
-import type { SettingsOfType } from '../../../common/settings';
+import { useRootLoaderData } from '~/root';
+
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
@@ -25,7 +26,7 @@ export function snapNumberToLimits(value: number, min?: number, max?: number) {
   return value;
 }
 export const NumberSetting: FC<Props> = ({ help, label, max, min, setting, step = 1 }) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);
@@ -34,7 +35,11 @@ export const NumberSetting: FC<Props> = ({ help, label, max, min, setting, step 
 
   const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
     async ({ currentTarget: { value, min, max } }) => {
-      const updatedValue = snapNumberToLimits(parseInt(value, 10) || 0, parseInt(min, 10), parseInt(max, 10));
+      const updatedValue = snapNumberToLimits(
+        Number.parseInt(value, 10) || 0,
+        Number.parseInt(min, 10),
+        Number.parseInt(max, 10),
+      );
       patchSettings({ [setting]: updatedValue });
     },
     [patchSettings, setting],

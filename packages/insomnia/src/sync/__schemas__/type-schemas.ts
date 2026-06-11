@@ -1,8 +1,15 @@
 import { createBuilder, type Schema } from '@develohpanda/fluent-builder';
 
-import { baseModelSchema } from '../../models/__schemas__/model-schemas';
-import type { BackendProject, Branch, MergeConflict, SnapshotStateEntry, StatusCandidate, Team } from '../types';
-import type { BackendProjectWithTeam } from '../vcs/normalize-backend-project-team';
+import { baseModelSchema } from '../../sync/__schemas__/model-schemas';
+import type {
+  BackendProject,
+  BackendProjectWithTeam,
+  Branch,
+  MergeConflict,
+  SnapshotStateEntry,
+  StatusCandidate,
+  Team,
+} from '../types';
 
 export const projectSchema: Schema<BackendProject> = {
   id: () => 'id',
@@ -36,6 +43,9 @@ export const mergeConflictSchema: Schema<MergeConflict> = {
   theirsBlobContent: () => null,
   message: () => 'message',
   name: () => 'name',
+  suggestedMergeResult: () => '',
+  mergeResult: () => '',
+  resolutionSource: () => 'choose',
 };
 
 export const statusCandidateSchema: Schema<StatusCandidate> = {

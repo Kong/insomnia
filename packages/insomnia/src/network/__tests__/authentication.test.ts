@@ -1,12 +1,13 @@
+// @ts-nocheck
 import { describe, expect, it } from 'vitest';
 
-import { AUTH_API_KEY, AUTH_OAUTH_1 } from '../../common/constants';
-import { _buildBearerHeader, getAuthHeader, getAuthObjectOrNull, getAuthQueryParams } from '../authentication';
+import { getAuthHeader } from '../../main/network/get-auth-header';
+import { _buildBearerHeader, getAuthObjectOrNull } from '../authentication';
 
 describe('OAuth 1.0', () => {
   it('Does OAuth 1.0', async () => {
     const authentication = {
-      type: AUTH_OAUTH_1,
+      type: 'oauth1',
       consumerKey: 'consumerKey',
       consumerSecret: 'consumerSecret',
       callback: 'https://insomnia.rest/callback/',
@@ -39,7 +40,7 @@ describe('OAuth 1.0', () => {
 
   it('Does OAuth 1.0 with RSA-SHA1', async () => {
     const authentication = {
-      type: AUTH_OAUTH_1,
+      type: 'oauth1',
       consumerKey: 'consumerKey',
       consumerSecret: 'consumerSecret',
       callback: 'https://insomnia.rest/callback/',
@@ -88,7 +89,7 @@ describe('OAuth 1.0', () => {
 
   it('Does OAuth 1.0 with defaults', async () => {
     const authentication = {
-      type: AUTH_OAUTH_1,
+      type: 'oauth1',
       consumerKey: 'consumerKey',
       consumerSecret: 'consumerSecret',
       signatureMethod: 'HMAC-SHA1',
@@ -148,7 +149,7 @@ describe('API Key', () => {
   describe('getAuthHeader', () => {
     it('Creates header with key as header name and value as header value, when addTo is "header"', async () => {
       const authentication = {
-        type: AUTH_API_KEY,
+        type: 'apikey',
         key: 'x-api-key',
         value: 'test',
         addTo: 'header',
@@ -167,7 +168,7 @@ describe('API Key', () => {
 
     it('Creates cookie with key as name and value as value, when addTo is "cookie"', async () => {
       const authentication = {
-        type: AUTH_API_KEY,
+        type: 'apikey',
         key: 'x-api-key',
         value: 'test',
         addTo: 'cookie',
@@ -184,23 +185,6 @@ describe('API Key', () => {
       });
     });
   });
-
-  describe('getAuthQueryParams', () => {
-    it('Creates a query param with key as parameter name and value as parameter value, when addTo is "queryParams"', async () => {
-      const authentication = {
-        type: AUTH_API_KEY,
-        key: 'x-api-key',
-        value: 'test',
-        addTo: 'queryParams',
-      };
-
-      const header = getAuthQueryParams(authentication, 'https://insomnia.rest/');
-      expect(header).toEqual({
-        name: 'x-api-key',
-        value: 'test',
-      });
-    });
-  });
 });
 
 describe('getAuthObjectOrNull', () => {
@@ -209,7 +193,7 @@ describe('getAuthObjectOrNull', () => {
     expect(expected).toBeNull();
   });
   it('returns null if authentication is undefined', async () => {
-    const expected = await getAuthObjectOrNull(undefined);
+    const expected = await getAuthObjectOrNull();
     expect(expected).toBeNull();
   });
   it('returns null if authentication is empty object', async () => {

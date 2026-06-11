@@ -82,7 +82,7 @@ export class Variable extends Property {
     if ('_kind' in value && value._kind === 'Variable') {
       return value.value;
     }
-    return undefined;
+    return;
   }
 
   /**

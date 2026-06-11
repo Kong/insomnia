@@ -5,7 +5,7 @@ import type { Variable, VariableList } from '../variables';
 
 const varListToObject = (obj: VariableList<Variable> | undefined) => {
   if (!obj) {
-    return undefined;
+    return;
   }
 
   return obj.map(

@@ -1,26 +1,50 @@
+import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
+
+import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
+import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
+import { useReadyState } from '~/ui/hooks/use-ready-state';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
-import * as models from '../../../models';
-import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isScratchpadOrganizationId } from '../../../models/organization';
-import { isRequest, type Request } from '../../../models/request';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
+import { revalidateWorkspaceActiveRequest } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
-import type { ListWorkspacesLoaderData } from '../../routes/project';
-import { revalidateWorkspaceActiveRequest } from '../../routes/workspace';
+import { Input } from '../base/input';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 
+const { isRequest } = models.request;
+
 export interface RequestSettingsModalOptions {
-  request: Request | GrpcRequest | WebSocketRequest;
+  request: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest;
 }
+
+export const SocketIOPathSettings = ({
+  request,
+  patchRequest,
+}: {
+  request: SocketIORequest;
+  patchRequest: (id: string, patch: Partial<SocketIORequest>) => void;
+}) => {
+  const readyState = useReadyState({ requestId: request._id, protocol: 'socketIO' });
+  return (
+    <Input
+      label="Socket.IO Handshake Path"
+      description="The path where the Socket.IO server is listening. Leave empty to use the default /socket.io/"
+      placeholder="/custom-path/"
+      name="settingPath"
+      defaultValue={request.settingPath || ''}
+      isDisabled={readyState}
+      onChange={value => patchRequest(request._id, { settingPath: value })}
+    />
+  );
+};
 
 export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {
   const modalRef = useRef<ModalHandle>(null);
@@ -29,11 +53,14 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     projectId: string;
     workspaceId: string;
   };
-  const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
+  const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && !isScratchpadOrganizationId(organizationId)) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
+    if (isIdleAndUninitialized && !models.organization.isScratchpadOrganizationId(organizationId)) {
+      workspacesFetcher.load({
+        organizationId,
+        projectId,
+      });
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
@@ -41,20 +68,23 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     projectLoaderData?.files
       .map(w => w.workspace)
       .filter(isNotNullOrUndefined)
-      .filter(w => w.scope !== 'mock-server') || [];
+      .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
   const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   useEffect(() => {
     modalRef.current?.show();
   }, []);
 
-  const requestFetcher = useFetcher();
+  const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const patchRequest = useRequestPatcher();
   const navigate = useNavigate();
   const duplicateRequest = (r: Partial<Request>) => {
-    requestFetcher.submit(JSON.stringify(r), {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/duplicate`,
-      method: 'post',
-      encType: 'application/json',
+    duplicateRequestFetcher.submit({
+      organizationId,
+      projectId,
+      workspaceId,
+      requestId: request._id,
+      name: r.name || request.name,
+      parentId: r.parentId,
     });
   };
   async function handleMoveToWorkspace() {
@@ -75,7 +105,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     patchRequest(request._id, { [event.currentTarget.name]: event.currentTarget.checked ? true : false });
   };
   const updateReflectonApi = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    invariant(isGrpcRequest(request), 'Must be gRPC request');
+    invariant(models.grpcRequest.isGrpcRequest(request), 'Must be gRPC request');
     patchRequest(request._id, {
       reflectionApi: {
         ...request.reflectionApi,
@@ -85,7 +115,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   };
 
   return (
-    <OverlayContainer>
+    <OverlayContainer onContextMenu={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>
           Request Settings <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
@@ -103,7 +133,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 />
               </label>
             </div>
-            {request && isWebSocketRequest(request) && (
+            {request && models.webSocketRequest.isWebSocketRequest(request) && (
               <>
                 <>
                   <div className="pad-top pad-bottom">
@@ -189,7 +219,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                      className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleCopyToWorkspace}
                     >
                       Copy
@@ -198,7 +228,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                      className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleMoveToWorkspace}
                     >
                       Move
@@ -207,7 +237,10 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 </div>
               </>
             )}
-            {request && isGrpcRequest(request) && (
+            {request && models.socketIORequest.isSocketIORequest(request) && (
+              <SocketIOPathSettings request={request} patchRequest={patchRequest} />
+            )}
+            {request && models.grpcRequest.isGrpcRequest(request) && (
               <>
                 <div className="form-control form-control--thin pad-top-sm">
                   <label>
@@ -368,7 +401,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                         defaultValue={request.settingFollowRedirects}
                         name="settingFollowRedirects"
                         onChange={async event => {
-                          await models.request.update(request, {
+                          await services.request.update(request, {
                             [event.currentTarget.name]: event.currentTarget.value,
                           });
                         }}
@@ -413,7 +446,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                      className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleCopyToWorkspace}
                     >
                       Copy
@@ -422,7 +455,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                      className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleMoveToWorkspace}
                     >
                       Move

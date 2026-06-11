@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: OAuth Testing
 meta:
   id: wrk_d28d3ba65f4e454b93bc03cd58c07eee

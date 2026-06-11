@@ -1,5 +1,8 @@
 import path from 'node:path';
 
+import type { AllTypes } from 'insomnia-data';
+import { models } from 'insomnia-data';
+
 import { GIT_CLONE_DIR } from './git-vcs';
 
 // The win32 separator is a single backslash (\), but we have to escape both the JS string and RegExp.
@@ -9,7 +12,7 @@ const _cloneDirRegExp = new RegExp(`^${GIT_CLONE_DIR}${pathSep}`);
 
 interface GitPathSegments {
   root: string | null;
-  type: string | null;
+  type: AllTypes | null;
   id: string | null;
 }
 
@@ -23,7 +26,7 @@ const parseGitPath = (filePath: string): GitPathSegments => {
   const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
   return {
     root: root || null,
-    type: type || null,
+    type: models.isValidType(type) ? type : null,
     id: id || null,
   };
 };

@@ -1,19 +1,10 @@
-import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { isRequest, type Request } from '../models/request';
-import { isRequestGroup, type RequestGroup } from '../models/request-group';
-import {
-  HTTP_METHODS,
-  SORT_CREATED_ASC,
-  SORT_CREATED_DESC,
-  SORT_HTTP_METHOD,
-  SORT_MODIFIED_ASC,
-  SORT_MODIFIED_DESC,
-  SORT_NAME_ASC,
-  SORT_NAME_DESC,
-  SORT_TYPE_ASC,
-  SORT_TYPE_DESC,
-  SORT_TYPE_MANUAL,
-} from './constants';
+import type { GrpcRequest, Request, RequestGroup } from 'insomnia-data';
+import { models } from 'insomnia-data';
+
+import { type DashboardSortOrder, HTTP_METHODS, type SortOrder } from './constants';
+
+const { isRequest } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 type SortableModel = Request | RequestGroup | GrpcRequest;
 type SortFunction<SortableType> = (a: SortableType, b: SortableType) => number;
@@ -42,14 +33,6 @@ export const createdLastSort: SortFunction<{ created: number }> = (a, b) => {
   return a.created > b.created ? -1 : 1;
 };
 
-export const ascendingModifiedSort: SortFunction<{ lastModifiedTimestamp: number }> = (a, b) => {
-  if (a.lastModifiedTimestamp === b.lastModifiedTimestamp) {
-    return 0;
-  }
-
-  return a.lastModifiedTimestamp < b.lastModifiedTimestamp ? -1 : 1;
-};
-
 export const descendingModifiedSort: SortFunction<{ lastModifiedTimestamp: number }> = (a, b) => {
   if (a.lastModifiedTimestamp === b.lastModifiedTimestamp) {
     return 0;
@@ -65,8 +48,8 @@ export const httpMethodSort: SortFunction<Pick<SortableModel, 'type' | 'metaSort
       return isRequest(a) ? -1 : 1;
     }
 
-    if (isGrpcRequest(a) || isGrpcRequest(b)) {
-      return isGrpcRequest(a) ? -1 : 1;
+    if (models.grpcRequest.isGrpcRequest(a) || models.grpcRequest.isGrpcRequest(b)) {
+      return models.grpcRequest.isGrpcRequest(a) ? -1 : 1;
     }
   }
 
@@ -127,15 +110,14 @@ export const descendingNumberSort: SortFunction<number> = (a, b) => {
 
 export const ascendingFirstIndexStringSort: SortFunction<string[]> = (a, b) => a[0].localeCompare(b[0]);
 
-export const sortMethodMap = {
-  [SORT_NAME_ASC]: ascendingNameSort,
-  [SORT_NAME_DESC]: descendingNameSort,
-  [SORT_CREATED_ASC]: createdFirstSort,
-  [SORT_CREATED_DESC]: createdLastSort,
-  [SORT_MODIFIED_ASC]: ascendingModifiedSort,
-  [SORT_MODIFIED_DESC]: descendingModifiedSort,
-  [SORT_HTTP_METHOD]: httpMethodSort,
-  [SORT_TYPE_DESC]: descendingTypeSort,
-  [SORT_TYPE_ASC]: ascendingTypeSort,
-  [SORT_TYPE_MANUAL]: metaSortKeySort,
+export const sortMethodMap: Record<DashboardSortOrder | SortOrder, SortFunction<any>> = {
+  'name-asc': ascendingNameSort,
+  'name-desc': descendingNameSort,
+  'created-asc': createdFirstSort,
+  'created-desc': createdLastSort,
+  'modified-desc': descendingModifiedSort,
+  'http-method': httpMethodSort,
+  'type-desc': descendingTypeSort,
+  'type-asc': ascendingTypeSort,
+  'type-manual': metaSortKeySort,
 };

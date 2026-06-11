@@ -1,5 +1,5 @@
-import type { OAuth2ResponseType, RequestAuthentication } from 'insomnia/src/models/request';
-import type { OAuth1SignatureMethod } from 'insomnia/src/network/o-auth-1/constants';
+import type { OAuth1SignatureMethod } from 'insomnia/src/common/constants';
+import type { OAuth2ResponseType, RequestAuthentication } from 'insomnia-data';
 
 import { Property } from './properties';
 import { Variable, VariableList } from './variables';
@@ -804,6 +804,10 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
     case 'netrc': {
       // TODO: not supported yet
       throw new Error('netrc auth is not supported in scripting yet');
+    }
+    case 'singleToken': {
+      // TODO: not supported yet
+      throw new Error('singleToken auth is not supported in scripting yet');
     }
     default: {
       // @ts-expect-error - user can input any string

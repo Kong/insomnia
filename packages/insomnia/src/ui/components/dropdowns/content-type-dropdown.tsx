@@ -1,4 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import type { Request, RequestBody, RequestHeader, RequestParameter } from 'insomnia-data';
+import { deconstructQueryStringToParams } from 'insomnia-data/common';
 import React, { type FC } from 'react';
 import {
   Button,
@@ -11,7 +13,7 @@ import {
   Select,
   SelectValue,
 } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 
 import {
   CONTENT_TYPE_EDN,
@@ -27,94 +29,20 @@ import {
   getContentTypeName,
   METHOD_POST,
 } from '../../../common/constants';
-import type { Request, RequestBody, RequestHeader, RequestParameter } from '../../../models/request';
-import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
-import { SegmentEvent } from '../../analytics';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { AnalyticsEvent } from '../../analytics';
 import { useRequestPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData } from '../../routes/request';
 import { Icon } from '../icon';
-import { showAlert } from '../modals/index';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 
 const EMPTY_MIME_TYPE = null;
 
-const contentTypeSections: {
-  id: string;
-  icon: IconName;
-  name: string;
-  items: {
-    id: string;
-    name: string;
-  }[];
-}[] = [
-  {
-    id: 'structured',
-    name: 'Structured',
-    icon: 'bars',
-    items: [
-      {
-        id: CONTENT_TYPE_FORM_DATA,
-        name: 'Form Data',
-      },
-      {
-        id: CONTENT_TYPE_FORM_URLENCODED,
-        name: 'Form URL Encoded',
-      },
-      {
-        id: CONTENT_TYPE_GRAPHQL,
-        name: 'GraphQL',
-      },
-    ],
-  },
-  {
-    id: 'text',
-    icon: 'code',
-    name: 'Text',
-    items: [
-      {
-        id: CONTENT_TYPE_JSON,
-        name: 'JSON',
-      },
-      {
-        id: CONTENT_TYPE_XML,
-        name: 'XML',
-      },
-      {
-        id: CONTENT_TYPE_YAML,
-        name: 'YAML',
-      },
-      {
-        id: CONTENT_TYPE_EDN,
-        name: 'EDN',
-      },
-      {
-        id: CONTENT_TYPE_PLAINTEXT,
-        name: 'Plain Text',
-      },
-      {
-        id: CONTENT_TYPE_OTHER,
-        name: 'Other',
-      },
-    ],
-  },
-  {
-    id: 'other',
-    icon: 'ellipsis-h',
-    name: 'Other',
-    items: [
-      {
-        id: CONTENT_TYPE_FILE,
-        name: 'File',
-      },
-      {
-        id: 'no-body',
-        name: 'No Body',
-      },
-    ],
-  },
-];
-
 export const ContentTypeDropdown: FC = () => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const { activeRequest } = useRequestLoaderData()! as RequestLoaderData;
   const patchRequest = useRequestPatcher();
   const { requestId } = useParams() as { requestId: string };
   const handleChangeMimeType = async (mimeType: string | null) => {
@@ -141,18 +69,21 @@ export const ContentTypeDropdown: FC = () => {
     const willPreserveForm = isFormUrlEncoded && willBeMultipart;
 
     if (!isEmpty && !willPreserveText && !willPreserveForm) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Switch Body Type?',
         message: 'Current body will be lost. Are you sure you want to continue?',
         addCancel: true,
         onConfirm: async () => {
           patchRequest(requestId, { body: { mimeType } });
-          window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.requestBodyTypeSelect,
+            properties: { type: mimeType },
+          });
         },
       });
     } else {
       patchRequest(requestId, { body: { mimeType } });
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
+      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestBodyTypeSelect, properties: { type: mimeType } });
     }
   };
 
@@ -161,6 +92,82 @@ export const ContentTypeDropdown: FC = () => {
   const hasParams = body && 'params' in body && body.params;
   const numBodyParams = hasParams ? body.params?.filter(({ disabled }) => !disabled).length : 0;
 
+  // !Note: after bumping react-aria-components to 1.12.2, the ListBox Collection items are missing once the outer key changes and the items' reference is not changed. So here we always use the new array reference to force the ListBox to re-render.
+  const contentTypeSections: {
+    id: string;
+    icon: IconName;
+    name: string;
+    items: {
+      id: string;
+      name: string;
+    }[];
+  }[] = [
+    {
+      id: 'structured',
+      name: 'Structured',
+      icon: 'bars',
+      items: [
+        {
+          id: CONTENT_TYPE_FORM_DATA,
+          name: 'Form Data',
+        },
+        {
+          id: CONTENT_TYPE_FORM_URLENCODED,
+          name: 'Form URL Encoded',
+        },
+        {
+          id: CONTENT_TYPE_GRAPHQL,
+          name: 'GraphQL',
+        },
+      ],
+    },
+    {
+      id: 'text',
+      icon: 'code',
+      name: 'Text',
+      items: [
+        {
+          id: CONTENT_TYPE_JSON,
+          name: 'JSON',
+        },
+        {
+          id: CONTENT_TYPE_XML,
+          name: 'XML',
+        },
+        {
+          id: CONTENT_TYPE_YAML,
+          name: 'YAML',
+        },
+        {
+          id: CONTENT_TYPE_EDN,
+          name: 'EDN',
+        },
+        {
+          id: CONTENT_TYPE_PLAINTEXT,
+          name: 'Plain Text',
+        },
+        {
+          id: CONTENT_TYPE_OTHER,
+          name: 'Other',
+        },
+      ],
+    },
+    {
+      id: 'other',
+      icon: 'ellipsis-h',
+      name: 'Other',
+      items: [
+        {
+          id: CONTENT_TYPE_FILE,
+          name: 'File',
+        },
+        {
+          id: 'no-body',
+          name: 'No Body',
+        },
+      ],
+    },
+  ];
   return (
     <Select
       aria-label="Change Body Type"
@@ -168,18 +175,18 @@ export const ContentTypeDropdown: FC = () => {
       onSelectionChange={mimeType => {
         if (mimeType === 'no-body') {
           handleChangeMimeType(EMPTY_MIME_TYPE);
-        } else {
-          handleChangeMimeType(mimeType.toString());
+          return;
         }
+        mimeType && handleChangeMimeType(mimeType.toString());
       }}
       selectedKey={body.mimeType ?? 'no-body'}
     >
-      <Button className="flex min-w-[12ch] flex-1 items-center justify-between gap-2 rounded-sm px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+      <Button className="flex min-w-[12ch] flex-1 items-center justify-between gap-2 rounded-xs px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
         <SelectValue className="flex items-center justify-center gap-2 truncate">
-          <div className="flex items-center gap-2 text-[--hl]">
+          <div className="flex items-center gap-2 text-(--hl)">
             {hasMimeType ? getContentTypeName(body.mimeType) : 'No Body'}
             {numBodyParams ? (
-              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 {numBodyParams}
               </span>
             ) : null}
@@ -190,24 +197,24 @@ export const ContentTypeDropdown: FC = () => {
       <Popover className="flex min-w-max flex-col overflow-y-hidden">
         <ListBox
           items={contentTypeSections}
-          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
         >
           {section => (
             <ListBoxSection>
-              <Header className="flex items-center gap-2 py-1 pl-2 text-xs uppercase text-[--hl]">
+              <Header className="flex items-center gap-2 py-1 pl-2 text-xs text-(--hl) uppercase">
                 <Icon icon={section.icon} /> <span>{section.name}</span>
               </Header>
               <Collection items={section.items}>
                 {item => (
                   <ListBoxItem
-                    className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                    className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                     aria-label={item.name}
                     textValue={item.name}
                   >
                     {({ isSelected }) => (
                       <>
                         <span>{item.name}</span>
-                        {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
+                        {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
                       </>
                     )}
                   </ListBoxItem>

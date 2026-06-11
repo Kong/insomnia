@@ -30,14 +30,14 @@ const Avatar = ({ src, alt }: { src: string; alt: string }) => {
 export const OrganizationAvatar = ({ src, alt }: { src: string; alt: string }) => {
   if (!src) {
     return (
-      <div className="flex h-full w-full items-center justify-center p-[--padding-md]">{getNameInitials(alt)}</div>
+      <div className="flex h-full w-full items-center justify-center p-(--padding-md)">{getNameInitials(alt)}</div>
     );
   }
 
   return (
     <Suspense
       fallback={
-        <div className="flex h-full w-full items-center justify-center p-[--padding-md]">{getNameInitials(alt)}</div>
+        <div className="flex h-full w-full items-center justify-center p-(--padding-md)">{getNameInitials(alt)}</div>
       }
     >
       <Avatar src={src} alt={alt} />

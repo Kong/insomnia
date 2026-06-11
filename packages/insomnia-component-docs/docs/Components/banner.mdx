@@ -1,0 +1,47 @@
+---
+id: banner
+sidebar_label: 'Banner'
+sidebar_position: 1
+---
+
+# Banner
+
+## Props
+
+| Prop      | Type                  | Required | Description                   |
+| --------- | --------------------- | -------- | ----------------------------- |
+| `type`    | `'info' \| 'warning'` | Yes      | Type of banner to display     |
+| `message` | `React.ReactNode`     | Yes      | Message content to display    |
+| `title`   | `string`              | No       | Optional title for the banner |
+
+## Usage Examples
+
+### Info
+
+```tsx live
+<Banner type="info" title="info title" message="This is an info banner." />
+```
+
+### Info without title
+
+```tsx live
+<Banner type="info" message="This is an info banner." />
+```
+
+### Warning
+
+```tsx live
+<Banner type="warning" title="warnning title" message="This is an warnning banner." />
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-font`: Banner text color
+- `--color-surprise`: Info banner background
+- `--color-warning`: Warning banner background
+
+You can customize these variables in your CSS to theme the banner appearance.

@@ -1,5 +1,5 @@
 export default [
-  'utf-8',
+  'utf8',
   'us-ascii',
   '950',
   'ASMO-708',

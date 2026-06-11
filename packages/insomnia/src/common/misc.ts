@@ -1,7 +1,4 @@
-import zlib from 'node:zlib';
-
 import fuzzysort from 'fuzzysort';
-import { v4 as uuidv4 } from 'uuid';
 
 import { DEBOUNCE_MILLIS } from './constants';
 
@@ -47,8 +44,14 @@ export function hasAcceptEncodingHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'accept-encoding').length > 0;
 }
 
-export function getSetCookieHeaders<T extends Header>(headers: T[]): T[] {
-  return filterHeaders(headers, 'set-cookie');
+export function getSetCookieHeaders(headers: Header[]): Header[] {
+  return filterHeaders(headers, 'set-cookie').map(h => {
+    // remove Nunjucks interpolation symbols
+    return {
+      name: h.name,
+      value: h.value.replaceAll('{{', '').replaceAll('}}', '').replaceAll('{%', '').replaceAll('%}', ''),
+    };
+  });
 }
 
 export function getLocationHeader<T extends Header>(headers: T[]): T | null {
@@ -76,19 +79,7 @@ export function getContentDispositionHeader<T extends Header>(headers: T[]): T |
   return matches.length ? matches[0] : null;
 }
 
-/**
- * Generate an ID of the format "<MODEL_NAME>_<TIMESTAMP><RANDOM>"
- * @param prefix
- * @returns {string}
- */
-export function generateId(prefix?: string) {
-  const id = uuidv4().replace(/-/g, '');
-
-  if (prefix) {
-    return `${prefix}_${id}`;
-  }
-  return id;
-}
+export { generateId } from 'insomnia-data/common';
 
 export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
   return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
@@ -138,20 +129,6 @@ export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]
     return v;
   }
   return v(...args);
-}
-
-export function compressObject(obj: any) {
-  const compressed = zlib.gzipSync(JSON.stringify(obj));
-  return compressed.toString('base64');
-}
-
-export function decompressObject<ObjectType>(input: string | null): ObjectType | null {
-  if (typeof input !== 'string') {
-    return null;
-  }
-
-  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
-  return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
 }
 
 /**
@@ -252,9 +229,27 @@ export function unescapeForwardSlash(str: string): string {
     // Odd count: the last backslash escapes the slash; we remove that one
     if (bs.length % 2 === 1) {
       // Keep all but the last backslash, then append the unescaped forward slash
-      return bs.slice(0, bs.length - 1) + '/';
+      return bs.slice(0, -1) + '/';
     }
     // Even count: all backslashes are literal escapes; leave the sequence unchanged
     return match;
   });
 }
+
+export const SECURITY_SETTINGS_PATH_LABEL = 'Insomnia Preferences → General → Security';
+
+export function cannotAccessPathError(accessingPath: string): string {
+  return process.type === 'renderer' || process.type === 'browser'
+    ? `Insomnia cannot access the file "${accessingPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`
+    : `Insomnia cannot access the file ‘${accessingPath}’. You must specify which directories Insomnia can access with one or more "--dataFolders <directory>".`;
+}
+
+export type DefaultBrowserRedirectParam =
+  | {
+      redirectUrl: string;
+    }
+  | {
+      encryptedRedirectUrl: string;
+      encryptedKey: string;
+      iv: string;
+    };

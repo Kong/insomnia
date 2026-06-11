@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import { services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
-import * as models from '../../../models/index';
 import * as plugin from '../response';
 
 describe('init()', () => {
@@ -35,7 +35,7 @@ describe('response.*', () => {
   it('works for basic and full response', async () => {
     const bodyPath = path.join(tmpdir(), 'response.zip');
     fs.writeFileSync(bodyPath, Buffer.from('Hello World!'));
-    const response = await models.initModel(models.response.type, {
+    const response = await services.response.create({
       bodyPath,
       bodyCompression: null,
       parentId: 'req_1',

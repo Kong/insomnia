@@ -1,10 +1,8 @@
+import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { docsTemplateTags } from '../../../common/documentation';
-import type { GrpcRequest } from '../../../models/grpc-request';
-import type { Request } from '../../../models/request';
-import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RenderError } from '../../../templating/render-error';
 import { Link } from '../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -12,7 +10,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 export interface RequestRenderErrorModalOptions {
   error: RenderError | null;
-  request: Request | WebSocketRequest | GrpcRequest | null;
+  request: Request | WebSocketRequest | SocketIORequest | GrpcRequest | McpRequest | null;
 }
 export interface RequestRenderErrorModalHandle {
   show: (options: RequestRenderErrorModalOptions) => void;
@@ -60,7 +58,7 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
                 <Link
                   button
                   href={docsTemplateTags}
-                  className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                  className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                 >
                   Templating Documentation <i className="fa fa-external-link" />
                 </Link>

@@ -1,29 +1,41 @@
 import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import path from 'node:path';
+import nodePath from 'node:path';
 
 import * as commander from 'commander';
-import type { logType } from 'consola';
-import consola, { BasicReporter, FancyReporter, LogLevel } from 'consola';
+import { LogLevels } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
-import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
+// @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
+import { Confirm } from 'enquirer';
+import { pick } from 'es-toolkit';
+import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
+import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
-import type { UserUploadEnvironment } from 'insomnia/src/models/environment';
-import { init, type as EnvironmentType } from 'insomnia/src/models/environment';
-import type { Request } from 'insomnia/src/models/request';
-import type { RequestGroup } from 'insomnia/src/models/request-group';
-import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
-import { generate, runTestsCli } from 'insomnia-testing';
+import { initRuntime } from 'insomnia/src/runtimes';
+import { nodeRuntime } from 'insomnia/src/runtimes/runtime.node';
+import { configureFetch } from 'insomnia-api';
+import type {
+  Environment,
+  Request,
+  RequestGroup,
+  RequestTestResult,
+  UserUploadEnvironment,
+  Workspace,
+} from 'insomnia-data';
+import { initServices, models } from 'insomnia-data';
+import { deserializeNDJSON } from 'insomnia-data/common';
+import { servicesNodeImpl } from 'insomnia-data/node';
+import { generate } from 'insomnia-testing/src/generate/generate';
+import { runTestsCli } from 'insomnia-testing/src/run/run';
 import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
-import { type RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
 import packageJson from '../package.json';
+import { flushAnalytics, InsoEvent, trackInsoEvent } from './analytics';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
-import type { Database } from './db';
+import { RunCollectionResultReport } from './commands/run-collection/result-report';
 import { isFile, loadDb } from './db';
 import { insomniaExportAdapter } from './db/adapters/insomnia-adapter';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
@@ -32,16 +44,30 @@ import type { BaseModel } from './db/models/types';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
+import type { Database } from './db/types';
+import { InsoError } from './errors';
+import { BasicReporter, logger } from './logger';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
+import { generateDocumentation } from './scripts/docs';
+import { getAppDataDir, getDefaultProductName } from './util';
+
+initServices(servicesNodeImpl);
+initRuntime(nodeRuntime);
 
 export interface GlobalOptions {
   ci: boolean;
   config: string;
-  exportFile: string;
   printOptions: boolean;
   verbose: boolean;
   workingDir: string;
 }
+
+if (!isDevelopment()) {
+  // in production, silence the deprecation warnings
+  process.removeAllListeners('warning');
+}
+
+configureFetch(options => insomniaFetch({ ...options }));
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
   try {
@@ -53,7 +79,7 @@ export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: 
       logger.debug(`Found config file at ${results?.filepath}.`);
       const scripts = results.config?.scripts || {};
       const filePath = results.filepath;
-      const options = ['workingDir', 'ci', 'verbose', 'exportFile', 'printOptions'].reduce((acc, key) => {
+      const options = ['workingDir', 'ci', 'verbose', 'printOptions'].reduce((acc, key) => {
         const value = results.config?.options?.[key];
         if (value) {
           return { ...acc, [key]: value };
@@ -74,66 +100,21 @@ export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: 
   return {};
 };
 
-export type LogsByType = Partial<Record<logType, string[]>>;
-
-export type ModifiedConsola = ReturnType<typeof consola.create> & { __getLogs: () => LogsByType };
-
-const consolaLogger = consola.create({
-  reporters: [
-    new FancyReporter({
-      formatOptions: {
-        // @ts-expect-error something is wrong here, ultimately these types come from https://nodejs.org/api/util.html#util_util_inspect_object_options and `date` doesn't appear to be one of the options.
-        date: false,
-      },
-    }),
-  ],
-});
-
-(consolaLogger as ModifiedConsola).__getLogs = () => ({});
-
-export const logger = consolaLogger as ModifiedConsola;
-
-export class InsoError extends Error {
-  cause?: Error | null;
-
-  constructor(message: string, cause?: Error) {
-    super(message);
-    this.name = 'InsoError';
-    this.cause = cause;
-  }
-}
-
-/**
- * getAppDataDir returns the data directory for an Electron app,
- * it is equivalent to the app.getPath('userData') API in Electron.
- * https://www.electronjs.org/docs/api/app#appgetpathname
- */
-export function getAppDataDir(app: string): string {
-  switch (process.platform) {
-    case 'darwin': {
-      return path.join(homedir(), 'Library', 'Application Support', app);
-    }
-    case 'win32': {
-      return path.join(process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming'), app);
-    }
-    case 'linux': {
-      return path.join(process.env.XDG_DATA_HOME || path.join(homedir(), '.config'), app);
-    }
-    default: {
-      throw new Error('Unsupported platform');
-    }
-  }
-}
-export const getDefaultProductName = (): string => {
-  const name = process.env.DEFAULT_APP_NAME;
-  if (!name) {
-    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
-  }
-  return name;
-};
+const localAppDir = getAppDataDir(getDefaultProductName());
 
 export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
-  return file && path.resolve(workingDir || process.cwd(), file);
+  if (!file) {
+    return '';
+  }
+
+  if (workingDir) {
+    if (fs.existsSync(workingDir) && !fs.statSync(workingDir).isDirectory()) {
+      return nodePath.resolve(nodePath.dirname(workingDir), file);
+    }
+    return nodePath.resolve(workingDir, file);
+  }
+
+  return nodePath.resolve(process.cwd(), file);
 };
 export const logErrorAndExit = (err?: Error) => {
   if (err instanceof InsoError) {
@@ -156,15 +137,18 @@ const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
   }
 };
 
-const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions) => {
-  let pathToSearch = '';
-  const useLocalAppData = !options.workingDir && !options.exportFile;
-  if (useLocalAppData) {
-    logger.warn('No working directory or export file provided, using local app data directory.');
-    pathToSearch = localAppDir;
-  } else {
-    pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+const getWorkingDir = (options: { workingDir?: string }): string => {
+  if (options.workingDir) {
+    return nodePath.resolve(options.workingDir);
   }
+
+  logger.warn('No working directory provided, using local app data directory.');
+  return localAppDir;
+};
+
+const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions) => {
+  const pathToSearch = getWorkingDir(options);
+
   const db = await loadDb({ pathToSearch, filterTypes: ['ApiSpec'] });
   if (!db.ApiSpec.length) {
     throw new InsoError(`Specification content not found using API spec id: "${identifier}" in "${pathToSearch}"`);
@@ -207,7 +191,6 @@ const collect = (val: string, memo: string[]) => {
   memo.push(val);
   return memo;
 };
-const localAppDir = getAppDataDir(getDefaultProductName());
 const readFileFromPathOrUrl = async (pathOrUrl: string) => {
   if (!pathOrUrl) {
     return '';
@@ -240,7 +223,7 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
         );
       }
       throw new Error('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
-    } catch (error) {
+    } catch {
       throw new Error('Upload JSON file can not be parsed');
     }
   } else if (fileType === 'csv') {
@@ -303,11 +286,38 @@ export const go = (args?: string[]) => {
     proxySettings.noProxy = process.env.NO_PROXY || process.env.no_proxy || '';
   }
 
+  // Merge global options, config file options, and command options
+  // Initialize logger
+  const mergeOptionsAndInit = async <T extends Record<string, any>>(
+    cmd: T,
+  ): Promise<
+    GlobalOptions &
+      T & {
+        configFileContent: Awaited<ReturnType<typeof tryToReadInsoConfigFile>>;
+      }
+  > => {
+    const globals: GlobalOptions = program.optsWithGlobals();
+
+    const commandOptions = { ...globals, ...cmd };
+    const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
+
+    const options = {
+      ...__configFile?.options,
+      ...commandOptions,
+      configFileContent: __configFile,
+    };
+    logger.level = options.verbose ? LogLevels.verbose : LogLevels.info;
+    options.ci && logger.setReporters([new BasicReporter()]);
+    options.printOptions && logger.log('Loaded options', options, '\n');
+
+    return options;
+  };
+
   // export and lint logic
   // Provide a path to a file which looks like an insomnia db
   // it may contain multiple workspaces, and specs.
   // you can also just provide a spec file
-  // things get confusing when you might have a workingDir a exportFile and an identifier, since they can all be paths to a spec file
+  // things get confusing when you might have a workingDir and an identifier, since they can all be paths to a spec file
 
   // differences
   // lint can read a .spectral.yml from the folder provided
@@ -349,6 +359,7 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
+    .option('--requestTimeout <duration>', 'milliseconds before request times out') // defaults to user settings
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
     .option('--httpsProxy <proxy>', 'URL for the proxy server for https requests.', proxySettings.httpsProxy)
     .option('--httpProxy <proxy>', 'URL for the proxy server for http requests.', proxySettings.httpProxy)
@@ -356,6 +367,11 @@ export const go = (args?: string[]) => {
       '--noProxy <comma_separated_list_of_hostnames>',
       'Comma separated list of hostnames that do not require a proxy to get reached, even if one is specified.',
       proxySettings.noProxy,
+    )
+    .option(
+      '-f, --dataFolders [dataFolders...]',
+      'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.',
+      [],
     )
     .action(
       async (
@@ -371,27 +387,14 @@ export const go = (args?: string[]) => {
           httpsProxy?: string;
           httpProxy?: string;
           noProxy?: string;
+          dataFolders: string[];
+          requestTimeout?: string;
         },
       ) => {
-        const globals: GlobalOptions = program.optsWithGlobals();
-        const commandOptions = { ...globals, ...cmd };
-        const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
+        const options = await mergeOptionsAndInit(cmd);
 
-        const options = {
-          ...(__configFile?.options || {}),
-          ...commandOptions,
-        };
-        logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
-        options.ci && logger.setReporters([new BasicReporter()]);
-        options.printOptions && logger.log('Loaded options', options, '\n');
-        const useLocalAppData = !options.workingDir && !options.exportFile;
-        let pathToSearch = '';
-        if (useLocalAppData) {
-          logger.warn('No working directory or export file provided, using local app data directory.');
-          pathToSearch = localAppDir;
-        } else {
-          pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
-        }
+        const pathToSearch = getWorkingDir(options);
+
         if (options.reporter && !reporterTypes.find(r => r === options.reporter)) {
           logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
           return process.exit(1);
@@ -422,10 +425,10 @@ export const go = (args?: string[]) => {
           return process.exit(1);
         }
 
-        const transientVariables = {
-          ...init(),
+        const transientVariables: Environment = {
+          ...models.environment.init(),
           _id: uuidv4(),
-          type: EnvironmentType,
+          type: 'Environment',
           parentId: '',
           modified: 0,
           created: Date.now(),
@@ -449,6 +452,8 @@ export const go = (args?: string[]) => {
           const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, transientVariables, {
             validateSSL: !options.disableCertValidation,
             ...proxyOptions,
+            dataFolders: options.dataFolders,
+            ...(options.requestTimeout ? { timeout: Number.parseInt(options.requestTimeout, 10) } : {}),
           });
           // Generate test file
           const testFileContents = generate(
@@ -471,8 +476,15 @@ export const go = (args?: string[]) => {
 
           // TODO: is this necessary?
           const success = options.verbose ? await runTestPromise : await noConsoleLog(() => runTestPromise);
+
+          await trackInsoEvent(InsoEvent.runTest, { success });
+          await flushAnalytics();
+
           return process.exit(success ? 0 : 1);
         } catch (error) {
+          await trackInsoEvent(InsoEvent.runTest, { success: false });
+          await flushAnalytics();
+
           logErrorAndExit(error);
         }
         return process.exit(1);
@@ -487,6 +499,7 @@ export const go = (args?: string[]) => {
     .option('-e, --env <identifier>', 'environment to use', '')
     .option('-g, --globals <identifier>', 'global environment to use (filepath or id)', '')
     .option('--delay-request <duration>', 'milliseconds to delay between requests', '0')
+    .option('--requestTimeout <duration>', 'milliseconds before request times out') // defaults to user settings
     .option('--env-var <key=value>', 'override environment variables', collect, [])
     .option('-n, --iteration-count <count>', 'number of times to repeat', '1')
     .option('-d, --iteration-data <path/url>', 'file path or url (JSON or CSV)', '')
@@ -499,6 +512,23 @@ export const go = (args?: string[]) => {
       '--noProxy <comma_separated_list_of_hostnames>',
       'Comma separated list of hostnames that do not require a proxy to get reached, even if one is specified.',
       proxySettings.noProxy,
+    )
+    .option(
+      '-f, --dataFolders [dataFolders...]',
+      'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.',
+      [],
+    )
+    .option('--output <file>', 'Output the results to a file in JSON format.')
+    .addOption(
+      new commander.Option(
+        '--includeFullData <type>',
+        'Include full data in the output file, including request, response, environment and etc.',
+      ).choices(['redact', 'plaintext']),
+    )
+    .option(
+      '--acceptRisk',
+      'Accept the security warning when outputting to a file, please make sure you understand the risks.',
+      false,
     )
     .action(
       async (
@@ -517,37 +547,60 @@ export const go = (args?: string[]) => {
           httpsProxy?: string;
           httpProxy?: string;
           noProxy?: string;
+          reporter: TestReporter;
+          dataFolders: string[];
+          output?: string;
+          includeFullData?: 'redact' | 'plaintext';
+          acceptRisk: boolean;
+          requestTimeout?: string;
         },
       ) => {
-        const globals: {
-          config: string;
-          workingDir: string;
-          exportFile: string;
-          ci: boolean;
-          printOptions: boolean;
-          verbose: boolean;
-        } = program.optsWithGlobals();
+        const options = await mergeOptionsAndInit(cmd);
 
-        const commandOptions = { ...globals, ...cmd };
-        const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
+        let outputFilePath = '';
+        // Check if the output file is a writable file if it exists
+        if (options.output) {
+          outputFilePath = getAbsoluteFilePath({ workingDir: options.workingDir, file: options.output });
+          if (fs.existsSync(outputFilePath)) {
+            const stats = fs.statSync(outputFilePath);
+            if (!stats.isFile()) {
+              logger.fatal(`Output path "${outputFilePath}" is not a file.`);
+              return process.exit(1);
+            }
+            try {
+              fs.accessSync(outputFilePath, fs.constants.W_OK);
+            } catch {
+              logger.fatal(`Output file "${outputFilePath}" is not writable.`);
+              return process.exit(1);
+            }
+          }
 
-        const options = {
-          reporter: defaultReporter,
-          ...(__configFile?.options || {}),
-          ...commandOptions,
-        };
-        logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
-        options.ci && logger.setReporters([new BasicReporter()]);
-        options.printOptions && logger.log('Loaded options', options, '\n');
-        let pathToSearch = '';
-        const useLocalAppData = !options.workingDir && !options.exportFile;
-        if (useLocalAppData) {
-          logger.warn('No working directory or export file provided, using local app data directory.');
-          pathToSearch = localAppDir;
-        } else {
-          pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+          // Show security disclaimer when outputting to a file with data
+          if (options.includeFullData && !options.acceptRisk) {
+            const disclaimerMessage = [
+              'SECURITY WARNING',
+              'Outputting to a file could contain sensitive data like API tokens or secrets. Make sure you understand this, and the contents of your collection, before proceeding.',
+              'Are you sure you want to continue?',
+            ].join('\n');
+
+            const acceptDisclaimer = await new Confirm({ message: disclaimerMessage, initial: false }).run();
+
+            if (!acceptDisclaimer) {
+              logger.fatal('User did not accept the disclaimer, aborting.');
+              return process.exit(1);
+            }
+          }
         }
 
+        const report = new RunCollectionResultReport(
+          {
+            outputFilePath,
+            includeFullData: options.includeFullData,
+          },
+          logger,
+        );
+
+        const pathToSearch = getWorkingDir(options);
         const db = await loadDb({
           pathToSearch,
           filterTypes: [],
@@ -558,6 +611,8 @@ export const go = (args?: string[]) => {
           logger.fatal('No workspace found in the provided data store or fallbacks.');
           return process.exit(1);
         }
+
+        report.update({ collection: workspace as Workspace });
 
         // Find environment
         const workspaceId = workspace._id;
@@ -570,7 +625,14 @@ export const go = (args?: string[]) => {
               env => matchIdIsh(env, options.globals) || env.name === options.globals,
             );
             if (!globalEnv) {
-              logger.warn('No global environment found with id or name', options.globals);
+              logger.warn(
+                `Error: No global environment found with ID or name "${options.globals}".
+  TIP: If you're running "inso" inside a Git project, specify the path to the Insomnia YAML file containing the global environment using the "--globals" option.
+  
+  Example:
+    $ inso run collection --globals /path/to/global-environment.yaml
+                `,
+              );
               return process.exit(1);
             }
             if (globalEnv) {
@@ -618,6 +680,8 @@ export const go = (args?: string[]) => {
           return process.exit(1);
         }
 
+        report.update({ environment: environment as Environment });
+
         let requestsToRun = getRequestsToRunFromListOrWorkspace(db, workspaceId, options.item);
         if (options.requestNamePattern) {
           requestsToRun = requestsToRun.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
@@ -631,7 +695,9 @@ export const go = (args?: string[]) => {
         const isRunningFolder = options.item.length === 1 && options.item[0].startsWith('fld_');
         if (options.item.length && !isRunningFolder) {
           const requestOrder = new Map<string, number>();
-          options.item.forEach((reqId: string, order: number) => requestOrder.set(reqId, order + 1));
+          options.item.forEach((reqId: string, order: number) => {
+            requestOrder.set(reqId, order + 1);
+          });
           requestsToRun = requestsToRun.sort(
             (a, b) =>
               (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length),
@@ -690,13 +756,13 @@ export const go = (args?: string[]) => {
         }
 
         try {
-          const iterationCount = parseInt(options.iterationCount, 10);
+          const iterationCount = Number.parseInt(options.iterationCount, 10);
 
           const iterationData = await pathToIterationData(options.iterationData, options.envVar);
-          const transientVariables = {
-            ...init(),
+          const transientVariables: Environment = {
+            ...models.environment.init(),
             _id: uuidv4(),
-            type: EnvironmentType,
+            type: 'Environment',
             parentId: '',
             modified: 0,
             created: Date.now(),
@@ -716,11 +782,23 @@ export const go = (args?: string[]) => {
             noProxy: options.noProxy,
           };
 
+          report.update({
+            proxy: proxyOptions,
+            iterationCount,
+            iterationData,
+            startedAt: Date.now(),
+          });
+
           const sendRequest = await getSendRequestCallbackMemDb(
             environment._id,
             db,
             transientVariables,
-            { validateSSL: !options.disableCertValidation, ...proxyOptions },
+            {
+              validateSSL: !options.disableCertValidation,
+              ...proxyOptions,
+              dataFolders: options.dataFolders,
+              ...(options.requestTimeout ? { timeout: Number.parseInt(options.requestTimeout, 10) } : {}),
+            },
             iterationData,
             iterationCount,
           );
@@ -743,6 +821,21 @@ export const go = (args?: string[]) => {
                 continue;
               }
 
+              report.addExecution({
+                request: req,
+                response: {
+                  status: res.statusMessage,
+                  code: res.status,
+                  headers: res.headers,
+                  data: res.data,
+                  responseTime: res.responseTime,
+                },
+                // TODO: Remove the category field from test results since it is not needed in the report and is always incorrect as unknown.
+                tests: res.testResults.map(t => pick(t, ['testCase', 'status', 'executionTime', 'errorMessage'])),
+                iteration: i,
+                success,
+              });
+
               const timelineString = await readFile(res.timelinePath, 'utf8');
               const appendNewLineIfNeeded = (str: string) => (str.endsWith('\n') ? str : str + '\n');
               const timeline = deserializeNDJSON(timelineString)
@@ -759,7 +852,7 @@ export const go = (args?: string[]) => {
                 }
               }
 
-              await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
+              await new Promise(r => setTimeout(r, Number.parseInt(options.delayRequest, 10)));
 
               if (res.nextRequestIdOrName) {
                 const offset = getNextRequestOffset(requestsToRun.slice(reqIndex), res.nextRequestIdOrName);
@@ -777,8 +870,19 @@ export const go = (args?: string[]) => {
 
           logTestResultSummary(testResultsQueue);
 
+          await report.saveReport();
+
+          await trackInsoEvent(InsoEvent.runCollection, { success });
+          await flushAnalytics();
+
           return process.exit(success ? 0 : 1);
         } catch (error) {
+          report.update({ error: (error instanceof Error ? error.message : String(error)) || 'Unknown error' });
+          await report.saveReport();
+
+          await trackInsoEvent(InsoEvent.runCollection, { success: false });
+          await flushAnalytics();
+
           logErrorAndExit(error);
         }
         return process.exit(1);
@@ -792,31 +896,33 @@ export const go = (args?: string[]) => {
     )
     .command('spec [identifier]')
     .description('Lint an API Specification, identifier can be an API Spec id or a file path')
-    .action(async identifier => {
-      const globals: GlobalOptions = program.optsWithGlobals();
-      const commandOptions = globals;
-      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
-      const options = {
-        ...(__configFile?.options || {}),
-        ...commandOptions,
-      };
-      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
-      options.ci && logger.setReporters([new BasicReporter()]);
+    .option(
+      '-r, --ruleset <path>',
+      'path to a Spectral ruleset file, overrides default OAS ruleset and any ruleset in the API Spec folder',
+    )
+    .action(async (identifier, cmd: { ruleset?: string }) => {
+      const options = await mergeOptionsAndInit({});
+
       // Assert identifier is a file
       const identifierAsAbsPath =
         identifier && getAbsoluteFilePath({ workingDir: options.workingDir, file: identifier });
       let isIdentifierAFile = false;
       try {
         isIdentifierAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
-      } catch (err) {}
+      } catch {}
       const pathToSearch = '';
-      let specContent;
-      let rulesetFileName;
+      let specContent: string | undefined;
+      let rulesetFileName: string | undefined;
+      if (cmd.ruleset) {
+        rulesetFileName = getAbsoluteFilePath({ workingDir: options.workingDir, file: cmd.ruleset });
+      }
       if (isIdentifierAFile) {
         // try load as a file
         logger.trace(`Linting specification file from identifier: \`${identifierAsAbsPath}\``);
-        specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf-8');
-        rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
+        specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf8');
+        if (!rulesetFileName) {
+          rulesetFileName = await getRuleSetFileFromFolderByFilename(identifierAsAbsPath);
+        }
         if (!specContent) {
           logger.fatal(`Specification content not found using path: ${identifier} in ${identifierAsAbsPath}`);
           return process.exit(1);
@@ -837,8 +943,15 @@ export const go = (args?: string[]) => {
 
       try {
         const { isValid } = await lintSpecification({ specContent, rulesetFileName });
+
+        await trackInsoEvent(InsoEvent.lintSpec, { success: isValid });
+        await flushAnalytics();
+
         return process.exit(isValid ? 0 : 1);
       } catch (error) {
+        await trackInsoEvent(InsoEvent.lintSpec, { success: false });
+        await flushAnalytics();
+
         logErrorAndExit(error);
       }
       return process.exit(1);
@@ -852,14 +965,8 @@ export const go = (args?: string[]) => {
     .option('-o, --output <path>', 'save the generated config to a file', '')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations, defaults to false', false)
     .action(async (identifier, cmd: { output: string; skipAnnotations: boolean }) => {
-      const globals: GlobalOptions = program.optsWithGlobals();
-      const commandOptions = { ...globals, ...cmd };
-      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
-      const options = {
-        ...(__configFile?.options || {}),
-        ...commandOptions,
-      };
-      options.printOptions && logger.log('Loaded options', options, '\n');
+      const options = await mergeOptionsAndInit(cmd);
+
       let specContent = '';
       try {
         specContent = await resolveSpecInDatabase(identifier, options);
@@ -875,12 +982,23 @@ export const go = (args?: string[]) => {
           options.output && getAbsoluteFilePath({ workingDir: options.workingDir, file: options.output });
         if (!outputPath) {
           logger.log(toExport);
+
+          await trackInsoEvent(InsoEvent.exportSpec, { success: true });
+          await flushAnalytics();
+
           return process.exit(0);
         }
         const filePath = await writeFileWithCliOptions(outputPath, toExport);
         logger.log(`Specification exported to "${filePath}".`);
+
+        await trackInsoEvent(InsoEvent.exportSpec, { success: true });
+        await flushAnalytics();
+
         return process.exit(0);
       } catch (error) {
+        await trackInsoEvent(InsoEvent.exportSpec, { success: false });
+        await flushAnalytics();
+
         logErrorAndExit(error);
       }
       return process.exit(1);
@@ -892,24 +1010,14 @@ export const go = (args?: string[]) => {
     .description('Run scripts defined in .insorc')
     .allowUnknownOption()
     .action(async (scriptName: string, cmd) => {
-      const commandOptions = { ...program.optsWithGlobals(), ...cmd };
-      // TODO: getAbsolutePath to working directory and use it to check from config file
-      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
+      const options = await mergeOptionsAndInit(cmd);
 
-      const options = {
-        ...(__configFile?.options || {}),
-        ...commandOptions,
-      };
-      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
-      options.ci && logger.setReporters([new BasicReporter()]);
-      options.printOptions && logger.log('Loaded options', options, '\n');
-
-      const scriptTask = __configFile?.scripts?.[scriptName];
+      const scriptTask = options.configFileContent?.scripts?.[scriptName];
 
       if (!scriptTask) {
         logger.fatal(
           `Could not find inso script "${scriptName}" in the config file.`,
-          Object.keys(__configFile?.scripts || {}),
+          Object.keys(options.configFileContent?.scripts || {}),
         );
         return process.exit(1);
       }
@@ -925,20 +1033,28 @@ export const go = (args?: string[]) => {
 
       logger.debug(`>> ${scriptArgs.slice(1).join(' ')}`);
 
+      // Track script invocation - the underlying command will track its own success/failure
+      await trackInsoEvent(InsoEvent.script);
+
       program.parseAsync(scriptArgs).catch(logErrorAndExit);
     });
+
+  program.command('generate-docs').action(() => {
+    generateDocumentation(program);
+    return process.exit(1);
+  });
 
   program.parseAsync(args || process.argv).catch(logErrorAndExit);
 };
 
 const getNextRequestOffset = (leftRequestsToRun: Request[], nextRequestIdOrName: string) => {
   const idMatchOffset = leftRequestsToRun.findIndex(req => req._id.trim() === nextRequestIdOrName.trim());
-  if (idMatchOffset >= 0) {
+  if (idMatchOffset !== -1) {
     return idMatchOffset;
   }
 
   const nameMatchOffset = leftRequestsToRun.reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
-  if (nameMatchOffset >= 0) {
+  if (nameMatchOffset !== -1) {
     return leftRequestsToRun.length - 1 - nameMatchOffset;
   }
 

@@ -1,18 +1,37 @@
-import { build, type BuildOptions, context } from 'esbuild';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { analyzeMetafile, build, type BuildOptions, context, type Plugin } from 'esbuild';
 
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
+const isDebug = Boolean(process.env.DEBUG);
 const version = process.env.VERSION || 'dev';
+// Redirects *.renderer imports to their *.node equivalents for node/CLI builds.
+const rendererToNodePlugin: Plugin = {
+  name: 'renderer-to-node',
+  setup(build) {
+    build.onResolve({ filter: /\.renderer$/ }, args => ({
+      path: path.resolve(args.resolveDir, args.path.replace('.renderer', '.node') + '.ts'),
+    }));
+  },
+};
+
 const config: BuildOptions = {
   outfile: './dist/index.js',
   bundle: true,
+  metafile: isDebug,
   platform: 'node',
   minify: isProd,
   target: 'node22',
   sourcemap: true,
   format: 'cjs',
   tsconfig: 'tsconfig.json',
+  alias: {
+    electron: '../insomnia/send-request/electron',
+  },
   plugins: [
+    rendererToNodePlugin,
     // taken from https://github.com/tjx666/awesome-vscode-extension-boilerplate/blob/main/scripts/esbuild.ts
     {
       name: 'umd2esm',
@@ -32,7 +51,9 @@ const config: BuildOptions = {
     'process.env.DEFAULT_APP_NAME': JSON.stringify(isProd ? 'Insomnia' : 'insomnia-app'),
     'process.env.VERSION': JSON.stringify(isProd ? version : 'dev'),
     '__DEV__': JSON.stringify(!isProd),
+    'process.type': 'undefined',
   },
+  // node-llama-cpp is not included here because inso does not need it
   external: ['@getinsomnia/node-libcurl', 'fsevents', 'mocha'],
   entryPoints: ['./src/index.ts'],
 };
@@ -44,5 +65,18 @@ if (watch) {
   }
   watch();
 } else {
+  if (isDebug) {
+    async function buildWithDebug() {
+      const result = await build(config);
+
+      if (result.metafile) {
+        fs.mkdirSync('./artifacts', { recursive: true });
+        fs.writeFileSync('./artifacts/meta.json', JSON.stringify(result.metafile));
+        fs.writeFileSync('./artifacts/bundle-analysis.log', await analyzeMetafile(result.metafile));
+      }
+    }
+
+    buildWithDebug();
+  }
   build(config);
 }

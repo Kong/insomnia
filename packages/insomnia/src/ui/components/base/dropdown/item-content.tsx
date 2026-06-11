@@ -1,6 +1,6 @@
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { type CSSProperties, type FC, type PropsWithChildren, type ReactNode } from 'react';
 
-import type { PlatformKeyCombinations } from '../../../../common/settings';
 import { SvgIcon } from '../../svg-icon';
 import { PromptButton } from '../prompt-button';
 import { DropdownHint } from './dropdown-hint';
@@ -26,7 +26,7 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
     <>
       <div className="flex w-full items-center">
         {icon && typeof icon === 'string' ? (
-          <i className={`fa fa-${icon} flex items-center px-[--padding-xs]`} style={iconStyle} />
+          <i className={`fa fa-${icon} flex items-center px-(--padding-xs)`} style={iconStyle} />
         ) : (
           icon
         )}
@@ -41,7 +41,7 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
     return (
       <PromptButton
         fullWidth
-        className={`flex h-full w-full items-center justify-between pl-1 pr-2 ${className || ''}`}
+        className={`flex h-full w-full items-center justify-between pr-2 pl-1 ${className || ''}`}
         onClick={onClick}
       >
         {content}
@@ -52,7 +52,7 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
   return (
     <div
       role="button"
-      className={`flex h-full w-full items-center justify-between pl-[--padding-sm] pr-[--padding-md] ${className || ''} ${isSelected ? 'bg-[--hl-xs] font-bold' : ''}`}
+      className={`flex h-full w-full items-center justify-between pr-(--padding-md) pl-(--padding-sm) ${className || ''} ${isSelected ? 'bg-(--hl-xs) font-bold' : ''}`}
       style={style}
     >
       {content}

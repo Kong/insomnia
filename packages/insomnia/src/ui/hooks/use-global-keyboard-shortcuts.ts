@@ -1,12 +1,13 @@
-import * as plugins from '../../plugins';
+import { useRootLoaderData } from '~/root';
+
+import { plugins } from '../../plugins/renderer-bridge';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
-import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import { useRootLoaderData } from '../routes/root';
+import { SettingsModal } from '../components/modals/settings-modal';
 import { useSettingsPatcher } from './use-request';
 
 export const useGlobalKeyboardShortcuts = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const patchSettings = useSettingsPatcher();
 
   useDocBodyKeyboardShortcuts({
@@ -16,6 +17,6 @@ export const useGlobalKeyboardShortcuts = () => {
       patchSettings({ showVariableSourceAndValue: !settings.showVariableSourceAndValue }),
     // TODO: move this to organization route
     preferences_showGeneral: () => showModal(SettingsModal),
-    preferences_showKeyboardShortcuts: () => showModal(SettingsModal, { tab: TAB_INDEX_SHORTCUTS }),
+    preferences_showKeyboardShortcuts: () => showModal(SettingsModal, { tab: 'keyboard' }),
   });
 };

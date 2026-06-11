@@ -35,7 +35,7 @@ describe('test request and response objects', () => {
         { key: 'header2', value: 'val2' },
         { key: 'Content-Length', value: '100' },
         { key: 'Content-Disposition', value: 'attachment; filename="filename.txt"' },
-        { key: 'Content-Type', value: 'text/plain; charset=utf-8' },
+        { key: 'Content-Type', value: 'text/plain; charset=utf8' },
       ],
       cookie: [
         { key: 'header1', value: 'val1' },
@@ -54,20 +54,24 @@ describe('test request and response objects', () => {
       key: 888,
     });
     expect(resp.contentInfo()).toEqual({
-      charset: 'utf-8',
-      contentType: 'text/plain; charset=utf-8',
+      charset: 'utf8',
+      contentType: 'text/plain; charset=utf8',
       fileExtension: 'txt',
       fileName: 'filename',
       mimeFormat: '',
       mimeType: 'text/plain',
     });
 
-    // extended assertion chains
+    // extended assertions which are dynamically added
     resp.to.have.status(200);
-    resp.to.have.status('OK');
     resp.to.have.header('header1');
-    resp.to.have.jsonBody({ key: 888 });
+    resp.to.have.jsonBody('key');
     resp.to.have.body('{"key": 888}');
+
+    resp.to.not.be.error;
+    resp.to.be.withBody;
+    resp.to.be.json;
+
     resp.to.have.jsonSchema({
       type: 'object',
       properties: {
@@ -78,16 +82,17 @@ describe('test request and response objects', () => {
     });
 
     resp.to.not.have.status(201);
-    resp.to.not.have.status('NOT FOUND');
+    resp.to.not.have.status(404);
     resp.to.not.have.header('header_nonexist');
-    resp.to.not.have.jsonBody({ key: 777 });
+    resp.to.not.have.jsonBody('nokey');
     resp.to.not.have.body('{"key": 777}');
+
     resp.to.not.have.jsonSchema({
       type: 'object',
       properties: {
-        keyNoExist: { type: 'integer' },
+        xxkey: { type: 'integer' },
       },
-      required: ['keyNoExist'],
+      required: ['xxkey'],
       additionalProperties: false,
     });
   });

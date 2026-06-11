@@ -1,4 +1,5 @@
 type: mock.insomnia.rest/5.0
+schema_version: "5.1"
 name: My API Mock
 meta:
   id: wrk_7b534dfd6f1e4362b7a87fcd181697a0
@@ -14,8 +15,7 @@ routes:
       modified: 1707812450193
     body: '{"message":"welcome"}'
     headers:
-      - id: pair_b466a74db8ed40fcbbe8f84136f204f8
-        name: X-Mockbin-Test
+      - name: X-Mockbin-Test
         value: "true"
     method: GET
     mimeType: application/json
@@ -27,8 +27,7 @@ routes:
       modified: 1707812454502
     body: '{"uptime":12345678}'
     headers:
-      - id: pair_d0a6e2d6a3614e05943cf156e52134d8
-        name: X-Mockbin-Test
+      - name: X-Mockbin-Test
         value: test
     method: GET
     mimeType: application/json

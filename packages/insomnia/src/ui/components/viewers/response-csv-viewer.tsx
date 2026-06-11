@@ -1,8 +1,10 @@
 import Papa from 'papaparse';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
+import { utf8StringFromBytes } from '~/utils/utf8-bytes';
+
 interface Props {
-  body: Buffer;
+  body: Uint8Array;
 }
 
 export const ResponseCSVViewer: FC<Props> = ({ body }) => {
@@ -10,7 +12,7 @@ export const ResponseCSVViewer: FC<Props> = ({ body }) => {
   const tableRef = useRef<HTMLTableElement>(null);
 
   useEffect(() => {
-    Papa.parse<string[]>(body.toString('utf8'), {
+    Papa.parse<string[]>(utf8StringFromBytes(body), {
       skipEmptyLines: true,
       complete: result => {
         setCSV(result);

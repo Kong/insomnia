@@ -4,10 +4,10 @@ import path from 'node:path';
 import { importInsomniaV5Data } from 'insomnia/src/common/insomnia-v5';
 import YAML from 'yaml';
 
-import { InsoError } from '../../cli';
-import type { DbAdapter } from '../index';
-import { emptyDb } from '../index';
+import { InsoError } from '../../errors';
 import type { BaseModel } from '../models/types';
+import type { DbAdapter } from '../types';
+import { emptyDb } from '../types';
 
 /**
  * When exporting from Insomnia, the `models.[kind].type` is converted from PascalCase to snake_case.
@@ -78,7 +78,7 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   const db = emptyDb();
 
   // Now, reading and parsing
-  const content = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
+  const content = await fs.promises.readFile(filePath, { encoding: 'utf8' });
   let parsed:
     | {
         __export_format: number;

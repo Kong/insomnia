@@ -1,17 +1,85 @@
-@import 'codemirror/addon/dialog/dialog.css';
-@import 'codemirror/addon/fold/foldgutter.css';
-@import 'codemirror/addon/hint/show-hint.css';
-@import 'codemirror/addon/search/matchesonscrollbar.css';
-@import 'codemirror/addon/lint/lint.css';
-@import 'codemirror/lib/codemirror.css';
-@import './lib/codemirror/codemirror.css';
-@import './lib/codemirror/material.css';
-@import './main.css';
-@import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css';
+/* Do not change the position of tailwindcss import to ensure css cascade layer order  */
+@import 'tailwindcss' source('../../../src');
+@import '@fortawesome/fontawesome-svg-core/styles.css' layer(base);
+@import 'codemirror/addon/dialog/dialog.css' layer(base);
+@import 'codemirror/addon/fold/foldgutter.css' layer(base);
+@import 'codemirror/addon/hint/show-hint.css' layer(base);
+@import 'codemirror/addon/search/matchesonscrollbar.css' layer(base);
+@import 'codemirror/addon/lint/lint.css' layer(base);
+@import 'codemirror/lib/codemirror.css' layer(base);
+/* used by merge-editor */
+@import 'codemirror/addon/merge/merge.css' layer(base);
+@import 'codemirror/theme/base16-dark.css' layer(base);
+@import './lib/codemirror/merge-dark.css' layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import './lib/codemirror/codemirror.css' layer(base);
+@import './lib/codemirror/material.css' layer(base);
+@import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon-modifiers.css' layer(base);
+@import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css' layer(base);
+@import 'monaco-editor/min/vs/editor/editor.main.css' layer(base);
+@import './main.css' layer(base);
+
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --animate-text-slide-4: text-slide-4 7s cubic-bezier(0.83, 0, 0.17, 1) infinite;
+  --animate-up-loop: up-loop 1s linear infinite;
+  --animate-down-loop: down-loop 1s linear infinite;
+
+  @keyframes text-slide-4 {
+    0%,
+    20% {
+      transform: translateY(0%);
+    }
+    25%,
+    45% {
+      transform: translateY(-20%);
+    }
+    50%,
+    70% {
+      transform: translateY(-40%);
+    }
+    75%,
+    95% {
+      transform: translateY(-60%);
+    }
+    100% {
+      transform: translateY(-80%);
+    }
+  }
+  @keyframes up-loop {
+    0% {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+  }
+  @keyframes down-loop {
+    0% {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+  }
+}
 
 html {
   font-size: 11px;
@@ -162,4 +230,84 @@ table.json-diff-viewer {
 
 .monaco-editor .margin {
   margin: 0;
+}
+
+::view-transition-new(toast):only-child {
+  animation: slideIn 400ms ease-out;
+}
+
+::view-transition-old(toast):only-child {
+  animation: slideOut 400ms ease-in;
+}
+
+@keyframes slideIn {
+  from {
+    translate: 100% 0;
+    opacity: 0;
+  }
+}
+@keyframes slideOut {
+  to {
+    translate: 100% 0;
+    opacity: 0;
+  }
+}
+
+.CodeMirror-merge {
+  height: 100%;
+}
+.CodeMirror-merge .CodeMirror-merge-pane {
+  height: 100%;
+}
+.CodeMirror-merge .CodeMirror {
+  height: 100%;
+}
+
+/* Info decoration styles for glyph margin */
+.monaco-editor .info-decoration {
+}
+
+/* System change line background */
+.monaco-editor .system-change-line-bg ~ .cdr {
+  /* Remove the background-color of the following line decoration */
+  background-color: transparent !important;
+}
+
+.monaco-editor.vs-dark .system-change-line-bg {
+  background-color: #383838 !important;
+}
+
+.monaco-editor.vs .system-change-line-bg {
+  background-color: #e5e5e5 !important;
+}
+
+.monaco-editor .info-decoration::after {
+  content: '\f05a'; /* FontAwesome info-circle icon */
+  color: var(--color-font);
+  font-size: 12px;
+  font-family: 'Font Awesome 6 Free' !important; /* FontAwesome font family */
+}
+
+.monaco-editor .codicon-unfold::before,
+.monaco-editor .codicon-fold:before {
+  content: '' !important;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  background-color: var(--color-font);
+}
+
+.monaco-editor .codicon-unfold::before {
+  mask-image: url('../images/icn-expand.svg');
+}
+
+.monaco-editor .codicon-fold::before {
+  mask-image: url('../images/icn-collapse.svg');
+}
+
+.monaco-editor .diff-hidden-lines-widget a[title='Show Unchanged Region'] {
+  margin-right: auto;
 }

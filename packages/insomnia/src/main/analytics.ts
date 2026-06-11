@@ -1,155 +1,133 @@
 import crypto from 'node:crypto';
 
-import { Analytics } from '@segment/analytics-node';
+import * as Sentry from '@sentry/electron/main';
 import { net } from 'electron';
+import { AnalyticsEvent, InsomniaAnalytics } from 'insomnia-analytics';
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
   getApiBaseURL,
-  getAppPlatform,
   getAppVersion,
   getClientString,
   getProductName,
   getSegmentWriteKey,
+  PLAYWRIGHT_TEST,
 } from '../common/constants';
-import * as models from '../models/index';
 
-const analytics = new Analytics({
+export { AnalyticsEvent };
+
+let _currentOrganizationId: string | undefined;
+
+export function setCurrentOrganizationId(id: string | undefined): void {
+  _currentOrganizationId = id;
+}
+
+const analytics = new InsomniaAnalytics({
   writeKey: getSegmentWriteKey(),
-  httpClient: {
-    makeRequest(_options) {
-      return net.fetch(_options.url, {
-        method: _options.method,
-        headers: _options.headers,
-        body: _options.body,
-        signal: AbortSignal.timeout(_options.httpRequestTimeout),
-      });
+  app: {
+    appName: getProductName(),
+    appVersion: getAppVersion(),
+    osVersion: () => process.getSystemVersion(),
+    platform: 'app',
+  },
+  settings: {
+    httpClient: {
+      makeRequest(_options) {
+        return net.fetch(_options.url, {
+          method: _options.method,
+          headers: _options.headers,
+          body: _options.body,
+          signal: AbortSignal.timeout(_options.httpRequestTimeout),
+        });
+      },
     },
+  },
+  onError: error => {
+    console.warn('[analytics] Error sending analytics event', error);
   },
 });
 
 const getDeviceId = async () => {
-  const settings = await models.settings.get();
-  return settings.deviceId || (await models.settings.update(settings, { deviceId: uuidv4() })).deviceId;
+  const settings = await services.settings.get();
+  return settings.deviceId || (await services.settings.update(settings, { deviceId: uuidv4() })).deviceId;
 };
-
-export enum SegmentEvent {
-  appStarted = 'App Started',
-  collectionCreate = 'Collection Created',
-  dataExport = 'Data Exported',
-  dataImport = 'Data Imported',
-  loginSuccess = 'Login Success',
-  documentCreate = 'Document Created',
-  kongConnected = 'Kong Connected',
-  kongSync = 'Kong Synced',
-  requestBodyTypeSelect = 'Request Body Type Selected',
-  requestCreate = 'Request Created',
-  requestExecute = 'Request Executed',
-  collectionRunExecute = 'Collection Run Executed',
-  projectLocalCreate = 'Local Project Created',
-  projectLocalDelete = 'Local Project Deleted',
-  testSuiteCreate = 'Test Suite Created',
-  testSuiteDelete = 'Test Suite Deleted',
-  unitTestCreate = 'Unit Test Created',
-  unitTestDelete = 'Unit Test Deleted',
-  unitTestRun = 'Ran Individual Unit Test',
-  unitTestRunAll = 'Ran All Unit Tests',
-  vcsSyncStart = 'VCS Sync Started',
-  vcsSyncComplete = 'VCS Sync Completed',
-  vcsAction = 'VCS Action Executed',
-  buttonClick = 'Button Clicked',
-}
 
 function hashString(input: string) {
   return crypto.createHash('sha256').update(input).digest('hex');
 }
 
-export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
-  const settings = await models.settings.getOrCreate();
-  const userSession = await models.userSession.getOrCreate();
+export async function trackAnalyticsEvent(event: AnalyticsEvent, properties?: Record<string, any>) {
+  if (PLAYWRIGHT_TEST) {
+    return;
+  }
+  const settings = await services.settings.getOrCreate();
+  const userSession = await services.userSession.get();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }
   const allowAnalytics = settings.enableAnalytics || userSession?.hashedAccountId;
-  if (allowAnalytics) {
-    try {
-      const anonymousId = (await getDeviceId()) ?? '';
-      const context = {
-        app: { name: getProductName(), version: getAppVersion() },
-        os: { name: _getOsName(), version: process.getSystemVersion() },
-      };
+  if (!allowAnalytics) {
+    return;
+  }
 
-      analytics.track(
-        {
-          event,
-          properties,
-          context,
-          anonymousId,
-          userId: userSession?.hashedAccountId || '',
+  try {
+    const anonymousId = (await getDeviceId()) ?? '';
+    analytics.track({
+      event,
+      properties: {
+        ...(_currentOrganizationId && { organization_id: _currentOrganizationId }),
+        ...properties,
+      },
+      anonymousId,
+      userId: userSession?.hashedAccountId || '',
+    });
+  } catch (error: unknown) {
+    console.warn('[analytics] Unexpected error while sending analytics event', error);
+  } finally {
+    if (!userSession?.hashedAccountId && [AnalyticsEvent.unitTestRun, AnalyticsEvent.unitTestRunAll].includes(event)) {
+      Sentry.captureException(`Run tests by anonymous`, {
+        tags: {
+          source: 'main/analytics',
         },
-        error => {
-          if (error) {
-            console.warn('[analytics] Error sending segment event', error);
-          }
+        extra: {
+          organizationId: properties?.organizationId || '',
+          projectId: properties?.projectId || '',
         },
-      );
-    } catch (error: unknown) {
-      console.warn('[analytics] Unexpected error while sending segment event', error);
+      });
     }
   }
 }
 
 export async function trackPageView(name: string) {
-  const settings = await models.settings.getOrCreate();
-  const userSession = await models.userSession.getOrCreate();
+  if (PLAYWRIGHT_TEST) {
+    return;
+  }
+  const settings = await services.settings.getOrCreate();
+  const userSession = await services.userSession.get();
   if (!userSession?.hashedAccountId) {
     userSession.hashedAccountId = userSession?.accountId ? hashString(userSession.accountId) : '';
   }
 
   const allowAnalytics = settings.enableAnalytics || userSession?.hashedAccountId;
-  if (allowAnalytics) {
-    try {
-      const anonymousId = (await getDeviceId()) ?? '';
-      const context = {
-        app: { name: getProductName(), version: getAppVersion() },
-        os: { name: _getOsName(), version: process.getSystemVersion() },
-      };
-
-      analytics.page({ name, context, anonymousId, userId: userSession?.hashedAccountId }, error => {
-        if (error) {
-          console.warn('[analytics] Error sending segment event', error);
-        }
-      });
-
-      if (userSession?.id) {
-        net.fetch(getApiBaseURL() + '/v1/telemetry/', {
-          method: 'POST',
-          headers: new Headers({
-            'X-Session-Id': userSession?.id,
-            'X-Insomnia-Client': getClientString(),
-          }),
-        });
-      }
-    } catch (error: unknown) {
-      console.warn('[analytics] Unexpected error while sending segment event', error);
-    }
+  if (!allowAnalytics) {
+    return;
   }
-}
 
-// ~~~~~~~~~~~~~~~~~ //
-// Private Functions //
-// ~~~~~~~~~~~~~~~~~ //
-function _getOsName() {
-  const platform = getAppPlatform();
-  switch (platform) {
-    case 'darwin': {
-      return 'mac';
+  try {
+    const anonymousId = (await getDeviceId()) ?? '';
+    analytics.page({ name, anonymousId, userId: userSession?.hashedAccountId });
+
+    if (userSession?.id) {
+      net.fetch(getApiBaseURL() + '/v1/telemetry/', {
+        method: 'POST',
+        headers: new Headers({
+          'X-Session-Id': userSession?.id,
+          'X-Insomnia-Client': getClientString(),
+        }),
+      });
     }
-    case 'win32': {
-      return 'windows';
-    }
-    default: {
-      return platform;
-    }
+  } catch (error: unknown) {
+    console.warn('[analytics] Unexpected error while sending analytics event', error);
   }
 }

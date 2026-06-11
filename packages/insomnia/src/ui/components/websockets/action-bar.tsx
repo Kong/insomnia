@@ -1,18 +1,23 @@
+import type { SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
-import * as models from '../../../models';
-import type { WebSocketRequest } from '../../../models/websocket-request';
+import { recordProjectRecentRequest } from '~/common/project';
+import {
+  type ConnectActionParams,
+  useRequestConnectActionFetcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
+import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
-import type { ConnectActionParams } from '../../routes/request';
-import { OneLineEditor, type OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { DisconnectButton } from './disconnect-button';
 
 interface ActionBarProps {
-  request: WebSocketRequest;
+  request: WebSocketRequest | SocketIORequest;
   environmentId: string;
   defaultValue: string;
   readyState: boolean;
@@ -31,7 +36,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       oneLineEditorRef.current?.focusEnd();
     }, []);
 
-    const fetcher = useFetcher();
+    const connectRequestFetcher = useRequestConnectActionFetcher();
     const { organizationId, projectId, workspaceId, requestId } = useParams() as {
       organizationId: string;
       projectId: string;
@@ -43,25 +48,22 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
 
     const connect = useCallback(
       (connectParams: ConnectActionParams) => {
-        fetcher.submit(JSON.stringify(connectParams), {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
-          method: 'post',
-          encType: 'application/json',
+        connectRequestFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+          connectParams,
         });
       },
-      [fetcher, organizationId, projectId, requestId, workspaceId],
+      [connectRequestFetcher, organizationId, projectId, requestId, workspaceId],
     );
 
-    const handleSubmit = useCallback(async () => {
-      updateTabById?.(request._id, { temporary: false });
-      if (isOpen) {
-        window.main.webSocket.close({ requestId: request._id });
-        return;
-      }
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
+    const generateConnectParams = useCallback(async () => {
+      // Render any Liquid template tags in the url/headers/authentication settings/cookies
 
-      const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
+      const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
+      // Render any Liquid template tags in the url/headers/authentication settings/cookies
       const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
         request,
         environmentId,
@@ -73,15 +75,59 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
           workspaceCookieJar,
         },
       });
-      rendered &&
-        connect({
+      if (request.type === 'WebSocketRequest' && rendered) {
+        return {
           url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
           headers: rendered.headers,
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,
           suppressUserAgent: rendered.suppressUserAgent,
+        };
+      }
+
+      // socket.io use a separate field (query) for query parameters
+      if (request.type === 'SocketIORequest' && rendered) {
+        const query: Record<string, string> = {};
+        rendered.parameters.forEach(({ name, value }: { name: string; value: string }) => {
+          if (name) {
+            query[name] = value;
+          }
         });
-    }, [connect, environmentId, isOpen, request, updateTabById, workspaceId]);
+        return {
+          url: rendered.url,
+          query,
+          path: request.settingPath,
+          headers: rendered.headers,
+          authentication: rendered.authentication,
+          cookieJar: rendered.workspaceCookieJar,
+          suppressUserAgent: rendered.suppressUserAgent,
+        };
+      }
+
+      return null;
+    }, [environmentId, request, workspaceId]);
+
+    const handleSubmit = useCallback(async () => {
+      updateTabById?.(request._id, { temporary: false });
+      if (isOpen) {
+        if (request.type === 'WebSocketRequest') {
+          // If the request is already open, close it
+          window.main.webSocket.close({ requestId: request._id });
+        } else if (request.type === 'SocketIORequest') {
+          window.main.socketIO.close({ requestId: request._id });
+        }
+        return;
+      }
+      const connectParams = await generateConnectParams();
+      if (connectParams) {
+        recordProjectRecentRequest({
+          projectId,
+          requestId: request._id,
+          workspaceId,
+        });
+        connect(connectParams);
+      }
+    }, [connect, generateConnectParams, isOpen, projectId, request._id, request.type, updateTabById, workspaceId]);
 
     const setUrl = useCallback(
       (url: string) => {
@@ -117,32 +163,42 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       },
     });
 
-    const isConnectingOrClosed = !readyState;
+    const getRequestLabel = () => {
+      let requestTypeLabel = '';
+      if (request.type === 'WebSocketRequest') {
+        requestTypeLabel = 'WS';
+      } else if (request.type === 'SocketIORequest') {
+        requestTypeLabel = 'Socket.IO';
+      }
+      return requestTypeLabel;
+    };
+
     return (
       <>
-        {!isOpen && <span className="flex items-center pl-[--padding-md] text-[--color-notice]">WS</span>}
+        {!isOpen && (
+          <span className="flex items-center pl-(--padding-md) text-(--color-notice)">{getRequestLabel()}</span>
+        )}
         {isOpen && (
-          <span className="text-success flex items-center pl-[--padding-md]">
-            <span className="mr-[--padding-sm] h-2.5 w-2.5 rounded-[50%] bg-[--color-success]" />
+          <span className="text-success flex items-center pl-(--padding-md)">
+            <span className="mr-(--padding-sm) h-2.5 w-2.5 rounded-[50%] bg-(--color-success)" />
             CONNECTED
           </span>
         )}
         <form
           className="flex flex-1"
-          aria-disabled={isOpen}
           onSubmit={event => {
             event.preventDefault();
             handleSubmit();
           }}
         >
-          <div className="box-border h-full w-full px-[--padding-md]">
+          <div className="box-border h-full w-full px-(--padding-md)">
             <OneLineEditor
               id="websocket-url-bar"
               ref={oneLineEditorRef}
               onKeyDown={createKeybindingsHandler({
                 Enter: () => handleSubmit(),
               })}
-              readOnly={readyState}
+              readOnly={isOpen}
               placeholder="wss://example.com/chat"
               defaultValue={defaultValue}
               onChange={onChange}
@@ -150,15 +206,15 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
             />
           </div>
           <div className="flex p-1">
-            {isConnectingOrClosed ? (
+            {isOpen ? (
+              <DisconnectButton requestId={request._id} />
+            ) : (
               <button
-                className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+                className="rounded-xs bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
                 type="submit"
               >
                 Connect
               </button>
-            ) : (
-              <DisconnectButton requestId={request._id} />
             )}
           </div>
         </form>

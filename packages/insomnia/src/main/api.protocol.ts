@@ -1,12 +1,12 @@
+import path from 'node:path';
 import { Readable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
 
 import { Curl, CurlAuth, CurlFeature, CurlProxy, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
+import { services } from 'insomnia-data';
 
 import { getApiBaseURL } from '../common/constants';
-import { get as getSettings } from '../models/settings';
-import * as _userSession from '../models/user-session';
 import { setDefaultProtocol } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
 
@@ -51,17 +51,16 @@ export async function registerInsomniaProtocols() {
       const apiURL = getApiBaseURL();
       const url = new URL(`${apiURL}/${originalRequest.url.replace(`${insomniaStreamScheme}://`, '')}`);
       const urlStr = url.toString();
-      const settings = await getSettings();
+      const settings = await services.settings.get();
       // systemProxy follows the PAC return value format.
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#return_value_format
       let systemProxyStr = await session.defaultSession.resolveProxy(urlStr);
 
       // here we use libcurl to forward the SSE request because the SSE request sent by net.fetch can not be disconnected correctly in some cases
       // see https://github.com/electron/electron/issues/47097
-      return await new Promise((resolve, reject) => {
+      return await new Promise(async (resolve, reject) => {
         try {
-          const sessionId = new URLSearchParams(url.search).get('sessionId');
-
+          const { id: sessionId } = await services.userSession.get();
           const curl = new Curl();
           curl.setOpt(Curl.option.URL, urlStr);
           curl.setOpt(Curl.option.ACCEPT_ENCODING, '');
@@ -74,16 +73,16 @@ export async function registerInsomniaProtocols() {
               systemProxyStr = 'DIRECT';
             }
 
-            const proxies = systemProxyStr
+            const proxy = systemProxyStr
               .trim()
               .split(/\s*;\s*/g)
-              .filter(Boolean);
+              .find(Boolean);
 
             // only the first proxy specified will be used
-            const firstProxy = proxies[0];
-            const parts = firstProxy.split(/\s+/);
+            const firstProxy = proxy;
+            const parts = firstProxy?.split(/\s+/);
 
-            const proxyType = parts[0];
+            const proxyType = parts?.[0];
 
             if (proxyType === 'DIRECT') {
               curl.setOpt(Curl.option.PROXY, '');
@@ -123,7 +122,7 @@ export async function registerInsomniaProtocols() {
               }
               if (unknownProxy) {
                 curl.setOpt(Curl.option.PROXY, '');
-              } else {
+              } else if (parts?.[1]) {
                 curl.setOpt(Curl.option.PROXYTYPE, curlOptProxyType);
                 curl.setOpt(Curl.option.PROXY, parts[1]);
               }
@@ -179,6 +178,22 @@ export async function registerInsomniaProtocols() {
 
   if (!protocol.isProtocolHandled(httpsScheme)) {
     protocol.handle(httpsScheme, async request => {
+      const url = new URL(request.url);
+      if (url.hostname === 'insomnia-app.local') {
+        const rootDir = path.resolve(__dirname, 'client');
+        const filePath = path.join(rootDir, url.pathname.startsWith('/assets') ? url.pathname : 'index.html');
+        console.log(`Loading index for: ${url.pathname} from: ${filePath}`);
+
+        return await net.fetch(`file://${filePath}`, { bypassCustomProtocolHandlers: true });
+      }
+
+      // Allow Google Fonts to bypass the custom https protocol handler.
+      // Some embedded UIs (including the Customer.io in-app messaging/marketing SDK) load fonts from Google fonts.
+      // When those requests are routed through our custom https handler they fail due to unknown issues.
+      if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+        return net.fetch(request.url, { bypassCustomProtocolHandlers: true });
+      }
+
       return net.fetch(request, { bypassCustomProtocolHandlers: true });
     });
   }

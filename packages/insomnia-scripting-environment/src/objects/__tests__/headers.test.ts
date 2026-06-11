@@ -24,6 +24,6 @@ describe('test Header object', () => {
 
     const upserted = new Header({ key: 'h1', value: 'v1upserted' });
     headerList.upsert(upserted);
-    expect(headerList.one('h1')).toEqual(upserted);
+    expect(headerList.one('h1')).toEqual(upserted.value);
   });
 });

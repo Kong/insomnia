@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import type { RequestHeader } from 'insomnia/src/models/request';
-import type { Settings } from 'insomnia/src/models/settings';
 import { filterClientCertificates } from 'insomnia/src/network/certificate';
+import type { ClientCertificate, RequestHeader, RequestTestResult, Settings } from 'insomnia-data';
 
 import { toPreRequestAuth } from './auth';
 import { getExistingConsole } from './console';
@@ -17,7 +15,7 @@ import { RequestInfo } from './request-info';
 import type { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
-import { type RequestTestResult, skip, test, type TestHandler } from './test';
+import { skip, test, type TestHandler } from './test';
 import { toUrlObject } from './urls';
 import { checkIfUrlIncludesTag } from './utils';
 
@@ -119,7 +117,7 @@ export class InsomniaObject {
   };
 
   get settings() {
-    return undefined;
+    return;
   }
 
   toObject = () => {
@@ -147,8 +145,11 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
   // Mapping rule for the global environment:
   // - If global base environment is selected, both `baseGlobals` and `globals` point to the selected one.
   // - If one global sub environment is selected,  `baseGlobals` points to the base env of the selected one and `globals` points to the selected one.
-  const baseGlobals = new Environment('baseGlobals', rawObj.baseGlobals || {});
-  const globals = new Environment('globals', rawObj.globals || {}); // could be undefined
+  const baseGlobals = new Environment(rawObj.baseGlobals?.name || 'baseGlobals', rawObj.baseGlobals?.data || {});
+  const globals =
+    rawObj.globals?.id === rawObj.baseGlobals?.id
+      ? baseGlobals
+      : new Environment(rawObj.globals?.name || 'globals', rawObj.globals?.data || {});
   // Mapping rule for the environment and base environment:
   // - If base environment is selected, both `baseEnvironment` and `environment` point to the selected one.
   // - If one sub environment is selected,  `baseEnvironment` points to the base env and `environment` points to the selected one.
@@ -228,14 +229,15 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
         pfx: { src: matchedCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
       };
 
+  const reqUrl = toUrlObject(rawObj.request.url);
   const proxy = transformToSdkProxyOptions(
+    reqUrl.protocol,
     rawObj.settings.httpProxy,
     rawObj.settings.httpsProxy,
     rawObj.settings.proxyEnabled,
     rawObj.settings.noProxy,
   );
 
-  const reqUrl = toUrlObject(rawObj.request.url);
   reqUrl.addQueryParams(
     rawObj.request.parameters.map(param => ({ key: param.name, value: param.value, disabled: param.disabled })),
   );

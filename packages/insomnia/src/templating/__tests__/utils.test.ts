@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { NunjucksParsedTag } from '~/templating/types';
+
 import { extractUndefinedVariableKey } from '../render-error';
 import * as utils from '../utils';
 
@@ -46,7 +48,7 @@ describe('getKeys()', () => {
         true,
         ['x', 'y', 'z'],
       ],
-    };
+    } as const;
     const keys = utils.getKeys(obj).sort((a, b) => (a.name > b.name ? 1 : -1));
     expect(keys).toEqual([
       {
@@ -251,7 +253,7 @@ describe('unTokenizeTag()', () => {
   });
 
   it('quotes for all necessary types', () => {
-    const tagData = {
+    const tagData: NunjucksParsedTag = {
       name: 'name',
       args: [
         {
@@ -293,7 +295,7 @@ describe('unTokenizeTag()', () => {
   });
 
   it('fixes missing quotedBy attribute', () => {
-    const tagData = {
+    const tagData: NunjucksParsedTag = {
       name: 'name',
       args: [
         {

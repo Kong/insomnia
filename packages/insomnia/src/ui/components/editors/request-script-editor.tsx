@@ -12,21 +12,10 @@ import {
   Toolbar,
 } from 'react-aria-components';
 
-import {
-  CookieObject,
-  Environment,
-  Execution,
-  InsomniaObject,
-  Request as ScriptRequest,
-  RequestInfo,
-  Url,
-  Variables,
-  Vault,
-} from '../../../../../insomnia-scripting-environment/src/objects';
-import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
-import type { Settings } from '../../../models/settings';
-import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
+import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+
+import autocompleteSnippets from '../../../../../insomnia-scripting-environment/src/autocomplete-snippets.json';
 import { Icon } from '../icon';
 
 interface Props {
@@ -34,7 +23,7 @@ interface Props {
   defaultValue: string;
   uniquenessKey: string;
   className?: string;
-  settings: Settings;
+  onSnippetAdded?: (snippetName: string) => void;
 }
 
 const getEnvVar = 'insomnia.environment.get("variable_name");';
@@ -140,60 +129,9 @@ const lintOptions = {
   undef: true,
   // Prevent undefined usages
   node: true,
-  esversion: 8, // ES8 syntax (async/await, etc)
+  // https://jshint.com/docs/options/#esversion
+  esversion: 11,
 };
-
-// TODO: We probably don't want to expose every property like .toObject() so we need a way to filter those out
-// or make those properties private
-// TODO: introduce this functionality for other objects, such as Url, UrlMatchPattern and so on
-// TODO: introduce function arguments
-// TODO: provide snippets for environment keys if possible
-function getRequestScriptSnippets(insomniaObject: InsomniaObject, path: string): Snippet[] {
-  let snippets: Snippet[] = [];
-
-  const refs = new Set();
-  const insomniaRecords = insomniaObject as Record<string, any>;
-
-  for (const key in insomniaObject) {
-    const isPrivate = typeof key === 'string' && key.startsWith('_');
-    if (isPrivate) {
-      continue;
-    }
-
-    const value = insomniaRecords[key];
-
-    if (typeof key === 'object') {
-      if (refs.has(value)) {
-        // avoid cyclic referring
-        continue;
-      } else {
-        refs.add(value);
-      }
-    }
-
-    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-      snippets.push({
-        displayValue: `${path}.${value}`,
-        name: `${path}.${key}`,
-        value: `${path}.${key}`,
-      });
-    } else if (typeof value === 'function') {
-      snippets.push({
-        displayValue: `${path}.${key}()`,
-        name: `${path}.${key}()`,
-        value: `${path}.${key}()`,
-      });
-    } else if (Array.isArray(value)) {
-      for (const item of value) {
-        snippets = snippets.concat(getRequestScriptSnippets(item, `${path}.${key}`));
-      }
-    } else {
-      snippets = snippets.concat(getRequestScriptSnippets(value, `${path}.${key}`));
-    }
-  }
-
-  return snippets;
-}
 
 interface SnippetMenuItem {
   id: string;
@@ -529,7 +467,13 @@ const snippetsMenus: SnippetMenuItem[] = [
   miscMenu,
 ];
 
-export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChange, uniquenessKey, settings }) => {
+export const RequestScriptEditor: FC<Props> = ({
+  className,
+  defaultValue,
+  onChange,
+  uniquenessKey,
+  onSnippetAdded,
+}) => {
   const editorRef = useRef<CodeEditorHandle>(null);
 
   // Inserts at the line below the cursor and moves to the line beneath
@@ -544,59 +488,13 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
 
     editorRef.current?.focus();
     editorRef.current?.setCursorLine(cursorRow + snippet.split('\n').length);
+    onSnippetAdded?.(snippet);
   };
 
-  // TODO(george): Add more to this object to provide improved autocomplete
-  const requestScriptSnippets = getRequestScriptSnippets(
-    new InsomniaObject({
-      globals: new Environment('globals', {}),
-      baseGlobals: new Environment('baseGlobals', {}),
-      iterationData: new Environment('iterationData', {}),
-      environment: new Environment('environment', {}),
-      baseEnvironment: new Environment('baseEnvironment', {}),
-      variables: new Variables({
-        baseGlobalVars: new Environment('baseGlobals', {}),
-        globalVars: new Environment('globals', {}),
-        environmentVars: new Environment('environment', {}),
-        collectionVars: new Environment('collection', {}),
-        iterationDataVars: new Environment('data', {}),
-        folderLevelVars: [], // folderLevelVars
-        localVars: new Environment('data', {}),
-      }),
-      vault: settings.enableVaultInScripts ? new Vault('vault', {}, settings.enableVaultInScripts) : undefined,
-      request: new ScriptRequest({
-        url: new Url('http://placeholder.com'),
-      }),
-      settings,
-      clientCertificates: [],
-      cookies: new CookieObject({
-        _id: '',
-        type: '',
-        parentId: '',
-        modified: 0,
-        created: 0,
-        isPrivate: false,
-        name: '',
-        cookies: [],
-      }),
-      requestInfo: new RequestInfo({
-        // @TODO - Look into this event name when we introduce iteration data
-        eventName: 'prerequest',
-        iteration: 1,
-        iterationCount: 1,
-        requestName: '',
-        requestId: '',
-      }),
-      execution: new Execution({
-        location: ['path'],
-      }),
-      parentFolders: new ParentFolders([]),
-    }),
-    'insomnia',
-  );
+  const requestScriptSnippets = autocompleteSnippets as Snippet[];
 
   return (
-    <div className="flex h-full flex-col divide-y divide-solid divide-[--hl-md]">
+    <div className="flex h-full flex-col divide-y divide-solid divide-(--hl-md)">
       <CodeEditor
         id={`script-editor-${uniquenessKey}`}
         key={uniquenessKey}
@@ -612,10 +510,10 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
         getAutocompleteSnippets={() => requestScriptSnippets}
         onPaste={translateHandlersInScript}
       />
-      <Toolbar className="box-border flex h-[--line-height-sm] flex-shrink-0 flex-row items-center overflow-x-auto text-[var(--font-size-sm)]">
+      <Toolbar className="box-border flex h-(--line-height-sm) shrink-0 flex-row items-center overflow-x-auto text-(--font-size-sm)">
         {snippetsMenus.map(menu => (
           <MenuTrigger key={menu.id}>
-            <Button className="flex h-full items-center justify-center gap-2 px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+            <Button className="flex h-full items-center justify-center gap-2 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
               <Icon icon="code" />
               {menu.name}
             </Button>
@@ -623,19 +521,19 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
               <Menu
                 aria-label="Create a new request"
                 selectionMode="single"
-                className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                 items={menu.items}
               >
                 {section => {
                   if ('items' in section) {
                     return (
                       <MenuSection>
-                        <Header className="py-1 pl-2 text-xs uppercase text-[--hl]">{section.name}</Header>
+                        <Header className="py-1 pl-2 text-xs text-(--hl) uppercase">{section.name}</Header>
                         <Collection items={section.items}>
                           {item => (
                             <MenuItem
                               onAction={() => addSnippet(item.snippet)}
-                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                               key={item.name}
                             >
                               {item.name}
@@ -649,7 +547,7 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
                   return (
                     <MenuItem
                       onAction={() => addSnippet(section.snippet)}
-                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                      className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                       key={section.name}
                     >
                       {section.name}

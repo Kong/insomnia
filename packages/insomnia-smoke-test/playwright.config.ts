@@ -1,4 +1,33 @@
+import os from 'node:os';
+
 import type { PlaywrightTestConfig } from '@playwright/test';
+const isWindows = os.platform() === 'win32';
+const echoServer: PlaywrightTestConfig['webServer'] = {
+  name: 'Echo server',
+  command: 'npm run serve',
+  url: 'http://localhost:4010',
+  timeout: 20 * 1000,
+  reuseExistingServer: !process.env.CI,
+  stdout: 'ignore',
+  stderr: 'pipe',
+  wait: {
+    stdout: /Listening at http/,
+  },
+};
+const viteServer: PlaywrightTestConfig['webServer'] = {
+  name: 'Vite Server',
+  cwd: '../../',
+  command: 'npm run watch:app',
+  url: 'http://localhost:3334',
+  timeout: 120 * 1000,
+  reuseExistingServer: !process.env.CI,
+  stdout: 'pipe',
+  stderr: 'pipe',
+  wait: {
+    stdout: /VITE\s+ready in/,
+  },
+};
+const onlyStartWebServerInDev = !process.env.BUNDLE || process.env.BUNDLE === 'dev';
 const config: PlaywrightTestConfig = {
   projects: [
     {
@@ -20,12 +49,7 @@ const config: PlaywrightTestConfig = {
       retries: 0,
     },
   ],
-  webServer: {
-    command: 'npm run serve',
-    url: 'http://127.0.0.1:4010',
-    timeout: 120 * 1000,
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [echoServer, ...(onlyStartWebServerInDev ? [viteServer] : [])],
   use: {
     trace: {
       mode: 'retain-on-failure',
@@ -34,8 +58,8 @@ const config: PlaywrightTestConfig = {
       sources: true,
     },
   },
-  reporter: process.env.CI ? [['github'], ['line']] : [['list']],
-  timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
+  reporter: process.env.CI ? [['github'], ['line']] : [['dot']],
+  timeout: process.env.CI || isWindows ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',
   testDir: 'tests',
@@ -43,5 +67,6 @@ const config: PlaywrightTestConfig = {
     timeout: process.env.CI ? 25 * 1000 : 10 * 1000,
   },
   workers: 1,
+  globalTimeout: 20 * 60 * 1000,
 };
 export default config;

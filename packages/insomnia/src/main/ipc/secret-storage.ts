@@ -1,7 +1,6 @@
 import { safeStorage } from 'electron';
 
-import type ElectronStorage from '../electron-storage';
-import { initElectronStorage } from '../window-utils';
+import { getElectronStorage } from '../electron-storage';
 import { ipcMainHandle } from './electron';
 
 export interface secretStorageBridgeAPI {
@@ -20,55 +19,46 @@ export function registerSecretStorageHandlers() {
   ipcMainHandle('secretStorage.decryptString', (_, raw) => decryptString(raw));
 }
 
-let electronStorage: ElectronStorage | null = null;
-
-const getElectronStorage = () => {
-  if (!electronStorage) {
-    electronStorage = initElectronStorage();
-  }
-  return electronStorage;
-};
-
-const setSecret = async (key: string, secret: string) => {
+export const setSecret = async (key: string, secret: string) => {
   try {
     const secretStorage = getElectronStorage();
     const encrypted = encryptString(secret);
     secretStorage.setItem(key, encrypted);
   } catch (error) {
     console.error(`Can not save secret ${error.toString()}`);
-    return Promise.reject(error);
+    throw error;
   }
 };
 
-const getSecret = async (key: string) => {
+export const getSecret = async (key: string) => {
   try {
     const secretStorage = getElectronStorage();
     const encrypted = secretStorage.getItem(key, '');
     return encrypted === '' ? null : decryptString(encrypted);
   } catch (error) {
     console.error(`Can not get secret ${error.toString()}`);
-    return Promise.reject(null);
+    throw error;
   }
 };
 
-const deleteSecret = async (key: string) => {
+export const deleteSecret = async (key: string) => {
   try {
     const secretStorage = getElectronStorage();
     secretStorage.deleteItem(key);
   } catch (error) {
-    console.error(`Can not delele secret ${error.toString()}`);
-    return Promise.reject(error);
+    console.error(`Can not delete secret ${error.toString()}`);
+    throw error;
   }
 };
 
-const encryptString = (raw: string) => {
+export const encryptString = (raw: string) => {
   if (safeStorage.isEncryptionAvailable()) {
     return safeStorage.encryptString(raw).toString('hex');
   }
   return raw;
 };
 
-const decryptString = (cipherText: string) => {
+export const decryptString = (cipherText: string) => {
   const buffer = Buffer.from(cipherText, 'hex');
   if (safeStorage.isEncryptionAvailable()) {
     try {

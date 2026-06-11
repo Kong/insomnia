@@ -7,19 +7,24 @@ import electron, { BrowserWindow } from 'electron';
 import { MessageType, parseMessage } from 'graphql-ws';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import type {
+  BaseWebSocketRequest,
+  CookieJar,
+  Request,
+  RequestAuthentication,
+  RequestHeader,
+  WebSocketResponse,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
-import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { database } from '~/common/database';
+
+import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
-import { webSocketRequest } from '../../models';
-import * as models from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
-import type { Request } from '../../models/request';
-import { type RequestAuthentication, type RequestHeader } from '../../models/request';
-import { type BaseWebSocketRequest, isWebSocketRequest } from '../../models/websocket-request';
-import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
@@ -31,6 +36,7 @@ import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
+import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -70,9 +76,48 @@ export type WebSocketEvent = WebSocketOpenEvent | WebSocketMessageEvent | WebSoc
 
 export type WebSocketEventLog = WebSocketEvent[];
 
+const protocolName = 'webSocket';
 const WebSocketConnections = new Map<string, WebSocket>();
+const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+
+const getEventNotificationChannel = (responseId: string) =>
+  `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
+
+const sendToOpenWindows = (channel: string, ...args: unknown[]) => {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) {
+      continue;
+    }
+    window.webContents.send(channel, ...args);
+  }
+};
+
+const writeEventLogAndNotify = ({
+  requestId,
+  data,
+  clearRequestIdMap = false,
+}: {
+  requestId: string;
+  data: any;
+  clearRequestIdMap?: boolean;
+}) => {
+  eventLogFileStreams.get(requestId)?.write(data, () => {
+    const resId = requestIdToResponseIdMap.get(requestId);
+    if (!resId) {
+      return;
+    }
+
+    // notify all renderers of new event has been received
+    const notifyChannel = getEventNotificationChannel(resId);
+    sendToOpenWindows(notifyChannel);
+    if (clearRequestIdMap) {
+      // clean up maps after last event has been written to file
+      requestIdToResponseIdMap.delete(requestId);
+    }
+  });
+};
 
 const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMessage, clientRequestHeaders: string) => {
   const statusMessage = incomingMessage.statusMessage || '';
@@ -115,8 +160,8 @@ const openWebSocketConnection = async (
   }
 
   const request = options.isGraphqlSubscriptionRequest
-    ? await models.request.getById(options.requestId)
-    : await webSocketRequest.getById(options.requestId);
+    ? await services.request.getById(options.requestId)
+    : await services.webSocketRequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
@@ -128,26 +173,28 @@ const openWebSocketConnection = async (
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(options.workspaceId));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
-  const caCert = await models.caCertificate.findByParentId(options.workspaceId);
+  const caCert = await services.caCertificate.getByParentId(options.workspaceId);
   const caCertficatePath = caCert && !caCert.disabled ? caCert.path : null;
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  // allow to read the file as it is chosen by user
   const caCertificate =
-    (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+    (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
   try {
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `webSocket.${request._id}.readyState`;
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
       acc: Record<string, string>,
@@ -157,12 +204,12 @@ const openWebSocketConnection = async (
     let url = options.url;
     let authCookie = null;
     if (!options.authentication.disabled) {
-      if (options.authentication.type === AUTH_BASIC) {
+      if (options.authentication.type === 'basic') {
         const { username, password, useISO88591 } = options.authentication;
         const encoding = useISO88591 ? 'latin1' : 'utf8';
         headers.push(getBasicAuthHeader(username, password, encoding));
       }
-      if (options.authentication.type === AUTH_API_KEY) {
+      if (options.authentication.type === 'apikey') {
         const { key = '', value = '', addTo } = options.authentication; // Ensure key is not undefined
         if (addTo === HEADER) {
           headers.push({ name: key, value: value });
@@ -177,19 +224,23 @@ const openWebSocketConnection = async (
           url = joinUrlAndQueryString(options.url, qs);
         }
       }
-      if (options.authentication.type === AUTH_BEARER && options.authentication.token) {
+      if (options.authentication.type === 'bearer' && options.authentication.token) {
         const { token, prefix } = options.authentication;
         headers.push(getBearerAuthHeader(token, prefix));
       }
     }
 
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
-    const settings = await models.settings.get();
+    if (!request.disableUserAgentHeader && !hasUserAgentHeader) {
+      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+    }
+    const settings = await services.settings.get();
     const start = performance.now();
 
-    const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
+    const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'wss:');
     const pemCertificates: string[] = [];
     const pemCertificateKeys: KeyObject[] = [];
@@ -205,7 +256,7 @@ const openWebSocketConnection = async (
             JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) +
               '\n',
           );
-        pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+        pemCertificates.push(fs.readFileSync(cert, 'utf8'));
       }
 
       if (key) {
@@ -214,7 +265,7 @@ const openWebSocketConnection = async (
           ?.write(
             JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
           );
-        pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf-8'), passphrase: passphrase ?? undefined });
+        pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf8'), passphrase: passphrase ?? undefined });
       }
 
       if (pfx) {
@@ -223,7 +274,7 @@ const openWebSocketConnection = async (
           ?.write(
             JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
           );
-        pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf-8'), passphrase: passphrase ?? undefined });
+        pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf8'), passphrase: passphrase ?? undefined });
       }
     });
 
@@ -243,7 +294,8 @@ const openWebSocketConnection = async (
         global: settings.followRedirects,
       }[request.settingFollowRedirects] ?? true;
     const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']?.split(',').map(p => p.trim());
-    const shouldUseProxy = settings.proxyEnabled && isWebSocketRequest(request) && request.settingUseProxy;
+    const shouldUseProxy =
+      settings.proxyEnabled && models.webSocketRequest.isWebSocketRequest(request) && request.settingUseProxy;
     const ws = new WebSocket(url, protocols, {
       headers: lowerCasedEnabledHeaders,
       ca: caCertificate,
@@ -284,9 +336,9 @@ const openWebSocketConnection = async (
         settingStoreCookies: request.settingStoreCookies,
       };
 
-      const settings = await models.settings.get();
-      const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      const settings = await services.settings.get();
+      const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
       if (request.settingStoreCookies) {
         const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
@@ -303,7 +355,7 @@ const openWebSocketConnection = async (
           );
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
-            await models.cookieJar.update(options.cookieJar, { cookies });
+            await services.cookieJar.update(options.cookieJar, { cookies });
             timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
           }
         }
@@ -340,9 +392,9 @@ const openWebSocketConnection = async (
         settingSendCookies: request.settingSendCookies,
         settingStoreCookies: request.settingStoreCookies,
       };
-      const settings = await models.settings.get();
-      const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      const settings = await services.settings.get();
+      const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
       deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
     });
 
@@ -353,16 +405,13 @@ const openWebSocketConnection = async (
         type: 'open',
         timestamp: Date.now(),
       };
-
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(openEvent) + '\n' });
       timelineFileStreams
         .get(options.requestId)
         ?.write(
           JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
 
       if (options.initialPayload) {
         sendPayload(ws, { requestId: options.requestId, payload: options.initialPayload });
@@ -378,9 +427,7 @@ const openWebSocketConnection = async (
         direction: 'INCOMING',
         timestamp: Date.now(),
       };
-
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-
+      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
       // send subscribe operation to graphql websocket server
       if (options.isGraphqlSubscriptionRequest) {
         handleGraphQLWsMessage(data, request as Request);
@@ -400,9 +447,7 @@ const openWebSocketConnection = async (
 
       const message = `Closing connection with code ${code}`;
       deleteRequestMaps(request._id, message, closeEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
     });
 
     ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
@@ -418,9 +463,7 @@ const openWebSocketConnection = async (
       };
 
       deleteRequestMaps(request._id, message, errorEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
-      }
+      sendToOpenWindows(readyStateChannel, ws.readyState === WebSocket.OPEN);
       if (error.code) {
         createErrorResponse(
           responseId,
@@ -445,7 +488,7 @@ const openWebSocketConnection = async (
   }
 };
 
-// graphql ws protocl message handler. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
+// graphql ws protocol message handler. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
 const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) => {
   const graphqlServerData = parseMessage(data);
   const graphqlServerDataType = graphqlServerData.type;
@@ -467,7 +510,7 @@ const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) =>
     });
     sendWebSocketEvent({ payload, requestId });
   } else if (graphqlServerDataType === MessageType.Error || graphqlServerDataType === MessageType.Complete) {
-    // close connection if server responsed with error or complete
+    // close connection if server responded with error or complete
     closeWebSocketConnection({ requestId });
   }
 };
@@ -479,7 +522,7 @@ const createErrorResponse = async (
   timelinePath: string,
   message: string,
 ) => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
@@ -488,8 +531,8 @@ const createErrorResponse = async (
     statusMessage: 'Error',
     error: message,
   };
-  const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  const res = await services.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const deleteRequestMaps = async (
@@ -498,7 +541,11 @@ const deleteRequestMaps = async (
   event?: WebSocketCloseEvent | WebSocketErrorEvent,
 ) => {
   if (event) {
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+    writeEventLogAndNotify({
+      requestId,
+      data: JSON.stringify(event) + '\n',
+      clearRequestIdMap: true,
+    });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
@@ -534,8 +581,14 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
     timestamp: Date.now(),
   };
 
-  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
-  const response = await models.webSocketResponse.getLatestByParentId(options.requestId);
+  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(lastMessage) + '\n' });
+  const response = await database.findOne<WebSocketResponse>(
+    'WebSocketResponse',
+    {
+      parentId: options.requestId,
+    },
+    { modified: -1 },
+  );
   if (!response) {
     console.error('something went wrong');
     return;
@@ -564,14 +617,13 @@ const closeWebSocketConnection = (options: { requestId: string }): void => {
 const closeAllWebSocketConnections = (): void => WebSocketConnections.forEach(ws => ws.close());
 
 const findMany = async (options: { responseId: string }): Promise<WebSocketEvent[]> => {
-  const response = await models.webSocketResponse.getById(options.responseId);
+  const response = await services.webSocketResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }
-  const body = await fs.promises.readFile(response.eventLogPath);
+  const body = await secureReadFile(response.eventLogPath);
   return (
     body
-      .toString()
       .split('\n')
       .filter(e => e?.trim())
       // Parse the message

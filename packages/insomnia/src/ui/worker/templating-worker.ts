@@ -1,22 +1,11 @@
 import * as templating from '../../templating/worker';
 
-const originalRequire = self.require;
-const interceptor: any = (moduleName: string): NodeRequire => {
-  const allowList = ['crypto', 'date-fns', 'fs', 'iconv-lite', 'jsonpath-plus', 'os', 'tough-cookie', 'uuid'];
-  if (allowList.includes(moduleName)) {
-    return originalRequire(moduleName);
-  }
-  throw new Error(
-    `Cannot find module '${moduleName}'. This version improves the security around plugins by limiting scope of access by default. This may break some plugins which rely on having the same kind of access Insomnia does. You can still grant elevated access to plugins, should your workflow absolutely require it, by navigating to Preferences > Plugins and checking the box enabling elevated access for plugins.`,
-  );
-};
 async function performJob(input: {
   input: string;
   context: Record<string, any>;
   path: string;
   ignoreUndefinedEnvVariable: boolean;
 }) {
-  self.require = interceptor;
   return templating.render(input.input, {
     context: input.context,
     path: input.path,
@@ -38,6 +27,7 @@ self.onmessage = async event => {
     context.getKeysContext = () => context.serializedFunctions.keysContext;
     context.getProjectId = () => context.serializedFunctions.projectId;
     context.getPurpose = () => context.serializedFunctions.purpose;
+    context.getSettings = () => context.serializedFunctions.settings;
     const result = await performJob({ input, context, path, ignoreUndefinedEnvVariable });
     self.postMessage({ id, result });
   } catch (err) {

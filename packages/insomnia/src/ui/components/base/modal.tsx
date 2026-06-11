@@ -8,12 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { FocusScope } from 'react-aria';
-
-import { createKeybindingsHandler } from '../keydown-binder';
-// Keep global z-index reference so that every modal will
-// appear over top of an existing one.
-let globalZIndex = 1000;
+import { Dialog, Modal as RACModal, ModalOverlay } from 'react-aria-components';
 
 export interface ModalProps {
   centered?: boolean;
@@ -24,6 +19,9 @@ export interface ModalProps {
   onHide?: () => void;
   children?: ReactNode;
   className?: string;
+  dataTestId?: string;
+  maskClosable?: boolean;
+  keyboardClosable?: boolean;
 }
 
 export interface ModalHandle {
@@ -33,17 +31,30 @@ export interface ModalHandle {
   isOpen: () => boolean;
 }
 export const Modal = forwardRef<ModalHandle, ModalProps>(
-  ({ centered, children, className, onHide: onHideProp, onShow, skinny, tall, wide }, ref) => {
+  (
+    {
+      centered,
+      children,
+      className,
+      dataTestId,
+      onHide: onHideProp,
+      onShow,
+      skinny,
+      tall,
+      wide,
+      maskClosable = true,
+      keyboardClosable = true,
+    },
+    ref,
+  ) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState(false);
-    const [zIndex, setZIndex] = useState(globalZIndex);
     const [onHideArgument, setOnHideArgument] = useState<() => void>();
 
     const show: ModalHandle['show'] = useCallback(
       options => {
         options?.onHide && setOnHideArgument(options.onHide);
         setOpen(true);
-        setZIndex(globalZIndex++);
         onShow?.();
       },
       [onShow],
@@ -77,6 +88,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
       { 'modal--fixed-height': tall },
       { 'modal--wide': wide },
       { 'modal--skinny': skinny },
+      'z-10',
     );
 
     useEffect(() => {
@@ -85,38 +97,37 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
       for (const element of closeElements || []) {
         element.addEventListener('click', hide);
       }
-    }, [hide, open]);
-
-    const handleKeydown = createKeybindingsHandler({
-      Escape: () => {
-        hide();
-      },
-    });
-    useEffect(() => {
-      document.body.addEventListener('keydown', handleKeydown);
 
       return () => {
-        document.body.removeEventListener('keydown', handleKeydown);
+        for (const element of closeElements || []) {
+          element.removeEventListener('click', hide);
+        }
       };
-    }, [handleKeydown]);
+    }, [hide, open, maskClosable, keyboardClosable]);
 
     return open ? (
-      <FocusScope autoFocus>
-        <div
-          ref={containerRef}
-          onKeyDown={handleKeydown}
-          tabIndex={-1}
-          className={classes}
-          style={{ zIndex }}
-          aria-hidden={false}
-          role="dialog"
-        >
-          <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
-          <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
-            <div className="modal__content">{children}</div>
-          </div>
-        </div>
-      </FocusScope>
+      <ModalOverlay
+        isOpen={open}
+        onOpenChange={isOpen => {
+          !isOpen && hide();
+        }}
+        isDismissable={keyboardClosable}
+        className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
+      >
+        <RACModal ref={containerRef}>
+          <Dialog aria-label="Modal" className={classes}>
+            <div
+              className="modal__backdrop overlay theme--transparent-overlay"
+              {...(maskClosable ? { 'data-close-modal': true } : {})}
+            />
+            <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
+              <div className="modal__content" data-testid={dataTestId}>
+                {children}
+              </div>
+            </div>
+          </Dialog>
+        </RACModal>
+      </ModalOverlay>
     ) : null;
   },
 );

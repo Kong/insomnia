@@ -1,46 +1,50 @@
-import { readFile } from 'node:fs/promises';
-
+import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router';
-import { useMount } from 'react-use';
+import { useParams } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { recordProjectRecentRequest } from '~/common/project';
+import { useRootLoaderData } from '~/root';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { database as db } from '../../../common/database';
 import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
-import * as models from '../../../models';
-import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
-import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import type { GrpcRequestState } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
+import {
+  type GrpcRequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { RenderError } from '../../../templating/render-error';
 import { getGrpcConnectionErrorDetails } from '../../../utils/grpc';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { setDefaultProtocol } from '../../../utils/url/protocol';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { GrpcRequestState } from '../../routes/debug';
-import type { GrpcRequestLoaderData } from '../../routes/request';
-import { useRootLoaderData } from '../../routes/root';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
-import { OneLineEditor } from '../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showAlert, showError, showModal } from '../modals';
+import { showError, showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { ErrorModal } from '../modals/error-modal';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 import { Pane, PaneBody, PaneHeader } from './pane';
+const { isRequestGroup } = models.requestGroup;
 interface Props {
   grpcState: GrpcRequestState;
   setGrpcState: (states: GrpcRequestState) => void;
@@ -56,13 +60,28 @@ export const GrpcMethodTypeName = {
 } as const;
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcState, reloadRequests }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as GrpcRequestLoaderData;
-  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeRequest } = useRequestLoaderData() as GrpcRequestLoaderData;
+  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   const environmentId = activeEnvironment._id;
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
-  useMount(async () => {
+  const editorRef = useRef<CodeEditorHandle>(null);
+  const gitVersion = useGitVCSVersion();
+  const { projectId, workspaceId, requestId } = useParams() as {
+    projectId: string;
+    workspaceId: string;
+    requestId: string;
+  };
+  const patchRequest = useRequestPatcher();
+  const { updateTabById } = useInsomniaTabContext();
+
+  const applyReflectionResult = (loadedMethods: typeof methods) => {
+    const stillValid = loadedMethods.some(m => m.fullPath === activeRequest.protoMethodName);
+    patchRequest(requestId, { protoFileId: '', protoMethodName: stillValid ? activeRequest.protoMethodName : '' });
+  };
+
+  reactUse.useMount(async () => {
     if (activeRequest.protoFileId) {
       console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
       const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
@@ -81,40 +100,46 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         },
       });
 
-      const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+      const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
       const clientCertificate = workspaceClientCertificates.find(
         c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
       );
-      const caCertificate = await models.caCertificate.findByParentId(workspaceId);
-      const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
-      const clientCert = clientCertificate?.cert ? await readFile(clientCertificate?.cert, 'utf8') : undefined;
-      const clientKey = clientCertificate?.key ? await readFile(clientCertificate?.key, 'utf8') : undefined;
+      const caCertificateProp = await services.caCertificate.getByParentId(workspaceId);
+      const caCertificatePath = caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
+
+      const clientCert = clientCertificate?.cert
+        ? await window.main.insecureReadFile({
+            path: clientCertificate.cert,
+          })
+        : undefined;
+      const clientKey = clientCertificate?.key
+        ? await window.main.insecureReadFile({ path: clientCertificate.key })
+        : undefined;
+      // allow to read the file as it is chosen by user
+      const caCertificate = caCertificatePath
+        ? await window.main.insecureReadFile({ path: caCertificatePath })
+        : undefined;
 
       const renderedWithCertificates = {
         ...rendered,
         rejectUnauthorized: settings.validateSSL,
+        disableUserAgentHeader: activeRequest.disableUserAgentHeader,
         ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
           ? {
-              clientCert,
-              clientKey,
-              caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+              clientCert: clientCert,
+              clientKey: clientKey,
+              caCertificate: caCertificate,
             }
           : {}),
       };
       const methods = await window.main.grpc.loadMethodsFromReflection(renderedWithCertificates);
+      applyReflectionResult(methods);
       setGrpcState({ ...grpcState, methods });
     }
   });
-  const editorRef = useRef<CodeEditorHandle>(null);
-  const gitVersion = useGitVCSVersion();
-  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
-  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
-  const patchRequest = useRequestPatcher();
-
-  const { updateTabById } = useInsomniaTabContext();
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
   const methodType = method?.type;
   const handleRequestSend = async () => {
@@ -133,25 +158,48 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           purpose: 'send',
           skipBody: canClientStream(methodType),
         });
-        const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+        const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
         const clientCertificate = workspaceClientCertificates.find(
           c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false),
         );
-        const caCertificate = await models.caCertificate.findByParentId(workspaceId);
+        const caCertificate = await services.caCertificate.getByParentId(workspaceId);
         const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
 
         updateTabById?.(requestId, { temporary: false });
+
+        recordProjectRecentRequest({
+          projectId,
+          requestId,
+          workspaceId,
+        });
 
         window.main.grpc.start({
           request,
           rejectUnauthorized: settings.validateSSL,
           ...(request.url.toLowerCase().startsWith('grpcs:')
             ? {
-                clientCert: clientCertificate?.cert ? await readFile(clientCertificate?.cert || '', 'utf8') : undefined,
-                clientKey: clientCertificate?.key ? await readFile(clientCertificate?.key || '', 'utf8') : undefined,
-                caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                clientCert: clientCertificate?.cert
+                  ? await window.main.insecureReadFile({
+                      path: clientCertificate.cert,
+                    })
+                  : undefined,
+                clientKey: clientCertificate?.key
+                  ? await window.main.insecureReadFile({
+                      path: clientCertificate.key,
+                    })
+                  : undefined,
+                // allow to read the file as it is chosen by user
+                caCertificate: caCertificatePath
+                  ? await window.main.insecureReadFile({
+                      path: caCertificatePath,
+                    })
+                  : undefined,
               }
             : {}),
+        });
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.requestExecuted,
+          properties: { request_type: 'gRPC' },
         });
         setGrpcState({
           ...grpcState,
@@ -167,7 +215,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
             error: err,
           });
         } else {
-          showAlert({
+          showModal(AlertModal, {
             title: 'Unexpected Request Failure',
             message: (
               <div>
@@ -208,10 +256,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                 defaultValue={activeRequest.url}
                 placeholder="grpcb.in:9000"
                 onChange={url => patchRequest(requestId, { url })}
-                getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
+                getAutocompleteConstants={() =>
+                  services.helpers.queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)
+                }
               />
             </div>
-            <div className="flex flex-1 items-center gap-[--padding-xs] pr-[--padding-sm]">
+            <div className="flex flex-1 items-center gap-(--padding-xs) pr-(--padding-sm)">
               <GrpcMethodDropdown
                 disabled={running}
                 methods={methods}
@@ -259,32 +309,45 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                         reflectionApi: activeRequest.reflectionApi,
                       },
                     });
-                    const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+                    const workspaceClientCertificates = await services.clientCertificate.findByParentId(workspaceId);
                     const clientCertificate = workspaceClientCertificates.find(
                       c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
                     );
-                    const caCertificate = await models.caCertificate.findByParentId(workspaceId);
-                    const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
+                    const caCertificateProp = await services.caCertificate.getByParentId(workspaceId);
+                    const caCertificatePath =
+                      caCertificateProp && !caCertificateProp.disabled ? caCertificateProp.path : undefined;
                     const clientCert = clientCertificate?.cert
-                      ? await readFile(clientCertificate?.cert, 'utf8')
+                      ? await window.main.insecureReadFile({
+                          path: clientCertificate?.cert,
+                        })
                       : undefined;
                     const clientKey = clientCertificate?.key
-                      ? await readFile(clientCertificate?.key, 'utf8')
+                      ? await window.main.insecureReadFile({
+                          path: clientCertificate?.key,
+                        })
                       : undefined;
+                    // allow to read the file as it is chosen by user
+                    const caCertificate = caCertificatePath
+                      ? await window.main.insecureReadFile({
+                          path: caCertificatePath,
+                        })
+                      : undefined;
+
                     rendered = {
                       ...rendered,
                       rejectUnauthorized: settings.validateSSL,
+                      disableUserAgentHeader: activeRequest.disableUserAgentHeader,
                       ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
                         ? {
-                            clientCert,
-                            clientKey,
-                            caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                            clientCert: clientCert,
+                            clientKey: clientKey,
+                            caCertificate: caCertificate,
                           }
                         : {}),
                     };
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
+                    applyReflectionResult(methods);
                     setGrpcState({ ...grpcState, methods });
-                    patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
                   } catch (error) {
                     showModal(ErrorModal, { error, ...getGrpcConnectionErrorDetails(error) });
                   }
@@ -313,19 +376,19 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
         <PaneBody>
           <Tabs aria-label="Grpc request pane tabs" className="flex h-full w-full flex-1 flex-col">
             <TabList
-              className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+              className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
               aria-label="Request pane tabs"
             >
               {methodType && (
                 <Tab
-                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                   id="method-type"
                 >
                   {GrpcMethodTypeName[methodType]}
                 </Tab>
               )}
               <Tab
-                className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                 id="headers"
               >
                 Headers
@@ -335,7 +398,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
               <TabPanel className={'h-full w-full overflow-y-auto'} id="method-type">
                 <>
                   {running && canClientStream(methodType) && (
-                    <div className="box-border flex h-[var(--line-height-sm)] flex-row justify-end border-b border-[var(--hl-lg)] p-1">
+                    <div className="box-border flex h-(--line-height-sm) flex-row justify-end border-b border-(--hl-lg) p-1">
                       <button
                         className="btn btn--compact btn--clicky-small margin-left-sm bg-default"
                         onClick={async () => {
@@ -379,11 +442,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                   >
                     <TabList
                       items={messageTabs}
-                      className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                      className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
                     >
                       {item => (
                         <Tab
-                          className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                          className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                           id={item.id}
                         >
                           {item.name}

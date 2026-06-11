@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - 'release/**'
+  workflow_dispatch:
+
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,13 +15,12 @@ concurrency:
 jobs:
   # shared kong github action for security checking
   generate-sbom-and-upload-assets:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
-      packages: write
-      contents: write # publish sbom to GH releases/tag assets
+      contents: read # Required for actions/checkout
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       # Perform SCA / SBOM analysis for the entire monorepo code repository
       # Produces SCA(SBOM and CVE) report
@@ -32,11 +34,16 @@ jobs:
           dir: .
           upload-sbom-release-assets: false
   build-and-upload-release-artifacts:
-    timeout-minutes: 30
+    timeout-minutes: 45
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: read
     env:
       INSO_PACKAGE_NAME: insomnia-inso
       INSO_DOCKER_TAR: inso-docker-image.tar
+      # DIGICERT_SM_CLIENT_CERT_FILE: sm_client_cert.p12
+      # DIGICERT_WIN_SM_CLIENT_CERT_FILE: /d/a/insomnia-ee/insomnia-ee/sm_client_cert.p12
     strategy:
       fail-fast: false
       matrix:
@@ -47,25 +54,30 @@ jobs:
           - os: windows-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-22.04-arm
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+          # - os: ubuntu-24.04-arm
+          #   csc_link_secret: ''
+          #   csc_key_password_secret: ''
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
 
       - name: Install packages
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Setup Inso CLI version env var
         shell: bash
@@ -100,11 +112,42 @@ jobs:
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
+      - name: Setup DIGICERT_SM_CLIENT_CERT_FILE from base64 secret data
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+
+      - name: Set variables
+        id: variables
+        run: |
+          echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV"
+        shell: bash
+
+      # This will install smctl
+      # smctl will be used in the next step for signing
+      - name: Setup Software Trust Manager
+        if: runner.os == 'Windows'
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
+        with:
+          simple-signing-mode: true
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+
       # creates unpacked electron-builder contents that can be signed afterwards
       - name: Package unpacked app (Windows only)
         if: runner.os == 'Windows'
         shell: bash
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
+        run: |
+          # smctl credentials save ${SM_API_KEY} ${SM_CLIENT_CERT_PASSWORD}
+          NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
 
       # wraps the Insomnia.exe PE with another PE that will bootstrap particular security
       # features added to Windows 8 in order to stopgap CVE-2025-1353
@@ -118,54 +161,105 @@ jobs:
         shell: pwsh
         run: |
           New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
-          New-Item -Path "packages/insomnia/dist/win-unpacked/signed" -ItemType Directory -Force
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
 
       # signs unpacked electron-builder contents, in this case only the .exe
+      # this installs smctl as well
       - name: Code-sign unpacked .exe (Windows only)
         if: runner.os == 'Windows'
-        uses: sslcom/esigner-codesign@3b2dc3b6075c05ef889d88b761a1fd0183b28c6a # develop
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
-          command: batch_sign
-          username: ${{secrets.ES_USERNAME}}
-          password: ${{secrets.ES_PASSWORD}}
-          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
-          totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          dir_path: packages/insomnia/dist/win-unpacked/tosign
-          output_path: packages/insomnia/dist/win-unpacked/signed
-          override: true
+          simple-signing-mode: true
+          # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
+          input: packages/insomnia/dist/win-unpacked/tosign
+          keypair-alias: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
 
       - name: Move .dll and .exe files back to win-unpacked and delete /tosign
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/signed" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/signed" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/tosign" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
           Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
-          Remove-Item -Path "packages/insomnia/dist/win-unpacked/signed" -Recurse -Force
 
-      # re-packages the now code-signed electron-builder contents into a squirrel installer
+      # re-packages the now code-signed electron-builder contents into the installer
       - name: Package dist app (Windows only)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          docker pull ghcr.io/sslcom/codesigner-win:latest
           NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
         env:
-          USERNAME: ${{secrets.ES_USERNAME}}
-          PASSWORD: ${{secrets.ES_PASSWORD}}
-          CREDENTIAL_ID: ${{secrets.ES_CREDENTIAL_ID}}
-          TOTP_SECRET: ${{secrets.ES_TOTP_SECRET}}
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+
+      - name: Check squirrel exe signature (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = $env:INSO_VERSION
+          # https://github.com/electron/windows-installer/blob/main/src/index.ts#L25 (convert version to NuGet-compatible)
+          $nupkgVersion = $version -replace "-([a-zA-Z]+)\.", '-$1'
+          $nupkg = "insomnia-${nupkgVersion}-full.nupkg"
+          Write-Host "scan insomnia-${nupkgVersion}-full.nupkg"
+          7z x "packages/insomnia/dist/squirrel-windows/${nupkg}" -o"${version}-extract"
+
+          $exeFiles = Get-ChildItem -Path "${version}-extract/lib/net45" -Filter *.exe
+
+          if ($exeFiles.Count -eq 0) {
+            Write-Warning "No .exe files found in the package"
+            exit 1
+          }
+
+          Write-Host "Found $($exeFiles.Count) .exe file(s):"
+          Write-Host ""
+
+          foreach ($exe in $exeFiles) {
+            Write-Host "Checking: $($exe.Name)"
+            Write-Host "  Path: $($exe.FullName)"
+            $signature = Get-AuthenticodeSignature -FilePath $exe.FullName
+            Write-Host "  Status: $($signature.Status)"
+            Write-Host "  Signer: $($signature.SignerCertificate.Subject)"
+            Write-Host "  Timestamp: $($signature.TimeStamperCertificate.NotAfter)"
+            if ($signature.Status -ne 'Valid') {
+              Write-Error "  ❌ Invalid signature for $($exe.Name)"
+              exit 1
+            }
+            Write-Host "  ✓ Valid signature" -ForegroundColor Green
+          }
+          Write-Host "✓ All executables are properly signed" -ForegroundColor Green
 
       - name: Package inso
         run: |
-          echo "Replacing electron binary with node binary"
-          node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+          npm run install-libcurl-node
           npm run build:production -w insomnia-inso
           npm run package -w insomnia-inso
         env:
           VERSION: ${{ env.INSO_VERSION }}
+
+      - name: Code-sign inso exe (Windows only)
+        if: runner.os == 'Windows'
+        uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
+        with:
+          simple-signing-mode: true
+          # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
+          input: packages/insomnia-inso/binaries/inso.exe
+          keypair-alias: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+        env:
+          SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
+          SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
+
+      - name: Remove DigiCert client certificate after signing
+        shell: bash
+        run: |
+          rm -f ${{ env.SM_CLIENT_CERT_FILE }}
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
@@ -182,37 +276,46 @@ jobs:
 
       - name: Notarize Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
-        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2
-        with:
-          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
-          primary-bundle-id: com.insomnia.inso
-          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
-          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
-          appstore-connect-team-id: FX44YY62GV
-          verbose: true
+        env:
+          APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+        run: |
+          xcrun notarytool submit \
+            "./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id FX44YY62GV \
+            --verbose \
+            --wait
 
       - name: Staple Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
-        uses: BoundfoxStudios/action-xcode-staple@1e2200b448c6ed4dd44b963ff17d3e340fc6b064 # v1
-        with:
-          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
+        run: |
+          xcrun stapler staple \
+            "./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg"
 
       - name: Notarize Inso CLI binary (macOS only)
         if: runner.os == 'macOS'
-        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2
-        with:
-          product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso
-          primary-bundle-id: com.insomnia.inso-binary
-          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
-          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
-          appstore-connect-team-id: FX44YY62GV
+        env:
+          APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+        # notarytool requires the binary to be packaged in a zip, dmg, or pkg.
+        run: |
+          BIN_PATH="./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso"
+          ZIP_PATH="$(mktemp -d)/inso.zip"
+          ditto -c -k --keepParent "$BIN_PATH" "$ZIP_PATH"
+          xcrun notarytool submit "$ZIP_PATH" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id FX44YY62GV \
+            --wait
 
       - name: Create Inso zip/tar/gz artifacts
         run: npm run artifacts -w insomnia-inso
 
       - name: Login to Docker Hub
         if: runner.os == 'Linux' && runner.arch == 'X64'
-        uses: docker/login-action@3d58c274f17dffee475a5520cbe67f0a882c4dbb # v2.1.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ secrets.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
@@ -228,7 +331,7 @@ jobs:
       - name: Scan inso docker artifacts
         id: sbom_action
         if: runner.os == 'Linux' && runner.arch == 'X64'
-        uses: Kong/public-shared-actions/security-actions/scan-docker-image@a18abf762d6e2444bcbfd20de70451ea1e3bc1b1 # v4.1.1
+        uses: Kong/public-shared-actions/security-actions/scan-docker-image@29dd57c7c19389e07390c1c9fe83aef6ff0c424a # v6.1.0
         with:
           asset_prefix: image-inso-${{ runner.os }}-${{ runner.arch }}
           image: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
@@ -238,12 +341,13 @@ jobs:
           SYFT_SOURCE_NAME: ${{ env.INSO_DOCKER_TAR }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           if-no-files-found: ignore
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
           path: |
             packages/insomnia/dist/*.exe
+            packages/insomnia/dist/*.yml
             packages/insomnia/dist/squirrel-windows/*
             packages/insomnia/dist/*.zip
             packages/insomnia/dist/*.dmg
@@ -255,31 +359,37 @@ jobs:
             packages/insomnia-inso/artifacts/*
 
       - name: Upload source assets for Sentry
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ runner.os }}-${{ runner.arch }}-sentry
           path: |
-            packages/insomnia/build/*.js
-            packages/insomnia/build/*.map
+            packages/insomnia/build/**/*.js
+            packages/insomnia/build/**/*.map
             !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:
     timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
+      - name: Checkout branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
       - name: Get release version
         id: release_version
         shell: bash
         run: |
-          echo "version=${BRANCH/release\//}" >> $GITHUB_OUTPUT
-        env:
-          BRANCH: ${{ github.ref_name }}
+          echo "version=$(jq .version packages/insomnia/package.json -rj)" >> $GITHUB_OUTPUT
+          echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
       - name: update-pull-request
-        uses: kt3k/update-pr-description@fef8b17c6648e0daa550d2ed6b5cf140d282574e # v2.0.0
-        with:
-          pr_body: |
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_BODY: |
             # WARNING: <ins>Do not merge</ins> this PR. Use the "Publish" workflow.
 
             ## Publish workflow:
@@ -304,7 +414,7 @@ jobs:
             You can update the changelog.md in this branch, run git log to get the latest changes:
 
             ```bash
-            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="release/${{ steps.release_version.outputs.version }}"
+            git log --no-merges --oneline --pretty=format:'* %s by @%an' --since="<last release tag>" --until="${{ steps.release_version.outputs.branch }}"
             ```
             </details>
 
@@ -325,5 +435,10 @@ jobs:
             git push
             ```
             </details>
-          destination_branch: develop
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list --repo "$REPO" --base develop --head "$GITHUB_REF_NAME" --state open --json number -q '.[0].number')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR found from $GITHUB_REF_NAME into develop; skipping body update."
+            exit 0
+          fi
+          gh pr edit "$PR_NUMBER" --repo "$REPO" --body "$PR_BODY"

@@ -1,33 +1,22 @@
-import fs from 'node:fs';
-
-import type * as Har from 'har-format';
+import { fetchMockbinLogs, type MockbinLogOutput } from 'insomnia-api';
+import type { MockRoute, MockServer, Response, ResponseTimelineEntry } from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, type PreviewMode } from 'insomnia-data/common';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
-import { useFetcher } from 'react-router';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
 
-import {
-  getMockServiceURL,
-  getPreviewModeName,
-  PREVIEW_MODE_FRIENDLY,
-  PREVIEW_MODES,
-  type PreviewMode,
-} from '../../../common/constants';
-import { exportHarCurrentRequest } from '../../../common/har';
-import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import * as models from '../../../models';
-import type { MockRoute } from '../../../models/mock-route';
-import type { MockServer } from '../../../models/mock-server';
-import type { Response } from '../../../models/response';
+import { useRootLoaderData } from '~/root';
+import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
+import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
+
+import { getMockServiceURL } from '../../../common/constants';
 import { cancelRequestById } from '../../../network/cancellation';
-import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
-import type { MockRouteLoaderData } from '../../routes/mock-route';
-import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { CodeEditor } from '../codemirror/code-editor';
 import { Pane, PaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { ResponseTimer } from '../response-timer';
@@ -39,35 +28,20 @@ import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
 
-interface MockbinLogOutput {
-  log: {
-    version: string;
-    creator: {
-      name: string;
-      version: string;
-    };
-    entries: [
-      {
-        startedDateTime: string;
-        clientIPAddress: string;
-        request: Har.Request;
-      },
-    ];
-  };
-}
+const { useInterval } = reactUse;
 
 export const MockResponsePane = () => {
-  const { mockServer, mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
-  const { settings } = useRootLoaderData();
+  const { mockServer, mockRoute, activeResponse } = useMockRouteLoaderData()!;
+  const { settings } = useRootLoaderData()!;
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
-  const requestFetcher = useFetcher({ key: 'mock-request-fetcher' });
+  const requestFetcher = useRequestNewMockSendActionFetcher({ key: 'mock-request-fetcher' });
   const { steps } = useExecutionState({ requestId: activeResponse?.parentId });
 
   useEffect(() => {
     const fn = async () => {
       if (activeResponse) {
-        const timeline = await models.response.getTimeline(activeResponse, true);
+        const timeline = await services.helpers.getResponseTimeline(activeResponse, true);
         setTimeline(timeline);
       }
     };
@@ -99,36 +73,36 @@ export const MockResponsePane = () => {
       )}
       <Tabs aria-label="Mock response" className="flex h-full w-full flex-1 flex-col">
         <TabList
-          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
         >
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="preview"
           >
             Preview
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
           >
             Headers
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="timeline"
           >
             Console
           </Tab>
           <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="history"
           >
             History
           </Tab>
         </TabList>
         <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="preview">
-          <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+          <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
             {activeResponse ? (
               <PreviewModeDropdown
                 activeResponse={activeResponse}
@@ -150,7 +124,7 @@ export const MockResponsePane = () => {
               filter={''}
               filterHistory={[]}
               bodyBuffer={activeResponse.bodyBuffer}
-              getBody={() => models.response.getBodyBuffer(activeResponse)}
+              getBody={() => services.helpers.getResponseBodyBuffer(activeResponse)}
               previewMode={previewMode}
               responseId={activeResponse._id}
               updateFilter={activeResponse.error ? undefined : () => {}}
@@ -181,19 +155,16 @@ const HistoryViewWrapperComponentFactory = ({
 }) => {
   const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
   const [logEntryId, setLogEntryId] = useState<number | null>(null);
-  const { userSession } = useRootLoaderData();
+  const { userSession } = useRootLoaderData()!;
 
   const fetchLogs = useCallback(async () => {
     const compoundId = mockRoute.parentId + mockRoute.name;
     const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
     try {
-      const res = await insomniaFetch<MockbinLogOutput>({
-        origin: mockbinUrl,
-        path: `/bin/log/${compoundId}`,
-        method: 'GET',
-        headers: {
-          'insomnia-mock-method': mockRoute.method,
-        },
+      const res = await fetchMockbinLogs({
+        mockbinUrl,
+        compoundId,
+        method: mockRoute.method,
         sessionId: userSession.id,
       });
       if (res?.log) {
@@ -202,7 +173,7 @@ const HistoryViewWrapperComponentFactory = ({
       }
       console.log('[mock] Error: fetching logs from remote', { mockbinUrl, res });
     } catch (e) {
-      // network erros will be managed by the upsert trigger, so we can ignore them here
+      // network errors will be managed by the upsert trigger, so we can ignore them here
       console.log({ mockbinUrl, e });
     }
   }, [
@@ -213,11 +184,11 @@ const HistoryViewWrapperComponentFactory = ({
     mockServer.useInsomniaCloud,
     userSession.id,
   ]);
-  // refetches logs whenever the path changes, or a response is recieved, or tenseconds elapses or history tab is click
+  // refetches logs whenever the path changes, or a response is received, or tenseconds elapses or history tab is click
   // chatgpt: answer my called
   useInterval(() => {
     fetchLogs();
-  }, 10000);
+  }, 10_000);
 
   useEffect(() => {
     fetchLogs();
@@ -226,42 +197,42 @@ const HistoryViewWrapperComponentFactory = ({
   return (
     <div className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
       <div className="box-border w-full flex-1 overflow-hidden overflow-y-scroll">
-        <div className="grid grid-cols-[repeat(5,auto)] divide-y divide-solid divide-[--hl-sm]">
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Method</div>
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Size</div>
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Date</div>
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">IP</div>
-          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Path</div>
+        <div className="grid grid-cols-[repeat(5,auto)] divide-y divide-solid divide-(--hl-sm)">
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Method</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Size</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Date</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">IP</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Path</div>
           {logs?.log.entries
             ?.map((row, index) => (
               <Fragment key={row.startedDateTime}>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="p-2">{row.request.method}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="p-2">{row.request.bodySize + row.request.headersSize}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="truncate p-2">{getTimeFromNow(row.startedDateTime, false)}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="truncate p-2">{row.clientIPAddress}</div>
                 </div>
                 <div
                   onClick={() => setLogEntryId(index)}
-                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                  className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="truncate p-2">{row.request.url}</div>
                 </div>
@@ -271,7 +242,7 @@ const HistoryViewWrapperComponentFactory = ({
         </div>
       </div>
       {logEntryId !== null && logs?.log.entries?.[logEntryId] && (
-        <div className="h-full flex-1 border border-solid border-[--hl-md]">
+        <div className="h-full flex-1 border border-solid border-(--hl-md)">
           <CodeEditor
             id="log-body-preview"
             key={logEntryId + logs?.log.entries?.[logEntryId].startedDateTime}
@@ -299,7 +270,7 @@ const PreviewModeDropdown = ({
     <Dropdown
       aria-label="Preview Mode Dropdown"
       triggerButton={
-        <Button className="text-[--hl]">
+        <Button className="text-(--hl)">
           {getPreviewModeName(previewMode)}
           <i className="fa fa-caret-down space-left" />
         </Button>
@@ -322,8 +293,8 @@ const PreviewModeDropdown = ({
             icon="copy"
             label="Copy raw response"
             onClick={async () => {
-              const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
-              bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
+              const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
+              bodyBuffer && window.clipboard.writeText(bodyBufferToUtf8(bodyBuffer));
             }}
           />
         </DropdownItem>
@@ -332,17 +303,19 @@ const PreviewModeDropdown = ({
             icon="save"
             label="Export raw response"
             onClick={async () => {
-              const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
               const { canceled, filePath } = await window.dialog.showSaveDialog({
                 title: 'Save Full Response',
                 buttonLabel: 'Save',
                 defaultPath: `response-${Date.now()}.txt`,
               });
 
-              if (canceled || !filePath || !bodyBuffer) {
+              if (canceled || !filePath || !activeResponse.bodyBuffer) {
                 return;
               }
-              fs.promises.writeFile(filePath, bodyBuffer.toString('utf8'));
+              await window.main.writeFile({
+                path: filePath,
+                content: bodyBufferToUtf8(activeResponse.bodyBuffer) || '',
+              });
             }}
           />
         </DropdownItem>
@@ -352,7 +325,7 @@ const PreviewModeDropdown = ({
               icon="save"
               label="Export prettified response"
               onClick={async () => {
-                const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
+                const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
                 const { canceled, filePath } = await window.dialog.showSaveDialog({
                   title: 'Save Full Response',
                   buttonLabel: 'Save',
@@ -362,7 +335,10 @@ const PreviewModeDropdown = ({
                 if (canceled || !filePath || !bodyBuffer) {
                   return;
                 }
-                fs.promises.writeFile(filePath, jsonPrettify(bodyBuffer.toString('utf8')));
+                await window.main.writeFile({
+                  path: filePath,
+                  content: jsonPrettify(bodyBufferToUtf8(bodyBuffer)) || '',
+                });
               }}
             />
           )}
@@ -381,13 +357,16 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath) {
                 return;
               }
-              const timeline = models.response.getTimeline(activeResponse);
+              const timeline = await services.helpers.getResponseTimeline(activeResponse);
               const headers = timeline
                 .filter(v => v.name === 'HeaderIn')
                 .map(v => v.value)
                 .join('');
 
-              fs.promises.writeFile(filePath, headers);
+              await window.main.writeFile({
+                path: filePath,
+                content: headers,
+              });
             }}
           />
         </DropdownItem>
@@ -396,7 +375,7 @@ const PreviewModeDropdown = ({
             icon="save"
             label="Export as HAR"
             onClick={async () => {
-              const activeRequest = await models.request.getById(activeResponse.parentId);
+              const activeRequest = await services.request.getById(activeResponse.parentId);
               const { canceled, filePath } = await window.dialog.showSaveDialog({
                 title: 'Save Full Response',
                 buttonLabel: 'Save',
@@ -406,10 +385,16 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath || !activeRequest) {
                 return;
               }
-              const data = await exportHarCurrentRequest(activeRequest, activeResponse);
+              const data = await window.main.exportHarCurrentRequest({
+                requestId: activeRequest._id,
+                responseId: activeResponse._id,
+              });
               const har = JSON.stringify(data, null, '\t');
 
-              fs.promises.writeFile(filePath, har);
+              await window.main.writeFile({
+                path: filePath,
+                content: har,
+              });
             }}
           />
         </DropdownItem>

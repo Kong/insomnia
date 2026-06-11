@@ -1,7 +1,7 @@
+import { type PersonalPlanType } from 'insomnia-api';
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 
 import { getAppWebsiteBaseURL } from '../../../common/constants';
-import type { PersonalPlanType } from '../../routes/organization';
 import { type ModalProps } from '../base/modal';
 import { AskModal, type AskModalHandle, type AskModalOptions } from './ask-modal';
 
@@ -40,7 +40,9 @@ export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) 
         const message = `${featureName} is only enabled for ${planDetail}, ${upgradeDetail}`;
         const onDone = async (isYes: boolean) => {
           if (isYes) {
-            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+            window.main.openInBrowser(
+              `${getAppWebsiteBaseURL()}/app/subscription/update?plan=team&source=app_feature_${featureName}`,
+            );
           }
         };
         if (isOwner) {

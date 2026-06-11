@@ -5,7 +5,7 @@ import { expect } from '@playwright/test';
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can send gRPC requests using mTLS requests (with reflection)', async ({ app, page }) => {
+test('can send gRPC requests using mTLS requests (with reflection)', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
@@ -19,13 +19,18 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('grpc').click();
 
-  await page.getByLabel('Request Collection').getByTestId('grpcs').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('grpcs');
   await expect.soft(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();
 
   // add root CA and client certificate
   const fixturePath = getFixturePath('certificates');
+
+  // add the path to allowed data folder list
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('dataFolders').fill(getFixturePath('certificates'));
+  await page.getByTestId('dataFolders-btn').click();
+  await page.locator('.app').press('Escape');
 
   await page.getByRole('button', { name: 'Add Certificates' }).click();
   let fileChooserPromise = page.waitForEvent('filechooser');
@@ -43,8 +48,8 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   await page.locator('[data-test-id="add-client-certificate-key-file-chooser"]').click();
   await (await fileChooserPromise).setFiles(path.join(fixturePath, 'client.key'));
 
-  await page.getByRole('button', { name: 'Add certificate' }).click();
-  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Add certificate' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Done' }).click();
 
   // initiates an mtls connection with the given certificates
   await page.getByTestId('button-server-reflection').click();

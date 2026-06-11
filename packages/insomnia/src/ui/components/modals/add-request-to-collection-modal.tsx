@@ -1,12 +1,12 @@
+import type { BaseModel, Project } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
+import { strings } from 'insomnia-data/common';
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
-import { database } from '../../../common/database';
-import { strings } from '../../../common/strings';
-import { sortProjects } from '../../../models/helpers/project';
-import * as models from '../../../models/index';
-import type { Project } from '../../../models/project';
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -18,27 +18,35 @@ interface AddRequestModalProps extends ModalProps {
 }
 
 export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }) => {
-  const { organizationId, projectId: currentProjectId, workspaceId: currentWorkspaceId } = useParams();
-  const [projectOptions, setProjectOptions] = useState<models.BaseModel[]>([]);
-  const [workspaceOptions, setWorkspaceOptions] = useState<models.BaseModel[]>([]);
+  const {
+    organizationId,
+    projectId: currentProjectId,
+    workspaceId: currentWorkspaceId,
+  } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
+  const [projectOptions, setProjectOptions] = useState<BaseModel[]>([]);
+  const [workspaceOptions, setWorkspaceOptions] = useState<BaseModel[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
 
-  const requestFetcher = useFetcher();
+  const requestFetcher = useRequestNewActionFetcher();
 
   useEffect(() => {
     (async () => {
       const organizationProjects = await database.find<Project>(models.project.type, {
         parentId: organizationId,
       });
-      setProjectOptions(sortProjects(organizationProjects));
+      setProjectOptions(models.project.sortProjects(organizationProjects));
       setSelectedProjectId(organizationProjects[0]?._id || '');
     })();
   }, [organizationId]);
 
   useEffect(() => {
     (async () => {
-      const workspaces = await models.workspace.findByParentId(selectedProjectId);
+      const workspaces = await services.workspace.findByParentId(selectedProjectId);
       const requestCollections = workspaces.filter(workspace => workspace.scope === 'collection');
       setWorkspaceOptions(requestCollections);
       setSelectedWorkspaceId(requestCollections[0]?._id || '');
@@ -55,14 +63,16 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
   const previousRequestFetcherState = useRef('idle');
 
   const createNewRequest = async () => {
-    requestFetcher.submit(
-      { requestType: 'HTTP', parentId: selectedWorkspaceId },
-      {
-        action: `/organization/${organizationId}/project/${selectedProjectId}/workspace/${selectedWorkspaceId}/debug/request/new`,
-        method: 'post',
-        encType: 'application/json',
-      },
-    );
+    requestFetcher.submit({
+      organizationId,
+      projectId: selectedProjectId,
+      workspaceId: selectedWorkspaceId,
+      requestType: 'HTTP',
+      parentId: selectedWorkspaceId,
+      metrics: {
+        source: 'add-request-to-collection-modal',
+      }
+    });
     previousRequestFetcherState.current = 'loading';
   };
 
@@ -130,9 +140,6 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
             >
               Collection is required
             </p>
-          )}
-          {requestFetcher.data?.error && (
-            <p className="notice error margin-bottom-sm mt-6">{requestFetcher.data.error}</p>
           )}
         </ModalBody>
         <ModalFooter>

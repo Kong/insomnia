@@ -1,22 +1,25 @@
-import { useCallback, useState } from 'react';
-import { useAsync } from 'react-use';
+import type { ThemeSettings } from 'insomnia-data';
+import { useCallback, useEffect, useState } from 'react';
+import * as reactUse from 'react-use';
 
-import type { ThemeSettings } from '../../models/settings';
-import { type ColorScheme, getThemes } from '../../plugins';
-import { applyColorScheme, type PluginTheme } from '../../plugins/misc';
-import { useRootLoaderData } from '../routes/root';
+import type { PluginTheme } from '~/plugins/bridge-types';
+import { useRootLoaderData } from '~/root';
+import { AnalyticsEvent } from '~/ui/analytics';
+
+import { applyColorScheme, getColorScheme } from '../../plugins/misc';
+import { plugins } from '../../plugins/renderer-bridge';
+import { type ColorScheme } from '../../plugins/types';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { lightTheme, darkTheme, autoDetectColorScheme, theme, pluginConfig } = settings;
 
   const [themes, setThemes] = useState<PluginTheme[]>([]);
 
-  useAsync(async () => {
-    const pluginThemes = await getThemes();
+  reactUse.useAsync(async () => {
+    const pluginThemes = await plugins.getThemes();
     setThemes(pluginThemes.map(({ theme }) => theme));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reload themes if pluginConfig changes
   }, [pluginConfig]);
 
   // Check if the theme is active
@@ -54,6 +57,11 @@ export const useThemes = () => {
   // Activate the theme for the selected color scheme
   const activate = useCallback(
     async (themeName: string, colorScheme: ColorScheme) => {
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.themeChanged,
+        properties: { themeName, colorScheme },
+      });
+
       switch (colorScheme) {
         case 'light': {
           await apply({ lightTheme: themeName });
@@ -87,4 +95,58 @@ export const useThemes = () => {
     changeAutoDetect,
     autoDetectColorScheme,
   };
+};
+
+export const useIsLightTheme = () => {
+  const rootLoaderData = useRootLoaderData();
+
+  let lightTheme = 'default';
+  let darkTheme = 'default';
+  let theme = 'default';
+  let autoDetectColorScheme = false;
+  if (rootLoaderData?.settings) {
+    lightTheme = rootLoaderData.settings.lightTheme;
+    darkTheme = rootLoaderData.settings.darkTheme;
+    theme = rootLoaderData.settings.theme;
+    autoDetectColorScheme = rootLoaderData.settings.autoDetectColorScheme;
+  }
+
+  const calcIsLightTheme = useCallback(() => {
+    let isLightTheme = false;
+    const colorScheme = getColorScheme({
+      autoDetectColorScheme,
+      darkTheme,
+      lightTheme,
+      theme,
+    });
+    if (colorScheme === 'light') {
+      isLightTheme = lightTheme.includes('light');
+    } else if (colorScheme === 'dark') {
+      isLightTheme = darkTheme.includes('light');
+    } else {
+      // check if user has selected a light theme
+      isLightTheme = theme.includes('light');
+    }
+    return isLightTheme;
+  }, [lightTheme, darkTheme, theme, autoDetectColorScheme]);
+
+  const [isLightTheme, setIsLightTheme] = useState<boolean>(calcIsLightTheme);
+
+  // Listen to system theme changes
+  useEffect(() => {
+    const matches = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => {
+      setIsLightTheme(calcIsLightTheme());
+    };
+    matches.addEventListener('change', onChange);
+    return () => {
+      matches.removeEventListener('change', onChange);
+    };
+  }, [calcIsLightTheme]);
+
+  // Listen to settings changes
+  useEffect(() => {
+    setIsLightTheme(calcIsLightTheme());
+  }, [calcIsLightTheme, lightTheme, darkTheme, theme, autoDetectColorScheme]);
+  return isLightTheme;
 };
