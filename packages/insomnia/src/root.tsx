@@ -494,13 +494,17 @@ const Root = () => {
           });
         }
 
-        // Require login for deep-link installs (mirrors the import deep-link). The replay effect
-        // re-fires pendingDeepLinkAfterAuthorize after login, so the flow resumes automatically.
-        const userSession = await services.userSession.get();
-        if (!userSession.id) {
-          window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
-          window.localStorage.setItem('logoutMessage', 'Please log in to install this plugin.');
-          return navigate(href('/auth/login'));
+        // Organization workspaces require an active session; scratchpad is local-only and has no
+        // account concept, so the gate is skipped there. The replay effect re-fires
+        // pendingDeepLinkAfterAuthorize once the user signs in.
+        const orgRequiresAuth = organizationId !== models.organization.SCRATCHPAD_ORGANIZATION_ID;
+        if (orgRequiresAuth) {
+          const userSession = await services.userSession.get();
+          if (!userSession.id) {
+            window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
+            window.localStorage.setItem('logoutMessage', 'Open a project to install this plugin.');
+            return navigate(href('/auth/login'));
+          }
         }
 
         // TODO (pavkout): Remove second parameter when we will decide about the @scoped packages name validation
