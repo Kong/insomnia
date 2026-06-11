@@ -20,7 +20,7 @@ export const UnsavedChangesConfirmDialog = ({
         <Heading slot="title" className="text-lg font-semibold">
           Unsaved changes
         </Heading>
-        <p slot="description" className="text-sm">
+        <p className="text-sm">
           You will lose any unsaved changes. Are you sure you want to cancel?
         </p>
         <div className="flex items-center justify-end gap-2">
