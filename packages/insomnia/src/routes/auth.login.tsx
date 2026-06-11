@@ -7,7 +7,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
 import { Tooltip } from '~/ui/components/tooltip';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { addScopeField, createFetcherSubmitHook } from '~/utils/router';
 
 import type { Route } from './+types/auth.login';
 
@@ -50,7 +50,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
 export const useLoginActionFetcher = createFetcherSubmitHook(
   submit => (data: { provider: string }) => {
-    submit(data, {
+    submit(addScopeField({ scopes: ['root'], data }), {
       action: href('/auth/login'),
       method: 'POST',
     });

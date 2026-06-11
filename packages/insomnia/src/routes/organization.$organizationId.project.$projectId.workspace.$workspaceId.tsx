@@ -1,5 +1,4 @@
 import type {
-  ApiSpec,
   CaCertificate,
   ClientCertificate,
   CookieJar,
@@ -7,7 +6,6 @@ import type {
   GitRepository,
   GrpcRequest,
   GrpcRequestMeta,
-  MockServer,
   Project,
   Request,
   RequestGroup,
@@ -33,7 +31,7 @@ import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project'
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook, createShouldRevalidateByScopes } from '~/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
@@ -42,7 +40,6 @@ const { isRequestGroup } = models.requestGroup;
 export type Collection = Child[];
 
 export interface WorkspaceLoaderData {
-  workspaces: Workspace[];
   activeWorkspace: Workspace;
   activeWorkspaceMeta: WorkspaceMeta;
   activeProject: Project;
@@ -54,11 +51,10 @@ export interface WorkspaceLoaderData {
   subEnvironments: Environment[];
   globalBaseEnvironments: (Environment & { workspaceName: string })[];
   globalSubEnvironments: Environment[];
-  activeApiSpec: ApiSpec | null;
-  activeMockServer?: MockServer | null;
+  // activeApiSpec: ApiSpec | null;
+  // activeMockServer?: MockServer | null;
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
-  projects: Project[];
   requestTree: Child[];
   grpcRequests: GrpcRequest[];
   collection: Collection;
@@ -86,6 +82,7 @@ const workspaceFileIssueModalText = {
 } as const;
 
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
+  console.log(`[loader] organization.$organizationId.project.$projectId.workspace.$workspaceId`);
   const { organizationId, projectId, workspaceId } = params;
 
   const activeProject = await services.project.get(projectId);
@@ -149,16 +146,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
   const activeCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
 
-  const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
-  const activeMockServer = await services.mockServer.getByParentId(workspaceId);
-
-  const organizationProjects =
-    (await database.find<Project>(models.project.type, {
-      parentId: organizationId,
-    })) || [];
-
-  const projects = models.project.sortProjects(organizationProjects);
 
   const searchParams = new URL(request.url).searchParams;
   const sortOrder = searchParams.get('sortOrder') as SortOrder;
@@ -296,8 +284,6 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     }
   }
 
-  const workspaces = await services.workspace.findByParentId(projectId);
-
   const collection = flattenTree();
 
   // If there is a filter then we need to show all the parents of the requests that are not hidden.
@@ -316,7 +302,6 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   });
 
   return {
-    workspaces,
     activeWorkspace,
     activeProject,
     gitRepository,
@@ -328,11 +313,8 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     baseEnvironment,
     globalSubEnvironments,
     globalBaseEnvironments: globalBaseEnvironmentsWithWorkspaceName,
-    activeApiSpec,
-    activeMockServer,
     clientCertificates,
     caCertificate: await services.caCertificate.getByParentId(workspaceId),
-    projects,
     requestTree,
     // TODO: remove this state hack when the grpc responses go somewhere else
     grpcRequests: grpcReqs,
@@ -346,6 +328,10 @@ export function useWorkspaceLoaderData() {
     'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
   );
 }
+
+export const shouldRevalidate = createShouldRevalidateByScopes({
+  dataScopes: ['workspace'],
+});
 
 export const useWorkspaceLoaderFetcher = createFetcherLoadHook(
   load =>
