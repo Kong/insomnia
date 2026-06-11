@@ -3,7 +3,11 @@ import { models } from 'insomnia-data';
 import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import { useRootLoaderData } from '~/root';
+import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { ProjectDropdown, type WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
+import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 
 import { AvatarGroup } from '../../avatar';
 import { Icon } from '../../icon';
@@ -20,8 +24,30 @@ interface ProjectNodeProps {
 
 export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrderChange }: ProjectNodeProps) => {
   const { doc, collapsed, organizationId } = item;
-  const { name: projectName, presence, _id: projectId } = doc;
+  const { userSession } = useRootLoaderData()!;
+  const { presence } = useInsomniaEventStreamContext();
+  const { name: projectName, _id: projectId } = doc;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const { projectsSyncStatusPromise } = useProjectLoaderData()!;
+  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(
+    projectsSyncStatusPromise,
+    organizationId,
+  );
+  const hasUncommittedOrUnpushedChanges =
+    checkAllProjectSyncStatus?.[projectId] ||
+    doc.gitRepository?.hasUncommittedChanges ||
+    doc.gitRepository?.hasUnpushedChanges;
+
+  const projectPresence = presence
+    .filter(p => p.project === doc.remoteId)
+    .filter(p => p.acct !== userSession.accountId)
+    .map(user => {
+      return {
+        key: user.acct,
+        alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+        src: user.avatar,
+      };
+    });
 
   return (
     <div
@@ -54,11 +80,14 @@ export const ProjectNode = ({ item, storageRules, onToggle, sortOrder, onSortOrd
         />
         <span className="min-w-0 flex-1 truncate text-base text-[rgb(var(--color-font-rgb),0.8)]">{projectName}</span>
       </div>
-      {presence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={presence} />}
+      {projectPresence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={projectPresence} />}
       {projectId !== models.project.SCRATCHPAD_PROJECT_ID && (
         <ProjectDropdown
           organizationId={organizationId}
-          project={doc}
+          project={{
+            ...doc,
+            hasUncommittedOrUnpushedChanges,
+          }}
           storageRules={storageRules}
           sortOrder={sortOrder}
           onSortOrderChange={onSortOrderChange}
