@@ -57,11 +57,10 @@ export function init(): {
         const settings = await services.settings.get();
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
         const { request: originRequest, caCertficatePath = null } = options;
-        const curlRequest =
-          process.type === 'renderer' || process.type === 'worker'
-            ? window.main.curlRequest
-            : // when exeucted in Inso;
-              (await import('../../main/network/libcurl-promise')).curlRequest;
+        const curlRequest = __IS_RENDERER__
+          ? window.main.curlRequest
+          : // when exeucted in Inso;
+            (await import('../../main/network/libcurl-promise')).curlRequest;
         const response = await curlRequest({
           requestId: `no-sideEffects-request-${requestId}`,
           req: {
