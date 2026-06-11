@@ -149,6 +149,7 @@ interface OpenSocketIORequestOptions {
   cookieJar: CookieJar;
   path?: string;
   initialPayload?: string;
+  suppressUserAgent?: boolean;
 }
 
 const getCertificates = async ({
@@ -291,7 +292,7 @@ const openSocketIOConnection = async (
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
-    if (!request.disableUserAgentHeader && !hasUserAgentHeader) {
+    if (!options.suppressUserAgent && !request.disableUserAgentHeader && !hasUserAgentHeader) {
       lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
     }
 

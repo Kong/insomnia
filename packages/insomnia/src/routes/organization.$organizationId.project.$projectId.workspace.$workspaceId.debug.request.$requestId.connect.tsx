@@ -47,6 +47,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       headers: rendered.headers,
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
+      suppressUserAgent: rendered.suppressUserAgent,
     });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,
@@ -74,6 +75,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       }),
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
+      suppressUserAgent: rendered.suppressUserAgent,
     });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,
@@ -108,6 +110,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       authentication: rendered.authentication,
       query: rendered.query || {},
       path: rendered.path,
+      suppressUserAgent: rendered.suppressUserAgent,
     });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,

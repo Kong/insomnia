@@ -216,6 +216,24 @@ export interface RequestPathParameter {
 
 export const PATH_PARAMETER_REGEX = /\/:[^/?#:]+/g;
 
+/** Replace `:param` url segments with their URL-encoded values; unmatched or empty params are left unchanged */
+export const applyPathParametersToUrl = (
+  url: string,
+  pathParameters?: RequestPathParameter[],
+): string => {
+  if (!pathParameters?.length) {
+    return url;
+  }
+  return url.replace(PATH_PARAMETER_REGEX, match => {
+    const paramName = match.replace('/:', '');
+    const param = pathParameters.find(p => p.name === paramName);
+    if (param?.value) {
+      return `/${encodeURIComponent(param.value)}`;
+    }
+    return match;
+  });
+};
+
 export const getPathParametersFromUrl = (url: string): string[] => {
   // Find all path parameters in the URL. Path parameters are defined as segments of the URL that start with a colon.
   const urlPathParameters =

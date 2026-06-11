@@ -22,7 +22,7 @@ import type {
   RequestHeader,
   RequestParameter,
 } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -830,6 +830,49 @@ describe('Request Model - Comprehensive Tests', () => {
 
       const deletedRequest = await services.request.getById(request._id);
       expect(deletedRequest).toBeUndefined();
+    });
+  });
+
+  describe('applyPathParametersToUrl', () => {
+    const { applyPathParametersToUrl } = models.request;
+
+    it('substitutes a single path parameter', () => {
+      expect(
+        applyPathParametersToUrl('ws://localhost/api/users/:id', [{ name: 'id', value: '1234' }]),
+      ).toBe('ws://localhost/api/users/1234');
+    });
+
+    it('substitutes multiple path parameters', () => {
+      expect(
+        applyPathParametersToUrl('https://api.example.com/:org/:repo', [
+          { name: 'org', value: 'kong' },
+          { name: 'repo', value: 'insomnia' },
+        ]),
+      ).toBe('https://api.example.com/kong/insomnia');
+    });
+
+    it('URL-encodes path parameter values', () => {
+      expect(
+        applyPathParametersToUrl('https://api.example.com/users/:id', [{ name: 'id', value: 'a/b c' }]),
+      ).toBe('https://api.example.com/users/a%2Fb%20c');
+    });
+
+    it('leaves unmatched :param segments unchanged', () => {
+      expect(
+        applyPathParametersToUrl('https://api.example.com/users/:id', [{ name: 'other', value: '1234' }]),
+      ).toBe('https://api.example.com/users/:id');
+    });
+
+    it('leaves :param segments unchanged when value is empty', () => {
+      expect(
+        applyPathParametersToUrl('https://api.example.com/users/:id', [{ name: 'id', value: '' }]),
+      ).toBe('https://api.example.com/users/:id');
+    });
+
+    it('returns url unchanged when pathParameters is empty or undefined', () => {
+      const url = 'https://api.example.com/users/:id';
+      expect(applyPathParametersToUrl(url, [])).toBe(url);
+      expect(applyPathParametersToUrl(url)).toBe(url);
     });
   });
 });

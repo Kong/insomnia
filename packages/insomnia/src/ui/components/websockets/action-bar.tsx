@@ -1,5 +1,4 @@
 import type { SocketIORequest, WebSocketRequest } from 'insomnia-data';
-import { services } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 
@@ -10,7 +9,7 @@ import {
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
+import { renderRealtimeConnectPayload } from '../../../utils/render-realtime-connect';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -60,20 +59,10 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     );
 
     const generateConnectParams = useCallback(async () => {
-      // Render any Liquid template tags in the url/headers/authentication settings/cookies
-
-      const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
-      // Render any Liquid template tags in the url/headers/authentication settings/cookies
-      const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+      const rendered = await renderRealtimeConnectPayload({
         request,
         environmentId,
-        payload: {
-          url: request.url,
-          headers: request.headers,
-          authentication: request.authentication,
-          parameters: request.parameters.filter(p => !p.disabled),
-          workspaceCookieJar,
-        },
+        workspaceId,
       });
       if (request.type === 'WebSocketRequest' && rendered) {
         return {

@@ -19,6 +19,7 @@ import {
   type WebSocketRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { RenderError } from '../../../templating/render-error';
+import { renderRealtimeConnectPayload } from '../../../utils/render-realtime-connect';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import {
   buildQueryStringFromParams,
@@ -89,18 +90,14 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
       const renderedMessage = await tryToInterpolateRequestOrShowRenderErrorModal({ request, environmentId, payload });
       const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
       if (!readyState) {
-        const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
-        const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+        const rendered = await renderRealtimeConnectPayload({
           request,
           environmentId,
-          payload: {
-            url: request.url,
-            headers: request.headers,
-            authentication: request.authentication,
-            parameters: request.parameters.filter(p => !p.disabled),
-            workspaceCookieJar,
-          },
+          workspaceId,
         });
+        if (!rendered) {
+          return;
+        }
         window.main.webSocket.open({
           requestId: request._id,
           workspaceId,
@@ -109,6 +106,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,
           initialPayload: renderedMessage,
+          suppressUserAgent: rendered.suppressUserAgent,
         });
         return;
       }

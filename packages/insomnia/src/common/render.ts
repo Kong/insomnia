@@ -31,7 +31,7 @@ import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 
-const { PATH_PARAMETER_REGEX } = models.request;
+const { applyPathParametersToUrl } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
 export async function buildRenderContext({
@@ -611,22 +611,7 @@ export async function getRenderedRequestAndContext({
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
-  // Render path parameters
-  if (renderedRequest.pathParameters) {
-    // Replace path parameters in URL with their rendered values
-    // Path parameters are path segments that start with a colon, e.g. :id
-    renderedRequest.url = renderedRequest.url.replace(PATH_PARAMETER_REGEX, match => {
-      const paramName = match.replace('\/:', '');
-      const param = renderedRequest.pathParameters?.find(p => p.name === paramName);
-
-      if (param && param.value) {
-        // The parameter value needs to be URL encoded
-        return `/${encodeURIComponent(param.value)}`;
-      }
-
-      return match;
-    });
-  }
+  renderedRequest.url = applyPathParametersToUrl(renderedRequest.url, renderedRequest.pathParameters);
 
   return {
     context: renderContext,
