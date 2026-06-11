@@ -59,8 +59,12 @@ test.describe('Focus and keyboard navigation', () => {
 
     // New environments default to KV mode, so selecting the new (empty) environment renders the KV
     // editor whose trailing blank row's Name should be focused.
-    await page.getByRole('row', { name: 'New Environment' }).waitFor({ state: 'visible' });
-    await page.getByRole('row', { name: 'New Environment' }).click();
+    const newEnvironmentRow = page.getByRole('row', { name: 'New Environment' });
+    await newEnvironmentRow.waitFor({ state: 'visible' });
+    // Click the painted name cell rather than the row's center: the row's flexible middle leaves a
+    // gap that the modal's pane container reports as intercepting the click, and the blank-row
+    // autofocus churns focus/scroll right after the editor mounts.
+    await newEnvironmentRow.locator('[data-editable=true]').click();
 
     await expect.soft(page.locator(focusedEditorWithChild('environment-kv-editor-name'))).toHaveCount(1);
   });
