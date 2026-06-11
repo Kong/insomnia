@@ -83,7 +83,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       try {
         const parsedTab = JSON.parse(storedTab);
         if (parsedTab === 'konnect') {
-          // const allProjects = await database.find<Project>(models.project.type, { parentId: organizationId });
           const allProjects = await services.project.list({ organizationId });
           const konnectProjects = models.project.sortProjects(allProjects.filter(p => p.konnectControlPlaneId != null));
           if (konnectProjects.length > 0) {

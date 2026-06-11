@@ -2,6 +2,7 @@ import type { GrpcRequest, Project, Request, RequestGroup, WebSocketRequest, Wor
 import { EnvironmentKvPairDataType, models, services as insoservices } from 'insomnia-data';
 
 import { database as db } from '../common/database';
+import { getDataFromKVPair } from '../utils/environment-utils';
 import {
   fetchAllControlPlanes,
   fetchAllServices,
@@ -563,8 +564,12 @@ async function upsertProjectEnvVars(controlPlane: KonnectControlPlane, project: 
   });
 
   if (newKvPairs.length > 0 || updatedExisting.some((kv, i) => kv !== existingKvPairs[i])) {
+    const finalKvPairData = [...updatedExisting, ...newKvPairs];
+    const { data, dataPropertyOrder } = getDataFromKVPair(finalKvPairData);
     await insoservices.environment.update(projectEnv, {
-      kvPairData: [...updatedExisting, ...newKvPairs],
+      kvPairData: finalKvPairData,
+      data,
+      dataPropertyOrder,
     });
   }
 

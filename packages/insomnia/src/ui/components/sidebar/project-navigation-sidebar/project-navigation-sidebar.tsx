@@ -353,10 +353,6 @@ const ProjectNavigationSidebarInner = (
     setCopiedReason(null);
     if (result?.success) {
       setLastSyncedAt(Date.now());
-      // Show environment onboarding after first successful sync
-      if (isFirstSync) {
-        setShowEnvOnboarding(true);
-      }
       // Navigate to and expand the first Konnect project after a successful sync
       const allProjects = await services.project.list({ organizationId });
       const sortedKonnectProjects = models.project.sortProjects(
@@ -364,7 +360,19 @@ const ProjectNavigationSidebarInner = (
       );
       const firstKonnectProject = sortedKonnectProjects[0];
       if (firstKonnectProject) {
-        navigate(`/organization/${organizationId}/project/${firstKonnectProject._id}`);
+        const workspaces = await services.workspace.findByParentId(firstKonnectProject._id);
+        const envWorkspace = workspaces.find(w => w.scope === 'environment');
+        if (envWorkspace) {
+          // Show environment onboarding after first successful sync
+          if (isFirstSync) {
+            setOnboardingEnvWorkspaceId(envWorkspace._id);
+          }
+          navigate(
+            `/organization/${organizationId}/project/${firstKonnectProject._id}/workspace/${envWorkspace._id}/environment`,
+          );
+        } else {
+          navigate(`/organization/${organizationId}/project/${firstKonnectProject._id}`);
+        }
         setExpandedProjectAndWorkspaceIds(prev => {
           const ids = prev || [];
           return ids.includes(firstKonnectProject._id) ? ids : [...ids, firstKonnectProject._id];
@@ -950,19 +958,11 @@ const ProjectNavigationSidebarInner = (
   const [showSyncDetails, setShowSyncDetails] = useState(false);
   const [copiedReason, setCopiedReason] = useState<string | null>(null);
   const [tooltipNow, setTooltipNow] = useState(Date.now());
-  const [showEnvOnboarding, setShowEnvOnboarding] = useState(false);
+  const [onboardingEnvWorkspaceId, setOnboardingEnvWorkspaceId] = useState<string | null>(null);
   const [envOnboardingNode, setEnvOnboardingNode] = useState<HTMLDivElement | null>(null);
-  // Find the first environment workspace in the visible konnect projects for onboarding highlight
-  const onboardingEnvWorkspaceId = useMemo(() => {
-    if (!showEnvOnboarding) return null;
-    const envItem = flatItems.find(
-      item => item.kind === 'workspace' && item.doc.scope === 'environment' && !item.hidden,
-    );
-    return envItem?.doc._id ?? null;
-  }, [showEnvOnboarding, flatItems]);
 
   const dismissEnvOnboarding = useCallback(() => {
-    setShowEnvOnboarding(false);
+    setOnboardingEnvWorkspaceId(null);
   }, []);
 
   const skippedRoutesByReason = useMemo(() => {
