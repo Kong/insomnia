@@ -86,11 +86,14 @@ export const isGitProject = (project: Project): project is GitProject =>
   'gitRepositoryId' in project && (project.gitRepositoryId !== null || isEmptyGitProject(project));
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
 
+export type KonnectDeploymentType = 'selfManaged' | 'serverless' | 'dedicatedCloud' | 'group' | 'k8sIngressController';
+
 interface CommonProject {
   name: string;
   mcpStdioAccess?: boolean;
   konnectControlPlaneId?: string | null;
   konnectClusterType?: string | null;
+  konnectDeploymentType?: KonnectDeploymentType | null;
 }
 
 export interface RemoteProject extends BaseModel, CommonProject {
@@ -114,7 +117,7 @@ export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => m
 
 export const isProjectId = (id: string | null) => id?.startsWith(`${prefix}_`);
 
-export const optionalKeys = ['konnectControlPlaneId', 'konnectClusterType'];
+export const optionalKeys = ['konnectControlPlaneId', 'konnectClusterType', 'konnectDeploymentType'];
 
 export function init(): Partial<Project> {
   return {

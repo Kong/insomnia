@@ -2,6 +2,7 @@ import type { GrpcRequest, Project, Request, RequestGroup, WebSocketRequest, Wor
 import { EnvironmentKvPairDataType, models, services as insoservices } from 'insomnia-data';
 
 import { database as db } from '../common/database';
+import { getDataFromKVPair } from '../utils/environment-utils';
 import {
   fetchAllControlPlanes,
   fetchAllServices,
@@ -11,6 +12,7 @@ import {
   type KonnectService,
 } from './api';
 import { applyExpressionFields } from './expression-parser';
+import { getKonnectDeploymentType } from './transform';
 import {
   buildRequestName,
   deriveProxyVarDefaults,
@@ -562,8 +564,12 @@ async function upsertProjectEnvVars(controlPlane: KonnectControlPlane, project: 
   });
 
   if (newKvPairs.length > 0 || updatedExisting.some((kv, i) => kv !== existingKvPairs[i])) {
+    const finalKvPairData = [...updatedExisting, ...newKvPairs];
+    const { data, dataPropertyOrder } = getDataFromKVPair(finalKvPairData);
     await insoservices.environment.update(projectEnv, {
-      kvPairData: [...updatedExisting, ...newKvPairs],
+      kvPairData: finalKvPairData,
+      data,
+      dataPropertyOrder,
     });
   }
 
@@ -598,10 +604,15 @@ async function syncControlPlane(
   // Upsert project for this control plane
   let project = existingProjectsByKonnectId.get(controlPlane.id);
   if (project) {
-    if (project.name !== controlPlane.name || project.konnectClusterType !== controlPlane.config.cluster_type) {
+    if (
+      project.name !== controlPlane.name ||
+      project.konnectClusterType !== controlPlane.config.cluster_type ||
+      getKonnectDeploymentType(controlPlane) !== project.konnectDeploymentType
+    ) {
       project = await insoservices.project.update(project, {
         name: controlPlane.name,
         konnectClusterType: controlPlane.config.cluster_type,
+        konnectDeploymentType: getKonnectDeploymentType(controlPlane),
       });
       acc.controlPlaneCounts.updated++;
     }
@@ -611,6 +622,7 @@ async function syncControlPlane(
       name: controlPlane.name,
       konnectControlPlaneId: controlPlane.id,
       konnectClusterType: controlPlane.config.cluster_type,
+      konnectDeploymentType: getKonnectDeploymentType(controlPlane),
     });
     existingProjectsByKonnectId.set(controlPlane.id, project);
     acc.controlPlaneCounts.created++;

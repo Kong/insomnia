@@ -23,6 +23,7 @@ export interface KonnectControlPlane {
   config: {
     cluster_type: string;
     control_plane_endpoint: string;
+    cloud_gateway: boolean;
   };
   proxy_urls: KonnectProxyUrl[] | null;
 }
@@ -90,15 +91,23 @@ async function fetchWithRetry(url: string, pat: string, signal?: AbortSignal): P
       return response;
     }
 
-    const parsed = response.headers.get('Retry-After') ? Number.parseInt(response.headers.get('Retry-After')!, 10) : Number.NaN;
-    const delay = Number.isFinite(parsed) && parsed > 0
-      ? parsed * 1000
-      : Math.min(BASE_DELAY_MS * 2 ** attempt, MAX_DELAY_MS);
+    const parsed = response.headers.get('Retry-After')
+      ? Number.parseInt(response.headers.get('Retry-After')!, 10)
+      : Number.NaN;
+    const delay =
+      Number.isFinite(parsed) && parsed > 0 ? parsed * 1000 : Math.min(BASE_DELAY_MS * 2 ** attempt, MAX_DELAY_MS);
 
     console.log(`[konnect] Rate limited. Retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`);
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(resolve, delay);
-      signal?.addEventListener('abort', () => { clearTimeout(timer); reject(signal.reason); }, { once: true });
+      signal?.addEventListener(
+        'abort',
+        () => {
+          clearTimeout(timer);
+          reject(signal.reason);
+        },
+        { once: true },
+      );
     });
     attempt++;
   }
@@ -129,10 +138,7 @@ export async function validatePat(pat: string): Promise<PatValidationResult> {
   }
 }
 
-export async function* fetchAllControlPlanes(
-  pat: string,
-  signal?: AbortSignal,
-): AsyncGenerator<KonnectControlPlane[]> {
+export async function* fetchAllControlPlanes(pat: string, signal?: AbortSignal): AsyncGenerator<KonnectControlPlane[]> {
   let page = 1;
   let totalPages = 1;
 

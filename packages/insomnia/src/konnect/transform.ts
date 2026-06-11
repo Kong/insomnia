@@ -1,4 +1,6 @@
-import type { KonnectProxyUrl, KonnectRoute } from './api';
+import type { KonnectDeploymentType } from 'insomnia-data';
+
+import type { KonnectControlPlane, KonnectProxyUrl, KonnectRoute } from './api';
 
 // ─── Template injection sanitisation ─────────────────────────────────────────
 
@@ -12,16 +14,16 @@ function stripTemplateSyntax(value: string): string {
   let result = value;
   while (result !== prev) {
     prev = result;
-    result = result
-      .replace(/\{\{[\s\S]*?\}\}/g, '')
-      .replace(/\{%[\s\S]*?%\}/g, '');
+    result = result.replace(/\{\{[\s\S]*?\}\}/g, '').replace(/\{%[\s\S]*?%\}/g, '');
   }
   return result;
 }
 
 /** Strips template syntax from each item, filters empties, and returns null if nothing remains. */
 function sanitizeStringArray(arr: string[] | null): string[] | null {
-  if (arr === null) { return null; }
+  if (arr === null) {
+    return null;
+  }
   const result = arr.map(stripTemplateSyntax).filter(s => s.trim() !== '');
   return result.length > 0 ? result : null;
 }
@@ -41,10 +43,10 @@ export function sanitizeRoute(route: KonnectRoute): KonnectRoute {
     hosts: sanitizeStringArray(route.hosts),
     headers: route.headers
       ? Object.fromEntries(
-        Object.entries(route.headers)
-          .map(([k, vs]): [string, string[]] => [stripTemplateSyntax(k), sanitizeStringArray(vs) ?? []])
-          .filter(([k, vs]) => k.trim() !== '' && vs.length > 0),
-      )
+          Object.entries(route.headers)
+            .map(([k, vs]): [string, string[]] => [stripTemplateSyntax(k), sanitizeStringArray(vs) ?? []])
+            .filter(([k, vs]) => k.trim() !== '' && vs.length > 0),
+        )
       : null,
     expression: route.expression !== null ? stripTemplateSyntax(route.expression) : null,
   };
@@ -79,7 +81,7 @@ export function extractRegionFromEndpoint(endpoint: string): string {
 /**
  * Names of the proxy environment variables Konnect sync manages.
  * On first sync, values are auto-filled from the control plane's `proxy_urls`
- * when available; otherwise created as empty strings for manual entry.
+ * when available.
  *
  * - `proxy_host`: host (with port when non-standard), used in http/https/ws/wss URLs.
  * - `grpc_proxy_host`: host:port, used in grpc:// URLs.
@@ -199,7 +201,9 @@ export function generatePathPlaceholder(
   // Validation: Check for leftover regex syntax
   const hasLeftoverRegex = /[()[\]*+?\\]/.test(path);
   if (hasLeftoverRegex) {
-    if (fallbackMode === 'keep') { return { path: regexString, pathParameters: [] }; }
+    if (fallbackMode === 'keep') {
+      return { path: regexString, pathParameters: [] };
+    }
     return { path: '/:path', pathParameters: [{ name: 'path', value: '' }] };
   }
 
@@ -221,8 +225,12 @@ export function generatePathPlaceholder(
  * - regex path (Kong `~` prefix) → parsed via generatePathPlaceholder
  */
 export function resolvePath(rawPath: string | null): ResolvedPath {
-  if (rawPath === null) { return { path: '', pathParameters: [] }; }
-  if (rawPath.startsWith('~')) { return generatePathPlaceholder(rawPath.slice(1)); }
+  if (rawPath === null) {
+    return { path: '', pathParameters: [] };
+  }
+  if (rawPath.startsWith('~')) {
+    return generatePathPlaceholder(rawPath.slice(1));
+  }
   return { path: rawPath, pathParameters: [] };
 }
 
@@ -230,15 +238,17 @@ export function routeDisplayName(route: { name: string | null; id: string }): st
   return route.name ?? `Route ${route.id}`;
 }
 
-export function buildRequestName(
-  route: { name: string | null; paths: string[] | null; id: string },
-): string {
+export function buildRequestName(route: { name: string | null; paths: string[] | null; id: string }): string {
   const rawPath = route.paths?.[0];
-  if (rawPath === undefined) { return routeDisplayName(route); }
+  if (rawPath === undefined) {
+    return routeDisplayName(route);
+  }
   const resolved = resolvePath(rawPath).path;
   // If the regex was too complex to parse (fell back to '/:path'), use the raw
   // Kong path (including the '~' prefix) — it's more informative than '/:path'.
-  if (resolved === '/:path') { return rawPath; }
+  if (resolved === '/:path') {
+    return rawPath;
+  }
   return resolved || routeDisplayName(route);
 }
 
@@ -282,7 +292,9 @@ export function pathParametersChanged(
   existing: { name: string; value: string }[],
   incoming: { name: string; value: string }[],
 ): boolean {
-  if (existing.length !== incoming.length) { return true; }
+  if (existing.length !== incoming.length) {
+    return true;
+  }
   return existing.some((p, i) => p.name !== incoming[i].name);
 }
 
@@ -305,9 +317,112 @@ export function konnectHeadersChanged(
   for (const h of existing) {
     const expected = incomingByName.get(h.name);
     if (expected !== undefined) {
-      if (h.value !== expected) { return true; }
+      if (h.value !== expected) {
+        return true;
+      }
       matched++;
     }
   }
   return matched !== incoming.length;
+}
+
+export function getKonnectDeploymentType(controlPlane: KonnectControlPlane): KonnectDeploymentType | null {
+  const controlPlaneType = controlPlaneConfigToControlPlaneType({
+    cluster_type: controlPlane.config.cluster_type as keyof typeof CLUSTER_TYPE_TO_CP_TYPE_MAP,
+    cloud_gateway: controlPlane.config.cloud_gateway,
+  });
+
+  switch (controlPlaneType) {
+    case ControlPlaneType.K8SIngressController: {
+      return 'k8sIngressController';
+    }
+    case ControlPlaneType.Cloud: {
+      return 'dedicatedCloud';
+    }
+    case ControlPlaneType.Serverless: {
+      return 'serverless';
+    }
+    case ControlPlaneType.GroupWithCloudDataPlanes:
+    case ControlPlaneType.GroupWithOnPremDataPlanes: {
+      return 'group';
+    }
+    case ControlPlaneType.ServerlessV1: {
+      return 'serverless';
+    }
+    default: {
+      return 'selfManaged';
+    }
+  }
+}
+
+enum ControlPlaneType {
+  Hybrid = 'CONTROL_PLANE_TYPE_HYBRID', // self managed
+  Cloud = 'CONTROL_PLANE_TYPE_CLOUD', // Dedicated cloud
+  K8SIngressController = 'CONTROL_PLANE_TYPE_K8S_INGRESS_CONTROLLER', // KIC
+  /**
+   * Group of hybrid-type control planes, on-prem data planes can connect to this control plane group
+   */
+  GroupWithOnPremDataPlanes = 'CONTROL_PLANE_TYPE_GROUP_WITH_ON_PREM_DATA_PLANES',
+  /**
+   * Group of hybrid-type control planes, cloud data planes can be created and managed by this control plane group
+   */
+  GroupWithCloudDataPlanes = 'CONTROL_PLANE_TYPE_GROUP_WITH_CLOUD_DATA_PLANES',
+  Serverless = 'CONTROL_PLANE_TYPE_SERVERLESS', // Serverless.v0 deployed on fly.io
+  ServerlessV1 = 'CONTROL_PLANE_TYPE_SERVERLESS_V1', // Serverless.v1 (previously HVC)
+  // NativeEventProxy = 'CONTROL_PLANE_TYPE_KAFKA_NATIVE_EVENT_PROXY', // KNEP is deprecated in GM, DO NOT add it back
+}
+
+const ControlPlaneClusterTypeEnum = {
+  ControlPlane: 'CLUSTER_TYPE_CONTROL_PLANE',
+  K8SIngressController: 'CLUSTER_TYPE_K8S_INGRESS_CONTROLLER',
+  ControlPlaneGroup: 'CLUSTER_TYPE_CONTROL_PLANE_GROUP',
+  Serverless: 'CLUSTER_TYPE_SERVERLESS',
+  HttpGateway: 'CLUSTER_TYPE_HTTP_GATEWAY',
+  EventGateway: 'CLUSTER_TYPE_EVENT_GATEWAY',
+  KafkaNativeEventProxy: 'CLUSTER_TYPE_KAFKA_NATIVE_EVENT_PROXY',
+  CloudApiGateway: 'CLUSTER_TYPE_CLOUD_API_GATEWAY',
+  ServerlessV1: 'CLUSTER_TYPE_SERVERLESS_V1',
+};
+
+const CLUSTER_TYPE_TO_CP_TYPE_MAP = {
+  [ControlPlaneClusterTypeEnum.ControlPlane]: { false: ControlPlaneType.Hybrid, true: ControlPlaneType.Cloud },
+  [ControlPlaneClusterTypeEnum.K8SIngressController]: { false: ControlPlaneType.K8SIngressController },
+  [ControlPlaneClusterTypeEnum.ControlPlaneGroup]: {
+    false: ControlPlaneType.GroupWithOnPremDataPlanes,
+    true: ControlPlaneType.GroupWithCloudDataPlanes,
+  },
+  [ControlPlaneClusterTypeEnum.Serverless]: { false: ControlPlaneType.Serverless },
+  [ControlPlaneClusterTypeEnum.ServerlessV1]: { true: ControlPlaneType.ServerlessV1 },
+  // Placeholders for other cluster types
+  [ControlPlaneClusterTypeEnum.CloudApiGateway]: { true: ControlPlaneType.ServerlessV1 }, // TODO: remove this when CLUSTER_TYPE_SERVERLESS_V1 is accepted by the API (KHCP-19640)
+  [ControlPlaneClusterTypeEnum.HttpGateway]: { false: null },
+  [ControlPlaneClusterTypeEnum.EventGateway]: { false: null },
+  [ControlPlaneClusterTypeEnum.KafkaNativeEventProxy]: { false: null }, // KNEP is deprecated, DO NOT map it to any CP type
+} as const;
+
+type ControlPlaneConfigToControlPlaneType<
+  T extends keyof typeof CLUSTER_TYPE_TO_CP_TYPE_MAP,
+  C extends boolean,
+> = `${C}` extends keyof (typeof CLUSTER_TYPE_TO_CP_TYPE_MAP)[T]
+  ? (typeof CLUSTER_TYPE_TO_CP_TYPE_MAP)[T][`${C}`]
+  : never;
+
+type NeverToNull<T> = T extends never ? null : T;
+
+function controlPlaneConfigToControlPlaneType<
+  T extends keyof typeof CLUSTER_TYPE_TO_CP_TYPE_MAP,
+  C extends boolean,
+>(config: { cluster_type: T; cloud_gateway: C }): NeverToNull<ControlPlaneConfigToControlPlaneType<T, C>> {
+  type ReturnType = NeverToNull<ControlPlaneConfigToControlPlaneType<T, C>>;
+  const { cluster_type: clusterType, cloud_gateway: isCloudGateway } = config;
+  const subMap = CLUSTER_TYPE_TO_CP_TYPE_MAP[clusterType];
+  if (subMap && Object.hasOwnProperty.call(subMap, `${isCloudGateway}`)) {
+    return subMap[`${isCloudGateway}` as keyof typeof subMap] as ReturnType;
+  }
+  // this should never happen, but just in case
+  console.error(
+    `ControlPlaneConfigToControlPlaneType: invalid clusterType ${clusterType} or cloud_gateway ${isCloudGateway}`,
+  );
+
+  return null as ReturnType;
 }
