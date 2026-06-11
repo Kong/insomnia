@@ -1,15 +1,24 @@
 import React from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
-export const UnsavedChangesConfirmDialog = ({
-  isOpen,
-  onConfirm,
-  onDismiss,
-}: {
+interface Props {
+  /** Whether the confirm dialog is visible. */
   isOpen: boolean;
+  /** Called when the user confirms discarding their unsaved changes. */
   onConfirm: () => void;
+  /** Called when the user backs out (Escape, the "No" button) to keep editing. */
   onDismiss: () => void;
-}) => (
+}
+
+/**
+ * Presentational confirm dialog for "you have unsaved changes" flows. Stateless
+ * and fully controlled — it only renders based on `isOpen` and reports the
+ * user's choice via `onConfirm` (discard) / `onDismiss` (keep editing).
+ *
+ * Normally you don't render this directly: `UnsavedChangesGuard` owns the open
+ * state and renders it for you. Reach for it only when you need custom placement.
+ */
+export const UnsavedChangesConfirmDialog = ({ isOpen, onConfirm, onDismiss }: Props) => (
   <ModalOverlay
     isOpen={isOpen}
     onOpenChange={open => !open && onDismiss()}
