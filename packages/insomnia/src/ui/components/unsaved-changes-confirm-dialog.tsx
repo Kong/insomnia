@@ -16,11 +16,11 @@ export const UnsavedChangesConfirmDialog = ({
     className="fixed top-0 left-0 z-[200] flex h-(--visual-viewport-height) w-full items-center justify-center bg-transparent"
   >
     <Modal className="flex w-full max-w-sm flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-6 text-(--color-font) shadow-xl">
-      <Dialog className="flex flex-col gap-4 outline-hidden">
+      <Dialog className="flex flex-col gap-4 outline-hidden" aria-describedby="unsaved-description">
         <Heading slot="title" className="text-lg font-semibold">
           Unsaved changes
         </Heading>
-        <p className="text-sm">
+        <p id="unsaved-description" className="text-sm">
           You will lose any unsaved changes. Are you sure you want to cancel?
         </p>
         <div className="flex items-center justify-end gap-2">
