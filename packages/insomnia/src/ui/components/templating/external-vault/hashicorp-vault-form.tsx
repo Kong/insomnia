@@ -2,8 +2,8 @@ import type { CloudProviderCredential } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React from 'react';
 
-import { useRootLoaderData } from '~/root';
 import type { NunjucksParsedTag } from '~/templating/types';
+import { useCloudCredentials } from '~/ui/hooks/data';
 
 import { HelpTooltip } from '../../help-tooltip';
 import {
@@ -25,7 +25,7 @@ const { HashiCorpCredentialType } = models.cloudCredential;
 const defaultKVVersion = 'v2';
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
-  const { cloudCredentials } = useRootLoaderData()!;
+  const cloudCredentials = useCloudCredentials();
 
   const { formData, onChange, activeTagData } = props;
   const { secretName } = formData;

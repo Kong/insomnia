@@ -3,8 +3,7 @@ import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
-import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.update';
-import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
+import { useCreateCloudCredential, useUpdateCloudCredential } from '~/ui/hooks/data';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
 import { plugins } from '../../../../plugins/renderer-bridge';
@@ -31,27 +30,27 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const [manulInputUrl, setManualInputUrl] = useState('');
   const providerDisplayName = getProviderDisplayName(provider);
 
-  const updateCloudCredentialsFetcher = useUpdateCloudCredentialActionFetcher();
-  const createCloudCredentialsFetcher = useCreateCloudCredentialActionFetcher();
+  const updateCloudCredentialsFetcher = useUpdateCloudCredential();
+  const createCloudCredentialsFetcher = useCreateCloudCredential();
   const isEditing = !!providerCredential;
   const upsertFetcher = isEditing ? updateCloudCredentialsFetcher : createCloudCredentialsFetcher;
 
   const fetchErrorMessage = upsertFetcher.data && 'error' in upsertFetcher.data ? upsertFetcher.data.error : '';
 
-  const isLoading = upsertFetcher.state !== 'idle';
+  const isLoading = upsertFetcher.isPending;
 
   const handleFormSubmit = (data: BaseCloudCredential & { isAuthenticated?: boolean }) => {
     const { name, credentials, isAuthenticated = false } = data;
     const patch = { name, credentials, provider } as Partial<CloudProviderCredential>;
 
     if (isEditing) {
-      return updateCloudCredentialsFetcher.submit({
+      return updateCloudCredentialsFetcher.mutate({
         patch,
         cloudCredentialId: providerCredential._id,
       });
     }
 
-    return createCloudCredentialsFetcher.submit({
+    return createCloudCredentialsFetcher.mutate({
       name,
       credentials,
       provider,
@@ -96,12 +95,12 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
 
   useEffect(() => {
     // close modal if submit success
-    if (upsertFetcher.data && !('error' in upsertFetcher.data) && upsertFetcher.state === 'idle') {
+    if (upsertFetcher.data && !('error' in upsertFetcher.data) && !upsertFetcher.isPending) {
       const newCredentialData = upsertFetcher.data;
       onClose(newCredentialData);
       onComplete && onComplete(newCredentialData);
     }
-  }, [upsertFetcher.data, upsertFetcher.state, onClose, onComplete]);
+  }, [upsertFetcher.data, upsertFetcher.isPending, onClose, onComplete]);
 
   return (
     <ModalOverlay

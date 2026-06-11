@@ -659,7 +659,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
 
   const workspaceData = useWorkspaceLoaderData();
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const { workspaceCount, userSession } = useRootLoaderData()!;
+  const { userSession } = useRootLoaderData()!;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
@@ -686,7 +686,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-
+  const [workspaceCount, setWorkspaceCount] = useState(0);
+  useEffect(() => {
+    services.workspace.count().then(setWorkspaceCount);
+  }, []);
   useEffect(() => {
     onModalChange?.(isImportModalOpen || isImportProjectsModalOpen || isExportModalOpen);
   }, [isImportModalOpen, isImportProjectsModalOpen, isExportModalOpen, onModalChange]);
