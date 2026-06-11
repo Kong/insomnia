@@ -205,7 +205,7 @@ export const Plugins: FC = () => {
                     showModal(PluginInstallModal, { name, returnToSettings: true });
                   }}
                 >
-                  Review & Install
+                  Preview
                 </Button>
               </div>
             </div>

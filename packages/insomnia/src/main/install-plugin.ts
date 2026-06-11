@@ -140,28 +140,10 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
       throw new Error('Invalid plugin metadata: missing tarball URL');
     }
 
-    // Step 3: Ensure the plugin tarball can be fetched
-    try {
-      // Validate the host allowlist + loopback (with DNS re-resolution) immediately before fetching.
-      await assertTarballUrlAllowed(info.dist.tarball);
-
-      // Reject redirects: a 3xx could otherwise forward the request to an internal host that
-      // bypassed the checks above (the same posture as the remote-ruleset fetcher). Combined with
-      // re-validating the final response URL below, this closes the redirect/rebinding window that
-      // a plain follow-redirects fetch would leave open between the check and the connection.
-      const tarballResponse = await net.fetch(info.dist.tarball, { redirect: 'error' });
-
-      // Re-validate the URL we actually landed on, in case the network layer resolved/redirected
-      // somewhere other than what we validated.
-      await assertTarballUrlAllowed(tarballResponse.url);
-
-      // Check if the response is OK (status code 200)
-      if (!tarballResponse.ok) {
-        throw new Error(`Failed to fetch tarball: ${tarballResponse.statusText}`);
-      }
-    } catch (err: any) {
-      throw new Error(`Failed to fetch plugin tarball ${info.dist.tarball}: ${err.message}`);
-    }
+    // Step 3: Validate the tarball host against the allowlist and check for DNS rebinding before
+    // handing off to Yarn. Yarn resolves and downloads the tarball itself (the original install
+    // path); we don't pre-fetch it — that would break on registries that redirect .tgz downloads.
+    await assertTarballUrlAllowed(info.dist.tarball);
 
     // Step 4: Install the plugin into a temporary directory
     tmpDir = await installPluginToTmpDir(pluginName, allowScopedPackageNames);
@@ -257,13 +239,46 @@ export async function getPluginInfo(lookupName: string, allowScopedPackageNames 
   console.log('[plugins] Fetching module info from npm');
 
   const registryUrl = await getRegistryUrl();
-  const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', registryUrl]);
+  let stdout: string;
+  try {
+    stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', registryUrl]);
+  } catch (err) {
+    // Yarn writes a JSON error object to stderr when the package doesn't exist on the registry.
+    // Parse it and surface a readable message instead of the raw JSON string.
+    const raw = err instanceof Error ? err.message : String(err);
+    const match = raw.match(/\{.*\}/s);
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[0]);
+        if (parsed?.type === 'error') {
+          const detail: string = parsed.data ?? '';
+          if (/invalid response|not found|404|does not exist/i.test(detail)) {
+            throw new Error(`Plugin "${lookupName}" was not found on the registry.`);
+          }
+        }
+      } catch (innerErr) {
+        if (innerErr instanceof Error && innerErr.message.startsWith('Plugin "')) {
+          throw innerErr;
+        }
+      }
+    }
+    throw err;
+  }
 
   let yarnOutput;
   try {
     yarnOutput = JSON.parse(stdout);
   } catch (err) {
     throw new Error(`Invalid JSON received from yarn: ${(err as Error).message}`);
+  }
+
+  // Yarn can also surface errors via stdout JSON (type: 'error') for some registry failures.
+  if (yarnOutput?.type === 'error') {
+    const detail: string = yarnOutput.data ?? '';
+    if (/invalid response|not found|404|does not exist/i.test(detail)) {
+      throw new Error(`Plugin "${lookupName}" was not found on the registry.`);
+    }
+    throw new Error(detail || 'Unknown yarn error');
   }
 
   const data = yarnOutput.data;

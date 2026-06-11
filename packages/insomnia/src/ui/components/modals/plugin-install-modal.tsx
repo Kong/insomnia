@@ -110,7 +110,9 @@ export const PluginInstallModal = forwardRef<PluginInstallModalHandle, ModalProp
             if (requestIdRef.current !== requestId) {
               return;
             }
-            // Best-effort: is this package already installed, and at what version?
+            // Reload from disk so the installed check reflects the real filesystem state (not the
+            // startup-time in-memory cache, which won't know about manually deleted plugin folders).
+            await pluginsBridge.reloadPlugins().catch(() => {});
             const installed = await pluginsBridge.getPlugins().catch((): SerializablePlugin[] => []);
             if (requestIdRef.current !== requestId) {
               return;
@@ -172,14 +174,8 @@ export const PluginInstallModal = forwardRef<PluginInstallModalHandle, ModalProp
   const isUpToDate = !!preview && installedVersion === preview.version;
   const isUpgrade = !!installedVersion && !isUpToDate;
   const installDisabled = isLoading || isInstalling || !preview || !preview.tarballHostAllowed || isUpToDate;
-  const installLabel = isInstalling
-    ? 'Installing…'
-    : isUpToDate
-      ? 'Installed'
-      : isUpgrade
-        ? `Update to v${preview?.version}`
-        : 'Install';
-  const installIconName = isInstalling ? 'spinner' : isUpToDate ? 'circle-check' : 'download';
+  const installLabel = isUpgrade ? `Update to v${preview?.version}` : 'Install';
+  const installIconName = isInstalling ? 'spinner' : 'download';
 
   return (
     <Modal ref={modalRef} wide onHide={handleHidden}>
@@ -207,20 +203,34 @@ export const PluginInstallModal = forwardRef<PluginInstallModalHandle, ModalProp
           <div className="flex flex-col gap-4">
             {/* Header / identity */}
             <div className="flex items-start gap-4">
-              {iconSrc && !iconError ? (
-                // Square Gravatar profile photo; fall back to the plug icon if the author has no
-                // Gravatar (404) or it otherwise fails to load.
-                <img
-                  src={iconSrc}
-                  alt=""
-                  onError={() => setState(prev => ({ ...prev, iconError: true }))}
-                  className="h-14 w-14 shrink-0 rounded-md bg-(--hl-xs) object-cover"
-                />
-              ) : (
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-(--hl-xs)">
-                  <Icon icon="plug" className="h-6 w-6 text-(--hl)" />
-                </div>
-              )}
+              {/* Left column: avatar + install button, both the same width */}
+              <div className="flex w-20 shrink-0 flex-col items-stretch gap-2">
+                {iconSrc && !iconError ? (
+                  // Square Gravatar profile photo; fall back to the plug icon if the author has no
+                  // Gravatar (404) or it otherwise fails to load.
+                  <img
+                    src={iconSrc}
+                    alt=""
+                    onError={() => setState(prev => ({ ...prev, iconError: true }))}
+                    className="h-20 w-20 rounded-md bg-(--hl-xs) object-cover"
+                  />
+                ) : (
+                  <div className="flex h-20 w-20 items-center justify-center rounded-md bg-(--hl-xs)">
+                    <Icon icon="plug" className="h-7 w-7 text-(--hl)" />
+                  </div>
+                )}
+                <button
+                  title={installLabel}
+                  className="flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-2 py-1.5 text-xs font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50"
+                  disabled={installDisabled}
+                  onClick={handleInstall}
+                >
+                  <Icon icon={installIconName} className={`shrink-0 ${isInstalling ? 'animate-spin' : ''}`} />
+                  {!isInstalling && <span className="truncate">{installLabel}</span>}
+                </button>
+              </div>
+
+              {/* Right column: title, subline, stats, description */}
               <div className="min-w-0 flex-1">
                 {/* displayName / name / publisher are untrusted plain text */}
                 <h2 className="truncate text-xl font-bold text-(--color-font)">{preview.displayName || preview.name}</h2>
@@ -262,18 +272,6 @@ export const PluginInstallModal = forwardRef<PluginInstallModalHandle, ModalProp
                 )}
 
                 {preview.description && <p className="mt-2 text-sm text-(--color-font)">{preview.description}</p>}
-
-                {/* Primary action lives up here under the description (no footer / Cancel button). */}
-                <div className="mt-3">
-                  <button
-                    className="flex items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50"
-                    disabled={installDisabled}
-                    onClick={handleInstall}
-                  >
-                    <Icon icon={installIconName} className={isInstalling ? 'animate-spin' : ''} />
-                    {installLabel}
-                  </button>
-                </div>
               </div>
             </div>
 
