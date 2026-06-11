@@ -119,31 +119,12 @@ test.describe('Cloud Sync', () => {
         win.webContents.send('mainWindowFocusChange', true);
       });
     });
+
     await page.getByLabel('Git Sync').click({ delay: 1000 });
-
-    // Pull can fail if there are local unstaged changes; normalize state first.
-    const discardAllChanges = page.getByLabel('Discard all changes');
-    if (await discardAllChanges.isVisible()) {
-      const isDisabled = await discardAllChanges.getAttribute('aria-disabled');
-      if (isDisabled !== 'true') {
-        await discardAllChanges.click();
-      }
-    }
-
     const pullButton = page.getByLabel('Pull');
-    let hasPullAction = true;
-    try {
-      await pullButton.waitFor({ state: 'visible', timeout: 5000 });
-    } catch {
-      hasPullAction = false;
-    }
+    await expect.soft(pullButton).not.toHaveAttribute('aria-disabled', 'true');
+    await pullButton.click();
 
-    if (hasPullAction) {
-      const pullDisabled = await pullButton.getAttribute('aria-disabled');
-      if (pullDisabled !== 'true') {
-        await pullButton.click();
-      }
-    }
     // Keep focus in environment tree after sync to avoid transient focus races.
     await page.getByLabel('My Environment').first().click();
     await fetch(`${devServerUrl}/__test-config/cloud-sync/new-commit`, {
