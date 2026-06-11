@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 /**
  * Page object for the **project navigation sidebar** (left-side tree).
@@ -157,6 +157,7 @@ export class NavigationSidebar {
   async clickRequestOrFolder(requestOrGroupName: string, workspaceName?: string): Promise<void> {
     const row = this.requestRow(requestOrGroupName, workspaceName);
     await row.click();
+    await expect.soft(row).toHaveAttribute('data-selected', 'true');
   }
 
   async openRequestActionsDropdown(requestName: string, workspaceName?: string): Promise<void> {

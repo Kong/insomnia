@@ -66,7 +66,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
     const [undefinedEnvironmentVariables, setUndefinedEnvironmentVariables] = useState('');
     const undefinedEnvironmentVariableList = undefinedEnvironmentVariables?.split(',');
-    if (searchParams.has('error')) {
+
+    useEffect(() => {
+      if (!searchParams.has('error')) {
+        return;
+      }
+
       if (searchParams.has('envVariableMissing') && searchParams.get('undefinedEnvironmentVariables')) {
         setShowEnvVariableMissingModal(true);
         setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
@@ -104,10 +109,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         });
       }
 
-      // clean up params
-      searchParams.delete('error');
       setSearchParams({});
-    }
+    }, [searchParams, setSearchParams]);
 
     const { activeWorkspace, activeEnvironment } = useWorkspaceLoaderData()!;
     const { settings } = useRootLoaderData()!;

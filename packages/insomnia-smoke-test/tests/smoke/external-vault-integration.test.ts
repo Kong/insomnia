@@ -65,6 +65,11 @@ test('Setup external vault and used in request', async ({ app, page, insomnia })
 
   // close the settings
   await page.locator('.app').press('Escape');
+  // dismiss any remaining modal overlay before interacting with the sidebar
+  await page
+    .locator('[data-close-modal="true"]')
+    .click()
+    .catch(() => {});
 
   // used in request
   await insomnia.navigationSidebar.clickRequestOrFolder('External Vault Tag');

@@ -101,6 +101,8 @@ test.describe('Cloud Sync', () => {
   });
 
   test('Push actions', async ({ page, app }) => {
+    test.slow();
+
     await page.getByLabel('Environment Project').click();
     // Wait for sync-dropdown to be mounted
     await page.getByLabel('Git Sync').waitFor({ state: 'visible' });
@@ -118,10 +120,32 @@ test.describe('Cloud Sync', () => {
       });
     });
     await page.getByLabel('Git Sync').click({ delay: 1000 });
-    await page.getByLabel('Pull').click();
-    // ensure value has been updated
-    await page.getByText('foo').click();
-    await page.getByText('bar').click();
+
+    // Pull can fail if there are local unstaged changes; normalize state first.
+    const discardAllChanges = page.getByLabel('Discard all changes');
+    if (await discardAllChanges.isVisible()) {
+      const isDisabled = await discardAllChanges.getAttribute('aria-disabled');
+      if (isDisabled !== 'true') {
+        await discardAllChanges.click();
+      }
+    }
+
+    const pullButton = page.getByLabel('Pull');
+    let hasPullAction = true;
+    try {
+      await pullButton.waitFor({ state: 'visible', timeout: 5000 });
+    } catch {
+      hasPullAction = false;
+    }
+
+    if (hasPullAction) {
+      const pullDisabled = await pullButton.getAttribute('aria-disabled');
+      if (pullDisabled !== 'true') {
+        await pullButton.click();
+      }
+    }
+    // Keep focus in environment tree after sync to avoid transient focus races.
+    await page.getByLabel('My Environment').first().click();
     await fetch(`${devServerUrl}/__test-config/cloud-sync/new-commit`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

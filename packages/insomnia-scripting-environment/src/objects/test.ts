@@ -1,5 +1,7 @@
 import type { RequestTestResult } from 'insomnia-data';
 
+const NativePromise = Promise;
+
 /** @ignore */
 export async function test(msg: string, fn: () => Promise<void>, log: (testResult: RequestTestResult) => void) {
   const wrapFn = async () => {
@@ -33,9 +35,15 @@ export async function test(msg: string, fn: () => Promise<void>, log: (testResul
 }
 
 let testPromises = new Array<Promise<void>>();
+
+/** @ignore */
+export function resetTestPromises() {
+  testPromises = [];
+}
+
 /** ignore */
 export async function waitForAllTestsDone() {
-  await Promise.allSettled(testPromises);
+  await NativePromise.allSettled(testPromises);
   testPromises = [];
 }
 function startTestObserver(promise: Promise<void>) {
