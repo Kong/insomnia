@@ -1,6 +1,7 @@
+import { useQueries, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
-import type { RequestGroup, Workspace } from 'insomnia-data';
+import type { BaseModel, RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import {
   type Dispatch,
@@ -20,8 +21,14 @@ import * as reactUse from 'react-use';
 
 import { Button as BasicButton } from '~/basic-components/button';
 import type { SortOrder } from '~/common/constants';
+import type { ChangeBufferEvent } from '~/common/database';
 import { fuzzyMatchAll } from '~/common/misc';
-import { getAllRemoteBackendProjectsOfOrg, getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
+import {
+  getAllRemoteBackendProjectsOfOrg,
+  getProjectsWithGitRepositories,
+  getUnsyncedRemoteWorkspaces,
+  type InsomniaFile,
+} from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
@@ -35,21 +42,24 @@ import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-mo
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
-import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
 import {
   type AllRequestsAndMetaInWorkspace,
+  COLLECTION_QUERY_KEY,
+  collectionQueryKey,
   filterCollection,
   flattenCollectionChildren,
   getAllRequestsAndMetaByWorkspace,
   getWorkspacesByProjectIds,
+  projectsQueryKey,
+  SIDEBAR_RELEVANT_DOC_TYPES,
+  workspacesQueryKey,
 } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
@@ -167,19 +177,20 @@ const ProjectNavigationSidebarInner = (
     requestId?: string;
     requestGroupId?: string;
   };
-  const { userSession, settings } = useRootLoaderData()!;
-  const projectLoaderData = useProjectLoaderData()!;
-  const { projects, projectsSyncStatusPromise } = projectLoaderData;
-  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(
-    projectsSyncStatusPromise,
-    organizationId,
-  );
-  const { presence } = useInsomniaEventStreamContext();
+  const { settings } = useRootLoaderData()!;
+  const { projects: initialProjects } = useProjectLoaderData()!;
+  const queryClient = useQueryClient();
+  // Source the project list from React Query rather than the loader to avoid unnecessary re-render
+  const { data: projects = [] } = useQuery({
+    queryKey: projectsQueryKey(organizationId),
+    queryFn: async () => models.project.sortProjects(await getProjectsWithGitRepositories({ organizationId })),
+    initialData: initialProjects,
+  });
+
   const [searchParams, _setSearchParams] = useSearchParams();
   const tabNavigate = useTabNavigate();
 
   const [collectionSortOrders, setCollectionSortOrders] = useState<Record<string, SortOrder>>({});
-  const [flatItems, setFlatItems] = useState<FlatItem[]>([]);
   const [projectWorkspaceSortOrder, setProjectWorkspaceSortOrder] = useState<Record<string, WorkspaceSortOrder>>({});
   const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
   // Customized workspace sort orders by projectId
@@ -207,45 +218,23 @@ const ProjectNavigationSidebarInner = (
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
-  // ref to cache queried workspaces by project id
-  const cachedWorkspacesRef = useRef<Map<string, Workspace[]>>(new Map());
-  // ref to cache queried collection children (request & requestGroups) data and meta by workspace id
-  const cachedCollectionChildrenAndMetaRef = useRef<Map<string, AllRequestsAndMetaInWorkspace>>(new Map());
   // ref to track whether we are currently fetching unsynced files for cloud sync projects to avoid duplicate requests
   const isFetchingUnsyncedFilesRef = useRef(false);
 
   const syncKonnectProjectsAndNotifyRef = useRef<() => Promise<void>>(async () => {});
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
-
-  const projectsWithPresence = useMemo(
-    () =>
-      projects
-        .filter(isProjectTabActive ? p => !p.konnectControlPlaneId : p => p.konnectControlPlaneId != null)
-        .map(project => {
-          const projectPresence = presence
-            .filter(p => p.project === project.remoteId)
-            .filter(p => p.acct !== userSession.accountId)
-            .map(user => {
-              return {
-                key: user.acct,
-                alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-                src: user.avatar,
-              };
-            });
-          return {
-            ...project,
-            presence: projectPresence,
-            hasUncommittedOrUnpushedChanges:
-              checkAllProjectSyncStatus?.[project._id] ||
-              project.gitRepository?.hasUncommittedChanges ||
-              project.gitRepository?.hasUnpushedChanges,
-          };
-        }),
-    [projects, isProjectTabActive, presence, checkAllProjectSyncStatus, userSession.accountId],
+  // show konnect or none-konnect projects based on selected tab
+  const activeProjects = useMemo(
+    () => projects.filter(isProjectTabActive ? p => !p.konnectControlPlaneId : p => p.konnectControlPlaneId != null),
+    [isProjectTabActive, projects],
   );
+  const projectIds = useMemo(() => activeProjects.map(p => p._id), [activeProjects]);
 
-  const cloudSyncProjects = useMemo(() => projects.filter(p => models.project.isRemoteProject(p)), [projects]);
+  const cloudSyncProjects = useMemo(
+    () => activeProjects.filter(p => models.project.isRemoteProject(p)),
+    [activeProjects],
+  );
   // Generate a stable string key to trigger getOrFetchUnsyncedFiles when the list of cloud sync projects changes.
   const cloudSyncProjectIdsKey = useMemo(
     () =>
@@ -374,6 +363,30 @@ const ProjectNavigationSidebarInner = (
     }
   };
 
+  // Given a changed request/group/meta document, find its parent workspaceIds
+  const findCollectionWorkspaceIdsForChangedDoc = useCallback(
+    (doc: BaseModel) => {
+      const workspaceIds: string[] = [];
+      const cachedCollections = queryClient.getQueriesData<AllRequestsAndMetaInWorkspace>({
+        queryKey: [COLLECTION_QUERY_KEY],
+      });
+      for (const [queryKey, data] of cachedCollections) {
+        const workspaceId = queryKey[1] as string;
+        if (!data) {
+          continue;
+        }
+        if (
+          doc.parentId === workspaceId ||
+          data.allRequests.some(request => request._id === doc._id || request._id === doc.parentId)
+        ) {
+          workspaceIds.push(workspaceId);
+        }
+      }
+      return workspaceIds;
+    },
+    [queryClient],
+  );
+
   useEffect(() => {
     if (projectNavigationSidebarFilter) {
       window.main.trackAnalyticsEvent({
@@ -392,56 +405,105 @@ const ProjectNavigationSidebarInner = (
     return uiEventBus.on(CLOUD_SYNC_FILE_CHANGE, updateUnsyncedFiles);
   }, [getAllRemoteFilesByProjectId, organizationId]);
 
+  // Listen for local database changes and invalidate only the affected query keys,
   useEffect(() => {
-    // clear caches on any router data change to avoid showing stale data
-    cachedWorkspacesRef.current.clear();
-    cachedCollectionChildrenAndMetaRef.current.clear();
-  }, [projectLoaderData]);
+    return window.main.on('db.changes', (_, changes: ChangeBufferEvent[]) => {
+      // Ids of the projects whose workspaces data need to be invalidated
+      const projectIdsToInvalidate: string[] = [];
+      // Ids of the workspaces whose collection data need to be invalidated
+      const workspaceIdsToInvalidate: string[] = [];
+      let shouldInvalidateProjectList = false;
 
-  useEffect(() => {
-    const tryToGetWorkspacesFromCache = async (projectIds: string[]) => {
-      const uncachedProjectIds = projectIds.filter(id => !cachedWorkspacesRef.current.has(id));
-      if (uncachedProjectIds.length > 0) {
-        const workspacesByProjectId = await getWorkspacesByProjectIds(uncachedProjectIds);
-        for (const [projectId, workspaces] of workspacesByProjectId.entries()) {
-          cachedWorkspacesRef.current.set(projectId, workspaces);
+      for (const [, doc] of changes) {
+        if (!SIDEBAR_RELEVANT_DOC_TYPES.includes(doc.type)) {
+          continue;
         }
-      }
-      return cachedWorkspacesRef.current;
-    };
-    const tryToGetCollectionChildrenAndMetaFromCache = async (workspaceIds: string[]) => {
-      const uncachedWorkspaceIds = workspaceIds.filter(id => !cachedCollectionChildrenAndMetaRef.current.has(id));
-      if (uncachedWorkspaceIds.length > 0) {
-        const collectionChildAndMetaByWorkspaceId = await getAllRequestsAndMetaByWorkspace(uncachedWorkspaceIds);
-        for (const [workspaceId, collectionChildrenAndMeta] of collectionChildAndMetaByWorkspaceId.entries()) {
-          cachedCollectionChildrenAndMetaRef.current.set(workspaceId, collectionChildrenAndMeta);
+        if (doc.type === models.project.type) {
+          // A project was mutated, need to refresh the whole project list
+          shouldInvalidateProjectList = true;
+          continue;
         }
+        if (doc.type === models.workspace.type) {
+          // A workspace was mutated, refresh the workspace list under its parent project and the collection data.
+          projectIdsToInvalidate.push(doc.parentId);
+          continue;
+        }
+        // request/requestGroup/meta was mutated, find the parent workspace and refresh its collection data.
+        findCollectionWorkspaceIdsForChangedDoc(doc).forEach(id => workspaceIdsToInvalidate.push(id));
       }
-      return cachedCollectionChildrenAndMetaRef.current;
-    };
+      // Invalidate all affected queries at once after processing the whole batch of changes.
+      if (shouldInvalidateProjectList) {
+        queryClient.invalidateQueries({ queryKey: projectsQueryKey(organizationId) });
+      }
+      projectIdsToInvalidate.forEach(projectId =>
+        queryClient.invalidateQueries({ queryKey: workspacesQueryKey(projectId) }),
+      );
+      workspaceIdsToInvalidate.forEach(workspaceId =>
+        queryClient.invalidateQueries({ queryKey: collectionQueryKey(workspaceId) }),
+      );
+    });
+  }, [queryClient, organizationId, findCollectionWorkspaceIdsForChangedDoc]);
 
-    const buildWorkspaceAndCollectionData = async () => {
-      const items: FlatItem[] = [];
-      // Array of project and collection workspace ids that should get data from db
+  // Cached of workspaces by parent projectId
+  const workspacesByProjectId = useQueries({
+    queries: projectIds.map(projectId => ({
+      queryKey: workspacesQueryKey(projectId),
+      queryFn: async () => (await getWorkspacesByProjectIds([projectId])).get(projectId) ?? [],
+    })),
+    combine: useCallback(
+      (results: UseQueryResult<Workspace[]>[]) => {
+        const map = new Map<string, Workspace[]>();
+        projectIds.forEach((projectId, index) => map.set(projectId, results[index]?.data ?? []));
+        return map;
+      },
+      [projectIds],
+    ),
+  });
 
-      const projectIds = projectsWithPresence.map(p => p._id);
-      const collectionWorkspaceIds: string[] = [];
-      const workspacesByProject = await tryToGetWorkspacesFromCache(projectIds);
-      projectIds.forEach(projectId => {
-        const workspaces = workspacesByProject.get(projectId) || [];
-        workspaces.forEach(wk => {
-          if (
-            wk.scope === 'collection' &&
-            // Fetch collection children and meta if 1) the workspace is expanded or 2) there is an active filter
-            (!!projectNavigationSidebarFilter || (expandedProjectAndWorkspaceIds || []).includes(wk._id))
-          ) {
-            collectionWorkspaceIds.push(wk._id);
+  // Get the list of collection workspace ids that should be cached based on the current filter and expanded projects/workspaces. Only collection workspaces are cached because they are the only ones with requests/groups that need to be displayed in the tree — for non-collection workspaces we only display the workspace name, so no extra data fetching is needed.
+  const collectionWorkspaceIds = useMemo(() => {
+    const ids: string[] = [];
+    projectIds.forEach(projectId => {
+      (workspacesByProjectId.get(projectId) || []).forEach(workspace => {
+        if (
+          workspace.scope === 'collection' &&
+          (!!projectNavigationSidebarFilter || (expandedProjectAndWorkspaceIds || []).includes(workspace._id))
+        ) {
+          ids.push(workspace._id);
+        }
+      });
+    });
+    return ids;
+  }, [projectIds, workspacesByProjectId, projectNavigationSidebarFilter, expandedProjectAndWorkspaceIds]);
+
+  // Cached collection workspace data including all requests/groups and their meta (e.g. for sorting) by workspaceId
+  const collectionByWorkspaceId = useQueries({
+    queries: collectionWorkspaceIds.map(workspaceId => ({
+      queryKey: collectionQueryKey(workspaceId),
+      queryFn: async () => (await getAllRequestsAndMetaByWorkspace([workspaceId])).get(workspaceId),
+    })),
+    combine: useCallback(
+      (results: UseQueryResult<AllRequestsAndMetaInWorkspace | undefined>[]) => {
+        const map = new Map<string, AllRequestsAndMetaInWorkspace>();
+        collectionWorkspaceIds.forEach((workspaceId, index) => {
+          const data = results[index]?.data;
+          if (data) {
+            map.set(workspaceId, data);
           }
         });
-      });
-      const collectionChildrenAndMetaByWorkspaceId =
-        await tryToGetCollectionChildrenAndMetaFromCache(collectionWorkspaceIds);
-      for (const project of projectsWithPresence) {
+        return map;
+      },
+      [collectionWorkspaceIds],
+    ),
+  });
+
+  // Build the flat tree synchronously from the cached query data
+  const flatItems = useMemo<FlatItem[]>(() => {
+    const buildWorkspaceAndCollectionData = (): FlatItem[] => {
+      const items: FlatItem[] = [];
+      const workspacesByProject = workspacesByProjectId;
+      const collectionChildrenAndMetaByWorkspaceId = collectionByWorkspaceId;
+      for (const project of activeProjects) {
         const projectId = project._id;
         const isProjectCollapsed = !(expandedProjectAndWorkspaceIds ?? []).includes(projectId);
         items.push({
@@ -647,18 +709,19 @@ const ProjectNavigationSidebarInner = (
         });
       }
 
-      setFlatItems(items);
+      return items;
     };
-    buildWorkspaceAndCollectionData();
+    return buildWorkspaceAndCollectionData();
   }, [
+    workspacesByProjectId,
+    collectionByWorkspaceId,
     collectionSortOrders,
     projectWorkspaceSortOrder,
     expandedProjectAndWorkspaceIds,
-    isProjectTabActive,
     localWorkspaceOrders,
     organizationId,
     projectNavigationSidebarFilter,
-    projectsWithPresence,
+    activeProjects,
     unsyncedFilesByProjectId,
   ]);
 
@@ -671,7 +734,7 @@ const ProjectNavigationSidebarInner = (
       dropPosition: 'before' | 'after',
     ) => {
       const isMoveToDifferentProject = sourceProjectId !== targetProjectId;
-      const workspaces = cachedWorkspacesRef.current.get(targetProjectId) || [];
+      const workspaces = queryClient.getQueryData<Workspace[]>(workspacesQueryKey(targetProjectId)) || [];
       const currentWorkspaceSortOrder = projectWorkspaceSortOrder[targetProjectId] || 'type-manual';
       // Get the base order of workspace before re-order
       const baseOrder =
@@ -701,7 +764,7 @@ const ProjectNavigationSidebarInner = (
       }
       setLocalWorkspaceOrders({ ...localWorkspaceOrders, [targetProjectId]: reordered });
     },
-    [projectWorkspaceSortOrder, setLocalWorkspaceOrders, localWorkspaceOrders],
+    [projectWorkspaceSortOrder, setLocalWorkspaceOrders, localWorkspaceOrders, queryClient],
   );
 
   const toggleProjectOrWorkspace = useCallback(
@@ -757,7 +820,7 @@ const ProjectNavigationSidebarInner = (
       const requestGroupMetas = await Promise.all(
         requestGroupIds.map(requestGroupId => services.requestGroupMeta.getByParentId(requestGroupId)),
       );
-      // Update the collapsed state of the toggled request groups.
+      // Resolve the next collapsed state for each toggled request group.
       const nextStates = requestGroupIds.map((requestGroupId, index) => {
         const requestGroupMeta = requestGroupMetas[index];
         return {
@@ -765,99 +828,33 @@ const ProjectNavigationSidebarInner = (
           collapsed: collapsed ?? (requestGroupMeta ? !requestGroupMeta.collapsed : false),
         };
       });
+      const collapsedByRequestGroupId = new Map(
+        nextStates.map(({ requestGroupId, collapsed }) => [requestGroupId, collapsed]),
+      );
 
+      // Optimistically update the cached collection so the tree re-renders immediately.
+      queryClient.setQueryData<AllRequestsAndMetaInWorkspace>(collectionQueryKey(workspace._id), previous => {
+        if (!previous) {
+          return previous;
+        }
+        return {
+          ...previous,
+          requestGroupMetas: previous.requestGroupMetas.map(requestGroupMeta =>
+            collapsedByRequestGroupId.has(requestGroupMeta.parentId)
+              ? { ...requestGroupMeta, collapsed: collapsedByRequestGroupId.get(requestGroupMeta.parentId)! }
+              : requestGroupMeta,
+          ),
+        };
+      });
+
+      // Persist the change to database
       await Promise.all(
         nextStates.map(({ requestGroupId, collapsed }) =>
           services.requestGroupMeta.updateOrCreateForParentId(requestGroupId, { collapsed }),
         ),
       );
-      // Update the collapsed state in the cache.
-      cachedCollectionChildrenAndMetaRef.current.forEach(workspaceData => {
-        workspaceData.requestGroupMetas.forEach(requestGroupMeta => {
-          const nextState = nextStates.find(({ requestGroupId }) => requestGroupId === requestGroupMeta.parentId);
-          if (nextState) {
-            requestGroupMeta.collapsed = nextState.collapsed;
-          }
-        });
-      });
-
-      setFlatItems(previousFlatItems =>
-        nextStates.reduce((nextFlatItems, { requestGroupId, collapsed }) => {
-          const toggledChildren: { id: string; parentIsCollapsed: boolean }[] = [];
-
-          return nextFlatItems.map(item => {
-            if (item.kind === 'collectionChild') {
-              const { children, doc } = item;
-              // Find toggled request group and update collapsed state
-              if (doc._id === requestGroupId) {
-                // Add all children of the toggled request group to the array to update their hidden state
-                toggledChildren.push(
-                  ...(children?.map(child => ({ id: child.doc._id, parentIsCollapsed: collapsed })) ?? []),
-                );
-
-                return {
-                  ...item,
-                  collapsed,
-                  hidden: false,
-                };
-              }
-
-              const matchedToggledChild = toggledChildren.find(tc => tc.id === item.doc._id);
-              if (matchedToggledChild) {
-                const { parentIsCollapsed } = matchedToggledChild;
-                if (models.requestGroup.isRequestGroupId(doc._id)) {
-                  // Add children of the toggled child request group to the array to update their hidden state
-                  const isToggledRequestGroupCollapsed =
-                    parentIsCollapsed ||
-                    cachedCollectionChildrenAndMetaRef.current
-                      .get(workspace._id)
-                      ?.requestGroupMetas.find(rgm => rgm.parentId === doc._id)?.collapsed ||
-                    false;
-                  toggledChildren.push(
-                    ...(item.children?.map(child => ({
-                      id: child.doc._id,
-                      parentIsCollapsed: isToggledRequestGroupCollapsed,
-                    })) ?? []),
-                  );
-                }
-
-                return {
-                  ...item,
-                  hidden: parentIsCollapsed,
-                };
-              }
-            }
-
-            if (item.kind === 'emptyFolder') {
-              const parentFolder = item.requestGroup;
-              const parentFolderId = parentFolder?._id;
-              const matchedToggledChild = toggledChildren.find(tc => tc.id === parentFolderId);
-              // Update the emptyFolder node hidden state based on its parent request group collapsed state.
-              if (parentFolderId === requestGroupId) {
-                return {
-                  ...item,
-                  hidden: collapsed,
-                };
-              } else if (matchedToggledChild) {
-                return {
-                  ...item,
-                  hidden:
-                    matchedToggledChild.parentIsCollapsed ||
-                    // If the parent folder is toggled to be expanded, the empty folder node should still be hidden if its parent request group is collapsed.
-                    cachedCollectionChildrenAndMetaRef.current
-                      .get(workspace._id)
-                      ?.requestGroupMetas.find(rgm => rgm.parentId === matchedToggledChild.id)?.collapsed ||
-                    false,
-                };
-              }
-            }
-
-            return item;
-          });
-        }, previousFlatItems),
-      );
     },
-    [projectNavigationSidebarFilter],
+    [projectNavigationSidebarFilter, queryClient],
   );
 
   const parentRef = useRef<HTMLDivElement>(null);
