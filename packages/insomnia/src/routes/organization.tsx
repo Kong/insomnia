@@ -386,7 +386,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                       </Tooltip>
                     </TooltipTrigger>
                     {!isScratchpadWorkspace && hasUntrackedData && (
-                      <div>
+                      <TooltipTrigger delay={500}>
                         <Button
                           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                           onPress={() => {
@@ -396,10 +396,16 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                             showModal(SettingsModal, { tab: 'data' });
                           }}
                         >
-                          <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click
-                          here to view them.
+                          <Icon icon="exclamation-circle" />
                         </Button>
-                      </div>
+                        <Tooltip
+                          placement="top"
+                          offset={8}
+                          className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                        >
+                          We have detected orphaned projects on your computer, click here to view them.
+                        </Tooltip>
+                      </TooltipTrigger>
                     )}
                   </div>
                   <div className="flex shrink grow basis-1/3 justify-end">
