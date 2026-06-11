@@ -542,7 +542,7 @@ async function upsertProjectEnvVars(controlPlane: KonnectControlPlane, project: 
   const existingByName = new Map(existingKvPairs.map(kv => [kv.name, kv]));
   const proxyDefaults = deriveProxyVarDefaults(controlPlane.proxy_urls);
   const newKvPairs = [...KONNECT_PROXY_VAR_NAMES]
-    .filter(name => !existingByName.has(name) && Boolean(proxyDefaults[name]))
+    .filter(name => !existingByName.has(name))
     .map(name => ({
       id: `env_${name}`,
       name,
