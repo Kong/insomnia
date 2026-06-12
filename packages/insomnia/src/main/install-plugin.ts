@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
-import { app, net } from 'electron';
+import { app } from 'electron';
 import { services } from 'insomnia-data';
 
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
@@ -100,25 +100,23 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
       throw new Error('Invalid plugin metadata: missing tarball URL');
     }
 
-    // Step 3: Ensure the plugin tarball can be fetched
+    // Step 3: only allow tarballs from known hosts
+    let tarballUrl: URL;
     try {
-      // After fetching info, check the info.dist.tarball. This prevents downloading from weird hosts.
-      const tarballUrl = new URL(info.dist.tarball);
-      const allowedTarballHostnames = await getAllowedTarballHostnames();
-      if (!allowedTarballHostnames.includes(tarballUrl.hostname)) {
-        throw new Error(`Tarball must come from an allowed host. Got: ${tarballUrl.hostname}`);
-      }
-
-      // Fetch the tarball to ensure it's accessible
-      // This is a simple check to ensure the tarball URL is valid and accessible
-      const tarballResponse = await net.fetch(info.dist.tarball);
-
-      // Check if the response is OK (status code 200)
-      if (!tarballResponse.ok) {
-        throw new Error(`Failed to fetch tarball: ${tarballResponse.statusText}`);
-      }
-    } catch (err: any) {
-      throw new Error(`Failed to fetch plugin tarball ${info.dist.tarball}: ${err.message}`);
+      tarballUrl = new URL(info.dist.tarball);
+    } catch {
+      throw new Error(`Invalid tarball URL in plugin metadata: ${info.dist.tarball}`);
+    }
+    const allowedTarballHostnames = await getAllowedTarballHostnames();
+    if (!allowedTarballHostnames.includes(tarballUrl.hostname)) {
+      throw new Error(`Tarball must come from an allowed host. Got: ${tarballUrl.hostname}`);
+    }
+    // and require https, unless it's the user's own http registry (same host:port)
+    const registryUrl = new URL(await getRegistryUrl());
+    const isUsersHttpRegistry =
+      registryUrl.protocol === 'http:' && tarballUrl.protocol === 'http:' && tarballUrl.host === registryUrl.host;
+    if (tarballUrl.protocol !== 'https:' && !isUsersHttpRegistry) {
+      throw new Error(`Tarball must be served over https. Got: ${info.dist.tarball}`);
     }
 
     // Step 4: Install the plugin into a temporary directory
