@@ -243,13 +243,18 @@ jobs:
         env:
           VERSION: ${{ env.INSO_VERSION }}
 
+      - name: Compile inso secure wrapper (Windows only)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: ./build-inso-wrapper.sh
+
       - name: Code-sign inso exe (Windows only)
         if: runner.os == 'Windows'
         uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
-          # If the below 2 parameters are supplied, then smctl executable is invoked to attempt the signing.
-          input: packages/insomnia-inso/binaries/inso.exe
+          # Sign the directory so both inso.exe (wrapper) and inso-node.exe (inner) are signed.
+          input: packages/insomnia-inso/binaries
           keypair-alias: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
         env:
           SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
