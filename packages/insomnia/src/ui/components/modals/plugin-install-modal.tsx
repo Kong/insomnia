@@ -356,7 +356,7 @@ export const PluginInstallModal = forwardRef<PluginInstallModalHandle, ModalProp
                 <h3 className="mb-3 text-sm font-bold tracking-wide text-(--hl) uppercase">Readme</h3>
                 {/* Untrusted README content: strip embedded images (often broken relative paths,
                     and a remote-load/tracking vector) and render text/code/links only. */}
-                <MarkdownPreview markdown={preview.readme} forbidImages />
+                <MarkdownPreview markdown={preview.readme} />
               </div>
             )}
           </div>

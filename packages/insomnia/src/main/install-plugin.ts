@@ -324,7 +324,8 @@ export interface PluginPreview {
   version: string;
   publisher?: {
     name: string;
-    icon?: string;
+    // icon is intentionally omitted — arbitrary author-supplied URLs must not leave the main
+    // process unvalidated. avatarUrl (Gravatar) fills the image role for the UI.
   };
   // Author's Gravatar profile image URL (d=404, so it fails over to the UI's fallback icon when the
   // author has no Gravatar). Undefined when no author email is published.
@@ -385,7 +386,7 @@ export async function getPluginPreview(lookupName: string, allowScopedPackageNam
     description: info.insomnia?.description,
     readme,
     version: info.version,
-    publisher: info.insomnia?.publisher,
+    publisher: info.insomnia?.publisher?.name ? { name: info.insomnia.publisher.name } : undefined,
     avatarUrl: gravatarUrlFromEmail(info.authorEmail),
     npmUrl: `https://www.npmjs.com/package/${info.name}`,
     dist: {

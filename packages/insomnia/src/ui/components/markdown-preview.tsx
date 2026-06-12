@@ -1,7 +1,7 @@
 import highlight from 'highlight.js/lib/common';
 import React, { type FC, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { markdownToHTML } from '../../common/markdown-to-html';
+import { markdownToHTMLSafe } from '../../common/markdown-to-html';
 import type { HandleRender } from '../../templating/types';
 
 interface Props {
@@ -9,12 +9,9 @@ interface Props {
   handleRender?: HandleRender;
   className?: string;
   heading?: string;
-  // When true, all <img> are stripped from the rendered output. Used for untrusted READMEs where
-  // embedded images (often relative paths) would either break or load arbitrary remote resources.
-  forbidImages?: boolean;
 }
 
-export const MarkdownPreview: FC<Props> = ({ markdown, heading, forbidImages }) => {
+export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [compiled, setCompiled] = useState('');
   const [error, setError] = useState('');
@@ -23,7 +20,7 @@ export const MarkdownPreview: FC<Props> = ({ markdown, heading, forbidImages }) 
     let shouldUpdate = true;
     const fn = async () => {
       try {
-        const compiled = markdownToHTML(markdown, forbidImages ? { FORBID_TAGS: ['img'] } : undefined);
+        const compiled = markdownToHTMLSafe(markdown);
         shouldUpdate && setCompiled(compiled);
         shouldUpdate && setError('');
       } catch (err) {
@@ -35,7 +32,7 @@ export const MarkdownPreview: FC<Props> = ({ markdown, heading, forbidImages }) 
     return () => {
       shouldUpdate = false;
     };
-  }, [markdown, forbidImages]);
+  }, [markdown]);
   useLayoutEffect(() => {
     if (!divRef.current) {
       return;
@@ -53,7 +50,10 @@ export const MarkdownPreview: FC<Props> = ({ markdown, heading, forbidImages }) 
   }, [compiled]);
   const _handleClickLink = (event: any) => {
     event.preventDefault();
-    window.main.openInBrowser(event.target.getAttribute('href'));
+    const href = (event.currentTarget as HTMLAnchorElement).getAttribute('href');
+    if (href) {
+      window.main.openInBrowser(href);
+    }
   };
 
   return (
