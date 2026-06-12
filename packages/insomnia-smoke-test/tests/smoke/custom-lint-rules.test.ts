@@ -61,6 +61,13 @@ const USER_B_SESSION = {
  * does not include `info.x-smoke-test-marker`, so once our custom ruleset is
  * uploaded the rule defined in fixtures/files/custom.spectral.yaml will fire.
  */
+async function expandLintPanel(page: Page) {
+  const lintButton = page.getByTestId('lint-panel-toggle');
+  await expect.soft(lintButton).toBeVisible({ timeout: 15_000 });
+  await lintButton.click();
+  await expect.soft(page.getByTestId('lint-panel')).toBeAttached({ timeout: 15_000 });
+}
+
 async function openPetStoreDesignDoc(page: Page) {
   await page.getByRole('button', { name: 'Create document' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
@@ -73,7 +80,9 @@ async function uploadRuleset(insomnia: InsomniaApp, page: Page) {
   await insomnia.queueOpenDialogResponse([RULESET_FIXTURE]);
   await page.getByLabel('Upload custom ruleset').click();
   // Soft assert per ESLint rule; a failure here will surface downstream as well.
-  await expect.soft(page.getByRole('button', { name: 'View selected ruleset content' })).toBeVisible({ timeout: 10_000 });
+  await expect
+    .soft(page.getByRole('button', { name: 'View selected ruleset content' }))
+    .toBeVisible({ timeout: 10_000 });
 }
 
 async function removeRuleset(page: Page) {
@@ -112,7 +121,10 @@ async function createGitDesignDocument(insomnia: InsomniaApp, page: Page, projec
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Lint Test Spec');
   await page.getByRole('textbox', { name: /File name/ }).fill('lint_test_spec');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
-  await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
+  await page
+    .getByRole('dialog')
+    .waitFor({ state: 'hidden', timeout: 10_000 })
+    .catch(() => {});
   // Populate with Pet Store example so the lint panel renders (requires non-empty apiSpec.contents).
   await page.getByText('Use example').click();
   await page.getByText('Pet Store').click();
@@ -159,9 +171,15 @@ test.describe('Custom Spectral Lint Rules', () => {
     await uploadRuleset(insomnia, insomnia.page);
 
     // Our custom rule should now fire on Pet Store.
+    await expandLintPanel(insomnia.page);
     await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({
       timeout: 15_000,
     });
+
+    // Capture error/warning counts before relaunch so we can assert persistence.
+    const lintToggle = insomnia.page.getByTestId('lint-panel-toggle');
+    await expect.soft(lintToggle).toBeVisible({ timeout: 15_000 });
+    const lintSummaryBefore = await lintToggle.textContent();
 
     // Close the Electron process and relaunch it against the same data path.
     // This exercises the full persistence boundary: NeDB on disk, main-process
@@ -175,9 +193,10 @@ test.describe('Custom Spectral Lint Rules', () => {
     await expect
       .soft(insomnia.page.getByRole('button', { name: 'View selected ruleset content' }))
       .toBeVisible({ timeout: 15_000 });
-    await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({
-      timeout: 15_000,
-    });
+
+    // Assert same error/warning counts as before relaunch (ruleset persisted).
+    const lintToggleAfter = insomnia.page.getByTestId('lint-panel-toggle');
+    await expect.soft(lintToggleAfter).toHaveText(lintSummaryBefore ?? '', { timeout: 15_000 });
   });
 
   // ---------------------------------------------------------------------------
@@ -186,6 +205,7 @@ test.describe('Custom Spectral Lint Rules', () => {
   test('remove custom ruleset reverts to default OAS, persists after app relaunch', async ({ insomnia }) => {
     await openPetStoreDesignDoc(insomnia.page);
     await uploadRuleset(insomnia, insomnia.page);
+    await expandLintPanel(insomnia.page);
     await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({
       timeout: 15_000,
     });
@@ -204,7 +224,9 @@ test.describe('Custom Spectral Lint Rules', () => {
   // ---------------------------------------------------------------------------
   // 3. Invalid ruleset — error modal appears, ruleset is not applied
   // ---------------------------------------------------------------------------
-  test('uploading a ruleset with disallowed keys shows an error and leaves default ruleset active', async ({ insomnia }) => {
+  test('uploading a ruleset with disallowed keys shows an error and leaves default ruleset active', async ({
+    insomnia,
+  }) => {
     await openPetStoreDesignDoc(insomnia.page);
     await expect.soft(insomnia.page.getByText('Default OAS Ruleset')).toBeVisible();
 
@@ -218,9 +240,7 @@ test.describe('Custom Spectral Lint Rules', () => {
 
     // Default ruleset should still be active; no custom upload button state change.
     await expect.soft(insomnia.page.getByText('Default OAS Ruleset')).toBeVisible();
-    await expect
-      .soft(insomnia.page.getByRole('button', { name: 'View selected ruleset content' }))
-      .toBeHidden();
+    await expect.soft(insomnia.page.getByRole('button', { name: 'View selected ruleset content' })).toBeHidden();
   });
 
   // ---------------------------------------------------------------------------
@@ -293,9 +313,8 @@ test.describe('Custom Spectral Lint Rules', () => {
       await expect
         .soft(machineB.page.getByRole('button', { name: 'View selected ruleset content' }))
         .toBeVisible({ timeout: 15_000 });
-      await expect
-        .soft(machineB.page.getByText(new RegExp(RULESET_RULE_NAME)))
-        .toBeVisible({ timeout: 15_000 });
+      await expandLintPanel(machineB.page);
+      await expect.soft(machineB.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({ timeout: 15_000 });
 
       await fetch(`${devServerUrl}/__test-config/cloud-sync/reset`, { method: 'POST' });
     });
@@ -334,9 +353,8 @@ test.describe('Custom Spectral Lint Rules', () => {
       await expect
         .soft(userB.page.getByRole('button', { name: 'View selected ruleset content' }))
         .toBeVisible({ timeout: 15_000 });
-      await expect
-        .soft(userB.page.getByText(new RegExp(RULESET_RULE_NAME)))
-        .toBeVisible({ timeout: 15_000 });
+      await expandLintPanel(userB.page);
+      await expect.soft(userB.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({ timeout: 15_000 });
 
       await fetch(`${devServerUrl}/__test-config/cloud-sync/reset`, { method: 'POST' });
     });
