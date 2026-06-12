@@ -660,7 +660,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const lintToolbar = (
     <div
-      className={`flex flex-wrap items-center gap-2 border-solid border-(--hl-md) p-(--padding-sm) ${isLintPaneOpen ? 'border-b' : ''}`}
+      className={`flex h-(--line-height-sm) flex-wrap items-center gap-2 border-solid border-(--hl-md) px-(--padding-sm) ${isLintPaneOpen ? 'border-b' : ''}`}
     >
       <div className="inline-flex items-center gap-2">
         <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
@@ -1306,9 +1306,9 @@ const Component = ({ params }: Route.ComponentProps) => {
                 isOpen={isViewRulesetModalOpen}
                 onOpenChange={setIsViewRulesetModalOpen}
                 isDismissable
-                className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-(--color-bg) py-[100px]"
+                className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
               >
-                <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
+                <Modal className="max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
                   <Dialog className="relative outline-hidden">
                     {({ close }) => (
                       <>
@@ -1355,17 +1355,19 @@ const Component = ({ params }: Route.ComponentProps) => {
                       <Panel
                         ref={lintPanelRef}
                         id="lint-panel"
-                        defaultSize={20}
+                        defaultSize={0}
                         minSize={5}
                         collapsible
                         onCollapse={() => setIsLintPaneOpen(false)}
                         onExpand={() => setIsLintPaneOpen(true)}
                         className="flex flex-col overflow-hidden"
                       >
-                        <div className="box-border flex h-full flex-col">
-                          {lintToolbar}
-                          {lintMessageList}
-                        </div>
+                        {isLintPaneOpen && (
+                          <div className="box-border flex h-full flex-col">
+                            {lintToolbar}
+                            {lintMessageList}
+                          </div>
+                        )}
                       </Panel>
                     </>
                   )}
