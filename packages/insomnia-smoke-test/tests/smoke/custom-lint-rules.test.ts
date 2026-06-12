@@ -176,6 +176,11 @@ test.describe('Custom Spectral Lint Rules', () => {
       timeout: 15_000,
     });
 
+    // Capture error/warning counts before relaunch so we can assert persistence.
+    const lintToggle = insomnia.page.getByTestId('lint-panel-toggle');
+    await expect.soft(lintToggle).toBeVisible({ timeout: 15_000 });
+    const lintSummaryBefore = await lintToggle.textContent();
+
     // Close the Electron process and relaunch it against the same data path.
     // This exercises the full persistence boundary: NeDB on disk, main-process
     // startup, renderer init, clientLoader.
@@ -188,11 +193,10 @@ test.describe('Custom Spectral Lint Rules', () => {
     await expect
       .soft(insomnia.page.getByRole('button', { name: 'View selected ruleset content' }))
       .toBeVisible({ timeout: 15_000 });
-    await insomnia.page.getByTestId('preview-toggle').click(); //give some space to the panel; the viewport in playwright is too small and the swagger preview sits right underneath
-    await expect.soft(insomnia.page.locator('#swagger-ui')).toBeHidden({ timeout: 15_000 });
-    await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({
-      timeout: 15_000,
-    });
+
+    // Assert same error/warning counts as before relaunch (ruleset persisted).
+    const lintToggleAfter = insomnia.page.getByTestId('lint-panel-toggle');
+    await expect.soft(lintToggleAfter).toHaveText(lintSummaryBefore ?? '', { timeout: 15_000 });
   });
 
   // ---------------------------------------------------------------------------
