@@ -77,7 +77,7 @@ const isSubEnvironmentResource = (environment: Environment) => {
 
 export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) => id === 'insomnia-4';
 
-export async function fetchImportContentFromURI({ uri }: { uri: string }) {
+export async function fetchImportContentFromURI({ uri, fromDeepLink = false }: { uri: string; fromDeepLink?: boolean }) {
   const url = new URL(uri);
 
   if (url.origin === 'https://github.com') {
@@ -85,10 +85,13 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   }
 
   if (uri.match(/^(http|https):\/\//)) {
-    const response = await fetch(uri);
-    const content = await response.text();
-
-    return content;
+    if (fromDeepLink) {
+      // Deeplink-originated imports have a reduced request capabilities.
+      return window.main.fetchDeeplinkImportContent({ url: uri });
+    }
+    // Manual imports (UI file picker, paste, URI input) are fetched directly in the renderer.
+    const response = await fetch(uri, { cache: 'no-store' });
+    return response.text();
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
     const readFileProcessFork = async (path: string) =>

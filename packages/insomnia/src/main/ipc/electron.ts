@@ -95,6 +95,7 @@ export type HandleChannels =
   | 'grpc.writeProtoFile'
   | 'grpc.validateProtoFile'
   | 'initializeWorkspaceBackendProject'
+  | 'import.fetchDeeplinkContent'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'

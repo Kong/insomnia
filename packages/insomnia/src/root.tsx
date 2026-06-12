@@ -454,6 +454,7 @@ const Root = () => {
             endpoint: params.endpoint,
             operationId: params.operationId,
             autoScan: true,
+            fromDeepLink: true,
             startedAt: Date.now(),
           });
         }

@@ -185,6 +185,7 @@ export interface ImportSource {
   endpoint?: string;
   operationId?: string;
   autoScan?: boolean;
+  fromDeepLink?: boolean;
   startedAt?: number;
 }
 
@@ -231,9 +232,12 @@ export const ImportModal: FC<ImportModalProps> = ({
       } else if (from.type === 'mcp') {
         fd.append('mcp', from.defaultValue || '');
       }
+      if (from.fromDeepLink) {
+        fd.append('fromDeepLink', 'true');
+      }
       scanResourcesFetcher.submit(fd);
     }
-  }, [autoScan, from.type, from.defaultValue, scanResourcesFetcher, scanResourcesFetcherData]);
+  }, [autoScan, from.type, from.defaultValue, from.fromDeepLink, scanResourcesFetcher, scanResourcesFetcherData]);
 
   const hasApiSpecScanResult = scanResourcesFetcherData?.some(isApiSpecScanResult);
   const [showForm, setShowForm] = useState(!autoScan);

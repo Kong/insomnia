@@ -12,6 +12,7 @@ import {
   BrowserWindow,
   type IpcRendererEvent,
   type MenuItemConstructorOptions,
+  net,
   shell,
   utilityProcess,
 } from 'electron';
@@ -37,6 +38,7 @@ import {
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
+import { assertNotLoopbackUrl } from '~/common/private-host';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
 import {
   deleteCompiledRuleset,
@@ -220,6 +222,7 @@ export interface RendererToMainBridgeAPI {
     authentication: AuthTypeOAuth2,
     forceRefresh?: boolean,
   ) => Promise<OAuth2Token | undefined>;
+  fetchDeeplinkImportContent: (options: { url: string }) => Promise<string>;
   secureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFile: (options: { path: string }) => Promise<string>;
   insecureReadFileWithEncoding: (options: {
@@ -563,6 +566,43 @@ export function registerMainHandlers() {
 
   ipcMainHandle('exportWorkspacesHAR', async (_, options: { workspaces: any[]; includePrivateDocs?: boolean }) => {
     return exportWorkspacesHAR(options.workspaces, options.includePrivateDocs);
+  });
+
+  ipcMainHandle('import.fetchDeeplinkContent', async (_, options: unknown) => {
+    if (typeof options !== 'object' || options === null || typeof (options as Record<string, unknown>).url !== 'string') {
+      throw new Error('Invalid options: url must be a string');
+    }
+    const { url } = options as { url: string };
+    try {
+      new URL(url);
+    } catch {
+      throw new Error('Invalid URL');
+    }
+
+    let nextUrl = url;
+    let hops = 0;
+    const MAX_REDIRECTS = 10;
+
+    while (true) {
+      const hop = new URL(nextUrl);
+      if (hop.protocol !== 'http:' && hop.protocol !== 'https:') {
+        throw new Error('Redirect to non-http/https URL is not allowed');
+      }
+      await assertNotLoopbackUrl(nextUrl);
+      const response = await net.fetch(nextUrl, { cache: 'no-store', redirect: 'manual' });
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get('location');
+        if (!location) {
+          throw new Error('Redirect with no Location header');
+        }
+        if (++hops > MAX_REDIRECTS) {
+          throw new Error('Too many redirects');
+        }
+        nextUrl = new URL(location, nextUrl).href;
+        continue;
+      }
+      return response.text();
+    }
   });
 
   ipcMainHandle('insecureReadFile', async (_, options: { path: string }) => {

@@ -306,6 +306,7 @@ const main: Window['main'] = {
     forceRefresh?: boolean,
   ): Promise<OAuth2Token | undefined> =>
     invokeWithNormalizedError('getOAuth2Token', requestId, authentication, forceRefresh),
+  fetchDeeplinkImportContent: options => invokeWithNormalizedError('import.fetchDeeplinkContent', options),
   insecureReadFile: options => invokeWithNormalizedError('insecureReadFile', options),
   insecureReadFileWithEncoding: options => invokeWithNormalizedError('insecureReadFileWithEncoding', options),
   secureReadFile: options => invokeWithNormalizedError('secureReadFile', options),

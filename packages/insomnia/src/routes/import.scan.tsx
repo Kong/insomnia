@@ -20,8 +20,9 @@ export const scanImportResources = async (data: {
   mcp?: string;
   filePaths?: string | string[];
   postmanArchiveFile?: string | null;
+  fromDeepLink?: boolean;
 }): Promise<ScanResult[]> => {
-  const { source, postmanArchiveFile } = data;
+  const { source, postmanArchiveFile, fromDeepLink } = data;
   const isZipFilePath = (filePath: string) => filePath.toLowerCase().endsWith('.zip');
 
   invariant(typeof source === 'string', 'Source is required.');
@@ -35,7 +36,7 @@ export const scanImportResources = async (data: {
     const { uri } = data;
     invariant(typeof uri === 'string' && uri.length, 'URI is required');
     contentList.push({
-      contentStr: await fetchImportContentFromURI({ uri }),
+      contentStr: await fetchImportContentFromURI({ uri, fromDeepLink }),
       oriFileName: uri,
     });
   } else if (source === 'curl') {
@@ -154,6 +155,7 @@ interface ImportScanInputData {
   mcp?: string;
   filePaths?: string | string[];
   postmanArchiveFile?: string | null;
+  fromDeepLink?: string;
 }
 
 export async function clientAction({ request }: ActionFunctionArgs) {
@@ -161,7 +163,7 @@ export async function clientAction({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
     const data = Object.fromEntries(formData.entries()) as unknown as ImportScanInputData;
 
-    return await scanImportResources(data);
+    return await scanImportResources({ ...data, fromDeepLink: data.fromDeepLink === 'true' });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     return [
