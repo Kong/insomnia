@@ -23,6 +23,9 @@ export interface ModelConfig {
   // openai, gemini, url, gguf
   topP?: number;
   temperature?: number;
+  sendTemperature?: boolean;
+  sendTopP?: boolean;
+  sendMaxTokens?: boolean;
 
   // gguf, gemini, url
   topK?: number;

@@ -31,6 +31,9 @@ describe('url-utils', () => {
         temperature: 0.75,
         topP: 0.8,
         maxTokens: DEFAULT_URL_MODEL_PARAMETERS.maxTokens,
+        sendTemperature: DEFAULT_URL_MODEL_PARAMETERS.sendTemperature,
+        sendTopP: DEFAULT_URL_MODEL_PARAMETERS.sendTopP,
+        sendMaxTokens: DEFAULT_URL_MODEL_PARAMETERS.sendMaxTokens,
       });
     });
   });
@@ -41,6 +44,9 @@ describe('url-utils', () => {
         temperature: 0.7,
         topP: 0.9,
         maxTokens: 4096,
+        sendTemperature: true,
+        sendTopP: true,
+        sendMaxTokens: true,
       });
       expect(result.success).toBe(true);
     });
@@ -50,6 +56,9 @@ describe('url-utils', () => {
         temperature: 2.5,
         topP: 1.2,
         maxTokens: 0,
+        sendTemperature: true,
+        sendTopP: true,
+        sendMaxTokens: true,
       });
       expect(result.success).toBe(false);
     });
@@ -61,6 +70,9 @@ describe('url-utils', () => {
         temperature: 0.7,
         topP: 0.9,
         maxTokens: 4096,
+        sendTemperature: true,
+        sendTopP: true,
+        sendMaxTokens: true,
       };
       expect(hasUrlModelParameterChanges(currentConfig, getUrlModelParametersFromConfig(currentConfig))).toBe(false);
     });
@@ -70,12 +82,39 @@ describe('url-utils', () => {
         temperature: 0.7,
         topP: 0.9,
         maxTokens: 4096,
+        sendTemperature: true,
+        sendTopP: true,
+        sendMaxTokens: true,
       };
       expect(
         hasUrlModelParameterChanges(currentConfig, {
           temperature: 0.8,
           topP: 0.85,
           maxTokens: 2048,
+          sendTemperature: true,
+          sendTopP: true,
+          sendMaxTokens: true,
+        }),
+      ).toBe(true);
+    });
+
+    it('returns true when send flags differ from current config', () => {
+      const currentConfig = {
+        temperature: 0.7,
+        topP: 0.9,
+        maxTokens: 4096,
+        sendTemperature: true,
+        sendTopP: true,
+        sendMaxTokens: true,
+      };
+      expect(
+        hasUrlModelParameterChanges(currentConfig, {
+          temperature: 0.7,
+          topP: 0.9,
+          maxTokens: 4096,
+          sendTemperature: false,
+          sendTopP: true,
+          sendMaxTokens: true,
         }),
       ).toBe(true);
     });
@@ -100,6 +139,9 @@ describe('url-utils', () => {
         temperature: 1.1,
         topP: 0.8,
         maxTokens: 1024,
+        sendTemperature: false,
+        sendTopP: true,
+        sendMaxTokens: false,
       });
 
       expect(payload).toEqual({
@@ -108,6 +150,9 @@ describe('url-utils', () => {
         temperature: 1.1,
         topP: 0.8,
         maxTokens: 1024,
+        sendTemperature: false,
+        sendTopP: true,
+        sendMaxTokens: false,
       });
     });
 
@@ -116,6 +161,9 @@ describe('url-utils', () => {
         temperature: 0.7,
         topP: 0.95,
         maxTokens: 2048,
+        sendTemperature: true,
+        sendTopP: false,
+        sendMaxTokens: true,
       });
 
       expect(payload).toEqual({
@@ -125,6 +173,9 @@ describe('url-utils', () => {
         temperature: 0.7,
         topP: 0.95,
         maxTokens: 2048,
+        sendTemperature: true,
+        sendTopP: false,
+        sendMaxTokens: true,
       });
     });
   });

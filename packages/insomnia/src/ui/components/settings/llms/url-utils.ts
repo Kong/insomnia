@@ -6,6 +6,9 @@ export const urlModelParametersSchema = z.object({
   temperature: z.number().min(0).max(2),
   topP: z.number().min(0).max(1),
   maxTokens: z.number().int().min(1).max(128_000),
+  sendTemperature: z.boolean(),
+  sendTopP: z.boolean(),
+  sendMaxTokens: z.boolean(),
 });
 
 export type UrlModelParameters = z.infer<typeof urlModelParametersSchema>;
@@ -14,12 +17,18 @@ export const DEFAULT_URL_MODEL_PARAMETERS: UrlModelParameters = {
   temperature: 0.6,
   topP: 0.9,
   maxTokens: 8192,
+  sendTemperature: true,
+  sendTopP: true,
+  sendMaxTokens: true,
 };
 
 export const getUrlModelParametersFromConfig = (config?: Partial<LLMConfig> | null): UrlModelParameters => ({
   temperature: config?.temperature ?? DEFAULT_URL_MODEL_PARAMETERS.temperature,
   topP: config?.topP ?? DEFAULT_URL_MODEL_PARAMETERS.topP,
   maxTokens: config?.maxTokens ?? DEFAULT_URL_MODEL_PARAMETERS.maxTokens,
+  sendTemperature: config?.sendTemperature ?? DEFAULT_URL_MODEL_PARAMETERS.sendTemperature,
+  sendTopP: config?.sendTopP ?? DEFAULT_URL_MODEL_PARAMETERS.sendTopP,
+  sendMaxTokens: config?.sendMaxTokens ?? DEFAULT_URL_MODEL_PARAMETERS.sendMaxTokens,
 });
 
 export const hasUrlModelParameterChanges = (
@@ -30,7 +39,10 @@ export const hasUrlModelParameterChanges = (
   return (
     modelParameters.temperature !== current.temperature ||
     modelParameters.topP !== current.topP ||
-    modelParameters.maxTokens !== current.maxTokens
+    modelParameters.maxTokens !== current.maxTokens ||
+    modelParameters.sendTemperature !== current.sendTemperature ||
+    modelParameters.sendTopP !== current.sendTopP ||
+    modelParameters.sendMaxTokens !== current.sendMaxTokens
   );
 };
 
@@ -55,6 +67,9 @@ export const getUrlLoadModelsSettingsPayload = (
   maxTokens: modelParameters.maxTokens,
   temperature: modelParameters.temperature,
   topP: modelParameters.topP,
+  sendMaxTokens: modelParameters.sendMaxTokens,
+  sendTemperature: modelParameters.sendTemperature,
+  sendTopP: modelParameters.sendTopP,
 });
 
 export const getUrlActivateSettingsPayload = (
@@ -69,6 +84,9 @@ export const getUrlActivateSettingsPayload = (
   maxTokens: modelParameters.maxTokens,
   temperature: modelParameters.temperature,
   topP: modelParameters.topP,
+  sendMaxTokens: modelParameters.sendMaxTokens,
+  sendTemperature: modelParameters.sendTemperature,
+  sendTopP: modelParameters.sendTopP,
 });
 
 export const isUrlActivateDisabled = ({

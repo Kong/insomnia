@@ -21,6 +21,9 @@ export interface LLMConfig {
   maxTokens?: number;
   temperature?: number;
   topP?: number;
+  sendTemperature?: boolean;
+  sendTopP?: boolean;
+  sendMaxTokens?: boolean;
   topK?: number;
   seed?: boolean;
   repeatPenalty?: number;
@@ -68,6 +71,12 @@ export const getBackendConfig = async (backend: LLMBackend): Promise<Partial<LLM
         break;
       }
       case 'seed': {
+        config[field] = value === 'true';
+        break;
+      }
+      case 'sendTemperature':
+      case 'sendTopP':
+      case 'sendMaxTokens': {
         config[field] = value === 'true';
         break;
       }
