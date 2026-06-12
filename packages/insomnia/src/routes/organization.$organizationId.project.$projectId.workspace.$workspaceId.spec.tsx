@@ -774,6 +774,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               'No lint problems'
             ) : (
               <Button
+                data-testid="lint-panel-toggle"
                 onPress={() => (isLintPaneOpen ? lintPanelRef.current?.collapse() : lintPanelRef.current?.expand())}
               >
                 <span className="underline">
@@ -881,6 +882,7 @@ const Component = ({ params }: Route.ComponentProps) => {
               )}
               <ToggleButton
                 aria-label="Toggle preview"
+                data-testid="preview-toggle"
                 isSelected={isSpecPaneOpen}
                 className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onChange={value => {
