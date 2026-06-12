@@ -189,6 +189,7 @@ test.describe('Custom Spectral Lint Rules', () => {
       .soft(insomnia.page.getByRole('button', { name: 'View selected ruleset content' }))
       .toBeVisible({ timeout: 15_000 });
     await insomnia.page.getByTestId('preview-toggle').click(); //give some space to the panel; the viewport in playwright is too small and the swagger preview sits right underneath
+    await expect.soft(insomnia.page.locator('#swagger-ui')).toBeHidden({ timeout: 15_000 });
     await expect.soft(insomnia.page.getByText(new RegExp(RULESET_RULE_NAME))).toBeVisible({
       timeout: 15_000,
     });
