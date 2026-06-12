@@ -422,12 +422,6 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://app/auth/login') {
         return;
       }
-      if (urlWithoutParams === 'insomnia://app/alert') {
-        return showModal(AlertModal, {
-          title: params.title,
-          message: params.message,
-        });
-      }
       // Supports params: uri, curl, origin
       if (urlWithoutParams === 'insomnia://app/import') {
         // Clean up the flag set during deep-link replay so it never leaks
