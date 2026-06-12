@@ -660,7 +660,7 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const lintToolbar = (
     <div
-      className={`flex h-(--line-height-sm) flex-wrap items-center gap-2 border-solid border-(--hl-md) px-(--padding-sm) ${isLintPaneOpen ? 'border-b' : ''}`}
+      className={`flex h-(--line-height-sm) items-center gap-2 overflow-hidden border-solid border-(--hl-md) px-(--padding-sm) ${isLintPaneOpen ? 'border-b' : ''}`}
     >
       <div className="inline-flex items-center gap-2">
         <Icon icon={selectedRulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
