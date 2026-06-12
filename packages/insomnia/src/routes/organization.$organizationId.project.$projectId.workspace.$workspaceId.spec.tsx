@@ -1356,14 +1356,14 @@ const Component = ({ params }: Route.ComponentProps) => {
                         ref={lintPanelRef}
                         id="lint-panel"
                         defaultSize={0}
-                        minSize={5}
+                        minSize={10}
                         collapsible
                         onCollapse={() => setIsLintPaneOpen(false)}
                         onExpand={() => setIsLintPaneOpen(true)}
                         className="flex flex-col overflow-hidden"
                       >
                         {isLintPaneOpen && (
-                          <div className="box-border flex h-full flex-col">
+                          <div data-testid="lint-panel" className="box-border flex h-full flex-col">
                             {lintToolbar}
                             {lintMessageList}
                           </div>
