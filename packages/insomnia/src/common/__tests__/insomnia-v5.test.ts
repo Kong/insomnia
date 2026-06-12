@@ -12,6 +12,7 @@ import YAML from 'yaml';
 
 import { INSOMNIA_SCHEMA_VERSION } from '../../common/insomnia-schema-migrations/schema-version';
 import { database as db } from '../database';
+import { scanResources } from '../import';
 import {
   getInsomniaV5DataExport,
   importInsomniaV5Data,
@@ -199,6 +200,59 @@ collection: []
         url: 'https://api.example.com/test',
         method: 'GET',
       });
+    });
+
+    it('exports as JSON when format is "json"', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_json_export',
+        name: 'JSON Export Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.request.create({
+        _id: 'req_json_export',
+        name: 'JSON Export Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/json',
+        method: 'POST',
+        metaSortKey: 0,
+      });
+
+      await services.environment.create({
+        _id: 'env_json_export',
+        name: 'Base Environment',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      const yamlResult = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+      const jsonResult = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+        format: 'json',
+      });
+
+      // The JSON output must be parseable by a strict JSON parser (YAML is not).
+      const parsed = JSON.parse(jsonResult);
+      expect(parsed.type).toBe('collection.insomnia.rest/5.0');
+      expect(parsed.schema_version).toBe(INSOMNIA_SCHEMA_VERSION);
+      expect(parsed.collection[0]).toMatchObject({
+        name: 'JSON Export Request',
+        url: 'https://api.example.com/json',
+        method: 'POST',
+      });
+
+      // JSON and YAML exports must represent the same data (lossless round-trip).
+      expect(parsed).toEqual(YAML.parse(yamlResult));
+
+      // A JSON v5 export must be detected as Insomnia v5 on import (round-trip).
+      const scanResult = await scanResources([{ contentStr: jsonResult }]);
+      expect(scanResult[0].type?.id).toBe('insomnia-5');
+      expect(scanResult[0].errors.length).toBe(0);
     });
 
     it('handles empty workspace gracefully', async () => {
