@@ -1,4 +1,4 @@
-import { useQueries, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import { useQueries, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import type { BaseModel, RequestGroup, Workspace } from 'insomnia-data';
@@ -23,16 +23,9 @@ import { Button as BasicButton } from '~/basic-components/button';
 import type { SortOrder } from '~/common/constants';
 import type { ChangeBufferEvent } from '~/common/database';
 import { fuzzyMatchAll } from '~/common/misc';
-import {
-  getAllRemoteBackendProjectsOfOrg,
-  getProjectsWithGitRepositories,
-  getUnsyncedRemoteWorkspaces,
-  type InsomniaFile,
-} from '~/common/project';
+import { getAllRemoteBackendProjectsOfOrg, getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
-import { useRootLoaderData } from '~/root';
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { KongLogo } from '~/ui/components/kong-logo';
@@ -43,6 +36,7 @@ import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/em
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
+import { projectKeys, useProjects, useSettings } from '~/ui/hooks/data';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
@@ -57,7 +51,6 @@ import {
   flattenCollectionChildren,
   getAllRequestsAndMetaByWorkspace,
   getWorkspacesByProjectIds,
-  projectsQueryKey,
   SIDEBAR_RELEVANT_DOC_TYPES,
   workspacesQueryKey,
 } from './project-navigation-sidebar-utils';
@@ -177,15 +170,9 @@ const ProjectNavigationSidebarInner = (
     requestId?: string;
     requestGroupId?: string;
   };
-  const { settings } = useRootLoaderData()!;
-  const { projects: initialProjects } = useProjectLoaderData()!;
+  const settings = useSettings();
   const queryClient = useQueryClient();
-  // Source the project list from React Query rather than the loader to avoid unnecessary re-render
-  const { data: projects = [] } = useQuery({
-    queryKey: projectsQueryKey(organizationId),
-    queryFn: async () => models.project.sortProjects(await getProjectsWithGitRepositories({ organizationId })),
-    initialData: initialProjects,
-  });
+  const { data: projects = [] } = useProjects(organizationId);
 
   const [searchParams, _setSearchParams] = useSearchParams();
   const tabNavigate = useTabNavigate();
@@ -433,7 +420,7 @@ const ProjectNavigationSidebarInner = (
       }
       // Invalidate all affected queries at once after processing the whole batch of changes.
       if (shouldInvalidateProjectList) {
-        queryClient.invalidateQueries({ queryKey: projectsQueryKey(organizationId) });
+        queryClient.invalidateQueries({ queryKey: projectKeys.list(organizationId) });
       }
       projectIdsToInvalidate.forEach(projectId =>
         queryClient.invalidateQueries({ queryKey: workspacesQueryKey(projectId) }),

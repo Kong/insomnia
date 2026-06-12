@@ -66,11 +66,10 @@ export const SIDEBAR_RELEVANT_DOC_TYPES = [
   models.requestGroupMeta.type,
 ];
 
-// Unique key for tanstack to query and cache projects, workspaces & collections
-export const PROJECTS_QUERY_KEY = 'project-navigation-sidebar-projects';
+// Unique key for tanstack to query and cache workspaces & collections.
+// The projects query key lives in the shared `~/ui/hooks/data` query-keys registry.
 export const WORKSPACES_QUERY_KEY = 'project-navigation-sidebar-workspaces';
 export const COLLECTION_QUERY_KEY = 'project-navigation-sidebar-collection';
-export const projectsQueryKey = (organizationId: string) => [PROJECTS_QUERY_KEY, organizationId];
 export const workspacesQueryKey = (projectId: string) => [WORKSPACES_QUERY_KEY, projectId];
 export const collectionQueryKey = (workspaceId: string) => [COLLECTION_QUERY_KEY, workspaceId];
 

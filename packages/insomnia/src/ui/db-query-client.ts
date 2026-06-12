@@ -12,3 +12,8 @@ export const dbQueryClient = new QueryClient({
     },
   },
 });
+
+if (typeof window !== 'undefined') {
+  // @ts-expect-error - Expose the dbQueryClient on the window object for debugging purposes. This is not intended for production use.
+  window.__TANSTACK_QUERY_CLIENT__ = dbQueryClient;
+}

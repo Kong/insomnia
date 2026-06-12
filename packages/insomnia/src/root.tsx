@@ -1,6 +1,5 @@
 import { config } from '@fortawesome/fontawesome-svg-core';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import type { IpcRendererEvent } from 'electron';
 import type { Settings, UserSession } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
@@ -281,10 +280,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <Links />
       </head>
       <body className="size-full">
-        <QueryClientProvider client={dbQueryClient}>
-          {children}
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
+        <QueryClientProvider client={dbQueryClient}>{children}</QueryClientProvider>
         <ScrollRestoration />
         <Scripts />
         <div id="graphql-explorer-container" />
