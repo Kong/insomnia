@@ -6,8 +6,9 @@ on:
   push:
     branches:
       - develop
-      - 'release/**'
   pull_request:
+    branches:
+      - develop
     types:
       - opened
       - synchronize
