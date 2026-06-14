@@ -33,11 +33,13 @@ echo "Compiling resources..."
 windres --include-dir $CPP_DIR $CPP_DIR/final.rc $CPP_DIR/res.o
 
 echo "Compiling inso wrapper..."
+# Pure C with -nostdlib so the only import is KERNEL32.dll.
+# No msvcrt.dll -> no advapi32 CRT init -> no cryptbase sideload probe in the wrapper.
 # Note: no -mwindows flag — inso is a console application.
-g++ -lkernel32 -c $CPP_DIR/inso.cpp -o $CPP_DIR/inso.o
+gcc -O2 -c $CPP_DIR/inso.c -o $CPP_DIR/inso.o
 
 echo "Linking inso wrapper..."
-g++ -O2 -static -static-libgcc -static-libstdc++ -lwinpthread \
+gcc -O2 -nostdlib -lkernel32 \
     $CPP_DIR/inso.o $CPP_DIR/res.o -o $BINARIES_DIR/inso.exe
 
 echo "Inso secure wrapper built successfully."
