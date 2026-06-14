@@ -24,7 +24,7 @@ const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
         '../binaries',
         platform === 'win32' ? '-a -cf' : '-cJf',
         platform === 'win32' ? `inso-windows-${version}.zip` : `inso-linux-${process.arch}-${version}.tar.xz`,
-        ...(platform === 'win32' ? ['inso.exe', 'inso-node.dll'] : ['inso']),
+        platform === 'win32' ? 'inso.exe' : 'inso',
       ],
       { cwd, shell: platform === 'win32' },
     );
