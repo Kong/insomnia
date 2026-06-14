@@ -1848,6 +1848,13 @@ html {
   background: var(--hl-xl);
   color: bar(--color-font);
 }
+/* Connector bar drawn down the left of the lines spanned by a block tag
+   ({% if %}…{% endif %}, {% for %}…{% endfor %}, …) so the delimiters read as
+   one statement. Applied via addLineClass(..., 'wrap', 'nunjucks-block-line'). */
+.editor .nunjucks-block-line {
+  box-shadow: inset 2px 0 0 var(--color-info);
+  background: var(--hl-xxs);
+}
 .app {
   position: relative;
   height: 100%;

@@ -364,7 +364,7 @@ export const CodeEditor = memo(
         const initialOptions: EditorConfiguration = {
           lineNumbers: showGuttersAndLineNumbers,
           placeholder: placeholder || '',
-          foldGutter: showGuttersAndLineNumbers,
+          foldGutter: false,
           autoRefresh: { delay: 2000 },
           lineWrapping: settings.editorLineWrapping ?? true,
           scrollbarStyle: 'native',
@@ -387,7 +387,7 @@ export const CodeEditor = memo(
           keyMap: !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default',
           extraKeys: CodeMirror.normalizeKeyMap(extraKeys),
           gutters: showGuttersAndLineNumbers
-            ? ['CodeMirror-lint-markers', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter']
+            ? ['CodeMirror-lint-markers', 'CodeMirror-linenumbers']
             : [],
           foldOptions: {
             widget: (from: CodeMirror.Position, to: CodeMirror.Position) => widget(codeMirror.current, from, to),

@@ -56,7 +56,9 @@ export function normalizeToDotAndBracketNotation(prefix: string) {
  * @param {string} tagStr - the template string for the tag
  */
 export function tokenizeTag(tagStr: string) {
-  const withoutEnds = tagStr.trim().replace(/^{%/, '').replace(/%}$/, '').trim();
+  // Strip the delimiters, allowing for LiquidJS whitespace-control dashes
+  // (`{%-` / `-%}`) so e.g. `{%- if i == 4 -%}` parses its name as `if`.
+  const withoutEnds = tagStr.trim().replace(/^{%-?/, '').replace(/-?%}$/, '').trim();
   const nameMatch = withoutEnds.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
   const name = nameMatch ? nameMatch[0] : withoutEnds;
   const argsStr = withoutEnds.slice(name.length);
@@ -66,6 +68,30 @@ export function tokenizeTag(tagStr: string) {
     args: tokenizeArgs(argsStr),
   };
   return parsedTag;
+}
+
+// LiquidJS tags whose primary purpose is to act on a single named variable. For these
+// the editor shows a `name → variable` pill (e.g. `assign → username`) instead of just
+// the keyword. `tokenizeArgs` is not reused here because it mis-splits `assign x = …`
+// and `echo x | filter: ","`; a direct regex on the tag text is more reliable.
+const FIELD_TAGS = new Set(['assign', 'capture', 'case', 'decrement', 'echo', 'increment']);
+
+/**
+ * For a "field" tag (assign/capture/case/decrement/echo/increment), return a
+ * `name → variable` label where the variable is the first identifier after the keyword;
+ * otherwise return null. Tolerates LiquidJS whitespace-control delimiters (`{%-` / `-%}`).
+ */
+export function fieldTagLabel(tagStr: string): string | null {
+  const inner = tagStr
+    .trim()
+    .replace(/^{%-?/, '')
+    .replace(/-?%}$/, '')
+    .trim();
+  const match = inner.match(/^(\w+)\s+([a-zA-Z_$][0-9a-zA-Z_$]*)/);
+  if (!match || !FIELD_TAGS.has(match[1])) {
+    return null;
+  }
+  return `${match[1]} → ${match[2]}`;
 }
 
 /** Convert a tokenized tag back into a Liquid template string */

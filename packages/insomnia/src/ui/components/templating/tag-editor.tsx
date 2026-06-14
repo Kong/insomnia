@@ -289,7 +289,7 @@ export const TagEditor: FC<Props> = props => {
               const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
               update(state.tagDefinitions, tagDefinition, null, false);
             }}
-            value={activeTagDefinition ? activeTagDefinition.name : ''}
+            value={activeTagDefinition ? activeTagDefinition.name : 'custom'}
           >
             {state.tagDefinitions.map(tagDefinition => (
               <option key={tagDefinition.name} value={tagDefinition.name}>
@@ -592,8 +592,11 @@ export const TagEditor: FC<Props> = props => {
         <div className="form-control form-control--outlined">
           <label>
             Custom
-            <input
-              type="text"
+            {/* A textarea (not a single-line input) so multi-line LiquidJS such as
+                the `{% liquid … %}` master tag and `{% if %}…{% endif %}` blocks
+                can be authored and edited with newlines. */}
+            <textarea
+              rows={5}
               defaultValue={activeTagData.rawValue}
               onChange={event => {
                 const { tagDefinitions, activeTagData, activeTagDefinition } = state;

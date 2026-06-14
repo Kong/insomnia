@@ -242,6 +242,37 @@ describe('tokenizeTag()', () => {
     };
     expect(actual).toEqual(expected);
   });
+
+  it('parses the name through LiquidJS whitespace-control delimiters', () => {
+    expect(utils.tokenizeTag('{%- if i == 4 -%}').name).toBe('if');
+    expect(utils.tokenizeTag('{%- continue -%}').name).toBe('continue');
+    expect(utils.tokenizeTag('{%- endif -%}').name).toBe('endif');
+    // A trailing-only or leading-only dash is still handled.
+    expect(utils.tokenizeTag('{% for i in (1..5) -%}').name).toBe('for');
+  });
+});
+
+describe('fieldTagLabel()', () => {
+  it('labels field tags as `name → variable`', () => {
+    expect(utils.fieldTagLabel("{% assign username = 'Bob' %}")).toBe('assign → username');
+    expect(utils.fieldTagLabel('{% capture greeting %}')).toBe('capture → greeting');
+    expect(utils.fieldTagLabel('{% case x %}')).toBe('case → x');
+    expect(utils.fieldTagLabel('{% increment counter %}')).toBe('increment → counter');
+    expect(utils.fieldTagLabel('{% decrement counter %}')).toBe('decrement → counter');
+    expect(utils.fieldTagLabel('{% echo username | append: ", hi" | capitalize %}')).toBe('echo → username');
+  });
+
+  it('tolerates whitespace-control delimiters', () => {
+    expect(utils.fieldTagLabel('{%- assign a = 1 -%}')).toBe('assign → a');
+  });
+
+  it('returns null for non-field tags', () => {
+    expect(utils.fieldTagLabel("{% now 'iso-8601' %}")).toBeNull();
+    expect(utils.fieldTagLabel('{% if x %}')).toBeNull();
+    expect(utils.fieldTagLabel('{% endcapture %}')).toBeNull();
+    // The `{% liquid %}` master tag is not a field tag (handled as multiline elsewhere).
+    expect(utils.fieldTagLabel('{% liquid\nassign x = 1\n%}')).toBeNull();
+  });
 });
 
 describe('unTokenizeTag()', () => {

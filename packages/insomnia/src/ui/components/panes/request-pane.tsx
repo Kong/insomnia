@@ -80,6 +80,9 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}`;
+  // The body editor must not remount on every response (that would flash all template
+  // tag pills). Its content is the raw request body — independent of the active response.
+  const bodyEditorKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}`;
 
   if (!activeRequest) {
     return <PlaceholderRequestPane />;
@@ -292,7 +295,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
           </PanelGroup>
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col" id="content-type">
-          <BodyEditor key={uniqueKey} request={activeRequest} environmentId={environmentId} />
+          <BodyEditor key={bodyEditorKey} request={activeRequest} environmentId={environmentId} />
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="auth">
           <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
