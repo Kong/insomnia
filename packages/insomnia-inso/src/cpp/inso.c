@@ -5,6 +5,20 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+/* Provide memset/memcpy so -nostdlib doesn't generate unresolved references
+   when the compiler emits implicit calls (e.g. for ZeroMemory / struct copies). */
+void *memset(void *dst, int c, SIZE_T n) {
+  volatile unsigned char *p = (volatile unsigned char *)dst;
+  while (n--) *p++ = (unsigned char)c;
+  return dst;
+}
+void *memcpy(void *dst, const void *src, SIZE_T n) {
+  unsigned char *d = (unsigned char *)dst;
+  const unsigned char *s = (const unsigned char *)src;
+  while (n--) *d++ = *s++;
+  return dst;
+}
+
 /* Custom entry point — bypasses msvcrt CRT startup entirely. */
 void __cdecl WinMainCRTStartup(void) {
   /* Apply process mitigation policies.

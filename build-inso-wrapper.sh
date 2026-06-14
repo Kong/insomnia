@@ -39,7 +39,7 @@ echo "Compiling inso wrapper..."
 gcc -O2 -c $CPP_DIR/inso.c -o $CPP_DIR/inso.o
 
 echo "Linking inso wrapper..."
-gcc -O2 -nostdlib -lkernel32 \
-    $CPP_DIR/inso.o $CPP_DIR/res.o -o $BINARIES_DIR/inso.exe
+gcc -O2 -nostdlib \
+    $CPP_DIR/inso.o $CPP_DIR/res.o -lkernel32 -o $BINARIES_DIR/inso.exe
 
 echo "Inso secure wrapper built successfully."
