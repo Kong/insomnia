@@ -517,6 +517,15 @@ export class GitVCS {
           return;
         }
 
+        // Trees/directories have already returned above (preserving recursion),
+        // so anything reaching here is a blob. Only keep yaml files; this skips
+        // dotfiles like .gitignore/.DS_Store whose empty extension slipped past
+        // the extension check above, while still allowing yaml dotfiles such as
+        // .spectral.yaml (extname === '.yaml').
+        if (path.extname(filepath) !== '.yaml') {
+          return null;
+        }
+
         // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
         const headOid = headType === 'blob' ? await head?.oid() : undefined;
         const stageOid = stageType === 'blob' ? await stage?.oid() : undefined;
@@ -674,6 +683,15 @@ export class GitVCS {
         }
         if ((stageType === 'tree' || stageType === 'special') && !isBlob) {
           return;
+        }
+
+        // Trees/directories have already returned above (preserving recursion),
+        // so anything reaching here is a blob. Only keep yaml files; this skips
+        // dotfiles like .gitignore/.DS_Store whose empty extension slipped past
+        // the extension check above, while still allowing yaml dotfiles such as
+        // .spectral.yaml (extname === '.yaml').
+        if (path.extname(filepath) !== '.yaml') {
+          return null;
         }
 
         // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
