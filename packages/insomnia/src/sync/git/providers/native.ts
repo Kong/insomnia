@@ -90,6 +90,8 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
 
       const proc = spawn('git', ['credential', 'fill'], {
         ...(repoPath ? { cwd: repoPath } : {}),
+        stdio: ['pipe', 'pipe', 'ignore'],
+        windowsHide: true,
       });
 
       proc.on('error', err => {
