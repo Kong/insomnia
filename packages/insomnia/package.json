@@ -52,7 +52,7 @@
     "@fortawesome/react-fontawesome": "^3.0.2",
     "@getinsomnia/node-libcurl": "3.2.2",
     "@getinsomnia/srp-js": "1.0.0-alpha.1",
-    "@grpc/grpc-js": "^1.13.3",
+    "@grpc/grpc-js": "^1.14.4",
     "@grpc/proto-loader": "^0.7.13",
     "@react-router/fs-routes": "7.15.0",
     "@react-router/node": "7.15.0",
