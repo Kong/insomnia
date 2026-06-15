@@ -64,6 +64,22 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
   return {};
 };
 
+// Run a resolved plugin template tag with a freshly-built common context. Shared by the bundle
+// and user-plugin execute handlers so both build context (incl. renderPurpose) identically.
+const runPluginTag = (
+  run: (context: any, ...args: any[]) => any,
+  body: {
+    args: any[];
+    pluginName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  },
+) => {
+  const { pluginName, args, context: originContext } = body;
+  const { meta, renderPurpose, context } = originContext;
+  const commonContext = getPluginCommonContext({ plugin: { name: pluginName }, renderPurpose });
+  return run({ meta, renderPurpose, context, ...commonContext }, ...args);
+};
+
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string }) => {
@@ -274,17 +290,14 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     tagName: string;
     context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
   }) => {
-    const { tagName, pluginName, args, context: originContext } = body;
-    const { meta, renderPurpose, context } = originContext;
+    const { tagName, pluginName } = body;
     const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
     if (appBundlePluginNames.includes(pluginName)) {
       const module = getBundlePluginModule(pluginName);
       const templateTags = module?.templateTags || [];
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
-        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
-        // @ts-expect-error -- TSCONVERSION: Bundle plugin tag context do not have node functions in utils
-        return targetTag.run({ meta, renderPurpose, context, ...commonContext }, ...args);
+        return runPluginTag(targetTag.run, body);
       }
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
@@ -315,14 +328,11 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     tagName: string;
     context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
   }) => {
-    const { tagName, pluginName, args, context: originContext } = body;
-    const { meta, renderPurpose, context } = originContext;
+    const { tagName, pluginName } = body;
     const tags = await getTemplateTags();
     const targetTag = tags.find(t => t.plugin.name === pluginName && t.templateTag.name === tagName);
     if (targetTag) {
-      const commonContext = getPluginCommonContext({ plugin: { name: pluginName }, renderPurpose });
-      // @ts-expect-error -- TSCONVERSION: plugin tag context does not perfectly match PluginTemplateTagContext
-      return targetTag.templateTag.run({ meta, renderPurpose, context, ...commonContext }, ...args);
+      return runPluginTag(targetTag.templateTag.run, body);
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
   },
