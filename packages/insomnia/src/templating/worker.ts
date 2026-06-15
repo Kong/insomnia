@@ -7,6 +7,7 @@ import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY
 import { buildLiquidEngine, stripLiquidComments } from './liquid-engine';
 import { createLiquidTagWorker, fetchFromTemplateWorkerDatabase } from './liquid-extension-worker';
 import { extractUndefinedVariableKey, translateLiquidError } from './render-error';
+import type { PluginToMainAPIPaths } from './types';
 export { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME };
 
 // Cached engine instances
@@ -93,6 +94,22 @@ export async function getTagDefinitions() {
     }));
 }
 
+// Fetch plugin template tags from main and route each tag's `run` back over IPC, so execution
+// happens in the main process where the Node built-ins plugins require (e.g. crypto) are available.
+async function fetchAndRoutePluginTags(
+  getPath: PluginToMainAPIPaths,
+  executePath: PluginToMainAPIPaths,
+): Promise<TemplateTag[]> {
+  const tags = (await fetchFromTemplateWorkerDatabase(getPath, {})) as TemplateTag[];
+  tags.forEach(({ templateTag, plugin }) => {
+    const pluginName = plugin.name;
+    const tagName = templateTag.name;
+    templateTag.run = async (context, ...args) =>
+      await fetchFromTemplateWorkerDatabase(executePath, { context, args, pluginName, tagName });
+  });
+  return tags;
+}
+
 async function getLiquid(
   ignoreUndefinedEnvVariable?: boolean,
 ): Promise<{ engine: Liquid; tagMetadata: Map<string, any> }> {
@@ -100,26 +117,18 @@ async function getLiquid(
     return { engine: liquidAll, tagMetadata: liquidAllTagMetadata };
   }
 
-  const bundlePluginTemplateTags = (await fetchFromTemplateWorkerDatabase(
+  // Bundle plugins ship inside the app; user-installed plugins are loaded from disk. Both are
+  // registered here so their tags resolve at render time, not just in the editor autocomplete.
+  const bundlePluginTemplateTags = await fetchAndRoutePluginTags(
     'plugin.getBundlePluginTemplateTags',
-    {},
-  )) as TemplateTag[];
+    'plugin.executeBundlePluginTag',
+  );
+  const userPluginTemplateTags = await fetchAndRoutePluginTags(
+    'plugin.getUserPluginTemplateTags',
+    'plugin.executeUserPluginTag',
+  );
 
-  bundlePluginTemplateTags.forEach(tag => {
-    const { templateTag, plugin } = tag;
-    const pluginName = plugin.name;
-    const tagName = templateTag.name;
-    // Route execution of bundled plugin tags back to main process
-    templateTag.run = async (context, ...args) =>
-      await fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginTag', {
-        context,
-        args,
-        pluginName,
-        tagName,
-      });
-  });
-
-  const allTags = [...localTemplateTags, ...bundlePluginTemplateTags];
+  const allTags = [...localTemplateTags, ...bundlePluginTemplateTags, ...userPluginTemplateTags];
 
   allTags.forEach((ext, i) => {
     ext.templateTag.priority = ext.templateTag.priority ?? i;

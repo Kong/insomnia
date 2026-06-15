@@ -1,3 +1,4 @@
+import { serializeRenderContext } from '../../templating/render-context-serialization';
 import { extractUndefinedVariableKey, RenderError } from '../../templating/render-error';
 import type { RenderInputType } from '../../templating/types';
 
@@ -11,20 +12,7 @@ worker.addEventListener('error', event => {
 });
 
 export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: RenderInputType): Promise<string> {
-  const newContext = {
-    ...context,
-    serializedFunctions: {
-      requestId: context.getMeta().requestId,
-      workspaceId: context.getMeta().workspaceId,
-      environmentId: context.getEnvironmentId(),
-      extraInfo: context.getExtraInfo(),
-      globalEnvironmentId: context.getGlobalEnvironmentId(),
-      keysContext: context.getKeysContext(),
-      projectId: context.getProjectId(),
-      purpose: context.getPurpose(),
-      settings: context.getSettings(),
-    },
-  };
+  const newContext = serializeRenderContext(context);
 
   // Id to avoid race conditions
   const id = window.crypto.randomUUID();

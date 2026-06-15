@@ -9,7 +9,7 @@ import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
-import { getPluginCommonContext } from '~/plugins';
+import { getPluginCommonContext, getTemplateTags } from '~/plugins';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
@@ -62,6 +62,22 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
     }
   }
   return {};
+};
+
+// Run a resolved plugin template tag with a freshly-built common context. Shared by the bundle
+// and user-plugin execute handlers so both build context (incl. renderPurpose) identically.
+const runPluginTag = (
+  run: (context: any, ...args: any[]) => any,
+  body: {
+    args: any[];
+    pluginName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  },
+) => {
+  const { pluginName, args, context: originContext } = body;
+  const { meta, renderPurpose, context } = originContext;
+  const commonContext = getPluginCommonContext({ plugin: { name: pluginName }, renderPurpose });
+  return run({ meta, renderPurpose, context, ...commonContext }, ...args);
 };
 
 // These are exposed to the templating worker and can be used by plugins from context.util
@@ -274,18 +290,49 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     tagName: string;
     context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
   }) => {
-    const { tagName, pluginName, args, context: originContext } = body;
-    const { meta, renderPurpose, context } = originContext;
+    const { tagName, pluginName } = body;
     const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
     if (appBundlePluginNames.includes(pluginName)) {
       const module = getBundlePluginModule(pluginName);
       const templateTags = module?.templateTags || [];
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
-        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
-        // @ts-expect-error -- TSCONVERSION: Bundle plugin tag context do not have node functions in utils
-        return targetTag.run({ meta, renderPurpose, context, ...commonContext }, ...args);
+        return runPluginTag(targetTag.run, body);
       }
+    }
+    throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
+  },
+  // generate the template tags for user-installed plugins and send back to the web worker.
+  // Bundle plugins are handled separately by `plugin.getBundlePluginTemplateTags`.
+  'plugin.getUserPluginTemplateTags': async () => {
+    const tags = await getTemplateTags();
+    // Bundle plugins have an empty `directory`; everything else is user-installed.
+    return tags
+      .filter(({ plugin }) => plugin.directory !== '')
+      .map(({ plugin, templateTag }) => ({
+        plugin: {
+          name: plugin.name,
+          description: plugin.description,
+          version: plugin.version,
+          directory: plugin.directory,
+          config: plugin.config,
+        },
+        templateTag,
+      }));
+  },
+  // execute a user-installed plugin tag with the given parameters, in the main process where
+  // Node built-ins (e.g. crypto) the plugin requires are available.
+  'plugin.executeUserPluginTag': async (body: {
+    args: any[];
+    pluginName: string;
+    tagName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  }) => {
+    const { tagName, pluginName } = body;
+    const tags = await getTemplateTags();
+    const targetTag = tags.find(t => t.plugin.name === pluginName && t.templateTag.name === tagName);
+    if (targetTag) {
+      return runPluginTag(targetTag.templateTag.run, body);
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
   },

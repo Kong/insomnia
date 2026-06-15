@@ -787,11 +787,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
   context: Record<string, any>;
 }) => {
   const { request, context } = renderResult;
-  try {
-    return await getRuntime().network.applyRequestHooks(request, context);
-  } catch {
-    throw new Error(`Failed to transform request with plugins: ${request._id}`);
-  }
+  return await getRuntime().network.applyRequestHooks(request, context);
 };
 
 export interface sendCurlAndWriteTimelineError {
