@@ -193,6 +193,7 @@ export default defineConfig([
   {
     files: [
       'packages/insomnia/src/ui/**/*.{ts,tsx}',
+      'packages/insomnia/src/basic-components/**/*.{ts,tsx}',
       'packages/insomnia/src/routes/**/*.{ts,tsx}',
       'packages/insomnia/src/common/**/*.{ts,tsx}',
       'packages/insomnia/src/**/*.renderer.{ts,tsx}',
