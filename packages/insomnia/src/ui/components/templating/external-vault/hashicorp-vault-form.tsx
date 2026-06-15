@@ -162,7 +162,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
             <div className="form-control">
               <label>
                 Secret Key:
-                <HelpTooltip className="space-left">The secret key of the retrived key-value secrets.</HelpTooltip>
+                <HelpTooltip className="space-left">The secret key of the retrieved key-value secrets.</HelpTooltip>
                 <input
                   name="secretKey"
                   defaultValue={secretKey}

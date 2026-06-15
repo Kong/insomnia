@@ -534,7 +534,7 @@ export const RESPONSE_CODE_REASONS: Record<number, string> = {
   599: 'Network Connect Timeout Error',
 };
 
-// (ms) curently server timeout is 30s
+// (ms) currently server timeout is 30s
 export const INSOMNIA_FETCH_TIME_OUT = 30_000;
 
 // channel names for real time events (websocket/socket-io/mcp)

@@ -60,7 +60,7 @@ export function init(): {
         const curlRequest =
           process.type === 'renderer' || process.type === 'worker'
             ? window.main.curlRequest
-            : // when exeucted in Inso;
+            : // when executed in Inso;
               (await import('../../main/network/libcurl-promise')).curlRequest;
         const response = await curlRequest({
           requestId: `no-sideEffects-request-${requestId}`,

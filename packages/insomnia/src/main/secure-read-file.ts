@@ -20,7 +20,7 @@ const getSecuredFolderAllowList = (userAllowList: string[]) => {
   const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
   // we use tmpdir for buildMultipart
   // we put the db in userData
-  // the user can also specifiy other folders
+  // the user can also specify other folders
   return [os.tmpdir(), userdataDirectory, ...userAllowList];
 };
 // For reading files specified by plugins, environment variables, and scripts which could come from an imported collection
