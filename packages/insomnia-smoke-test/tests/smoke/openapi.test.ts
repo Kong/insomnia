@@ -19,7 +19,9 @@ test('can render Spectral OpenAPI lint errors', async ({ page }) => {
   const lintSummary = page.getByRole('button', { name: /error/ });
   await expect.soft(lintSummary).toBeVisible();
 
-  // Expand the lint error message group & assert line number occurence
+  // Expand the lint panel
+  await page.getByTestId('lint-panel-toggle').click();
+  await expect.soft(page.getByTestId('lint-panel')).toBeVisible();
   const lintEntry = page.getByText(/oas3-schema/);
   await expect.soft(lintEntry).toBeVisible();
   await lintEntry.click();

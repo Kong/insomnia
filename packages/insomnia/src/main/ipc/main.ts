@@ -101,6 +101,32 @@ export const openInBrowser = (href: string) => {
   }
 };
 
+const sanitizeModelConfigForRequest = (modelConfig: ModelConfig | null | undefined): ModelConfig | null => {
+  if (!modelConfig) {
+    return null;
+  }
+
+  const sanitizedConfig: ModelConfig = { ...modelConfig };
+
+  if (sanitizedConfig.backend === 'url') {
+    if (sanitizedConfig.sendTemperature === false) {
+      delete sanitizedConfig.temperature;
+    }
+    if (sanitizedConfig.sendTopP === false) {
+      delete sanitizedConfig.topP;
+    }
+    if (sanitizedConfig.sendMaxTokens === false) {
+      delete sanitizedConfig.maxTokens;
+    }
+  }
+
+  delete sanitizedConfig.sendTemperature;
+  delete sanitizedConfig.sendTopP;
+  delete sanitizedConfig.sendMaxTokens;
+
+  return sanitizedConfig;
+};
+
 const readDir = async (_: unknown, options: { path: string }) => {
   try {
     const files = await fs.promises.readdir(options.path);
@@ -750,7 +776,7 @@ export function registerMainHandlers() {
           openApiSpec,
           specUrl,
           specText,
-          modelConfig,
+          modelConfig: sanitizeModelConfigForRequest(modelConfig as ModelConfig),
           useDynamicMockResponses,
           mockServerAdditionalFiles,
           aiPluginName: AI_PLUGIN_NAME,
@@ -802,7 +828,7 @@ export function registerMainHandlers() {
 
       process.postMessage({
         input,
-        modelConfig,
+        modelConfig: sanitizeModelConfigForRequest(modelConfig),
         aiPluginName: AI_PLUGIN_NAME,
       });
     });
@@ -864,7 +890,7 @@ export function registerMainHandlers() {
       process.postMessage({
         messages,
         systemPrompt,
-        modelConfig: mergedModelConfig,
+        modelConfig: sanitizeModelConfigForRequest(mergedModelConfig as ModelConfig),
         aiPluginName: AI_PLUGIN_NAME,
       });
     });
