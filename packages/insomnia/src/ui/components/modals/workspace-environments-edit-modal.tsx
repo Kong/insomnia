@@ -524,7 +524,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                         onChange={handleEnvironmentChange}
                         environmentInfo={{
                           object: selectedEnvironment.data,
-                          propertyOrder: selectedEnvironment.dataPropertyOrder,
+                          propertyOrder: selectedEnvironment.dataPropertyOrder ?? null,
                         }}
                       />
                     )}

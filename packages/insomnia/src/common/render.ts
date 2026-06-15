@@ -58,7 +58,7 @@ export async function buildRenderContext({
   if (rootGlobalEnvironment) {
     const ordered = orderedJSON.order(
       rootGlobalEnvironment.data,
-      rootGlobalEnvironment.dataPropertyOrder,
+      rootGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -67,7 +67,7 @@ export async function buildRenderContext({
   if (subGlobalEnvironment) {
     const ordered = orderedJSON.order(
       subGlobalEnvironment.data,
-      subGlobalEnvironment.dataPropertyOrder,
+      subGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -77,12 +77,16 @@ export async function buildRenderContext({
   // Then get sub environment keys in correct order
   // Then get ancestor (folder) environment keys in correct order
   if (rootEnvironment) {
-    const ordered = orderedJSON.order(rootEnvironment.data, rootEnvironment.dataPropertyOrder, JSON_ORDER_SEPARATOR);
+    const ordered = orderedJSON.order(
+      rootEnvironment.data,
+      rootEnvironment.dataPropertyOrder ?? null,
+      JSON_ORDER_SEPARATOR,
+    );
     envObjects.push(ordered);
   }
 
   if (subEnvironment) {
-    const ordered = orderedJSON.order(subEnvironment.data, subEnvironment.dataPropertyOrder, JSON_ORDER_SEPARATOR);
+    const ordered = orderedJSON.order(subEnvironment.data, subEnvironment.dataPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
     envObjects.push(ordered);
   }
 
@@ -91,7 +95,7 @@ export async function buildRenderContext({
     const { environment, environmentPropertyOrder } = ancestor;
 
     if (typeof environment === 'object' && environment !== null) {
-      const ordered = orderedJSON.order(environment, environmentPropertyOrder, JSON_ORDER_SEPARATOR);
+      const ordered = orderedJSON.order(environment, environmentPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
       envObjects.push(ordered);
     }
   }
@@ -100,7 +104,7 @@ export async function buildRenderContext({
   if (userUploadEnvironment) {
     const ordered = orderedJSON.order(
       userUploadEnvironment.data,
-      userUploadEnvironment.dataPropertyOrder,
+      userUploadEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -110,7 +114,7 @@ export async function buildRenderContext({
   if (transientVariables) {
     const ordered = orderedJSON.order(
       transientVariables.data,
-      transientVariables.dataPropertyOrder,
+      transientVariables.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
