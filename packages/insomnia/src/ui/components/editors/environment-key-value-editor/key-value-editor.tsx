@@ -96,6 +96,11 @@ export const EnvironmentKVEditor = ({
   // diffs) until the user starts typing in it.
   const kvPairs: EnvironmentKvPairData[] = useMemo(() => [...persistedPairs, blankPair], [persistedPairs, blankPair]);
   const codeModalRef = useRef<CodePromptModalHandle>(null);
+  // Refs to each row's Name editor, keyed by pair id. React Aria's ListBox (with drag-and-drop) owns
+  // roving focus and lands it on the row element; we hand that focus into the row's CodeMirror editor
+  // rather than fighting React Aria with an imperative focus loop (which corrupts the modal's
+  // ariaHideOutside/inert management on the sibling environments list).
+  const nameEditorRefs = useRef<Map<string, OneLineEditorHandle>>(new Map());
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
   const [decryptedValues, setDecryptedValues] = useState<Record<string, string>>({});
   const symmetricKey = useMemo(() => (vaultKey === '' ? {} : base64decode(vaultKey, true)), [vaultKey]);
@@ -306,12 +311,17 @@ export const EnvironmentKVEditor = ({
         <div className={`${cellCommonStyle} relative flex h-full w-[30%] grow pl-1`}>
           <OneLineEditor
             ref={isBlank ? blankNameEditorRef : undefined}
+            ref={el => {
+              if (el) {
+                nameEditorRefs.current.set(id, el);
+              } else {
+                nameEditorRefs.current.delete(id);
+              }
+            }}
             id={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
             defaultValue={name}
             readOnly={!enabled || disabled}
-            // Focus the Name of the trailing blank row so the editor is ready to type into on open/add.
-            autoFocus={!disabled && itemIndex === kvPairs.length - 1 && name === ''}
             onChange={newName => {
               // check filed names for invalid '$' for '.' sign
               const error = ensureKeyIsValid(newName, true);
@@ -517,9 +527,13 @@ export const EnvironmentKVEditor = ({
         dependencies={[kvPairError, data, symmetricKey, blankId]}
         className="h-full w-full overflow-y-auto p-(--padding-sm)"
         items={kvPairs}
+        // Let React Aria place focus on the trailing blank row so the editor is ready to type into on
+        // open/add — then onFocus below hands that focus into the row's Name editor.
+        autoFocus={!disabled && kvPairs.length > 0 && kvPairs[kvPairs.length - 1].name === '' ? 'last' : undefined}
       >
         {kvPair => {
           const { id, name, enabled } = kvPair;
+          const isTrailingBlankRow = name === '' && kvPair === kvPairs[kvPairs.length - 1];
           return (
             <ListBoxItem
               key={id}
@@ -527,6 +541,13 @@ export const EnvironmentKVEditor = ({
               textValue={`environment-item-${name || id}`}
               style={{ opacity: enabled ? '1' : '0.4' }}
               className={'flex h-(--line-height-sm) w-full focus:outline-hidden'}
+              onFocus={e => {
+                // Forward focus from the row element into its Name editor, but only for the trailing
+                // blank row and only when the row itself (not an inner field) received focus.
+                if (!disabled && isTrailingBlankRow && e.target === e.currentTarget) {
+                  nameEditorRefs.current.get(id)?.focusEnd();
+                }
+              }}
             >
               {renderPairItem(kvPair)}
             </ListBoxItem>
