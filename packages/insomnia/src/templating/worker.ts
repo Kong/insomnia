@@ -119,7 +119,27 @@ async function getLiquid(
       });
   });
 
-  const allTags = [...localTemplateTags, ...bundlePluginTemplateTags];
+  const userPluginTemplateTags = (await fetchFromTemplateWorkerDatabase(
+    'plugin.getUserPluginTemplateTags',
+    {},
+  )) as TemplateTag[];
+
+  userPluginTemplateTags.forEach(tag => {
+    const { templateTag, plugin } = tag;
+    const pluginName = plugin.name;
+    const tagName = templateTag.name;
+    // Route execution of user-installed plugin tags back to main process, where the
+    // Node built-ins they require (e.g. crypto) are available.
+    templateTag.run = async (context, ...args) =>
+      await fetchFromTemplateWorkerDatabase('plugin.executeUserPluginTag', {
+        context,
+        args,
+        pluginName,
+        tagName,
+      });
+  });
+
+  const allTags = [...localTemplateTags, ...bundlePluginTemplateTags, ...userPluginTemplateTags];
 
   allTags.forEach((ext, i) => {
     ext.templateTag.priority = ext.templateTag.priority ?? i;
