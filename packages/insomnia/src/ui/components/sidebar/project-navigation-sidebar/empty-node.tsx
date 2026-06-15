@@ -39,8 +39,10 @@ export const EmptyNode = ({ item, storageRules }: EmptyNodeProps) => {
   });
   const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar' });
   const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source: 'sidebar' });
-  const createNewMockServer = () => setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source: 'sidebar' });
-  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source: 'sidebar' });
+  const createNewMockServer = () =>
+    setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source: 'sidebar' });
+  const createNewGlobalEnvironment = () =>
+    setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source: 'sidebar' });
   const createNewMcpClient = () => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source: 'sidebar' });
 
   const newRequestFetcher = useRequestNewActionFetcher();

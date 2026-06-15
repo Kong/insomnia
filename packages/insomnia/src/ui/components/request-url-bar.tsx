@@ -6,7 +6,6 @@ import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
-import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -18,6 +17,7 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 
 import { database as db } from '../../common/database';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';

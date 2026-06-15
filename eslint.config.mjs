@@ -29,22 +29,15 @@ const generalRestrictedImportPatterns = [
     message: "Only 'insomnia-data', 'insomnia-data/node' and 'insomnia-data/common' are allowed",
   },
 ];
-const rendererNodeMigrationOffenders = [
-  'packages/insomnia/src/common/misc.ts',
-  'packages/insomnia/src/common/significant-diff-detection.ts',
-  'packages/insomnia/src/routes/import.scan.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.update.tsx',
-];
+// Files that still import Node built-ins from renderer-context code and are
+// therefore exempt from the ban below. Keep this list minimal — verify a file
+// genuinely needs the exemption (i.e. it actually imports a Node built-in)
+// before adding it, and remove entries as files are migrated.
 const rendererNodeRestrictionIgnores = [
-  ...rendererNodeMigrationOffenders,
   'packages/insomnia/src/common/__tests__/**/*.{ts,tsx}',
-  'packages/insomnia/src/common/send-request.ts',
-  'packages/insomnia/src/common/bundle-spectral-ruleset.ts',
-  'packages/insomnia/src/common/private-host.ts',
+  'packages/insomnia/src/common/send-request.ts', // node:fs/promises, node:path
+  'packages/insomnia/src/common/bundle-spectral-ruleset.ts', // node:dns/promises, node:fs, node:path
+  'packages/insomnia/src/common/private-host.ts', // node:net
 ];
 // Browser globals that must not appear in Node-context code (main process,
 // UtilityProcess, node adapters) or in context-agnostic worker/isomorphic code.
@@ -236,10 +229,7 @@ export default defineConfig([
       'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },
   },
-  // Isomorphic context: must run anywhere — neither DOM globals nor Node
-  // built-ins. (suffix-only for now. `common/` is the de-facto isomorphic
-  // bucket but still uses window/document in ~5 files, so it cannot be marked
-  // `.iso` wholesale yet — it stays under the renderer rule above.)
+  // Isomorphic context: must run anywhere — neither DOM globals nor Node built-ins.
   {
     files: ['packages/insomnia/src/**/*.iso.ts'],
     rules: {
@@ -250,6 +240,21 @@ export default defineConfig([
           patterns: generalRestrictedImportPatterns,
         },
       ],
+      'no-restricted-globals': ['error', ...domRestrictedGlobals],
+    },
+  },
+  // `common/` is the de-facto isomorphic bucket: imported by the renderer, the
+  // main process, and the inso CLI, so it must not reach for DOM globals.
+  // (Node built-ins are already banned for common/ via the renderer rule above,
+  // with the migration-offender ignore list.) DOM-dependent helpers have been
+  // moved to ui/utils; the few genuinely isomorphic, guarded accesses that
+  // remain (constants env-resolution, import.ts __IS_RENDERER__ forks) carry an
+  // inline eslint-disable explaining the guard. Tests run under jsdom, so they
+  // are exempt.
+  {
+    files: ['packages/insomnia/src/common/**/*.{ts,tsx}'],
+    ignores: ['packages/insomnia/src/common/__tests__/**/*.{ts,tsx}'],
+    rules: {
       'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },
   },
@@ -319,10 +324,7 @@ export default defineConfig([
   },
   // Node context: main process, UtilityProcess, and node adapters — no DOM globals.
   {
-    files: [
-      'packages/insomnia/src/main/**/*.{ts,tsx,js,mjs}',
-      'packages/insomnia/src/**/*.node.ts',
-    ],
+    files: ['packages/insomnia/src/main/**/*.{ts,tsx,js,mjs}', 'packages/insomnia/src/**/*.node.ts'],
     rules: {
       'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },

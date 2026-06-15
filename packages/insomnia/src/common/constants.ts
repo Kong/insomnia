@@ -17,6 +17,7 @@ import { version } from '../../package.json';
 // In the inso CLI and main process, fall back to process.env.
 const ENV = 'env';
 
+// eslint-disable-next-line no-restricted-globals -- isomorphic: guarded by `typeof window`. Renderer reads env from the preload (`window.env`); main process, UtilityProcess and the inso CLI fall back to process.env.
 const env = typeof window !== 'undefined' && window.env ? window.env : process[ENV];
 
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
@@ -50,13 +51,6 @@ export const getCioSiteId = () =>
   appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].siteId;
 // Must specify full `process.env.BUILD_DATE` here because esbuild define is a build-time replacement and won't inject to runtime
 export const getAppBuildDate = () => new Date((env.BUILD_DATE || process.env.BUILD_DATE) ?? '').toLocaleDateString();
-
-export const getBrowserUserAgent = () =>
-  encodeURIComponent(
-    String(window.navigator.userAgent)
-      .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
-      .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
-  ).replace('%2C', ',');
 
 export function updatesSupported() {
   // Updates are not supported on Linux

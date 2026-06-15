@@ -3,12 +3,12 @@ import { services } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 
-import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';

@@ -32,7 +32,7 @@ import * as reactUse from 'react-use';
 import { Button as BasicButton } from '~/basic-components/button';
 import type { SortOrder } from '~/common/constants';
 import { fuzzyMatchAll } from '~/common/misc';
-import { getAllRemoteBackendProjectsOfOrg, getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
+import { getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
@@ -55,6 +55,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
+import { getAllRemoteBackendProjectsOfOrg } from '~/ui/utils/remote-projects';
 
 import { Icon } from '../../icon';
 import {
@@ -87,9 +88,7 @@ export interface ProjectNavigationSidebarHandle {
 export type ProjectNavigationSidebarTabId = 'projects' | 'konnect';
 
 function LastSyncedLabel({ lastSyncedAt }: { lastSyncedAt: number | null }) {
-  return lastSyncedAt
-    ? `Last synced: ${getRelativeTimeString(lastSyncedAt, Date.now())}`
-    : 'Not yet synced';
+  return lastSyncedAt ? `Last synced: ${getRelativeTimeString(lastSyncedAt, Date.now())}` : 'Not yet synced';
 }
 
 function getRelativeTimeString(timestamp: number, now: number = Date.now()): string {

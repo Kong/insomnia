@@ -93,7 +93,8 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     const path = uri.replace(/^(file):\/\//, '');
     const readFileProcessFork = async (path: string) =>
       __IS_RENDERER__
-        ? window.main.insecureReadFile({ path })
+        ? // eslint-disable-next-line no-restricted-globals -- isomorphic: window.main is only reached in the renderer (__IS_RENDERER__); the node path uses a dynamic import.
+          window.main.insecureReadFile({ path })
         : (await import('../main/secure-read-file')).insecureReadFile(path);
 
     return readFileProcessFork(path);
@@ -112,6 +113,7 @@ export interface PostmanDataDumpRawData {
 export async function getFilesFromPostmanExportedDataDump(filePath: string): Promise<PostmanDataDumpRawData> {
   let res;
   try {
+    // eslint-disable-next-line no-restricted-globals -- renderer-only: invoked only from renderer import flows. TODO: fork via __IS_RENDERER__ if ever called from node.
     res = await window.main.extractJsonFileFromPostmanDataDumpArchive(filePath);
   } catch {
     throw new Error('Extract failed');
@@ -206,10 +208,10 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          const convertProcessFork =
-            __IS_RENDERER__
-              ? window.main.parseImport
-              : (await import('../main/importers/convert')).convert;
+          const convertProcessFork = __IS_RENDERER__
+            ? // eslint-disable-next-line no-restricted-globals -- isomorphic: window.main is only reached in the renderer (__IS_RENDERER__); the node path uses a dynamic import.
+              window.main.parseImport
+            : (await import('../main/importers/convert')).convert;
           result = (await convertProcessFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {

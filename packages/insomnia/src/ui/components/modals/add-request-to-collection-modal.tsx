@@ -71,7 +71,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
       parentId: selectedWorkspaceId,
       metrics: {
         source: 'add-request-to-collection-modal',
-      }
+      },
     });
     previousRequestFetcherState.current = 'loading';
   };
