@@ -71,6 +71,7 @@ beforeEach(() => {
     network: {} as any,
     templating: {} as any,
     secretStorage: {} as any,
+    importer: {} as any,
   });
 
   vi.stubGlobal('window', {

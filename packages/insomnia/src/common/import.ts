@@ -22,6 +22,7 @@ import { z, type ZodError } from 'zod/v4';
 import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
+import { getRuntime } from '../runtimes';
 import { invariant } from '../utils/invariant';
 import { parseApiSpec, type ParsedApiSpec } from './api-specs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
@@ -91,14 +92,7 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    const readFileProcessFork = async (path: string) => {
-      const { insecureReadFile } = __IS_RENDERER__
-        ? await import('../ui/utils/import-bridge')
-        : await import('../main/secure-read-file');
-      return insecureReadFile(path);
-    };
-
-    return readFileProcessFork(path);
+    return getRuntime().importer.insecureReadFile(path);
   }
   // Treat everything else as raw text
   const content = decodeURIComponent(uri);
@@ -114,9 +108,7 @@ export interface PostmanDataDumpRawData {
 export async function getFilesFromPostmanExportedDataDump(filePath: string): Promise<PostmanDataDumpRawData> {
   let res;
   try {
-    res = __IS_RENDERER__
-      ? await (await import('../ui/utils/import-bridge')).extractJsonFileFromPostmanDataDumpArchive(filePath)
-      : await (await import('../main/ipc/extract-postman-data-dump')).default(null, filePath);
+    res = await getRuntime().importer.extractJsonFileFromPostmanDataDumpArchive(filePath);
   } catch {
     throw new Error('Extract failed');
   }
@@ -198,23 +190,19 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
           insomnia5Import = data as ExportedModel[];
           v5Error = error;
         }
-        if (insomnia5Import.length > 0) {
-          result = {
-            type: {
-              id: 'insomnia-5',
-              name: 'Insomnia v5',
-              description: 'Insomnia v5',
-            },
-            data: {
-              resources: insomnia5Import,
-            },
-          };
-        } else {
-          const { convert: convertProcessFork } = __IS_RENDERER__
-            ? await import('../ui/utils/import-bridge')
-            : await import('../main/importers/convert');
-          result = (await convertProcessFork(importEntry)) as unknown as ConvertResult;
-        }
+        result =
+          insomnia5Import.length > 0
+            ? {
+                type: {
+                  id: 'insomnia-5',
+                  name: 'Insomnia v5',
+                  description: 'Insomnia v5',
+                },
+                data: {
+                  resources: insomnia5Import,
+                },
+              }
+            : ((await getRuntime().importer.convert(importEntry)) as unknown as ConvertResult);
       } catch (err: unknown) {
         if (v5Error) {
           const messages = extractErrorMessages(v5Error);
