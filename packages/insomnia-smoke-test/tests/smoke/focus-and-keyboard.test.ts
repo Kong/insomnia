@@ -64,7 +64,7 @@ test.describe('Focus and keyboard navigation', () => {
     // Click the painted name cell rather than the row's center: the row's flexible middle leaves a
     // gap that the modal's pane container reports as intercepting the click, and the blank-row
     // autofocus churns focus/scroll right after the editor mounts.
-    await newEnvironmentRow.click();
+    await newEnvironmentRow.locator('[data-editable=true]').click();
 
     await expect.soft(page.locator(focusedEditorWithChild('environment-kv-editor-name'))).toHaveCount(1);
   });
