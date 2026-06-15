@@ -3,7 +3,7 @@ import React, { type FC } from 'react';
 import { Button, Heading, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import { documentationLinks } from '../../common/documentation';
-import { selectFileOrFolder } from '../../common/select-file-or-folder';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 import { blankSpec as emptySpec, petStoreSpec, todoSpec } from './example-openapi-specs';
 import { Icon } from './icon';
 import { showModal } from './modals';

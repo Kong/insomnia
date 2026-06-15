@@ -3,7 +3,7 @@ import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
-import { selectFileOrFolder } from '../../../common/select-file-or-folder';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

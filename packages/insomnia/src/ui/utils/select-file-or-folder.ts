@@ -10,7 +10,6 @@ interface FileSelection {
 }
 
 export const selectFileOrFolder = async ({ itemTypes, extensions, showHiddenFiles }: Options) => {
-  // If no types are selected then default to just files and not directories
   const types = itemTypes || ['file'];
   let title = 'Select ';
 

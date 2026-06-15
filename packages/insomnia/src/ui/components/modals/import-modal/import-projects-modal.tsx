@@ -9,7 +9,7 @@ import * as reactUse from 'react-use';
 
 import { database } from '~/common/database';
 import type { ScanResult } from '~/common/import';
-import { selectFileOrFolder } from '~/common/select-file-or-folder';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 import { importScannedResources } from '~/routes/import.resources';
 import { scanImportResources } from '~/routes/import.scan';
 import { useOrganizationLoaderData } from '~/routes/organization';

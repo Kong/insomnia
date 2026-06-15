@@ -5,7 +5,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { recordProjectRecentRequest } from '~/common/project';
+import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';

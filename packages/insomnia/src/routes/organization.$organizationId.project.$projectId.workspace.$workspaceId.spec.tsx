@@ -36,7 +36,7 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
-import { selectFileOrFolder } from '~/common/select-file-or-folder';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 import { useRootLoaderData } from '~/root';
 import { useDeleteProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete-ruleset';
 import { useRefreshProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.refresh-ruleset';

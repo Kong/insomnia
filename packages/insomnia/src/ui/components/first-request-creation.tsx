@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
-import { getProjectRecentRequests, type RecentProjectRequest } from '~/common/project';
+import { getProjectRecentRequests, type RecentProjectRequest } from '~/ui/utils/recent-project-requests';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
