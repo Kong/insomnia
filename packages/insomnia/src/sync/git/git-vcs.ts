@@ -474,7 +474,9 @@ export class GitVCS {
             return null;
           }
         } else {
-          // If the path is a file with an extension different than yaml we don't want to check it
+          // Early-skip files with a non-yaml extension. Directories (empty
+          // extname) fall through to the tree handling below so the walk keeps
+          // recursing into them; non-yaml *files* are filtered there instead.
           if (path.extname(filepath) && path.extname(filepath) !== '.yaml') {
             return null;
           }
@@ -631,7 +633,9 @@ export class GitVCS {
             return null;
           }
         } else {
-          // If the path is a file with an extension different than yaml we don't want to check it
+          // Early-skip files with a non-yaml extension. Directories (empty
+          // extname) fall through to the tree handling below so the walk keeps
+          // recursing into them; non-yaml *files* are filtered there instead.
           if (path.extname(filepath) && path.extname(filepath) !== '.yaml') {
             return null;
           }
