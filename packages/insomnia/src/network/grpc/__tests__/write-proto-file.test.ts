@@ -6,7 +6,7 @@ import path from 'node:path';
 import { services } from 'insomnia-data';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { writeProtoFile } from '../write-proto-file';
+import { writeProtoFile } from '../write-proto-file.node';
 
 describe('writeProtoFile', () => {
   let existsSyncSpy;

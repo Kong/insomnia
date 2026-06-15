@@ -32,7 +32,7 @@ import { services } from 'insomnia-data';
 
 import { version } from '../../../package.json';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
-import { writeProtoFile } from '../../network/grpc/write-proto-file';
+import { writeProtoFile } from '../../network/grpc/write-proto-file.node';
 import { invariant } from '../../utils/invariant';
 import { mockRequestMethods } from './automock';
 import { ipcMainHandle, ipcMainOn } from './electron';
