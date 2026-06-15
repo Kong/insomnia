@@ -91,7 +91,7 @@
     "decompress": "^4.2.1",
     "deep-equal": "2.2.3",
     "diff-match-patch-ts": "^0.6.0",
-    "dompurify": "^3.4.1",
+    "dompurify": "^3.4.10",
     "electron-context-menu": "^3.6.1",
     "electron-updater": "^6.6.2",
     "events": "^3.3.0",
