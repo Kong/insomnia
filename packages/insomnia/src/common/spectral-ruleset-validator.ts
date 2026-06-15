@@ -74,7 +74,7 @@ function validateThen(ruleName: string, then: Record<string, unknown>): string |
 
 // Structural check only: each "extends" entry must be a plain string. Whether an entry is a valid
 // identifier, local path, or remote URL — and whether a remote URL is safe to fetch (SSRF) — is
-// decided when the ruleset is bundled (see common/bundle-spectral-ruleset.ts).
+// decided when the ruleset is bundled (see main/bundle-spectral-ruleset.ts).
 function validateExtends(value: unknown): string | null {
   for (const entry of toArray(value)) {
     if (Array.isArray(entry)) {

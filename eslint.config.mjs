@@ -209,8 +209,8 @@ export default defineConfig([
     },
   },
   // Web worker context: neither DOM globals nor Node built-ins.
-  // (suffix-only; the existing workers use folder/`-worker.ts` naming and would
-  // need renaming to `.worker.ts` to opt in — tracked as follow-up.)
+  // (suffix-based opt-in; the templating worker is named `.worker.ts`. Any other
+  // workers still using folder/`-worker.ts` naming need renaming to opt in.)
   {
     files: ['packages/insomnia/src/**/*.worker.ts'],
     rules: {
@@ -241,7 +241,7 @@ export default defineConfig([
   // `common/` is the de-facto isomorphic bucket: imported by the renderer, the
   // main process, and the inso CLI, so it must not reach for DOM globals.
   // (Node built-ins are already banned for common/ via the renderer rule above,
-  // with the migration-offender ignore list.) DOM-dependent helpers have been
+  // whose only remaining exemption is the `__tests__` glob.) DOM-dependent helpers have been
   // moved to ui/utils; the few genuinely isomorphic, guarded accesses that
   // remain (constants env-resolution, import.ts __IS_RENDERER__ forks) carry an
   // inline eslint-disable explaining the guard. Tests run under jsdom, so they
