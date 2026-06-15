@@ -268,7 +268,7 @@ async function migrateGitCredentials(): Promise<void> {
 async function ensureNativeCredentialExists(): Promise<void> {
   const existing = await database.findOne<GitCredentials>(models.gitCredentials.type, { provider: 'native' });
   if (!existing) {
-    await services.gitCredentials.create({ provider: 'native' });
+    await services.gitCredentials.create({ provider: 'native', name: 'System Git Credentials' });
     console.log('[git-credentials-migration] Created native credential singleton');
   }
 }

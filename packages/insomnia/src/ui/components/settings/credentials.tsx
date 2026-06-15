@@ -613,8 +613,8 @@ const GitCredentialsList = () => {
         </MenuTrigger>
       </div>
 
-      {credentialsFetcher.data?.credentials.filter(c => c.provider !== 'native').length === 0 && (
-        <p className="text-center">No Git credentials configured</p>
+      {(credentialsFetcher.data?.credentials || []).filter(c => c.provider !== 'native').length === 0 && (
+        <p className="text-center">No additional Git credentials configured</p>
       )}
 
       <GridList
@@ -638,25 +638,19 @@ const GitCredentialsList = () => {
                     <span className="text-xs text-(--color-font-muted)">Uses system git config for identity</span>
                   ) : (
                     <>
-                      {isGitCredentialsV2(item) && 'author' in item && (item as any).author?.avatarUrl ? (
+                      {item.author?.avatarUrl ? (
                         <img
-                          src={(item as any).author.avatarUrl}
-                          alt={(item as any).author.name || 'Avatar'}
+                          src={item.author.avatarUrl}
+                          alt={item.author.name || 'Avatar'}
                           className="h-6 w-6 rounded-full"
                         />
                       ) : (
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-(--hl-sm) text-xs font-bold text-(--color-font-muted)">
-                          {isGitCredentialsV2(item) && 'author' in item && (item as any).author?.name
-                            ? (item as any).author.name.charAt(0).toUpperCase()
-                            : '?'}
+                          {item.author?.name ? item.author.name.charAt(0).toUpperCase() : '?'}
                         </div>
                       )}
-                      {isGitCredentialsV2(item) && 'author' in item && (
-                        <>
-                          <span>{(item as any).author?.name}</span>
-                          <span>{(item as any).author?.email}</span>
-                        </>
-                      )}
+                      <span>{item.author?.name}</span>
+                      <span>{item.author?.email}</span>
                     </>
                   )}
                 </div>

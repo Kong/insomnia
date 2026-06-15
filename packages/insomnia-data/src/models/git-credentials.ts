@@ -125,6 +125,8 @@ interface CustomCredential extends BaseCredentialData {
  */
 export interface NativeGitCredential {
   provider: 'native';
+  /** User-friendly name used for display/accessibility (aria-label, textValue). */
+  name?: string;
   author?: {
     name: string;
     email: string;
