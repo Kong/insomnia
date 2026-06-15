@@ -181,7 +181,6 @@ export default defineConfig([
   //   *.renderer.{ts,tsx} → browser context (no Node built-ins)
   //   *.node.ts           → Node context    (no DOM globals)
   //   *.worker.ts         → web worker       (neither)
-  //   *.iso.ts            → isomorphic       (neither — must run anywhere)
   // The folder rules (ui/, routes/, main/) carry the coarse process boundary;
   // the suffixes carry context for code that lives in a context-neutral place
   // (e.g. runtimes/ adapters). Note: `.client.ts`/`.server.ts` are React
@@ -189,16 +188,13 @@ export default defineConfig([
   // both run in the renderer, so they are intentionally absent here.
 
   // Browser/renderer context: DOM is available, Node built-ins are a bug.
-  // (formerly the "nodeIntegration: false" section)
   {
     files: [
       'packages/insomnia/src/ui/**/*.{ts,tsx}',
       'packages/insomnia/src/basic-components/**/*.{ts,tsx}',
       'packages/insomnia/src/routes/**/*.{ts,tsx}',
-      'packages/insomnia/src/common/**/*.{ts,tsx}',
       'packages/insomnia/src/**/*.renderer.{ts,tsx}',
     ],
-    ignores: rendererNodeRestrictionIgnores,
     rules: {
       'no-restricted-imports': [
         'error',
@@ -225,9 +221,12 @@ export default defineConfig([
       'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },
   },
-  // Isomorphic context: must run anywhere — neither DOM globals nor Node built-ins.
+  // `common/` is the de-facto isomorphic bucket: imported by the renderer, the
+  // main process, and the inso CLI, so it must not reach for DOM globals.
+  // whose only remaining exemption is the `__tests__` glob.)
   {
-    files: ['packages/insomnia/src/**/*.iso.ts'],
+    files: ['packages/insomnia/src/common/**/*.{ts,tsx}'],
+    ignores: ['packages/insomnia/src/common/__tests__/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -236,21 +235,6 @@ export default defineConfig([
           patterns: generalRestrictedImportPatterns,
         },
       ],
-      'no-restricted-globals': ['error', ...domRestrictedGlobals],
-    },
-  },
-  // `common/` is the de-facto isomorphic bucket: imported by the renderer, the
-  // main process, and the inso CLI, so it must not reach for DOM globals.
-  // (Node built-ins are already banned for common/ via the renderer rule above,
-  // whose only remaining exemption is the `__tests__` glob.) DOM-dependent helpers have been
-  // moved to ui/utils; the few genuinely isomorphic, guarded accesses that
-  // remain (constants env-resolution, import.ts __IS_RENDERER__ forks) carry an
-  // inline eslint-disable explaining the guard. Tests run under jsdom, so they
-  // are exempt.
-  {
-    files: ['packages/insomnia/src/common/**/*.{ts,tsx}'],
-    ignores: ['packages/insomnia/src/common/__tests__/**/*.{ts,tsx}'],
-    rules: {
       'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },
   },
