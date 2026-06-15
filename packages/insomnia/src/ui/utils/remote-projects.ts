@@ -2,16 +2,6 @@ import { database, models, services, type Workspace } from 'insomnia-data';
 
 import { type InsomniaFile } from '~/common/project';
 
-export const getAllRemoteBackendProjectsByProjectId = async ({
-  teamProjectId,
-  organizationId,
-}: {
-  teamProjectId: string;
-  organizationId: string;
-}) => {
-  return window.main.sync.remoteBackendProjects({ teamId: organizationId, teamProjectId });
-};
-
 export const getAllRemoteBackendProjectsOfOrg = async ({ organizationId }: { organizationId: string }) => {
   return window.main.sync.remoteBackendProjectsOfTeam({ teamId: organizationId });
 };
