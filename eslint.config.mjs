@@ -46,6 +46,18 @@ const rendererNodeRestrictionIgnores = [
   'packages/insomnia/src/common/bundle-spectral-ruleset.ts',
   'packages/insomnia/src/common/private-host.ts',
 ];
+// Browser globals that must not appear in Node-context code (main process,
+// UtilityProcess, node adapters) or in context-agnostic worker/isomorphic code.
+const domRestrictedGlobals = [
+  {
+    name: 'window',
+    message: '"window" is not available in this execution context.',
+  },
+  {
+    name: 'document',
+    message: '"document" is not available in this execution context.',
+  },
+];
 
 export default defineConfig([
   // https://typescript-eslint.io/getting-started#additional-configs
@@ -175,12 +187,27 @@ export default defineConfig([
       ],
     },
   },
-  // nodeIntegration: false section
+  // ── Execution-context boundaries ────────────────────────────────────────
+  // Context is enforced by file location AND by filename suffix, so a module's
+  // runtime is legible from its path alone:
+  //   *.renderer.{ts,tsx} → browser context (no Node built-ins)
+  //   *.node.ts           → Node context    (no DOM globals)
+  //   *.worker.ts         → web worker       (neither)
+  //   *.iso.ts            → isomorphic       (neither — must run anywhere)
+  // The folder rules (ui/, routes/, main/) carry the coarse process boundary;
+  // the suffixes carry context for code that lives in a context-neutral place
+  // (e.g. runtimes/ adapters). Note: `.client.ts`/`.server.ts` are React
+  // Router's SSR-bundling suffixes, NOT context markers — with `ssr: false`
+  // both run in the renderer, so they are intentionally absent here.
+
+  // Browser/renderer context: DOM is available, Node built-ins are a bug.
+  // (formerly the "nodeIntegration: false" section)
   {
     files: [
       'packages/insomnia/src/ui/**/*.{ts,tsx}',
       'packages/insomnia/src/routes/**/*.{ts,tsx}',
       'packages/insomnia/src/common/**/*.{ts,tsx}',
+      'packages/insomnia/src/**/*.renderer.{ts,tsx}',
     ],
     ignores: rendererNodeRestrictionIgnores,
     rules: {
@@ -191,6 +218,39 @@ export default defineConfig([
           patterns: generalRestrictedImportPatterns,
         },
       ],
+    },
+  },
+  // Web worker context: neither DOM globals nor Node built-ins.
+  // (suffix-only; the existing workers use folder/`-worker.ts` naming and would
+  // need renaming to `.worker.ts` to opt in — tracked as follow-up.)
+  {
+    files: ['packages/insomnia/src/**/*.worker.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: rendererBuiltinSpecifiers,
+          patterns: generalRestrictedImportPatterns,
+        },
+      ],
+      'no-restricted-globals': ['error', ...domRestrictedGlobals],
+    },
+  },
+  // Isomorphic context: must run anywhere — neither DOM globals nor Node
+  // built-ins. (suffix-only for now. `common/` is the de-facto isomorphic
+  // bucket but still uses window/document in ~5 files, so it cannot be marked
+  // `.iso` wholesale yet — it stays under the renderer rule above.)
+  {
+    files: ['packages/insomnia/src/**/*.iso.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: rendererBuiltinSpecifiers,
+          patterns: generalRestrictedImportPatterns,
+        },
+      ],
+      'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },
   },
   {
@@ -257,22 +317,14 @@ export default defineConfig([
       'packages/insomnia/src/*.js',
     ],
   },
-  // Main process ESLint rules
+  // Node context: main process, UtilityProcess, and node adapters — no DOM globals.
   {
-    files: ['packages/insomnia/src/main/**/*.{ts,tsx,js,mjs}'],
+    files: [
+      'packages/insomnia/src/main/**/*.{ts,tsx,js,mjs}',
+      'packages/insomnia/src/**/*.node.ts',
+    ],
     rules: {
-      'no-restricted-globals': [
-        'error',
-        // block usage of browser globals in main process code
-        {
-          name: 'window',
-          message: '"window" is not available in main process.',
-        },
-        {
-          name: 'document',
-          message: '"document" is not available in main process.',
-        },
-      ],
+      'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },
   },
   // Test files ESLint rules
