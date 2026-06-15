@@ -91,11 +91,12 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     return content;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
-    const readFileProcessFork = async (path: string) =>
-      __IS_RENDERER__
-        ? // eslint-disable-next-line no-restricted-globals -- isomorphic: window.main is only reached in the renderer (__IS_RENDERER__); the node path uses a dynamic import.
-          window.main.insecureReadFile({ path })
-        : (await import('../main/secure-read-file')).insecureReadFile(path);
+    const readFileProcessFork = async (path: string) => {
+      const { insecureReadFile } = __IS_RENDERER__
+        ? await import('../ui/utils/import-bridge')
+        : await import('../main/secure-read-file');
+      return insecureReadFile(path);
+    };
 
     return readFileProcessFork(path);
   }
@@ -113,8 +114,9 @@ export interface PostmanDataDumpRawData {
 export async function getFilesFromPostmanExportedDataDump(filePath: string): Promise<PostmanDataDumpRawData> {
   let res;
   try {
-    // eslint-disable-next-line no-restricted-globals -- renderer-only: invoked only from renderer import flows. TODO: fork via __IS_RENDERER__ if ever called from node.
-    res = await window.main.extractJsonFileFromPostmanDataDumpArchive(filePath);
+    res = __IS_RENDERER__
+      ? await (await import('../ui/utils/import-bridge')).extractJsonFileFromPostmanDataDumpArchive(filePath)
+      : await (await import('../main/ipc/extract-postman-data-dump')).default(null, filePath);
   } catch {
     throw new Error('Extract failed');
   }
@@ -208,10 +210,9 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          const convertProcessFork = __IS_RENDERER__
-            ? // eslint-disable-next-line no-restricted-globals -- isomorphic: window.main is only reached in the renderer (__IS_RENDERER__); the node path uses a dynamic import.
-              window.main.parseImport
-            : (await import('../main/importers/convert')).convert;
+          const { convert: convertProcessFork } = __IS_RENDERER__
+            ? await import('../ui/utils/import-bridge')
+            : await import('../main/importers/convert');
           result = (await convertProcessFork(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {

@@ -19,7 +19,7 @@ vi.mock('node:dns/promises', () => ({
 import dns from 'node:dns/promises';
 import fs from 'node:fs';
 
-import { bundleSpectralRuleset, compileSpectralRulesetFromContent } from '~/common/bundle-spectral-ruleset';
+import { bundleSpectralRuleset, compileSpectralRulesetFromContent } from '~/main/bundle-spectral-ruleset';
 
 const mockReadFile = vi.mocked(fs.promises.readFile) as MockedFunction<(path: string) => Promise<string>>;
 

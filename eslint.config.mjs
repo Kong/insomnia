@@ -29,16 +29,11 @@ const generalRestrictedImportPatterns = [
     message: "Only 'insomnia-data', 'insomnia-data/node' and 'insomnia-data/common' are allowed",
   },
 ];
-// Files that still import Node built-ins from renderer-context code and are
-// therefore exempt from the ban below. Keep this list minimal — verify a file
-// genuinely needs the exemption (i.e. it actually imports a Node built-in)
-// before adding it, and remove entries as files are migrated.
-const rendererNodeRestrictionIgnores = [
-  'packages/insomnia/src/common/__tests__/**/*.{ts,tsx}',
-  'packages/insomnia/src/common/send-request.ts', // node:fs/promises, node:path
-  'packages/insomnia/src/common/bundle-spectral-ruleset.ts', // node:dns/promises, node:fs, node:path
-  'packages/insomnia/src/common/private-host.ts', // node:net
-];
+// Renderer-context code (ui/, routes/, common/, *.renderer) must not import
+// Node built-ins. Tests run under jsdom/node and are exempt. No production
+// files need an exemption: node-only modules live outside common/ (main/,
+// network/) and genuinely isomorphic code uses userland or __IS_RENDERER__ forks.
+const rendererNodeRestrictionIgnores = ['packages/insomnia/src/common/__tests__/**/*.{ts,tsx}'];
 // Browser globals that must not appear in Node-context code (main process,
 // UtilityProcess, node adapters) or in context-agnostic worker/isomorphic code.
 const domRestrictedGlobals = [
