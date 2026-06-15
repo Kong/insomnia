@@ -392,11 +392,11 @@ export const FirstRequestCreation = ({
               ? `Today is a new day, we’re rooting for you!`
               : `We have a sneaking suspicion that you came here to send a request, so let’s get started!`}
           </p>
-          <div className="mt-8 w-[50%] min-w-100">
+          <div className="mt-8 w-[50%] min-w-135">
             <div
-              className={`flex aspect-540/127 flex-col overflow-hidden rounded-lg border border-(--hl-md) bg-(--color-bg) ${isRequestInputFocused ? 'shadow-[0_0_0_4px_#0044F433]' : ''}`}
+              className={`flex aspect-540/127 min-h-31.75 flex-col overflow-hidden rounded-lg border border-(--hl-md) bg-(--color-bg) ${isRequestInputFocused ? 'shadow-[0_0_0_4px_#0044F433]' : ''}`}
             >
-              <div className="flex-1 px-4 pt-3 pb-2">
+              <div className="min-h-0 flex-1 px-4 pt-3 pb-2">
                 <textarea
                   ref={inputRef}
                   autoFocus
@@ -415,7 +415,7 @@ export const FirstRequestCreation = ({
                   })}
                 />
               </div>
-              <div className="flex items-center justify-between gap-2 p-2">
+              <div className="flex h-12 shrink-0 items-center justify-between gap-2 p-2">
                 <Tooltip message="Upload Postman, OpenAPI, etc.">
                   <Button
                     aria-label="Attach content"

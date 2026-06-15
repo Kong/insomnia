@@ -1,6 +1,7 @@
 import type { Cookie, RequestHeader } from 'insomnia-data';
 
 import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
+import { serializeRenderContext } from '~/templating/render-context-serialization';
 import type { RenderedRequest } from '~/templating/types';
 
 import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
@@ -62,7 +63,8 @@ export async function applyRequestHooks(
   return pluginsBridge.applyRequestHooks({
     renderedRequest: request,
     projectId: renderedContext.getProjectId(),
-    environment: renderedContext,
+    // Functions on the render context cannot be structured-cloned over IPC to the plugin window.
+    environment: serializeRenderContext(renderedContext),
   });
 }
 
@@ -78,6 +80,7 @@ export async function applyResponseHooks(
     response,
     renderedRequest,
     projectId: renderedContext.getProjectId(),
-    environment: renderedContext,
+    // Functions on the render context cannot be structured-cloned over IPC to the plugin window.
+    environment: serializeRenderContext(renderedContext),
   });
 }

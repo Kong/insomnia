@@ -124,7 +124,9 @@ export const Plugins: FC = () => {
   return (
     <div>
       <p className="notice info no-margin-top">
-        Plugins is still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
+        Plugins are built and maintained by third-party developers. Thank you!
+        Insomnia does not review, endorse, or support any particular plugin unless explicitly noted.
+        Plugins are still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
 
       <div className="flex flex-col gap-6">

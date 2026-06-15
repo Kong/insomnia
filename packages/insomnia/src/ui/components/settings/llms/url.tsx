@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Button, Input, Text } from 'react-aria-components';
 
 import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
+import { Checkbox } from '~/ui/components/base/checkbox';
 import { Icon } from '~/ui/components/icon';
 import {
   DEFAULT_URL_MODEL_PARAMETERS,
@@ -293,6 +294,7 @@ export const Url = ({
                       id={temperatureId}
                       type="number"
                       value={modelParameters.temperature.toString()}
+                      disabled={!modelParameters.sendTemperature}
                       onChange={e => {
                         const value = Number.parseFloat(e.target.value);
                         if (!Number.isNaN(value) && value >= 0 && value <= 2) {
@@ -303,6 +305,18 @@ export const Url = ({
                       min={0}
                       max={2}
                     />
+                    <Checkbox
+                      className="mt-1 cursor-pointer rounded-sm px-2 py-1 text-xs text-(--hl) transition-colors hover:bg-(--hl-sm) hover:text-(--color-font)"
+                      isSelected={modelParameters.sendTemperature}
+                      onChange={isSelected =>
+                        setModelParameters(prev => ({
+                          ...prev,
+                          sendTemperature: isSelected,
+                        }))
+                      }
+                    >
+                      Send Temperature parameter
+                    </Checkbox>
                   </div>
 
                   <div className="form-control form-control--outlined">
@@ -311,6 +325,7 @@ export const Url = ({
                       id={topPId}
                       type="number"
                       value={modelParameters.topP.toString()}
+                      disabled={!modelParameters.sendTopP}
                       onChange={e => {
                         const value = Number.parseFloat(e.target.value);
                         if (!Number.isNaN(value) && value >= 0 && value <= 1) {
@@ -321,6 +336,18 @@ export const Url = ({
                       min={0}
                       max={1}
                     />
+                    <Checkbox
+                      className="mt-1 cursor-pointer rounded-sm px-2 py-1 text-xs text-(--hl) transition-colors hover:bg-(--hl-sm) hover:text-(--color-font)"
+                      isSelected={modelParameters.sendTopP}
+                      onChange={isSelected =>
+                        setModelParameters(prev => ({
+                          ...prev,
+                          sendTopP: isSelected,
+                        }))
+                      }
+                    >
+                      Send Top P parameter
+                    </Checkbox>
                   </div>
 
                   <div className="form-control form-control--outlined">
@@ -329,6 +356,7 @@ export const Url = ({
                       id={maxTokensId}
                       type="number"
                       value={modelParameters.maxTokens.toString()}
+                      disabled={!modelParameters.sendMaxTokens}
                       onChange={e => {
                         const value = Number.parseInt(e.target.value, 10);
                         if (!Number.isNaN(value) && value >= 1 && value <= 128_000) {
@@ -339,6 +367,18 @@ export const Url = ({
                       min="1"
                       max="128000"
                     />
+                    <Checkbox
+                      className="mt-1 cursor-pointer rounded-sm px-2 py-1 text-xs text-(--hl) transition-colors hover:bg-(--hl-sm) hover:text-(--color-font)"
+                      isSelected={modelParameters.sendMaxTokens}
+                      onChange={isSelected =>
+                        setModelParameters(prev => ({
+                          ...prev,
+                          sendMaxTokens: isSelected,
+                        }))
+                      }
+                    >
+                      Send Max Tokens parameter
+                    </Checkbox>
                   </div>
                 </div>
               </div>

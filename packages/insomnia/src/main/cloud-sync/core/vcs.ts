@@ -1290,18 +1290,21 @@ export class VCS {
 
     const teamKeys: { accountId: string; encSymmetricKey: string; autoLinked: boolean }[] = [];
 
-    if (!teamId || !teamPublicKeys?.length) {
-      throw new Error('teamId and teamPublicKeys must not be null or empty!');
+    if (!teamId) {
+      throw new Error('teamId must not be null or empty!');
     }
 
     // Encrypt the symmetric key with the public keys of all the team members, ourselves included
-    for (const { accountId, publicKey, autoLinked } of teamPublicKeys) {
+    for (const { accountId, publicKey, autoLinked } of teamPublicKeys || []) {
       teamKeys.push({
         autoLinked,
         accountId,
         encSymmetricKey: crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
       });
     }
+
+    // Use the local project ID if available; fall back to the workspace ID as a stable identifier.
+    const localProjectId = this._backendProject ? this._backendProject.id : workspaceId;
 
     const { projectCreate } = await this._runGraphQL<{ projectCreate: BackendProject }>(
       `
@@ -1329,7 +1332,7 @@ export class VCS {
       `,
       {
         name: workspaceName,
-        id: this._backendProjectId(),
+        id: localProjectId,
         rootDocumentId: workspaceId,
         teamId: teamId,
         teamKeys: teamKeys,

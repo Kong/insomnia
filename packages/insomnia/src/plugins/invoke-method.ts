@@ -1,3 +1,4 @@
+import { deserializeRenderContext } from '../templating/render-context-serialization';
 import type {
   ApplyRequestHooksArgs,
   ApplyResponseHooksArgs,
@@ -187,7 +188,7 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
     case 'applyRequestHooks': {
       const { renderedRequest, projectId, environment } = args as ApplyRequestHooksArgs;
       const newRenderedRequest = { ...renderedRequest };
-      const renderedContext = { ...environment, getProjectId: () => projectId };
+      const renderedContext = deserializeRenderContext(environment);
 
       for (const { plugin, hook } of await getRequestHooks()) {
         const context = {
@@ -212,7 +213,7 @@ export async function invokePluginMethod(method: PluginInvokeMethod, args?: unkn
       const { response, renderedRequest, projectId, environment } = args as ApplyResponseHooksArgs;
       const newResponse = { ...response };
       const newRequest = { ...renderedRequest };
-      const renderedContext = { ...environment, getProjectId: () => projectId };
+      const renderedContext = deserializeRenderContext(environment);
 
       for (const { plugin, hook } of await getResponseHooks()) {
         const context = {

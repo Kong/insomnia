@@ -50,6 +50,74 @@ export class ProjectPage extends BasePage {
   }
 
   // ===========================================================================
+  // Project dashboard navigation
+  // ===========================================================================
+
+  private readonly projectDashboardUrl = /\/organization\/[^/]+\/project\/[^/]+$/;
+
+  async waitForProjectDashboard(): Promise<void> {
+    await this.page.waitForURL(this.projectDashboardUrl, { timeout: 30_000, waitUntil: 'commit' });
+    await this.page.getByTestId('workspace-page').waitFor({ state: 'hidden' });
+    await this.page.getByRole('grid', { name: 'Files' }).waitFor({ state: 'visible' });
+  }
+
+  async navigateFromWorkspaceBreadcrumb(projectName = 'Personal Workspace'): Promise<void> {
+    await this.page.keyboard.press('Escape');
+    await this.page.mouse.move(0, 0);
+
+    const maxAttempts = 4;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (this.projectDashboardUrl.test(this.page.url())) {
+        break;
+      }
+
+      const breadcrumbLink = this.page.getByTestId('workspace-breadcrumb-level-0').getByRole('link');
+      await ((await breadcrumbLink.isVisible()) ? breadcrumbLink.click() : this.sidebar.projectRow(projectName).click());
+
+      try {
+        await this.page.waitForURL(this.projectDashboardUrl, { timeout: 5000, waitUntil: 'commit' });
+        break;
+      } catch (error) {
+        if (attempt === maxAttempts) {
+          throw error;
+        }
+      }
+    }
+
+    await this.waitForProjectDashboard();
+  }
+
+  // ===========================================================================
+  // Workspace creation
+  // ===========================================================================
+
+  async selectCreateInProjectType(typeName: string): Promise<void> {
+    await this.waitForProjectDashboard();
+    await this.page.keyboard.press('Escape');
+    await this.page.getByLabel('Create in project').click();
+    const menuItem = this.page.getByRole('menuitemradio', { name: typeName }).last();
+    await menuItem.waitFor({ state: 'visible' });
+    await menuItem.click();
+  }
+
+  async createCollection(name = 'My Collection'): Promise<void> {
+    await this.selectCreateInProjectType('Collection');
+    await this.page.getByRole('dialog').waitFor({ state: 'visible' });
+    const nameInput = this.page
+      .getByRole('dialog')
+      .getByPlaceholder('Enter a name for your Request Collection');
+    await nameInput.waitFor({ state: 'visible' });
+    await nameInput.fill(name);
+    await this.page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
+    await this.page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await this.page
+      .getByLabel('Insomnia Tabs')
+      .getByLabel(`tab-${name}`, { exact: true })
+      .and(this.page.locator('[data-selected="true"]'))
+      .waitFor({ state: 'visible' });
+  }
+
+  // ===========================================================================
   // Project Creation
   // ===========================================================================
 

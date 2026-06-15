@@ -45,9 +45,10 @@ test.describe('after-response script features tests', () => {
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.getByRole('button', { name: 'Cancel Request' })).toBeHidden({ timeout: 45_000 });
 
     // verify
-    await page.getByRole('tab', { name: 'Tests' }).click();
+    await page.getByTestId('response-pane').getByRole('tab', { name: 'Tests' }).click();
 
     const responsePane = page.getByTestId('response-pane');
     await expect.soft(responsePane).toContainText('PASS');

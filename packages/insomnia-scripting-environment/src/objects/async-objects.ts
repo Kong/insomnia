@@ -1,9 +1,12 @@
+import { resetTestPromises } from './test';
+
 let monitoring = true;
 let scriptPromises = new Array<Promise<any>>();
 
 /** @ignore */
 export const OriginalPromise = Promise;
 
+resetTestPromises();
 /** @ignore */
 export class ProxiedPromise<T> extends Promise<T> {
   constructor(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void) {
