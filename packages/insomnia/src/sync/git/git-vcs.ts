@@ -518,11 +518,12 @@ export class GitVCS {
         }
 
         // Trees/directories have already returned above (preserving recursion),
-        // so anything reaching here is a blob. Only keep yaml files; this skips
-        // dotfiles like .gitignore/.DS_Store whose empty extension slipped past
-        // the extension check above, while still allowing yaml dotfiles such as
-        // .spectral.yaml (extname === '.yaml').
-        if (path.extname(filepath) !== '.yaml') {
+        // so anything reaching here is a blob. In the non-legacy format only
+        // yaml files are relevant, so skip everything else — including dotfiles
+        // like .gitignore/.DS_Store whose empty extension slipped past the
+        // extension check above (yaml dotfiles such as .spectral.yaml still
+        // pass). The legacy format uses .yml files, so it is excluded here.
+        if (!baseOpts.legacyDiff && path.extname(filepath) !== '.yaml') {
           return null;
         }
 
@@ -686,11 +687,12 @@ export class GitVCS {
         }
 
         // Trees/directories have already returned above (preserving recursion),
-        // so anything reaching here is a blob. Only keep yaml files; this skips
-        // dotfiles like .gitignore/.DS_Store whose empty extension slipped past
-        // the extension check above, while still allowing yaml dotfiles such as
-        // .spectral.yaml (extname === '.yaml').
-        if (path.extname(filepath) !== '.yaml') {
+        // so anything reaching here is a blob. In the non-legacy format only
+        // yaml files are relevant, so skip everything else — including dotfiles
+        // like .gitignore/.DS_Store whose empty extension slipped past the
+        // extension check above (yaml dotfiles such as .spectral.yaml still
+        // pass). The legacy format uses .yml files, so it is excluded here.
+        if (!baseOpts.legacyDiff && path.extname(filepath) !== '.yaml') {
           return null;
         }
 
