@@ -176,7 +176,6 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
 
 export interface RootLoaderData {
   settings: Settings;
-  workspaceCount: number;
   userSession: UserSession;
 }
 
@@ -186,13 +185,11 @@ export const useRootLoaderData = () => {
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const settings = await services.settings.get();
-  const workspaceCount = await services.workspace.count();
   const userSession = await services.userSession.get();
   const cloudCredentials = await services.cloudCredential.all();
 
   return {
     settings,
-    workspaceCount,
     userSession,
     cloudCredentials,
   };

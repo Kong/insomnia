@@ -18,13 +18,23 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import iconv from 'iconv-lite';
-import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services, TestResults } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import type {
+  AuthTypeOAuth2,
+  GitRepository,
+  OAuth2Token,
+  Project,
+  RequestHeader,
+  Services,
+  TestResults,
+  Workspace,
+  WorkspaceMeta,
+} from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
 import * as crypt from '~/common/account/crypt';
 import { AI_PLUGIN_NAME, type UpdateStatus } from '~/common/constants';
-import { cannotAccessPathError } from '~/common/misc';
+import { cannotAccessPathError, isNotNullOrUndefined } from '~/common/misc';
 import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
 import type {
   GenerateCommitsFromDiffFunction,
@@ -340,6 +350,11 @@ export interface RendererToMainBridgeAPI {
     | { response: undefined; error: string }
   >;
   syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
+  getOrganizationData: (organizationId: string) => Promise<{
+    projects: (Project & { gitRepository?: GitRepository })[];
+    workspaces: Workspace[];
+    workspaceMetas: WorkspaceMeta[];
+  }>;
   plugins: PluginsBridgeAPI;
   notifyPromptResult: (id: string, value: string | null) => void;
   vault: {
@@ -672,6 +687,33 @@ export function registerMainHandlers() {
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
   ipcMainHandle('syncNewWorkspaceIfNeeded', async (_, options: Parameters<typeof syncNewWorkspaceIfNeeded>[0]) => {
     return syncNewWorkspaceIfNeeded(options);
+  });
+
+  ipcMainHandle('getOrganizationData', async (_, organizationId: string) => {
+    const projects = await services.project.list({ organizationId });
+    const projectIds = projects.map(p => p._id);
+    const gitRepositoryIds = projects
+      .map(p => (models.project.isConnectedGitProject(p) ? models.project.getEffectiveRepoId(p) : null))
+      .filter(isNotNullOrUndefined);
+
+    const [gitRepositories, workspaces] = await Promise.all([
+      database.find<GitRepository>(models.gitRepository.type, {
+        parentId: { $in: gitRepositoryIds },
+      }),
+      services.workspace.list({ parentId: { $in: projectIds } }),
+    ]);
+
+    const projectsWithGitRepos = models.project.sortProjects(projects).map(project => {
+      const effectiveId = models.project.isConnectedGitProject(project)
+        ? models.project.getEffectiveRepoId(project)
+        : null;
+      return {
+        ...project,
+        gitRepository: gitRepositories.find((gr): gr is GitRepository => gr != null && gr._id === effectiveId),
+      };
+    });
+
+    return { projects: projectsWithGitRepos, workspaces };
   });
 
   ipcMainHandle('getLocalStorageDataFromFileOrigin', async () => {

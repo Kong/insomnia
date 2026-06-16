@@ -1,21 +1,14 @@
-import { services } from 'insomnia-data';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { database as db } from '~/common/database';
+import type { CollectionWorkspaceChildren } from '~/ui/hooks/data/use-workspace-children';
 
-import {
-  type AllRequestsAndMetaInWorkspace,
-  filterCollection,
-  flattenCollectionChildren,
-  getAllRequestsAndMetaByWorkspace,
-  getWorkspacesByProjectIds,
-} from './project-navigation-sidebar-utils';
+import { filterCollection, flattenCollectionChildren } from './project-navigation-sidebar-utils';
 
 // ── Helpers for pure-function test fixtures ───────────────────────────────
 
-type AnyDoc = AllRequestsAndMetaInWorkspace['allRequests'][number];
-type AnyMeta = AllRequestsAndMetaInWorkspace['allRequestMetas'][number];
-type FolderMeta = AllRequestsAndMetaInWorkspace['requestGroupMetas'][number];
+type AnyDoc = CollectionWorkspaceChildren['children']['requestsAndGroups'][number];
+type AnyMeta = CollectionWorkspaceChildren['childrenMetas']['allRequestMetas'][number];
+type FolderMeta = CollectionWorkspaceChildren['childrenMetas']['requestGroupMetas'][number];
 
 const mkReq = (id: string, parentId: string, extra: Record<string, unknown> = {}): AnyDoc =>
   ({
@@ -52,6 +45,27 @@ const mkReqMeta = (parentId: string, pinned = false): AnyMeta =>
 
 const mkFolderMeta = (parentId: string, collapsed = false): FolderMeta =>
   ({ _id: `fmeta_${parentId}`, type: 'RequestGroupMeta', parentId, collapsed }) as unknown as FolderMeta;
+
+// Build the CollectionWorkspaceChildren shape consumed by flattenCollectionChildren.
+const mkChildren = (
+  requestsAndGroups: AnyDoc[],
+  allRequestMetas: AnyMeta[] = [],
+  requestGroupMetas: FolderMeta[] = [],
+): CollectionWorkspaceChildren => ({
+  children: {
+    requestsAndGroups,
+    workspaceMeta: undefined,
+    cookieJar: undefined,
+    baseEnvironment: undefined,
+    caCertificates: [],
+    clientCertificates: [],
+    unitTestSuites: [],
+    protoDirectories: [],
+    protoFiles: [],
+    runnerTestResults: [],
+  },
+  childrenMetas: { allRequestMetas, requestGroupMetas },
+});
 
 // filterCollection works on Child[] – create minimal compatible objects
 type ChildLike = Parameters<typeof filterCollection>[0][number];
@@ -244,27 +258,18 @@ describe('flattenCollectionChildren', () => {
   const WS = 'wrk_test';
 
   it('returns an empty array when there are no requests', () => {
-    const data: AllRequestsAndMetaInWorkspace = { allRequests: [], allRequestMetas: [], requestGroupMetas: [] };
-    expect(flattenCollectionChildren(WS, false, data)).toEqual([]);
+    expect(flattenCollectionChildren(WS, false, mkChildren([]))).toEqual([]);
   });
 
   it('returns top-level requests when the workspace is not collapsed', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkReq('req_1', WS), mkReq('req_2', WS)],
-      allRequestMetas: [],
-      requestGroupMetas: [],
-    };
+    const data = mkChildren([mkReq('req_1', WS), mkReq('req_2', WS)]);
     const ids = flattenCollectionChildren(WS, false, data).map(c => c.doc._id);
 
     expect(ids).toEqual(expect.arrayContaining(['req_1', 'req_2']));
   });
 
   it('marks direct workspace children hidden when the workspace is collapsed', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkReq('req_1', WS), mkFolder('fld_1', WS), mkReq('req_2', 'fld_1')],
-      allRequestMetas: [],
-      requestGroupMetas: [],
-    };
+    const data = mkChildren([mkReq('req_1', WS), mkFolder('fld_1', WS), mkReq('req_2', 'fld_1')]);
     const result = flattenCollectionChildren(WS, true, data);
     const byId = Object.fromEntries(result.map(c => [c.doc._id, c]));
 
@@ -278,11 +283,11 @@ describe('flattenCollectionChildren', () => {
   it('hides grandchildren when a parent folder is collapsed even if the child folder has no collapsed meta', () => {
     // Bug: before the fix, fld_child had collapsed=false (no meta), so req_deep got
     // parentIsCollapsed=false and was incorrectly visible despite fld_parent being collapsed.
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkFolder('fld_parent', WS), mkFolder('fld_child', 'fld_parent'), mkReq('req_deep', 'fld_child')],
-      allRequestMetas: [],
-      requestGroupMetas: [mkFolderMeta('fld_parent', true)],
-    };
+    const data = mkChildren(
+      [mkFolder('fld_parent', WS), mkFolder('fld_child', 'fld_parent'), mkReq('req_deep', 'fld_child')],
+      [],
+      [mkFolderMeta('fld_parent', true)],
+    );
     const result = flattenCollectionChildren(WS, false, data);
     const byId = Object.fromEntries(result.map(c => [c.doc._id, c]));
 
@@ -294,22 +299,14 @@ describe('flattenCollectionChildren', () => {
   });
 
   it('places a folder before its children in the flat list', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkFolder('fld_1', WS), mkReq('req_1', 'fld_1')],
-      allRequestMetas: [],
-      requestGroupMetas: [],
-    };
+    const data = mkChildren([mkFolder('fld_1', WS), mkReq('req_1', 'fld_1')]);
     const ids = flattenCollectionChildren(WS, false, data).map(c => c.doc._id);
 
     expect(ids.indexOf('fld_1')).toBeLessThan(ids.indexOf('req_1'));
   });
 
   it('assigns correct nesting levels for each depth', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkFolder('fld_1', WS), mkFolder('fld_2', 'fld_1'), mkReq('req_1', 'fld_2')],
-      allRequestMetas: [],
-      requestGroupMetas: [],
-    };
+    const data = mkChildren([mkFolder('fld_1', WS), mkFolder('fld_2', 'fld_1'), mkReq('req_1', 'fld_2')]);
     const result = flattenCollectionChildren(WS, false, data);
     const byId = Object.fromEntries(result.map(c => [c.doc._id, c]));
 
@@ -319,11 +316,7 @@ describe('flattenCollectionChildren', () => {
   });
 
   it('populates the ancestors array for nested items', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkFolder('fld_1', WS), mkFolder('fld_2', 'fld_1'), mkReq('req_1', 'fld_2')],
-      allRequestMetas: [],
-      requestGroupMetas: [],
-    };
+    const data = mkChildren([mkFolder('fld_1', WS), mkFolder('fld_2', 'fld_1'), mkReq('req_1', 'fld_2')]);
     const result = flattenCollectionChildren(WS, false, data);
     const byId = Object.fromEntries(result.map(c => [c.doc._id, c]));
 
@@ -333,11 +326,11 @@ describe('flattenCollectionChildren', () => {
   });
 
   it('hides children of a collapsed folder', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkFolder('fld_1', WS), mkReq('req_1', 'fld_1'), mkReq('req_2', 'fld_1')],
-      allRequestMetas: [],
-      requestGroupMetas: [mkFolderMeta('fld_1', true)],
-    };
+    const data = mkChildren(
+      [mkFolder('fld_1', WS), mkReq('req_1', 'fld_1'), mkReq('req_2', 'fld_1')],
+      [],
+      [mkFolderMeta('fld_1', true)],
+    );
     const result = flattenCollectionChildren(WS, false, data);
     const byId = Object.fromEntries(result.map(c => [c.doc._id, c]));
 
@@ -348,11 +341,7 @@ describe('flattenCollectionChildren', () => {
   });
 
   it('does not hide children of an expanded folder', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkFolder('fld_1', WS), mkReq('req_1', 'fld_1')],
-      allRequestMetas: [],
-      requestGroupMetas: [mkFolderMeta('fld_1', false)],
-    };
+    const data = mkChildren([mkFolder('fld_1', WS), mkReq('req_1', 'fld_1')], [], [mkFolderMeta('fld_1', false)]);
     const result = flattenCollectionChildren(WS, false, data);
     const byId = Object.fromEntries(result.map(c => [c.doc._id, c]));
 
@@ -361,33 +350,21 @@ describe('flattenCollectionChildren', () => {
   });
 
   it('marks a request as pinned when its meta has pinned=true', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkReq('req_pinned', WS)],
-      allRequestMetas: [mkReqMeta('req_pinned', true)],
-      requestGroupMetas: [],
-    };
+    const data = mkChildren([mkReq('req_pinned', WS)], [mkReqMeta('req_pinned', true)]);
     const [item] = flattenCollectionChildren(WS, false, data);
 
     expect(item.pinned).toBe(true);
   });
 
   it('never marks a request group as pinned', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkFolder('fld_1', WS)],
-      allRequestMetas: [],
-      requestGroupMetas: [],
-    };
+    const data = mkChildren([mkFolder('fld_1', WS)]);
     const [item] = flattenCollectionChildren(WS, false, data);
 
     expect(item.pinned).toBe(false);
   });
 
   it('populates the children array for request groups', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [mkFolder('fld_1', WS), mkReq('req_1', 'fld_1'), mkReq('req_2', 'fld_1')],
-      allRequestMetas: [],
-      requestGroupMetas: [],
-    };
+    const data = mkChildren([mkFolder('fld_1', WS), mkReq('req_1', 'fld_1'), mkReq('req_2', 'fld_1')]);
     const result = flattenCollectionChildren(WS, false, data);
     const folder = result.find(c => c.doc._id === 'fld_1')!;
 
@@ -395,16 +372,12 @@ describe('flattenCollectionChildren', () => {
   });
 
   it('sorts folder children by metaSortKey ascending', () => {
-    const data: AllRequestsAndMetaInWorkspace = {
-      allRequests: [
-        mkFolder('fld_1', WS),
-        mkReq('req_last', 'fld_1', { metaSortKey: 300 }),
-        mkReq('req_first', 'fld_1', { metaSortKey: 100 }),
-        mkReq('req_mid', 'fld_1', { metaSortKey: 200 }),
-      ],
-      allRequestMetas: [],
-      requestGroupMetas: [],
-    };
+    const data = mkChildren([
+      mkFolder('fld_1', WS),
+      mkReq('req_last', 'fld_1', { metaSortKey: 300 }),
+      mkReq('req_first', 'fld_1', { metaSortKey: 100 }),
+      mkReq('req_mid', 'fld_1', { metaSortKey: 200 }),
+    ]);
     const result = flattenCollectionChildren(WS, false, data);
     const childIds = result.filter(c => c.doc.parentId === 'fld_1').map(c => c.doc._id);
 
