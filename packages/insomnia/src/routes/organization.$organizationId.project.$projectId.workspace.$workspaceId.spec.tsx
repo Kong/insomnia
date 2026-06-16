@@ -1343,7 +1343,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           </div>
         </Panel>
         <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-        <Panel className="flex flex-col">
+        <Panel id="workspace-content" className="flex flex-col">
           <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
             <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
               <div className="flex h-full w-full flex-col">

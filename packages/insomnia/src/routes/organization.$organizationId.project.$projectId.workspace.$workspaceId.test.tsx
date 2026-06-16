@@ -393,7 +393,7 @@ const Component = () => {
           </ErrorBoundary>
         </Panel>
         <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
-        <Panel className="flex flex-col">
+        <Panel id="workspace-content" className="flex flex-col">
           <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
             <Panel id="pane-one" minSize={10} className="pane-one theme--pane relative overflow-hidden">
               <Routes>
