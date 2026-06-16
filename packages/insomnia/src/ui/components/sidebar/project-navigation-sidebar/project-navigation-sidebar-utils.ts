@@ -1,23 +1,10 @@
-import type {
-  GrpcRequest,
-  GrpcRequestMeta,
-  Request,
-  RequestGroup,
-  RequestGroupMeta,
-  RequestMeta,
-  SocketIORequest,
-  SocketIORequestMeta,
-  WebSocketRequest,
-  WebSocketRequestMeta,
-  Workspace,
-} from 'insomnia-data';
 import type { BaseModel } from 'insomnia-data';
 import { models } from 'insomnia-data';
 
-import { database } from '~/common/database';
 import { fuzzyMatchAll } from '~/common/misc';
 import { sortMethodMap } from '~/common/sorting';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import type { CollectionChildDoc, CollectionWorkspaceChildren } from '~/ui/hooks/data/workspace-children';
 
 export interface SlimRequestDoc extends BaseModel {
   type: 'Request' | 'GrpcRequest' | 'WebSocketRequest' | 'SocketIORequest' | 'RequestGroup';
@@ -25,14 +12,6 @@ export interface SlimRequestDoc extends BaseModel {
   url: string;
   method?: string;
   description?: string;
-}
-
-type AllRequestDoc = Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup;
-
-export interface AllRequestsAndMetaInWorkspace {
-  allRequests: AllRequestDoc[];
-  allRequestMetas: (RequestMeta | GrpcRequestMeta | WebSocketRequestMeta | SocketIORequestMeta)[];
-  requestGroupMetas: RequestGroupMeta[];
 }
 
 // TODO SLIM THE REQUEST DOCS TO ONLY WHAT WE NEED FOR THE SIDEBAR TO IMPROVE PERFORMANCE
@@ -50,150 +29,21 @@ export interface AllRequestsAndMetaInWorkspace {
 //   created: r.created,
 // });
 
-export async function getWorkspacesByProjectIds(projectIds: string[]) {
-  const workspaces = await database.find<Workspace>(models.workspace.type, {
-    parentId: { $in: projectIds },
-  });
-  const workspacesByProjectId = new Map<string, Workspace[]>();
-  projectIds.forEach(projectId => {
-    workspacesByProjectId.set(projectId, workspaces.filter(w => w.parentId === projectId) || []);
-  });
-  return workspacesByProjectId;
-}
-
-export async function getAllRequestsAndMetaByWorkspace(workspaceIds: string[]) {
-  const allRequestsAndMetaByWorkspaceId = new Map<string, AllRequestsAndMetaInWorkspace>();
-  let requestGroupIdQueue = [...workspaceIds];
-  const allRequestGroups: RequestGroup[] = [];
-  // Map to track which workspace each request group belongs to
-  const requestGroupToWorkspaceId = new Map<string, string>();
-  const requestToWorkspaceId = new Map<string, string>();
-  const grpcRequestToWorkspaceId = new Map<string, string>();
-  const wsRequestToWorkspaceId = new Map<string, string>();
-  const socketIORequestToWorkspaceId = new Map<string, string>();
-  // Initialize the map with workspace IDs
-  workspaceIds.forEach(workspaceId => {
-    requestGroupToWorkspaceId.set(workspaceId, workspaceId);
-    requestToWorkspaceId.set(workspaceId, workspaceId);
-    grpcRequestToWorkspaceId.set(workspaceId, workspaceId);
-    wsRequestToWorkspaceId.set(workspaceId, workspaceId);
-    socketIORequestToWorkspaceId.set(workspaceId, workspaceId);
-    allRequestsAndMetaByWorkspaceId.set(workspaceId, { allRequests: [], allRequestMetas: [], requestGroupMetas: [] });
-  });
-
-  while (requestGroupIdQueue.length) {
-    const requestGroups = await database.find<RequestGroup>(models.requestGroup.type, {
-      parentId: { $in: requestGroupIdQueue },
-    });
-
-    if (requestGroups.length === 0) {
-      break;
-    }
-
-    requestGroups.forEach(requestGroup => {
-      const workspaceId = requestGroupToWorkspaceId.get(requestGroup.parentId);
-      if (workspaceId) {
-        requestGroupToWorkspaceId.set(requestGroup._id, workspaceId);
-      }
-    });
-
-    allRequestGroups.push(...requestGroups);
-    requestGroupIdQueue = requestGroups.map(rg => rg._id);
-  }
-
-  const listOfParentIds = [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)];
-
-  const [reqs, grpcReqs, wsReqs, socketIOReqs] = await Promise.all([
-    database.find(models.request.type, { parentId: { $in: listOfParentIds } }),
-    database.find<GrpcRequest>(models.grpcRequest.type, { parentId: { $in: listOfParentIds } }),
-    database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } }),
-    database.find(models.socketIORequest.type, { parentId: { $in: listOfParentIds } }),
-  ]);
-
-  const allRequests = [...reqs, ...allRequestGroups, ...grpcReqs, ...wsReqs, ...socketIOReqs] as AllRequestDoc[];
-
-  const [requestMetas, grpcRequestMetas, requestGroupMetas, wsRequestMetas, socketIORequestMetas] = await Promise.all([
-    database.find<RequestMeta>(models.requestMeta.type, { parentId: { $in: reqs.map(r => r._id) } }),
-    database.find<GrpcRequestMeta>(models.grpcRequestMeta.type, {
-      parentId: { $in: grpcReqs.map(r => r._id) },
-    }),
-    database.find<RequestGroupMeta>(models.requestGroupMeta.type, {
-      parentId: { $in: allRequestGroups.map(requestGroup => requestGroup._id) },
-    }),
-    database.find<WebSocketRequestMeta>(models.webSocketRequestMeta.type, {
-      parentId: { $in: wsReqs.map(r => r._id) },
-    }),
-    database.find<SocketIORequestMeta>(models.socketIORequestMeta.type, {
-      parentId: { $in: socketIOReqs.map(r => r._id) },
-    }),
-  ]);
-
-  const allRequestMetas = [...requestMetas, ...grpcRequestMetas, ...wsRequestMetas, ...socketIORequestMetas];
-  // Associate requests with their workspace IDs and group request metas by workspace ID
-  allRequests.forEach(request => {
-    const { parentId, _id: requestId } = request;
-    const workspaceId = requestGroupToWorkspaceId.get(parentId);
-    if (workspaceId) {
-      // Track which workspace this request belongs to
-      if (models.grpcRequest.isGrpcRequest(request)) {
-        grpcRequestToWorkspaceId.set(requestId, workspaceId);
-      } else if (models.request.isRequest(request)) {
-        requestToWorkspaceId.set(requestId, workspaceId);
-      } else if (models.webSocketRequest.isWebSocketRequest(request)) {
-        wsRequestToWorkspaceId.set(requestId, workspaceId);
-      } else if (models.socketIORequest.isSocketIORequest(request)) {
-        socketIORequestToWorkspaceId.set(requestId, workspaceId);
-      }
-      const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
-      if (workspaceData) {
-        workspaceData.allRequests.push(request);
-      }
-    }
-  });
-  // Build map of requestGroupMetas by workspace ID
-  requestGroupMetas.forEach(requestGroupMeta => {
-    const workspaceId = requestGroupToWorkspaceId.get(requestGroupMeta.parentId);
-    if (workspaceId) {
-      const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
-      if (workspaceData) {
-        workspaceData.requestGroupMetas.push(requestGroupMeta);
-      }
-    }
-  });
-  allRequestMetas.forEach(requestMeta => {
-    const requestOrGrpcRequestId = requestMeta.parentId;
-    let workspaceId: string | undefined;
-    if (models.request.isRequestId(requestOrGrpcRequestId)) {
-      workspaceId = requestToWorkspaceId.get(requestOrGrpcRequestId);
-    } else if (models.grpcRequest.isGrpcRequestId(requestOrGrpcRequestId)) {
-      workspaceId = grpcRequestToWorkspaceId.get(requestOrGrpcRequestId);
-    } else if (models.webSocketRequest.isWebSocketRequestId(requestOrGrpcRequestId)) {
-      workspaceId = wsRequestToWorkspaceId.get(requestOrGrpcRequestId);
-    } else if (models.socketIORequest.isSocketIORequestId(requestOrGrpcRequestId)) {
-      workspaceId = socketIORequestToWorkspaceId.get(requestOrGrpcRequestId);
-    }
-    if (workspaceId) {
-      const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
-      if (workspaceData) {
-        workspaceData.allRequestMetas.push(requestMeta);
-      }
-    }
-  });
-
-  return allRequestsAndMetaByWorkspaceId;
-}
-
 export function flattenCollectionChildren(
   workspaceId: string,
   parentIsCollapsed: boolean,
-  { allRequests, allRequestMetas, requestGroupMetas }: AllRequestsAndMetaInWorkspace,
+  collectionWorkspaceChildren: CollectionWorkspaceChildren,
   sortOrder: keyof typeof sortMethodMap = 'type-manual',
 ): Child[] {
   const { isRequestGroup } = models.requestGroup;
+  const allRequests = collectionWorkspaceChildren.children.requestsAndGroups;
+  const { allRequestMetas, requestGroupMetas } = collectionWorkspaceChildren.childrenMetas;
+
   const collection: Child[] = [];
 
   // map of parentId to its direct children requests and request groups
-  const requestsByParentId = new Map<string, AllRequestDoc[]>();
+  const requestsByParentId = new Map<string, CollectionChildDoc[]>();
+
   for (const req of allRequests) {
     const allRequestsByParentId = requestsByParentId.get(req.parentId);
     if (allRequestsByParentId) {
@@ -204,7 +54,7 @@ export function flattenCollectionChildren(
   }
   const sortFunction = sortMethodMap[sortOrder];
   const rootRequests = (requestsByParentId.get(workspaceId) || []).sort(sortFunction);
-  const stack: { doc: AllRequestDoc; level: number; parentIsCollapsed: boolean; ancestors: string[] }[] = [
+  const stack: { doc: CollectionChildDoc; level: number; parentIsCollapsed: boolean; ancestors: string[] }[] = [
     ...rootRequests,
   ]
     .reverse()

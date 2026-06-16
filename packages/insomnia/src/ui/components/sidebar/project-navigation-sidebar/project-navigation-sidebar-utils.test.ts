@@ -2,12 +2,14 @@ import { services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { database as db } from '~/common/database';
-
 import {
   type AllRequestsAndMetaInWorkspace,
+  getAllRequestsAndMetaByWorkspace,
+} from '~/ui/hooks/data/requests-and-metas';
+
+import {
   filterCollection,
   flattenCollectionChildren,
-  getAllRequestsAndMetaByWorkspace,
   getWorkspacesByProjectIds,
 } from './project-navigation-sidebar-utils';
 

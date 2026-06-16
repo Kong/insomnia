@@ -20,7 +20,9 @@ import {
   type ProjectNavigationSidebarTabId,
 } from '~/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar';
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';
+import { dbQueryClient } from '~/ui/context/app/insomnia-query-client';
 import { useSidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
+import { projectKeys } from '~/ui/hooks/data/projects';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
@@ -121,6 +123,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const organizationProjects = await getProjectsWithGitRepositories({ organizationId });
 
   const projects = models.project.sortProjects(organizationProjects);
+  // Seed the shared query cache so consumers (sidebar, project index page) read warm data on first render instead of refetching.
+  dbQueryClient.setQueryData(projectKeys.details(organizationId), projects);
 
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 

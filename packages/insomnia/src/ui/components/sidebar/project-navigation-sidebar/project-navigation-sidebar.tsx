@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import type { RequestGroup, Workspace } from 'insomnia-data';
@@ -36,7 +37,6 @@ import { getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { KongLogo } from '~/ui/components/kong-logo';
@@ -47,24 +47,23 @@ import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/em
 import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-env-onboarding';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
-import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
+import { useProjects } from '~/ui/hooks/data/projects';
+import {
+  type CollectionWorkspaceChildren,
+  useWorkspaceChildrenByWorkspaceIds,
+  workspaceChildrenKeys,
+} from '~/ui/hooks/data/workspace-children';
+import { useWorkspacesByProjectIds } from '~/ui/hooks/data/workspaces';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
-import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
 import { getAllRemoteBackendProjectsOfOrg } from '~/ui/utils/remote-projects';
 
 import { Icon } from '../../icon';
-import {
-  type AllRequestsAndMetaInWorkspace,
-  filterCollection,
-  flattenCollectionChildren,
-  getAllRequestsAndMetaByWorkspace,
-  getWorkspacesByProjectIds,
-} from './project-navigation-sidebar-utils';
+import { filterCollection, flattenCollectionChildren } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
 import type { FlatItem } from './types';
@@ -202,19 +201,12 @@ const ProjectNavigationSidebarInner = (
     requestId?: string;
     requestGroupId?: string;
   };
-  const { userSession, settings } = useRootLoaderData()!;
-  const projectLoaderData = useProjectLoaderData()!;
-  const { projects, projectsSyncStatusPromise } = projectLoaderData;
-  const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(
-    projectsSyncStatusPromise,
-    organizationId,
-  );
-  const { presence } = useInsomniaEventStreamContext();
+  const { settings } = useRootLoaderData()!;
+
   const [searchParams, _setSearchParams] = useSearchParams();
   const tabNavigate = useTabNavigate();
 
   const [collectionSortOrders, setCollectionSortOrders] = useState<Record<string, SortOrder>>({});
-  const [flatItems, setFlatItems] = useState<FlatItem[]>([]);
   const [projectWorkspaceSortOrder, setProjectWorkspaceSortOrder] = useState<Record<string, WorkspaceSortOrder>>({});
   const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
   // Customized workspace sort orders by projectId
@@ -241,6 +233,31 @@ const ProjectNavigationSidebarInner = (
     null,
   );
 
+  const queryClient = useQueryClient();
+  const { data: projects = [] } = useProjects(organizationId);
+  // Show konnect or none-konnect projects based on selected tab
+  const activeProjects = useMemo(
+    () => projects.filter(isProjectTabActive ? p => !p.konnectControlPlaneId : p => p.konnectControlPlaneId != null),
+    [isProjectTabActive, projects],
+  );
+  const projectIds = useMemo(() => activeProjects.map(p => p._id), [activeProjects]);
+  const workspacesByProjectId = useWorkspacesByProjectIds(projectIds);
+  // Get the list of collection workspace ids that should be cached based on the current filter and expanded projects/workspaces.
+  const collectionWorkspaceIds = useMemo(() => {
+    const ids: string[] = [];
+    projectIds.forEach(projectId => {
+      (workspacesByProjectId.get(projectId) || []).forEach(workspace => {
+        if (
+          workspace.scope === 'collection' &&
+          (!!projectNavigationSidebarFilter || (expandedProjectAndWorkspaceIds || []).includes(workspace._id))
+        ) {
+          ids.push(workspace._id);
+        }
+      });
+    });
+    return ids;
+  }, [projectIds, workspacesByProjectId, projectNavigationSidebarFilter, expandedProjectAndWorkspaceIds]);
+  const collectionByWorkspaceId = useWorkspaceChildrenByWorkspaceIds(collectionWorkspaceIds, 'collection');
   const nonKonnectProjects = projects.filter(p => !p.konnectControlPlaneId);
   const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
@@ -269,46 +286,17 @@ const ProjectNavigationSidebarInner = (
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
   reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
   const activeFilter = ((isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '').trim();
-  // ref to cache queried workspaces by project id
-  const cachedWorkspacesRef = useRef<Map<string, Workspace[]>>(new Map());
-  // ref to cache queried collection children (request & requestGroups) data and meta by workspace id
-  const cachedCollectionChildrenAndMetaRef = useRef<Map<string, AllRequestsAndMetaInWorkspace>>(new Map());
-  // ref to track whether we are currently fetching unsynced files for cloud sync projects to avoid duplicate requests
+
   const isFetchingUnsyncedFilesRef = useRef(false);
 
   const syncKonnectProjectsAndNotifyRef = useRef<() => Promise<void>>(async () => {});
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
-  const projectsWithPresence = useMemo(
-    () =>
-      projects
-        .filter(isProjectTabActive ? p => !p.konnectControlPlaneId : p => p.konnectControlPlaneId != null)
-        .map(project => {
-          const projectPresence = presence
-            .filter(p => p.project === project.remoteId)
-            .filter(p => p.acct !== userSession.accountId)
-            .map(user => {
-              return {
-                key: user.acct,
-                alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-                src: user.avatar,
-              };
-            });
-          return {
-            ...project,
-            presence: projectPresence,
-            hasUncommittedOrUnpushedChanges:
-              checkAllProjectSyncStatus?.[project._id] ||
-              project.gitRepository?.hasUncommittedChanges ||
-              project.gitRepository?.hasUnpushedChanges,
-          };
-        }),
-    [projects, isProjectTabActive, presence, checkAllProjectSyncStatus, userSession.accountId],
-  );
-
-  const cloudSyncProjects = useMemo(() => projects.filter(p => models.project.isRemoteProject(p)), [projects]);
-  // Generate a stable string key to trigger getOrFetchUnsyncedFiles when the list of cloud sync projects changes.
+  const cloudSyncProjects = useMemo(
+    () => activeProjects.filter(p => models.project.isRemoteProject(p)),
+    [activeProjects],
+  ); // Generate a stable string key to trigger getOrFetchUnsyncedFiles when the list of cloud sync projects changes.
   const cloudSyncProjectIdsKey = useMemo(
     () =>
       cloudSyncProjects
@@ -474,7 +462,7 @@ const ProjectNavigationSidebarInner = (
         },
       });
     }
-  }, [projectNavigationSidebarFilter, konnectFilter]);
+  }, [projectNavigationSidebarFilter, konnectFilter, activeProjectId]);
 
   useEffect(() => {
     getAllRemoteFilesByProjectId();
@@ -486,57 +474,20 @@ const ProjectNavigationSidebarInner = (
     return uiEventBus.on(CLOUD_SYNC_FILE_CHANGE, updateUnsyncedFiles);
   }, [getAllRemoteFilesByProjectId, organizationId]);
 
-  useEffect(() => {
-    // clear caches on any router data change to avoid showing stale data
-    cachedWorkspacesRef.current.clear();
-    cachedCollectionChildrenAndMetaRef.current.clear();
-  }, [projectLoaderData]);
+  // Note: the local-db → query-cache sync (invalidate/patch on db.changes) is registered once at the
+  // provider level in `subscribeQueryClientToDbChanges`, so it stays active even when this sidebar is
+  // unmounted. Do not re-register it here.
 
-  useEffect(() => {
-    const tryToGetWorkspacesFromCache = async (projectIds: string[]) => {
-      const uncachedProjectIds = projectIds.filter(id => !cachedWorkspacesRef.current.has(id));
-      if (uncachedProjectIds.length > 0) {
-        const workspacesByProjectId = await getWorkspacesByProjectIds(uncachedProjectIds);
-        for (const [projectId, workspaces] of workspacesByProjectId.entries()) {
-          cachedWorkspacesRef.current.set(projectId, workspaces);
-        }
-      }
-      return cachedWorkspacesRef.current;
-    };
-    const tryToGetCollectionChildrenAndMetaFromCache = async (workspaceIds: string[]) => {
-      const uncachedWorkspaceIds = workspaceIds.filter(id => !cachedCollectionChildrenAndMetaRef.current.has(id));
-      if (uncachedWorkspaceIds.length > 0) {
-        const collectionChildAndMetaByWorkspaceId = await getAllRequestsAndMetaByWorkspace(uncachedWorkspaceIds);
-        for (const [workspaceId, collectionChildrenAndMeta] of collectionChildAndMetaByWorkspaceId.entries()) {
-          cachedCollectionChildrenAndMetaRef.current.set(workspaceId, collectionChildrenAndMeta);
-        }
-      }
-      return cachedCollectionChildrenAndMetaRef.current;
-    };
-
-    const buildWorkspaceAndCollectionData = async () => {
+  const flatItems = useMemo<FlatItem[]>(() => {
+    const buildWorkspaceAndCollectionData = (): FlatItem[] => {
       const items: FlatItem[] = [];
       // Array of project and collection workspace ids that should get data from db
       const activeFilterLower = activeFilter.toLowerCase();
 
-      const projectIds = projectsWithPresence.map(p => p._id);
-      const collectionWorkspaceIds: string[] = [];
-      const workspacesByProject = await tryToGetWorkspacesFromCache(projectIds);
-      projectIds.forEach(projectId => {
-        const workspaces = workspacesByProject.get(projectId) || [];
-        workspaces.forEach(wk => {
-          if (
-            wk.scope === 'collection' &&
-            // Fetch collection children and meta if 1) the workspace is expanded or 2) there is an active filter
-            (!!activeFilter || (expandedProjectAndWorkspaceIds || []).includes(wk._id))
-          ) {
-            collectionWorkspaceIds.push(wk._id);
-          }
-        });
-      });
-      const collectionChildrenAndMetaByWorkspaceId =
-        await tryToGetCollectionChildrenAndMetaFromCache(collectionWorkspaceIds);
-      for (const project of projectsWithPresence) {
+      const workspacesByProject = workspacesByProjectId;
+      const collectionChildrenAndMetaByWorkspaceId = collectionByWorkspaceId;
+
+      for (const project of activeProjects) {
         const projectId = project._id;
         const isProjectCollapsed = !(expandedProjectAndWorkspaceIds ?? []).includes(projectId);
         items.push({
@@ -620,7 +571,9 @@ const ProjectNavigationSidebarInner = (
               hidden: isProjectCollapsed,
             });
 
-            const allRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceId.get(workspaceId);
+            const allRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceId.get(
+              workspaceId,
+            ) as CollectionWorkspaceChildren;
             // build collection children if it's a collection workspace and parent workspace and project are not collapsed or there is an active filter
             const shouldHideCollectionChildren = isWorkspaceCollapsed || isProjectCollapsed;
             let collectionChildren =
@@ -747,19 +700,20 @@ const ProjectNavigationSidebarInner = (
         });
       }
 
-      setFlatItems(items);
+      return items;
     };
-    buildWorkspaceAndCollectionData();
+    return buildWorkspaceAndCollectionData();
   }, [
     activeFilter,
+    activeProjects,
+    collectionByWorkspaceId,
     collectionSortOrders,
-    projectWorkspaceSortOrder,
     expandedProjectAndWorkspaceIds,
-    isProjectTabActive,
     localWorkspaceOrders,
     organizationId,
-    projectsWithPresence,
+    projectWorkspaceSortOrder,
     unsyncedFilesByProjectId,
+    workspacesByProjectId,
   ]);
 
   const handleLocalWorkspaceReorder = useCallback(
@@ -771,7 +725,7 @@ const ProjectNavigationSidebarInner = (
       dropPosition: 'before' | 'after',
     ) => {
       const isMoveToDifferentProject = sourceProjectId !== targetProjectId;
-      const workspaces = cachedWorkspacesRef.current.get(targetProjectId) || [];
+      const workspaces = workspacesByProjectId.get(targetProjectId) || [];
       const currentWorkspaceSortOrder = projectWorkspaceSortOrder[targetProjectId] || 'type-manual';
       // Get the base order of workspace before re-order
       const baseOrder =
@@ -801,7 +755,7 @@ const ProjectNavigationSidebarInner = (
       }
       setLocalWorkspaceOrders({ ...localWorkspaceOrders, [targetProjectId]: reordered });
     },
-    [projectWorkspaceSortOrder, setLocalWorkspaceOrders, localWorkspaceOrders],
+    [workspacesByProjectId, projectWorkspaceSortOrder, localWorkspaceOrders, setLocalWorkspaceOrders],
   );
 
   const toggleProjectOrWorkspace = useCallback(
@@ -866,98 +820,35 @@ const ProjectNavigationSidebarInner = (
         };
       });
 
+      const collapsedByRequestGroupId = new Map(
+        nextStates.map(({ requestGroupId, collapsed }) => [requestGroupId, collapsed]),
+      );
+
+      // Optimistically update the cached collection so the tree re-renders immediately.
+      queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.details(workspace._id), previous => {
+        if (!previous) {
+          return previous;
+        }
+        return {
+          ...previous,
+          childrenMetas: {
+            ...previous.childrenMetas,
+            requestGroupMetas: previous.childrenMetas.requestGroupMetas.map(requestGroupMeta =>
+              collapsedByRequestGroupId.has(requestGroupMeta.parentId)
+                ? { ...requestGroupMeta, collapsed: collapsedByRequestGroupId.get(requestGroupMeta.parentId)! }
+                : requestGroupMeta,
+            ),
+          },
+        };
+      });
+      // Persist the change to database
       await Promise.all(
         nextStates.map(({ requestGroupId, collapsed }) =>
           services.requestGroupMeta.updateOrCreateForParentId(requestGroupId, { collapsed }),
         ),
       );
-      // Update the collapsed state in the cache.
-      cachedCollectionChildrenAndMetaRef.current.forEach(workspaceData => {
-        workspaceData.requestGroupMetas.forEach(requestGroupMeta => {
-          const nextState = nextStates.find(({ requestGroupId }) => requestGroupId === requestGroupMeta.parentId);
-          if (nextState) {
-            requestGroupMeta.collapsed = nextState.collapsed;
-          }
-        });
-      });
-
-      setFlatItems(previousFlatItems =>
-        nextStates.reduce((nextFlatItems, { requestGroupId, collapsed }) => {
-          const toggledChildren: { id: string; parentIsCollapsed: boolean }[] = [];
-
-          return nextFlatItems.map(item => {
-            if (item.kind === 'collectionChild') {
-              const { children, doc } = item;
-              // Find toggled request group and update collapsed state
-              if (doc._id === requestGroupId) {
-                // Add all children of the toggled request group to the array to update their hidden state
-                toggledChildren.push(
-                  ...(children?.map(child => ({ id: child.doc._id, parentIsCollapsed: collapsed })) ?? []),
-                );
-
-                return {
-                  ...item,
-                  collapsed,
-                  hidden: false,
-                };
-              }
-
-              const matchedToggledChild = toggledChildren.find(tc => tc.id === item.doc._id);
-              if (matchedToggledChild) {
-                const { parentIsCollapsed } = matchedToggledChild;
-                if (models.requestGroup.isRequestGroupId(doc._id)) {
-                  // Add children of the toggled child request group to the array to update their hidden state
-                  const isToggledRequestGroupCollapsed =
-                    parentIsCollapsed ||
-                    cachedCollectionChildrenAndMetaRef.current
-                      .get(workspace._id)
-                      ?.requestGroupMetas.find(rgm => rgm.parentId === doc._id)?.collapsed ||
-                    false;
-                  toggledChildren.push(
-                    ...(item.children?.map(child => ({
-                      id: child.doc._id,
-                      parentIsCollapsed: isToggledRequestGroupCollapsed,
-                    })) ?? []),
-                  );
-                }
-
-                return {
-                  ...item,
-                  hidden: parentIsCollapsed,
-                };
-              }
-            }
-
-            if (item.kind === 'emptyFolder') {
-              const parentFolder = item.requestGroup;
-              const parentFolderId = parentFolder?._id;
-              const matchedToggledChild = toggledChildren.find(tc => tc.id === parentFolderId);
-              // Update the emptyFolder node hidden state based on its parent request group collapsed state.
-              if (parentFolderId === requestGroupId) {
-                return {
-                  ...item,
-                  hidden: collapsed,
-                };
-              } else if (matchedToggledChild) {
-                return {
-                  ...item,
-                  hidden:
-                    matchedToggledChild.parentIsCollapsed ||
-                    // If the parent folder is toggled to be expanded, the empty folder node should still be hidden if its parent request group is collapsed.
-                    cachedCollectionChildrenAndMetaRef.current
-                      .get(workspace._id)
-                      ?.requestGroupMetas.find(rgm => rgm.parentId === matchedToggledChild.id)?.collapsed ||
-                    false,
-                };
-              }
-            }
-
-            return item;
-          });
-        }, previousFlatItems),
-      );
     },
-    [activeFilter],
+    [activeFilter, queryClient],
   );
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -1121,7 +1012,11 @@ const ProjectNavigationSidebarInner = (
                         if (routeInfo?.resourceId === docId) {
                           toggleProjectOrWorkspace(docId);
                         } else {
-                          !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched, properties: { project_id: docId } });
+                          !isScratchPad &&
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.projectSwitched,
+                              properties: { project_id: docId },
+                            });
                           !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
                         }
                       } else if (item.kind === 'workspace') {

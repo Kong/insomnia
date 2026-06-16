@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import type { WorkspaceScope } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import type { WorkspaceMeta, WorkspaceScope } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -29,7 +29,7 @@ import {
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll } from '~/common/misc';
-import { getAllLocalFiles, type InsomniaFile } from '~/common/project';
+import { type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
@@ -54,6 +54,8 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { TimeFromNow } from '~/ui/components/time-from-now';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useProjects } from '~/ui/hooks/data/projects';
+import { useLocalFiles } from '~/ui/hooks/data/workspaces';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
@@ -69,23 +71,29 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(projectId, 'Project ID is required');
   invariant(organizationId, 'Organization ID is required');
 
+  const projectWorkspaces = await services.workspace.findByParentId(projectId);
+  const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+    parentId: { $in: projectWorkspaces.map(workspace => workspace._id) },
+  });
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
-  const localFiles = await getAllLocalFiles({ projectId });
 
   return {
-    localFiles,
     remoteFilesPromise,
+    workspaceMetas,
   };
 }
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { localFiles, remoteFilesPromise } = loaderData;
-  const { activeProject, activeProjectGitRepository, projects } = useProjectLoaderData()!;
+  const { remoteFilesPromise } = loaderData;
+  const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
   const { activeSidebarTab } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
+  // Read the project list from the shared query cache (same source the sidebar uses)
+  const { data: projects = [] } = useProjects(organizationId);
+  const localFiles = useLocalFiles(projectId, loaderData.workspaceMetas);
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
 
   useEffect(() => {
