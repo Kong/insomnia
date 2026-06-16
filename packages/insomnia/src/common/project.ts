@@ -133,7 +133,7 @@ export async function getAllLocalFiles({ projectId }: { projectId: string }) {
   ]);
 
   const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
-    parentId: {
+    _id: {
       $in: workspaceMetas.map(wm => wm.gitRepositoryId).filter(isNotNullOrUndefined),
     },
   });
@@ -213,6 +213,9 @@ export const getUnsyncedRemoteWorkspaces = (remoteFiles: InsomniaFile[], workspa
   const seenIds = new Set<string>();
   const uniqueRemoteFiles = remoteFiles.filter(file => {
     if (seenIds.has(file.id)) {
+      console.warn(
+        `[Duplicate Remote File] Duplicate remote file found with id: ${file.id} and remote id: ${file.remoteId}`,
+      );
       return false;
     }
     seenIds.add(file.id);

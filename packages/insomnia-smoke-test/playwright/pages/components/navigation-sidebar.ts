@@ -279,6 +279,7 @@ export class NavigationSidebar {
     await unsyncedWorkspaceButton.click();
     await expect.soft(this.unsyncedWorkspaceRow(name)).toBeHidden({ timeout: 5000 });
     await expect.soft(this.workspaceRow(name)).toBeVisible();
+    await this.workspaceRow(name).click();
     await this.expectWorkspaceActive(name);
   }
 

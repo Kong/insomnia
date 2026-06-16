@@ -10,7 +10,7 @@ import { configureFetch } from 'insomnia-api';
 import type { Stats } from 'insomnia-data';
 import { initDatabase, initServices, models, services } from 'insomnia-data';
 import { isMac } from 'insomnia-data/common';
-import { servicesNodeImpl } from 'insomnia-data/node';
+import { createCachedAppDataService, servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
 import { mainDatabase } from '~/main/database.main';
@@ -140,7 +140,15 @@ app.on('ready', async () => {
   // Init some important things first
   await initDatabase(mainDatabase);
   // Initialize services for main process
-  initServices(servicesNodeImpl);
+  initServices({
+    ...servicesNodeImpl,
+    // Create a cached service for appData and send updates to all windows when the cache is updated
+    appData: createCachedAppDataService(servicesNodeImpl.appData, mainDatabase, (queryKey, data) => {
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send('app-data-cache.update', queryKey, data);
+      }
+    }),
+  });
   initRuntime(nodeRuntime);
   await _createModelInstances();
   // proxy has to be set up before backup's net.fetch below

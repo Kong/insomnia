@@ -267,6 +267,7 @@ export type MainOnChannels =
   | 'writeText';
 
 export type RendererOnChannels =
+  | 'app-data-cache.update'
   | 'contextMenuCommand'
   | 'db.changes'
   | 'edit:undo'
