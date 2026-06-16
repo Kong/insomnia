@@ -3,7 +3,16 @@ import { models, services } from 'insomnia-data';
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData, useSearchParams } from 'react-router';
+import {
+  href,
+  Outlet,
+  redirect,
+  type ShouldRevalidateFunctionArgs,
+  useOutletContext,
+  useParams,
+  useRouteLoaderData,
+  useSearchParams,
+} from 'react-router';
 import * as reactUse from 'react-use';
 
 import { logout } from '~/account/session';
@@ -55,6 +64,12 @@ const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeatu
   }
   return learningFeature;
 };
+
+export function shouldRevalidate({ currentParams, nextParams }: ShouldRevalidateFunctionArgs) {
+  const isProjectOrOrganizationChanging =
+    currentParams.projectId !== nextParams.projectId || currentParams.organizationId !== nextParams.organizationId;
+  return isProjectOrOrganizationChanging;
+}
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;

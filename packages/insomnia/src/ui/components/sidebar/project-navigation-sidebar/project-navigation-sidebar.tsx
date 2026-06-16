@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
-import type { RequestGroup, Workspace } from 'insomnia-data';
+import type { ChangeBufferEvent, RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import {
   type Dispatch,
@@ -64,6 +64,7 @@ import {
   flattenCollectionChildren,
   getAllRequestsAndMetaByWorkspace,
   getWorkspacesByProjectIds,
+  invalidateSidebarCaches,
 } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
@@ -217,6 +218,10 @@ const ProjectNavigationSidebarInner = (
   const [flatItems, setFlatItems] = useState<FlatItem[]>([]);
   const [projectWorkspaceSortOrder, setProjectWorkspaceSortOrder] = useState<Record<string, WorkspaceSortOrder>>({});
   const [unsyncedFilesByProjectId, setUnsyncedFilesByProjectId] = useState<Map<string, InsomniaFile[]>>(new Map());
+  // Bumped when a sidebar-relevant db change invalidates the caches, to re-run the tree build below.
+  const [dataVersion, setDataVersion] = useState(0);
+  // Debounce tree rebuilds so a burst of db changes (e.g. a bulk import) collapses into one rebuild.
+  const rebuildTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Customized workspace sort orders by projectId
   const [localWorkspaceOrders, setLocalWorkspaceOrders] = reactUse.useLocalStorage<Record<string, string[]>>(
     `${organizationId}:local-workspace-orders`,
@@ -461,10 +466,30 @@ const ProjectNavigationSidebarInner = (
   }, [getAllRemoteFilesByProjectId, organizationId]);
 
   useEffect(() => {
-    // clear caches on any router data change to avoid showing stale data
-    cachedWorkspacesRef.current.clear();
-    cachedCollectionChildrenAndMetaRef.current.clear();
-  }, [projectLoaderData]);
+    const scheduleRebuild = () => {
+      if (rebuildTimeoutRef.current) {
+        // debounce multiple db changes into one rebuild
+        clearTimeout(rebuildTimeoutRef.current);
+      }
+      rebuildTimeoutRef.current = setTimeout(() => setDataVersion(v => v + 1), 100);
+    };
+    const unsubscribe = window.main.on('db.changes', (_, changes: ChangeBufferEvent[]) => {
+      const shouldInvalidate = invalidateSidebarCaches(
+        changes,
+        cachedWorkspacesRef.current,
+        cachedCollectionChildrenAndMetaRef.current,
+      );
+      if (shouldInvalidate) {
+        scheduleRebuild();
+      }
+    });
+    return () => {
+      unsubscribe?.();
+      if (rebuildTimeoutRef.current) {
+        clearTimeout(rebuildTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const tryToGetWorkspacesFromCache = async (projectIds: string[]) => {
@@ -728,6 +753,7 @@ const ProjectNavigationSidebarInner = (
     projectNavigationSidebarFilter,
     projectsWithPresence,
     unsyncedFilesByProjectId,
+    dataVersion,
   ]);
 
   const handleLocalWorkspaceReorder = useCallback(

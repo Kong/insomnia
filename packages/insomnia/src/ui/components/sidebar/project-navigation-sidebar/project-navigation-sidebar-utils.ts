@@ -1,4 +1,5 @@
 import type {
+  ChangeBufferEvent,
   GrpcRequest,
   GrpcRequestMeta,
   Request,
@@ -49,6 +50,64 @@ export interface AllRequestsAndMetaInWorkspace {
 //   modified: r.modified,
 //   created: r.created,
 // });
+
+// Document types whose changes can affect the sidebar tree.
+export const SIDEBAR_RELEVANT_DOC_TYPES = [
+  models.project.type,
+  models.workspace.type,
+  models.request.type,
+  models.grpcRequest.type,
+  models.webSocketRequest.type,
+  models.socketIORequest.type,
+  models.requestGroup.type,
+  models.requestMeta.type,
+  models.grpcRequestMeta.type,
+  models.webSocketRequestMeta.type,
+  models.socketIORequestMeta.type,
+  models.requestGroupMeta.type,
+];
+
+export function invalidateSidebarCaches(
+  changes: ChangeBufferEvent[],
+  workspacesByProjectId: Map<string, Workspace[]>,
+  collectionDataByWorkspaceId: Map<string, AllRequestsAndMetaInWorkspace>,
+): boolean {
+  let shouldInvalidate = false;
+  const invalidateWorkspaceData = (workspaceId: string | undefined) => {
+    if (workspaceId && collectionDataByWorkspaceId.delete(workspaceId)) {
+      shouldInvalidate = true;
+    }
+  };
+
+  for (const [_, doc] of changes) {
+    if (!SIDEBAR_RELEVANT_DOC_TYPES.includes(doc.type)) {
+      continue;
+    }
+
+    if (doc.type === models.project.type) {
+      // A project change, clear the workspace list cache
+      if (workspacesByProjectId.size > 0) {
+        workspacesByProjectId.clear();
+        shouldInvalidate = true;
+      }
+      continue;
+    }
+
+    if (doc.type === models.workspace.type) {
+      // Workspace change, clear the workspace from workspacesByProjectId
+      if (workspacesByProjectId.delete(doc.parentId)) {
+        shouldInvalidate = true;
+      }
+      invalidateWorkspaceData(doc._id);
+      continue;
+    }
+    // Request or request group or meta change, clear the collectionDataByWorkspaceId cache
+    collectionDataByWorkspaceId.clear();
+    shouldInvalidate = true;
+  }
+
+  return shouldInvalidate;
+}
 
 export async function getWorkspacesByProjectIds(projectIds: string[]) {
   const workspaces = await database.find<Workspace>(models.workspace.type, {
