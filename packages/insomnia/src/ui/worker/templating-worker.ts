@@ -1,3 +1,4 @@
+import { deserializeRenderContext } from '../../templating/render-context-serialization';
 import * as templating from '../../templating/worker';
 
 async function performJob(input: {
@@ -17,18 +18,12 @@ async function performJob(input: {
 self.onmessage = async event => {
   const { id, input, context, path, ignoreUndefinedEnvVariable } = JSON.parse(event.data);
   try {
-    context.getMeta = () => ({
-      requestId: context.serializedFunctions.requestId,
-      workspaceId: context.serializedFunctions.workspaceId,
+    const result = await performJob({
+      input,
+      context: deserializeRenderContext(context),
+      path,
+      ignoreUndefinedEnvVariable,
     });
-    context.getEnvironmentId = () => context.serializedFunctions.environmentId;
-    context.getExtraInfo = () => context.serializedFunctions.extraInfo;
-    context.getGlobalEnvironmentId = () => context.serializedFunctions.globalEnvironmentId;
-    context.getKeysContext = () => context.serializedFunctions.keysContext;
-    context.getProjectId = () => context.serializedFunctions.projectId;
-    context.getPurpose = () => context.serializedFunctions.purpose;
-    context.getSettings = () => context.serializedFunctions.settings;
-    const result = await performJob({ input, context, path, ignoreUndefinedEnvVariable });
     self.postMessage({ id, result });
   } catch (err) {
     self.postMessage({ id, err });

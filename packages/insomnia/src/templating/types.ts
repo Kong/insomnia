@@ -90,6 +90,8 @@ export type PluginToMainAPIPaths =
   | 'plugin.getBundlePluginTemplateTags'
   | 'plugin.executeBundlePluginTag'
   | 'plugin.executeBundlePluginMainAction'
+  | 'plugin.getUserPluginTemplateTags'
+  | 'plugin.executeUserPluginTag'
   | 'app.alert'
   | 'app.dialog'
   | 'app.prompt'

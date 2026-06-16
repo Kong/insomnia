@@ -1,7 +1,6 @@
 import { ipcRenderer } from 'electron';
 
-// Provide window.app so plugin-loading code (which checks process.type === 'renderer')
-// can resolve the userData path without needing the main renderer's full preload.
+// Provide window.app so plugin-loading code (which checks __IS_RENDERER__) can resolve the userData path without needing the main renderer's full preload.
 window.app = {
   getPath: (name: string) => ipcRenderer.sendSync('getPath', name) as string,
   getAppPath: () => ipcRenderer.sendSync('getAppPath') as string,
@@ -35,6 +34,10 @@ window.dialog = {
 
 window.clipboard = {
   readText: () => ipcRenderer.sendSync('readText') as string,
-  writeText: (text: string) => { ipcRenderer.send('writeText', text); },
-  clear: () => { ipcRenderer.send('clear'); },
+  writeText: (text: string) => {
+    ipcRenderer.send('writeText', text);
+  },
+  clear: () => {
+    ipcRenderer.send('clear');
+  },
 };
