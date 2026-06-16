@@ -5,13 +5,7 @@ import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organizatio
 import { showToast } from '~/ui/components/toast-notification';
 
 import { Icon } from '../../icon';
-import {
-  ACTIVE_BORDER_CLASS,
-  GUIDE_LINE_CSS,
-  ICON_CLASS,
-  ROW_CLASS,
-  TOGGLE_BTN_CLASS,
-} from './project-navigation-sidebar-utils';
+import { ACTIVE_BORDER_CLASS, GUIDE_LINE_CSS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './styles';
 import type { UnsyncedWorkspaceFlatItem } from './types';
 
 export const UnsyncedWorkspaceNode = ({ item }: { item: UnsyncedWorkspaceFlatItem }) => {

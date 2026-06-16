@@ -27,13 +27,7 @@ import { useReadyState } from '~/ui/hooks/use-ready-state';
 import { useRequestGroupPatcher, useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
 import { Icon } from '../../icon';
-import {
-  ACTIVE_BORDER_CLASS,
-  GUIDE_LINE_CSS,
-  ICON_CLASS,
-  ROW_CLASS,
-  TOGGLE_BTN_CLASS,
-} from './project-navigation-sidebar-utils';
+import { ACTIVE_BORDER_CLASS, GUIDE_LINE_CSS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './styles';
 
 function MethodBadge({ doc }: { doc: Request | WebSocketRequest | GrpcRequest | SocketIORequest | McpRequest }) {
   if (models.request.isRequest(doc)) {
