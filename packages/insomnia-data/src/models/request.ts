@@ -289,7 +289,7 @@ export interface BaseRequest {
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
-  disableUserAgentHeader: boolean;
+  disableUserAgentHeader?: boolean;
   konnectRouteKey?: string | null;
   konnectManagedHeaderNames?: string[] | null;
 }
@@ -325,7 +325,11 @@ export function getOperationType(request: Request) {
 export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION;
 
-export const optionalKeys = ['konnectRouteKey', 'konnectManagedHeaderNames'];
+export const optionalKeys: (keyof BaseRequest)[] = [
+  'konnectRouteKey',
+  'konnectManagedHeaderNames',
+  'disableUserAgentHeader',
+];
 
 export function init(): BaseRequest {
   return {
@@ -349,7 +353,6 @@ export function init(): BaseRequest {
     settingEncodeUrl: true,
     settingRebuildPath: true,
     settingFollowRedirects: 'global',
-    disableUserAgentHeader: false,
   };
 }
 
