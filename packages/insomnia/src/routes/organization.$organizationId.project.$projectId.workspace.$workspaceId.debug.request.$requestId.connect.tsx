@@ -9,8 +9,8 @@ import type {
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { invariant } from '~/common/utils/invariant';
 import type { RenderedRequest } from '~/common/templating/types';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 

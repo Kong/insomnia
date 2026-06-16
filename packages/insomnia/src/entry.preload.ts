@@ -10,12 +10,12 @@ import type {
   RunTemplateTagActionArgs,
 } from '~/common/plugins/bridge-types';
 import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types';
+import type { RenderedRequest } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { PluginInvokeMethod } from '~/plugins/invoke-method';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
-import type { RenderedRequest } from '~/common/templating/types';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';

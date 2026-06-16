@@ -24,6 +24,9 @@ import { EnvironmentType, models, services } from 'insomnia-data';
 import { invariant, serializeNDJSON } from 'insomnia-data/common';
 import orderedJSON from 'json-order';
 
+import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
+import { RenderError } from '~/common/templating/render-error';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { getKVPairFromData } from '~/common/utils/environment-utils';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '~/common/utils/url/querystring';
 import { getRuntime } from '~/runtimes';
@@ -36,9 +39,6 @@ import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeader
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { ResponsePatch } from '../main/network/libcurl-promise';
-import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
-import { RenderError } from '~/common/templating/render-error';
-import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { filterClientCertificates } from './certificate';

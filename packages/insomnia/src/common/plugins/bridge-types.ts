@@ -1,5 +1,5 @@
-import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { RenderedRequest } from '~/common/templating/types';
+import type { ResponsePatch } from '~/main/network/libcurl-promise';
 
 export type HexColor = `#${string}`;
 export type RGBColor = `rgb(${string})`;

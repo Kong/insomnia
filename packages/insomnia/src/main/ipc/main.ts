@@ -32,6 +32,7 @@ import type {
   MockRouteData,
   ModelConfig,
 } from '~/common/plugins/types';
+import type { RenderedRequest } from '~/common/templating/types';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
@@ -56,7 +57,6 @@ import { getSendRequestCallback } from '~/network/unit-test-feature';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import { getRuntime } from '../../runtimes';
-import type { RenderedRequest } from '~/common/templating/types';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {

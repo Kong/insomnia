@@ -5,6 +5,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { RenderError } from '~/common/templating/render-error';
 import { setDefaultProtocol } from '~/common/utils/url/protocol';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -27,7 +28,6 @@ import {
   type GrpcRequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { RenderError } from '~/common/templating/render-error';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';

@@ -7,6 +7,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { RenderError } from '~/common/templating/render-error';
 import {
   buildQueryStringFromParams,
   extractQueryStringFromUrl,
@@ -25,7 +26,6 @@ import {
   useRequestLoaderData,
   type WebSocketRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { RenderError } from '~/common/templating/render-error';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';

@@ -22,6 +22,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { responseTagRegex } from '~/common/templating/utils';
 import { getDataFromKVPair } from '~/common/utils/environment-utils';
 import { invariant } from '~/common/utils/invariant';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
@@ -32,7 +33,6 @@ import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { responseTagRegex } from '~/common/templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
