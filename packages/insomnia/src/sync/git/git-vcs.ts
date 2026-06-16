@@ -474,10 +474,15 @@ export class GitVCS {
             return null;
           }
         } else {
-          // Early-skip files with a non-yaml extension. Directories (empty
-          // extname) fall through to the tree handling below so the walk keeps
-          // recursing into them; non-yaml *files* are filtered there instead.
-          if (path.extname(filepath) && path.extname(filepath) !== '.yaml') {
+          // We want to inspect the repo root '.', directories (so the walk keeps
+          // recursing into them), and yaml files. Skip files with a non-yaml
+          // extension and dotfiles such as .gitignore/.DS_Store (whose extension
+          // is empty) — but keep yaml dotfiles like .spectral.yaml.
+          const ext = path.extname(filepath).toLowerCase();
+          const base = path.basename(filepath);
+          const isYamlFile = ext === '.yaml';
+          const isDotfile = base !== '.' && base.startsWith('.');
+          if (!isYamlFile && (ext || isDotfile)) {
             return null;
           }
         }
@@ -515,16 +520,6 @@ export class GitVCS {
         }
         if ((stageType === 'tree' || stageType === 'special') && !isBlob) {
           return;
-        }
-
-        // Trees/directories have already returned above (preserving recursion),
-        // so anything reaching here is a blob. In the non-legacy format only
-        // yaml files are relevant, so skip everything else — including dotfiles
-        // like .gitignore/.DS_Store whose empty extension slipped past the
-        // extension check above (yaml dotfiles such as .spectral.yaml still
-        // pass). The legacy format uses .yml files, so it is excluded here.
-        if (!baseOpts.legacyDiff && path.extname(filepath) !== '.yaml') {
-          return null;
         }
 
         // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
@@ -643,10 +638,15 @@ export class GitVCS {
             return null;
           }
         } else {
-          // Early-skip files with a non-yaml extension. Directories (empty
-          // extname) fall through to the tree handling below so the walk keeps
-          // recursing into them; non-yaml *files* are filtered there instead.
-          if (path.extname(filepath) && path.extname(filepath) !== '.yaml') {
+          // We want to inspect the repo root '.', directories (so the walk keeps
+          // recursing into them), and yaml files. Skip files with a non-yaml
+          // extension and dotfiles such as .gitignore/.DS_Store (whose extension
+          // is empty) — but keep yaml dotfiles like .spectral.yaml.
+          const ext = path.extname(filepath).toLowerCase();
+          const base = path.basename(filepath);
+          const isYamlFile = ext === '.yaml';
+          const isDotfile = base !== '.' && base.startsWith('.');
+          if (!isYamlFile && (ext || isDotfile)) {
             return null;
           }
         }
@@ -684,16 +684,6 @@ export class GitVCS {
         }
         if ((stageType === 'tree' || stageType === 'special') && !isBlob) {
           return;
-        }
-
-        // Trees/directories have already returned above (preserving recursion),
-        // so anything reaching here is a blob. In the non-legacy format only
-        // yaml files are relevant, so skip everything else — including dotfiles
-        // like .gitignore/.DS_Store whose empty extension slipped past the
-        // extension check above (yaml dotfiles such as .spectral.yaml still
-        // pass). The legacy format uses .yml files, so it is excluded here.
-        if (!baseOpts.legacyDiff && path.extname(filepath) !== '.yaml') {
-          return null;
         }
 
         // Figure out the oids for files, using the staged oid for the working dir oid if the stats match.
