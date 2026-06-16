@@ -63,7 +63,15 @@ export async function insomniaFetch<T = void>({
     }
     return isJson ? response.json() : (response.text() as Promise<T>);
   } catch (err) {
-    const error = err.name === 'AbortError' ? new Error('insomniaFetch timed out') : err;
-    throw error;
+    if (err.name === 'AbortError') {
+      throw new Error('insomniaFetch timed out');
+    }
+    // `fetch failed` from undici hides the real reason (TLS, DNS, proxy, connection refused)
+    // in `err.cause`. Surface it so failures are diagnosable from the logs.
+    if (err?.message === 'fetch failed' && err.cause) {
+      const cause = err.cause;
+      console.error(`[insomniaFetch] ${method} ${path} failed:`, cause?.code || '', cause?.message || cause);
+    }
+    throw err;
   }
 }
