@@ -68,6 +68,7 @@
     "@stoplight/spectral-rulesets": "^1.22.1",
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-virtual": "3.13.12",
+    "@tanstack/react-query": "^5.101.0",
     "@xmldom/xmldom": "^0.9.8",
     "acorn": "^8.16.0",
     "acorn-walk": "^8.3.5",

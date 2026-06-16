@@ -133,7 +133,7 @@ export async function getAllLocalFiles({ projectId }: { projectId: string }) {
   ]);
 
   const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
-    parentId: {
+    _id: {
       $in: workspaceMetas.map(wm => wm.gitRepositoryId).filter(isNotNullOrUndefined),
     },
   });
