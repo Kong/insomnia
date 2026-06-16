@@ -83,6 +83,7 @@ export function init(): BaseSettings {
     dataFolders: [],
     scriptSandboxEnabled: true,
     scriptStrictModeEnabled: true,
+    templateTagSandboxEnabled: false,
     disabledSecurityRules: [],
     disabledBlockedProperties: [],
     disabledBlockedRoots: [],
