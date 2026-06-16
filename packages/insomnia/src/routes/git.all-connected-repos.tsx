@@ -4,7 +4,7 @@ import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 export async function clientLoader() {
   const { accountId } = await services.userSession.get();

@@ -49,7 +49,6 @@ export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths
   return result;
 };
 
-
 function resolveArg(arg: ReturnType<typeof tokenizeArgs>[number], scope: Record<string, any>): any {
   if (arg.type === 'variable') {
     return scope[arg.value as string];
@@ -86,22 +85,19 @@ export function createLiquidTagWorker(
         app: {
           alert: async (title: string, message?: string) =>
             fetchFromTemplateWorkerDatabase('app.alert', { title, message }),
-          dialog: async (title: string) =>
-            fetchFromTemplateWorkerDatabase('app.dialog', { title }),
-          prompt: async (title: string, options?: { label?: string; defaultValue?: string; submitName?: string; inputType?: string }) =>
-            fetchFromTemplateWorkerDatabase('app.prompt', { title, options }),
-          getPath: async (name: string) =>
-            fetchFromTemplateWorkerDatabase('app.getPath', { name }),
+          dialog: async (title: string) => fetchFromTemplateWorkerDatabase('app.dialog', { title }),
+          prompt: async (
+            title: string,
+            options?: { label?: string; defaultValue?: string; submitName?: string; inputType?: string },
+          ) => fetchFromTemplateWorkerDatabase('app.prompt', { title, options }),
+          getPath: async (name: string) => fetchFromTemplateWorkerDatabase('app.getPath', { name }),
           getInfo: () => ({ version: packageJson.version, platform }),
           showSaveDialog: async (options?: { defaultPath?: string }) =>
             fetchFromTemplateWorkerDatabase('app.showSaveDialog', { options }),
           clipboard: {
-            readText: async () =>
-              fetchFromTemplateWorkerDatabase('app.clipboard.readText', {}),
-            writeText: async (text: string) =>
-              fetchFromTemplateWorkerDatabase('app.clipboard.writeText', { text }),
-            clear: async () =>
-              fetchFromTemplateWorkerDatabase('app.clipboard.clear', {}),
+            readText: async () => fetchFromTemplateWorkerDatabase('app.clipboard.readText', {}),
+            writeText: async (text: string) => fetchFromTemplateWorkerDatabase('app.clipboard.writeText', { text }),
+            clear: async () => fetchFromTemplateWorkerDatabase('app.clipboard.clear', {}),
           },
         },
         store: {

@@ -69,7 +69,6 @@ export function getBridgeMetricsSnapshot() {
   };
 }
 
-
 // Registered once so that persistent `ipcMain.on` handlers don't accumulate across window recreations.
 let ipcListenersRegistered = false;
 

@@ -2,10 +2,10 @@ import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentType } from 'insomnia-data';
 import { useCallback } from 'react';
 
+import { getKVPairFromData } from '~/common/utils/environment-utils';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
-import { getKVPairFromData } from '~/utils/environment-utils';
 
 export function useToggleEnvironmentType() {
   const toggleEnvironmentType = useCallback(

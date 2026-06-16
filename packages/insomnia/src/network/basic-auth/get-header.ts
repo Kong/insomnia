@@ -1,6 +1,6 @@
 import type { RequestHeader } from 'insomnia-data';
 
-import { bytesToBase64, latin1BytesFromString, utf8ToBase64 } from '~/utils/utf8-bytes';
+import { bytesToBase64, latin1BytesFromString, utf8ToBase64 } from '~/common/utils/utf8-bytes';
 
 export function getBasicAuthHeader(username?: string | null, password?: string | null, encoding = 'utf8') {
   const name = 'Authorization';

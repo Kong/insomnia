@@ -19,11 +19,12 @@ import { models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 import { z, type ZodError } from 'zod/v4';
 
+import { invariant } from '~/common/utils/invariant';
+
 import type { InsomniaImporter } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
 import { id as postmanEnvImporterId } from '../main/importers/importers/postman-env';
 import { getRuntime } from '../runtimes';
-import { invariant } from '../utils/invariant';
 import { parseApiSpec, type ParsedApiSpec } from './api-specs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';

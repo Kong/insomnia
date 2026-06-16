@@ -139,10 +139,10 @@ export const GGUF = ({
         </div>
         <p className="mt-1 text-xs text-(--hl)">
           You can add more models by placing GGUF files in{' '}
-          <span
-            className="cursor-pointer underline"
-            onClick={() => window.shell.openPath(llmsFolder)}
-          >the LLMs folder</span>.
+          <span className="cursor-pointer underline" onClick={() => window.shell.openPath(llmsFolder)}>
+            the LLMs folder
+          </span>
+          .
         </p>
         {selectedModel && (
           <div className="mt-4">

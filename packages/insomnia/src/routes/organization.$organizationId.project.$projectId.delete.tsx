@@ -4,9 +4,9 @@ import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
+import { invariant } from '~/common/utils/invariant';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
+import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.delete';
 

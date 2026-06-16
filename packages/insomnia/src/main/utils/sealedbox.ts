@@ -11,11 +11,7 @@ import { box as naclBox } from 'tweetnacl';
 
 export const keyPair = naclBox.keyPair;
 
-export function open(
-  sealedbox: Uint8Array,
-  pk: Uint8Array,
-  sk: Uint8Array,
-): Uint8Array | null {
+export function open(sealedbox: Uint8Array, pk: Uint8Array, sk: Uint8Array): Uint8Array | null {
   const epk = sealedbox.subarray(0, naclBox.publicKeyLength);
   const data = sealedbox.subarray(naclBox.publicKeyLength);
   return naclBox.open(data, nonce(epk, pk), epk, sk);

@@ -1,7 +1,7 @@
 import { services } from 'insomnia-data';
 
-import { getInsomniaVaultKey, PLAYWRIGHT_TEST } from '../common/constants';
-import { getRuntime } from '../runtimes';
+import { getInsomniaVaultKey, PLAYWRIGHT_TEST } from '~/common/constants';
+import { getRuntime } from '~/runtimes';
 
 export const base64encode = (input: string | JsonWebKey) => {
   const inputStr = typeof input === 'string' ? input : JSON.stringify(input);

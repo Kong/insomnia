@@ -22,13 +22,13 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { getDataFromKVPair } from '~/common/utils/environment-utils';
+import { invariant } from '~/common/utils/invariant';
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
 import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
 import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
-import { getDataFromKVPair } from '~/utils/environment-utils';
-import { invariant } from '~/utils/invariant';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';

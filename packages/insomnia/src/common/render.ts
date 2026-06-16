@@ -14,6 +14,8 @@ import type {
 import { models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import { getRuntime } from '../runtimes';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating/constants';
@@ -27,7 +29,6 @@ import type {
   RenderedRequest,
 } from '../templating/types';
 import * as templatingUtils from '../templating/utils';
-import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 

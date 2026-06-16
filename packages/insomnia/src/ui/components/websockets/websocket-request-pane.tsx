@@ -7,10 +7,17 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import {
+  buildQueryStringFromParams,
+  extractQueryStringFromUrl,
+  joinUrlAndQueryString,
+} from '~/common/utils/url/querystring';
 import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
+import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 
 import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
@@ -19,13 +26,6 @@ import {
   type WebSocketRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { RenderError } from '../../../templating/render-error';
-import { renderRealtimeConnectPayload } from '../../../utils/render-realtime-connect';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
-import {
-  buildQueryStringFromParams,
-  extractQueryStringFromUrl,
-  joinUrlAndQueryString,
-} from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';

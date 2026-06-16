@@ -44,6 +44,7 @@ import {
   invalidateCompiledRulesetCache,
   writeCompiledRuleset,
 } from '~/main/spectral-ruleset-cache';
+import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '~/main/utils/sealedbox';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 import type {
   GenerateCommitsFromDiffFunction,
@@ -56,7 +57,6 @@ import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
 import { getRuntime } from '../../runtimes';
 import type { RenderedRequest } from '../../templating/types';
-import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '../../utils/sealedbox';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {

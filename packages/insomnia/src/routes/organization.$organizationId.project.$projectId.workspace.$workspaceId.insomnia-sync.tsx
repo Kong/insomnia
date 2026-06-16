@@ -2,8 +2,8 @@ import type { Workspace } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync';
 

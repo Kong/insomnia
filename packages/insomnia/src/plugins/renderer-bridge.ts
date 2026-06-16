@@ -4,7 +4,7 @@ function call<M extends keyof Omit<PluginsBridgeAPI, 'getBridgeMetrics'>>(
   method: M,
   args?: Parameters<PluginsBridgeAPI[M]>[0],
 ): ReturnType<PluginsBridgeAPI[M]> {
-  const fn = (window.main.plugins[method] as (...a: any[]) => any);
+  const fn = window.main.plugins[method] as (...a: any[]) => any;
   return fn(args) as ReturnType<PluginsBridgeAPI[M]>;
 }
 

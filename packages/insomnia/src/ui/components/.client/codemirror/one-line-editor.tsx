@@ -228,7 +228,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           id,
         );
       }
-       
     }, [
       defaultValue,
       getAutocompleteConstants,

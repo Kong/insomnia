@@ -2,7 +2,7 @@ import type { WebSocketRequest } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { database as db } from '../common/database';
+import { database as db } from '../../common/database';
 import { renderRealtimeConnectPayload } from './render-realtime-connect';
 import type * as TryInterpolate from './try-interpolate';
 
@@ -14,7 +14,7 @@ vi.mock('./try-interpolate', () => ({
   tryToInterpolateRequestOrShowRenderErrorModal,
 }));
 
-vi.mock('../ui/components/modals', () => ({
+vi.mock('../components/modals', () => ({
   showModal: vi.fn(),
 }));
 

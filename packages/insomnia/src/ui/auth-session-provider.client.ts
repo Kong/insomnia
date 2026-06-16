@@ -1,7 +1,7 @@
+import { invariant } from '~/common/utils/invariant';
 import * as session from '~/ui/account/session';
 
 import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
-import { invariant } from '../utils/invariant';
 
 interface AuthBox {
   token: string;

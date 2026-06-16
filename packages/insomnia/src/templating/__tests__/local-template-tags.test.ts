@@ -4,7 +4,8 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { invariant } from '../../utils/invariant';
+import { invariant } from '~/common/utils/invariant';
+
 import { localTemplateTags } from '../local-template-tags';
 import { type PluginTemplateTagContext } from '../types';
 
@@ -130,61 +131,138 @@ describe('response tag', () => {
     invariant(responseTag, 'missing tag in localTemplateTags');
 
     it('handles count() returning a number', async () => {
-      const result = await responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', 'count(//book)', 'never', 60);
+      const result = await responseTag.run(
+        makeResponseContext(XML, 'application/xml; charset=utf-8'),
+        'body',
+        'req_1',
+        'count(//book)',
+        'never',
+        60,
+      );
       expect(result).toBe('2');
     });
 
     it('handles sum() returning a number', async () => {
-      const result = await responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', 'sum(//price)', 'never', 60);
+      const result = await responseTag.run(
+        makeResponseContext(XML, 'application/xml; charset=utf-8'),
+        'body',
+        'req_1',
+        'sum(//price)',
+        'never',
+        60,
+      );
       expect(result).toBe('18.98');
     });
 
     it('handles boolean() returning true', async () => {
-      const result = await responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', 'boolean(//book)', 'never', 60);
+      const result = await responseTag.run(
+        makeResponseContext(XML, 'application/xml; charset=utf-8'),
+        'body',
+        'req_1',
+        'boolean(//book)',
+        'never',
+        60,
+      );
       expect(result).toBe('true');
     });
 
     it('handles boolean() returning false', async () => {
-      const result = await responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', 'boolean(//missing)', 'never', 60);
+      const result = await responseTag.run(
+        makeResponseContext(XML, 'application/xml; charset=utf-8'),
+        'body',
+        'req_1',
+        'boolean(//missing)',
+        'never',
+        60,
+      );
       expect(result).toBe('false');
     });
 
     it('handles string() returning a string', async () => {
-      const result = await responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', 'string(//title[1])', 'never', 60);
+      const result = await responseTag.run(
+        makeResponseContext(XML, 'application/xml; charset=utf-8'),
+        'body',
+        'req_1',
+        'string(//title[1])',
+        'never',
+        60,
+      );
       expect(result).toBe('Gatsby');
     });
 
     it('returns inner text for an element node query', async () => {
       // /store/book[1]/title is unambiguous — only one <title> under the first <book>
-      const result = await responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', '/store/book[1]/title', 'never', 60);
+      const result = await responseTag.run(
+        makeResponseContext(XML, 'application/xml; charset=utf-8'),
+        'body',
+        'req_1',
+        '/store/book[1]/title',
+        'never',
+        60,
+      );
       expect(result).toBe('Gatsby');
     });
 
     it('returns nodeValue for an attribute node query', async () => {
-      const result = await responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', '/store/book[1]/@id', 'never', 60);
+      const result = await responseTag.run(
+        makeResponseContext(XML, 'application/xml; charset=utf-8'),
+        'body',
+        'req_1',
+        '/store/book[1]/@id',
+        'never',
+        60,
+      );
       expect(result).toBe('1');
     });
 
     it('returns text content for a text() node query', async () => {
-      const result = await responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', '/store/book[1]/title/text()', 'never', 60);
+      const result = await responseTag.run(
+        makeResponseContext(XML, 'application/xml; charset=utf-8'),
+        'body',
+        'req_1',
+        '/store/book[1]/title/text()',
+        'never',
+        60,
+      );
       expect(result).toBe('Gatsby');
     });
 
     it('throws when query matches no nodes', async () => {
       await expect(
-        responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', '//missing', 'never', 60),
+        responseTag.run(
+          makeResponseContext(XML, 'application/xml; charset=utf-8'),
+          'body',
+          'req_1',
+          '//missing',
+          'never',
+          60,
+        ),
       ).rejects.toThrow('Invalid XPath query: //missing');
     });
 
     it('throws when query matches more than one node', async () => {
       await expect(
-        responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', '//book', 'never', 60),
+        responseTag.run(
+          makeResponseContext(XML, 'application/xml; charset=utf-8'),
+          'body',
+          'req_1',
+          '//book',
+          'never',
+          60,
+        ),
       ).rejects.toThrow('Invalid XPath query: //book');
     });
 
     it('throws on a syntactically invalid XPath expression', async () => {
       await expect(
-        responseTag.run(makeResponseContext(XML, 'application/xml; charset=utf-8'), 'body', 'req_1', '//[]', 'never', 60),
+        responseTag.run(
+          makeResponseContext(XML, 'application/xml; charset=utf-8'),
+          'body',
+          'req_1',
+          '//[]',
+          'never',
+          60,
+        ),
       ).rejects.toThrow('Invalid XPath query: //[]');
     });
   });
@@ -235,7 +313,9 @@ describe('file tag: filesystem access isolation', () => {
   });
 
   it('propagates errors from context.util.readFile without a fallback', async () => {
-    const readFile = vi.fn(async () => { throw new Error('access denied by secureReadFile'); });
+    const readFile = vi.fn(async () => {
+      throw new Error('access denied by secureReadFile');
+    });
     const ctx = { util: { readFile } } as unknown as PluginTemplateTagContext;
 
     await expect(fileTag.run(ctx, '/sensitive/secrets.txt')).rejects.toThrow('access denied by secureReadFile');

@@ -12,7 +12,7 @@ import { TrialConfirmationModal } from '~/ui/components/modals/trial-confirmatio
 import { Tooltip } from '~/ui/components/tooltip';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { useUserService } from '~/ui/hooks/use-user-service';
-import { formatNumber } from '~/utils';
+import { formatNumber } from '~/ui/utils';
 
 interface Props {
   isMinimal?: boolean;

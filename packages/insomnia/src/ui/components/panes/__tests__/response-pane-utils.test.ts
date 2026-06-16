@@ -86,11 +86,7 @@ describe('downloadResponseBody', () => {
       // PNG magic bytes — would be corrupted by a UTF-8 round-trip
       const binaryData = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
-      await downloadResponseBody(
-        { name: 'My Request' },
-        { contentType: 'image/png', bodyBuffer: binaryData },
-        false,
-      );
+      await downloadResponseBody({ name: 'My Request' }, { contentType: 'image/png', bodyBuffer: binaryData }, false);
 
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { path, content } = mockWriteFile.mock.calls[0][0];
@@ -103,11 +99,7 @@ describe('downloadResponseBody', () => {
       mockShowSaveDialog.mockResolvedValue({ canceled: false, filePath: '/tmp/out.txt' });
       const textData = new TextEncoder().encode('Hello, World!');
 
-      await downloadResponseBody(
-        { name: 'My Request' },
-        { contentType: 'text/plain', bodyBuffer: textData },
-        true,
-      );
+      await downloadResponseBody({ name: 'My Request' }, { contentType: 'text/plain', bodyBuffer: textData }, true);
 
       expect(mockWriteFile).toHaveBeenCalledOnce();
       const { content } = mockWriteFile.mock.calls[0][0];

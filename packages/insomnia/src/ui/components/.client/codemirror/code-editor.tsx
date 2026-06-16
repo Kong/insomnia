@@ -37,9 +37,9 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
-import { ednPrettify } from '~/utils/prettify/edn';
-import { jsonPrettify } from '~/utils/prettify/json';
-import { queryXPath } from '~/utils/xpath/query';
+import { ednPrettify } from '~/ui/utils/prettify/edn';
+import { jsonPrettify } from '~/ui/utils/prettify/json';
+import { queryXPath } from '~/ui/utils/xpath/query';
 
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;

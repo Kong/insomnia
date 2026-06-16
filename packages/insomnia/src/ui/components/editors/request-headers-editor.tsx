@@ -3,11 +3,11 @@ import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import { getAppVersion } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
-import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -49,10 +49,10 @@ export const RequestHeadersEditor: FC<Props> = ({
   const { requestId, requestGroupId } = useParams() as { requestId?: string; requestGroupId?: string };
   const id = isRequestGroup ? requestGroupId : requestId;
   invariant(id, 'Request or RequestGroup ID is required');
-  const showUserAgentReadOnly =
-    !isRequestGroup && !headers.some(h => h.name.toLowerCase() === 'user-agent');
-  const readOnlyPairs = (isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs)
-    .filter(p => showUserAgentReadOnly || p.name.toLowerCase() !== 'user-agent');
+  const showUserAgentReadOnly = !isRequestGroup && !headers.some(h => h.name.toLowerCase() === 'user-agent');
+  const readOnlyPairs = (isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs).filter(
+    p => showUserAgentReadOnly || p.name.toLowerCase() !== 'user-agent',
+  );
   const patchHeaders = useCallback(
     (newHeaders: RequestHeader[]) => {
       const hadUserAgent = headers.some(h => h.name.toLowerCase() === 'user-agent');
@@ -134,9 +134,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       readOnlyPairs={readOnlyPairs}
       readOnlyDisabledByName={showUserAgentReadOnly ? { 'user-agent': !!disableUserAgentHeader } : undefined}
       onReadOnlyDisabledChange={
-        showUserAgentReadOnly
-          ? (_name, disabled) => patchRequest(id, { disableUserAgentHeader: disabled })
-          : undefined
+        showUserAgentReadOnly ? (_name, disabled) => patchRequest(id, { disableUserAgentHeader: disabled }) : undefined
       }
       onDescriptionToggle={onDescriptionToggle}
     />

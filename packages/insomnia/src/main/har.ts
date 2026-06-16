@@ -3,6 +3,8 @@ import type { BaseModel, Cookie, Environment, Request, RequestGroup, Response, W
 import { models, services } from 'insomnia-data';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
+import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
+import { smartEncodeUrl } from '~/common/utils/url/querystring';
 import { getAuthHeader } from '~/main/network/get-auth-header';
 import { secureReadFile } from '~/main/secure-read-file';
 import { getRuntime } from '~/runtimes';
@@ -13,8 +15,6 @@ import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from '../common/mis
 import { getRenderedRequestAndContext } from '../common/render';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest } from '../templating/types';
-import { parseGraphQLReqeustBody } from '../utils/graph-ql';
-import { smartEncodeUrl } from '../utils/url/querystring';
 
 const { isRequest } = models.request;
 

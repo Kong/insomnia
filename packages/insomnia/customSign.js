@@ -13,8 +13,8 @@ exports.default = async function (configuration) {
     return;
   }
 
-  const { SM_KEYPAIR_ALIAS,SM_API_KEY,SM_CLIENT_CERT_PASSWORD } = process.env;
-  if (!SM_KEYPAIR_ALIAS|| !SM_API_KEY || !SM_CLIENT_CERT_PASSWORD) {
+  const { SM_KEYPAIR_ALIAS, SM_API_KEY, SM_CLIENT_CERT_PASSWORD } = process.env;
+  if (!SM_KEYPAIR_ALIAS || !SM_API_KEY || !SM_CLIENT_CERT_PASSWORD) {
     console.log('[customSign] Skipping signing,  Missing required environment variable: SM_KEYPAIR_ALIAS');
     return;
   }

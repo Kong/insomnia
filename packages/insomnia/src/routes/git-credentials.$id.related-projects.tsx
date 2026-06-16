@@ -1,7 +1,7 @@
 import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/git-credentials.$id.related-projects';
 

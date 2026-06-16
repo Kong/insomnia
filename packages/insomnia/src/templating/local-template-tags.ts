@@ -1,10 +1,11 @@
 import { format } from 'date-fns';
 import type { TemplateTag } from 'insomnia/src/plugins/types';
 import type { PluginTemplateTag } from 'insomnia/src/templating/types';
-import { invariant } from 'insomnia/src/utils/invariant';
-import { utf8StringFromBytes } from 'insomnia/src/utils/utf8-bytes';
 import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
+
+import { invariant } from '~/common/utils/invariant';
+import { utf8StringFromBytes } from '~/common/utils/utf8-bytes';
 
 import { fakerFunctions } from './faker-functions';
 

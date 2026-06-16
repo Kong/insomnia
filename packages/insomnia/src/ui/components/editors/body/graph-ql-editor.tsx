@@ -24,8 +24,10 @@ import ReactDOM from 'react-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import * as reactUse from 'react-use';
 
+import { invariant } from '~/common/utils/invariant';
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
-import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
+import { jsonPrettify } from '~/ui/utils/prettify/json';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
@@ -38,8 +40,6 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../../../network/network';
-import { invariant } from '../../../../utils/invariant';
-import { jsonPrettify } from '../../../../utils/prettify/json';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import type { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';

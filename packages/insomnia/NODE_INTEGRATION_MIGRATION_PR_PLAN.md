@@ -12,15 +12,15 @@ Phase 2 (flip `contextIsolation: false` → `true`) is the next milestone.
 
 ## What was done (high level)
 
-| Area | Work |
-|---|---|
-| **Import guardrails** | Renderer import analyzer (`vite.config.ts`), baseline snapshot (`config/renderer-node-import-baseline.json`), CI via `npm run check:renderer-node-imports` |
-| **Network / route cleanup** | `response-operations.ts` → `insomnia-data/node-src/`; `url-matches-cert-host.ts`, `require-interceptor.ts`, `import.ts` cleaned |
-| **Third-party Node deps** | `mime-types` → `common/mime.ts` (Web API); `iconv-lite` → `TextDecoder`; `tough-cookie` and `@grpc/grpc-js` moved behind IPC |
-| **Plugin system** | Phase 1a (PR #9889): all plugin execution IPC-bridged to hidden BrowserWindow; Phase 1b (PR #9998): plugin imports removed from vite renderer bundle |
-| **Vault crypto** | `utils/vault-crypto.ts` rewritten as a thin IPC adapter — `encryptSecretValue`/`decryptSecretValue` delegate to `window.main.vault.*` in main (`main/ipc/main.ts:819`) |
-| **Env var preload** | `entry.preload.ts` collects all required env vars at preload time and exposes them as `window.env`; `common/constants.ts` reads `window.env` first, falls back to `process.env` for CLI/main |
-| **The flag** | `nodeIntegration: true` → `false` in `window-utils.ts` (Phase 1 complete) |
+| Area                        | Work                                                                                                                                                                                         |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Import guardrails**       | Renderer import analyzer (`vite.config.ts`), baseline snapshot (`config/renderer-node-import-baseline.json`), CI via `npm run check:renderer-node-imports`                                   |
+| **Network / route cleanup** | `response-operations.ts` → `insomnia-data/node-src/`; `url-matches-cert-host.ts`, `require-interceptor.ts`, `import.ts` cleaned                                                              |
+| **Third-party Node deps**   | `mime-types` → `common/mime.ts` (Web API); `iconv-lite` → `TextDecoder`; `tough-cookie` and `@grpc/grpc-js` moved behind IPC                                                                 |
+| **Plugin system**           | Phase 1a (PR #9889): all plugin execution IPC-bridged to hidden BrowserWindow; Phase 1b (PR #9998): plugin imports removed from vite renderer bundle                                         |
+| **Vault crypto**            | `utils/vault-crypto.ts` rewritten as a thin IPC adapter — `encryptSecretValue`/`decryptSecretValue` delegate to `window.main.vault.*` in main (`main/ipc/main.ts:819`)                       |
+| **Env var preload**         | `entry.preload.ts` collects all required env vars at preload time and exposes them as `window.env`; `common/constants.ts` reads `window.env` first, falls back to `process.env` for CLI/main |
+| **The flag**                | `nodeIntegration: true` → `false` in `window-utils.ts` (Phase 1 complete)                                                                                                                    |
 
 ---
 
@@ -57,14 +57,14 @@ Risk: low–medium. Mostly mechanical; risky only if any env var read is missed.
 
 These were scoped out of the Phase 1 PRs and are still needed before the contextIsolation flip:
 
-| Item | Notes |
-|---|---|
-| `src/plugins/index.ts`, `src/plugins/create.ts`, `src/utils/plugin.ts` | Still import `fs`/`path`. Safe for now (run in hidden window), but the import baseline should reflect that explicitly. |
-| `src/plugins/context/response.ts` | `fs`, `zlib`, `stream` — same as above. |
-| `src/network/network.ts` | `fs`/`path` for multipart body and cert resolution. Candidate for a narrow `window.main` helper or deferral to post-Phase-2 cleanup. |
-| `src/script-executor.ts` | One `appendFile` (`node:fs/promises`). Move behind `window.main.scriptLog.append` bridge. |
-| `src/templating/base-extension.ts` | `crypto`, `os` — replace with Web Crypto and `window.main` os-info helper. |
-| `packages/insomnia-testing` carve-out | `generate/generate.ts`, `run/run.ts` counted by analyzer but never loaded by renderer. Add to allow-list. |
+| Item                                                                   | Notes                                                                                                                                |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/plugins/index.ts`, `src/plugins/create.ts`, `src/utils/plugin.ts` | Still import `fs`/`path`. Safe for now (run in hidden window), but the import baseline should reflect that explicitly.               |
+| `src/plugins/context/response.ts`                                      | `fs`, `zlib`, `stream` — same as above.                                                                                              |
+| `src/network/network.ts`                                               | `fs`/`path` for multipart body and cert resolution. Candidate for a narrow `window.main` helper or deferral to post-Phase-2 cleanup. |
+| `src/script-executor.ts`                                               | One `appendFile` (`node:fs/promises`). Move behind `window.main.scriptLog.append` bridge.                                            |
+| `src/templating/base-extension.ts`                                     | `crypto`, `os` — replace with Web Crypto and `window.main` os-info helper.                                                           |
+| `packages/insomnia-testing` carve-out                                  | `generate/generate.ts`, `run/run.ts` counted by analyzer but never loaded by renderer. Add to allow-list.                            |
 
 ---
 

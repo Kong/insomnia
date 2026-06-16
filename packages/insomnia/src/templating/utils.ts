@@ -1,6 +1,6 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
-import { base64ToUtf8, utf8ToBase64 } from '~/utils/utf8-bytes';
+import { base64ToUtf8, utf8ToBase64 } from '~/common/utils/utf8-bytes';
 
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../templating/types';
 import { tokenizeArgs } from './tokenize-args';

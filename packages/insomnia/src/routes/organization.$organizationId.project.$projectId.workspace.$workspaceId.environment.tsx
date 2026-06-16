@@ -20,6 +20,8 @@ import {
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 import { debounce } from '~/common/misc';
+import { getDataFromKVPair } from '~/common/utils/environment-utils';
+import { decryptVaultKeyFromSession } from '~/common/utils/vault';
 import {
   useWorkspaceLoaderData,
   WORKSPACE_CONTENT_WRAPPER,
@@ -43,8 +45,6 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
-import { getDataFromKVPair } from '~/utils/environment-utils';
-import { decryptVaultKeyFromSession } from '~/utils/vault';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment';
 

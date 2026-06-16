@@ -1,7 +1,7 @@
 import { services } from 'insomnia-data';
 import { href, type LoaderFunctionArgs } from 'react-router';
 
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 export async function clientLoader(_args: LoaderFunctionArgs) {
   const credentials = await services.gitCredentials.all();

@@ -4,7 +4,7 @@ import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
-import { CURRENT_MIGRATION_VERSION } from '../sync/git/git-migration-version';
+import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
 
 export const enum AsyncTask {
   SyncOrganization,

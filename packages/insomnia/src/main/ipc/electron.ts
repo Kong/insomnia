@@ -14,10 +14,11 @@ import type {
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 
+import { invariant } from '~/common/utils/invariant';
+
 import { fnOrString } from '../../common/misc';
 import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
-import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
   | 'run-tests'

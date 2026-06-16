@@ -12,6 +12,7 @@ import {
   TextField,
 } from 'react-aria-components';
 
+import { validatePluginName } from '~/common/utils/plugin-name';
 import { useRootLoaderData } from '~/root';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
@@ -19,7 +20,6 @@ import { docsPlugins } from '../../../common/documentation';
 import type { SerializablePlugin } from '../../../plugins/bridge-types';
 import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { reload } from '../../../templating/renderer-safe';
-import { validatePluginName } from '../../../utils/plugin-name';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
@@ -124,9 +124,9 @@ export const Plugins: FC = () => {
   return (
     <div>
       <p className="notice info no-margin-top">
-        Plugins are built and maintained by third-party developers. Thank you!
-        Insomnia does not review, endorse, or support any particular plugin unless explicitly noted.
-        Plugins are still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
+        Plugins are built and maintained by third-party developers. Thank you! Insomnia does not review, endorse, or
+        support any particular plugin unless explicitly noted. Plugins are still an experimental feature. See{' '}
+        <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
 
       <div className="flex flex-col gap-6">

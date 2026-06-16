@@ -21,6 +21,10 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { database } from '~/common/database';
+import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
+import { invariant } from '~/common/utils/invariant';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
 
 import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
@@ -31,10 +35,6 @@ import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import type { RenderedRequest } from '../../templating/types';
-import { parseGraphQLReqeustBody } from '../../utils/graph-ql';
-import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
 

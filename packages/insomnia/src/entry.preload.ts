@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
 
+import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
@@ -28,7 +29,6 @@ import type {
 } from './plugins/bridge-types';
 import type { PluginInvokeMethod } from './plugins/invoke-method';
 import type { RenderedRequest } from './templating/types';
-import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI
@@ -442,8 +442,7 @@ const main: Window['main'] = {
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
     getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },
-  notifyPromptResult: (id: string, value: string | null) =>
-    ipcRenderer.send('ui.promptResult', { id, value }),
+  notifyPromptResult: (id: string, value: string | null) => ipcRenderer.send('ui.promptResult', { id, value }),
   timeline: {
     getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
     appendToFile: (options: { timelinePath: string; data: string }) =>

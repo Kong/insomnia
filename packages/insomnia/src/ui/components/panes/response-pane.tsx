@@ -4,9 +4,9 @@ import { PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/cancellation.renderer';
