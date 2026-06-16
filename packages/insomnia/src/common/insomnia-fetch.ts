@@ -3,6 +3,15 @@ import { type FetchConfig, ResponseFailError } from 'insomnia-api';
 import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT_TEST } from './constants';
 import { generateId } from './misc';
 
+type FetchImplementation = (input: string, init?: RequestInit) => Promise<Response>;
+
+// node fetch ignores the system proxy and OS certs — main swaps in net.fetch (entry.main.ts)
+let fetchImpl: FetchImplementation = (input, init) => globalThis.fetch(input, init);
+
+export function setFetchImplementation(impl: FetchImplementation) {
+  fetchImpl = impl;
+}
+
 // Adds headers, retries and opens deep links returned from the api
 export async function insomniaFetch<T = void>({
   method,
@@ -39,7 +48,7 @@ export async function insomniaFetch<T = void>({
   }
 
   try {
-    const response = await fetch((origin || getApiBaseURL()) + path, config);
+    const response = await fetchImpl((origin || getApiBaseURL()) + path, config);
     const uri = response.headers.get('x-insomnia-command');
     if (uri && onDeepLink) {
       onDeepLink(uri);
@@ -63,7 +72,21 @@ export async function insomniaFetch<T = void>({
     }
     return isJson ? response.json() : (response.text() as Promise<T>);
   } catch (err) {
-    const error = err.name === 'AbortError' ? new Error('insomniaFetch timed out') : err;
-    throw error;
+    if (!(err instanceof Error)) {
+      throw err;
+    }
+    // AbortSignal.timeout() gives TimeoutError, not AbortError
+    if (err.name === 'AbortError' || err.name === 'TimeoutError') {
+      throw new Error(`insomniaFetch timed out: ${method} ${path}`, { cause: err });
+    }
+    // the real error (ECONNREFUSED, cert problems) hides in err.cause, sometimes nested in an AggregateError
+    const cause = (err as { cause?: string | { code?: string; message?: string; errors?: { code?: string }[] } })
+      .cause;
+    const detail = typeof cause === 'string' ? cause : cause?.code || cause?.errors?.[0]?.code || cause?.message;
+    if (detail) {
+      // fresh Error (don't mutate err.message) so a re-observed/retried error doesn't append the detail twice
+      throw new Error(`${err.message} (${detail})`, { cause: err });
+    }
+    throw err;
   }
 }

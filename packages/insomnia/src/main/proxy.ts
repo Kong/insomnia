@@ -9,40 +9,44 @@ async function updateProxy() {
   const { proxyEnabled, httpProxy, httpsProxy, noProxy } = await services.settings.get();
 
   if (proxyEnabled) {
-    // Supported values for proxyUrl are like: http://localhost:8888, https://localhost:8888 or localhost:8888
-    // This function tries to parse the proxyUrl and return the hostname in order to allow all the above values to work.
-    function parseProxyFromUrl(proxyUrl: string) {
-      const url = new URL(setDefaultProtocol(proxyUrl));
-      return `${url.hostname}${url.port ? `:${url.port}` : ''}`;
-    }
-    const proxyRules = [];
-    if (httpProxy) {
-      proxyRules.push(`http=${parseProxyFromUrl(httpProxy)}`);
-    }
-    if (httpsProxy) {
-      proxyRules.push(`https=${parseProxyFromUrl(httpsProxy)}`);
-    }
+    try {
+      // Supported values for proxyUrl are like: http://localhost:8888, https://localhost:8888 or localhost:8888
+      // This function tries to parse the proxyUrl and return the host (host:port) in order to allow all the above values to work.
+      // url.host keeps IPv6 brackets intact, url.hostname doesn't
+      function parseProxyFromUrl(proxyUrl: string) {
+        const url = new URL(setDefaultProtocol(proxyUrl));
+        return url.host;
+      }
+      const proxyRules = [];
+      if (httpProxy) {
+        proxyRules.push(`http=${parseProxyFromUrl(httpProxy)}`);
+      }
+      if (httpsProxy) {
+        proxyRules.push(`https=${parseProxyFromUrl(httpsProxy)}`);
+      }
 
-    session.defaultSession.resolveProxy;
-    // Set proxy rules in the main session https://www.electronjs.org/docs/latest/api/structures/proxy-config
-    session.defaultSession.setProxy({
-      proxyRules: proxyRules.join(';'),
-      proxyBypassRules: [
-        noProxy,
-        // getApiBaseURL(),
-        // @TODO Add all our API urls here to bypass the proxy to work as before with axios.
-        // We can add an option in settings to use the proxy for insomnia API requests and not include them here.
-      ].join(','),
-      mode: 'system',
-    });
-    return;
+      // Set proxy rules in the main session https://www.electronjs.org/docs/latest/api/structures/proxy-config
+      // no mode here — it overrides proxyRules ('system' ignores them)
+      await session.defaultSession.setProxy({
+        proxyRules: proxyRules.join(';'),
+        proxyBypassRules: noProxy ?? '',
+      });
+      return;
+    } catch (err) {
+      // bad proxy settings shouldn't break startup — fall back to the system proxy
+      console.warn('[proxy] Failed to apply proxy settings, falling back to system proxy', err);
+    }
   }
-  session.defaultSession.setProxy({ proxyRules: '', proxyBypassRules: '', mode: 'system' });
+  try {
+    await session.defaultSession.setProxy({ proxyRules: '', proxyBypassRules: '', mode: 'system' });
+  } catch (err) {
+    console.warn('[proxy] Failed to reset proxy to system', err);
+  }
 }
 
 export async function watchProxySettings() {
   let old = await services.settings.get();
-  updateProxy();
+  await updateProxy();
   db.onChange(async (changes: ChangeBufferEvent[]) => {
     for (const change of changes) {
       const [event, doc] = change;
@@ -54,7 +58,7 @@ export async function watchProxySettings() {
           old.httpsProxy !== doc.httpsProxy ||
           old.noProxy !== doc.noProxy;
         if (hasProxyChanged) {
-          updateProxy();
+          await updateProxy();
           old = doc;
         }
       }

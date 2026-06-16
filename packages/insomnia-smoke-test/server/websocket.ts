@@ -95,6 +95,9 @@ const upgrade = (wss: WebSocketServer, request: IncomingMessage, socket: Socket,
     }
     return redirectOnSuccess(socket);
   }
+  if (request.url === '/chat/1234') {
+    return redirectOnSuccess(socket);
+  }
   wss.handleUpgrade(request, socket, head, ws => {
     wss.emit('connection', ws, request);
   });
