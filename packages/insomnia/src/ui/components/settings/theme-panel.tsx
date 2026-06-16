@@ -1,7 +1,7 @@
 import React, { type FC } from 'react';
 import { Button, Checkbox, Label } from 'react-aria-components';
 
-import type { PluginTheme } from '~/plugins/bridge-types';
+import type { PluginTheme } from '~/common/plugins/bridge-types';
 
 import { useThemes } from '../../hooks/theme';
 import { HelpTooltip } from '../help-tooltip';

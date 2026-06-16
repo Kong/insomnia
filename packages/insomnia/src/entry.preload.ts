@@ -1,10 +1,10 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
 
+import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types';
 import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
-import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
@@ -26,9 +26,9 @@ import type {
   ExecutePluginMainActionArgs,
   PluginsBridgeAPI,
   RunTemplateTagActionArgs,
-} from './plugins/bridge-types';
-import type { PluginInvokeMethod } from './plugins/invoke-method';
-import type { RenderedRequest } from './templating/types';
+} from '~/common/plugins/bridge-types';
+import type { PluginInvokeMethod } from '~/plugins/invoke-method';
+import type { RenderedRequest } from '~/templating/types';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI

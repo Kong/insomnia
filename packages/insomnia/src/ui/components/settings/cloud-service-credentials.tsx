@@ -7,7 +7,7 @@ import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
-import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 import { usePlanData } from '../../hooks/use-plan';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';

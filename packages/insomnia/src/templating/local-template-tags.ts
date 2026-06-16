@@ -1,9 +1,9 @@
 import { format } from 'date-fns';
-import type { TemplateTag } from 'insomnia/src/plugins/types';
 import type { PluginTemplateTag } from 'insomnia/src/templating/types';
 import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
 
+import type { TemplateTag } from '~/common/plugins/types';
 import { invariant } from '~/common/utils/invariant';
 import { utf8StringFromBytes } from '~/common/utils/utf8-bytes';
 

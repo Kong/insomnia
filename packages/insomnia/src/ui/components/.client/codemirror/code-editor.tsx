@@ -21,7 +21,6 @@ import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import { plugins } from '~/plugins/renderer-bridge';
 import { useRootLoaderData } from '~/root';
 import { getTagDefinitions } from '~/templating/renderer-safe';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
@@ -37,6 +36,7 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 import { ednPrettify } from '~/ui/utils/prettify/edn';
 import { jsonPrettify } from '~/ui/utils/prettify/json';
 import { queryXPath } from '~/ui/utils/xpath/query';

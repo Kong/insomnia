@@ -1,7 +1,8 @@
 import { services } from 'insomnia-data';
 
+import type { Plugin } from '~/common/plugins/types';
+
 import type { PluginStore } from '../../templating/types';
-import type { Plugin } from '../types';
 
 export function init(plugin: Pick<Plugin, 'name'>): { store: PluginStore } {
   return {

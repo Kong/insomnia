@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TemplateTag } from '../../plugins/types';
+import type { TemplateTag } from '~/common/plugins/types';
 import * as extWorker from '../liquid-extension-worker';
 import { reload, render } from '../worker';
 

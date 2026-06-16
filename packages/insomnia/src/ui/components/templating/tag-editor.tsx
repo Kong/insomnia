@@ -12,7 +12,7 @@ import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString, SECURITY_SETTINGS_PATH_LABEL } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
-import { plugins } from '../../../plugins/renderer-bridge';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 import * as templating from '../../../templating/renderer-safe';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
 import * as templateUtils from '../../../templating/utils';

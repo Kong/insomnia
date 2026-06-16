@@ -4,7 +4,7 @@ import { href } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
-import { plugins } from '~/plugins/renderer-bridge';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/cloud-credentials.$cloudCredentialId.update';

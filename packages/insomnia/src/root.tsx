@@ -24,9 +24,6 @@ import {
 import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
-import { createPlugin } from '~/plugins/create';
-import { setTheme } from '~/plugins/misc';
-import { plugins } from '~/plugins/renderer-bridge';
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
@@ -50,6 +47,9 @@ import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
+import { createPlugin } from '~/ui/plugins/create';
+import { setTheme } from '~/ui/plugins/misc';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import type { Route } from './+types/root';
 

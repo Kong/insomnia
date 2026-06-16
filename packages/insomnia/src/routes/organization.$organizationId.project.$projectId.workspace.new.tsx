@@ -5,8 +5,8 @@ import { href, redirect } from 'react-router';
 
 import { getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
+import type { MockRouteData } from '~/common/plugins/types';
 import { invariant } from '~/common/utils/invariant';
-import type { MockRouteData } from '~/plugins/types';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';

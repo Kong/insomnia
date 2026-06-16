@@ -1,7 +1,7 @@
 import type { Tag } from 'liquidjs';
 import { Liquid, Tag as LiquidTag } from 'liquidjs';
 
-import type { Plugin } from '../plugins/types';
+import type { Plugin } from '~/common/plugins/types';
 import type { PluginTemplateTag } from './types';
 
 export type TagFactory = (ext: PluginTemplateTag, plugin: Plugin) => typeof Tag;

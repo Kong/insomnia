@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { PluginTheme } from '~/plugins/bridge-types';
+import type { PluginTheme } from '~/common/plugins/bridge-types';
 
 import { containsTemplateSyntax, validateTheme, validateThemeName } from './misc';
 

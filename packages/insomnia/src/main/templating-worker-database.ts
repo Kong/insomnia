@@ -15,7 +15,7 @@ import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants'
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
-import { type Plugin, type TemplateTag } from '../plugins/types';
+import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
 import { requestPromptFromRenderer } from './prompt-bridge';

@@ -1,4 +1,4 @@
-import type { PluginsBridgeAPI } from './bridge-types';
+import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
 
 function call<M extends keyof Omit<PluginsBridgeAPI, 'getBridgeMetrics'>>(
   method: M,

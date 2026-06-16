@@ -1,6 +1,6 @@
 import { href } from 'react-router';
 
-import type { MultiTurnMessage } from '~/plugins/types';
+import type { MultiTurnMessage } from '~/common/plugins/types';
 import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 

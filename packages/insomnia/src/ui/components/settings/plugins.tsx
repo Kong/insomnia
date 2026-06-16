@@ -17,8 +17,8 @@ import { useRootLoaderData } from '~/root';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import type { SerializablePlugin } from '../../../plugins/bridge-types';
-import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
+import type { SerializablePlugin } from '~/common/plugins/bridge-types';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 import { reload } from '../../../templating/renderer-safe';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';

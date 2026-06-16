@@ -18,14 +18,14 @@ export async function render(text: string, _config: Record<string, unknown> = {}
 export async function getTagDefinitions(): Promise<any[]> {
   const [{ localTemplateTags }, { plugins }] = await Promise.all([
     import('./local-template-tags'),
-    import('../plugins/renderer-bridge'),
+    import('~/ui/plugins/renderer-bridge'),
   ]);
 
   const pluginTags = await plugins.getTemplateTags();
 
   const allTags: { templateTag: Record<string, any> }[] = [
     ...localTemplateTags,
-    ...pluginTags.map(t => ({ templateTag: t.templateTag as Record<string, any> })),
+    ...pluginTags.map((t: any) => ({ templateTag: t.templateTag as Record<string, any> })),
   ];
 
   allTags.forEach((ext, i) => {

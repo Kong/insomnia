@@ -2,9 +2,10 @@ import Color from 'color';
 import type { ThemeSettings } from 'insomnia-data';
 import { getAppDefaultTheme } from 'insomnia-data/common';
 
-import type { PluginTheme, ThemeBlock } from './bridge-types';
+import type { PluginTheme, ThemeBlock } from '~/common/plugins/bridge-types';
+import type { ColorScheme } from '~/common/plugins/types';
+
 import { plugins } from './renderer-bridge';
-import type { ColorScheme } from './types';
 
 export interface CompleteStyleBlock {
   background: Required<Required<ThemeBlock>['background']>;

@@ -25,6 +25,12 @@ import { runTests } from 'insomnia-testing/src/run/run';
 import * as crypt from '~/common/account/crypt';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
+import type {
+  GenerateCommitsFromDiffFunction,
+  GenerateMcpSamplingResponseFunction,
+  MockRouteData,
+  ModelConfig,
+} from '~/common/plugins/types';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
@@ -46,15 +52,9 @@ import {
 } from '~/main/spectral-ruleset-cache';
 import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '~/main/utils/sealedbox';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
-import type {
-  GenerateCommitsFromDiffFunction,
-  GenerateMcpSamplingResponseFunction,
-  MockRouteData,
-  ModelConfig,
-} from '~/plugins/types';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
-import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
+import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
 import { getRuntime } from '../../runtimes';
 import type { RenderedRequest } from '../../templating/types';
 import type { AnalyticsEvent } from '../analytics';

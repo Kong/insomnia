@@ -7,7 +7,7 @@ import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credential
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
-import { plugins } from '../../../../plugins/renderer-bridge';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 import { Icon } from '../../icon';
 import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
