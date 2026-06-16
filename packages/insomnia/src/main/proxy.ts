@@ -29,7 +29,7 @@ async function updateProxy() {
       // no mode here — it overrides proxyRules ('system' ignores them)
       await session.defaultSession.setProxy({
         proxyRules: proxyRules.join(';'),
-        proxyBypassRules: noProxy,
+        proxyBypassRules: noProxy ?? '',
       });
       return;
     } catch (err) {

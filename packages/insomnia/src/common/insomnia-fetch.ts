@@ -84,7 +84,8 @@ export async function insomniaFetch<T = void>({
       .cause;
     const detail = typeof cause === 'string' ? cause : cause?.code || cause?.errors?.[0]?.code || cause?.message;
     if (detail) {
-      err.message = `${err.message} (${detail})`;
+      // fresh Error (don't mutate err.message) so a re-observed/retried error doesn't append the detail twice
+      throw new Error(`${err.message} (${detail})`, { cause: err });
     }
     throw err;
   }
