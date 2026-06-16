@@ -424,7 +424,7 @@ export async function savePatchesMadeByScript(patches: {
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === EnvironmentType.KVPAIR && {
-        kvPairData: getKVPairFromData(data, dataPropertyOrder),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null),
       }),
     });
   };
@@ -453,7 +453,7 @@ export async function savePatchesMadeByScript(patches: {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
-          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder),
+          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder ?? null),
         }),
       });
     }

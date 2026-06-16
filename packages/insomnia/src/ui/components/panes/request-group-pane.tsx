@@ -245,7 +245,7 @@ export const RequestGroupPane: FC = () => {
                   key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
                   environmentInfo={{
                     object: activeRequestGroup ? activeRequestGroup.environment : {},
-                    propertyOrder: activeRequestGroup && activeRequestGroup.environmentPropertyOrder,
+                    propertyOrder: (activeRequestGroup && activeRequestGroup.environmentPropertyOrder) ?? null,
                   }}
                   onBlur={saveChanges}
                 />

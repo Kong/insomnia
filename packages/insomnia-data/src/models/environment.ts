@@ -12,12 +12,12 @@ export const vaultEnvironmentMaskValue = '••••••';
 export const canDuplicate = true;
 export const canSync = true;
 // for those keys do not need to add in model init method
-export const optionalKeys = ['kvPairData', 'environmentType'];
+export const optionalKeys: (keyof BaseEnvironment)[] = ['kvPairData', 'environmentType', 'dataPropertyOrder'];
 
 export interface BaseEnvironment {
   name: string;
   data: Record<string, any>;
-  dataPropertyOrder: Record<string, any> | null;
+  dataPropertyOrder?: Record<string, any> | null;
   kvPairData?: EnvironmentKvPairData[];
   color: string | null;
   metaSortKey: number;
@@ -58,7 +58,6 @@ export function init() {
   return {
     name: 'New Environment',
     data: {},
-    dataPropertyOrder: null,
     color: null,
     isPrivate: false,
     metaSortKey: Date.now(),

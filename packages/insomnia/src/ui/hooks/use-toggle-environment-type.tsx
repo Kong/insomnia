@@ -17,7 +17,7 @@ export function useToggleEnvironmentType() {
     ) => {
       const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
       // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
-      const kvPairData = isSelected ? [] : getKVPairFromData(environment.data, environment.dataPropertyOrder);
+      const kvPairData = isSelected ? [] : getKVPairFromData(environment.data, environment.dataPropertyOrder ?? null);
       const foundDisabledItem = isSelected && environment.kvPairData?.some(pair => !pair.enabled);
       const foundDuplicateNameItem =
         isSelected &&
