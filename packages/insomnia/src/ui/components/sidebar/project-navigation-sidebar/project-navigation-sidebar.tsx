@@ -580,6 +580,16 @@ const ProjectNavigationSidebarInner = (
 
         for (const workspace of allWorkspaces) {
           if (workspace.scope === 'unsynced') {
+            // When a filter is active, show the unsynced workspace only if its name matches the filter.
+            const unsyncedWorkspaceMatchesFilter =
+              !projectNavigationSidebarFilter ||
+              Boolean(
+                fuzzyMatchAll(
+                  projectNavigationSidebarFilter.toLowerCase(),
+                  [workspace.name?.toLowerCase() || ''],
+                  { splitSpace: true, loose: true },
+                )?.indexes,
+              );
             items.push({
               kind: 'unsyncedWorkspace',
               organizationId,
@@ -590,7 +600,7 @@ const ProjectNavigationSidebarInner = (
                 ...workspace,
               },
               collapsed: false,
-              hidden: isProjectCollapsed,
+              hidden: projectNavigationSidebarFilter ? !unsyncedWorkspaceMatchesFilter : isProjectCollapsed,
             });
           } else {
             const { scope, _id: workspaceId } = workspace as Workspace;
@@ -724,7 +734,10 @@ const ProjectNavigationSidebarInner = (
             ?.toLowerCase()
             .includes(projectNavigationSidebarFilter.toLowerCase());
           const hasVisibleWorkspace = items.some(
-            i => i.kind === 'workspace' && i.project._id === projectId && !i.hidden,
+            i =>
+              (i.kind === 'workspace' || i.kind === 'unsyncedWorkspace') &&
+              i.project._id === projectId &&
+              !i.hidden,
           );
           const shouldHideProject = !projectMatchesFilter && !hasVisibleWorkspace;
           items.find(i => i.kind === 'project' && i.doc._id === projectId)!.hidden = shouldHideProject;
