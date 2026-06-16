@@ -11,7 +11,7 @@ import type {
 } from 'insomnia-data';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
-import { cancellableExecution } from './cancellation';
+import { cancellableExecution } from './cancellation.renderer';
 
 export interface ExecuteScriptContext {
   request: Request;

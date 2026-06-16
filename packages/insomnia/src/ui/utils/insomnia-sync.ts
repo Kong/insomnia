@@ -1,10 +1,11 @@
-import { showModal } from '../../ui/components/modals';
-import { SyncMergeModal } from '../../ui/components/modals/sync-merge-modal';
-import type { MergeConflict } from '../types';
+import type { MergeConflict } from '~/sync/types';
+
+import { showModal } from '../components/modals';
+import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 
 let hasRegisteredConflictListener = false;
 
-export { UserAbortResolveMergeConflictError } from './errors';
+export { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 
 export const registerSyncMergeConflictListener = () => {
   if (hasRegisteredConflictListener) {
