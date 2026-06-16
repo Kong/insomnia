@@ -2,6 +2,8 @@
 import type { AnyMessage, MethodInfo, PartialMessage, ServiceType } from '@bufbuild/protobuf';
 import type { UnaryResponse } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
+import { Metadata } from '@grpc/grpc-js';
+import { CompressionFilter } from '@grpc/grpc-js/build/src/compression-filter';
 import * as grpcReflection from 'grpc-reflection-js';
 import { services } from 'insomnia-data';
 import protobuf from 'protobufjs';
@@ -15,6 +17,20 @@ vi.mock('../../../network/grpc/write-proto-file.node');
 vi.mock('@grpc/proto-loader', async importOriginal => {
   const actual = await importOriginal();
   return { ...actual, load: vi.fn().mockResolvedValue({}) };
+});
+
+describe('grpc compression', () => {
+  it('handles compressed empty messages as empty messages', async () => {
+    const filter = new CompressionFilter({}, {});
+    const metadata = new Metadata();
+    metadata.set('grpc-encoding', 'gzip');
+    filter.receiveMetadata(metadata);
+    const frame = Buffer.alloc(5);
+    frame.writeUInt8(1, 0);
+    frame.writeUInt32BE(0, 1);
+
+    await expect(filter.receiveMessage(Promise.resolve(frame))).resolves.toEqual(Buffer.alloc(0));
+  });
 });
 
 describe('writeProtoFileById', () => {

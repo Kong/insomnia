@@ -1,0 +1,42 @@
+diff --git a/node_modules/@grpc/grpc-js/build/src/compression-filter.js b/node_modules/@grpc/grpc-js/build/src/compression-filter.js
+index b7daed3..1f45d66 100644
+--- a/node_modules/@grpc/grpc-js/build/src/compression-filter.js
++++ b/node_modules/@grpc/grpc-js/build/src/compression-filter.js
+@@ -91,6 +91,10 @@ class DeflateHandler extends CompressionHandler {
+     }
+     decompressMessage(message) {
+         return new Promise((resolve, reject) => {
++            if (message.length === 0) {
++                resolve(Buffer.alloc(0));
++                return;
++            }
+             let totalLength = 0;
+             const messageParts = [];
+             const decompresser = zlib.createInflate();
+@@ -108,6 +112,7 @@ class DeflateHandler extends CompressionHandler {
+             decompresser.on('end', () => {
+                 resolve(Buffer.concat(messageParts));
+             });
++            decompresser.on('error', reject);
+             decompresser.write(message);
+             decompresser.end();
+         });
+@@ -132,6 +137,10 @@ class GzipHandler extends CompressionHandler {
+     }
+     decompressMessage(message) {
+         return new Promise((resolve, reject) => {
++            if (message.length === 0) {
++                resolve(Buffer.alloc(0));
++                return;
++            }
+             let totalLength = 0;
+             const messageParts = [];
+             const decompresser = zlib.createGunzip();
+@@ -149,6 +158,7 @@ class GzipHandler extends CompressionHandler {
+             decompresser.on('end', () => {
+                 resolve(Buffer.concat(messageParts));
+             });
++            decompresser.on('error', reject);
+             decompresser.write(message);
+             decompresser.end();
+         });
