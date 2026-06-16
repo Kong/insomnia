@@ -3,7 +3,7 @@ import inspector from 'node:inspector';
 import { arch, release } from 'node:os';
 import path from 'node:path';
 
-import electron, { app, BrowserWindow, session } from 'electron';
+import electron, { app, BrowserWindow, net, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
@@ -12,7 +12,7 @@ import { database, initDatabase, initServices, models, services } from 'insomnia
 import { isMac } from 'insomnia-data/common';
 import { servicesNodeImpl } from 'insomnia-data/node';
 
-import { insomniaFetch } from '~/common/insomnia-fetch';
+import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
@@ -65,6 +65,11 @@ let openDeepLinkUrl = async (url: string) => {
   console.warn('[main] openDeepLinkUrl function not initialized yet, cannot open URL:', url);
 };
 configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => openDeepLinkUrl(uri) }));
+// net.fetch picks up the proxy + OS certs like the renderer; node fetch does neither.
+// only works post-ready, which is fine — nothing calls this earlier. 'omit' = no cookies, same as before.
+setFetchImplementation((input, init) =>
+  net.fetch(input, { ...init, credentials: 'omit', bypassCustomProtocolHandlers: true }),
+);
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -131,10 +136,11 @@ app.on('ready', async () => {
   initServices(servicesNodeImpl);
   initRuntime(nodeRuntime);
   await _createModelInstances();
+  // proxy has to be set up before backup's net.fetch below
+  await watchProxySettings();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
-  watchProxySettings();
 
   await runGitCredentialsMigration();
 
