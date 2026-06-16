@@ -34,7 +34,7 @@ interface BaseGrpcRequest {
     apiKey: string;
     module: string;
   };
-  disableUserAgentHeader: boolean;
+  disableUserAgentHeader?: boolean;
   konnectRouteKey?: string | null;
   konnectManagedHeaderNames?: string[] | null;
 }
@@ -45,7 +45,11 @@ export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequ
 
 export const isGrpcRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
-export const optionalKeys = ['konnectRouteKey', 'konnectManagedHeaderNames'];
+export const optionalKeys: (keyof BaseGrpcRequest)[] = [
+  'konnectRouteKey',
+  'konnectManagedHeaderNames',
+  'disableUserAgentHeader',
+];
 
 export function rewriteReferences(request: GrpcRequest, idMapping: Map<string, string>): GrpcRequest {
   return {
@@ -75,6 +79,5 @@ export function init(): BaseGrpcRequest {
       apiKey: '',
       module: 'buf.build/connectrpc/eliza',
     },
-    disableUserAgentHeader: false,
   };
 }

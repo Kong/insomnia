@@ -336,7 +336,7 @@ export const getSelectedMethod = async (
     request.metadata,
     settings.validateSSL,
     request.reflectionApi,
-    request.disableUserAgentHeader,
+    request.disableUserAgentHeader ?? false,
     ipcParams.clientCert,
     ipcParams.clientKey,
     ipcParams.caCertificate,
