@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TemplateTag } from '~/common/plugins/types';
-import * as extWorker from '../liquid-extension-worker';
+import * as extWorker from '~/common/templating/liquid-extension-worker';
+
 import { reload, render } from '../worker';
 
 // Mock only the IPC bridge; keep createLiquidTagWorker (and everything else) real so the
 // engine is built and the tag is rendered exactly as it is at runtime.
-vi.mock('../liquid-extension-worker', async importOriginal => {
+vi.mock('~/common/templating/liquid-extension-worker', async importOriginal => {
   return { ...(await importOriginal()), fetchFromTemplateWorkerDatabase: vi.fn() };
 });
 

@@ -4,7 +4,7 @@ import type { RequestContext } from '../../../insomnia-scripting-environment/src
 import type { ConvertResult } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
 import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../main/network/libcurl-promise';
-import type { RenderedRequest, RenderInputType } from '../templating/types';
+import type { RenderedRequest, RenderInputType } from '~/common/templating/types';
 
 interface CurlRequestErrorOutput {
   statusMessage: string;

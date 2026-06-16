@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../themes', () => ({ default: [] }));
-vi.mock('~/templating/liquid-extension-worker', () => ({
+vi.mock('~/common/templating/liquid-extension-worker', () => ({
   fetchFromTemplateWorkerDatabase: vi.fn(),
 }));
 vi.mock('../context/app', () => ({ init: vi.fn().mockReturnValue({ app: {} }) }));
@@ -23,7 +23,7 @@ vi.mock('insomnia-data', () => ({
 
 import { services } from 'insomnia-data';
 
-import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
+import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 
 import type { Plugin } from '../index';
 import {

@@ -3,7 +3,7 @@ import React from 'react';
 
 import { isBase64String, isValidJSONString } from '~/ui/utils/string-check';
 
-import type { NunjucksParsedTag } from '../../../templating/types';
+import type { NunjucksParsedTag } from '~/common/templating/types';
 import { ExternalVaultForm } from './external-vault/external-vault-form';
 
 export interface ArgConfigFormProps {

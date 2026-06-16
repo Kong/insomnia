@@ -1,5 +1,5 @@
-import { deserializeRenderContext } from '../../templating/render-context-serialization';
-import * as templating from '../../templating/worker';
+import { deserializeRenderContext } from '~/common/templating/render-context-serialization';
+import * as templating from '~/ui/templating/worker';
 
 async function performJob(input: {
   input: string;

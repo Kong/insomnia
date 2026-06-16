@@ -1,13 +1,12 @@
 import type { Liquid } from 'liquidjs';
 
-import { localTemplateTags } from '~/templating/local-template-tags';
-
 import type { TemplateTag } from '~/common/plugins/types';
-import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from './constants';
-import { buildLiquidEngine, stripLiquidComments } from './liquid-engine';
-import { createLiquidTagWorker, fetchFromTemplateWorkerDatabase } from './liquid-extension-worker';
-import { extractUndefinedVariableKey, translateLiquidError } from './render-error';
-import type { PluginToMainAPIPaths } from './types';
+import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import { buildLiquidEngine, stripLiquidComments } from '~/common/templating/liquid-engine';
+import { createLiquidTagWorker, fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
+import { localTemplateTags } from '~/common/templating/local-template-tags';
+import { extractUndefinedVariableKey, translateLiquidError } from '~/common/templating/render-error';
+import type { PluginToMainAPIPaths } from '~/common/templating/types';
 export { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME };
 
 // Cached engine instances

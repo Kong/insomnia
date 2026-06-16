@@ -32,7 +32,7 @@ import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { responseTagRegex } from '../../../templating/utils';
+import { responseTagRegex } from '~/common/templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';

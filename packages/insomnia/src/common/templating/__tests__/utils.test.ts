@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { NunjucksParsedTag } from '~/templating/types';
+import type { NunjucksParsedTag } from '~/common/templating/types';
 
 import { extractUndefinedVariableKey } from '../render-error';
 import * as utils from '../utils';

@@ -4,7 +4,7 @@ import nodePath from 'node:path';
 import clone from 'clone';
 import type { Cookie, RequestHeader } from 'insomnia-data';
 
-import type { RenderedRequest } from '~/templating/types';
+import type { RenderedRequest } from '~/common/templating/types';
 
 import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
 import { getAuthHeader as getAuthHeaderFromMain } from '../../main/network/get-auth-header';

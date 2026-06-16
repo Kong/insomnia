@@ -1,4 +1,6 @@
-import type { BinaryToTextEncoding } from 'node:crypto';
+// Mirrors node:crypto's BinaryToTextEncoding without importing a Node builtin,
+// so this module stays isomorphic and is legal in the common/ context.
+type BinaryToTextEncoding = 'base64' | 'base64url' | 'hex' | 'binary';
 
 import type {
   CloudProviderCredential,

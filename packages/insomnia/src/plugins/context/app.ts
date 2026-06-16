@@ -1,5 +1,5 @@
 import { getAppVersion } from 'insomnia/src/common/constants';
-import type { AppContext, RenderPurpose } from 'insomnia/src/templating/types';
+import type { AppContext, RenderPurpose } from 'insomnia/src/common/templating/types';
 import { platform } from 'insomnia-data/common';
 
 import { invariant } from '~/common/utils/invariant';

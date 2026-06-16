@@ -1,7 +1,7 @@
 import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 
 import { getRenderContext, render } from '~/common/render';
-import { RenderError } from '~/templating/render-error';
+import { RenderError } from '~/common/templating/render-error';
 import { showModal } from '~/ui/components/modals';
 import { RequestRenderErrorModal } from '~/ui/components/modals/request-render-error-modal';
 

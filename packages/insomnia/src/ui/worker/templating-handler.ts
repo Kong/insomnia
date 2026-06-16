@@ -1,6 +1,6 @@
-import { serializeRenderContext } from '../../templating/render-context-serialization';
-import { extractUndefinedVariableKey, RenderError } from '../../templating/render-error';
-import type { RenderInputType } from '../../templating/types';
+import { serializeRenderContext } from '~/common/templating/render-context-serialization';
+import { extractUndefinedVariableKey, RenderError } from '~/common/templating/render-error';
+import type { RenderInputType } from '~/common/templating/types';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
 // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this

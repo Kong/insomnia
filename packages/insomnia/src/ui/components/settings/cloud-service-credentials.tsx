@@ -5,9 +5,9 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-compone
 
 import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
-import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 import { usePlanData } from '../../hooks/use-plan';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';

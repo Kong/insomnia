@@ -2,7 +2,7 @@ import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequ
 
 import type { ParsedApiSpec } from '~/common/api-specs';
 import type { PluginTheme } from '~/common/plugins/bridge-types';
-import type { PluginTemplateTag } from '~/templating/types';
+import type { PluginTemplateTag } from '~/common/templating/types';
 
 // shared types for private plugins
 

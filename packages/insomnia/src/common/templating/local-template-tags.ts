@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import type { PluginTemplateTag } from 'insomnia/src/templating/types';
+import type { PluginTemplateTag } from 'insomnia/src/common/templating/types';
 import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
 

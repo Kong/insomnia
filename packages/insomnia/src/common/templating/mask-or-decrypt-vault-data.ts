@@ -1,9 +1,8 @@
 import { models, services } from 'insomnia-data';
 
+import type { RenderPurpose } from '~/common/templating/types';
 import { decryptVaultKeyFromSession } from '~/common/utils/vault';
-
-import { getRuntime } from '../runtimes';
-import type { RenderPurpose } from '../templating/types';
+import { getRuntime } from '~/runtimes';
 
 export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: any, renderPurpose?: RenderPurpose) {
   /**

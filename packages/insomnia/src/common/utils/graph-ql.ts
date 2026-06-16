@@ -1,5 +1,5 @@
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
-import type { RenderedRequest } from '~/templating/types';
+import type { RenderedRequest } from '~/common/templating/types';
 
 // parse graphql request body since we save entire query variables as string rather then stringified json string. - INS-4281
 export function parseGraphQLReqeustBody(renderedRequest: RenderedRequest) {

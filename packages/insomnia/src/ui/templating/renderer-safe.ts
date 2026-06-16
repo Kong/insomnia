@@ -1,7 +1,7 @@
 // Renderer-safe templating utilities — no Node.js imports.
 // Use this module from renderer code instead of templating/index.
 
-export { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME, LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME } from './constants';
+export { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME, LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
 
 // No-op in renderer: the web worker manages its own engine lifecycle.
 export function reload(): void {}
@@ -17,7 +17,7 @@ export async function render(text: string, _config: Record<string, unknown> = {}
 
 export async function getTagDefinitions(): Promise<any[]> {
   const [{ localTemplateTags }, { plugins }] = await Promise.all([
-    import('./local-template-tags'),
+    import('~/common/templating/local-template-tags'),
     import('~/ui/plugins/renderer-bridge'),
   ]);
 

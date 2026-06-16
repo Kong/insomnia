@@ -13,8 +13,8 @@ import { getAppVersion } from '../common/constants';
 import { database } from '../common/database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from '../common/misc';
 import { getRenderedRequestAndContext } from '../common/render';
-import { RenderError } from '../templating/render-error';
-import type { RenderedRequest } from '../templating/types';
+import { RenderError } from '~/common/templating/render-error';
+import type { RenderedRequest } from '~/common/templating/types';
 
 const { isRequest } = models.request;
 

@@ -9,7 +9,7 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
-import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '../../templating/types';
+import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '~/common/templating/types';
 
 export function init(): {
   network: PluginTemplateTagContext['network'];

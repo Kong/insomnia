@@ -18,17 +18,17 @@ import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import { getRuntime } from '../runtimes';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating/constants';
-import { maskOrDecryptVaultDataIfNecessary } from '../templating/mask-or-decrypt-vault-data';
-import { RenderError } from '../templating/render-error';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
+import { RenderError } from '~/common/templating/render-error';
 import type {
   BaseRenderContext,
   BaseRenderContextOptions,
   RenderContextAncestor,
   RenderContextOptions,
   RenderedRequest,
-} from '../templating/types';
-import * as templatingUtils from '../templating/utils';
+} from '~/common/templating/types';
+import * as templatingUtils from '~/common/templating/utils';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 

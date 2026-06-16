@@ -1,11 +1,21 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
 
+import type {
+  ApplyRequestHooksArgs,
+  ApplyResponseHooksArgs,
+  ExecutePluginActionArgs,
+  ExecutePluginMainActionArgs,
+  PluginsBridgeAPI,
+  RunTemplateTagActionArgs,
+} from '~/common/plugins/bridge-types';
 import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types';
 import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
+import type { PluginInvokeMethod } from '~/plugins/invoke-method';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+import type { RenderedRequest } from '~/common/templating/types';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
@@ -19,16 +29,6 @@ import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
-import type {
-  ApplyRequestHooksArgs,
-  ApplyResponseHooksArgs,
-  ExecutePluginActionArgs,
-  ExecutePluginMainActionArgs,
-  PluginsBridgeAPI,
-  RunTemplateTagActionArgs,
-} from '~/common/plugins/bridge-types';
-import type { PluginInvokeMethod } from '~/plugins/invoke-method';
-import type { RenderedRequest } from '~/templating/types';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI

@@ -12,14 +12,14 @@ import {
   TextField,
 } from 'react-aria-components';
 
+import type { SerializablePlugin } from '~/common/plugins/bridge-types';
 import { validatePluginName } from '~/common/utils/plugin-name';
 import { useRootLoaderData } from '~/root';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import type { SerializablePlugin } from '~/common/plugins/bridge-types';
-import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
-import { reload } from '../../../templating/renderer-safe';
+import { reload } from '~/ui/templating/renderer-safe';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';

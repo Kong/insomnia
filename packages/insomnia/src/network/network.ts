@@ -36,9 +36,9 @@ import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeader
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { ResponsePatch } from '../main/network/libcurl-promise';
-import { maskOrDecryptVaultDataIfNecessary } from '../templating/mask-or-decrypt-vault-data';
-import { RenderError } from '../templating/render-error';
-import type { RenderedRequest, RenderPurpose } from '../templating/types';
+import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
+import { RenderError } from '~/common/templating/render-error';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { filterClientCertificates } from './certificate';

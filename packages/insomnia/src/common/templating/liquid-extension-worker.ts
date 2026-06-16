@@ -2,8 +2,9 @@ import type { CloudProviderCredential, Request, RequestGroup, Response, Workspac
 import type { Context, Emitter, Liquid, TagToken, TopLevelToken } from 'liquidjs';
 import { Tag } from 'liquidjs';
 
-import packageJson from '../../package.json';
 import type { Plugin } from '~/common/plugins/types';
+
+import packageJson from '../../../package.json';
 import { tokenizeArgs } from './tokenize-args';
 import type {
   BaseRenderContext,

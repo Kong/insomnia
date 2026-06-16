@@ -17,13 +17,13 @@ import type {
   Theme,
   WorkspaceAction,
 } from '~/common/plugins/types';
-import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
+import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
-import type { RenderPurpose } from '../templating/types';
+import type { RenderPurpose } from '~/common/templating/types';
 import themes from './themes';
 
 let plugins: Plugin[] | null | undefined = null;

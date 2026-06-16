@@ -25,6 +25,7 @@ import { runTests } from 'insomnia-testing/src/run/run';
 import * as crypt from '~/common/account/crypt';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
+import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
 import type {
   GenerateCommitsFromDiffFunction,
   GenerateMcpSamplingResponseFunction,
@@ -54,9 +55,8 @@ import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '~/main/utils
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
-import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
 import { getRuntime } from '../../runtimes';
-import type { RenderedRequest } from '../../templating/types';
+import type { RenderedRequest } from '~/common/templating/types';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
