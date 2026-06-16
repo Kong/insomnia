@@ -186,7 +186,7 @@ export const NewWorkspaceModal = ({
     <ModalOverlay
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      isDismissable={createNewWorkspaceFetcher.state === 'idle' && gitRepoTreeFetcher.state === 'idle'}
+      isDismissable={false}
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
