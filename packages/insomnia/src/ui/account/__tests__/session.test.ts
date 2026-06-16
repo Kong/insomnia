@@ -2,7 +2,8 @@ import * as insomniaApi from 'insomnia-api';
 import type { AESMessage } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getRuntime } from '../../runtimes';
+import { getRuntime } from '~/runtimes';
+
 import {
   absorbKey,
   getCurrentSessionId,
@@ -19,7 +20,7 @@ vi.mock('insomnia-api', () => ({
   logout: vi.fn(),
 }));
 
-vi.mock('../../runtimes', () => ({
+vi.mock('~/runtimes', () => ({
   getRuntime: vi.fn(),
 }));
 

@@ -1,4 +1,5 @@
-import * as session from '../account/session';
+import * as session from '~/ui/account/session';
+
 import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
 import { invariant } from '../utils/invariant';
 

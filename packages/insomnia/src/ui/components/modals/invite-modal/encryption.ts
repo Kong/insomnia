@@ -7,7 +7,8 @@ import {
   startAddingCollaborators,
 } from 'insomnia-api';
 
-import { getCurrentSessionId, getPrivateKey } from '../../../../account/session';
+import { getCurrentSessionId, getPrivateKey } from '~/ui/account/session';
+
 import { invariant } from '../../../../utils/invariant';
 
 interface InviteInstruction {

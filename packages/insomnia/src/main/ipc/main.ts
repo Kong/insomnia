@@ -22,6 +22,7 @@ import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services, TestResults 
 import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
+import * as crypt from '~/common/account/crypt';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
@@ -51,7 +52,6 @@ import type {
   ModelConfig,
 } from '~/plugins/types';
 
-import * as crypt from '../../account/crypt';
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
 import { getRuntime } from '../../runtimes';

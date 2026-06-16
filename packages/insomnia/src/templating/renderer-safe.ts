@@ -14,7 +14,7 @@ export async function render(text: string, _config: Record<string, unknown> = {}
 // Get template tag definitions without loading Node-dependent plugin code.
 // Return type intentionally untyped (same as index.ts original) so callers can access
 // extra fields like liveDisplayName that live on the tag metadata but not on NunjucksParsedTag.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export async function getTagDefinitions(): Promise<any[]> {
   const [{ localTemplateTags }, { plugins }] = await Promise.all([
     import('./local-template-tags'),
@@ -23,7 +23,7 @@ export async function getTagDefinitions(): Promise<any[]> {
 
   const pluginTags = await plugins.getTemplateTags();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const allTags: { templateTag: Record<string, any> }[] = [
     ...localTemplateTags,
     ...pluginTags.map(t => ({ templateTag: t.templateTag as Record<string, any> })),

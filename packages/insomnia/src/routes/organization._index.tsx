@@ -2,7 +2,7 @@ import type { Organization } from 'insomnia-api';
 import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import * as session from '~/account/session';
+import * as session from '~/ui/account/session';
 import { migrateProjectsUnderOrganization, syncOrganizations } from '~/ui/organization-utils';
 import { invariant } from '~/utils/invariant';
 

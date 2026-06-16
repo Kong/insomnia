@@ -195,7 +195,9 @@ export function decryptAESToBuffer(jwkOrKey: string | JsonWebKey, encryptedResul
  * Generate a random AES256 key for use with symmetric encryption
  */
 export async function generateAES256Key() {
-  const c = window.crypto;
+  // globalThis.crypto resolves to WebCrypto in the renderer and Node global Web Crypto
+  // in the main process, keeping this module isomorphic.
+  const c = globalThis.crypto;
   // @ts-expect-error -- TSCONVERSION: likely needs a module augmentation for webkit
   const subtle = c ? c.subtle || c.webkitSubtle : null;
 
