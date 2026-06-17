@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - develop
-      - 'release/**'
   pull_request:
     types:
       - opened
