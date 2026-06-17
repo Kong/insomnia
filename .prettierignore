@@ -3,6 +3,7 @@ coverage
 node_modules
 bin
 # Ignore generated files in insomnia
+packages/insomnia/bin/yarn-standalone.js
 packages/insomnia/src/**.js
 packages/insomnia/src/**.js.map
 # Ignore fixture files for tests since we need to keep them in a specific format

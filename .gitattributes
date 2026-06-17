@@ -7,3 +7,8 @@
 *.woff2 binary
 *.otf   binary
 *.zip   binary
+
+# Vendored, webpack-bundled standalone yarn binary — a generated artifact, not hand-edited.
+# Mark as generated so GitHub collapses it in diffs/stats, and disable textual diffing so it
+# never bloats `git diff`.
+packages/insomnia/bin/yarn-standalone.js linguist-generated=true -diff
