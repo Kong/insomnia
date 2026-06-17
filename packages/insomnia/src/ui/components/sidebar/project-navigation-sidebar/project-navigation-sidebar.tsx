@@ -252,7 +252,11 @@ const ProjectNavigationSidebarInner = (
     const readLocalStorageString = (key: string): string => {
       try {
         const raw = localStorage.getItem(key);
-        return raw != null ? JSON.parse(raw) || '' : '';
+        if (raw == null) {
+          return '';
+        }
+        const parsed: unknown = JSON.parse(raw);
+        return typeof parsed === 'string' ? parsed : '';
       } catch {
         return '';
       }
