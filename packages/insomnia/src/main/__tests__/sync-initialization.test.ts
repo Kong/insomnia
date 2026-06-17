@@ -20,7 +20,7 @@ vi.mock('insomnia-data', () => ({
       getById: vi.fn(),
     },
     project: {
-      get: vi.fn(),
+      getById: vi.fn(),
     },
     userSession: {
       get: vi.fn(),
@@ -68,7 +68,7 @@ describe('sync-initialization', () => {
     vi.clearAllMocks();
 
     vi.mocked(services.workspace.getById).mockResolvedValue(workspace);
-    vi.mocked(services.project.get).mockResolvedValue(project);
+    vi.mocked(services.project.getById).mockResolvedValue(project);
     vi.mocked(services.userSession.get).mockResolvedValue({ id: 'sess_123' } as any);
     vi.mocked(services.workspaceMeta.getOrCreateByParentId).mockResolvedValue({ gitRepositoryId: null } as any);
     vi.mocked(services.environment.getOrCreateForParentId).mockResolvedValue({} as any);

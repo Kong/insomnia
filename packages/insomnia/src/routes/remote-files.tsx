@@ -1,5 +1,4 @@
 import { getUserFiles, type Organization, type RemoteFile } from 'insomnia-api';
-import type { Project } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
