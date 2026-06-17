@@ -29,7 +29,7 @@ import {
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll } from '~/common/misc';
-import type { InsomniaFile } from '~/common/project';
+import { type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
@@ -62,13 +62,6 @@ import { isPrimaryClickModifier } from '~/ui/utils';
 
 export interface ProjectLoaderData {
   localFiles: InsomniaFile[];
-  allFilesCount: number;
-  documentsCount: number;
-  environmentsCount: number;
-  collectionsCount: number;
-  mockServersCount: number;
-  mcpClientsCount: number;
-  projectsCount: number;
   activeProject?: Project;
   activeProjectGitRepository?: GitRepository;
   projects: (Project & { gitRepository?: GitRepository })[];

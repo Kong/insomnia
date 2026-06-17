@@ -65,10 +65,20 @@ const getInsomniaLearningFeature = async (fallbackLearningFeature: LearningFeatu
   return learningFeature;
 };
 
-export function shouldRevalidate({ currentParams, nextParams }: ShouldRevalidateFunctionArgs) {
-  const isProjectOrOrganizationChanging =
-    currentParams.projectId !== nextParams.projectId || currentParams.organizationId !== nextParams.organizationId;
-  return isProjectOrOrganizationChanging;
+export function shouldRevalidate({ currentParams, nextParams, formMethod, formAction }: ShouldRevalidateFunctionArgs) {
+  const isProjectOrOrganizationOrWorkspaceChanging =
+    currentParams.projectId !== nextParams.projectId ||
+    currentParams.organizationId !== nextParams.organizationId ||
+    currentParams.workspaceId !== nextParams.workspaceId;
+  const isActionMutation = formMethod !== undefined && formMethod.toUpperCase() !== 'GET';
+  const isOrgScopedMutation =
+    isActionMutation && !!formAction?.startsWith(`/organization/${nextParams.organizationId}`);
+  const isWorkspaceSpecificAction =
+    isActionMutation && nextParams.workspaceId && formAction?.includes(`/workspace/${nextParams.workspaceId}`);
+  // Only revalidate if the project, organization, or workspace is changing, or if it's an org-scoped mutation that is not workspace specific
+  const shouldRevalidate =
+    isProjectOrOrganizationOrWorkspaceChanging || (isOrgScopedMutation && !isWorkspaceSpecificAction);
+  return shouldRevalidate;
 }
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
@@ -154,15 +164,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     localFiles,
     remoteFilesPromise,
     projects,
-    projectsCount: organizationProjects.length,
     activeProject: project,
     activeProjectGitRepository,
-    allFilesCount: localFiles.length,
-    environmentsCount: localFiles.filter(file => file.scope === 'environment').length,
-    documentsCount: localFiles.filter(file => file.scope === 'design').length,
-    collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
-    mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
-    mcpClientsCount: localFiles.filter(file => file.scope === 'mcp').length,
     projectsSyncStatusPromise,
     learningFeaturePromise,
   };
