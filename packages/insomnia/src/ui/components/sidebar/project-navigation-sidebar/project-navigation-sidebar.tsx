@@ -245,6 +245,22 @@ const ProjectNavigationSidebarInner = (
   const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
   const [konnectFilterInputValue, setKonnectFilterInputValue] = useState(konnectFilter || '');
+
+  useEffect(() => {
+    // Keep input state aligned with storage only when organization context switches.
+    // Read directly from localStorage to bypass react-use's stale state on key change.
+    const readLocalStorageString = (key: string): string => {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw != null ? JSON.parse(raw) || '' : '';
+      } catch {
+        return '';
+      }
+    };
+    setFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-sidebar-filter`));
+    setKonnectFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-konnect-filter`));
+  }, [organizationId]);
+
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
   reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
@@ -446,12 +462,12 @@ const ProjectNavigationSidebarInner = (
   };
 
   useEffect(() => {
-    if (projectNavigationSidebarFilter) {
+    if (projectNavigationSidebarFilter || konnectFilter) {
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.projectListFiltered,
       });
     }
-  }, [projectNavigationSidebarFilter]);
+  }, [projectNavigationSidebarFilter, konnectFilter]);
 
   useEffect(() => {
     getAllRemoteFilesByProjectId();
