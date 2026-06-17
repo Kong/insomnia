@@ -14,7 +14,12 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     await syncOrganizations(sessionId, accountId);
 
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-    invariant(organizations.length, 'Failed to fetch organizations. Check your network connection and try again.');
+    // No orgs means either the fetch failed (network unavailable/expired session) or there really are none (should not be possible)
+    // send the user to login page instead of crashing the app
+    if (!organizations.length) {
+      await session.logout();
+      return redirect(href('/auth/login'));
+    }
 
     const personalOrganization = models.organization.findPersonalOrganization(organizations, accountId);
     invariant(
