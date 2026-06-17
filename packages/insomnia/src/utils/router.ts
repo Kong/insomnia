@@ -1,5 +1,5 @@
 import type { Organization } from 'insomnia-api';
-import type { GitProject, GitRepository, Project } from 'insomnia-data';
+import type { GitProject, GitRepository } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
@@ -46,7 +46,7 @@ export const getInitialRouteForOrganization = async ({
     const match = getMatchParams(prevOrganizationLocation);
 
     if (match && match.params.organizationId && match.params.projectId) {
-      const existingProject = await services.project.get(match.params.projectId);
+      const existingProject = await services.project.getById(match.params.projectId);
 
       if (existingProject) {
         console.log('Redirecting to last visited project', existingProject._id);
@@ -70,7 +70,7 @@ export const getInitialRouteForOrganization = async ({
     }
   }
   // 2. if no history, redirect to the first project
-  const firstProject = await database.findOne<Project>(models.project.type, { parentId: organizationId });
+  const firstProject = await services.project.get({ parentId: organizationId });
 
   if (firstProject?._id) {
     return href(`/organization/:organizationId/project/:projectId`, {
@@ -89,7 +89,7 @@ export const getInitialEntry = async () => {
   // Otherwise if the user is not logged in and has not logged in before, then show the login
   // Otherwise if the user is logged in, then show the organization
   try {
-    const allProjects = await database.find<Project>(models.project.type, {});
+    const allProjects = await services.project.list();
     const gitRepoIds = (
       allProjects.filter(
         (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),

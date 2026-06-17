@@ -26,7 +26,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   }
   if (models.workspace.isWorkspaceId(id)) {
     const item = await services.workspace.getById(id);
-    const targetItem = await services.project.get(targetId);
+    const targetItem = await services.project.getById(targetId);
     invariant(item, 'Drag item not found');
     invariant(targetItem, 'Target item not found');
     await services.workspace.update(item, {

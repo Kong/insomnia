@@ -48,7 +48,7 @@ export interface MockServerLoaderData {
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, projectId, organizationId } = params;
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   if (!project) {
     showResourceNotFoundToast(`Project not found: ${projectId}`);
     throw redirect(href('/organization/:organizationId/project', { organizationId }));

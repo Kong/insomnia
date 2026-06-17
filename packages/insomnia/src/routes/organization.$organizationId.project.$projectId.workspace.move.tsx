@@ -26,7 +26,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(oldWorkspace, 'Workspace not found');
 
     // duplicate the workspace to the new project
-    const newProject = (await services.project.get(newProjectId)) as Project;
+    const newProject = (await services.project.getById(newProjectId)) as Project;
     const workspaceExport = await getInsomniaV5DataExport({
       workspaceId: oldWorkspace._id,
       includePrivateEnvironments: true,

@@ -63,7 +63,7 @@ async function deleteWorkspace(workspace: Workspace | null, project: Project | n
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   const formData = await request.formData();
 

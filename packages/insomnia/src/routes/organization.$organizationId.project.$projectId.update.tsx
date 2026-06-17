@@ -36,7 +36,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const { organizationId, projectId } = params;
 
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
 
   const effectiveRepoId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;

@@ -33,7 +33,7 @@ export const syncNewWorkspaceIfNeeded = async ({ workspaceId }: { workspaceId: s
   const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  const project = await services.project.get(workspace.parentId);
+  const project = await services.project.getById(workspace.parentId);
   invariant(project, 'Project not found');
 
   const userSession = await services.userSession.get();

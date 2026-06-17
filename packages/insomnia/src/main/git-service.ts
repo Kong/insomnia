@@ -232,7 +232,7 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   }
 
   invariant(projectId, 'Project ID is required');
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(models.project.isConnectedGitProject(project), 'Project is not linked to a git repository');
   const repoId = models.project.getEffectiveRepoId(project);
@@ -306,7 +306,7 @@ export async function getProjectGitFileIssues({
   workspaceId,
   gitRepositoryId,
 }: GetProjectGitFileIssuesOptions): Promise<WorkspaceFileIssue[]> {
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
   if (!project || !models.project.isConnectedGitProject(project)) {
     return [];
   }
@@ -1173,7 +1173,7 @@ export const cloneGitRepoAction = async ({
 
       async function getProject() {
         if (cloneIntoProjectId) {
-          const project = await services.project.get(cloneIntoProjectId);
+          const project = await services.project.getById(cloneIntoProjectId);
           invariant(project, 'Project not found');
 
           await services.project.update(project, {
@@ -1268,7 +1268,7 @@ export const cloneGitRepoAction = async ({
       };
     }
 
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
 
     trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
@@ -1385,7 +1385,7 @@ export const cloneGitRepoAction = async ({
       const existingWorkspace = await services.workspace.getById(workspace._id);
 
       if (existingWorkspace) {
-        const project = await services.project.get(existingWorkspace.parentId);
+        const project = await services.project.getById(existingWorkspace.parentId);
         if (!project) {
           return {
             errors: [
@@ -1495,7 +1495,7 @@ export const updateGitRepoAction = async ({
       const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
       gitRepositoryId = workspaceMeta?.gitRepositoryId;
     } else if (projectId) {
-      const project = await services.project.get(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       gitRepositoryId = project.gitRepositoryId;
     }
@@ -1523,7 +1523,7 @@ export const updateGitRepoAction = async ({
         gitRepositoryId: gitRepository._id,
       });
     } else if (projectId) {
-      const project = await services.project.get(projectId);
+      const project = await services.project.getById(projectId);
       invariant(project, 'Project not found');
       await services.project.update(project, {
         gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
@@ -1583,7 +1583,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
       gitRepositoryId: null,
     });
   } else if (projectId) {
-    const project = await services.project.get(projectId);
+    const project = await services.project.getById(projectId);
     invariant(project, 'Project not found');
     await services.project.update(project, {
       gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID,
@@ -2705,7 +2705,7 @@ const getRepositoryDirectoryTree = async ({
   repositoryTree: FileTree;
   folderList: Record<string, string[]>;
 }> => {
-  const project = await services.project.get(projectId);
+  const project = await services.project.getById(projectId);
 
   if (project && models.project.isEmptyGitProject(project)) {
     return {
@@ -2973,7 +2973,7 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
     failedProjects.map(async ({ id, name }) => {
       logs.push(`${ts()} [INFO] ["${name}"] Converting to local project`);
       try {
-        const project = await services.project.get(id);
+        const project = await services.project.getById(id);
         if (!project || !models.project.isConnectedGitProject(project)) {
           logs.push(`${ts()} [WARN] ["${name}"] Project not found or already local — skipping`);
           return;
