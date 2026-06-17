@@ -66,43 +66,41 @@ export const ProjectModal = ({
               aria-label="Create or update dialog"
               className="grid flex-1 grid-rows-[min-content_1fr_min-content] gap-4 overflow-hidden p-10 outline-hidden"
             >
-              {({ close }) => (
-                <>
-                  <div className="flex items-center justify-between gap-2">
-                    <Heading slot="title" className="text-2xl">
-                      {title}
-                    </Heading>
-                    <Button
-                      className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                      data-test-id="project-modal-close-button"
-                      onPress={requestClose}
-                    >
-                      <Icon icon="x" />
-                    </Button>
-                  </div>
-                  {project ? (
-                    <ProjectSettingsForm
-                      storageRules={storageRules}
-                      project={project}
-                      gitRepository={gitRepository}
-                      onCancel={requestClose}
-                      onSuccessUpdate={close}
-                      credentials={credentials}
-                      providers={providers}
-                      setHasUnsavedChanges={setHasUnsavedChanges}
-                    />
-                  ) : (
-                    <ProjectCreateForm
-                      storageRules={storageRules}
-                      onCancel={requestClose}
-                      activeViewObj={activeViewObj}
-                      credentials={credentials}
-                      providers={providers}
-                      setHasUnsavedChanges={setHasUnsavedChanges}
-                    />
-                  )}
-                </>
-              )}
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <Heading slot="title" className="text-2xl">
+                    {title}
+                  </Heading>
+                  <Button
+                    className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                    data-test-id="project-modal-close-button"
+                    onPress={requestClose}
+                  >
+                    <Icon icon="x" />
+                  </Button>
+                </div>
+                {project ? (
+                  <ProjectSettingsForm
+                    storageRules={storageRules}
+                    project={project}
+                    gitRepository={gitRepository}
+                    onCancel={requestClose}
+                    onSuccessUpdate={() => onOpenChange(false)}
+                    credentials={credentials}
+                    providers={providers}
+                    setHasUnsavedChanges={setHasUnsavedChanges}
+                  />
+                ) : (
+                  <ProjectCreateForm
+                    storageRules={storageRules}
+                    onCancel={requestClose}
+                    activeViewObj={activeViewObj}
+                    credentials={credentials}
+                    providers={providers}
+                    setHasUnsavedChanges={setHasUnsavedChanges}
+                  />
+                )}
+              </>
             </Dialog>
           </Modal>
         </ModalOverlay>
