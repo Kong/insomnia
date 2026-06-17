@@ -1,6 +1,7 @@
 import { type McpRequest, models } from 'insomnia-data';
 import { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
+import { useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -17,6 +18,10 @@ import { PaneHeader } from '~/ui/components/pane-header';
 import { useWorkspaceBreadcrumbs } from '~/ui/components/workspace/use-workspace-breadcrumb';
 
 export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: boolean }) {
+  const { organizationId } = useParams() as {
+    organizationId: string;
+  };
+  const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
   const { activeCookieJar, caCertificate, clientCertificates, activeWorkspace } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
   const breadcrumbs = useWorkspaceBreadcrumbs();
@@ -59,7 +64,8 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
 
   return (
     <PaneHeader
-      breadcrumbs={realBreadcrumbs}
+      // For scratch pad, we don't want to show the project breadcrumb.
+      breadcrumbs={isScratchPad ? realBreadcrumbs.slice(1) : realBreadcrumbs}
       rightSlot={
         hasSettings ? (
           <>
