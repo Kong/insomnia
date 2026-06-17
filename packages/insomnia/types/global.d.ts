@@ -20,6 +20,7 @@ type RendererEnv = {
   INSOMNIA_ENV: string | undefined;
   BUILD_DATE: string | undefined;
   PORTABLE_EXECUTABLE_DIR: string | undefined;
+  ALLOW_UPDATES_IN_DEV: string | undefined;
   OAUTH_REDIRECT_URL: string | undefined;
   OAUTH_RELAY_URL: string | undefined;
   INSOMNIA_API_URL: string | undefined;

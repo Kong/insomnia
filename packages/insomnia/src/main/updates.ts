@@ -120,6 +120,9 @@ export const init = async () => {
     event.returnValue = currentUpdateStatus;
   });
   ipcMainOn('applyUpdateAndRestart', () => {
+    if (currentUpdateStatus !== 'readyToRestart') {
+      return;
+    }
     performInstall?.();
   });
   // on check now button pushed

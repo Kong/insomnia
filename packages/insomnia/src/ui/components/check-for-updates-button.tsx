@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type UpdateStatus } from '../../common/constants';
+import { allowUpdatesInDev, isDevelopment, type UpdateStatus } from '../../common/constants';
 import { Icon } from './icon';
+import { Tooltip } from './tooltip';
 
 const STATUS_LABELS: Record<UpdateStatus, string> = {
   idle: 'Check',
@@ -31,24 +32,34 @@ export const CheckForUpdatesButton = () => {
     return () => clearTimeout(fallbackRef.current);
   }, [status]);
 
+  const updatesDisabledInDev = isDevelopment() && !allowUpdatesInDev();
   const isBusy = status === 'checking' || status === 'downloading';
   const isReadyToRestart = status === 'readyToRestart';
 
-  return (
+  const button = (
     <button
-      className="btn btn--outlined btn--super-compact flex items-center gap-2"
-      disabled={isBusy}
+      className={`btn btn--outlined btn--super-compact flex items-center gap-2${updatesDisabledInDev ? ' pointer-events-none' : ''}`}
+      disabled={isBusy || updatesDisabledInDev}
       onClick={() => {
         if (isReadyToRestart) {
           window.main.applyUpdateAndRestart();
           return;
         }
         window.main.manualUpdateCheck();
-        setStatus('checking');
       }}
     >
       <Icon className={isBusy ? 'animate-spin' : ''} icon={isReadyToRestart ? 'rotate' : isBusy ? 'refresh' : 'check'} />
       {STATUS_LABELS[status]}
     </button>
   );
+
+  if (updatesDisabledInDev) {
+    return (
+      <Tooltip message="Updates are disabled in development mode" position="top">
+        {button}
+      </Tooltip>
+    );
+  }
+
+  return button;
 };
