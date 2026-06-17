@@ -245,8 +245,31 @@ const ProjectNavigationSidebarInner = (
   const nonKonnectProjects = projects.filter(p => !p.konnectControlPlaneId);
   const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
+  const [konnectFilterInputValue, setKonnectFilterInputValue] = useState(konnectFilter || '');
+
+  useEffect(() => {
+    // Keep input state aligned with storage only when organization context switches.
+    // Read directly from localStorage to bypass react-use's stale state on key change.
+    const readLocalStorageString = (key: string): string => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw == null) {
+          return '';
+        }
+        const parsed: unknown = JSON.parse(raw);
+        return typeof parsed === 'string' ? parsed : '';
+      } catch {
+        return '';
+      }
+    };
+    setFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-sidebar-filter`));
+    setKonnectFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-konnect-filter`));
+  }, [organizationId]);
+
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
+  reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
+  const activeFilter = ((isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '').trim();
   // ref to cache queried workspaces by project id
   const cachedWorkspacesRef = useRef<Map<string, Workspace[]>>(new Map());
   // ref to cache queried collection children (request & requestGroups) data and meta by workspace id
@@ -444,12 +467,12 @@ const ProjectNavigationSidebarInner = (
   };
 
   useEffect(() => {
-    if (projectNavigationSidebarFilter) {
+    if (projectNavigationSidebarFilter || konnectFilter) {
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.projectListFiltered,
       });
     }
-  }, [projectNavigationSidebarFilter]);
+  }, [projectNavigationSidebarFilter, konnectFilter]);
 
   useEffect(() => {
     getAllRemoteFilesByProjectId();
@@ -492,6 +515,7 @@ const ProjectNavigationSidebarInner = (
     const buildWorkspaceAndCollectionData = async () => {
       const items: FlatItem[] = [];
       // Array of project and collection workspace ids that should get data from db
+      const activeFilterLower = activeFilter.toLowerCase();
 
       const projectIds = projectsWithPresence.map(p => p._id);
       const collectionWorkspaceIds: string[] = [];
@@ -502,7 +526,7 @@ const ProjectNavigationSidebarInner = (
           if (
             wk.scope === 'collection' &&
             // Fetch collection children and meta if 1) the workspace is expanded or 2) there is an active filter
-            (!!projectNavigationSidebarFilter || (expandedProjectAndWorkspaceIds || []).includes(wk._id))
+            (!!activeFilter || (expandedProjectAndWorkspaceIds || []).includes(wk._id))
           ) {
             collectionWorkspaceIds.push(wk._id);
           }
@@ -544,7 +568,7 @@ const ProjectNavigationSidebarInner = (
           : [];
         const allWorkspaces = [...sortedWorkspaces, ...unsyncedWorkspaces];
         // If there is no workspace under the project, show an empty workspace if no active filter
-        if (allWorkspaces.length === 0 && !projectNavigationSidebarFilter) {
+        if (allWorkspaces.length === 0 && !activeFilter) {
           items.push({
             kind: 'emptyProject',
             organizationId,
@@ -556,6 +580,15 @@ const ProjectNavigationSidebarInner = (
 
         for (const workspace of allWorkspaces) {
           if (workspace.scope === 'unsynced') {
+            // When a filter is active, show the unsynced workspace only if its name matches the filter.
+            const unsyncedWorkspaceMatchesFilter =
+              !activeFilter ||
+              Boolean(
+                fuzzyMatchAll(activeFilterLower, [workspace.name?.toLowerCase() || ''], {
+                  splitSpace: true,
+                  loose: true,
+                })?.indexes,
+              );
             items.push({
               kind: 'unsyncedWorkspace',
               organizationId,
@@ -566,7 +599,7 @@ const ProjectNavigationSidebarInner = (
                 ...workspace,
               },
               collapsed: false,
-              hidden: isProjectCollapsed,
+              hidden: activeFilter ? !unsyncedWorkspaceMatchesFilter : isProjectCollapsed,
             });
           } else {
             const { scope, _id: workspaceId } = workspace as Workspace;
@@ -589,7 +622,7 @@ const ProjectNavigationSidebarInner = (
             // build collection children if it's a collection workspace and parent workspace and project are not collapsed or there is an active filter
             const shouldHideCollectionChildren = isWorkspaceCollapsed || isProjectCollapsed;
             let collectionChildren =
-              (!shouldHideCollectionChildren || !!projectNavigationSidebarFilter) && allRequestsAndMetaInWorkspace
+              (!shouldHideCollectionChildren || !!activeFilter) && allRequestsAndMetaInWorkspace
                 ? flattenCollectionChildren(
                     workspaceId,
                     shouldHideCollectionChildren,
@@ -598,13 +631,13 @@ const ProjectNavigationSidebarInner = (
                   )
                 : [];
 
-            if (projectNavigationSidebarFilter) {
+            if (activeFilter) {
               // apply filter to collection children first
-              collectionChildren = filterCollection(collectionChildren, projectNavigationSidebarFilter);
+              collectionChildren = filterCollection(collectionChildren, activeFilter);
               const collectionChildMatchesFilter = collectionChildren.some(child => !child.hidden);
               const workspaceMatchesFilter = Boolean(
                 fuzzyMatchAll(
-                  projectNavigationSidebarFilter.toLowerCase(),
+                  activeFilterLower,
                   // Todo: support remote files (cloud sync) in filter
                   [workspace.name?.toLowerCase() || ''],
                   { splitSpace: true, loose: true },
@@ -618,9 +651,7 @@ const ProjectNavigationSidebarInner = (
             const pinnedCollectionChildren = shouldHideCollectionChildren
               ? []
               : // Filter out pinned requests by pinned attribute. Besides, when there is an active filter, also filter out un-matched requests.
-                collectionChildren.filter(
-                  child => child.pinned && !(projectNavigationSidebarFilter ? child.hidden : false),
-                );
+                collectionChildren.filter(child => child.pinned && !(activeFilter ? child.hidden : false));
 
             if (pinnedCollectionChildren.length > 0) {
               items.push({
@@ -665,7 +696,7 @@ const ProjectNavigationSidebarInner = (
               if (
                 models.requestGroup.isRequestGroupId(child.doc._id) &&
                 child.children?.length === 0 &&
-                !projectNavigationSidebarFilter
+                !activeFilter
               ) {
                 // If there is a request group with no children, add an empty folder node
                 items.push({
@@ -681,7 +712,7 @@ const ProjectNavigationSidebarInner = (
               }
             });
 
-            if (collectionChildren.length === 0 && !shouldHideCollectionChildren && !projectNavigationSidebarFilter) {
+            if (collectionChildren.length === 0 && !shouldHideCollectionChildren && !activeFilter) {
               items.push({
                 kind: 'emptyCollection',
                 organizationId,
@@ -695,12 +726,10 @@ const ProjectNavigationSidebarInner = (
         }
 
         // If project or any of its descendant workspace/collection child matches the filter, show the project; otherwise hide
-        if (projectNavigationSidebarFilter) {
-          const projectMatchesFilter = project.name
-            ?.toLowerCase()
-            .includes(projectNavigationSidebarFilter.toLowerCase());
+        if (activeFilter) {
+          const projectMatchesFilter = project.name?.toLowerCase().includes(activeFilterLower);
           const hasVisibleWorkspace = items.some(
-            i => i.kind === 'workspace' && i.project._id === projectId && !i.hidden,
+            i => (i.kind === 'workspace' || i.kind === 'unsyncedWorkspace') && i.project._id === projectId && !i.hidden,
           );
           const shouldHideProject = !projectMatchesFilter && !hasVisibleWorkspace;
           items.find(i => i.kind === 'project' && i.doc._id === projectId)!.hidden = shouldHideProject;
@@ -708,7 +737,7 @@ const ProjectNavigationSidebarInner = (
       }
 
       // If there is an active filter, expand all items to show matched results and their ancestors
-      if (projectNavigationSidebarFilter) {
+      if (activeFilter) {
         items.forEach(item => {
           if ('collapsed' in item) {
             item.collapsed = false;
@@ -720,13 +749,13 @@ const ProjectNavigationSidebarInner = (
     };
     buildWorkspaceAndCollectionData();
   }, [
+    activeFilter,
     collectionSortOrders,
     projectWorkspaceSortOrder,
     expandedProjectAndWorkspaceIds,
     isProjectTabActive,
     localWorkspaceOrders,
     organizationId,
-    projectNavigationSidebarFilter,
     projectsWithPresence,
     unsyncedFilesByProjectId,
   ]);
@@ -776,7 +805,7 @@ const ProjectNavigationSidebarInner = (
   const toggleProjectOrWorkspace = useCallback(
     (projectOrWorkspaceId: string) => {
       // Do not update toggle state if there is an active filter
-      if (!projectNavigationSidebarFilter) {
+      if (!activeFilter) {
         const expandedIds = expandedProjectAndWorkspaceIds || [];
         const isExpanded = expandedIds.includes(projectOrWorkspaceId);
         setExpandedProjectAndWorkspaceIds(
@@ -784,13 +813,13 @@ const ProjectNavigationSidebarInner = (
         );
       }
     },
-    [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
+    [expandedProjectAndWorkspaceIds, activeFilter, setExpandedProjectAndWorkspaceIds],
   );
 
   const expandProjectOrWorkspaces = useCallback(
     (projectOrWorkspaceIds: string[]) => {
       // Do not update toggle state if there is an active filter
-      if (!projectNavigationSidebarFilter) {
+      if (!activeFilter) {
         const expandedIds = expandedProjectAndWorkspaceIds || [];
         const newExpandedIds = Array.from(new Set([...expandedIds, ...projectOrWorkspaceIds]));
         // Avoid updating state if there is no change in expanded ids to prevent unnecessary re-render
@@ -800,7 +829,7 @@ const ProjectNavigationSidebarInner = (
         }
       }
     },
-    [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
+    [expandedProjectAndWorkspaceIds, activeFilter, setExpandedProjectAndWorkspaceIds],
   );
 
   useImperativeHandle(
@@ -819,7 +848,7 @@ const ProjectNavigationSidebarInner = (
         return;
       }
 
-      if (projectNavigationSidebarFilter) {
+      if (activeFilter) {
         return;
       }
 
@@ -926,7 +955,7 @@ const ProjectNavigationSidebarInner = (
         }, previousFlatItems),
       );
     },
-    [projectNavigationSidebarFilter],
+    [activeFilter],
   );
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -996,9 +1025,9 @@ const ProjectNavigationSidebarInner = (
         <>
           <div className="flex justify-between gap-1 p-(--padding-sm)">
             <SidebarSearchField
-              value={isProjectTabActive ? filterInputValue : (konnectFilter ?? '')}
+              value={isProjectTabActive ? filterInputValue : konnectFilterInputValue}
               isDisabled={projects.length === 0}
-              onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
+              onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilterInputValue}
             />
             {isProjectTabActive ? (
               !isScratchPad && <NewProjectButton onPress={onCreateProject} isDisabled={projects.length === 0} />
