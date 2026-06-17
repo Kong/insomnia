@@ -146,6 +146,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     properties: {
       storage: newProjectData.storageType,
       git_provider,
+      project_id: newProjectId,
     },
   });
 

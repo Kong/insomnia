@@ -469,6 +469,9 @@ const ProjectNavigationSidebarInner = (
     if (projectNavigationSidebarFilter || konnectFilter) {
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.projectListFiltered,
+        properties: {
+          project_id: activeProjectId,
+        },
       });
     }
   }, [projectNavigationSidebarFilter, konnectFilter]);
@@ -1118,7 +1121,7 @@ const ProjectNavigationSidebarInner = (
                         if (routeInfo?.resourceId === docId) {
                           toggleProjectOrWorkspace(docId);
                         } else {
-                          !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched });
+                          !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched, properties: { project_id: docId } });
                           !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
                         }
                       } else if (item.kind === 'workspace') {

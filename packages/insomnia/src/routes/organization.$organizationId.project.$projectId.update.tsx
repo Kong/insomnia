@@ -110,6 +110,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'local',
+            project_id: project._id,
           },
         });
       } catch (error: unknown) {
@@ -162,6 +163,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'remote',
+            project_id: project._id,
           },
         });
 
@@ -226,6 +228,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             event: AnalyticsEvent.projectUpdated,
             properties: {
               storage: 'git',
+              project_id: project._id,
             },
           });
         } catch (error: unknown) {
@@ -380,6 +383,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       event: AnalyticsEvent.projectUpdated,
       properties: {
         storage: 'local',
+        project_id: project._id,
       },
     });
 
