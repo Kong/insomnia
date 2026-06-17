@@ -244,7 +244,7 @@ export const General: FC = () => {
       {updatesSupported() && (
         <Fragment>
           <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Software Updates</h2>
-          <div className="flex w-full justify-between gap-2">
+          <div className="flex w-full items-center justify-between gap-2">
             <BooleanSetting
               label="Automatically download and install updates"
               setting="updateAutomatically"

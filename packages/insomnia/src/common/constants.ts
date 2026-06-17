@@ -66,6 +66,8 @@ export function updatesSupported() {
   return true;
 }
 
+export type UpdateStatus = 'idle' | 'checking' | 'downloading' | 'readyToRestart';
+
 export const getClientString = () => `${getAppEnvironment()}::${platform}::${getAppVersion()}`;
 
 // Global Stuff

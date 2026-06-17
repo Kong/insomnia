@@ -209,6 +209,7 @@ export const ipcMainHandle = (
 export type MainOnChannels =
   | 'addExecutionStep'
   | 'analytics.setOrganizationId'
+  | 'applyUpdateAndRestart'
   | 'cancelCurlRequest'
   | 'clear'
   | 'completeExecutionStep'
@@ -216,6 +217,7 @@ export type MainOnChannels =
   | 'curl.closeAll'
   | 'getAppPath'
   | 'getPath'
+  | 'getUpdateStatus'
   | 'grpc.cancel'
   | 'grpc.closeAll'
   | 'grpc.commit'
@@ -282,6 +284,7 @@ export type RendererOnChannels =
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
+  | 'update-status-changed'
   | 'show-oauth-authorization-modal'
   | 'hide-oauth-authorization-modal'
   | 'mcp-auth-confirmation'
