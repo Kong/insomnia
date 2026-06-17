@@ -207,7 +207,9 @@ export const NewWorkspaceModal = ({
       {({ requestClose }) => (
         <ModalOverlay
           isOpen={isOpen}
-          onOpenChange={onOpenChange}
+          onOpenChange={open => {
+            if (!open) requestClose();
+          }}
           isDismissable={false}
           className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
         >

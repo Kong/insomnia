@@ -52,11 +52,16 @@ export const ProjectModal = ({
       {({ requestClose }) => (
         <ModalOverlay
           isOpen={isOpen}
-          onOpenChange={onOpenChange}
+          onOpenChange={open => {
+            if (!open) requestClose();
+          }}
           isDismissable={false}
           className="fixed top-0 right-0 bottom-0 left-0 z-10 flex items-start justify-center bg-black/30 pt-[200px]"
         >
-          <Modal ref={modalRef} className="flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
+          <Modal
+            ref={modalRef}
+            className="flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)"
+          >
             <Dialog
               aria-label="Create or update dialog"
               className="grid flex-1 grid-rows-[min-content_1fr_min-content] gap-4 overflow-hidden p-10 outline-hidden"

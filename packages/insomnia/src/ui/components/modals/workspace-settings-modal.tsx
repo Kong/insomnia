@@ -99,7 +99,9 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
         <ModalOverlay
           isOpen
           isDismissable={false}
-          onOpenChange={onClose}
+          onOpenChange={open => {
+            if (!open) requestClose();
+          }}
           className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
         >
           <Modal className="flex h-max max-h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">

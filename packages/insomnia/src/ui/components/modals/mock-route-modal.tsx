@@ -141,8 +141,10 @@ export const MockRouteModal = ({
       {({ requestClose }) => (
         <ModalOverlay
           isOpen={isOpen}
-          onOpenChange={onOpenChange}
-          isDismissable
+          onOpenChange={open => {
+            if (!open) requestClose();
+          }}
+          isDismissable={false}
           className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
         >
           <Modal className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
