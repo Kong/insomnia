@@ -244,9 +244,11 @@ const ProjectNavigationSidebarInner = (
   const nonKonnectProjects = projects.filter(p => !p.konnectControlPlaneId);
   const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
+  const [konnectFilterInputValue, setKonnectFilterInputValue] = useState(konnectFilter || '');
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
-  const activeFilter = (isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '';
+  reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
+  const activeFilter = ((isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '').trim();
   // ref to cache queried workspaces by project id
   const cachedWorkspacesRef = useRef<Map<string, Workspace[]>>(new Map());
   // ref to cache queried collection children (request & requestGroups) data and meta by workspace id
@@ -492,6 +494,7 @@ const ProjectNavigationSidebarInner = (
     const buildWorkspaceAndCollectionData = async () => {
       const items: FlatItem[] = [];
       // Array of project and collection workspace ids that should get data from db
+      const activeFilterLower = activeFilter.toLowerCase();
 
       const projectIds = projectsWithPresence.map(p => p._id);
       const collectionWorkspaceIds: string[] = [];
@@ -604,7 +607,7 @@ const ProjectNavigationSidebarInner = (
               const collectionChildMatchesFilter = collectionChildren.some(child => !child.hidden);
               const workspaceMatchesFilter = Boolean(
                 fuzzyMatchAll(
-                  activeFilter.toLowerCase(),
+                  activeFilterLower,
                   // Todo: support remote files (cloud sync) in filter
                   [workspace.name?.toLowerCase() || ''],
                   { splitSpace: true, loose: true },
@@ -694,7 +697,7 @@ const ProjectNavigationSidebarInner = (
 
         // If project or any of its descendant workspace/collection child matches the filter, show the project; otherwise hide
         if (activeFilter) {
-          const projectMatchesFilter = project.name?.toLowerCase().includes(activeFilter.toLowerCase());
+          const projectMatchesFilter = project.name?.toLowerCase().includes(activeFilterLower);
           const hasVisibleWorkspace = items.some(
             i => i.kind === 'workspace' && i.project._id === projectId && !i.hidden,
           );
@@ -992,9 +995,9 @@ const ProjectNavigationSidebarInner = (
         <>
           <div className="flex justify-between gap-1 p-(--padding-sm)">
             <SidebarSearchField
-              value={isProjectTabActive ? filterInputValue : (konnectFilter ?? '')}
+              value={isProjectTabActive ? filterInputValue : konnectFilterInputValue}
               isDisabled={projects.length === 0}
-              onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
+              onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilterInputValue}
             />
             {isProjectTabActive ? (
               !isScratchPad && <NewProjectButton onPress={onCreateProject} isDisabled={projects.length === 0} />
