@@ -196,7 +196,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                           defaultValue={workspace.description}
                           onChange={setDescription}
                         />
-                        <Input name="description" className="sr-only" value={description} />
+                        <Input name="description" className="sr-only" value={description} readOnly />
                         {!models.workspace.isEnvironment(workspace) && !models.workspace.isMcp(workspace) && (
                           <>
                             <Heading>Actions</Heading>

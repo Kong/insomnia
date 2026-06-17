@@ -193,7 +193,6 @@ export const MockRouteModal = ({
                   <label className="text-sm text-(--hl)">HTTP Method</label>
                   <select
                     name="method"
-                    defaultValue={defaultMethod || 'GET'}
                     onChange={e => setSelectedMethod(e.target.value)}
                     value={selectedMethod}
                     required
