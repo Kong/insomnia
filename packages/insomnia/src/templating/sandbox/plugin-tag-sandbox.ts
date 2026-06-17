@@ -34,6 +34,8 @@ export interface RunTagInSandboxOptions {
   timeoutMs?: number;
   /** Hard memory cap for the QuickJS runtime. Defaults to 64 MiB. */
   memoryLimitBytes?: number;
+  /** Max size of a single marshaled bridge payload (request or response). Defaults to 8 MiB. */
+  maxPayloadBytes?: number;
 }
 
 /**
@@ -42,7 +44,10 @@ export interface RunTagInSandboxOptions {
  * intermediate handles are reclaimed wholesale.
  */
 export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<string> => {
-  const { pluginSource, tagName, envelope, bridge, onConsole, timeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = opts;
+  const {
+    pluginSource, tagName, envelope, bridge, onConsole,
+    timeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024, maxPayloadBytes = MAX_BRIDGE_PAYLOAD_BYTES,
+  } = opts;
   const { getQuickJSModule } = await import('./quickjs-runtime');
   const QuickJS = await getQuickJSModule();
   const ctx = QuickJS.newContext();
@@ -53,7 +58,7 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     ctx.runtime.setInterruptHandler(shouldInterruptAfterDeadline(Date.now() + timeoutMs));
     ctx.runtime.setMemoryLimit(memoryLimitBytes);
 
-    installHostBridge(ctx, bridge);
+    installHostBridge(ctx, bridge, maxPayloadBytes);
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
 
@@ -69,21 +74,48 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
   }
 };
 
+/** Max size of a single marshaled bridge payload (request body or handler result JSON). */
+const MAX_BRIDGE_PAYLOAD_BYTES = 8 * 1024 * 1024;
+
+/** Keys that enable prototype pollution; dropped from any object parsed out of the sandbox. */
+const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/**
+ * JSON.parse reviver that strips prototype-pollution keys. The body is fully attacker-controlled and
+ * is handed to host handlers (e.g. network.sendRequest, cloudCredential.update) that may spread or
+ * deep-merge it, so a `__proto__` key must never survive the parse.
+ */
+const stripDangerousKeys = (key: string, value: unknown): unknown => (DANGEROUS_KEYS.has(key) ? undefined : value);
+
 /** Register `__hostBridge(path, bodyJson)` returning a VM promise resolved from async host work. */
-const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge): void => {
+const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge, maxPayloadBytes: number): void => {
   const fn = ctx.newFunction('__hostBridge', (pathHandle, bodyHandle) => {
     const path = ctx.getString(pathHandle);
+    const bodyJson = ctx.getString(bodyHandle);
+    const deferred = ctx.newPromise();
+
+    if (bodyJson.length > maxPayloadBytes) {
+      resolveWithString(ctx, deferred, encodeBridgeFailure(new Error('bridge request payload too large')));
+      deferred.settled.then(() => ctx.runtime.executePendingJobs());
+      return deferred.handle;
+    }
+
     let body: unknown;
     try {
-      body = JSON.parse(ctx.getString(bodyHandle));
+      body = JSON.parse(bodyJson, stripDangerousKeys);
     } catch {
       body = {};
     }
-    const deferred = ctx.newPromise();
     Promise.resolve()
       .then(() => bridge(path, body))
+      .then(value => {
+        const encoded = encodeBridgeSuccess(value);
+        return encoded.length > maxPayloadBytes
+          ? encodeBridgeFailure(new Error('bridge response payload too large'))
+          : encoded;
+      })
       .then(
-        value => resolveWithString(ctx, deferred, encodeBridgeSuccess(value)),
+        json => resolveWithString(ctx, deferred, json),
         err => resolveWithString(ctx, deferred, encodeBridgeFailure(err)),
       );
     // The settled VM promise schedules a job; pump it so the awaiting sandbox code resumes.

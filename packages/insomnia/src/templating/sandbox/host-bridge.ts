@@ -56,3 +56,32 @@ export const scopePluginDataHandlers = (
   }
   return scoped;
 };
+
+/** Upper bound on nested `context.util.render()` calls from inside the sandbox. */
+export const DEFAULT_MAX_RENDER_DEPTH = 8;
+
+/**
+ * Wrap the `util.render` handler to reject once the sandbox-reported nesting `depth` exceeds
+ * `maxDepth`. The in-sandbox context increments `depth` per nested `util.render`, so this is a cheap
+ * recursion guard layered on the runtime's interrupt + memory limits (the real DoS backstop). Note:
+ * `depth` resets across the unsandboxed in-process render engine, so this only bounds direct
+ * self-recursion within a single sandboxed invocation — full propagation is follow-up work.
+ */
+export const capUtilRenderDepth = (
+  handlers: Record<string, (body: any) => Promise<unknown>>,
+  maxDepth: number = DEFAULT_MAX_RENDER_DEPTH,
+): Record<string, (body: any) => Promise<unknown>> => {
+  const handler = handlers['util.render'];
+  if (!handler) {
+    return handlers;
+  }
+  return {
+    ...handlers,
+    'util.render': async body => {
+      if ((body?.depth ?? 0) > maxDepth) {
+        throw new Error(`util.render exceeded the maximum nesting depth of ${maxDepth}`);
+      }
+      return handler(body);
+    },
+  };
+};
