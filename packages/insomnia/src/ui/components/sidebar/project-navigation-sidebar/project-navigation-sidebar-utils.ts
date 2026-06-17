@@ -94,8 +94,8 @@ export function invalidateSidebarCaches(
     }
 
     if (doc.type === models.workspace.type) {
-      const movedBetweenProjects = patches.some(p => 'parentId' in p);
-      if (movedBetweenProjects) {
+      const isChangingParent = patches.some(p => 'parentId' in p);
+      if (isChangingParent) {
         // parentId changed,clear the whole map
         if (workspacesByProjectId.size > 0) {
           workspacesByProjectId.clear();
@@ -107,9 +107,11 @@ export function invalidateSidebarCaches(
       invalidateWorkspaceData(doc._id);
       continue;
     }
-    // Request or request group or meta change, clear the collectionDataByWorkspaceId cache
-    collectionDataByWorkspaceId.clear();
-    shouldInvalidate = true;
+    if (collectionDataByWorkspaceId.size > 0) {
+      // Request or request group or meta change, clear the collectionDataByWorkspaceId cache
+      collectionDataByWorkspaceId.clear();
+      shouldInvalidate = true;
+    }
   }
 
   return shouldInvalidate;

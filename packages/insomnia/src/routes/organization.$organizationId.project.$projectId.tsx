@@ -73,12 +73,13 @@ export function shouldRevalidate({ currentParams, nextParams, formMethod, formAc
   const isActionMutation = formMethod !== undefined && formMethod.toUpperCase() !== 'GET';
   const isOrgScopedMutation =
     isActionMutation && !!formAction?.startsWith(`/organization/${nextParams.organizationId}`);
-  const isWorkspaceSpecificAction =
-    isActionMutation && nextParams.workspaceId && formAction?.includes(`/workspace/${nextParams.workspaceId}`);
+  const isWorkspaceSpecificAction = Boolean(
+    isActionMutation && nextParams.workspaceId && formAction?.includes(`/workspace/${nextParams.workspaceId}`),
+  );
   // Only revalidate if the project, organization, or workspace is changing, or if it's an org-scoped mutation that is not workspace specific
-  const shouldRevalidate =
+  const shouldRevalidateProjectLoaderData =
     isProjectOrOrganizationOrWorkspaceChanging || (isOrgScopedMutation && !isWorkspaceSpecificAction);
-  return shouldRevalidate;
+  return shouldRevalidateProjectLoaderData;
 }
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
