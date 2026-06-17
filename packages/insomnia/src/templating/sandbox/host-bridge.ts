@@ -25,3 +25,34 @@ export const createMapBridge =
     }
     return handler(body);
   };
+
+/** Bridge paths whose storage is scoped per-plugin; their `pluginName` must come from the host. */
+export const PLUGIN_DATA_PATHS = [
+  'pluginData.hasItem',
+  'pluginData.setItem',
+  'pluginData.getItem',
+  'pluginData.removeItem',
+  'pluginData.clear',
+  'pluginData.all',
+] as const;
+
+/**
+ * Defense in depth for plugin storage. The in-sandbox context stamps the owning `pluginName` onto
+ * every `pluginData.*` call, but that value originates inside the sandbox and so can be forged. This
+ * wraps the `pluginData.*` handlers to overwrite `pluginName` with the trusted name the host knows
+ * for the executing tag, regardless of what the sandbox sent — preventing one plugin from reading or
+ * clearing another plugin's store. All other handlers pass through unchanged.
+ */
+export const scopePluginDataHandlers = (
+  handlers: Record<string, (body: any) => Promise<unknown>>,
+  pluginName: string,
+): Record<string, (body: any) => Promise<unknown>> => {
+  const scoped: Record<string, (body: any) => Promise<unknown>> = { ...handlers };
+  for (const path of PLUGIN_DATA_PATHS) {
+    const handler = handlers[path];
+    if (handler) {
+      scoped[path] = body => handler({ ...body, pluginName });
+    }
+  }
+  return scoped;
+};

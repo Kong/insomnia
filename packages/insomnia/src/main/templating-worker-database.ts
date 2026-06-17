@@ -111,16 +111,22 @@ const runPluginTagInSandbox = async (
   },
 ): Promise<string> => {
   const { runTagInSandbox } = await import('../templating/sandbox/plugin-tag-sandbox');
-  const { createMapBridge } = await import('../templating/sandbox/host-bridge');
+  const { createMapBridge, scopePluginDataHandlers } = await import('../templating/sandbox/host-bridge');
   const { pluginName, tagName, args, context: originContext } = body;
   const { meta, renderPurpose, context } = originContext;
-  const bridge = createMapBridge({
-    ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
-    'util.render': async (b: { str: string; context: Record<string, any> }) => {
-      const { render } = await import('../templating');
-      return render(b.str, { context: b.context });
-    },
-  });
+  // Force the trusted pluginName onto pluginData.* calls so a tag can't forge another plugin's name.
+  const bridge = createMapBridge(
+    scopePluginDataHandlers(
+      {
+        ...(pluginToMainAPI as Record<string, (b: any) => Promise<any>>),
+        'util.render': async (b: { str: string; context: Record<string, any> }) => {
+          const { render } = await import('../templating');
+          return render(b.str, { context: b.context });
+        },
+      },
+      pluginName,
+    ),
+  );
   return runTagInSandbox({
     pluginSource,
     tagName,

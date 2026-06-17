@@ -1,4 +1,4 @@
-import type { QuickJSContext, QuickJSHandle } from 'quickjs-emscripten';
+import { type QuickJSContext, type QuickJSHandle, shouldInterruptAfterDeadline } from 'quickjs-emscripten';
 
 import type { HostBridge } from './host-bridge';
 import { IN_SANDBOX_BOOTSTRAP, RUNNER, wrapPluginSource } from './in-sandbox-bootstrap';
@@ -32,6 +32,8 @@ export interface RunTagInSandboxOptions {
   onConsole?: (level: string, message: string) => void;
   /** Wall-clock cap for the whole tag run; mirrors the LiquidJS renderLimit (10s). */
   timeoutMs?: number;
+  /** Hard memory cap for the QuickJS runtime. Defaults to 64 MiB. */
+  memoryLimitBytes?: number;
 }
 
 /**
@@ -40,12 +42,17 @@ export interface RunTagInSandboxOptions {
  * intermediate handles are reclaimed wholesale.
  */
 export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<string> => {
-  const { pluginSource, tagName, envelope, bridge, onConsole, timeoutMs = 10_000 } = opts;
+  const { pluginSource, tagName, envelope, bridge, onConsole, timeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = opts;
   const { getQuickJSModule } = await import('./quickjs-runtime');
   const QuickJS = await getQuickJSModule();
   const ctx = QuickJS.newContext();
 
   try {
+    // CPU + memory guards. The interrupt handler is polled regularly by the interpreter, so it stops
+    // synchronous infinite loops that drivePromiseToString's between-yields deadline cannot catch.
+    ctx.runtime.setInterruptHandler(shouldInterruptAfterDeadline(Date.now() + timeoutMs));
+    ctx.runtime.setMemoryLimit(memoryLimitBytes);
+
     installHostBridge(ctx, bridge);
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
