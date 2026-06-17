@@ -39,6 +39,8 @@ declare global {
     database: DatabaseBridgeAPI;
     // This is a temporary measure to provide access to services on the global window object. It will be removed in the future once all usages are updated to import services directly from the insomnia-data package.
     _dataServices?: Services;
+    // Under contextIsolation the services Proxy can't cross the bridge; the preload exposes this flat invoke instead and the renderer rebuilds the Proxy.
+    _dataServicesInvoke?: (serviceName: string, methodName: string, ...args: unknown[]) => Promise<unknown>;
     dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
     app: Pick<Electron.App, 'getPath' | 'getAppPath'> & { process: { platform: NodeJS.Platform } };
     shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;
