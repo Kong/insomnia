@@ -22,7 +22,7 @@ export const UnsavedChangesConfirmDialog = ({ isOpen, onConfirm, onDismiss }: Pr
   <ModalOverlay
     isOpen={isOpen}
     onOpenChange={open => !open && onDismiss()}
-    className="fixed top-0 left-0 z-[200] flex h-(--visual-viewport-height) w-full items-center justify-center bg-transparent"
+    className="fixed top-0 left-0 z-[200] flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
   >
     <Modal className="flex w-full max-w-sm flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-6 text-(--color-font) shadow-xl">
       <Dialog className="flex flex-col gap-4 outline-hidden" aria-describedby="unsaved-description">
