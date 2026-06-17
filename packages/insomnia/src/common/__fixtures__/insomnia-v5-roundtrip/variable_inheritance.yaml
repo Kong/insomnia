@@ -1,0 +1,75 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Variable Inheritance
+meta:
+  id: wrk_efcf2df7312846d184cb82fba2fe8755
+  created: 1779816112607
+  modified: 1779816112607
+  description: ""
+collection:
+  - name: grandparent
+    meta:
+      id: fld_87b0432032bf4237977594affb1976fb
+      created: 1779816124318
+      modified: 1779816364828
+      sortKey: -1779816124318
+      description: ""
+    children:
+      - name: parent
+        meta:
+          id: fld_416a8cde60014e13808286c925cda903
+          created: 1779816141613
+          modified: 1779816391323
+          sortKey: -1779816141613
+          description: ""
+        children:
+          - url: https://insomnia-airlines-api.onrender.com/test/extra-data
+            name: Child Request
+            meta:
+              id: req_70759093fbcf498996c1da257b8e6f8b
+              created: 1779816145656
+              modified: 1779816330205
+              isPrivate: false
+              description: ""
+              sortKey: -1779816145656
+            method: GET
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.1-alpha.0
+                description: ""
+                disabled: false
+              - name: x-test-value
+                value: "{{ _['test-value'] }}"
+                description: ""
+                disabled: false
+            authentication:
+              type: basic
+              useISO88591: false
+              username: "{{ _['test-value'] }}"
+              password: ""
+              disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+    environment:
+      test-value: grandparent
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_4886ac6900e625c33f800075dc17c4aec7c508d6
+    created: 1779816112609
+    modified: 1779816112609
+environments:
+  name: Base Environment
+  meta:
+    id: env_4886ac6900e625c33f800075dc17c4aec7c508d6
+    created: 1779816112609
+    modified: 1779816233120
+    isPrivate: false
+  data:
+    test-value: collection

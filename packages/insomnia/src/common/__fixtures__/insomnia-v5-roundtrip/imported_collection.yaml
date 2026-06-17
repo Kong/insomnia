@@ -1,0 +1,72 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Imported from Try in Insomnia
+meta:
+  id: wrk_23c61ab98f3646f09135c07aed8a8245
+  created: 1778511433620
+  modified: 1778786300089
+  description: ""
+collection:
+  - url: http://localhost:8000/flights
+    name: http://localhost:8000/flights
+    meta:
+      id: req_a4cdf8671bee4d69bb2d7fb516fcd51e
+      created: 1778511433621
+      modified: 1778511433621
+      isPrivate: false
+      description: ""
+      sortKey: -1778511433621
+    method: GET
+    parameters:
+      - name: origin
+        value: YYZ
+        disabled: false
+    headers:
+      - name: User-Agent
+        value: insomnia/12.5.1-alpha.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: https://insomnia-airlines-api.onrender.com/flights
+    name: https://insomnia-airlines-api.onrender.com/flights
+    meta:
+      id: req_20bde7c7b5ed4b8d839ea86d53a35792
+      created: 1778512055254
+      modified: 1778512055254
+      isPrivate: false
+      description: ""
+      sortKey: -1778512055254
+    method: GET
+    parameters:
+      - name: status
+        value: BOARDING
+        disabled: false
+    headers:
+      - name: User-Agent
+        value: insomnia/12.5.1-alpha.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_96cac014d79f891d0866aef82234f8d59090262c
+    created: 1778511433708
+    modified: 1778511433708
+environments:
+  name: Base Environment
+  meta:
+    id: env_96cac014d79f891d0866aef82234f8d59090262c
+    created: 1778511433622
+    modified: 1778511433622
+    isPrivate: false
