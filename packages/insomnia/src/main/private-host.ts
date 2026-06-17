@@ -4,7 +4,7 @@ import { isIPv4, isIPv6 } from 'node:net';
 // Classifies a hostname or IP literal as private/loopback. Used as an SSRF guard when deciding
 // whether a remote URL is safe to fetch. This is a synchronous check on the literal value only;
 // callers that must also defend against DNS rebinding resolve the host and re-check the resulting
-// addresses with this same function (see common/bundle-spectral-ruleset.ts).
+// addresses with this same function (see main/bundle-spectral-ruleset.ts).
 // Note: duplicated in the Spectral lint worker (main/lint-process.mjs), which is a plain .mjs
 // module and cannot import this file. If this logic changes, mirror it there.
 export function isPrivateOrLoopbackHost(hostname: string): boolean {

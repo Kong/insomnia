@@ -1,6 +1,8 @@
 import type { AESMessage, Cookie, RequestHeader } from 'insomnia-data';
 
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
+import type { ConvertResult } from '../main/importers/convert';
+import type { ImportEntry } from '../main/importers/entities';
 import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../main/network/libcurl-promise';
 import type { RenderedRequest, RenderInputType } from '../templating/types';
 
@@ -51,9 +53,18 @@ export interface SecretStorageRuntime {
   decryptString: (cipherText: string) => Promise<string>;
 }
 
+// Import helpers that fork by process: in the renderer they go through the
+// `window.main` IPC bridge; in node/main they call the underlying handlers directly.
+export interface ImportRuntime {
+  insecureReadFile: (filePath: string) => Promise<string>;
+  extractJsonFileFromPostmanDataDumpArchive: (filePath: string) => Promise<any>;
+  convert: (importEntry: ImportEntry, options?: { importerId?: string }) => Promise<ConvertResult>;
+}
+
 export interface RuntimeCapabilities {
   network: NetworkRuntime;
   crypto: CryptoRuntime;
   templating: TemplatingRuntime;
   secretStorage: SecretStorageRuntime;
+  importer: ImportRuntime;
 }

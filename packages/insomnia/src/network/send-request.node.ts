@@ -13,7 +13,7 @@ import {
   tryToExecuteAfterResponseScript,
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
-} from '../network/network';
+} from './network';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings

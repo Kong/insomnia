@@ -30,7 +30,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
 import type { TimingStep } from '~/main/network/request-timing';
-import { cancelRequestById } from '~/network/cancellation';
+import { cancelRequestById } from '~/network/cancellation.renderer';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';

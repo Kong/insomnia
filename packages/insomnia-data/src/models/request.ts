@@ -216,6 +216,24 @@ export interface RequestPathParameter {
 
 export const PATH_PARAMETER_REGEX = /\/:[^/?#:]+/g;
 
+/** Replace `:param` url segments with their URL-encoded values; unmatched or empty params are left unchanged */
+export const applyPathParametersToUrl = (
+  url: string,
+  pathParameters?: RequestPathParameter[],
+): string => {
+  if (!pathParameters?.length) {
+    return url;
+  }
+  return url.replace(PATH_PARAMETER_REGEX, match => {
+    const paramName = match.replace('/:', '');
+    const param = pathParameters.find(p => p.name === paramName);
+    if (param?.value) {
+      return `/${encodeURIComponent(param.value)}`;
+    }
+    return match;
+  });
+};
+
 export const getPathParametersFromUrl = (url: string): string[] => {
   // Find all path parameters in the URL. Path parameters are defined as segments of the URL that start with a colon.
   const urlPathParameters =
@@ -289,7 +307,7 @@ export interface BaseRequest {
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
-  disableUserAgentHeader: boolean;
+  disableUserAgentHeader?: boolean;
   konnectRouteKey?: string | null;
   konnectManagedHeaderNames?: string[] | null;
 }
@@ -325,7 +343,11 @@ export function getOperationType(request: Request) {
 export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION;
 
-export const optionalKeys = ['konnectRouteKey', 'konnectManagedHeaderNames'];
+export const optionalKeys: (keyof BaseRequest)[] = [
+  'konnectRouteKey',
+  'konnectManagedHeaderNames',
+  'disableUserAgentHeader',
+];
 
 export function init(): BaseRequest {
   return {
@@ -349,7 +371,6 @@ export function init(): BaseRequest {
     settingEncodeUrl: true,
     settingRebuildPath: true,
     settingFollowRedirects: 'global',
-    disableUserAgentHeader: false,
   };
 }
 

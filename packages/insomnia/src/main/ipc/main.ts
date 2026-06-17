@@ -22,9 +22,9 @@ import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services, TestResults 
 import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
-import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
 import { AI_PLUGIN_NAME } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
+import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import {

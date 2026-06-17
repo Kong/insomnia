@@ -17,13 +17,13 @@ vi.mock('electron', () => ({
   app: { getPath: vi.fn(() => '/fake/userData') },
 }));
 
-vi.mock('~/common/bundle-spectral-ruleset', () => ({
+vi.mock('~/main/bundle-spectral-ruleset', () => ({
   compileSpectralRulesetFromContent: vi.fn(),
 }));
 
 import fs from 'node:fs';
 
-import { compileSpectralRulesetFromContent } from '~/common/bundle-spectral-ruleset';
+import { compileSpectralRulesetFromContent } from '~/main/bundle-spectral-ruleset';
 
 import { compiledRulesetPathFor, deleteCompiledRuleset, writeCompiledRuleset } from '../spectral-ruleset-cache';
 

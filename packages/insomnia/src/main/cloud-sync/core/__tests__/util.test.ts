@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
+import { models } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { baseModelSchema, workspaceModelSchema } from '../../../../sync/__schemas__/model-schemas';
@@ -919,6 +920,36 @@ describe('util', () => {
       const result3 = hashDocument(baseModelBuilder.name('abc').modified(456).build());
       expect(result1.hash).toBe(result2.hash);
       expect(result1.hash).not.toBe(result3.hash);
+    });
+
+    it('does not add missing environment property order', () => {
+      const environment = {
+        ...baseModelBuilder.reset()._id('env_1').parentId('wrk_1').type(models.environment.type).build(),
+        ...models.environment.init(),
+        metaSortKey: 1234,
+        name: 'Base Environment',
+      };
+
+      const result = hashDocument(environment);
+      expect(result.hash).toBe('d0550d0c20563b689c99eadfd254e9220b85325b');
+      expect(result.content).toBe(
+        '{"_id":"env_1","color":null,"created":1234,"data":{},"isPrivate":false,"metaSortKey":1234,"name":"Base Environment","parentId":"wrk_1","type":"Environment"}',
+      );
+    });
+
+    it('does not add missing request group property order', () => {
+      const requestGroup = {
+        ...baseModelBuilder.reset()._id('fld_1').parentId('wrk_1').type(models.requestGroup.type).build(),
+        ...models.requestGroup.init(),
+        metaSortKey: -1234,
+        name: 'Folder',
+      };
+
+      const result = hashDocument(requestGroup);
+      expect(result.hash).toBe('c2cb8d76a07d72620a89dc84588020f21822ded6');
+      expect(result.content).toBe(
+        '{"_id":"fld_1","created":1234,"description":"","environment":{},"isPrivate":false,"metaSortKey":-1234,"name":"Folder","parentId":"wrk_1","type":"RequestGroup"}',
+      );
     });
 
     it('shouldnt change the hash of a workspace after a parent id is added and ignored', () => {

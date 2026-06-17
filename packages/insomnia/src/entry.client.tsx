@@ -16,13 +16,13 @@ import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
 import { applyColorScheme } from './plugins/misc';
-import { registerSyncMergeConflictListener } from './sync/vcs/insomnia-sync';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
 import { PromptModal } from './ui/components/modals/prompt-modal';
 import { WrapperModal } from './ui/components/modals/wrapper-modal';
 import { initializeSentry } from './ui/sentry';
+import { registerSyncMergeConflictListener } from './ui/utils/insomnia-sync';
 import { getInitialEntry } from './utils/router';
 
 initializeSentry();

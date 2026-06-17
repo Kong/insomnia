@@ -147,6 +147,7 @@ interface OpenWebSocketRequestOptions {
   cookieJar: CookieJar;
   initialPayload?: string;
   isGraphqlSubscriptionRequest?: boolean;
+  suppressUserAgent?: boolean;
 }
 const openWebSocketConnection = async (
   _event: Electron.IpcMainInvokeEvent,
@@ -234,7 +235,7 @@ const openWebSocketConnection = async (
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
-    if (!request.disableUserAgentHeader && !hasUserAgentHeader) {
+    if (!options.suppressUserAgent && !request.disableUserAgentHeader && !hasUserAgentHeader) {
       lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
     }
     const settings = await services.settings.get();

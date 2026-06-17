@@ -35,14 +35,14 @@ import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeader
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { ResponsePatch } from '../main/network/libcurl-promise';
+import { maskOrDecryptVaultDataIfNecessary } from '../templating/mask-or-decrypt-vault-data';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
-import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { filterClientCertificates } from './certificate';
-import type { TransformedExecuteScriptContext } from './concurrency';
+import type { TransformedExecuteScriptContext } from './concurrency.renderer';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
@@ -424,7 +424,7 @@ export async function savePatchesMadeByScript(patches: {
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === EnvironmentType.KVPAIR && {
-        kvPairData: getKVPairFromData(data, dataPropertyOrder),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null),
       }),
     });
   };
@@ -453,7 +453,7 @@ export async function savePatchesMadeByScript(patches: {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
-          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder),
+          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder ?? null),
         }),
       });
     }

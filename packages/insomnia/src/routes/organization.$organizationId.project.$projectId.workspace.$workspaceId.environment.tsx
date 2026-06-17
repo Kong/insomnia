@@ -536,7 +536,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                   onChange={debouncedHandleChange}
                   environmentInfo={{
                     object: selectedEnvironment.data,
-                    propertyOrder: selectedEnvironment.dataPropertyOrder,
+                    propertyOrder: selectedEnvironment.dataPropertyOrder ?? null,
                   }}
                 />
               )}

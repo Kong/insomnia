@@ -34,6 +34,14 @@ describe('extractRegionFromEndpoint', () => {
     expect(extractRegionFromEndpoint('https://def456.in.cp0.konghq.com')).toBe('in');
   });
 
+  it('extracts "eu" from a EU control plane endpoint with bare "cp" subdomain', () => {
+    expect(extractRegionFromEndpoint('https://xyz789.eu.cp.konghq.com')).toBe('eu');
+  });
+
+  it('extracts "us" from a US control plane endpoint with bare "cp" subdomain', () => {
+    expect(extractRegionFromEndpoint('https://abc123.us.cp.konghq.com')).toBe('us');
+  });
+
   it('defaults to "us" for a malformed URL', () => {
     expect(extractRegionFromEndpoint('not-a-url')).toBe('us');
   });

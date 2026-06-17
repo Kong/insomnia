@@ -54,8 +54,7 @@ export const showToast = (content: RAToastContent, options?: { timeout?: number 
   }
 
   // Pass timeout: null to keep the toast persistent (no auto-dismiss).
-  const toastOptions: { timeout?: number } =
-    options?.timeout === null ? {} : { timeout: options?.timeout ?? 3000 };
+  const toastOptions: { timeout?: number } = options?.timeout === null ? {} : { timeout: options?.timeout ?? 3000 };
 
   const key = queue.add(content, toastOptions);
   // Return the key for further reference if needed.

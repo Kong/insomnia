@@ -27,7 +27,11 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
   const rulesetContent = projectLintRuleset?.rulesetContent ?? '';
 
-  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, projectId, rulesetContent });
+  const { diagnostics, error } = await window.main.lintSpec({
+    documentContent: apiSpec.contents,
+    projectId,
+    rulesetContent,
+  });
   if (error) {
     throw error;
   }

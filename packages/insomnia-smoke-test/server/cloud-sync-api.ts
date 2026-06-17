@@ -117,7 +117,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My Collection R1',
         },
         {
-          blob: 'c50bc39ab29bb892df65bdbc97f23af84b9d1067',
+          blob: '1b7fe31ec583c8a42fedc0e86a103b94076e77c4',
           key: 'env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c',
           name: 'Base Environment',
         },
@@ -141,7 +141,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My Collection R1',
         },
         {
-          blob: 'c50bc39ab29bb892df65bdbc97f23af84b9d1067',
+          blob: '1b7fe31ec583c8a42fedc0e86a103b94076e77c4',
           key: 'env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c',
           name: 'Base Environment',
         },
@@ -168,7 +168,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My Environment',
         },
         {
-          blob: 'bf6064229bdaeec3bf597329c640ca2a11fd4d72',
+          blob: '7024cbb27bb92821c17c0b27de612a0b1a8c082c',
           key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
           name: 'Base Environment',
         },
@@ -190,7 +190,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My MCP Client',
         },
         {
-          blob: 'ee4579d33d3e25e3244ead2dca8c7b6e2e4f8dcf',
+          blob: 'fed20333ca44d6d4aae729f210ce371ed31392a3',
           key: 'env_0c042933878b85facb6c4e673b0166b256f37ad0',
           name: 'Base Environment',
         },
@@ -214,7 +214,7 @@ const projectSnapshots: Record<string, any[]> = {
           name: 'My MCP Client',
         },
         {
-          blob: 'ee4579d33d3e25e3244ead2dca8c7b6e2e4f8dcf',
+          blob: 'fed20333ca44d6d4aae729f210ce371ed31392a3',
           key: 'env_0c042933878b85facb6c4e673b0166b256f37ad0',
           name: 'Base Environment',
         },
@@ -263,7 +263,7 @@ const environmentProjectNewCommitSnapshot = [
         name: 'My Environment',
       },
       {
-        blob: 'bf6064229bdaeec3bf597329c640ca2a11fd4d72',
+        blob: '7024cbb27bb92821c17c0b27de612a0b1a8c082c',
         key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
         name: 'Base Environment',
       },
@@ -282,7 +282,7 @@ const environmentProjectNewCommitSnapshot = [
         name: 'My Environment',
       },
       {
-        blob: '966ed58bb00e1031ddd69afc171c34cbfde2b307',
+        blob: '8928646f281ac14f6410aa29fa60b7060f6529d0',
         key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
         name: 'Base Environment',
       },
@@ -295,8 +295,8 @@ const rawBlobs: Record<string, string> = {
   // request collection blobs
   'be076c5943e0d32b05efbbf215b4f9d2bb894a9c':
     '{"_id":"wrk_a7132f924ba7451594ba64ec411c9e13","created":1769407477819,"description":"","name":"My Collection R1","parentId":null,"scope":"collection","type":"Workspace"}',
-  'c50bc39ab29bb892df65bdbc97f23af84b9d1067':
-    '{"_id":"env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c","color":null,"created":1769407477820,"data":{},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"metaSortKey":1769407477820,"name":"Base Environment","parentId":"wrk_a7132f924ba7451594ba64ec411c9e13","type":"Environment"}',
+  '1b7fe31ec583c8a42fedc0e86a103b94076e77c4':
+    '{"_id":"env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c","color":null,"created":1769407477820,"data":{},"environmentType":"kv","isPrivate":false,"metaSortKey":1769407477820,"name":"Base Environment","parentId":"wrk_a7132f924ba7451594ba64ec411c9e13","type":"Environment"}',
   'd78e5942f5508063ea484bb4b497f0ed446309c9':
     '{"_id":"req_d11697e0652742e691374e380cdcd2b2","authentication":{},"body":{},"created":1769407553323,"description":"","headers":[{"name":"Content-Type","value":"application/json"},{"description":"","disabled":false,"name":"User-Agent","value":"insomnia/12.3.0"}],"isPrivate":false,"metaSortKey":-1769407553323,"method":"GET","name":"New Request","parameters":[],"parentId":"wrk_a7132f924ba7451594ba64ec411c9e13","pathParameters":[],"settingDisableRenderRequestBody":false,"settingEncodeUrl":true,"settingFollowRedirects":"global","settingRebuildPath":true,"settingSendCookies":true,"settingStoreCookies":true,"type":"Request","url":""}',
   '1f8a8cd1da88d9abb4bfc1d6e662716d41705ace':
@@ -304,15 +304,15 @@ const rawBlobs: Record<string, string> = {
   // environment blobs
   '2588c9eeaf8c4129c5b33bbb9f77de04e8598c5e':
     '{"_id":"wrk_2068a8dfd6914c369073686bb92737ae","created":1769408109261,"description":"","name":"My Environment","parentId":null,"scope":"environment","type":"Workspace"}',
-  'bf6064229bdaeec3bf597329c640ca2a11fd4d72':
-    '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
-  '966ed58bb00e1031ddd69afc171c34cbfde2b307':
-    '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{"foo":"bar"},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"kvPairData":[{"enabled":true,"id":"envPair_6691b0028e104e499f8c4acf0a1a9e6a","name":"foo","type":"str","value":"bar"}],"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
+  '7024cbb27bb92821c17c0b27de612a0b1a8c082c':
+    '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{},"environmentType":"kv","isPrivate":false,"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
+  '8928646f281ac14f6410aa29fa60b7060f6529d0':
+    '{"_id":"env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be","color":null,"created":1769408109277,"data":{"foo":"bar"},"environmentType":"kv","isPrivate":false,"kvPairData":[{"enabled":true,"id":"envPair_6691b0028e104e499f8c4acf0a1a9e6a","name":"foo","type":"str","value":"bar"}],"metaSortKey":1769408109277,"name":"Base Environment","parentId":"wrk_2068a8dfd6914c369073686bb92737ae","type":"Environment"}',
   // mcp blobs
   'a8252b458e8a1b5f3c214e5e7f944887a142ae72':
     '{"_id":"wrk_efab8e758b97459bab2659d8fdcf8627","created":1769408435321,"description":"","name":"My MCP Client","parentId":null,"scope":"mcp","type":"Workspace"}',
-  'ee4579d33d3e25e3244ead2dca8c7b6e2e4f8dcf':
-    '{"_id":"env_0c042933878b85facb6c4e673b0166b256f37ad0","color":null,"created":1769408435351,"data":{},"dataPropertyOrder":null,"environmentType":"kv","isPrivate":false,"metaSortKey":1769408435351,"name":"Base Environment","parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","type":"Environment"}',
+  'fed20333ca44d6d4aae729f210ce371ed31392a3':
+    '{"_id":"env_0c042933878b85facb6c4e673b0166b256f37ad0","color":null,"created":1769408435351,"data":{},"environmentType":"kv","isPrivate":false,"metaSortKey":1769408435351,"name":"Base Environment","parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","type":"Environment"}',
   '2f6a337993dcbcc164187f74e4278ca22c0ea065':
     '{"_id":"mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0","authentication":{},"connected":false,"created":1769408435331,"description":"","env":[],"headers":[{"name":"User-Agent","value":"insomnia/12.3.0"}],"mcpStdioAccess":false,"parentId":"wrk_efab8e758b97459bab2659d8fdcf8627","roots":[],"sslValidation":true,"subscribeResources":[],"transportType":"streamable-http","type":"McpRequest","url":""}',
   '379b74a13b742b573c16dda3ed38abde8cfdb0c3':

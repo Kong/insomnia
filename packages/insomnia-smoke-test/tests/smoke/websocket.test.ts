@@ -51,10 +51,18 @@ test('can make websocket connection', async ({ app, page, insomnia }) => {
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('WebSocket connection established');
 
+  // Can connect with path parameters substituted in the URL
+  await insomnia.navigationSidebar.clickRequestOrFolder('path-param');
+  await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010/chat/:id');
+  await page.click('text=Connect');
+  await expect.soft(statusTag).toContainText('101 Switching Protocols');
+  await page.getByRole('tab', { name: 'Console' }).click();
+  await expect.soft(responseBody).toContainText('WebSocket connection established');
+
   const webSocketActiveConnections = page.getByTestId('WebSocketSpinner__Connected');
 
-  // Basic auth, Bearer auth, and Redirect connections are displayed as open
-  await expect.soft(webSocketActiveConnections).toHaveCount(3);
+  // Basic auth, Bearer auth, Redirect, and path-param connections are displayed as open
+  await expect.soft(webSocketActiveConnections).toHaveCount(4);
 
   // Can disconnect from all connections
   await page.locator('button[name="DisconnectDropdown__DropdownButton"]').click();

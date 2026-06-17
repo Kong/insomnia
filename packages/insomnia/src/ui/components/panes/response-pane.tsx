@@ -9,7 +9,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
 
 import { getSetCookieHeaders } from '../../../common/misc';
-import { cancelRequestById } from '../../../network/cancellation';
+import { cancelRequestById } from '../../../network/cancellation.renderer';
 import {
   type RequestLoaderData,
   useRequestLoaderData,

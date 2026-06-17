@@ -11,8 +11,8 @@ import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { oas } from '@stoplight/spectral-rulesets';
 import { fetch as spectralFetch } from '@stoplight/spectral-runtime';
 import { DiagnosticSeverity } from '@stoplight/types';
-import { bundleSpectralRuleset, compileSpectralRulesetFromContent } from 'insomnia/src/common/bundle-spectral-ruleset';
-import { isPrivateOrLoopbackHost } from 'insomnia/src/common/private-host';
+import { bundleSpectralRuleset, compileSpectralRulesetFromContent } from 'insomnia/src/main/bundle-spectral-ruleset';
+import { isPrivateOrLoopbackHost } from 'insomnia/src/main/private-host';
 
 import { InsoError } from '../errors';
 import { logger } from '../logger';

@@ -6,7 +6,6 @@ import { useNavigate, useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
-import { getProjectRecentRequests, type RecentProjectRequest } from '~/common/project';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
@@ -17,6 +16,7 @@ import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
 import { Tooltip } from '~/ui/components/tooltip';
 import { getBadgeClassName, ResourceIcon } from '~/ui/components/workspace/resource-icon';
+import { getProjectRecentRequests, type RecentProjectRequest } from '~/ui/utils/recent-project-requests';
 import { setDefaultProtocol } from '~/utils/url/protocol';
 
 import { Icon } from './icon';

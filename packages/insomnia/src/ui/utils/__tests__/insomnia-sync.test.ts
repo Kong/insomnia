@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { UserAbortResolveMergeConflictError } from '../errors';
+import { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 
-vi.mock('../../../ui/components/modals', () => ({
+vi.mock('~/ui/components/modals', () => ({
   showModal: vi.fn(),
 }));
 
-vi.mock('../../../ui/components/modals/sync-merge-modal', () => ({
+vi.mock('~/ui/components/modals/sync-merge-modal', () => ({
   SyncMergeModal: Symbol('SyncMergeModal'),
 }));
 

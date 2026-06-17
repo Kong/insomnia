@@ -29,22 +29,22 @@ const generalRestrictedImportPatterns = [
     message: "Only 'insomnia-data', 'insomnia-data/node' and 'insomnia-data/common' are allowed",
   },
 ];
-const rendererNodeMigrationOffenders = [
-  'packages/insomnia/src/common/misc.ts',
-  'packages/insomnia/src/common/significant-diff-detection.ts',
-  'packages/insomnia/src/routes/import.scan.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.new.tsx',
-  'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.update.tsx',
-];
-const rendererNodeRestrictionIgnores = [
-  ...rendererNodeMigrationOffenders,
-  'packages/insomnia/src/common/__tests__/**/*.{ts,tsx}',
-  'packages/insomnia/src/common/send-request.ts',
-  'packages/insomnia/src/common/bundle-spectral-ruleset.ts',
-  'packages/insomnia/src/common/private-host.ts',
+// Renderer-context code (ui/, routes/, common/, *.renderer) must not import
+// Node built-ins. Tests run under jsdom/node and are exempt. No production
+// files need an exemption: node-only modules live outside common/ (main/,
+// network/) and genuinely isomorphic code uses userland or __IS_RENDERER__ forks.
+const rendererNodeRestrictionIgnores = ['packages/insomnia/src/common/__tests__/**/*.{ts,tsx}'];
+// Browser globals that must not appear in Node-context code (main process,
+// UtilityProcess, node adapters) or in context-agnostic worker/isomorphic code.
+const domRestrictedGlobals = [
+  {
+    name: 'window',
+    message: '"window" is not available in this execution context.',
+  },
+  {
+    name: 'document',
+    message: '"document" is not available in this execution context.',
+  },
 ];
 
 export default defineConfig([
@@ -175,14 +175,26 @@ export default defineConfig([
       ],
     },
   },
-  // nodeIntegration: false section
+  // ── Execution-context boundaries ────────────────────────────────────────
+  // Context is enforced by file location AND by filename suffix, so a module's
+  // runtime is legible from its path alone:
+  //   *.renderer.{ts,tsx} → browser context (no Node built-ins)
+  //   *.node.ts           → Node context    (no DOM globals)
+  //   *.worker.ts         → web worker       (neither)
+  // The folder rules (ui/, routes/, main/) carry the coarse process boundary;
+  // the suffixes carry context for code that lives in a context-neutral place
+  // (e.g. runtimes/ adapters). Note: `.client.ts`/`.server.ts` are React
+  // Router's SSR-bundling suffixes, NOT context markers — with `ssr: false`
+  // both run in the renderer, so they are intentionally absent here.
+
+  // Browser/renderer context: DOM is available, Node built-ins are a bug.
   {
     files: [
       'packages/insomnia/src/ui/**/*.{ts,tsx}',
+      'packages/insomnia/src/basic-components/**/*.{ts,tsx}',
       'packages/insomnia/src/routes/**/*.{ts,tsx}',
-      'packages/insomnia/src/common/**/*.{ts,tsx}',
+      'packages/insomnia/src/**/*.renderer.{ts,tsx}',
     ],
-    ignores: rendererNodeRestrictionIgnores,
     rules: {
       'no-restricted-imports': [
         'error',
@@ -191,6 +203,39 @@ export default defineConfig([
           patterns: generalRestrictedImportPatterns,
         },
       ],
+    },
+  },
+  // Web worker context: neither DOM globals nor Node built-ins.
+  // (suffix-based opt-in; the templating worker is named `.worker.ts`. Any other
+  // workers still using folder/`-worker.ts` naming need renaming to opt in.)
+  {
+    files: ['packages/insomnia/src/**/*.worker.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: rendererBuiltinSpecifiers,
+          patterns: generalRestrictedImportPatterns,
+        },
+      ],
+      'no-restricted-globals': ['error', ...domRestrictedGlobals],
+    },
+  },
+  // `common/` is the de-facto isomorphic bucket: imported by the renderer, the
+  // main process, and the inso CLI, so it must not reach for DOM globals.
+  // whose only remaining exemption is the `__tests__` glob.)
+  {
+    files: ['packages/insomnia/src/common/**/*.{ts,tsx}'],
+    ignores: ['packages/insomnia/src/common/__tests__/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: rendererBuiltinSpecifiers,
+          patterns: generalRestrictedImportPatterns,
+        },
+      ],
+      'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },
   },
   {
@@ -257,22 +302,11 @@ export default defineConfig([
       'packages/insomnia/src/*.js',
     ],
   },
-  // Main process ESLint rules
+  // Node context: main process, UtilityProcess, and node adapters — no DOM globals.
   {
-    files: ['packages/insomnia/src/main/**/*.{ts,tsx,js,mjs}'],
+    files: ['packages/insomnia/src/main/**/*.{ts,tsx,js,mjs}', 'packages/insomnia/src/**/*.node.ts'],
     rules: {
-      'no-restricted-globals': [
-        'error',
-        // block usage of browser globals in main process code
-        {
-          name: 'window',
-          message: '"window" is not available in main process.',
-        },
-        {
-          name: 'document',
-          message: '"document" is not available in main process.',
-        },
-      ],
+      'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },
   },
   // Test files ESLint rules

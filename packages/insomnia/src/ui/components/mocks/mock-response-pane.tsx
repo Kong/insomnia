@@ -13,7 +13,7 @@ import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
 
 import { getMockServiceURL } from '../../../common/constants';
-import { cancelRequestById } from '../../../network/cancellation';
+import { cancelRequestById } from '../../../network/cancellation.renderer';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';

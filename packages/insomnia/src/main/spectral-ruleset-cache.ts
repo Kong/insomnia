@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { app } from 'electron';
 
-import { compileSpectralRulesetFromContent } from '~/common/bundle-spectral-ruleset';
+import { compileSpectralRulesetFromContent } from '~/main/bundle-spectral-ruleset';
 
 // In-memory cache of the last written ruleset content hash for each project ID.
 // We need this to avoid expensive recompilation and disk writes when a user relints their spec and the ruleset content hasn't changed since the last compilation.
