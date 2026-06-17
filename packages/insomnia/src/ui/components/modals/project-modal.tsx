@@ -1,6 +1,6 @@
 import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project } from 'insomnia-data';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useNavigation } from 'react-router';
 
@@ -28,6 +28,7 @@ export const ProjectModal = ({
   // Close the modal when a navigation happens
   const activeNavigation = useNavigation();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (activeNavigation && activeNavigation.state !== 'idle' && activeNavigation.location && isOpen) {
@@ -47,15 +48,15 @@ export const ProjectModal = ({
   const { credentials, providers } = useGitCredentials();
 
   return (
-    <UnsavedChangesGuard hasUnsavedChanges={hasUnsavedChanges} onClose={() => onOpenChange(false)}>
+    <UnsavedChangesGuard hasUnsavedChanges={hasUnsavedChanges} onClose={() => onOpenChange(false)} parentRef={modalRef}>
       {({ requestClose }) => (
         <ModalOverlay
           isOpen={isOpen}
           onOpenChange={onOpenChange}
           isDismissable={false}
-          className="fixed top-0 right-0 bottom-0 left-0 z-10 flex items-start justify-center bg-black/30 pt-[70px]"
+          className="fixed top-0 right-0 bottom-0 left-0 z-10 flex items-start justify-center bg-black/30 pt-[200px]"
         >
-          <Modal className="flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
+          <Modal ref={modalRef} className="flex max-h-[calc(var(--visual-viewport-height)-140px)] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font)">
             <Dialog
               aria-label="Create or update dialog"
               className="grid flex-1 grid-rows-[min-content_1fr_min-content] gap-4 overflow-hidden p-10 outline-hidden"
