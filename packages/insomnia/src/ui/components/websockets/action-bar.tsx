@@ -10,7 +10,6 @@ import {
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';

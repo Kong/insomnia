@@ -19,7 +19,6 @@ import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
