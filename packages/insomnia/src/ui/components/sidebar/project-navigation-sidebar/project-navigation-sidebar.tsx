@@ -246,7 +246,7 @@ const ProjectNavigationSidebarInner = (
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
-  const activeFilter = isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter || '';
+  const activeFilter = (isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '';
   // ref to cache queried workspaces by project id
   const cachedWorkspacesRef = useRef<Map<string, Workspace[]>>(new Map());
   // ref to cache queried collection children (request & requestGroups) data and meta by workspace id
