@@ -1,0 +1,32 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Sandbox Plugin Collection
+meta:
+  id: wrk_sandboxplugin0000000000000000000
+  created: 1748314417144
+  modified: 1748314417144
+collection:
+  - url: http://127.0.0.1:4010/echo
+    name: Sandbox Crypto
+    meta:
+      id: req_sandboxcrypto00000000000000000000
+      created: 1748327288726
+      modified: 1748329418160
+      isPrivate: false
+      sortKey: -1748327288726
+    method: GET
+    body:
+      mimeType: text/plain
+      text: |
+        {% sandboxcrypto %}
+    headers:
+      - name: Content-Type
+        value: text/plain
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true

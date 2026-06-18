@@ -270,6 +270,7 @@ export const ScriptingSettings = () => {
             </p>
           </div>
           <Switch
+            data-testid="template-tag-sandbox-toggle"
             isSelected={templateTagSandboxEnabled}
             onChange={enabled => patchSettings({ templateTagSandboxEnabled: enabled })}
             className="group flex items-center gap-2"
