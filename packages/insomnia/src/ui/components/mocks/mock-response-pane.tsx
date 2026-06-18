@@ -6,15 +6,15 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
-import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
+import { jsonPrettify } from '~/ui/utils/prettify/json';
 
 import { getMockServiceURL } from '../../../common/constants';
 import { cancelRequestById } from '../../../network/cancellation.renderer';
-import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Pane, PaneHeader } from '../panes/pane';

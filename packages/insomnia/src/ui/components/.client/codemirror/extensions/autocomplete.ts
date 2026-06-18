@@ -4,8 +4,8 @@ import CodeMirror, { type EnvironmentAutocompleteOptions, type Hint, type ShowHi
 import { getPlatformKeyCombinations } from 'insomnia-data/common';
 
 import { escapeRegex, fnOrString, isNotNullOrUndefined } from '~/common/misc';
-import type { NunjucksParsedTag } from '~/templating/types';
-import { getDefaultFill } from '~/templating/utils';
+import type { NunjucksParsedTag } from '~/common/templating/types';
+import { getDefaultFill } from '~/common/templating/utils';
 
 import { isNunjucksMode } from '../modes/nunjucks';
 

@@ -6,11 +6,12 @@ import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from
 import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { logout } from '~/account/session';
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { checkAllProjectSyncStatus, getAllLocalFiles, getProjectsWithGitRepositories } from '~/common/project';
+import { invariant } from '~/common/utils/invariant';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { logout } from '~/ui/account/session';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import {
@@ -25,7 +26,6 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { getAllRemoteFiles } from '~/ui/utils/remote-projects';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 

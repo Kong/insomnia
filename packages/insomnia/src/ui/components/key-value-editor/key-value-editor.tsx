@@ -13,8 +13,8 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
-import { utf8ByteLength } from '~/utils/utf8-bytes';
 
 import { describeByteSize, generateId } from '../../../common/misc';
 import { FileInputButton } from '../base/file-input-button';

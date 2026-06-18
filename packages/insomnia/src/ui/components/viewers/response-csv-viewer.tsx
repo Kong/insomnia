@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { utf8StringFromBytes } from '~/utils/utf8-bytes';
+import { utf8StringFromBytes } from '~/common/utils/utf8-bytes';
 
 interface Props {
   body: Uint8Array;

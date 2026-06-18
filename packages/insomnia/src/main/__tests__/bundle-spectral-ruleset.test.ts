@@ -472,22 +472,22 @@ rules:
       rulesetResponse(`functions:\n  - exec\nrules:\n  env-check:\n    given: "$"\n    then:\n      function: exec\n`),
     );
 
-    await expect(
-      compileSpectralRulesetFromContent(`extends:\n  - "https://example.com/exec.yaml"\n`),
-    ).rejects.toThrow('failed validation');
+    await expect(compileSpectralRulesetFromContent(`extends:\n  - "https://example.com/exec.yaml"\n`)).rejects.toThrow(
+      'failed validation',
+    );
   });
 
   it('rejects a non-https remote extends without fetching', async () => {
-    await expect(
-      compileSpectralRulesetFromContent(`extends:\n  - "http://example.com/remote.yaml"\n`),
-    ).rejects.toThrow('must use https');
+    await expect(compileSpectralRulesetFromContent(`extends:\n  - "http://example.com/remote.yaml"\n`)).rejects.toThrow(
+      'must use https',
+    );
     expect(fetch).not.toHaveBeenCalled();
   });
 
   it('rejects a remote extends pointing at a loopback host without fetching', async () => {
-    await expect(
-      compileSpectralRulesetFromContent(`extends:\n  - "https://127.0.0.1/remote.yaml"\n`),
-    ).rejects.toThrow('disallowed host');
+    await expect(compileSpectralRulesetFromContent(`extends:\n  - "https://127.0.0.1/remote.yaml"\n`)).rejects.toThrow(
+      'disallowed host',
+    );
     expect(fetch).not.toHaveBeenCalled();
   });
 

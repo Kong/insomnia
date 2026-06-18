@@ -10,12 +10,13 @@ import { HydratedRouter } from 'react-router/dom';
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import { initRuntime } from '~/runtimes';
 import { rendererRuntime } from '~/runtimes/runtime.renderer';
+import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '~/ui/account/session';
 import { database as clientDatabase } from '~/ui/database.client';
+import { applyColorScheme } from '~/ui/plugins/misc';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
+import { getInitialEntry } from '~/ui/utils/router';
 
-import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { applyColorScheme } from './plugins/misc';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
@@ -23,7 +24,6 @@ import { PromptModal } from './ui/components/modals/prompt-modal';
 import { WrapperModal } from './ui/components/modals/wrapper-modal';
 import { initializeSentry } from './ui/sentry';
 import { registerSyncMergeConflictListener } from './ui/utils/insomnia-sync';
-import { getInitialEntry } from './utils/router';
 
 initializeSentry();
 

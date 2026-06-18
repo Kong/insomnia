@@ -3,7 +3,7 @@ import { createVault, resetVault, verifyVaultA, verifyVaultM1 } from 'insomnia-a
 import type { UserSession } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
-import { base64encode, saveVaultKeyIfNecessary } from '../utils/vault';
+import { base64encode, saveVaultKeyIfNecessary } from '~/common/utils/vault';
 
 const { Buffer, Client, generateAES256Key, getRandomHex, params, srpGenKey } = srp;
 

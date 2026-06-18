@@ -8,8 +8,8 @@ import { scopeToLabelMap } from '~/common/get-workspace-label';
 import { isNotNullOrUndefined } from '~/common/misc';
 import type { InsomniaFile } from '~/common/project';
 import { descendingNumberSort } from '~/common/sorting';
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.list-workspaces';
 

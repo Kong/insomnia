@@ -5,8 +5,8 @@ import { extension as mimeExtension } from 'mime-types';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import { utf8StringFromBytes } from '~/common/utils/utf8-bytes';
 import type { Part } from '~/main/multipart-buffer-to-array';
-import { utf8StringFromBytes } from '~/utils/utf8-bytes';
 
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals/index';

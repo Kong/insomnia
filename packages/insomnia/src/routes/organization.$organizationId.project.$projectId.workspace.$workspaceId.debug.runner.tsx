@@ -29,6 +29,7 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
 import type { TimingStep } from '~/main/network/request-timing';
 import { cancelRequestById } from '~/network/cancellation.renderer';
 import { defaultSendActionRuntime } from '~/network/network';
@@ -56,8 +57,7 @@ import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
 import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
-import { moveAfter, moveBefore } from '~/utils';
-import { invariant } from '~/utils/invariant';
+import { moveAfter, moveBefore } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 

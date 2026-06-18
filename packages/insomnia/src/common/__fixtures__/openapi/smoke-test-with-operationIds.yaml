@@ -23,7 +23,7 @@ paths:
       tags:
         - Misc
       responses:
-        "200":
+        '200':
           description: A JSON object containing the id
           content:
             application/json:
@@ -39,12 +39,12 @@ paths:
       tags:
         - File
       responses:
-        "200":
+        '200':
           description: loaded dummy csv file
           content:
             application/csv:
               schema:
-                $ref: "#/components/schemas/File"
+                $ref: '#/components/schemas/File'
   /file/dummy.pdf:
     get:
       operationId: dummyPdfFile
@@ -52,12 +52,12 @@ paths:
       tags:
         - File
       responses:
-        "200":
+        '200':
           description: loaded dummy CSV file
           content:
             application/pdf:
               schema:
-                $ref: "#/components/schemas/File"
+                $ref: '#/components/schemas/File'
   /auth/basic:
     get:
       operationId: basicAuth
@@ -67,12 +67,12 @@ paths:
       tags:
         - Auth
       responses:
-        "200":
+        '200':
           description: successfully authed
           content:
             text/plain:
               schema:
-                $ref: "#/components/schemas/String"
+                $ref: '#/components/schemas/String'
   /delay/seconds/{duration}:
     get:
       operationId: delayByDuration
@@ -86,12 +86,12 @@ paths:
       tags:
         - Misc
       responses:
-        "200":
+        '200':
           description: delayed
           content:
             text/plain:
               schema:
-                $ref: "#/components/schemas/String"
+                $ref: '#/components/schemas/String'
 components:
   schemas:
     File:
@@ -103,4 +103,3 @@ components:
     basicAuth:
       type: http
       scheme: basic
-    

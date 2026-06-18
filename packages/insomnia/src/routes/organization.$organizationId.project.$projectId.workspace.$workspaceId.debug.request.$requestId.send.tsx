@@ -15,6 +15,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
 import { getContentDispositionHeader } from '~/common/misc';
+import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
+import { invariant } from '~/common/utils/invariant';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
 import {
@@ -29,9 +31,7 @@ import {
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
 import { AnalyticsEvent, type ImportAttribution, importAttributionKey } from '~/ui/analytics';
-import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 

@@ -7,10 +7,10 @@ import { promisify } from 'node:util';
 import { app } from 'electron';
 import { services } from 'insomnia-data';
 
+import { validatePluginName } from '~/common/utils/plugin-name';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';
-import { validatePluginName } from '../utils/plugin-name';
 
 // Promisified version of execFile to use async/await
 export const execFilePromise = promisify(execFile);

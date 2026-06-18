@@ -3,7 +3,7 @@ import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from 'insomnia
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 
-import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 
 import {
   type RequestLoaderData,

@@ -2,9 +2,9 @@ import type { Request } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { useEffect, useMemo, useRef } from 'react';
 
+import { invariant } from '~/common/utils/invariant';
 import type { RequestRow } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
-import { invariant } from '~/utils/invariant';
 
 import {
   type Child,

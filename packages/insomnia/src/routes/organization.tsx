@@ -29,7 +29,7 @@ import { SidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
-import type { AsyncTask } from '~/utils/router';
+import type { AsyncTask } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization';
 

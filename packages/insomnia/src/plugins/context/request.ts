@@ -1,7 +1,8 @@
 import type { RequestBody } from 'insomnia-data';
 
+import type { RenderedRequest } from '~/common/templating/types';
+
 import * as misc from '../../common/misc';
-import type { RenderedRequest } from '../../templating/types';
 export function filterParameters<T extends { name: string; value: string }>(parameters: T[], name: string): T[] {
   if (!Array.isArray(parameters) || !name) {
     return [];

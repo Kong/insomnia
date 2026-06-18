@@ -2,7 +2,7 @@ import type { Organization } from 'insomnia-api';
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 export async function clientLoader() {
   const { accountId } = await services.userSession.get();

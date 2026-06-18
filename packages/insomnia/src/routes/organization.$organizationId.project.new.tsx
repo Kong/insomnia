@@ -4,10 +4,10 @@ import { href, redirect } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
 import { projectLock } from '~/common/project';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.new';
 
@@ -142,6 +142,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     properties: {
       storage: newProjectData.storageType,
       git_provider,
+      project_id: newProjectId,
     },
   });
 

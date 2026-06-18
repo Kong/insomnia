@@ -1,8 +1,9 @@
 import { session } from 'electron/main';
 import { models, services } from 'insomnia-data';
 
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+
 import { type ChangeBufferEvent, database as db } from '../common/database';
-import { setDefaultProtocol } from '../utils/url/protocol';
 
 // Update the proxy settings before making the request.
 async function updateProxy() {

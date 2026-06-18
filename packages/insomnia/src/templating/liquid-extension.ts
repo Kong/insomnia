@@ -9,14 +9,14 @@ import type { Context, Emitter, Liquid, TagToken, TopLevelToken } from 'liquidjs
 import { Tag } from 'liquidjs';
 
 import { jarFromCookies } from '~/common/cookies';
+import type { Plugin } from '~/common/plugins/types';
+import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from '~/common/templating/types';
+import { decodeEncoding, tokenizeArgs } from '~/common/templating/utils';
 
 import { database as db } from '../common/database';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
-import type { Plugin } from '../plugins/types';
-import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
-import { decodeEncoding, tokenizeArgs } from './utils';
 
 function resolveArg(arg: ReturnType<typeof tokenizeArgs>[number], scope: Record<string, any>): any {
   if (arg.type === 'variable') {

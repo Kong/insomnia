@@ -5,8 +5,8 @@ import React, { useCallback } from 'react';
 import { Button, GridListItem } from 'react-aria-components';
 
 import type { WorkspaceFileIssue } from '~/main/git-service';
+import { scrollElementIntoView } from '~/ui/utils';
 
-import { scrollElementIntoView } from '../../../utils';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';

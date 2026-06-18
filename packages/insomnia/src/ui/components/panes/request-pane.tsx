@@ -7,6 +7,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { extractQueryStringFromUrl } from '~/common/utils/url/querystring';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getAuthObjectOrNull } from '../../../network/authentication';
@@ -16,7 +17,6 @@ import {
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../../ui/analytics';
-import { extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -208,7 +208,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                         handleImportQueryFromUrl();
                         window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsImportFromURLClicked });
                       }}
-                      className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
+                      className="flex h-full min-w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
                     >
                       Import from URL
                     </Button>
@@ -220,7 +220,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                         window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsBulkEditToggled });
                       }}
                       isSelected={settings.useBulkParametersEditor}
-                      className="flex h-full w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                      className="flex h-full min-w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     >
                       {({ isSelected }) => (
                         <Fragment>

@@ -1,8 +1,8 @@
 import type { Cookie, RequestHeader } from 'insomnia-data';
 
-import { plugins as pluginsBridge } from '~/plugins/renderer-bridge';
-import { serializeRenderContext } from '~/templating/render-context-serialization';
-import type { RenderedRequest } from '~/templating/types';
+import { serializeRenderContext } from '~/common/templating/render-context-serialization';
+import type { RenderedRequest } from '~/common/templating/types';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
 import type { CurlRequestOptions, ResponsePatch } from '../../main/network/libcurl-promise';

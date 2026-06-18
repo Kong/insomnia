@@ -12,12 +12,13 @@ import type {
   SaveDialogOptions,
 } from 'electron';
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
-import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
+import { localTemplateTags } from 'insomnia/src/common/templating/local-template-tags';
+
+import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '~/common/templating/types';
+import type { extractNunjucksTagFromCoords } from '~/common/templating/utils';
+import { invariant } from '~/common/utils/invariant';
 
 import { fnOrString } from '../../common/misc';
-import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
-import type { extractNunjucksTagFromCoords } from '../../templating/utils';
-import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
   | 'run-tests'

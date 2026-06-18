@@ -1,4 +1,4 @@
-import type { AESMessage } from '../../account/crypt';
+import type { AESMessage } from '~/common/account/crypt';
 
 export const decryptAES = (symmetricKey: string | JsonWebKey, encryptedResult: AESMessage): Promise<string> =>
   window.main.crypt.decryptAES(symmetricKey, encryptedResult);

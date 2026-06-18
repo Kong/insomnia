@@ -21,11 +21,9 @@ import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import { plugins } from '~/plugins/renderer-bridge';
+import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
+import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/renderer-safe';
-import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
-import { extractNunjucksTagFromCoords } from '~/templating/utils';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -37,9 +35,11 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
-import { ednPrettify } from '~/utils/prettify/edn';
-import { jsonPrettify } from '~/utils/prettify/json';
-import { queryXPath } from '~/utils/xpath/query';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import { getTagDefinitions } from '~/ui/templating/renderer-safe';
+import { ednPrettify } from '~/ui/utils/prettify/edn';
+import { jsonPrettify } from '~/ui/utils/prettify/json';
+import { queryXPath } from '~/ui/utils/xpath/query';
 
 import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;

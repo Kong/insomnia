@@ -9,14 +9,14 @@ import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
+import { type Plugin, type TemplateTag } from '~/common/plugins/types';
+import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '~/common/templating/types';
 import { getPluginCommonContext, getTemplateTags } from '~/plugins';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
-import { type Plugin, type TemplateTag } from '../plugins/types';
-import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
 import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';

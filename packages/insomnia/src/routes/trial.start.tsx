@@ -2,7 +2,7 @@ import { startTrial } from 'insomnia-api';
 import { services } from 'insomnia-data';
 
 import { syncCurrentPlan } from '~/ui/organization-utils';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/settings.update';
 

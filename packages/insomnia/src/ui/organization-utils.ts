@@ -3,7 +3,7 @@ import type { Project, Workspace } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 
 import { projectLock } from '~/common/project';
-import { invariant } from '~/utils/invariant';
+import { invariant } from '~/common/utils/invariant';
 
 import {
   initializeLocalBackendProjectAndMarkForSync,

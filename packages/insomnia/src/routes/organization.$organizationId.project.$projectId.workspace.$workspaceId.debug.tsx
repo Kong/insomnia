@@ -101,8 +101,8 @@ import {
   useRequestPatcher,
 } from '~/ui/hooks/use-request';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { scrollElementIntoView } from '~/utils';
-import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/utils/grpc';
+import { scrollElementIntoView } from '~/ui/utils';
+import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/ui/utils/grpc';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 

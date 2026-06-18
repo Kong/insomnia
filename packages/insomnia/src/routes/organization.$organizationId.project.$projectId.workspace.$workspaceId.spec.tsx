@@ -36,6 +36,7 @@ import YAML from 'yaml';
 import { parseApiSpec } from '~/common/api-specs';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
+import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { useRootLoaderData } from '~/root';
 import { useDeleteProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete-ruleset';
 import { useRefreshProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.refresh-ruleset';
@@ -68,7 +69,6 @@ import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
-import { utf8ByteLength } from '~/utils/utf8-bytes';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
 

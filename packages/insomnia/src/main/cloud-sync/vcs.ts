@@ -5,12 +5,12 @@ import { app, type WebContents } from 'electron';
 import type { RemoteProject } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
+import { invariant } from '~/common/utils/invariant';
 import type { VCS } from '~/main/cloud-sync/core/vcs';
 import { createVCS } from '~/main/cloud-sync/create-vcs';
 import { pullBackendProject } from '~/main/cloud-sync/pull-backend-project';
 import type { BackendProjectWithTeam, MergeConflict } from '~/sync/types';
 import { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
-import { invariant } from '~/utils/invariant';
 
 interface SyncInvocationContext {
   sender: WebContents;

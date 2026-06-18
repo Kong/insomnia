@@ -21,9 +21,9 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useRequestPayloadPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 

@@ -19,6 +19,7 @@ import { useParams, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import { documentationLinks } from '~/common/documentation';
+import { invariant } from '~/common/utils/invariant';
 import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
 import { useTestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.delete';
 import { useTestRunActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.run';
@@ -31,7 +32,6 @@ import { Icon } from '~/ui/components/icon';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId';
 

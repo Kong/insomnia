@@ -593,7 +593,20 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
   }
 
   if (schema instanceof Object) {
-    const { type, format, example, readOnly, default: defaultValue, allOf, oneOf, anyOf } = schema as OpenAPIV3.SchemaObject & { allOf?: OpenAPIV3.SchemaObject[]; oneOf?: OpenAPIV3.SchemaObject[]; anyOf?: OpenAPIV3.SchemaObject[] };
+    const {
+      type,
+      format,
+      example,
+      readOnly,
+      default: defaultValue,
+      allOf,
+      oneOf,
+      anyOf,
+    } = schema as OpenAPIV3.SchemaObject & {
+      allOf?: OpenAPIV3.SchemaObject[];
+      oneOf?: OpenAPIV3.SchemaObject[];
+      anyOf?: OpenAPIV3.SchemaObject[];
+    };
 
     if (readOnly) {
       return;

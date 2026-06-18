@@ -1,6 +1,8 @@
 import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '~/common/templating/types';
+
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
 import {
   fetchRequestData,
@@ -9,7 +11,6 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
-import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '../../templating/types';
 
 export function init(): {
   network: PluginTemplateTagContext['network'];

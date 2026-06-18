@@ -1,9 +1,9 @@
 import { href } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
+import { invariant } from '~/common/utils/invariant';
 import { getSyncItems } from '~/ui/sync-utils';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';
 

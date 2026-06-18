@@ -1,4 +1,5 @@
-import { invariant } from '../../../utils/invariant';
+import { invariant } from '~/common/utils/invariant';
+
 import type { ModalProps } from '../base/modal';
 import { ErrorModal, type ErrorModalOptions } from './error-modal';
 

@@ -21,6 +21,7 @@ import { models, services } from 'insomnia-data';
 
 import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import {
   callTool,
@@ -69,7 +70,6 @@ import type {
   OpenMcpClientConnectionOptions,
   OpenMcpHTTPClientConnectionOptions,
 } from '~/main/mcp/types';
-import { invariant } from '~/utils/invariant';
 
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 

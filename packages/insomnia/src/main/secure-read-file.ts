@@ -5,7 +5,7 @@ import path from 'node:path';
 import electron from 'electron';
 import { services } from 'insomnia-data';
 
-import { invariant } from '~/utils/invariant';
+import { invariant } from '~/common/utils/invariant';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '../common/misc';
 

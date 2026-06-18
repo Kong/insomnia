@@ -1,4 +1,5 @@
-import { invariant } from '../utils/invariant';
+import { invariant } from '~/common/utils/invariant';
+
 import { requireInterceptor } from './require-interceptor';
 import type { ThreatRule } from './script-security-rules';
 export type { ASTRule, ThreatRule } from './script-security-rules';
@@ -8,13 +9,15 @@ export { blockedPropertyRules, blockedRootRules, maskRules } from './script-secu
 export const interceptorRules: ThreatRule[] = [
   {
     name: 'require',
-    description: 'Replaces the require() function with an interceptor to prevent access to modules outside an explicit allowlist.',
+    description:
+      'Replaces the require() function with an interceptor to prevent access to modules outside an explicit allowlist.',
     maskName: 'require',
     maskValue: requireInterceptor,
   },
   {
     name: 'window',
-    description: 'Replaces the window object with a restricted proxy to prevent access to host APIs beyond the three bridge methods the script executor requires.',
+    description:
+      'Replaces the window object with a restricted proxy to prevent access to host APIs beyond the three bridge methods the script executor requires.',
     maskName: 'window',
     buildMaskValue: _violationCheck => {
       if (typeof window === 'undefined') {
@@ -45,12 +48,12 @@ export const interceptorRules: ThreatRule[] = [
   },
   {
     name: 'eval',
-    description: 'Replaces the eval() function with an interceptor to prevent execution of scripts containing sandbox violations.',
+    description:
+      'Replaces the eval() function with an interceptor to prevent execution of scripts containing sandbox violations.',
     maskName: 'eval',
     buildMaskValue: violationCheck => (script: string) => {
       invariant(script && typeof script === 'string', 'eval is called with invalid or empty value');
       violationCheck(script);
-
 
       return (0, eval)(script);
     },

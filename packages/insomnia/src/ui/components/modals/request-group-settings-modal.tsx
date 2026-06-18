@@ -3,12 +3,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useNavigate, useParams } from 'react-router';
 
+import { invariant } from '~/common/utils/invariant';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
 import { revalidateWorkspaceActiveRequestByFolder } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

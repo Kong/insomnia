@@ -9,11 +9,11 @@ import {
   METHOD_GET,
   METHOD_POST,
 } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
 import type { RequestCreatedMetricsProperties } from '~/ui/analytics';
 import { AnalyticsEvent } from '~/ui/analytics';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 

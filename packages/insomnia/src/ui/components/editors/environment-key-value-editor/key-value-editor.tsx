@@ -15,12 +15,12 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import { checkNestedKeys, ensureKeyIsValid } from '~/common/utils/environment-utils';
+import { base64decode } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
-import { checkNestedKeys, ensureKeyIsValid } from '~/utils/environment-utils';
 
 import { generateId } from '../../../../common/misc';
-import { base64decode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import { showModal } from '../../modals';
@@ -56,7 +56,7 @@ const ItemButton = (props: ButtonProps & { tabIndex?: number }) => {
       // add tab index
       btnRef.current.tabIndex = tabIndex;
     }
-  });
+  }, [tabIndex]);
 
   return <Button {...restProps} ref={btnRef} />;
 };
@@ -80,6 +80,16 @@ export const EnvironmentKVEditor = ({
   const [decryptedValues, setDecryptedValues] = useState<Record<string, string>>({});
   const symmetricKey = vaultKey === '' ? {} : base64decode(vaultKey, true);
 
+  const secretPairsKey = useMemo(
+    () =>
+      JSON.stringify(
+        kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET).map(p => ({ id: p.id, value: p.value })),
+      ),
+    [kvPairs],
+  );
+
+  const symmetricKeyString = useMemo(() => JSON.stringify(symmetricKey), [symmetricKey]);
+
   useEffect(() => {
     const secretPairs = kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET);
     if (secretPairs.length === 0 || Object.keys(symmetricKey).length === 0) {
@@ -88,7 +98,10 @@ export const EnvironmentKVEditor = ({
     }
     let cancelled = false;
     Promise.all(
-      secretPairs.map(async p => ({ id: p.id, value: await getRuntime().crypto.decryptSecretValue(p.value, symmetricKey as JsonWebKey) })),
+      secretPairs.map(async p => ({
+        id: p.id,
+        value: await getRuntime().crypto.decryptSecretValue(p.value, symmetricKey as JsonWebKey),
+      })),
     )
       .then(results => {
         if (!cancelled) {
@@ -99,13 +112,7 @@ export const EnvironmentKVEditor = ({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    JSON.stringify(
-      kvPairs.filter(p => p.type === EnvironmentKvPairDataType.SECRET).map(p => ({ id: p.id, value: p.value })),
-    ),
-    vaultKey,
-  ]);
+  }, [secretPairsKey, symmetricKeyString, kvPairs]);
 
   const commonItemTypes = [
     {
@@ -200,13 +207,21 @@ export const EnvironmentKVEditor = ({
             if (yes) {
               handleItemChange(id, 'type', newType);
               // decrypt and save the value
-              handleItemChange(id, 'value', await getRuntime().crypto.decryptSecretValue(originValue, symmetricKey as JsonWebKey));
+              handleItemChange(
+                id,
+                'value',
+                await getRuntime().crypto.decryptSecretValue(originValue, symmetricKey as JsonWebKey),
+              );
             }
           },
         });
       } else if (newType === EnvironmentKvPairDataType.SECRET) {
         // encrypt value if set to secret type
-        handleItemChange(id, 'value', await getRuntime().crypto.encryptSecretValue(originValue, symmetricKey as JsonWebKey));
+        handleItemChange(
+          id,
+          'value',
+          await getRuntime().crypto.encryptSecretValue(originValue, symmetricKey as JsonWebKey),
+        );
         handleItemChange(id, 'type', newType);
       } else {
         handleItemChange(id, 'type', newType);
@@ -340,7 +355,10 @@ export const EnvironmentKVEditor = ({
               placeholder="Input Secret"
               value={decryptedValues[id] ?? ''}
               onChange={async newValue => {
-                const encryptedValue = await getRuntime().crypto.encryptSecretValue(newValue, symmetricKey as JsonWebKey);
+                const encryptedValue = await getRuntime().crypto.encryptSecretValue(
+                  newValue,
+                  symmetricKey as JsonWebKey,
+                );
                 handleItemChange(id, 'value', encryptedValue);
               }}
             />

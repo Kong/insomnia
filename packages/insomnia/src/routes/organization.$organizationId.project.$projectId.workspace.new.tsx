@@ -5,12 +5,12 @@ import { href, redirect } from 'react-router';
 
 import { getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
-import type { MockRouteData } from '~/plugins/types';
+import type { MockRouteData } from '~/common/plugins/types';
+import { invariant } from '~/common/utils/invariant';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
 import { mockRouteToHar } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';

@@ -7,6 +7,7 @@ import { Heading, Link } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
+import { invariant } from '~/common/utils/invariant';
 import { useImportResourcesFetcher } from '~/routes/import.resources';
 import { useScanResourcesFetcher } from '~/routes/import.scan';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
@@ -20,7 +21,6 @@ import {
   type ImportSourceType,
   type ScanResult,
 } from '../../../../common/import';
-import { invariant } from '../../../../utils/invariant';
 import {
   AnalyticsEvent,
   importAttributionKey,

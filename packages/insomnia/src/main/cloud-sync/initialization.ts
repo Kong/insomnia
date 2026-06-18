@@ -1,12 +1,12 @@
 import { models, services } from 'insomnia-data';
 
 import { fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
+import { invariant } from '~/common/utils/invariant';
 import { getMainVCS } from '~/main/cloud-sync/vcs';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
 } from '~/sync/vcs/initialize-backend-project';
-import { invariant } from '~/utils/invariant';
 
 export const initializeWorkspaceBackendProject = async ({ workspaceId }: { workspaceId: string }) => {
   const workspace = await services.workspace.getById(workspaceId);
