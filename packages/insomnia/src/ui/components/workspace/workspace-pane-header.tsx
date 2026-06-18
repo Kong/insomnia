@@ -18,10 +18,8 @@ import { PaneHeader } from '~/ui/components/pane-header';
 import { useWorkspaceBreadcrumbs } from '~/ui/components/workspace/use-workspace-breadcrumb';
 
 export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: boolean }) {
-  const { organizationId } = useParams() as {
-    organizationId: string;
-  };
-  const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
+  const { organizationId } = useParams();
+  const isScratchPad = organizationId ? models.organization.isScratchpadOrganizationId(organizationId) : false;
   const { activeCookieJar, caCertificate, clientCertificates, activeWorkspace } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
   const breadcrumbs = useWorkspaceBreadcrumbs();
