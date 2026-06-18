@@ -16,6 +16,15 @@
 export const IN_SANDBOX_BOOTSTRAP = [
   '(function(){',
   '  "use strict";',
+
+  // --- capture the host-injected plumbing into closure locals, then delete the globals at the end ---
+  // so plugin code (evaluated after this bootstrap) can never reach the raw bridge / crypto / console
+  // host functions. The closures below keep these references alive; QuickJS retains the underlying
+  // host-function objects as long as a local still points at them.
+  '  var __hb = globalThis.__hostBridge;',
+  '  var __ch = globalThis.__cryptoHash, __chm = globalThis.__cryptoHmac, __crb = globalThis.__cryptoRandomBytes, __cru = globalThis.__cryptoRandomUUID;',
+  '  var __hc = globalThis.__hostConsole;',
+
   '  var T = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";',
 
   // --- btoa / atob (operate on Latin1 binary strings, matching the browser) ---
@@ -84,12 +93,12 @@ export const IN_SANDBOX_BOOTSTRAP = [
 
   // --- console (forwards to the host if a sink was injected) ---
   '  function __fmt(args) { var parts = []; for (var i = 0; i < args.length; i++) { var a = args[i]; try { parts.push(typeof a === "string" ? a : JSON.stringify(a)); } catch (e) { parts.push(String(a)); } } return parts.join(" "); }',
-  '  function __log(level) { return function () { if (typeof globalThis.__hostConsole === "function") { globalThis.__hostConsole(level, __fmt(arguments)); } }; }',
+  '  function __log(level) { return function () { if (typeof __hc === "function") { __hc(level, __fmt(arguments)); } }; }',
   '  globalThis.console = { log: __log("log"), info: __log("info"), warn: __log("warn"), error: __log("error"), debug: __log("debug") };',
 
   // --- the single async bridge helper ---
   '  function __bridge(path, body) {',
-  '    return globalThis.__hostBridge(path, JSON.stringify(body || {})).then(function (raw) {',
+  '    return __hb(path, JSON.stringify(body || {})).then(function (raw) {',
   '      var res = JSON.parse(raw);',
   '      if (!res.ok) { throw new Error(res.error && res.error.message ? res.error.message : "host bridge error: " + path); }',
   '      return res.value;',
@@ -120,7 +129,7 @@ export const IN_SANDBOX_BOOTSTRAP = [
   // crypto is backed by synchronous host functions (real host crypto), so digest()/randomBytes()
   // return values inline — matching node:crypto's synchronous contract.
   '    if (name === "crypto" || name === "node:crypto") {',
-  '      if (typeof globalThis.__cryptoHash !== "function") { throw new Error("\'crypto\' is not available in this sandbox"); }',
+  '      if (typeof __ch !== "function") { throw new Error("\'crypto\' is not available in this sandbox"); }',
   '      var mkDigester = function (compute) {',
   '        var parts = [];',
   '        var obj = {',
@@ -130,10 +139,10 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '        return obj;',
   '      };',
   '      return {',
-  '        createHash: function (algo) { return mkDigester(function (data, enc) { return globalThis.__cryptoHash(algo, data, "utf8", enc); }); },',
-  '        createHmac: function (algo, key) { var k = typeof key === "string" ? key : String(key); return mkDigester(function (data, enc) { return globalThis.__cryptoHmac(algo, k, data, enc); }); },',
+  '        createHash: function (algo) { return mkDigester(function (data, enc) { return __ch(algo, data, "utf8", enc); }); },',
+  '        createHmac: function (algo, key) { var k = typeof key === "string" ? key : String(key); return mkDigester(function (data, enc) { return __chm(algo, k, data, enc); }); },',
   '        randomBytes: function (size) {',
-  '          var b64 = globalThis.__cryptoRandomBytes(size);',
+  '          var b64 = __crb(size);',
   '          var binary = atob(b64);',
   '          return {',
   '            length: binary.length,',
@@ -144,7 +153,7 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '            }',
   '          };',
   '        },',
-  '        randomUUID: function () { return globalThis.__cryptoRandomUUID(); }',
+  '        randomUUID: function () { return __cru(); }',
   '      };',
   '    }',
   '    throw new Error("Cannot find module \'" + name + "\' in sandbox (not yet supported)");',
@@ -226,6 +235,12 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    var args = [ctx].concat(env.args || []);',
   '    return Promise.resolve(tag.run.apply(null, args)).then(function (r) { return r == null ? "" : String(r); });',
   '  };',
+
+  // --- remove the raw host capabilities from the global so plugin code can only reach the rebuilt
+  // context. The closures above retain the references they need (e.g. __bridge -> __hb). ---
+  '  delete globalThis.__hostBridge;',
+  '  delete globalThis.__cryptoHash; delete globalThis.__cryptoHmac; delete globalThis.__cryptoRandomBytes; delete globalThis.__cryptoRandomUUID;',
+  '  delete globalThis.__hostConsole;',
   '})();',
 ].join('\n');
 

@@ -37,7 +37,20 @@ export interface BridgeResult {
 export const encodeBridgeSuccess = (value: unknown): string =>
   JSON.stringify({ ok: true, value: value ?? null } satisfies BridgeResult);
 
+/**
+ * Redact host filesystem paths from an error message before it crosses back into the sandbox. Host
+ * errors (e.g. a `readFile` ENOENT) embed absolute paths that disclose host layout; we strip those
+ * while keeping the rest of the message (error codes, network failures, validation text) intact so
+ * legitimate plugin error handling still works.
+ *  - Windows: `C:\Users\...`
+ *  - POSIX: `/Users/...` (≥2 segments), but not the path part of a `scheme://host/...` URL.
+ */
+const PATH_PATTERN = /[A-Za-z]:\\[^\s'"]+|(?<![:/\w])(?:\/[\w.\-@ ]+){2,}\/?/g;
+
+export const sanitizeErrorMessage = (message: string): string =>
+  message.replace(PATH_PATTERN, '<redacted-path>');
+
 export const encodeBridgeFailure = (err: unknown): string => {
-  const message = err instanceof Error ? err.message : String(err);
+  const message = sanitizeErrorMessage(err instanceof Error ? err.message : String(err));
   return JSON.stringify({ ok: false, error: { message } } satisfies BridgeResult);
 };
