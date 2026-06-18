@@ -353,7 +353,6 @@ export const NewWorkspaceModal = ({
                         setWorkspaceData({
                           ...workspaceData,
                           mockServerCreationType: creationType as 'ai' | 'manual',
-                          mockServerType: creationType === 'ai' ? 'self-hosted' : workspaceData.mockServerType,
                         });
                       }}
                       className="mb-2 flex flex-col gap-2"
@@ -647,7 +646,7 @@ export const NewWorkspaceModal = ({
                       <div className="flex gap-2">
                         <Radio
                           value="cloud"
-                          isDisabled={isCloudMockDisabled || workspaceData.mockServerCreationType === 'ai'}
+                          isDisabled={isCloudMockDisabled}
                           className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                         >
                           <div className="flex items-center gap-2">
@@ -655,11 +654,9 @@ export const NewWorkspaceModal = ({
                             <Heading className="text-lg font-bold">Cloud Mock</Heading>
                           </div>
                           <p className="pt-2">
-                            {workspaceData.mockServerCreationType === 'ai'
-                              ? 'Not available when creating with Auto Generate.'
-                              : isCloudMockDisabled
-                                ? 'Only available for cloud projects'
-                                : 'Runs on Insomnia cloud, ideal for collaboration.'}
+                            {isCloudMockDisabled
+                              ? 'Only available for cloud projects'
+                              : 'Runs on Insomnia cloud, ideal for collaboration.'}
                           </p>
                         </Radio>
                         <Radio

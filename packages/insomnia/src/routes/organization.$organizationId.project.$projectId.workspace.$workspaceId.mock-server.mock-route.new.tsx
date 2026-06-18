@@ -19,24 +19,16 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     invariant(patch.name.startsWith('/'), 'Path must begin with a /');
 
     if (patch.parentId) {
-      const mockServer = await services.mockServer.getById(patch.parentId);
       const existingRoutes = await services.mockRoute.findByParentId(patch.parentId);
 
-      if (mockServer?.useInsomniaCloud) {
-        const hasRouteInServer = existingRoutes.find(m => m.name === patch.name);
-        if (hasRouteInServer) {
-          invariant(false, `Path "${patch.name}" already exists. Please enter a different path.`);
-        }
-      } else {
-        const hasRouteInServer = existingRoutes.find(
-          m => m.name === patch.name && m.method.toUpperCase() === patch.method?.toUpperCase(),
+      const hasRouteInServer = existingRoutes.find(
+        m => m.name === patch.name && m.method.toUpperCase() === patch.method?.toUpperCase(),
+      );
+      if (hasRouteInServer) {
+        invariant(
+          false,
+          `Path "${patch.name}" with ${patch.method} method already exists. Please enter a different path or method.`,
         );
-        if (hasRouteInServer) {
-          invariant(
-            false,
-            `Path "${patch.name}" with ${patch.method} method already exists. Please enter a different path or method.`,
-          );
-        }
       }
     }
     // TODO: remove this hack which enables a mock server to be created alongside a route
