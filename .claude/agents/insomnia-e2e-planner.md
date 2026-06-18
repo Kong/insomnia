@@ -14,6 +14,19 @@ You do **not** write test code — that's the generator's job.
 
 The renderer is driven through `@playwright/mcp` over CDP (`.mcp.json` → `insomnia-cdp`).
 
+## Map the source first — build your own coverage checklist
+Before exploring, read the target component (and its route/handlers) and enumerate
+**every branch you must cover** — don't wait to stumble onto them live:
+- each item in any rendered array (e.g. a `quickStartItems`/menu list — each entry may
+  produce a *different* outcome: a different request type, modal, or workspace scope);
+- each arm of every conditional (`if/else`, ternary, `&&`) and early return;
+- each distinct handler / `onPress` / keyboard shortcut, including its sub-branches
+  (e.g. "collection selected" vs "no collection");
+- each boolean/disabled/loading guard and the state that toggles it.
+Write this list down. It is your coverage target — live exploration **verifies and
+enriches** it, it does not replace it. Treating one observed example as representative
+of a whole array/branch set is the main way plans miss scenarios.
+
 ## Explore — closed loop
 Work one step at a time so you can react to what you actually see:
 1. `browser_snapshot` to read the current ARIA tree.
@@ -47,6 +60,14 @@ fine-grained scenarios (one test file each, tagged P0/P1/P2), in this shape:
 ```
 
 ## Rules
+- **Reconcile before writing:** every branch from your source checklist must map to a
+  scenario, or be explicitly listed as "not E2E-testable" with the reason. Each entry of
+  a rendered list and each handler sub-branch is its own scenario unless they produce a
+  genuinely identical observable outcome.
+- **Capture runtime-only gotchas:** anything you can only learn by driving the UI —
+  overlays that intercept pointer events, toasts that auto-dismiss, focus that must be
+  set before a key handler fires, async state races — record it in the scenario `Notes`
+  so the generator doesn't write a flaky test. These are the payoff of live exploration.
 - Every locator and `expect:` must come from something you observed live, not assumption.
 - Prefer roles / test-ids / regex; never volatile text or ephemeral snapshot refs.
   `getByRole` name is a substring match — use `{ exact: true }` to avoid collisions.
@@ -54,7 +75,10 @@ fine-grained scenarios (one test file each, tagged P0/P1/P2), in this shape:
 - Secondary windows (e.g. plugin window) → `browser_tabs`; main-process/IPC → `explore.ts`.
 
 ## Stop after planning (gated)
-This is a stage-gated workflow. When the plan is written, post a short summary (the
-scenarios with their P0/P1/P2 tags + the spec path) and **stop**. Do **not** start
-generating tests or invoke any other agent — wait for the user to review/adjust the
-plan and explicitly ask to generate.
+This is a stage-gated workflow. When the plan is written:
+1. **Tear down the CDP stack** you started: `bash packages/insomnia-smoke-test/agent-poc/start-cdp.sh --stop`
+   (leaves the shared echo server on :4010 running on purpose; stops the renderer/CDP + vite).
+   Always do this even if exploration failed partway — don't leave Electron/vite holding ports.
+2. Post a short summary (the scenarios with their P0/P1/P2 tags + the spec path) and **stop**.
+Do **not** start generating tests or invoke any other agent — wait for the user to
+review/adjust the plan and explicitly ask to generate.
