@@ -342,10 +342,21 @@ to another machine won't carry the path (expected for local repos).
    hard-block; resolved absolute paths are stored and compared. Last-used parent
    is persisted in `localStorage`. Clearing the picker ("Use default") reverts to
    the managed location (`directory: null`).
-3. **Open/adopt-folder.** New project-creation entry; folder picker → validate
+3. ✅ **Open/adopt-folder.** New project-creation entry; folder picker → validate
    RW + collision guard → `git init` if no `.git` (OQ2) → scan & import or
    initialize fresh Insomnia data (OQ1) → create repo/project with
-   `needsFullClone: false` → start watcher.
+   `needsFullClone: false` → start watcher. **Implementation note:** a new
+   `openGitRepoAction` (main) performs **no network clone** — it creates the
+   repo/project, then `GitVCS.init` *opens* an existing `.git` or runs `git init`
+   when absent (OQ2 handled for free). The folder's `origin` remote, if any, is
+   adopted as the repo `uri` (read via `listRemotes`) so future fetch/push works;
+   no credentials are required up front. The `RepoFileWatcher` imports existing
+   Insomnia YAML on start; a repo with no Insomnia data yields an empty project
+   ready to populate (OQ1) — consistent with cloning an empty repo, so no forced
+   workspace scaffolding. Folder is validated for existence + RW (`fs.access`) and
+   collision (`getByDirectory`, OQ5). UI: a **Clone from URL / Open existing
+   folder** toggle in the project-create git section; open mode needs no
+   credentials and the button reads **Open**.
 4. **Lifecycle & errors.** Implement D4 deletion semantics + missing-folder
    "unavailable" surface (OQ6, never auto-remove) + *Locate*/*Remove* actions +
    permission error surfaces.
