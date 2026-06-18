@@ -16,7 +16,9 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
   const listOfOrganizationIds = [...organizations.map(o => o.id), models.organization.SCRATCHPAD_ORGANIZATION_ID];
 
-  const projects = await services.project.listByOrganizationIds(listOfOrganizationIds);
+  const projects = await services.project.list({
+    parentId: { $nin: listOfOrganizationIds },
+  });
   const untrackedProjects = [];
 
   for (const project of projects) {
