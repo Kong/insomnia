@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { WorkspaceScope } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Button,
