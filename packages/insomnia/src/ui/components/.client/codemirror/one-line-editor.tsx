@@ -10,11 +10,9 @@ import * as reactUse from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import { plugins } from '~/plugins/renderer-bridge';
+import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
+import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/renderer-safe';
-import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
-import { extractNunjucksTagFromCoords } from '~/templating/utils';
 import { showModal } from '~/ui/components/modals';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
 import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
@@ -22,6 +20,8 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -228,7 +228,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           id,
         );
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       defaultValue,
       getAutocompleteConstants,

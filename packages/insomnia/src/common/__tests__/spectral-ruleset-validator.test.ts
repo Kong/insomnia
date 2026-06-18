@@ -21,7 +21,6 @@ const ruleWith = (body: string): string =>
     .map(l => (l ? `    ${l}` : l))
     .join('\n')}`;
 
-
 describe('toArray()', () => {
   it('returns [] for undefined', () => {
     const value = undefined;

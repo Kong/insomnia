@@ -1,9 +1,9 @@
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW } from 'insomnia-data/common';
 import { Fragment, useCallback, useRef, useState } from 'react';
 
+import { bytesToBase64, utf8StringFromBytes } from '~/common/utils/utf8-bytes';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
-import { bytesToBase64, utf8StringFromBytes } from '~/utils/utf8-bytes';
 
 import { HUGE_RESPONSE_MB, LARGE_RESPONSE_MB } from '../../../common/constants';
 import { unescapeForwardSlash } from '../../../common/misc';
@@ -15,22 +15,22 @@ import { ResponsePDFViewer } from './response-pdf-viewer';
 import { ResponseWebView } from './response-web-view';
 
 const CHARSET_ALIASES: Record<string, string> = {
-  utf8: 'utf8',
-  utf16le: 'utf-16le',
-  ucs2: 'utf-16le',
+  'utf8': 'utf8',
+  'utf16le': 'utf-16le',
+  'ucs2': 'utf-16le',
   'ucs-2': 'utf-16le',
-  latin1: 'iso-8859-1',
-  binary: 'iso-8859-1',
-  ascii: 'ascii',
-  win1250: 'windows-1250',
-  win1251: 'windows-1251',
-  win1252: 'windows-1252',
-  win1253: 'windows-1253',
-  win1254: 'windows-1254',
-  win1255: 'windows-1255',
-  win1256: 'windows-1256',
-  win1257: 'windows-1257',
-  win1258: 'windows-1258',
+  'latin1': 'iso-8859-1',
+  'binary': 'iso-8859-1',
+  'ascii': 'ascii',
+  'win1250': 'windows-1250',
+  'win1251': 'windows-1251',
+  'win1252': 'windows-1252',
+  'win1253': 'windows-1253',
+  'win1254': 'windows-1254',
+  'win1255': 'windows-1255',
+  'win1256': 'windows-1256',
+  'win1257': 'windows-1257',
+  'win1258': 'windows-1258',
 };
 
 let alwaysShowLargeResponses = false;

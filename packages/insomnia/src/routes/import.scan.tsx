@@ -8,10 +8,10 @@ import {
   mcpUrlToInsomniaV5Yaml,
   scanResources,
 } from '~/common/import';
+import { invariant } from '~/common/utils/invariant';
 import type { ImportEntry } from '~/main/importers/entities';
 import { AnalyticsEvent, trackImportEvent } from '~/ui/analytics';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 export const scanImportResources = async (data: {
   source: ImportSourceType;

@@ -8,9 +8,9 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
-import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';

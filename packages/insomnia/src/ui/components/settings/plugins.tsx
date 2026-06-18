@@ -12,14 +12,14 @@ import {
   TextField,
 } from 'react-aria-components';
 
+import type { SerializablePlugin } from '~/common/plugins/bridge-types';
+import { validatePluginName } from '~/common/utils/plugin-name';
 import { useRootLoaderData } from '~/root';
+import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
+import { reload } from '~/ui/templating/renderer-safe';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import type { SerializablePlugin } from '../../../plugins/bridge-types';
-import { plugins as pluginsBridge } from '../../../plugins/renderer-bridge';
-import { reload } from '../../../templating/renderer-safe';
-import { validatePluginName } from '../../../utils/plugin-name';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
@@ -124,9 +124,9 @@ export const Plugins: FC = () => {
   return (
     <div>
       <p className="notice info no-margin-top">
-        Plugins are built and maintained by third-party developers. Thank you!
-        Insomnia does not review, endorse, or support any particular plugin unless explicitly noted.
-        Plugins are still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
+        Plugins are built and maintained by third-party developers. Thank you! Insomnia does not review, endorse, or
+        support any particular plugin unless explicitly noted. Plugins are still an experimental feature. See{' '}
+        <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
 
       <div className="flex flex-col gap-6">
@@ -179,7 +179,7 @@ export const Plugins: FC = () => {
                   />
                 </TextField>
                 <Button
-                  className="flex h-full w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
+                  className="flex h-full shrink-0 min-w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--color-surprise)/80"
                   isDisabled={isInstallingFromNpm}
                   type="submit"
                   onPress={async () => {

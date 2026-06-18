@@ -8,11 +8,12 @@ import { autoUpdater as electronUpdater } from 'electron-updater';
 import type { Settings } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
+import { invariant } from '~/common/utils/invariant';
+
 import appConfig from '../../config/config.json';
 import packageJSON from '../../package.json';
 import { CHECK_FOR_UPDATES_INTERVAL, isDevelopment } from '../common/constants';
 import { delay } from '../common/misc';
-import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
 
 const isUpdateSupported = () => {

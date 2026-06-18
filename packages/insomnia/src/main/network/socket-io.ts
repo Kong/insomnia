@@ -17,13 +17,13 @@ import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOpti
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
 import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import { filterClientCertificates } from '../../network/certificate';
-import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
 

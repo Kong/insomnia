@@ -54,9 +54,7 @@ export const normalizeFolderPath = (value: string) => {
   return normalized.replace(new RegExp(`${separator === '\\' ? '\\\\' : '/'}+$`), '');
 };
 
-export type FolderValidationResult =
-  | { ok: true; normalizedValue: string }
-  | { ok: false; error: string };
+export type FolderValidationResult = { ok: true; normalizedValue: string } | { ok: false; error: string };
 
 export function validateFolderInput(input: string, existing: string[]): FolderValidationResult {
   const trimmed = input.trim();

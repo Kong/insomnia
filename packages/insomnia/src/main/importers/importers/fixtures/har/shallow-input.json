@@ -9,13 +9,15 @@
     }
   ],
   "postData": {
-    "params": [{
-      "name": "foo",
-      "value": "bar",
-      "filename": null,
-      "contentType": null,
-      "comment": "hahah"
-    }],
+    "params": [
+      {
+        "name": "foo",
+        "value": "bar",
+        "filename": null,
+        "contentType": null,
+        "comment": "hahah"
+      }
+    ],
     "text": ""
   },
   "queryString": [

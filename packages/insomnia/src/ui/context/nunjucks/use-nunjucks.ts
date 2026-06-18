@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
 
 import { getRenderContext, getRenderContextAncestors, render } from '~/common/render';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import type { HandleRender, RenderContextOptions } from '~/common/templating/types';
+import { getKeys } from '~/common/templating/utils';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating/constants';
-import type { HandleRender, RenderContextOptions } from '~/templating/types';
-import { getKeys } from '~/templating/utils';
 
 let getRenderContextPromiseCache: any = {};
 

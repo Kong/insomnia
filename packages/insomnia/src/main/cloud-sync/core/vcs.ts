@@ -8,10 +8,10 @@ import clone from 'clone';
 import { runVcsGraphQL } from 'insomnia-api';
 import type { BaseModel } from 'insomnia-data';
 
+import * as crypt from '~/common/account/crypt';
+import * as session from '~/common/account/session';
 import { PLAYWRIGHT_TEST } from '~/common/constants';
 
-import * as crypt from '../../../account/crypt';
-import * as session from '../../../account/session';
 import type { Operation } from '../../../common/database';
 import { generateId } from '../../../common/misc';
 import type {

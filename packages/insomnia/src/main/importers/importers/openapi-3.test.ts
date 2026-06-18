@@ -134,10 +134,7 @@ describe('openapi-3', () => {
         components: {
           schemas: {
             Pet: {
-              allOf: [
-                { $ref: '#/components/schemas/PetBase' },
-                { $ref: '#/components/schemas/PetDetails' },
-              ],
+              allOf: [{ $ref: '#/components/schemas/PetBase' }, { $ref: '#/components/schemas/PetDetails' }],
             },
             AdoptedPet: {
               allOf: [
@@ -200,16 +197,10 @@ describe('openapi-3', () => {
               },
             },
             CatOrDog: {
-              oneOf: [
-                { $ref: '#/components/schemas/Cat' },
-                { $ref: '#/components/schemas/Dog' },
-              ],
+              oneOf: [{ $ref: '#/components/schemas/Cat' }, { $ref: '#/components/schemas/Dog' }],
             },
             AnyPet: {
-              anyOf: [
-                { $ref: '#/components/schemas/Dog' },
-                { $ref: '#/components/schemas/Cat' },
-              ],
+              anyOf: [{ $ref: '#/components/schemas/Dog' }, { $ref: '#/components/schemas/Cat' }],
             },
           },
         },
@@ -219,7 +210,13 @@ describe('openapi-3', () => {
       expect(result).not.toBeNull();
 
       // Find the /pets request (allOf with Pet = PetBase + PetDetails)
-      const petsRequest = result?.find(item => item._type === 'request' && item.url?.includes('/pets') && !item.url?.includes('/update') && !item.url?.includes('/any'));
+      const petsRequest = result?.find(
+        item =>
+          item._type === 'request' &&
+          item.url?.includes('/pets') &&
+          !item.url?.includes('/update') &&
+          !item.url?.includes('/any'),
+      );
       expect(petsRequest).toBeDefined();
       expect(petsRequest?.method).toBe('POST');
       expect(petsRequest?.url).toContain('/pets');

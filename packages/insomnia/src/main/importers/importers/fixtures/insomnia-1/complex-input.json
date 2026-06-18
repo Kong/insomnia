@@ -21,10 +21,12 @@
           "url": "{{ base_url }}/users",
           "method": "POST",
           "body": "{\"foo\": \"bar\"}",
-          "headers": [{
-            "name": "Content-TYPE",
-            "value": "application/json; charset=utf-8"
-          }],
+          "headers": [
+            {
+              "name": "Content-TYPE",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
           "params": [
             {
               "name": "testing",

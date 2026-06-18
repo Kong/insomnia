@@ -2,9 +2,9 @@ import { getOrgUserPermissions, type Permission } from 'insomnia-api';
 import React, { useEffect, useState } from 'react';
 import { Button, Heading, Link, Radio, RadioGroup } from 'react-aria-components';
 
-import { getCurrentSessionId } from '~/account/session';
 import { Modal } from '~/basic-components/modal';
 import { getAppWebsiteBaseURL } from '~/common/constants';
+import { getCurrentSessionId } from '~/ui/account/session';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Tooltip } from '~/ui/components/tooltip';
 

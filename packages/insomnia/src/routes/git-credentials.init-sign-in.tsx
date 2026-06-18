@@ -1,7 +1,7 @@
 import { href } from 'react-router';
 
 import type { GitRemoteProviderType } from '~/sync/git/providers/types';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/git-credentials.init-sign-in';
 

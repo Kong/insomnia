@@ -123,8 +123,15 @@ describe('extractFieldsFromExpression', () => {
 
 describe('applyExpressionFields', () => {
   const baseRoute = {
-    id: 'r1', name: 'My Route', methods: null, paths: null,
-    protocols: ['http'], hosts: null, headers: null, snis: null, service: null,
+    id: 'r1',
+    name: 'My Route',
+    methods: null,
+    paths: null,
+    protocols: ['http'],
+    hosts: null,
+    headers: null,
+    snis: null,
+    service: null,
   };
 
   it('no expression — passthrough', () => {
@@ -141,7 +148,10 @@ describe('applyExpressionFields', () => {
   });
 
   it('tls.sni combined with other predicates — still skipped', () => {
-    const result = applyExpressionFields({ ...baseRoute, expression: 'tls.sni == "secure.example.com" && http.method == "GET"' });
+    const result = applyExpressionFields({
+      ...baseRoute,
+      expression: 'tls.sni == "secure.example.com" && http.method == "GET"',
+    });
     expect(result.syncable).toBe(false);
   });
 
@@ -163,7 +173,10 @@ describe('applyExpressionFields', () => {
   });
 
   it('partial expression — syncable with extracted fields only', () => {
-    const result = applyExpressionFields({ ...baseRoute, expression: 'http.method == "GET" && net.src.ip in 10.0.0.0/8' });
+    const result = applyExpressionFields({
+      ...baseRoute,
+      expression: 'http.method == "GET" && net.src.ip in 10.0.0.0/8',
+    });
     expect(result.syncable).toBe(true);
     if (result.syncable) {
       expect(result.route.methods).toEqual(['GET']);

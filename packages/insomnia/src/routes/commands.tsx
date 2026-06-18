@@ -11,8 +11,8 @@ import type {
 import { database, models, services } from 'insomnia-data';
 
 import { fuzzyMatch } from '~/common/misc';
-import { invariant } from '~/utils/invariant';
-import { createFetcherLoadHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/commands';
 

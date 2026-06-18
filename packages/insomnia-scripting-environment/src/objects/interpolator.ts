@@ -1,4 +1,4 @@
-import { fakerFunctions } from 'insomnia/src/templating/faker-functions';
+import { fakerFunctions } from 'insomnia/src/common/templating/faker-functions';
 import { Liquid } from 'liquidjs';
 
 /** @ignore */

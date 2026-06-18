@@ -40,8 +40,8 @@ import { parse, stringify } from 'yaml';
 import { type AllExportTypes, MODELS_BY_EXPORT_TYPE } from '~/common/import';
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { INSOMNIA_SCHEMA_VERSION } from '~/common/insomnia-schema-migrations/schema-version';
-import { maskVaultEnvironmentData } from '~/utils/environment-utils';
-import { invariant } from '~/utils/invariant';
+import { maskVaultEnvironmentData } from '~/common/utils/environment-utils';
+import { invariant } from '~/common/utils/invariant';
 
 import { database } from './database';
 import {

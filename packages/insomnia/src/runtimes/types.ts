@@ -1,10 +1,11 @@
 import type { AESMessage, Cookie, RequestHeader } from 'insomnia-data';
 
+import type { RenderedRequest, RenderInputType } from '~/common/templating/types';
+
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { ConvertResult } from '../main/importers/convert';
 import type { ImportEntry } from '../main/importers/entities';
 import type { CurlRequestOptions, CurlRequestOutput, ResponsePatch } from '../main/network/libcurl-promise';
-import type { RenderedRequest, RenderInputType } from '../templating/types';
 
 interface CurlRequestErrorOutput {
   statusMessage: string;

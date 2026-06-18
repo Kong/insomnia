@@ -13,15 +13,15 @@ import { getContentTypeHeader } from '../../../../common/misc';
 const lookupMimeType = (path: string) => {
   const ext = path.split('.').pop()?.toLowerCase();
   const mimeMap: Record<string, string> = {
-    'json': 'application/json',
-    'xml': 'application/xml',
-    'txt': 'text/plain',
-    'html': 'text/html',
-    'png': 'image/png',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'gif': 'image/gif',
-    'pdf': 'application/pdf',
+    json: 'application/json',
+    xml: 'application/xml',
+    txt: 'text/plain',
+    html: 'text/html',
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    pdf: 'application/pdf',
   };
   return mimeMap[ext || ''];
 };

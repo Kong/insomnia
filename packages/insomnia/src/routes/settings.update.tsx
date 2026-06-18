@@ -2,7 +2,7 @@ import type { Settings } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
 import { AnalyticsEvent } from '~/ui/analytics';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/settings.update';
 

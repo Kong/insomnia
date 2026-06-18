@@ -4,13 +4,13 @@ import { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
+import { invariant } from '~/common/utils/invariant';
+import { getVaultKeyFromStorage } from '~/common/utils/vault';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 import { validateVaultKey } from '~/ui/vault-key.client';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
-import { getVaultKeyFromStorage } from '~/utils/vault';
 
 import type { Route } from './+types/auth.authorize';
 

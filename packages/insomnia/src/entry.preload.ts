@@ -1,9 +1,20 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
 
+import type {
+  ApplyRequestHooksArgs,
+  ApplyResponseHooksArgs,
+  ExecutePluginActionArgs,
+  ExecutePluginMainActionArgs,
+  PluginsBridgeAPI,
+  RunTemplateTagActionArgs,
+} from '~/common/plugins/bridge-types';
+import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types';
+import type { RenderedRequest } from '~/common/templating/types';
+import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
-import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
+import type { PluginInvokeMethod } from '~/plugins/invoke-method';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
@@ -18,17 +29,6 @@ import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
-import type {
-  ApplyRequestHooksArgs,
-  ApplyResponseHooksArgs,
-  ExecutePluginActionArgs,
-  ExecutePluginMainActionArgs,
-  PluginsBridgeAPI,
-  RunTemplateTagActionArgs,
-} from './plugins/bridge-types';
-import type { PluginInvokeMethod } from './plugins/invoke-method';
-import type { RenderedRequest } from './templating/types';
-import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI
@@ -442,8 +442,7 @@ const main: Window['main'] = {
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
     getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },
-  notifyPromptResult: (id: string, value: string | null) =>
-    ipcRenderer.send('ui.promptResult', { id, value }),
+  notifyPromptResult: (id: string, value: string | null) => ipcRenderer.send('ui.promptResult', { id, value }),
   timeline: {
     getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
     appendToFile: (options: { timelinePath: string; data: string }) =>

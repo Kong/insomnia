@@ -1,4 +1,4 @@
-swagger: "2.0"
+swagger: '2.0'
 info:
   version: 1.0.0
   title: Swagger Petstore
@@ -9,7 +9,7 @@ basePath: /v1
 tags:
   - name: pets
     description: Everything about your Pets
-    externalDocs: 
+    externalDocs:
       description: Find out more
       url: http://swagger.io
 schemes:
@@ -33,7 +33,7 @@ paths:
           type: integer
           format: int32
       responses:
-        "200":
+        '200':
           description: A paged array of pets
           headers:
             x-next:
@@ -51,7 +51,7 @@ paths:
       tags:
         - pets
       responses:
-        "201":
+        '201':
           description: Null response
         default:
           description: unexpected error
@@ -70,7 +70,7 @@ paths:
           description: The id of the pet to retrieve
           type: string
       responses:
-        "200":
+        '200':
           description: Expected response to a valid request
           schema:
             $ref: '#/definitions/Pets'

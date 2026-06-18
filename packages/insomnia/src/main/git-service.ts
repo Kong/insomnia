@@ -31,6 +31,7 @@ import { models, services } from 'insomnia-data';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
+import { invariant } from '~/common/utils/invariant';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import {
   gitRemoteProviderRegistry,
@@ -66,7 +67,6 @@ import { RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
 import type { AutoResolvedConflict, MergeConflict } from '../sync/types';
-import { invariant } from '../utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
 

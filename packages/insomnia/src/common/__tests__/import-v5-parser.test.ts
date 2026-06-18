@@ -31,7 +31,6 @@ import {
 beforeAll(() => {
   // Make tests deterministic when schema uses crypto.randomUUID()
   if (!globalThis.crypto || typeof globalThis.crypto.randomUUID !== 'function') {
-     
     // @ts-ignore
     globalThis.crypto = {
       randomUUID: () => '00000000-0000-4000-8000-000000000000',

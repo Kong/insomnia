@@ -159,7 +159,12 @@ async function validateRemoteExtends(url: URL, visited: Set<string>, depth: numb
 // rules, and keeps only built-in identifiers (spectral:oas, …) in "extends". This is the basis
 // for the compiled ruleset the lint worker consumes, eliminating the validate-then-use race.
 // baseUrl is used to resolve relative URLs found inside remote rulesets; pass null at the top level.
-async function flattenRemoteExtends(ruleset: Ruleset, baseUrl: URL | null, visited: Set<string>, depth: number): Promise<Ruleset> {
+async function flattenRemoteExtends(
+  ruleset: Ruleset,
+  baseUrl: URL | null,
+  visited: Set<string>,
+  depth: number,
+): Promise<Ruleset> {
   const flattened: Ruleset = {};
   const builtinExtends: string[] = [];
 
@@ -246,12 +251,7 @@ async function flattenRuleset(
       continue;
     }
     // Local file paths are recursively loaded and flattened.
-    const childRuleset = await flattenRuleset(
-      path.resolve(baseDir, entry),
-      nextVisited,
-      depth + 1,
-      rootDir,
-    );
+    const childRuleset = await flattenRuleset(path.resolve(baseDir, entry), nextVisited, depth + 1, rootDir);
     if (childRuleset.extends) {
       remainingExtends.push(...childRuleset.extends);
     }

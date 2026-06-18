@@ -1,8 +1,7 @@
 import clone from 'clone';
 
 import { filterHeaders } from '~/common/misc';
-
-import type { RenderedRequest } from '../templating/types';
+import type { RenderedRequest } from '~/common/templating/types';
 
 export function applyDefaultHeaders(
   renderedRequest: RenderedRequest,

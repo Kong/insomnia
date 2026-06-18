@@ -58,7 +58,9 @@ describe('filters', () => {
 
   // default provides a fallback when a variable is undefined (requires ignoreUndefinedEnvVariable)
   it('default filter', async () => {
-    expect(await render("{{ x | default: 'fallback' }}", { context: {}, ignoreUndefinedEnvVariable: true })).toBe('fallback');
+    expect(await render("{{ x | default: 'fallback' }}", { context: {}, ignoreUndefinedEnvVariable: true })).toBe(
+      'fallback',
+    );
   });
 
   // replace uses Liquid colon syntax, not Nunjucks parentheses
@@ -97,7 +99,9 @@ describe('raw blocks', () => {
 
   // Tag syntax is also preserved verbatim inside raw blocks
   it('passes through liquid tag syntax verbatim', async () => {
-    expect(await render('{% raw %}{% if x %}yes{% endif %}{% endraw %}', { context: {} })).toBe('{% if x %}yes{% endif %}');
+    expect(await render('{% raw %}{% if x %}yes{% endif %}{% endraw %}', { context: {} })).toBe(
+      '{% if x %}yes{% endif %}',
+    );
   });
 
   // raw emits content with no HTML escaping — React JSX {value} binding is safe,
@@ -148,9 +152,7 @@ describe('nunjucks breaking changes', () => {
 
   // {% set %} is a Nunjucks keyword and will throw a parse error in LiquidJS
   it('set is not supported — parse error expected', async () => {
-    await expect(
-      render('{% set x = "hello" %}{{ x }}', { context: {} }),
-    ).rejects.toBeDefined();
+    await expect(render('{% set x = "hello" %}{{ x }}', { context: {} })).rejects.toBeDefined();
   });
 
   // Liquid filter args use colon+comma syntax: | filter: arg1, arg2 (not parentheses)
@@ -160,9 +162,9 @@ describe('nunjucks breaking changes', () => {
 
   // elsif (not elif) is the correct branching keyword in LiquidJS
   it('elsif is the correct keyword in LiquidJS', async () => {
-    expect(
-      await render('{% if x %}a{% elsif y %}b{% else %}c{% endif %}', { context: { x: false, y: true } }),
-    ).toBe('b');
+    expect(await render('{% if x %}a{% elsif y %}b{% else %}c{% endif %}', { context: { x: false, y: true } })).toBe(
+      'b',
+    );
   });
 });
 
@@ -274,16 +276,14 @@ describe('file-loading tags blocked', () => {
 
   // Variable path: attacker-controlled tpl value must not reach the filesystem
   it('include with a variable path is blocked', async () => {
-    await expect(
-      render('{% include tpl %}', { context: { tpl: '/sensitive/secrets.txt' } }),
-    ).rejects.toThrow(/disabled/);
+    await expect(render('{% include tpl %}', { context: { tpl: '/sensitive/secrets.txt' } })).rejects.toThrow(
+      /disabled/,
+    );
   });
 
   // Static path: even a hardcoded filename must be blocked at the tag level
   it('include with a static literal path is blocked', async () => {
-    await expect(
-      render('{% include package.json %}', { context: {} }),
-    ).rejects.toThrow(/disabled/);
+    await expect(render('{% include package.json %}', { context: {} })).rejects.toThrow(/disabled/);
   });
 
   // render is a Liquid built-in for partial templates — blocked for the same reason as include
@@ -310,9 +310,7 @@ describe('unless tag', () => {
 
   // unless supports an else branch for the truthy case
   it('supports else branch', async () => {
-    expect(
-      await render('{% unless x %}no{% else %}yes{% endunless %}', { context: { x: true } }),
-    ).toBe('yes');
+    expect(await render('{% unless x %}no{% else %}yes{% endunless %}', { context: { x: true } })).toBe('yes');
   });
 });
 
@@ -348,23 +346,23 @@ describe('case / when tag', () => {
 describe('for tag — advanced', () => {
   // limit:N stops iteration after N items, regardless of collection size
   it('limit stops iteration early', async () => {
-    expect(
-      await render('{% for i in list limit:2 %}{{ i }}{% endfor %}', { context: { list: [1, 2, 3, 4] } }),
-    ).toBe('12');
+    expect(await render('{% for i in list limit:2 %}{{ i }}{% endfor %}', { context: { list: [1, 2, 3, 4] } })).toBe(
+      '12',
+    );
   });
 
   // offset:N skips the first N items before starting iteration
   it('offset skips leading items', async () => {
-    expect(
-      await render('{% for i in list offset:2 %}{{ i }}{% endfor %}', { context: { list: [1, 2, 3, 4] } }),
-    ).toBe('34');
+    expect(await render('{% for i in list offset:2 %}{{ i }}{% endfor %}', { context: { list: [1, 2, 3, 4] } })).toBe(
+      '34',
+    );
   });
 
   // reversed iterates the collection in reverse order
   it('reversed iterates in reverse order', async () => {
-    expect(
-      await render('{% for i in list reversed %}{{ i }}{% endfor %}', { context: { list: [1, 2, 3] } }),
-    ).toBe('321');
+    expect(await render('{% for i in list reversed %}{{ i }}{% endfor %}', { context: { list: [1, 2, 3] } })).toBe(
+      '321',
+    );
   });
 
   // break exits the loop immediately, discarding remaining items
@@ -404,9 +402,9 @@ describe('for tag — advanced', () => {
 
   // else branch runs when the collection is empty, replacing the loop body entirely
   it('else branch runs when collection is empty', async () => {
-    expect(
-      await render('{% for i in list %}{{ i }}{% else %}empty{% endfor %}', { context: { list: [] } }),
-    ).toBe('empty');
+    expect(await render('{% for i in list %}{{ i }}{% else %}empty{% endfor %}', { context: { list: [] } })).toBe(
+      'empty',
+    );
   });
 
   // Numeric ranges (1..N) generate an inclusive sequence without a context array
@@ -431,20 +429,16 @@ describe('liquid block tag', () => {
   // {% liquid %} groups multiple tag statements without separate {% %} delimiters per line
   it('executes multiple statements in one block', async () => {
     expect(
-      await render(
-        '{% liquid\nassign x = "hello"\nassign y = "world"\necho x\necho " "\necho y\n%}',
-        { context: {} },
-      ),
+      await render('{% liquid\nassign x = "hello"\nassign y = "world"\necho x\necho " "\necho y\n%}', { context: {} }),
     ).toBe('hello world');
   });
 
   // Control flow tags work inside a liquid block using newline-separated syntax
   it('supports if/for inside liquid block', async () => {
     expect(
-      await render(
-        '{% liquid\nfor i in list\nif i > 2\necho i\nendif\nendfor\n%}',
-        { context: { list: [1, 2, 3, 4] } },
-      ),
+      await render('{% liquid\nfor i in list\nif i > 2\necho i\nendif\nendfor\n%}', {
+        context: { list: [1, 2, 3, 4] },
+      }),
     ).toBe('34');
   });
 });
@@ -452,23 +446,17 @@ describe('liquid block tag', () => {
 describe('increment and decrement tags', () => {
   // increment outputs the current counter value then increments it; starts at 0
   it('increment starts at 0 and increases', async () => {
-    expect(
-      await render('{% increment c %}{% increment c %}{% increment c %}', { context: {} }),
-    ).toBe('012');
+    expect(await render('{% increment c %}{% increment c %}{% increment c %}', { context: {} })).toBe('012');
   });
 
   // decrement outputs the current counter value then decrements it; starts at -1
   it('decrement starts at -1 and decreases', async () => {
-    expect(
-      await render('{% decrement c %}{% decrement c %}{% decrement c %}', { context: {} }),
-    ).toBe('-1-2-3');
+    expect(await render('{% decrement c %}{% decrement c %}{% decrement c %}', { context: {} })).toBe('-1-2-3');
   });
 
   // increment counters and assign variables share a name but use separate storage
   it('increment and assign variables are independent', async () => {
-    expect(
-      await render('{% assign c = "hello" %}{% increment c %}{{ c }}', { context: {} }),
-    ).toBe('0hello');
+    expect(await render('{% assign c = "hello" %}{% increment c %}{{ c }}', { context: {} })).toBe('0hello');
   });
 });
 
@@ -484,17 +472,14 @@ describe('capture and tablerow tags', () => {
 
   // capture is purely in-memory string accumulation with no I/O surface
   it('capture does not leak filesystem or network access', async () => {
-    expect(
-      await render('{% capture x %}static{% endcapture %}{{ x }}', { context: {} }),
-    ).toBe('static');
+    expect(await render('{% capture x %}static{% endcapture %}{{ x }}', { context: {} })).toBe('static');
   });
 
   // tablerow generates <tr>/<td> HTML for each item in the collection
   it('tablerow renders html table rows', async () => {
-    const result = await render(
-      '<table>{% tablerow i in list cols:2 %}{{ i }}{% endtablerow %}</table>',
-      { context: { list: [1, 2, 3] } },
-    );
+    const result = await render('<table>{% tablerow i in list cols:2 %}{{ i }}{% endtablerow %}</table>', {
+      context: { list: [1, 2, 3] },
+    });
     expect(result).toContain('<tr');
     expect(result).toContain('<td');
     expect(result).toContain('1');
@@ -503,10 +488,9 @@ describe('capture and tablerow tags', () => {
 
   // The engine does not HTML-encode values; callers must sanitize before DOM insertion
   it('tablerow output is a string — not executable HTML', async () => {
-    const result = await render(
-      '{% tablerow x in items %}{{ x }}{% endtablerow %}',
-      { context: { items: ['<script>alert(1)</script>'] } },
-    );
+    const result = await render('{% tablerow x in items %}{{ x }}{% endtablerow %}', {
+      context: { items: ['<script>alert(1)</script>'] },
+    });
     expect(result).toContain('<script>alert(1)</script>');
   });
 });
@@ -518,35 +502,28 @@ describe('XSS: variable output passthrough', () => {
   // Script tags in context values are passed through unchanged — no encoding applied
   it('script tag value is rendered verbatim', async () => {
     const payload = '<script>alert("xss")</script>';
-    expect(
-      await render('{{ v }}', { context: { v: payload }, ignoreUndefinedEnvVariable: true }),
-    ).toBe(payload);
+    expect(await render('{{ v }}', { context: { v: payload }, ignoreUndefinedEnvVariable: true })).toBe(payload);
   });
 
   // SVG event handler attributes are also passed through unchanged
   it('svg event handler value is rendered verbatim', async () => {
     const payload = '<svg onload="alert(1)">';
-    expect(
-      await render('{{ v }}', { context: { v: payload }, ignoreUndefinedEnvVariable: true }),
-    ).toBe(payload);
+    expect(await render('{{ v }}', { context: { v: payload }, ignoreUndefinedEnvVariable: true })).toBe(payload);
   });
 
   // HTML entities are not decoded — &lt; stays &lt;, never becomes <
   it('html-encoded payload is not double-decoded', async () => {
     const encoded = '&lt;script&gt;alert(1)&lt;/script&gt;';
-    expect(
-      await render('{{ v }}', { context: { v: encoded }, ignoreUndefinedEnvVariable: true }),
-    ).toBe(encoded);
+    expect(await render('{{ v }}', { context: { v: encoded }, ignoreUndefinedEnvVariable: true })).toBe(encoded);
   });
 });
 
 describe('XSS: filter chain passthrough', () => {
   // Filters that manipulate strings can introduce angle brackets — output is still verbatim
   it('replace filter can introduce angle brackets — output is verbatim', async () => {
-    const result = await render(
-      "{{ v | replace: 'OPEN', '<script>' | replace: 'CLOSE', '</script>' }}",
-      { context: { v: 'OPENalert(1)CLOSE' } },
-    );
+    const result = await render("{{ v | replace: 'OPEN', '<script>' | replace: 'CLOSE', '</script>' }}", {
+      context: { v: 'OPENalert(1)CLOSE' },
+    });
     expect(result).toBe('<script>alert(1)</script>');
   });
 
@@ -560,19 +537,18 @@ describe('XSS: filter chain passthrough', () => {
 describe('assign and capture: no re-evaluation', () => {
   // Assigning a string that contains {{ }} stores it as a literal, not a template
   it('assigned string containing {{ }} is treated as a literal', async () => {
-    const result = await render(
-      '{% assign evil = "{{ secret }}" %}{{ evil }}',
-      { context: { secret: 'LEAKED' }, ignoreUndefinedEnvVariable: true },
-    );
+    const result = await render('{% assign evil = "{{ secret }}" %}{{ evil }}', {
+      context: { secret: 'LEAKED' },
+      ignoreUndefinedEnvVariable: true,
+    });
     expect(result).toBe('{{ secret }}');
   });
 
   // A captured block is rendered once at capture time; the stored string is output as-is
   it('capture output is not re-rendered after storage', async () => {
-    const result = await render(
-      '{% capture block %}{{ secret }}{% endcapture %}{{ block }}',
-      { context: { secret: 'visible' } },
-    );
+    const result = await render('{% capture block %}{{ secret }}{% endcapture %}{{ block }}', {
+      context: { secret: 'visible' },
+    });
     expect(result).toBe('visible');
   });
 
@@ -590,7 +566,9 @@ describe('prototype pollution resistance', () => {
   // Passing a context value must never modify Object.prototype
   it('context key named __proto__ does not pollute Object prototype', async () => {
     const before = ({} as any).polluted;
-    await Promise.resolve(render('{{ v }}', { context: { v: 'safe' }, ignoreUndefinedEnvVariable: true })).catch(() => {});
+    await Promise.resolve(render('{{ v }}', { context: { v: 'safe' }, ignoreUndefinedEnvVariable: true })).catch(
+      () => {},
+    );
     expect(({} as any).polluted).toBe(before);
   });
 
@@ -613,9 +591,7 @@ describe('prototype pollution resistance', () => {
 describe('DoS resistance', () => {
   // (1..11_000_000) exceeds the 10 MB memoryLimit tracked during range expansion
   it('memoryLimit aborts enormous range expansions', async () => {
-    await expect(
-      render('{% for i in (1..11000000) %}{{ i }}{% endfor %}', { context: {} }),
-    ).rejects.toBeDefined();
+    await expect(render('{% for i in (1..11000000) %}{{ i }}{% endfor %}', { context: {} })).rejects.toBeDefined();
   });
 
   // 200 levels of nested if must parse and render without a stack overflow

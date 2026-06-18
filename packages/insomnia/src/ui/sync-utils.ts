@@ -17,8 +17,8 @@ import type {
 import { models, services } from 'insomnia-data';
 
 import { database, type Operation } from '~/common/database';
+import { invariant } from '~/common/utils/invariant';
 import type { BackendProject, Compare, StatusCandidate } from '~/sync/types';
-import { invariant } from '~/utils/invariant';
 
 type PushPull = 'push' | 'pull';
 type VCSAction =
