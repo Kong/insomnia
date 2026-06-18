@@ -328,14 +328,20 @@ to another machine won't carry the path (expected for local repos).
 
 ## Implementation Plan (incremental, behind this design)
 
-1. **Model + resolver (foundation).** Add `directory: string | null` to
+1. ✅ **Model + resolver (foundation).** Add `directory: string | null` to
    `GitRepository` (`init()` → `null`). Introduce `getRepoBaseDir()` and replace
    the 3 hard-coded joins in `git-service.ts`. No behavior change yet
    (everything resolves to managed dir). Ship + verify regression-free.
-2. **Clone-to-chosen-folder.** Add destination picker to the clone flow
+2. ✅ **Clone-to-chosen-folder.** Add destination picker to the clone flow
    (default = last-used dir, fallback `~/Insomnia` — OQ3); pass the chosen path
    into the new `GitRepository.directory`; validate + collision-check (OQ5) in
-   main.
+   main. **Implementation note:** the picker selects a **parent folder**; the
+   renderer derives the repo name from the URI and clones into
+   `<parent>/<repo-name>` (matching `git clone <url>` behaviour, avoids cloning
+   into a non-empty folder). `getByDirectory()` (new service method) backs the
+   hard-block; resolved absolute paths are stored and compared. Last-used parent
+   is persisted in `localStorage`. Clearing the picker ("Use default") reverts to
+   the managed location (`directory: null`).
 3. **Open/adopt-folder.** New project-creation entry; folder picker → validate
    RW + collision guard → `git init` if no `.git` (OQ2) → scan & import or
    initialize fresh Insomnia data (OQ1) → create repo/project with
