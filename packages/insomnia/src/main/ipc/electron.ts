@@ -77,6 +77,7 @@ export type HandleChannels =
   | 'git.mergeGitBranch'
   | 'git.migrateLegacyInsomniaFolderToFile'
   | 'git.multipleCommitToGitRepo'
+  | 'git.openGitRepo'
   | 'git.pullFromGitRemote'
   | 'git.pushToGitRemote'
   | 'git.resetGitRepo'

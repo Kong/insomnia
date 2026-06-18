@@ -212,6 +212,7 @@ const git: GitServiceAPI = {
   gitChangesLoader: options => invokeWithNormalizedError('git.gitChangesLoader', options),
   canPushLoader: options => invokeWithNormalizedError('git.canPushLoader', options),
   cloneGitRepo: options => invokeWithNormalizedError('git.cloneGitRepo', options),
+  openGitRepo: options => invokeWithNormalizedError('git.openGitRepo', options),
   initGitRepoClone: options => invokeWithNormalizedError('git.initGitRepoClone', options),
   updateGitRepo: options => invokeWithNormalizedError('git.updateGitRepo', options),
   resetGitRepo: options => invokeWithNormalizedError('git.resetGitRepo', options),

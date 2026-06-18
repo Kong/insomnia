@@ -1541,6 +1541,131 @@ export const cloneGitRepoAction = async ({
   }
 };
 
+/**
+ * Open/adopt an existing local folder as a Git project. See GIT_LOCAL_REPOS_DESIGN.md.
+ *
+ * Unlike {@link cloneGitRepoAction} this performs no network clone — it points
+ * Insomnia at a folder already on disk:
+ *   - If the folder is not yet a git repo, `GitVCS.init` runs `git init` (OQ2).
+ *   - Existing Insomnia YAML is imported by the watcher; a repo with no Insomnia
+ *     data simply yields an empty project ready to populate (OQ1).
+ *   - Two projects may not target the same folder (OQ5 — hard block).
+ */
+export const openGitRepoAction = async ({
+  organizationId,
+  name,
+  directory,
+}: {
+  organizationId: string;
+  name?: string;
+  directory: string;
+}) => {
+  try {
+    if (!directory || !path.isAbsolute(directory)) {
+      return { errors: ['A valid absolute folder path is required.'] };
+    }
+    const resolvedDirectory = path.resolve(directory);
+
+    // Validate the folder exists, is a directory and is readable/writable.
+    try {
+      const stats = await fs.promises.stat(resolvedDirectory);
+      if (!stats.isDirectory()) {
+        return { errors: [`Not a folder: ${resolvedDirectory}`] };
+      }
+      await fs.promises.access(resolvedDirectory, fs.constants.R_OK | fs.constants.W_OK);
+    } catch {
+      return { errors: [`Folder is not accessible (check it exists and you have read/write permission): ${resolvedDirectory}`] };
+    }
+
+    // Hard-block if another project already owns this folder (OQ5).
+    const existing = await services.gitRepository.getByDirectory(resolvedDirectory);
+    if (existing) {
+      return { errors: [`A project is already connected to this folder: ${resolvedDirectory}`] };
+    }
+
+    const bufferId = await database.bufferChanges();
+
+    const gitRepository = await services.gitRepository.create({
+      uri: '',
+      credentialsId: null,
+      needsFullClone: false,
+      directory: resolvedDirectory,
+    });
+
+    const project = await services.project.create({
+      name: name || path.basename(resolvedDirectory) || 'New Git Project',
+      parentId: organizationId,
+      gitRepositoryId: models.project.toProtectedRepoId(gitRepository._id),
+    });
+
+    const fsClient = await getGitFSClient({
+      projectId: project._id,
+      gitRepositoryId: gitRepository._id,
+      directory: resolvedDirectory,
+    });
+
+    // Opens the existing repo, or runs `git init` when there is no .git yet.
+    await GitVCS.init({
+      repoId: gitRepository._id,
+      uri: '',
+      directory: GIT_CLONE_DIR,
+      fs: fsClient,
+      gitDirectory: GIT_INTERNAL_DIR,
+      credentialsId: null,
+    });
+
+    await GitVCS.setAuthor();
+
+    // Adopt the folder's existing origin remote (if any) as the repo URI so
+    // future fetch/push targets the right place.
+    let originUri = '';
+    try {
+      const remotes = await GitVCS.listRemotes();
+      originUri = remotes.find(remote => remote.remote === 'origin')?.url || '';
+    } catch {
+      // No remotes configured — a local-only repository.
+    }
+    if (originUri) {
+      await services.gitRepository.update(gitRepository, { uri: parseGitToHttpsURL(originUri) });
+    }
+
+    // Migrate a legacy `.insomnia/` directory if one is present on disk.
+    const hasLegacyInsomniaDir = await containsLegacyInsomniaDir({ fsClient });
+    if (hasLegacyInsomniaDir) {
+      await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
+    }
+
+    // Start the watcher — it imports any existing Insomnia YAML from disk into NeDB.
+    await repoFileWatcherRegistry.startWatcher(gitRepository._id, resolvedDirectory, project._id);
+
+    const updateRepository = await services.gitRepository.getById(gitRepository._id);
+    invariant(updateRepository, 'Git Repository not found');
+
+    let currentBranch: string | null = null;
+    try {
+      currentBranch = await GitVCS.getCurrentBranch();
+    } catch {
+      // A freshly-initialised repo may not have an active branch yet.
+    }
+    await services.gitRepository.update(updateRepository, {
+      cachedGitLastCommitTime: Date.now(),
+      cachedGitRepositoryBranch: currentBranch,
+    });
+
+    await database.flushChanges(bufferId);
+
+    trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
+      ...vcsEventProperties('git', 'clone'),
+      providerName: 'custom',
+      repoId: gitRepository._id,
+    });
+
+    return { organizationId, projectId: project._id };
+  } catch (e) {
+    return { errors: [e instanceof Error ? e.message : String(e)] };
+  }
+};
+
 export const updateGitRepoAction = async ({
   projectId,
   workspaceId,
@@ -3092,6 +3217,7 @@ export interface GitServiceAPI {
   canPushLoader: typeof canPushLoader;
   initGitRepoClone: typeof initGitRepoCloneAction;
   cloneGitRepo: typeof cloneGitRepoAction;
+  openGitRepo: typeof openGitRepoAction;
   updateGitRepo: typeof updateGitRepoAction;
   resetGitRepo: typeof resetGitRepoAction;
   commitToGitRepo: typeof commitToGitRepoAction;
@@ -3155,6 +3281,9 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.canPushLoader', (_, options: Parameters<typeof canPushLoader>[0]) => canPushLoader(options));
   ipcMainHandle('git.cloneGitRepo', (_, options: Parameters<typeof cloneGitRepoAction>[0]) =>
     cloneGitRepoAction(options),
+  );
+  ipcMainHandle('git.openGitRepo', (_, options: Parameters<typeof openGitRepoAction>[0]) =>
+    openGitRepoAction(options),
   );
   ipcMainHandle('git.initGitRepoClone', (_, options: Parameters<typeof initGitRepoCloneAction>[0]) =>
     initGitRepoCloneAction(options),
