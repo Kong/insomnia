@@ -358,12 +358,43 @@ async function assertBranchOnOrigin(context: string): Promise<void> {
 }
 
 /**
+ * Resolves the absolute base directory where a Git repository's working tree and
+ * .git directory live on disk.
+ *
+ * - When the repository has a user-chosen `directory`, that path is used as-is
+ *   (the user owns it; Insomnia must not delete it on project removal).
+ * - Otherwise the repository lives in the app-managed location
+ *   `{INSOMNIA_DATA_PATH || userData}/version-control/git/{id}`.
+ *
+ * This is the single source of truth for repo paths. Callers that already have
+ * the GitRepository document should pass `directory` to avoid a DB lookup;
+ * otherwise the directory is resolved from the database by id.
+ */
+async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null): Promise<string> {
+  let dir = directory;
+  if (dir === undefined) {
+    const repo = await services.gitRepository.getById(gitRepositoryId);
+    dir = repo?.directory ?? null;
+  }
+
+  if (dir) {
+    return dir;
+  }
+
+  return path.join(
+    process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
+    `version-control/git/${gitRepositoryId}`,
+  );
+}
+
+/**
  * Creates a file system client for Git operations
  * Returns different clients based on whether we're working with a workspace or project
  *
  * @param projectId - The project ID
  * @param workspaceId - Optional workspace ID (if provided, uses workspace-specific client)
  * @param gitRepositoryId - The Git repository ID
+ * @param directory - Optional user-chosen repo directory (resolved from DB when omitted)
  * @returns File system client configured for the appropriate context
  */
 function getGitBaseDir(gitRepositoryId: string): string {
@@ -377,13 +408,15 @@ async function getGitFSClient({
   projectId,
   workspaceId,
   gitRepositoryId,
+  directory,
 }: {
   projectId: string;
   workspaceId?: string;
   gitRepositoryId: string;
+  directory?: string | null;
 }) {
   // Base directory where Git data is stored
-  const baseDir = getGitBaseDir(gitRepositoryId);
+  const baseDir = await getRepoBaseDir(gitRepositoryId, directory);
 
   // Workspace FS Client - used when working with a specific workspace
   if (workspaceId) {
@@ -517,10 +550,15 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
-    const baseDir = getGitBaseDir(gitRepository._id);
+    const baseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
 
     const bufferId = await database.bufferChanges();
-    const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
+    const fsClient = await getGitFSClient({
+      gitRepositoryId: gitRepository._id,
+      projectId,
+      workspaceId,
+      directory: gitRepository.directory,
+    });
 
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
       let legacyInsomniaWorkspace;
@@ -1237,7 +1275,7 @@ export const cloneGitRepoAction = async ({
       }
 
       // Start watcher — it automatically imports all YAML files during creation
-      const cloneBaseDir = getGitBaseDir(gitRepository._id);
+      const cloneBaseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
 
       // If the project already has a ruleset in the DB (e.g. cloud → git migration),
       // write it to disk now so its mtime is newer than the cloned file. This ensures
@@ -2962,11 +3000,19 @@ export async function runAllGitRepoMigrations(): Promise<MigrationSummary> {
         logs.push(`${ts()} [${level.toUpperCase()}] ["${project.name}"] ${message}`);
       };
 
-      const allowedBase = path.resolve(baseDataPath);
-      const baseDir = path.resolve(allowedBase, 'version-control', 'git', repoId);
-      if (!baseDir.startsWith(allowedBase + path.sep)) {
-        logger('warn', `Skipping repo with unsafe path — repoId may contain path traversal: ${repoId}`);
-        return;
+      let baseDir: string;
+      if (gitRepository.directory) {
+        // User-located repos are created in the new on-disk layout, so the
+        // legacy-structure migration is a no-op for them. Use their directory
+        // directly — the managed-path traversal guard does not apply.
+        baseDir = gitRepository.directory;
+      } else {
+        const allowedBase = path.resolve(baseDataPath);
+        baseDir = path.resolve(allowedBase, 'version-control', 'git', repoId);
+        if (!baseDir.startsWith(allowedBase + path.sep)) {
+          logger('warn', `Skipping repo with unsafe path — repoId may contain path traversal: ${repoId}`);
+          return;
+        }
       }
 
       const success = await migrateRepoStructureIfNeeded(baseDir, project._id, repoId, logger);
