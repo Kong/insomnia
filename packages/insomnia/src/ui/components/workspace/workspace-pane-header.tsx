@@ -64,7 +64,7 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
 
   return (
     <PaneHeader
-      // For scratch pad, we don't want to show the project breadcrumb.
+      // For scratch pad, do not show project in breadcrumbs.
       breadcrumbs={isScratchPad ? realBreadcrumbs.slice(1) : realBreadcrumbs}
       rightSlot={
         hasSettings ? (
