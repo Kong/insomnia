@@ -24,6 +24,8 @@ export interface CreateProjectData {
   connectRepositoryLater?: boolean;
   ref?: string;
   selectedAuthorEmail?: string | null;
+  /** Optional absolute path to a user-chosen folder to clone the repo into. */
+  directory?: string | null;
 }
 
 export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
@@ -82,6 +84,7 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
       name: newProjectData.name,
       ref: newProjectData.ref || '',
       selectedAuthorEmail: newProjectData.selectedAuthorEmail,
+      directory: newProjectData.directory,
     });
 
     if (errors) {

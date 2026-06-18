@@ -12,7 +12,7 @@ import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
-import { type ProjectData, type ProjectType, useActiveView } from '~/ui/components/project/utils';
+import { deriveRepoName, type ProjectData, type ProjectType, useActiveView } from '~/ui/components/project/utils';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
 import { Icon } from '../icon';
@@ -90,11 +90,20 @@ export const ProjectCreateForm: FC<Props> = ({
     if (!storageType) {
       return;
     }
+
+    // For a custom clone location, the picked folder is the parent — clone into
+    // `<parent>/<repo-name>`, matching `git clone` behaviour.
+    const directory =
+      storageType === 'git' && !projectData.connectRepositoryLater && projectData.cloneParentDir
+        ? window.path.join(projectData.cloneParentDir, deriveRepoName(projectData.uri))
+        : undefined;
+
     newProjectFetcher.submit({
       organizationId,
       projectData: {
         ...projectData,
         storageType,
+        directory,
       },
     });
   };

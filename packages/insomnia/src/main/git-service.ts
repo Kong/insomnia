@@ -1124,6 +1124,7 @@ export const cloneGitRepoAction = async ({
   uri,
   ref,
   selectedAuthorEmail,
+  directory,
 }: {
   organizationId: string;
   projectId?: string;
@@ -1133,6 +1134,11 @@ export const cloneGitRepoAction = async ({
   uri: string;
   ref?: string;
   selectedAuthorEmail?: string | null;
+  /**
+   * Optional absolute path to a user-chosen folder to clone into. When omitted,
+   * the repository is stored in the app-managed location. See GIT_LOCAL_REPOS_DESIGN.md.
+   */
+  directory?: string | null;
 }) => {
   try {
     const repoSettingsPatch: Partial<GitRepository> = {};
@@ -1141,6 +1147,24 @@ export const cloneGitRepoAction = async ({
     repoSettingsPatch.credentialsId = credentialsId;
     if (selectedAuthorEmail !== undefined) {
       repoSettingsPatch.selectedAuthorEmail = selectedAuthorEmail;
+    }
+
+    // When a user-chosen clone location is provided, validate it and guard
+    // against two projects targeting the same folder (decision OQ5 — hard block).
+    if (directory) {
+      if (!path.isAbsolute(directory)) {
+        return { errors: ['Clone location must be an absolute path.'] };
+      }
+      const resolvedDirectory = path.resolve(directory);
+
+      const existing = await services.gitRepository.getByDirectory(resolvedDirectory);
+      if (existing) {
+        return {
+          errors: [`A project is already connected to this folder: ${resolvedDirectory}`],
+        };
+      }
+
+      repoSettingsPatch.directory = resolvedDirectory;
     }
 
     let provider = 'custom';
@@ -1236,7 +1260,11 @@ export const cloneGitRepoAction = async ({
 
       const project = await getProject();
 
-      const fsClient = await getGitFSClient({ projectId: project._id, gitRepositoryId: gitRepository._id });
+      const fsClient = await getGitFSClient({
+        projectId: project._id,
+        gitRepositoryId: gitRepository._id,
+        directory: gitRepository.directory,
+      });
       const repoBaseDir = getGitBaseDir(gitRepository._id);
 
       if (gitRepository.needsFullClone) {
