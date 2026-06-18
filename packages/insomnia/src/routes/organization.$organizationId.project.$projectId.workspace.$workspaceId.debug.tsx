@@ -41,7 +41,7 @@ import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle }
 import { href, redirect, useFetchers, useMatch, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
+import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
 import { generateId } from '~/common/misc';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
 import { useRootLoaderData } from '~/root';
@@ -782,9 +782,7 @@ const Debug = () => {
       <div className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
-        {!panel && !models.organization.isScratchpadOrganizationId(organizationId) && (
-          <WorkspacePaneHeader hasSettings />
-        )}
+        {!panel && <WorkspacePaneHeader hasSettings />}
       </div>
       <PanelGroup
         ref={sidebarPanelRef}
@@ -796,7 +794,15 @@ const Debug = () => {
         {/* Design page has a collection view with legacy collection list */}
         {isDesignWorkspace && (
           <>
-            <Panel id="sidebar" order={1} className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
+            <Panel
+              id="sidebar"
+              order={1}
+              className="sidebar theme--sidebar"
+              defaultSize={DEFAULT_SIDEBAR_SIZE}
+              maxSize={40}
+              minSize={10}
+              collapsible
+            >
               <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
                 <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
                   {models.workspace.isDesign(activeWorkspace) && (
