@@ -44,8 +44,9 @@ the UX work required. Implementation can begin incrementally behind this design.
 
 - A Git project can be backed by a repository at **any user-chosen absolute
   path** on the local filesystem.
-- Users can **open an already-cloned repository** (with existing `.git` and
-  Insomnia YAML files) without re-cloning.
+- Users can **open/adopt a folder** without re-cloning: an already-cloned repo
+  (with Insomnia data), a git repo without Insomnia data (initialize into it), or
+  a plain non-git folder (`git init` + initialize). See D2.
 - Users can **choose a destination directory** when cloning a new repository.
 - The **default behavior is unchanged**: repos created without choosing a
   location continue to live in the managed `version-control/git/{id}` folder, so
@@ -68,8 +69,9 @@ the UX work required. Implementation can begin incrementally behind this design.
 - Syncing the *managed* legacy repos to user locations automatically (we offer a
   "reveal in finder" / optional "move" path later, not a forced migration).
 - Workspace-scoped (legacy, NeDB-backed) Git Sync. This design targets
-  **project-scoped** Git projects, which already store a real working tree on
-  disk. Workspace-scoped support is out of scope unless trivially free.
+  **project-scoped** Git projects only (decision OQ4), which already store a real
+  working tree on disk. Legacy workspace-scoped repos stay in the managed
+  location.
 
 ---
 
@@ -150,22 +152,30 @@ operate on whatever base dir they're handed.
 - Single resolver `getRepoBaseDir()` is the **only** code allowed to turn a repo
   into a path. Replaces the 3 inlined joins. This is the linchpin of the change.
 
-### D2. "Open existing repo" = register, don't clone
+### D2. "Open folder" = adopt or initialize, never clone
 
-The "open existing" flow does **not** call `git.clone`. It:
+The open flow does **not** call `git.clone` — it adopts whatever the user points
+at, initializing as needed. It is intentionally permissive (decisions OQ1/OQ2):
 
-1. Asks the user to pick a folder (native dialog).
-2. Validates the folder is a Git repo (`.git` exists / `git.findRoot`
-   resolves) and is readable/writable.
-3. Scans for Insomnia files (`insomnia.*.yaml`, `.insomnia/`) — reuse the
-   existing scan from the shallow-clone preview path so the "select what to
-   import" UI is identical.
-4. Creates `GitRepository { directory: <path>, uri: <origin remote or ''>,
+1. Asks the user to pick a folder (native dialog), then validates it exists and
+   is readable/writable (`fs.access(R_OK | W_OK)`).
+2. **Collision guard (OQ5 — hard block):** if an existing `GitRepository` already
+   has this `directory`, refuse and point the user at the existing project.
+3. **Not a git repo (no `.git`)?** → run `git.init` in the folder (OQ2). This
+   makes "open folder" also cover "start Insomnia in a plain folder".
+4. **Git repo but no Insomnia data?** → allow and **initialize** fresh Insomnia
+   data into it (OQ1); the new workspace/base files are written to disk on first
+   sync. We do *not* block unrelated/empty repos.
+5. **Has Insomnia files?** → scan (`insomnia.*.yaml`, `.insomnia/`) reusing the
+   shallow-clone preview scan so the "select what to import" UI is identical, then
+   import.
+6. Creates `GitRepository { directory: <path>, uri: <origin remote or ''>,
    needsFullClone: false }` and the `GitProject`, then starts the
-   `RepoFileWatcher` on that dir to import YAML → NeDB.
+   `RepoFileWatcher` on that dir to sync YAML ⇄ NeDB.
 
-Open question: behavior when the folder has a `.git` but **no** Insomnia files
-(empty/unrelated repo) — see Open Questions.
+Because steps 3–4 can write Insomnia files into a folder the user already owns,
+the UI must clearly state what will be created before committing — adopting a
+folder is consented, but writing into an unrelated repo should never be silent.
 
 ### D3. Default location preserved; no forced migration
 
@@ -322,13 +332,17 @@ to another machine won't carry the path (expected for local repos).
    `GitRepository` (`init()` → `null`). Introduce `getRepoBaseDir()` and replace
    the 3 hard-coded joins in `git-service.ts`. No behavior change yet
    (everything resolves to managed dir). Ship + verify regression-free.
-2. **Clone-to-chosen-folder.** Add destination picker to the clone flow; pass the
-   chosen path into the new `GitRepository.directory`; validate in main.
-3. **Open-existing-repo.** New project-creation entry; folder picker → validate
-   (`.git` + RW) → reuse scan → create repo/project with `needsFullClone: false`
-   → start watcher.
+2. **Clone-to-chosen-folder.** Add destination picker to the clone flow
+   (default = last-used dir, fallback `~/Insomnia` — OQ3); pass the chosen path
+   into the new `GitRepository.directory`; validate + collision-check (OQ5) in
+   main.
+3. **Open/adopt-folder.** New project-creation entry; folder picker → validate
+   RW + collision guard → `git init` if no `.git` (OQ2) → scan & import or
+   initialize fresh Insomnia data (OQ1) → create repo/project with
+   `needsFullClone: false` → start watcher.
 4. **Lifecycle & errors.** Implement D4 deletion semantics + missing-folder
-   detection/surface + *Locate*/*Remove* actions + permission error surfaces.
+   "unavailable" surface (OQ6, never auto-remove) + *Locate*/*Remove* actions +
+   permission error surfaces.
 5. **Polish.** Reveal-in-folder, last-used dir, collision guard, health badge.
 
 Each step is independently shippable; steps 2–3 can ship behind a feature flag.
@@ -348,20 +362,27 @@ with the repo's `directory` before custom locations ship:
 
 ---
 
-## Open Questions
+## Resolved Decisions
 
-- **OQ1.** "Open existing" against a repo with a `.git` but **no** Insomnia files
-  — block, or allow and treat as an empty Insomnia project we initialize into?
-- **OQ2.** Should we support **non-Git** existing folders (init a fresh repo in a
-  user folder), or strictly require an existing `.git`?
-- **OQ3.** Default destination for new clones — `~/Insomnia`, last-used, or force
-  an explicit pick every time?
-- **OQ4.** Do we support **workspace-scoped (legacy)** Git Sync for user
-  locations, or project-scoped only (current assumption)?
-- **OQ5.** Collision policy when two projects target the same folder — hard block
-  or warn-and-allow?
-- **OQ6.** Behavior on transient unavailability (unmounted drive) vs. true
-  deletion — how long/loud before we prompt the user?
+These were open during the spike and are now decided (2026-06-18):
+
+- **OQ1 — `.git` present but no Insomnia data → _Allow & initialize_.** Adopt the
+  folder and initialize fresh Insomnia data into it. (See D2 step 4.)
+- **OQ2 — Non-git folder (no `.git`) → _Allow & `git init`_.** "Open folder" runs
+  `git.init` when needed, so it also covers starting Insomnia in a plain folder.
+  (See D2 step 3.)
+- **OQ3 — Clone destination default → _Last-used directory_,** falling back to
+  `~/Insomnia` (or home) on first use. Not forced-pick, not a fixed location.
+- **OQ4 — Scope → _Project-scoped Git projects only_.** Workspace-scoped (legacy,
+  NeDB-backed) Git Sync keeps using the managed location. Confirms the design's
+  existing assumption; legacy scope stays out of v1.
+- **OQ5 — Folder collision → _Hard block_.** Before create, check for an existing
+  `GitRepository.directory` match and refuse, pointing at the existing project.
+  Prevents two watchers/DBs contending over one folder. (See D2 step 2.)
+- **OQ6 — Missing folder → _Show "unavailable", never auto-remove_.** Do not try
+  to distinguish transient (unmounted drive) from deleted. Mark the project
+  unavailable, disable git ops, offer *Locate* / *Remove*, and re-check when it
+  returns — but never auto-delete the project regardless of duration. (See D4.)
 
 ---
 
