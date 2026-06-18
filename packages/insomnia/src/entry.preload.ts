@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
+import { contextBridge, ipcRenderer, type IpcRendererEvent, webUtils as webUtilities } from 'electron';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
 
 import type {
@@ -197,10 +197,6 @@ const sync: SyncBridgeAPI = {
     invokeSyncMethod('switchAndCreateBackendProjectIfNotExist', ...args),
   takeSnapshot: (...args) => invokeSyncMethod('takeSnapshot', ...args),
   unstage: (...args) => invokeSyncMethod('unstage', ...args),
-  on: (channel, listener) => {
-    ipcRenderer.on(channel, listener);
-    return () => ipcRenderer.removeListener(channel, listener);
-  },
 };
 
 const git: GitServiceAPI = {
@@ -313,8 +309,13 @@ const main: Window['main'] = {
   lintSpec: options => invokeWithNormalizedError('lintSpec', options),
   bundleSpectralRuleset: options => invokeWithNormalizedError('bundleSpectralRuleset', options),
   on: (channel, listener) => {
-    ipcRenderer.on(channel, listener);
-    return () => ipcRenderer.removeListener(channel, listener);
+    // Under contextIsolation the IpcRendererEvent can't be cloned across the
+    // contextBridge; no listener uses it, so drop it and forward only the
+    // (cloneable) payload args.
+    const handler = (_event: IpcRendererEvent, ...args: unknown[]) =>
+      (listener as (event: unknown, ...args: unknown[]) => void)(undefined, ...args);
+    ipcRenderer.on(channel, handler);
+    return () => ipcRenderer.removeListener(channel, handler);
   },
   cookies,
   webSocket,

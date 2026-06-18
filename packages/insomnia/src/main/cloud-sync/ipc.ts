@@ -66,17 +66,6 @@ export interface SyncBridgeAPI extends SyncBridgeMethods {
   }>;
   resolveConflict: (options: { handlerId: string; conflicts: MergeConflict[] }) => void;
   cancelConflict: (options: { handlerId: string }) => void;
-  on: (
-    channel: 'sync.merge-conflicts',
-    listener: (
-      event: IpcRendererEvent,
-      options: {
-        handlerId: string;
-        conflicts: MergeConflict[];
-        labels: { ours: string; theirs: string };
-      },
-    ) => void,
-  ) => () => void;
 }
 
 export const registerSyncHandlers = () => {

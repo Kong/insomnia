@@ -41,9 +41,6 @@ if (!dataServices) {
   );
 }
 initServices(dataServices);
-// Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
-// (no-op under contextIsolation, where the property is never set on window)
-delete window._dataServices;
 initRuntime(rendererRuntime);
 
 configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));

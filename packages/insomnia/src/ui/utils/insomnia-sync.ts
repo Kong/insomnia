@@ -13,7 +13,7 @@ export const registerSyncMergeConflictListener = () => {
   }
 
   hasRegisteredConflictListener = true;
-  window.main.sync.on('sync.merge-conflicts', (_event, { handlerId, conflicts, labels }) => {
+  window.main.on('sync.merge-conflicts', (_event, { handlerId, conflicts, labels }) => {
     showModal(SyncMergeModal, {
       conflicts,
       labels,
