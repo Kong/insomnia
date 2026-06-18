@@ -28,7 +28,7 @@ import {
   getThemes,
   getWorkspaceActions,
   reloadPlugins,
-} from './index';
+} from './plugin-loader.node';
 
 export type PluginInvokeMethod =
   | 'getThemes'

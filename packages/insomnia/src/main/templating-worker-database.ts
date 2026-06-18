@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { jarFromCookies } from '~/common/cookies';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '~/common/templating/types';
-import { getPluginCommonContext, getTemplateTags } from '~/plugins';
+import { getPluginCommonContext, getTemplateTags } from '~/plugins/plugin-loader.node';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';

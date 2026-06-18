@@ -1,3 +1,10 @@
+// Node-only plugin loader. This module touches the filesystem, `process.env`, `require`
+// and `electron`, so it must only run in Node-capable contexts: the Electron main process,
+// the node network/utility runtime, the inso CLI, and the hidden plugin window
+// (`entry.plugin-window.ts`). It is NOT reachable from the contextIsolated main renderer,
+// which talks to these functions over the plugin IPC bridge (see `~/ui/plugins/renderer-bridge`).
+// The `__IS_RENDERER__` branches below refer to the plugin/hidden windows (which expose
+// `window.app`), not the main renderer.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -145,6 +152,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Make sure the default directories exist
     const pluginPath = path.resolve(
+      // eslint-disable-next-line no-restricted-globals
       process.env['INSOMNIA_DATA_PATH'] || (__IS_RENDERER__ ? window : electron).app.getPath('userData'),
       'plugins',
     );
@@ -315,6 +323,7 @@ export function getPluginCommonContext({
     ...pluginNetwork.init(),
     util: {
       openInBrowser: async (url: string) =>
+        // eslint-disable-next-line no-restricted-globals
         __IS_RENDERER__ ? window.main.openInBrowser(url) : electron.shell.openExternal(url),
       models: {
         request: {

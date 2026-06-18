@@ -1,7 +1,10 @@
 import { localTemplateTags } from 'insomnia/src/common/templating/local-template-tags';
 import type { Liquid } from 'liquidjs';
 
-import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import {
+  LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME,
+  NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME,
+} from '~/common/templating/constants';
 import { buildLiquidEngine, stripLiquidComments } from '~/common/templating/liquid-engine';
 import { extractUndefinedVariableKey, translateLiquidError } from '~/common/templating/render-error';
 
@@ -98,7 +101,7 @@ async function getLiquid(
     return { engine: liquidAll, tagMetadata: liquidAllTagMetadata };
   }
 
-  const pluginTemplateTags = await (await import('../plugins')).getTemplateTags();
+  const pluginTemplateTags = await (await import('../plugins/plugin-loader.node')).getTemplateTags();
 
   const allTags = [
     ...localTemplateTags,

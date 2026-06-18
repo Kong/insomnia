@@ -25,7 +25,7 @@ import { services } from 'insomnia-data';
 
 import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 
-import type { Plugin } from '../index';
+import type { Plugin } from '../plugin-loader.node';
 import {
   _testOnlySetPlugins,
   executePluginMainAction,
@@ -38,7 +38,7 @@ import {
   getTemplateTags,
   getThemes,
   getWorkspaceActions,
-} from '../index';
+} from '../plugin-loader.node';
 
 const makePlugin = (overrides: Partial<Plugin> = {}): Plugin => ({
   name: 'test-plugin',

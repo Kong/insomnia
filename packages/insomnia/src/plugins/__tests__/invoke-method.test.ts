@@ -22,8 +22,8 @@ vi.mock('insomnia-data', () => ({
 
 import type { Plugin } from '~/common/plugins/types';
 
-import { _testOnlySetPlugins } from '../index';
 import { invokePluginMethod } from '../invoke-method';
+import { _testOnlySetPlugins } from '../plugin-loader.node';
 
 const makePlugin = (overrides: Partial<Plugin> = {}): Plugin => ({
   name: 'test-plugin',

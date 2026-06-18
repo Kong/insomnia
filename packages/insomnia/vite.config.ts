@@ -68,9 +68,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
       // Allows us to import modules that will be resolved by Node's require() function.
       // e.g. import fs from 'fs'; will get transformed to const fs = require('fs'); so that it works in the renderer process.
-      // Still needed: renderer files (plugins/index.ts, sync/git/providers/*.ts) import `electron` as a value,
+      // Still needed: renderer-reachable files (sync/git/providers/*.ts) import `electron` as a value,
       // and non-browser-safe node builtins must not be bundled into the renderer. The plugin converts
-      // these to require() calls, which resolve correctly because contextIsolation is currently false.
+      // these to require() calls.
       electronNodeRequire({
         modules: ['electron'],
       }),
