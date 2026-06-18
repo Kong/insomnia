@@ -9,12 +9,7 @@ import * as reactUse from 'react-use';
 import { logout } from '~/account/session';
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import {
-  checkAllProjectSyncStatus,
-  getAllLocalFiles,
-  getAllRemoteFiles,
-  getProjectsWithGitRepositories,
-} from '~/common/project';
+import { checkAllProjectSyncStatus, getProjectsWithGitRepositories } from '~/common/project';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
@@ -123,13 +118,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     url: '',
   };
 
-  const [localFiles, organizationProjects = []] = await Promise.all([
-    getAllLocalFiles({ projectId }),
-    getProjectsWithGitRepositories({ organizationId }),
-  ]);
+  const organizationProjects = await getProjectsWithGitRepositories({ organizationId });
+
   const projects = models.project.sortProjects(organizationProjects);
 
-  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
   const projectsSyncStatusPromise = checkAllProjectSyncStatus(projects);
@@ -140,18 +132,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       : undefined;
 
   return {
-    localFiles,
-    remoteFilesPromise,
     projects,
-    projectsCount: organizationProjects.length,
     activeProject: project,
     activeProjectGitRepository,
-    allFilesCount: localFiles.length,
-    environmentsCount: localFiles.filter(file => file.scope === 'environment').length,
-    documentsCount: localFiles.filter(file => file.scope === 'design').length,
-    collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
-    mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
-    mcpClientsCount: localFiles.filter(file => file.scope === 'mcp').length,
     projectsSyncStatusPromise,
     learningFeaturePromise,
   };
