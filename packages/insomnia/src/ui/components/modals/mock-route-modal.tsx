@@ -60,10 +60,12 @@ export const MockRouteModal = ({
   const createFetcher = useMockRouteNewActionFetcher();
   const updateFetcher = useMockRouteUpdateActionFetcher();
 
-  const [selectedPath, setSelectedPath] = useState<string | undefined>(defaultPath);
-  const [selectedMethod, setSelectedMethod] = useState<string | undefined>(defaultMethod);
+  const effectiveDefaultPath = defaultPath || '/';
+  const effectiveDefaultMethod = defaultMethod || 'GET';
+  const [selectedPath, setSelectedPath] = useState(effectiveDefaultPath);
+  const [selectedMethod, setSelectedMethod] = useState(effectiveDefaultMethod);
 
-  const changedFieldCount = [selectedPath !== defaultPath, selectedMethod !== defaultMethod].filter(Boolean).length;
+  const changedFieldCount = [selectedPath !== effectiveDefaultPath, selectedMethod !== effectiveDefaultMethod].filter(Boolean).length;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -168,7 +170,6 @@ export const MockRouteModal = ({
               <Form onSubmit={handleSubmit} className="flex flex-col gap-4 p-(--padding-md)">
                 <TextField
                   name="path"
-                  defaultValue={defaultPath || '/'}
                   isRequired
                   validate={path => {
                     if (!path.startsWith('/')) {

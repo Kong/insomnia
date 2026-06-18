@@ -26,7 +26,7 @@ interface Props {
   activeViewObj?: ReturnType<typeof useActiveView>;
   credentials: GitCredentials[];
   providers: GitProviderOption[];
-  setHasUnsavedChanges: (hasUnsavedChanges: boolean) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export const ProjectCreateForm: FC<Props> = ({
@@ -36,7 +36,7 @@ export const ProjectCreateForm: FC<Props> = ({
   activeViewObj,
   credentials,
   providers,
-  setHasUnsavedChanges,
+  onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -77,8 +77,8 @@ export const ProjectCreateForm: FC<Props> = ({
   ].filter(Boolean).length;
 
   useEffect(() => {
-    setHasUnsavedChanges(changedFieldCount > 1);
-  }, [changedFieldCount, setHasUnsavedChanges]);
+    if (onDirtyChange) onDirtyChange(changedFieldCount > 1);
+  }, [changedFieldCount, onDirtyChange]);
 
   useEffect(() => {
     if (newProjectFetcher.state === 'idle' && newProjectFetcher.data && newProjectFetcher.data?.error) {

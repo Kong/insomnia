@@ -67,7 +67,7 @@ interface Props {
   onSuccessUpdate?(): void;
   credentials: GitCredentials[];
   providers: GitProviderOption[];
-  setHasUnsavedChanges: (hasUnsavedChanges: boolean) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
@@ -79,7 +79,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   onSuccessUpdate,
   credentials,
   providers,
-  setHasUnsavedChanges,
+  onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -145,8 +145,8 @@ export const ProjectSettingsForm: FC<Props> = ({
   }, [updateProjectFetcher.data, updateProjectFetcher.state]);
 
   useEffect(() => {
-    setHasUnsavedChanges(changedFieldCount > 1);
-  }, [setHasUnsavedChanges, changedFieldCount]);
+    if (onDirtyChange) onDirtyChange(changedFieldCount > 1);
+  }, [onDirtyChange, changedFieldCount]);
 
   const onUpsertProject = () => {
     if (project) {

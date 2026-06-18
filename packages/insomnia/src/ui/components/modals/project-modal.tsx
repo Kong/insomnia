@@ -47,6 +47,8 @@ export const ProjectModal = ({
 
   const { credentials, providers } = useGitCredentials();
 
+  const onDirtyChange = (dirty: boolean) => setHasUnsavedChanges(dirty);
+
   return (
     <UnsavedChangesGuard hasUnsavedChanges={hasUnsavedChanges} onClose={() => onOpenChange(false)} parentRef={modalRef}>
       {({ requestClose }) => (
@@ -88,7 +90,7 @@ export const ProjectModal = ({
                     onSuccessUpdate={() => onOpenChange(false)}
                     credentials={credentials}
                     providers={providers}
-                    setHasUnsavedChanges={setHasUnsavedChanges}
+                    onDirtyChange={onDirtyChange}
                   />
                 ) : (
                   <ProjectCreateForm
@@ -97,7 +99,7 @@ export const ProjectModal = ({
                     activeViewObj={activeViewObj}
                     credentials={credentials}
                     providers={providers}
-                    setHasUnsavedChanges={setHasUnsavedChanges}
+                    onDirtyChange={onDirtyChange}
                   />
                 )}
               </>
