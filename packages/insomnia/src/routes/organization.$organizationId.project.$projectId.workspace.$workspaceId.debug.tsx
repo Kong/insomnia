@@ -782,9 +782,7 @@ const Debug = () => {
       <div className="flex flex-col">
         {/* Hide tabs when it's on the tutorial panel */}
         {!panel && <OrganizationTabList currentPage="debug" />}
-        {!panel && !models.organization.isScratchpadOrganizationId(organizationId) && (
-          <WorkspacePaneHeader hasSettings />
-        )}
+        {!panel && <WorkspacePaneHeader hasSettings />}
       </div>
       <PanelGroup
         ref={sidebarPanelRef}
@@ -796,7 +794,19 @@ const Debug = () => {
         {/* Design page has a collection view with legacy collection list */}
         {isDesignWorkspace && (
           <>
+<<<<<<< HEAD
             <Panel id="sidebar" order={1} className="sidebar theme--sidebar" maxSize={40} minSize={10} collapsible>
+=======
+            <Panel
+              id="sidebar"
+              order={1}
+              className="sidebar theme--sidebar"
+              defaultSize={DEFAULT_SIDEBAR_SIZE}
+              maxSize={40}
+              minSize={10}
+              collapsible
+            >
+>>>>>>> c9825ec02 (Fix: Show environment settings in  scratchpad  (#10114))
               <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
                 <div className="flex flex-col items-start divide-y divide-solid divide-(--hl-md)">
                   {models.workspace.isDesign(activeWorkspace) && (
