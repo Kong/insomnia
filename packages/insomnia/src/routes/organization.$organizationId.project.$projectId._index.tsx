@@ -58,6 +58,7 @@ import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { isPrimaryClickModifier } from '~/ui/utils';
 import { getAllRemoteFiles } from '~/ui/utils/remote-projects';
@@ -98,7 +99,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
   }, [localFiles, remoteFiles]);
 
-  const { userSession } = useRootLoaderData()!;
+  const { userSession, settings } = useRootLoaderData()!;
+  const patchSettings = useSettingsPatcher();
   const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
   const loadingBackendProjects = useFetchers()
     .filter(
@@ -370,7 +372,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
       <Fragment>
         <OrganizationTabList showActiveStatus={false} />
         <div className="px-4 pt-4">
-          {activeSidebarTab === 'projects' && (
+          {activeSidebarTab === 'projects' && !settings.hideFirstRequestPane && (
             <FirstRequestCreation
               greetingName={greetingName}
               collectionItems={collectionItems}
@@ -386,6 +388,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 });
               }}
               onImportFrom={() => setImportModalType('file')}
+              onCollapse={() => {
+                window.main.trackAnalyticsEvent({ event: AnalyticsEvent.firstRequestPaneCollapsed });
+                patchSettings({ hideFirstRequestPane: true });
+              }}
             />
           )}
         </div>
@@ -461,126 +467,144 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
               </div>
             )}
             {/* Show filter UI if there are files with presence or if the user has entered any filter input(even no match) */}
-            {(filesWithPresence.length > 0 || workspaceListFilter) && (
-              <div className="flex w-full max-w-xl justify-between gap-2 p-(--padding-md)">
-                <SearchField
-                  aria-label="Files filter"
-                  className="group relative flex-1"
-                  value={workspaceListFilter}
-                  onChange={filter => {
-                    setWorkspaceListFilter(filter);
-                    if (filter.trim() !== '') {
-                      trackOnceDaily(AnalyticsEvent.homepageFiltered);
-                    }
-                  }}
-                >
-                  <Input
-                    placeholder="Filter"
-                    className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
-                  />
-                  <div className="absolute top-0 right-0 flex h-full items-center px-2">
-                    <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
-                      <Icon icon="close" />
-                    </Button>
-                  </div>
-                </SearchField>
-                <Select
-                  aria-label="Sort order"
-                  className="aspect-square h-full"
-                  selectedKey={workspaceListSortOrder}
-                  onSelectionChange={order => setWorkspaceListSortOrder(order as DashboardSortOrder)}
-                >
-                  <Button
-                    aria-label="Select sort order"
-                    className="flex aspect-square h-full shrink-0 items-center justify-center rounded-xs bg-(--hl-xxs) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  >
-                    <Icon icon="sort" />
-                  </Button>
-                  <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                    <ListBox
-                      items={DASHBOARD_SORT_ORDERS.map(order => {
-                        return {
-                          id: order,
-                          name: dashboardSortOrderName[order],
-                        };
-                      })}
-                      className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
-                    >
-                      {item => (
-                        <ListBoxItem
-                          id={item.id}
-                          key={item.id}
-                          className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                          aria-label={item.name}
-                          textValue={item.name}
-                          value={item}
-                        >
-                          {({ isSelected }) => (
-                            <Fragment>
-                              <span>{item.name}</span>
-                              {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
-                            </Fragment>
-                          )}
-                        </ListBoxItem>
-                      )}
-                    </ListBox>
-                  </Popover>
-                </Select>
-
-                <MenuTrigger>
-                  <Button
-                    aria-label="Create in project"
-                    className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  >
-                    <Icon icon="plus-circle" /> <span className="hidden md:block">Create</span>
-                  </Button>
-                  <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                    <Menu
-                      aria-label="Create in project actions"
-                      selectionMode="single"
-                      onAction={key => {
-                        const item = createInProjectActionList.find(item => item.id === key);
-                        if (item) {
-                          item.action();
+            {(filesWithPresence.length > 0 ||
+              workspaceListFilter ||
+              (activeSidebarTab === 'projects' && settings.hideFirstRequestPane)) && (
+              <div className="flex w-full justify-between gap-2 p-(--padding-md)">
+                {(filesWithPresence.length > 0 || workspaceListFilter) && (
+                  <div className="flex w-full max-w-xl justify-between gap-2">
+                    <SearchField
+                      aria-label="Files filter"
+                      className="group relative flex-1"
+                      value={workspaceListFilter}
+                      onChange={filter => {
+                        setWorkspaceListFilter(filter);
+                        if (filter.trim() !== '') {
+                          trackOnceDaily(AnalyticsEvent.homepageFiltered);
                         }
                       }}
-                      items={createInProjectActionList}
-                      className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                     >
-                      {item => (
-                        <MenuItem
-                          key={item.id}
-                          id={item.id}
-                          className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
-                          aria-label={item.name}
+                      <Input
+                        placeholder="Filter"
+                        className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+                      />
+                      <div className="absolute top-0 right-0 flex h-full items-center px-2">
+                        <Button className="flex aspect-square w-5 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all group-data-empty:hidden hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
+                          <Icon icon="close" />
+                        </Button>
+                      </div>
+                    </SearchField>
+                    <Select
+                      aria-label="Sort order"
+                      className="aspect-square h-full"
+                      selectedKey={workspaceListSortOrder}
+                      onSelectionChange={order => setWorkspaceListSortOrder(order as DashboardSortOrder)}
+                    >
+                      <Button
+                        aria-label="Select sort order"
+                        className="flex aspect-square h-full shrink-0 items-center justify-center rounded-xs bg-(--hl-xxs) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                      >
+                        <Icon icon="sort" />
+                      </Button>
+                      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                        <ListBox
+                          items={DASHBOARD_SORT_ORDERS.map(order => {
+                            return {
+                              id: order,
+                              name: dashboardSortOrderName[order],
+                            };
+                          })}
+                          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                         >
-                          <div
-                            className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
-                          >
-                            <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
-                          </div>
-                          <span>{item.name}</span>
-                        </MenuItem>
-                      )}
-                    </Menu>
-                  </Popover>
-                </MenuTrigger>
+                          {item => (
+                            <ListBoxItem
+                              id={item.id}
+                              key={item.id}
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                              aria-label={item.name}
+                              textValue={item.name}
+                              value={item}
+                            >
+                              {({ isSelected }) => (
+                                <Fragment>
+                                  <span>{item.name}</span>
+                                  {isSelected && <Icon icon="check" className="justify-self-end text-(--color-success)" />}
+                                </Fragment>
+                              )}
+                            </ListBoxItem>
+                          )}
+                        </ListBox>
+                      </Popover>
+                    </Select>
 
-                <Button
-                  onPress={() => {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.importStarted,
-                      properties: {
-                        source: 'project',
-                      },
-                    });
-                    setImportModalType('file');
-                  }}
-                  aria-label="Import"
-                  className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="file-import" /> <span className="hidden md:block">Import</span>
-                </Button>
+                    <MenuTrigger>
+                      <Button
+                        aria-label="Create in project"
+                        className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                      >
+                        <Icon icon="plus-circle" /> <span className="hidden md:block">Create</span>
+                      </Button>
+                      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                        <Menu
+                          aria-label="Create in project actions"
+                          selectionMode="single"
+                          onAction={key => {
+                            const item = createInProjectActionList.find(item => item.id === key);
+                            if (item) {
+                              item.action();
+                            }
+                          }}
+                          items={createInProjectActionList}
+                          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                        >
+                          {item => (
+                            <MenuItem
+                              key={item.id}
+                              id={item.id}
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                              aria-label={item.name}
+                            >
+                              <div
+                                className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-4 w-4 items-center justify-center rounded-sm p-1`}
+                              >
+                                <Icon icon={item.icon} className="h-3 w-3 shrink-0" />
+                              </div>
+                              <span>{item.name}</span>
+                            </MenuItem>
+                          )}
+                        </Menu>
+                      </Popover>
+                    </MenuTrigger>
+
+                    <Button
+                      onPress={() => {
+                        window.main.trackAnalyticsEvent({
+                          event: AnalyticsEvent.importStarted,
+                          properties: {
+                            source: 'project',
+                          },
+                        });
+                        setImportModalType('file');
+                      }}
+                      aria-label="Import"
+                      className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                    >
+                      <Icon icon="file-import" /> <span className="hidden md:block">Import</span>
+                    </Button>
+                  </div>
+                )}
+                {activeSidebarTab === 'projects' && settings.hideFirstRequestPane && (
+                  <Button
+                    onPress={() => {
+                      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.firstRequestPaneExpanded });
+                      patchSettings({ hideFirstRequestPane: false });
+                    }}
+                    aria-label="Show First Request Pane"
+                    className="ml-auto flex h-full shrink-0 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                  >
+                    <Icon icon="wand-magic-sparkles" /> <span className="hidden md:block">Show First Request Pane</span>
+                  </Button>
+                )}
               </div>
             )}
 
