@@ -54,6 +54,11 @@ the UX work required. Implementation can begin incrementally behind this design.
   permissions, and the directory picker.
 - Clear, safe behavior for the lifecycle edge cases (folder deleted on disk;
   project deleted in app).
+- **No new external/runtime dependencies.** The feature must be built entirely
+  on existing primitives: `node:fs` / `node:path` in the main process,
+  isomorphic-git, the existing native folder picker (`showOpenDialog`), and the
+  existing `fs.watch`-based watcher. We explicitly **do not** add a filesystem
+  watching library (e.g. `chokidar`) or any other npm package. See [C1](#c1-no-new-dependencies).
 
 ### Non-Goals (for this spike / first iteration)
 
@@ -206,6 +211,27 @@ Opening a user folder does not require the native `git` binary; isomorphic-git
 reads the standard `.git` directory the same way regardless of who cloned it.
 This keeps the change contained and avoids a new runtime dependency.
 
+### C1. No new dependencies
+
+This feature ships with **zero new npm packages**. Concretely:
+
+- **Filesystem watching** stays on the existing
+  [`repo-file-watcher.ts`](packages/insomnia/src/sync/git/repo-file-watcher.ts),
+  which uses native `fs.watch({ recursive: true })` plus a 10 s polling fallback
+  — **not** `chokidar`. User-located repos are just a different base dir handed
+  to the same watcher; no watching-library upgrade is needed. (Caveat: native
+  `fs.watch` recursive support differs by platform — already true today for
+  managed repos — so the polling fallback remains our cross-platform safety net.)
+- **Folder selection** reuses the existing native dialog via
+  [`select-file-or-folder.ts`](packages/insomnia/src/ui/utils/select-file-or-folder.ts)
+  → IPC `showOpenDialog` (`properties: ['openDirectory']`). No new picker.
+- **Path / permission / validation** logic uses `node:path` and `node:fs`
+  (`path.resolve`, `fs.access`, `fs.stat`) only.
+- **Git operations** stay on isomorphic-git (see D6).
+
+If any task appears to need a new dependency, that's a signal the approach is
+wrong — stop and reassess against this constraint rather than adding the package.
+
 ### D7. Path storage is absolute, displayed friendly
 
 Persist absolute paths (cross-machine portability is not a goal — these are
@@ -256,9 +282,11 @@ to another machine won't carry the path (expected for local repos).
 - **Two projects pointing at the same folder** — detect and prevent (or warn):
   query existing `GitRepository.directory` for collisions before create.
 - **Watcher fan-out** — many user folders in disparate locations means many
-  `chokidar`/watcher instances; confirm registry scales and that
-  `node_modules`/large sibling dirs in a chosen folder don't get watched
-  (scope the watcher to the repo working tree + ignore patterns).
+  native `fs.watch` instances (no library change — see [C1](#c1-no-new-dependencies));
+  confirm the watcher registry scales and that `node_modules`/large sibling dirs
+  in a chosen folder don't get walked/watched (scope to the repo working tree +
+  ignore patterns). User-chosen folders are more likely than the managed folder
+  to contain large unrelated trees, so this matters more here.
 - **Folder that is a Git repo but has unrelated/huge content** — importing only
   Insomnia files is correct, but committing through Insomnia could stage
   unrelated files. Confirm `.gitignore`/staging scope is limited to Insomnia
@@ -304,6 +332,19 @@ to another machine won't carry the path (expected for local repos).
 5. **Polish.** Reveal-in-folder, last-used dir, collision guard, health badge.
 
 Each step is independently shippable; steps 2–3 can ship behind a feature flag.
+
+### Known remaining path-construction sites
+
+Step 1 centralizes the main-process path through `getRepoBaseDir()`. One
+**renderer-side** site still builds the managed path inline and must be threaded
+with the repo's `directory` before custom locations ship:
+
+- [`...workspace.$workspaceId.spec.tsx:105`](packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx#L105)
+  builds `gitSyncRulesetPath` as
+  `window.app.getPath('userData')/version-control/git/{id}/.spectral.yaml`.
+  Correct only for managed repos (`directory: null`). When custom directories
+  land, the loader must resolve the repo's `directory` (e.g. via an IPC/loader
+  value) instead of assuming `userData`. Tracked for step 2/3.
 
 ---
 
