@@ -160,7 +160,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('button', { name: 'Access Token author Git' }).click();
     await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
-    await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('git-server.git');
+    await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('http://localhost:4010/git/git-server.git');
     await this.page.getByRole('button', { name: 'Show suggestions Branch' }).click();
     await this.page.getByRole('option', { name: 'master' }).click();
     await this.page.getByRole('button', { name: 'Scan for files' }).click();
