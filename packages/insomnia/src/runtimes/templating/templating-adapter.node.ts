@@ -6,6 +6,6 @@ export async function renderTemplate({
   path,
   ignoreUndefinedEnvVariable,
 }: RenderInputType): Promise<string | null> {
-  const templating = await import('../../templating/index');
+  const templating = await import('../../templating/template-renderer.node');
   return templating.render(input, { context, path, ignoreUndefinedEnvVariable });
 }

@@ -1,3 +1,9 @@
+// Node-only templating engine. This module loads Node-dependent plugin template tags
+// (via `../plugins/plugin-loader.node`) and builds the Liquid engine, so it must only run
+// in Node-capable contexts: the node templating runtime adapter, the hidden plugin window,
+// and the inso CLI. It is NOT reachable from the contextIsolated main renderer, which uses
+// the renderer-safe wrapper (`~/ui/templating/renderer-safe`) and delegates real rendering
+// to the templating web worker.
 import { localTemplateTags } from 'insomnia/src/common/templating/local-template-tags';
 import type { Liquid } from 'liquidjs';
 

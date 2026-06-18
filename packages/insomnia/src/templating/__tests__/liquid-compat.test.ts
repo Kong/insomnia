@@ -2,7 +2,7 @@
 // worked under Nunjucks. Run with: npm test -w insomnia
 import { describe, expect, it } from 'vitest';
 
-import { render } from '../index';
+import { render } from '../template-renderer.node';
 
 describe('variable interpolation', () => {
   // Basic {{ var }} substitution from a flat context object

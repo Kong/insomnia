@@ -1,5 +1,5 @@
 // Renderer-safe templating utilities — no Node.js imports.
-// Use this module from renderer code instead of templating/index.
+// Use this module from renderer code instead of templating/template-renderer.node.
 
 export { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME, LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
 
