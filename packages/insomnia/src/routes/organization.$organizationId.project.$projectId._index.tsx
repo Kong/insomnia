@@ -29,9 +29,8 @@ import {
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll } from '~/common/misc';
-import { getAllLocalFiles, type InsomniaFile } from '~/common/project';
+import { getAllLocalFiles, getAllRemoteFiles, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
-import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -60,7 +59,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { isPrimaryClickModifier } from '~/ui/utils';
-import { getAllRemoteFiles } from '~/ui/utils/remote-projects';
+import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId._index';
 
