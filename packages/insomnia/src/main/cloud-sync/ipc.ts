@@ -1,5 +1,3 @@
-import type { IpcRendererEvent } from 'electron';
-
 import type {
   BackendProject,
   BackendProjectWithTeam,
