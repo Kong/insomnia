@@ -166,7 +166,9 @@ const extractBody = (
     ...((pairsByName.form as string[] | undefined) || []),
     ...((pairsByName.F as string[] | undefined) || []),
   ].map(str => {
-    const [name, value] = str.split('=');
+    const equalIndex = str.indexOf('=');
+    const name = equalIndex === -1 ? str : str.slice(0, equalIndex);
+    const value = equalIndex === -1 ? '' : str.slice(equalIndex + 1);
     const item: Parameter = {
       name,
     };

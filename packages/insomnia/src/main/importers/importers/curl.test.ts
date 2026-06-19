@@ -180,6 +180,16 @@ describe('curl', () => {
       curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode '%3D'",
       expected: { body: { params: [{ name: '', value: '%3D' }] } },
     },
+    {
+      name: 'should handle multipart text fields with multiple equals signs',
+      curl: "curl -X POST https://example.com -F 'token=abc=def=='",
+      expected: { body: { params: [{ name: 'token', value: 'abc=def==', type: 'text' }] } },
+    },
+    {
+      name: 'should handle multipart file fields with equals signs in the file path',
+      curl: "curl -X POST https://example.com -F 'file=@/tmp/a=b.txt'",
+      expected: { body: { params: [{ name: 'file', fileName: '/tmp/a=b.txt', type: 'file' }] } },
+    },
 
     // --data flags without urlencoded content type
     {
