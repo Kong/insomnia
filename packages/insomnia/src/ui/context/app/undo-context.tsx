@@ -10,7 +10,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useFetcher, useNavigate } from 'react-router';
+import { useFetcher, useNavigate, useRevalidator } from 'react-router';
 
 import {
   type DeleteEntry,
@@ -83,6 +83,7 @@ const UndoContext = createContext<UndoContextValue>({
 export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
   const navigate = useNavigate();
   const fetcher = useFetcher();
+  const revalidator = useRevalidator();
 
   const undoStackRef = useRef<UndoEntry[]>([]);
   const redoStackRef = useRef<UndoEntry[]>([]);
@@ -164,8 +165,11 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
       navigate(
         `/organization/${entry.location.organizationId}/project/${entry.location.projectId}/workspace/${entry.location.workspaceId}/debug/request/${entry.location.requestId}`,
       );
+      // Direct DB writes don't trigger React Router revalidation, so the sidebar loaders
+      // won't show the restored request without an explicit revalidate.
+      revalidator.revalidate();
     },
-    [navigate],
+    [navigate, revalidator],
   );
 
   const redeleteRequest = useCallback(
@@ -177,8 +181,9 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
       navigate(
         `/organization/${entry.location.organizationId}/project/${entry.location.projectId}/workspace/${entry.location.workspaceId}/debug`,
       );
+      revalidator.revalidate();
     },
-    [navigate],
+    [navigate, revalidator],
   );
 
   const finalizeGroup = useCallback(() => {
