@@ -724,6 +724,9 @@ export async function syncKonnect({ pat, organizationId, signal, onProgress }: S
           throw err;
         }
         const errMessage = err instanceof Error ? err.message : String(err);
+        if (region === 'sg' && errMessage.includes('403')) {
+          continue;
+        }
         acc.skippedRegions.push(`${region}: ${errMessage}`);
       }
     }
