@@ -38,25 +38,20 @@ test('global undo reverts changes and brings the right sub-tab into view', async
 test('global undo restores a deleted request', async ({ page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  const workspaceName = 'Undo delete collection';
-  await insomnia.navigationSidebar.selectProject('Personal Workspace');
-  await insomnia.projectPage.waitForProjectDashboard();
-  await insomnia.projectPage.createCollection(workspaceName);
-  await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
-    workspaceName,
-    actionName: 'HTTP Request',
-  });
+  // Create a collection with a default request ("My first collection" / "My first request").
+  await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+  const requestName = 'My first request';
+  await expect.soft(insomnia.navigationSidebar.requestRow(requestName)).toBeVisible();
 
   // Delete the request via the sidebar actions menu.
   await insomnia.navigationSidebar.selectRequestDropdownOption({
-    requestName: 'New Request',
+    requestName,
     actionName: 'Delete',
-    workspaceName,
   });
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect.soft(insomnia.navigationSidebar.requestRow('New Request', workspaceName)).toBeHidden();
+  await expect.soft(insomnia.navigationSidebar.requestRow(requestName)).toBeHidden();
 
   // Undo restores the deleted request.
   await page.keyboard.press('ControlOrMeta+z');
-  await expect.soft(insomnia.navigationSidebar.requestRow('New Request', workspaceName)).toBeVisible();
+  await expect.soft(insomnia.navigationSidebar.requestRow(requestName)).toBeVisible();
 });
