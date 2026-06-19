@@ -342,7 +342,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const effectiveId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
       const gitRepository = effectiveId ? await services.gitRepository.getById(effectiveId) : null;
 
-      gitRepository && (await services.gitRepository.remove(gitRepository));
+      if (gitRepository) {
+        // Stop the watcher and delete the folder only if Insomnia owns it; a
+        // user-chosen folder stays on disk (see GIT_LOCAL_REPOS_DESIGN.md, D4).
+        await window.main.git.cleanupGitRepoStorage({ gitRepositoryId: gitRepository._id });
+        await services.gitRepository.remove(gitRepository);
+      }
       await services.project.update(project, { name, gitRepositoryId: null });
 
       reportGitProjectCount(organizationId, sessionId);

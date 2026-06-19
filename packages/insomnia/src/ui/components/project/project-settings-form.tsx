@@ -23,6 +23,7 @@ import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useGitProjectRelocateActionFetcher } from '~/routes/git.relocate';
 import { useGitValidateCredentialsFetcher } from '~/routes/git.validate-credentials';
 import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
 import type { GitProviderOption } from '~/sync/git/providers/types';
@@ -32,9 +33,11 @@ import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
-import { useActiveView } from '~/ui/components/project/utils';
+import { deriveRepoName, useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
+import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
@@ -118,6 +121,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
   const validateCredentialsFetcher = useGitValidateCredentialsFetcher();
   const updateProjectFetcher = useProjectUpdateActionFetcher();
+  const relocateFetcher = useGitProjectRelocateActionFetcher();
 
   const insomniaFiles =
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
@@ -147,6 +151,17 @@ export const ProjectSettingsForm: FC<Props> = ({
   useEffect(() => {
     if (onDirtyChange) onDirtyChange(changedFieldCount > 1);
   }, [onDirtyChange, changedFieldCount]);
+
+  useEffect(() => {
+    if (
+      relocateFetcher.state === 'idle' &&
+      relocateFetcher.data &&
+      'errors' in relocateFetcher.data &&
+      relocateFetcher.data.errors
+    ) {
+      setError(relocateFetcher.data.errors.join(', '));
+    }
+  }, [relocateFetcher.data, relocateFetcher.state]);
 
   const onUpsertProject = () => {
     if (project) {
@@ -179,9 +194,37 @@ export const ProjectSettingsForm: FC<Props> = ({
     project?.gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID &&
     Boolean(gitRepository?._id);
 
-  const repoPath = showRepoPath
-    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository!._id)
-    : '';
+  // Relocation goes through a route action (declared above with the other
+  // fetchers) so loaders revalidate afterwards. `relocatedDir` from the action
+  // result shows the new path immediately, before the revalidated
+  // `gitRepository` prop arrives.
+  const isRelocating = relocateFetcher.state !== 'idle';
+  const relocatedDir =
+    relocateFetcher.data && 'directory' in relocateFetcher.data ? relocateFetcher.data.directory : null;
+  const repoPath = showRepoPath ? relocatedDir || resolveGitRepoBaseDir(gitRepository!) : '';
+
+  const onRelocateRepo = async () => {
+    if (!project || !gitRepository) {
+      return;
+    }
+    const picked = await selectFileOrFolder({
+      itemTypes: ['directory'],
+      defaultPath: window.app.getPath('home'),
+    });
+    if (picked.canceled || !picked.filePath) {
+      return;
+    }
+    // Move into `<chosen-parent>/<repo-name>`, matching the clone flow.
+    const folderName = deriveRepoName(gitRepository.uri) || gitRepository._id;
+    const newDirectory = window.path.join(picked.filePath, folderName);
+
+    setError(null);
+    relocateFetcher.submit({
+      gitRepositoryId: gitRepository._id,
+      projectId: project._id,
+      newDirectory,
+    });
+  };
 
   const showGitRepoForm =
     storageType === 'git' &&
@@ -386,6 +429,25 @@ export const ProjectSettingsForm: FC<Props> = ({
                       className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
                     >
                       Open in file system
+                    </Tooltip>
+                  </TooltipTrigger>
+                  <TooltipTrigger>
+                    <Button
+                      onPress={onRelocateRepo}
+                      isDisabled={isRelocating}
+                      className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+                      aria-label="Move repository to another folder"
+                    >
+                      <Icon
+                        icon={isRelocating ? 'spinner' : 'pen-to-square'}
+                        className={`size-4 ${isRelocating ? 'animate-spin' : ''}`}
+                      />
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+                    >
+                      Move to another folder
                     </Tooltip>
                   </TooltipTrigger>
                 </div>

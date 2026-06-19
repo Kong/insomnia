@@ -151,6 +151,45 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('button', { name: 'Create', exact: true }).click();
   }
 
+  /**
+   * Opens an existing local folder as a Git project (no clone). The native
+   * directory picker is mocked to return `folderPath`. If the folder isn't a git
+   * repo, the app runs `git init`. See GIT_LOCAL_REPOS_DESIGN.md.
+   */
+  async openGitProjectFromFolder(name: string, folderPath: string): Promise<void> {
+    await mockOpenDialogForDirectory(this.app, folderPath);
+    await this.page.getByRole('button', { name: 'Create new Project' }).click();
+    await this.setProjectName(name);
+    await this.selectStorageType('git');
+    await this.page.getByRole('button', { name: 'Open existing folder' }).click();
+    await this.page.getByRole('button', { name: 'Choose folder' }).click();
+    await this.page.getByRole('button', { name: 'Open', exact: true }).click();
+  }
+
+  /**
+   * Clones a repo into a user-chosen parent folder (the picker is mocked to
+   * return `parentFolderPath`). The repo is cloned into
+   * `<parentFolderPath>/<repo-name>`. Requires the git test server + credential.
+   */
+  async cloneGitProjectIntoFolder(name: string, parentFolderPath: string): Promise<void> {
+    await mockOpenDialogForDirectory(this.app, parentFolderPath);
+    await this.sidebar.clickNewProject();
+    await this.page.getByRole('textbox', { name: 'Project name' }).click();
+    await this.page.getByRole('textbox', { name: 'Project name' }).press('ControlOrMeta+a');
+    await this.page.getByRole('textbox', { name: 'Project name' }).fill(name);
+    await this.page.getByText('Git Sync').click();
+    await this.page.getByRole('button', { name: 'Access Token author Git' }).click();
+    await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
+    await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
+    await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('git-server.git');
+    await this.page.getByRole('button', { name: 'Show suggestions Branch' }).click();
+    await this.page.getByRole('option', { name: 'master' }).click();
+    // Pick the custom clone destination before scanning.
+    await this.page.getByRole('button', { name: 'Choose folder' }).click();
+    await this.page.getByRole('button', { name: 'Scan for files' }).click();
+    await this.page.getByRole('button', { name: 'Create Blank Project' }).click();
+  }
+
   async createGitSyncProject(name = 'My Git Project'): Promise<void> {
     await this.sidebar.clickNewProject();
     await this.page.getByRole('textbox', { name: 'Project name' }).click();

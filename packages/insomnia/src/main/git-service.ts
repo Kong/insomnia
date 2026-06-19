@@ -388,6 +388,28 @@ async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null
 }
 
 /**
+ * Delete a repository's on-disk folder, but ONLY when Insomnia owns it.
+ *
+ * Insomnia owns the app-managed location (`directory === null`). A user-chosen
+ * `directory` belongs to the user and must never be deleted when the project is
+ * removed (decision D4 in GIT_LOCAL_REPOS_DESIGN.md). Failures are logged, not
+ * thrown — losing a project record should not be blocked by a stale folder.
+ */
+async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 'directory'>) {
+  if (repo.directory) {
+    // User-owned folder — leave it on disk.
+    return;
+  }
+
+  const baseDir = await getRepoBaseDir(repo._id, null);
+  try {
+    await fs.promises.rm(baseDir, { recursive: true, force: true });
+  } catch (e) {
+    console.warn('[git] Failed to remove managed repo folder', baseDir, e);
+  }
+}
+
+/**
  * Creates a file system client for Git operations
  * Returns different clients based on whether we're working with a workspace or project
  *
@@ -551,6 +573,30 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
     const baseDir = await getRepoBaseDir(gitRepository._id, gitRepository.directory);
+
+    // For a user-owned folder, detect that it has been moved/renamed/deleted (or
+    // its drive unmounted) BEFORE creating the FS client — `fsClient` auto-creates
+    // its base dir, which would silently resurrect a deleted folder as empty and
+    // let the watcher wipe the database. We surface an "unavailable" state and let
+    // the user re-locate or remove the project; we never auto-remove it (OQ6/D4).
+    if (gitRepository.directory) {
+      let isAvailable = false;
+      try {
+        isAvailable = (await fs.promises.stat(gitRepository.directory)).isDirectory();
+      } catch {
+        isAvailable = false;
+      }
+      if (!isAvailable) {
+        return {
+          errors: [
+            `Repository folder not found at "${gitRepository.directory}". It may have been moved, renamed, or deleted, or its drive may not be mounted.`,
+          ],
+          repositoryUnavailable: true,
+          directory: gitRepository.directory,
+          gitRepository,
+        };
+      }
+    }
 
     const bufferId = await database.bufferChanges();
     const fsClient = await getGitFSClient({
@@ -1666,6 +1712,129 @@ export const openGitRepoAction = async ({
   }
 };
 
+/**
+ * Release a Git repository's runtime/disk resources when its project is being
+ * deleted (called from the renderer delete flow). Stops the file watcher and
+ * deletes the on-disk folder only when Insomnia owns it — user-chosen folders
+ * are left untouched (decision D4 in GIT_LOCAL_REPOS_DESIGN.md).
+ *
+ * The DB document removal stays in the renderer action so it participates in the
+ * same buffered change-set; this only handles the main-process-only concerns.
+ */
+export const cleanupGitRepoStorageAction = async ({ gitRepositoryId }: { gitRepositoryId: string }) => {
+  const repo = await services.gitRepository.getById(gitRepositoryId);
+  repoFileWatcherRegistry.stopWatcher(gitRepositoryId);
+  clearConflictSuppression(gitRepositoryId);
+  if (repo) {
+    await deleteManagedRepoFolderIfOwned(repo);
+  }
+  return {};
+};
+
+/**
+ * Move a Git project's on-disk repository to a user-chosen folder and record the
+ * new location on `GitRepository.directory`. See GIT_LOCAL_REPOS_DESIGN.md.
+ *
+ * The whole repository (working tree + `.git`) is moved, so history and
+ * uncommitted changes are preserved. If the previous location was the managed
+ * folder it is left empty by the move (rename) or removed (cross-device copy).
+ */
+export const relocateGitRepoAction = async ({
+  gitRepositoryId,
+  projectId,
+  newDirectory,
+}: {
+  gitRepositoryId: string;
+  projectId: string;
+  newDirectory: string;
+}) => {
+  if (!newDirectory || !path.isAbsolute(newDirectory)) {
+    return { errors: ['A valid absolute folder path is required.'] };
+  }
+  const targetDir = path.resolve(newDirectory);
+
+  const repo = await services.gitRepository.getById(gitRepositoryId);
+  invariant(repo, 'Git Repository not found');
+
+  const currentBaseDir = await getRepoBaseDir(repo._id, repo.directory);
+  if (path.resolve(currentBaseDir) === targetDir) {
+    return { errors: ['The repository is already in that folder.'] };
+  }
+
+  // Hard-block if another project already owns the target (OQ5).
+  const existing = await services.gitRepository.getByDirectory(targetDir);
+  if (existing && existing._id !== repo._id) {
+    return { errors: [`A project is already connected to this folder: ${targetDir}`] };
+  }
+
+  // Refuse to move onto an existing path — never clobber user data.
+  try {
+    await fs.promises.stat(targetDir);
+    return { errors: [`That folder already exists: ${targetDir}. Choose a folder that does not exist yet.`] };
+  } catch {
+    // Good — the destination does not exist.
+  }
+
+  // The destination's parent must exist and be writable.
+  try {
+    await fs.promises.access(path.dirname(targetDir), fs.constants.W_OK);
+  } catch {
+    return { errors: [`Cannot write to ${path.dirname(targetDir)}. Choose a different location.`] };
+  }
+
+  // Stop the watcher before touching files on disk.
+  repoFileWatcherRegistry.stopWatcher(repo._id);
+
+  try {
+    let currentExists = false;
+    try {
+      currentExists = (await fs.promises.stat(currentBaseDir)).isDirectory();
+    } catch {
+      // Nothing on disk yet (e.g. an empty managed repo) — just create the target.
+    }
+
+    if (currentExists) {
+      try {
+        await fs.promises.rename(currentBaseDir, targetDir);
+      } catch (e) {
+        // Cross-device moves (e.g. to an external drive) can't be renamed.
+        if ((e as NodeJS.ErrnoException)?.code === 'EXDEV') {
+          await fs.promises.cp(currentBaseDir, targetDir, { recursive: true });
+          await fs.promises.rm(currentBaseDir, { recursive: true, force: true });
+        } else {
+          throw e;
+        }
+      }
+    } else {
+      await fs.promises.mkdir(targetDir, { recursive: true });
+    }
+  } catch (e) {
+    // Move failed — leave the repo where it was and resume watching it.
+    await repoFileWatcherRegistry.startWatcher(repo._id, currentBaseDir, projectId);
+    return { errors: [`Failed to move repository: ${e instanceof Error ? e.message : String(e)}`] };
+  }
+
+  // Persist the new location and re-point the in-memory VCS + watcher at it.
+  await services.gitRepository.update(repo, { directory: targetDir });
+
+  const newFsClient = await getGitFSClient({ projectId, gitRepositoryId: repo._id, directory: targetDir });
+  // Re-init only when this repo is the one currently loaded in the singleton VCS;
+  // otherwise the next loadGitRepository will initialise it at the new location.
+  if (GitVCS.isInitializedForRepo(repo._id)) {
+    await GitVCS.init({
+      repoId: repo._id,
+      uri: repo.uri,
+      directory: GIT_CLONE_DIR,
+      fs: newFsClient,
+      gitDirectory: GIT_INTERNAL_DIR,
+      credentialsId: repo.credentialsId,
+    });
+  }
+  await repoFileWatcherRegistry.startWatcher(repo._id, targetDir, projectId);
+
+  return { directory: targetDir };
+};
+
 export const updateGitRepoAction = async ({
   projectId,
   workspaceId,
@@ -1792,6 +1961,8 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
   // Stop the file watcher for this repository (project-scoped flow only).
   repoFileWatcherRegistry.stopWatcher(repo._id);
   clearConflictSuppression(repo._id);
+  // Remove the on-disk folder only when Insomnia owns it (never a user folder).
+  await deleteManagedRepoFolderIfOwned(repo);
 
   await database.flushChanges(flushId);
 
@@ -3218,6 +3389,8 @@ export interface GitServiceAPI {
   initGitRepoClone: typeof initGitRepoCloneAction;
   cloneGitRepo: typeof cloneGitRepoAction;
   openGitRepo: typeof openGitRepoAction;
+  cleanupGitRepoStorage: typeof cleanupGitRepoStorageAction;
+  relocateGitRepo: typeof relocateGitRepoAction;
   updateGitRepo: typeof updateGitRepoAction;
   resetGitRepo: typeof resetGitRepoAction;
   commitToGitRepo: typeof commitToGitRepoAction;
@@ -3284,6 +3457,12 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle('git.openGitRepo', (_, options: Parameters<typeof openGitRepoAction>[0]) =>
     openGitRepoAction(options),
+  );
+  ipcMainHandle('git.cleanupGitRepoStorage', (_, options: Parameters<typeof cleanupGitRepoStorageAction>[0]) =>
+    cleanupGitRepoStorageAction(options),
+  );
+  ipcMainHandle('git.relocateGitRepo', (_, options: Parameters<typeof relocateGitRepoAction>[0]) =>
+    relocateGitRepoAction(options),
   );
   ipcMainHandle('git.initGitRepoClone', (_, options: Parameters<typeof initGitRepoCloneAction>[0]) =>
     initGitRepoCloneAction(options),

@@ -69,6 +69,7 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
+import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec';
@@ -102,8 +103,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     : workspaceMeta?.gitRepositoryId;
   // we don't run the lint here because it is expensive and slows first render too much
   // TODO: add this in once we run this loader outside the renderer
-  const gitSyncRulesetPath = gitRepositoryId
-    ? window.path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/.spectral.yaml`)
+  // Honour user-chosen repo locations: the ruleset lives at the repo root, which
+  // is the GitRepository's `directory` when set, else the managed location.
+  const gitRepository = gitRepositoryId ? await services.gitRepository.getById(gitRepositoryId) : null;
+  const gitSyncRulesetPath = gitRepository
+    ? window.path.join(resolveGitRepoBaseDir(gitRepository), '.spectral.yaml')
     : '';
 
   // The ProjectLintRuleset record is the source of truth for both git and cloud projects.
