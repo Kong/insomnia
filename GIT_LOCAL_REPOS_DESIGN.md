@@ -214,6 +214,19 @@ Findings from the spike (see [Spike Findings](#spike-findings--qa) for detail):
   and OneDrive/Dropbox virtual files must surface actionable errors.
 - **Symlinks / network drives**: resolve real path; warn (not block) on network
   paths since isomorphic-git + watcher latency may degrade.
+- **Folder-trust prompt** ✅: opening an arbitrary folder imports whatever
+  collections/environments/rulesets it contains, and collections can carry
+  pre-request / after-response scripts (which run in Insomnia's sandbox when a
+  request is *sent*, not on open). Before adopting a folder we show a shared
+  trust confirmation
+  ([`confirmOpenFolderTrust`](packages/insomnia/src/ui/utils/git-folder-trust.tsx))
+  — "Only open folders from a source you trust", showing the path — used by both
+  entry points: **New Project → Open existing folder** and **Open folder from the
+  OS** (CLI/Finder/deep link). It's a per-open confirmation (no "remember"
+  needed — the collision guard means each folder is adopted at most once). Key
+  safety property worth stating: because we use **isomorphic-git** (D6), opening a
+  folder **never executes git hooks** — unlike running the native `git` CLI or a
+  VS Code task — so the residual risk is limited to imported Insomnia content.
 
 ### D6. Keep isomorphic-git (no native git dependency)
 
@@ -256,8 +269,11 @@ to another machine won't carry the path (expected for local repos).
 
 - **How safe is opening any folder as a Git project?** Acceptable. The FS
   boundary is unchanged: only the main process does disk I/O, and the path is
-  user-consented via the native dialog. Residual risk is user-error (pointing at
-  the wrong folder), mitigated by validation + the "no auto-delete" rule (D4).
+  user-consented via the native dialog. We use isomorphic-git, so opening a folder
+  **never runs git hooks** (no arbitrary code execution from the repo). The
+  residual risk is imported Insomnia content (collections may contain request
+  scripts) and user-error (wrong folder) — mitigated by the **folder-trust prompt**
+  (D5), main-side validation, and the "no auto-delete" rule (D4).
 - **File-permission issues?** Yes, expected and must be handled: read-only dirs,
   macOS TCC-protected locations (Desktop/Documents/Downloads/iCloud), Windows
   ACLs, and cloud-sync placeholder files (OneDrive/Dropbox "online-only").
@@ -406,6 +422,37 @@ E2E smoke tests in
 POM helpers `openGitProjectFromFolder` / `cloneGitProjectIntoFolder` added to
 [`project/index.ts`](packages/insomnia-smoke-test/playwright/pages/project/index.ts).
 Run: `npm run test:smoke:dev -- git-local-repos`.
+
+6. ✅ **"Open folder in Insomnia" (OS integration).** Open a local folder as a
+   Git project from outside the app:
+   - **CLI**: `insomnia /path/to/folder` (cold start via argv, or running app via
+     `second-instance`).
+   - **macOS Finder**: *Open With → Insomnia* on a folder — enabled by a
+     `public.folder` `CFBundleDocumentTypes` entry in
+     [`electron-builder.config.js`](packages/insomnia/electron-builder.config.js)
+     `mac.extendInfo`, handled by `app.on('open-file')`.
+   - **Deep link**: `insomnia://app/open-folder?path=<encoded>`.
+
+   The **main process** owns folder detection (it has `fs`): `toOpenFolderDeepLink`
+   verifies the path is an existing directory and normalises every entry point
+   into the single deep link `insomnia://app/open-folder?path=…` before sending
+   `shell:open`. This keeps the **renderer** to one clean case in
+   [`root.tsx`](packages/insomnia/src/root.tsx). The handler resolves the
+   **currently active org** (fallback: last-visited org), shows the trust prompt,
+   then **submits through the project-creation route action**
+   (`useProjectNewActionFetcher` with `openExistingDirectory`) rather than calling
+   the `openGitRepo` IPC directly — so React Router revalidates loaders (the
+   sidebar/project list refresh) and the action's redirect navigates to the new
+   project. Calling the IPC directly was a bug: the DB changed but no loaders
+   revalidated, so the UI didn't update (same class of issue the relocate route
+   action solves). Windows Explorer context-menu was left
+   out of scope (NSIS registry work); the CLI path already works on Windows.
+   **Caveat:** cold-start `open-file`/`open-url` reliability matches the existing
+   deep-link behaviour — events firing before the listener attaches are not yet
+   buffered. **Dev testing:** the Finder association / `insomnia://` protocol only
+   register for an *installed, signed* build, so there's a dev-only **Developer →
+   Open folder in Insomnia…** menu item ([window-utils.ts](packages/insomnia/src/main/window-utils.ts))
+   that runs the native folder picker and fires the same `open-folder` deep link.
 
 ### Known remaining path-construction sites
 
