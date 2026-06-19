@@ -67,6 +67,7 @@ interface Props {
   onSuccessUpdate?(): void;
   credentials: GitCredentials[];
   providers: GitProviderOption[];
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
@@ -78,6 +79,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   onSuccessUpdate,
   credentials,
   providers,
+  onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -122,6 +124,14 @@ export const ProjectSettingsForm: FC<Props> = ({
       ? initCloneGitRepositoryFetcher.data.files
       : [];
 
+  const changedFieldCount = [
+    projectData.name !== project?.name,
+    isSwitchingStorageType(project!, storageType),
+    project?.gitRepositoryId && projectData.uri !== gitRepository?.uri,
+    project?.gitRepositoryId && projectData.credentialsId !== gitRepository?.credentialsId,
+    project?.gitRepositoryId && projectData.selectedAuthorEmail !== gitRepository?.selectedAuthorEmail,
+  ].filter(Boolean).length;
+
   useEffect(() => {
     if (updateProjectFetcher?.data && updateProjectFetcher?.data?.success && onSuccessUpdate) {
       onSuccessUpdate();
@@ -133,6 +143,10 @@ export const ProjectSettingsForm: FC<Props> = ({
       setError(updateProjectFetcher.data.error);
     }
   }, [updateProjectFetcher.data, updateProjectFetcher.state]);
+
+  useEffect(() => {
+    if (onDirtyChange) onDirtyChange(changedFieldCount > 1);
+  }, [onDirtyChange, changedFieldCount]);
 
   const onUpsertProject = () => {
     if (project) {

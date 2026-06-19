@@ -23,7 +23,7 @@ import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
 import * as crypt from '~/common/account/crypt';
-import { AI_PLUGIN_NAME } from '~/common/constants';
+import { AI_PLUGIN_NAME, type UpdateStatus } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
 import type {
@@ -220,6 +220,8 @@ export interface RendererToMainBridgeAPI {
   halfSecondAfterAppStart: () => void;
   openDeepLink: (url: string) => void;
   manualUpdateCheck: () => void;
+  applyUpdateAndRestart: () => void;
+  getUpdateStatus: () => UpdateStatus;
   backup: () => Promise<void>;
   restoreBackup: (version: string) => Promise<void>;
   authorizeUserInWindow: typeof authorizeUserInWindow;

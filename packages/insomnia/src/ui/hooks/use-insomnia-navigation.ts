@@ -164,7 +164,7 @@ const getMatchedRoute = (pathname: string, searchParams: URLSearchParams) => {
 
     return {
       route,
-      params: match.params,
+      params: match.params as Record<string, string | undefined>,
       resourceId,
     };
   }

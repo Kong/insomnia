@@ -26,6 +26,7 @@ import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 import { createPluginWindow, destroyPluginWindow } from './plugin-window';
+import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -204,12 +205,11 @@ export function createWindow(): ElectronBrowserWindow {
     webPreferences: {
       preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
-      nodeIntegration: false,
-      nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs
       webviewTag: true,
-      // TODO: enable context isolation
-      contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',
+      // Security-critical flags (nodeIntegration/contextIsolation). Pinned by window-security.test.ts.
+      // Spread last so nothing below can override them. Do not weaken — see ./window-security.
+      ...MAIN_WINDOW_SECURITY,
     },
   });
   browserWindows.set('Insomnia', mainBrowserWindow);

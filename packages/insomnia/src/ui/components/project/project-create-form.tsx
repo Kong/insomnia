@@ -26,6 +26,7 @@ interface Props {
   activeViewObj?: ReturnType<typeof useActiveView>;
   credentials: GitCredentials[];
   providers: GitProviderOption[];
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export const ProjectCreateForm: FC<Props> = ({
@@ -35,6 +36,7 @@ export const ProjectCreateForm: FC<Props> = ({
   activeViewObj,
   credentials,
   providers,
+  onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -65,6 +67,18 @@ export const ProjectCreateForm: FC<Props> = ({
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
       ? initCloneGitRepositoryFetcher.data.files
       : [];
+
+  const changedFieldCount = [
+    projectData.name !== defaultProjectName,
+    !!storageType,
+    projectData.uri && projectData.uri.length > 0,
+    !!projectData.credentialsId,
+    projectData.connectRepositoryLater !== false,
+  ].filter(Boolean).length;
+
+  useEffect(() => {
+    if (onDirtyChange) onDirtyChange(changedFieldCount > 1);
+  }, [changedFieldCount, onDirtyChange]);
 
   useEffect(() => {
     if (newProjectFetcher.state === 'idle' && newProjectFetcher.data && newProjectFetcher.data?.error) {
