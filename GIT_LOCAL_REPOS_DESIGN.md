@@ -357,25 +357,78 @@ to another machine won't carry the path (expected for local repos).
    collision (`getByDirectory`, OQ5). UI: a **Clone from URL / Open existing
    folder** toggle in the project-create git section; open mode needs no
    credentials and the button reads **Open**.
-4. **Lifecycle & errors.** Implement D4 deletion semantics + missing-folder
-   "unavailable" surface (OQ6, never auto-remove) + *Locate*/*Remove* actions +
-   permission error surfaces.
-5. **Polish.** Reveal-in-folder, last-used dir, collision guard, health badge.
+4. ✅ **Lifecycle & errors (core).** D4 deletion semantics implemented:
+   `deleteManagedRepoFolderIfOwned()` deletes the on-disk folder **only** when
+   Insomnia owns it (`directory === null`); user folders are never deleted. Wired
+   into project delete (`cleanupGitRepoStorageAction` IPC — also stops the watcher
+   and clears conflict suppression), git→local conversion, and
+   `resetGitRepoAction`. **Note:** folder deletion for managed repos is *new* —
+   previously the folder leaked on delete. Missing-folder detection (OQ6) added to
+   `loadGitRepository`: for a user folder, it `stat`s the path **before** creating
+   the FS client (which would otherwise auto-recreate a deleted folder as empty and
+   let the watcher wipe the DB) and returns a structured
+   `{ repositoryUnavailable: true, directory }` error instead of proceeding. Never
+   auto-removes the project. **Still pending:** the actionable *Locate…* (re-point
+   `directory`) / *Remove* buttons + a dedicated unavailable banner in the project
+   route — today the unavailable state surfaces as the loader error message.
+5. 🟡 **Polish.** ✅ Reveal-in-folder (Git repository settings modal shows the
+   resolved **Local folder** path with a *Reveal* button via
+   `shell.showItemInFolder`). ✅ Last-used dir (step 2). ✅ Collision guard (steps
+   2–3). ✅ **Relocate / "Move to another folder"** (`relocateGitRepoAction`):
+   the project-settings **Path to local files** row now has a *Move to another
+   folder* button — picks a parent, moves the whole repo (working tree + `.git`,
+   preserving history) into `<parent>/<repo-name>`, persists `directory`,
+   re-points the singleton `GitVCS` + watcher, and refuses to clobber an existing
+   folder or collide with another project (OQ5). Cross-device moves fall back from
+   `rename` to `cp -r` + remove; on failure the watcher is restored at the
+   original location. This makes **managed** projects relocatable too — moving a
+   managed repo empties/removes its `version-control/git/<id>` folder. Invoked via
+   a [`/git/relocate`](packages/insomnia/src/routes/git.relocate.tsx) **route
+   action** (fetcher) so React Router revalidates loaders after the move and the
+   settings UI reflects the new path without a manual refresh.
+   **Pending:** sidebar health badge for unavailable repos.
 
 Each step is independently shippable; steps 2–3 can ship behind a feature flag.
 
+### Tests
+
+E2E smoke tests in
+[`git-local-repos.test.ts`](packages/insomnia-smoke-test/tests/smoke/git-local-repos.test.ts)
+(native dir picker mocked via `mockOpenDialogForDirectory`):
+
+- **Open a plain folder** → adopts it and `git init` runs (asserts `.git` appears
+  on disk) — exercises step 3 + OQ2.
+- **Open the same folder twice** → second attempt surfaces the
+  "already connected to this folder" hard-block — exercises OQ5.
+- **Clone into a chosen parent** → repo lands at `<parent>/git-server/.git`
+  (git test server + credential) — exercises step 2.
+
+POM helpers `openGitProjectFromFolder` / `cloneGitProjectIntoFolder` added to
+[`project/index.ts`](packages/insomnia-smoke-test/playwright/pages/project/index.ts).
+Run: `npm run test:smoke:dev -- git-local-repos`.
+
 ### Known remaining path-construction sites
 
-Step 1 centralizes the main-process path through `getRepoBaseDir()`. One
-**renderer-side** site still builds the managed path inline and must be threaded
-with the repo's `directory` before custom locations ship:
+Step 1 centralizes the main-process path through `getRepoBaseDir()`. The
+renderer-side sites that built the managed path inline now respect `directory`:
 
-- [`...workspace.$workspaceId.spec.tsx:105`](packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx#L105)
-  builds `gitSyncRulesetPath` as
-  `window.app.getPath('userData')/version-control/git/{id}/.spectral.yaml`.
-  Correct only for managed repos (`directory: null`). When custom directories
-  land, the loader must resolve the repo's `directory` (e.g. via an IPC/loader
-  value) instead of assuming `userData`. Tracked for step 2/3.
+- ✅ [`...workspace.$workspaceId.spec.tsx`](packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.tsx)
+  `gitSyncRulesetPath` now resolves the `GitRepository.directory` (falling back to
+  the managed location) before joining `.spectral.yaml`.
+- ✅ [`git-repository-settings-modal.tsx`](packages/insomnia/src/ui/components/modals/git-repository-settings-modal/git-repository-settings-modal.tsx)
+  computes the same resolved base dir for the **Local folder** / *Reveal* row.
+- ✅ [`project-settings-form.tsx`](packages/insomnia/src/ui/components/project/project-settings-form.tsx)
+  the **Path to local files** row was hard-coded to the managed path — now uses
+  the resolver (so custom-directory projects show their real folder) and hosts the
+  *Move to another folder* action.
+- ✅ [`git-project-staging-modal.tsx`](packages/insomnia/src/ui/components/modals/git-project-staging-modal.tsx)
+  the commit modal's **Path to this project** row.
+- ✅ [`git-project-sync-dropdown.tsx`](packages/insomnia/src/ui/components/dropdowns/git-project-sync-dropdown.tsx)
+  the git sync dropdown's repo-path display.
+
+All of these share [`resolveGitRepoBaseDir()`](packages/insomnia/src/ui/utils/git-repo-path.ts)
+— the renderer mirror of the main-process `getRepoBaseDir()`. New renderer sites
+needing the repo path should use it rather than re-inlining the fallback.
 
 ---
 
