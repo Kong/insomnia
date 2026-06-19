@@ -188,6 +188,98 @@ describe('curl', () => {
       expected: { body: { text: 'key=value' } },
     },
 
+    // --form / -F flags (multipart/form-data)
+    {
+      name: 'should handle --form with plain key=value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'field=value'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'field', value: 'value', type: 'text' }],
+        },
+      },
+    },
+    {
+      name: 'should handle --form with @filename',
+      curl: "curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'file=@/tmp/a.json'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'file', fileName: '/tmp/a.json', type: 'file' }],
+        },
+      },
+    },
+    {
+      name: 'should strip ;type= modifier from --form file value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'data=@/tmp/a.json;type=application/json'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'data', fileName: '/tmp/a.json', type: 'file' }],
+        },
+      },
+    },
+    {
+      name: 'should strip ;filename= modifier from --form file value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'upload=@/tmp/a.bin;filename=renamed.bin'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'upload', fileName: '/tmp/a.bin', type: 'file' }],
+        },
+      },
+    },
+    {
+      name: 'should strip multiple chained modifiers from --form file value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'upload=@/tmp/a.bin;type=application/octet-stream;filename=renamed.bin'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'upload', fileName: '/tmp/a.bin', type: 'file' }],
+        },
+      },
+    },
+    {
+      name: 'should strip ;type= modifier from --form text value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'field=value;type=text/csv'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'field', value: 'value', type: 'text' }],
+        },
+      },
+    },
+    {
+      name: 'should preserve semicolons in quoted --form text value',
+      curl: `curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'colors="red; green; blue";type=text/x-myapp'`,
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'colors', value: 'red; green; blue', type: 'text' }],
+        },
+      },
+    },
+    {
+      name: 'should preserve semicolons in quoted --form filename',
+      curl: `curl -X POST https://example.com -H 'Content-Type: multipart/form-data' --form 'file=@"local;file";filename="name;in;post"'`,
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'file', fileName: 'local;file', type: 'file' }],
+        },
+      },
+    },
+    {
+      name: 'should handle -F alias the same as --form',
+      curl: "curl -X POST https://example.com -H 'Content-Type: multipart/form-data' -F 'data=@/tmp/a.json;type=application/json'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'data', fileName: '/tmp/a.json', type: 'file' }],
+        },
+      },
+    },
+
     // -H flags
     {
       name: 'should handle -H with space after colon',
