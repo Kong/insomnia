@@ -222,17 +222,38 @@ app.on('activate', (_error, hasVisibleWindows) => {
   }
 });
 
+// When a folder path is opened from the OS (CLI arg, Finder "Open With", etc.),
+// normalise it into the open-folder deep link so the renderer has a single,
+// well-formed entry point. Returns null when the path isn't an existing folder.
+// See GIT_LOCAL_REPOS_DESIGN.md.
+const toOpenFolderDeepLink = async (rawPath: string): Promise<string | null> => {
+  try {
+    if (!rawPath || !path.isAbsolute(rawPath)) {
+      return null;
+    }
+    const stats = await fs.stat(rawPath);
+    if (!stats.isDirectory()) {
+      return null;
+    }
+    return `insomnia://app/open-folder?path=${encodeURIComponent(rawPath)}`;
+  } catch {
+    return null;
+  }
+};
+
 const _launchApp = async () => {
   await _trackStats();
   let window: BrowserWindow;
   // Handle URLs sent via command line args
-  ipcMainOnce('halfSecondAfterAppStart', () => {
+  ipcMainOnce('halfSecondAfterAppStart', async () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
     const args = process.argv.slice(1).filter(a => a !== '.');
     console.log('[main] Check args and create windows', args);
     if (args.length) {
       window = windowUtils.createWindowsAndReturnMain();
-      window.webContents.send('shell:open', args.join(','));
+      // A folder path (e.g. `insomnia /path/to/repo`) opens it as a Git project.
+      const folderDeepLink = await toOpenFolderDeepLink(args[args.length - 1]);
+      window.webContents.send('shell:open', folderDeepLink || args.join(','));
     }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
@@ -244,7 +265,7 @@ const _launchApp = async () => {
       app.quit();
     } else {
       // Called when second instance launched with args (Windows/Linux)
-      app.on('second-instance', (_1, args) => {
+      app.on('second-instance', async (_1, args) => {
         console.log('[main] Second instance listener received:', args.join('||'));
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -255,7 +276,8 @@ const _launchApp = async () => {
         }
         const lastArg = args.slice(-1).join(',');
         console.log('[main] Open Deep Link URL sent from second instance', lastArg);
-        window.webContents.send('shell:open', lastArg);
+        const folderDeepLink = await toOpenFolderDeepLink(lastArg);
+        window.webContents.send('shell:open', folderDeepLink || lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
 
@@ -275,6 +297,15 @@ const _launchApp = async () => {
 
       app.on('open-url', (_event, url) => {
         openDeepLinkUrl(url);
+      });
+      // macOS Finder "Open With" → Insomnia for a folder (declared as a folder
+      // document type in electron-builder.config.js). Only folders are adopted.
+      app.on('open-file', async (event, filePath) => {
+        event.preventDefault();
+        const folderDeepLink = await toOpenFolderDeepLink(filePath);
+        if (folderDeepLink) {
+          openDeepLinkUrl(folderDeepLink);
+        }
       });
       ipcMainOn('openDeepLink', (_event, url) => {
         openDeepLinkUrl(url);

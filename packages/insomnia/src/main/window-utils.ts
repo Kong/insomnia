@@ -634,6 +634,26 @@ export function createWindow(): ElectronBrowserWindow {
           hiddenBrowserWindow ? stopHiddenBrowserWindow() : createHiddenBrowserWindow();
         },
       },
+      {
+        // Simulates the OS "Open folder in Insomnia" flow without a packaged build
+        // (Finder association / protocol handler only register for an installed app).
+        label: `${MNEMONIC_SYM}Open folder in Insomnia…`,
+        click: async () => {
+          const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
+          if (!window) {
+            return;
+          }
+          const { canceled, filePaths } = await dialog.showOpenDialog(window, {
+            title: 'Open folder in Insomnia',
+            buttonLabel: 'Open',
+            properties: ['openDirectory'],
+          });
+          if (canceled || !filePaths[0]) {
+            return;
+          }
+          window.webContents.send('shell:open', `insomnia://app/open-folder?path=${encodeURIComponent(filePaths[0])}`);
+        },
+      },
     ],
   };
   const toolsMenu: MenuItemConstructorOptions = {

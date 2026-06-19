@@ -14,6 +14,7 @@ import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
 import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { deriveRepoName, type ProjectData, type ProjectType, useActiveView } from '~/ui/components/project/utils';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
+import { confirmOpenFolderTrust } from '~/ui/utils/git-folder-trust';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { Icon } from '../icon';
@@ -92,8 +93,14 @@ export const ProjectCreateForm: FC<Props> = ({
 
   const isGitOpen = storageType === 'git' && gitMode === 'open';
 
-  const onUpsertProject = () => {
+  const onUpsertProject = async () => {
     if (!storageType) {
+      return;
+    }
+
+    // Opening an arbitrary local folder pulls in whatever it contains, so ask
+    // the user to confirm they trust it first. See GIT_LOCAL_REPOS_DESIGN.md.
+    if (isGitOpen && openExistingDir && !(await confirmOpenFolderTrust(openExistingDir))) {
       return;
     }
 

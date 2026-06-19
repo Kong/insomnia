@@ -58,6 +58,16 @@ const config = {
       NSRequiresAquaSystemAppearance: false,
       NSLocalNetworkUsageDescription:
         'Insomnia needs permission to connect to local APIs and development servers such as localhost, 127.0.0.1, or other LAN hosts.',
+      // Allow Finder "Open With → Insomnia" on folders so they can be opened as
+      // Git projects. See GIT_LOCAL_REPOS_DESIGN.md.
+      CFBundleDocumentTypes: [
+        {
+          CFBundleTypeName: 'Folder',
+          CFBundleTypeRole: 'Viewer',
+          LSHandlerRank: 'Alternate',
+          LSItemContentTypes: ['public.folder'],
+        },
+      ],
     },
     // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
     notarize: true,
