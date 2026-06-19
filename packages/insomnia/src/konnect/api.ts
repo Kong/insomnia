@@ -86,7 +86,9 @@ async function fetchWithRetry(url: string, pat: string, signal?: AbortSignal): P
   while (true) {
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${pat}` },
-      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]) : AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)])
+        : AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     if (response.status !== 429 || attempt >= MAX_RETRY_ATTEMPTS) {
@@ -140,7 +142,11 @@ export async function validatePat(pat: string): Promise<PatValidationResult> {
   }
 }
 
-export async function* fetchAllControlPlanes(pat: string, region: KonnectRegion, signal?: AbortSignal): AsyncGenerator<KonnectControlPlane[]> {
+export async function* fetchAllControlPlanes(
+  pat: string,
+  region: KonnectRegion,
+  signal?: AbortSignal,
+): AsyncGenerator<KonnectControlPlane[]> {
   let page = 1;
   let totalPages = 1;
 

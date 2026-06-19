@@ -73,7 +73,12 @@ function makeRoute(overrides: Partial<KonnectRoute> = {}): KonnectRoute {
  * - Control planes: page-number pagination (meta.page.total)
  * - Services / routes: cursor pagination (offset field)
  */
-function mockFetch(cps: KonnectControlPlane[], services: KonnectService[], routes: KonnectRoute[], opts?: { failRegion?: string }) {
+function mockFetch(
+  cps: KonnectControlPlane[],
+  services: KonnectService[],
+  routes: KonnectRoute[],
+  opts?: { failRegion?: string },
+) {
   const json = (data: unknown) =>
     new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
@@ -2135,8 +2140,26 @@ describe('Feature: Expression-Based Routes', () => {
 
 describe('Feature: Multi-Region Control Plane Sync', () => {
   it('Scenario: Syncs control planes from multiple regions in a single pass', async () => {
-    const usCp = makeCp({ id: 'cp-us', name: 'US Plane', region: 'us', config: { cluster_type: 'CLUSTER_TYPE_HYBRID', control_plane_endpoint: 'https://abc.us.cp0.konghq.com', cloud_gateway: true } });
-    const euCp = makeCp({ id: 'cp-eu', name: 'EU Plane', region: 'eu', config: { cluster_type: 'CLUSTER_TYPE_HYBRID', control_plane_endpoint: 'https://abc.eu.cp0.konghq.com', cloud_gateway: true } });
+    const usCp = makeCp({
+      id: 'cp-us',
+      name: 'US Plane',
+      region: 'us',
+      config: {
+        cluster_type: 'CLUSTER_TYPE_HYBRID',
+        control_plane_endpoint: 'https://abc.us.cp0.konghq.com',
+        cloud_gateway: true,
+      },
+    });
+    const euCp = makeCp({
+      id: 'cp-eu',
+      name: 'EU Plane',
+      region: 'eu',
+      config: {
+        cluster_type: 'CLUSTER_TYPE_HYBRID',
+        control_plane_endpoint: 'https://abc.eu.cp0.konghq.com',
+        cloud_gateway: true,
+      },
+    });
 
     vi.stubGlobal('fetch', mockFetch([usCp, euCp], [], []));
 
@@ -2149,8 +2172,26 @@ describe('Feature: Multi-Region Control Plane Sync', () => {
   });
 
   it('Scenario: Deletes project when CP is removed from its region', async () => {
-    const usCp = makeCp({ id: 'cp-us', name: 'US Plane', region: 'us', config: { cluster_type: 'CLUSTER_TYPE_HYBRID', control_plane_endpoint: 'https://abc.us.cp0.konghq.com', cloud_gateway: true } });
-    const euCp = makeCp({ id: 'cp-eu', name: 'EU Plane', region: 'eu', config: { cluster_type: 'CLUSTER_TYPE_HYBRID', control_plane_endpoint: 'https://abc.eu.cp0.konghq.com', cloud_gateway: true } });
+    const usCp = makeCp({
+      id: 'cp-us',
+      name: 'US Plane',
+      region: 'us',
+      config: {
+        cluster_type: 'CLUSTER_TYPE_HYBRID',
+        control_plane_endpoint: 'https://abc.us.cp0.konghq.com',
+        cloud_gateway: true,
+      },
+    });
+    const euCp = makeCp({
+      id: 'cp-eu',
+      name: 'EU Plane',
+      region: 'eu',
+      config: {
+        cluster_type: 'CLUSTER_TYPE_HYBRID',
+        control_plane_endpoint: 'https://abc.eu.cp0.konghq.com',
+        cloud_gateway: true,
+      },
+    });
 
     vi.stubGlobal('fetch', mockFetch([usCp, euCp], [], []));
     await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
@@ -2168,17 +2209,32 @@ describe('Feature: Multi-Region Control Plane Sync', () => {
 
 describe('Feature: Region fetch error resilience', () => {
   it('Scenario: Continues syncing other regions when one fails', async () => {
-    const usCp = makeCp({ id: 'cp-us', name: 'US Plane', region: 'us', config: { cluster_type: 'CLUSTER_TYPE_HYBRID', control_plane_endpoint: 'https://abc.us.cp0.konghq.com', cloud_gateway: true } });
+    const usCp = makeCp({
+      id: 'cp-us',
+      name: 'US Plane',
+      region: 'us',
+      config: {
+        cluster_type: 'CLUSTER_TYPE_HYBRID',
+        control_plane_endpoint: 'https://abc.us.cp0.konghq.com',
+        cloud_gateway: true,
+      },
+    });
 
-    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
-      if (url.includes('eu.api.konghq.com/v2/control-planes')) {
-        return new Response('Internal Server Error', { status: 500 });
-      }
-      if (url.includes('.api.konghq.com/v2/control-planes')) {
-        return new Response(JSON.stringify({ data: [usCp], meta: { page: { total: 1, size: 100, number: 1 } } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-      }
-      return new Response('Not found', { status: 404 });
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url.includes('eu.api.konghq.com/v2/control-planes')) {
+          return new Response('Internal Server Error', { status: 500 });
+        }
+        if (url.includes('.api.konghq.com/v2/control-planes')) {
+          return new Response(JSON.stringify({ data: [usCp], meta: { page: { total: 1, size: 100, number: 1 } } }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        return new Response('Not found', { status: 404 });
+      }),
+    );
 
     const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
 
@@ -2189,8 +2245,26 @@ describe('Feature: Region fetch error resilience', () => {
   });
 
   it('Scenario: Does not delete projects from a region that failed to fetch', async () => {
-    const usCp = makeCp({ id: 'cp-us', name: 'US Plane', region: 'us', config: { cluster_type: 'CLUSTER_TYPE_HYBRID', control_plane_endpoint: 'https://abc.us.cp0.konghq.com', cloud_gateway: true } });
-    const euCp = makeCp({ id: 'cp-eu', name: 'EU Plane', region: 'eu', config: { cluster_type: 'CLUSTER_TYPE_HYBRID', control_plane_endpoint: 'https://abc.eu.cp0.konghq.com', cloud_gateway: true } });
+    const usCp = makeCp({
+      id: 'cp-us',
+      name: 'US Plane',
+      region: 'us',
+      config: {
+        cluster_type: 'CLUSTER_TYPE_HYBRID',
+        control_plane_endpoint: 'https://abc.us.cp0.konghq.com',
+        cloud_gateway: true,
+      },
+    });
+    const euCp = makeCp({
+      id: 'cp-eu',
+      name: 'EU Plane',
+      region: 'eu',
+      config: {
+        cluster_type: 'CLUSTER_TYPE_HYBRID',
+        control_plane_endpoint: 'https://abc.eu.cp0.konghq.com',
+        cloud_gateway: true,
+      },
+    });
 
     // First sync: both regions succeed
     vi.stubGlobal('fetch', mockFetch([usCp, euCp], [], []));

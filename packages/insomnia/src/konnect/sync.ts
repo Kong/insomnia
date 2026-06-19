@@ -610,7 +610,8 @@ async function syncControlPlane(
     if (
       project.name !== controlPlane.name ||
       project.konnectClusterType !== controlPlane.config.cluster_type ||
-      getKonnectDeploymentType(controlPlane) !== project.konnectDeploymentType
+      getKonnectDeploymentType(controlPlane) !== project.konnectDeploymentType ||
+      project.konnectRegion !== controlPlane.region
     ) {
       project = await insoservices.project.update(project, {
         name: controlPlane.name,
@@ -732,7 +733,7 @@ export async function syncKonnect({ pat, organizationId, signal, onProgress }: S
     // risk deleting projects whose CPs simply weren't returned.
     const failedRegions = new Set(acc.skippedRegions.map(entry => entry.split(':')[0]));
     for (const [controlPlaneId, project] of existingProjectsByKonnectId) {
-      if (!incomingControlPlaneIds.has(controlPlaneId) && !failedRegions.has(project.konnectRegion ?? '')) {
+      if (!incomingControlPlaneIds.has(controlPlaneId) && project.konnectRegion && !failedRegions.has(project.konnectRegion)) {
         await insoservices.project.remove(project);
         acc.controlPlaneCounts.deleted++;
       }
