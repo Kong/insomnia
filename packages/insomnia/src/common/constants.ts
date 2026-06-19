@@ -119,7 +119,13 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
 export const getKonnectApiUrl = () => env.KONNECT_API_URL || 'api.konghq.com';
-export const getKonnectApiRegions = (): string[] => env.KONNECT_API_REGIONS?.split(',').map((r: string) => r.trim()).filter(Boolean) ?? ['us', 'eu', 'au', 'in', 'sg'];
+export const getKonnectApiRegions = (): string[] => {
+   const regions = (env.KONNECT_API_REGIONS ?? '')
+     .split(',')
+     .map((r: string) => r.trim())
+     .filter(Boolean);
+   return regions.length > 0 ? regions : ['us', 'eu', 'au', 'in', 'sg'];
+};
 
 // App website
 export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';

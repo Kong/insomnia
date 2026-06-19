@@ -616,6 +616,7 @@ async function syncControlPlane(
         name: controlPlane.name,
         konnectClusterType: controlPlane.config.cluster_type,
         konnectDeploymentType: getKonnectDeploymentType(controlPlane),
+        konnectRegion: controlPlane.region,
       });
       acc.controlPlaneCounts.updated++;
     }
@@ -626,6 +627,7 @@ async function syncControlPlane(
       konnectControlPlaneId: controlPlane.id,
       konnectClusterType: controlPlane.config.cluster_type,
       konnectDeploymentType: getKonnectDeploymentType(controlPlane),
+      konnectRegion: controlPlane.region,
     });
     existingProjectsByKonnectId.set(controlPlane.id, project);
     acc.controlPlaneCounts.created++;
@@ -725,9 +727,12 @@ export async function syncKonnect({ pat, organizationId, signal, onProgress }: S
       }
     }
 
-    // Delete stale projects (Control Planes removed from Konnect)
+    // Delete stale projects, but skip any whose region failed to fetch —
+    // incomingControlPlaneIds is incomplete for those regions so we would
+    // risk deleting projects whose CPs simply weren't returned.
+    const failedRegions = new Set(acc.skippedRegions.map(entry => entry.split(':')[0]));
     for (const [controlPlaneId, project] of existingProjectsByKonnectId) {
-      if (!incomingControlPlaneIds.has(controlPlaneId)) {
+      if (!incomingControlPlaneIds.has(controlPlaneId) && !failedRegions.has(project.konnectRegion ?? '')) {
         await insoservices.project.remove(project);
         acc.controlPlaneCounts.deleted++;
       }

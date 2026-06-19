@@ -73,7 +73,7 @@ function makeRoute(overrides: Partial<KonnectRoute> = {}): KonnectRoute {
  * - Control planes: page-number pagination (meta.page.total)
  * - Services / routes: cursor pagination (offset field)
  */
-function mockFetch(cps: KonnectControlPlane[], services: KonnectService[], routes: KonnectRoute[]) {
+function mockFetch(cps: KonnectControlPlane[], services: KonnectService[], routes: KonnectRoute[], opts?: { failRegion?: string }) {
   const json = (data: unknown) =>
     new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
@@ -87,6 +87,9 @@ function mockFetch(cps: KonnectControlPlane[], services: KonnectService[], route
     }
     if (url.includes('.api.konghq.com/v2/control-planes')) {
       const region = new URL(url).hostname.split('.')[0];
+      if (opts?.failRegion === region) {
+        return new Response('Internal Server Error', { status: 500 });
+      }
       const regionalCps = cps.filter(cp => cp.config.control_plane_endpoint.includes(`.${region}.`));
       return json({ data: regionalCps, meta: { page: { total: regionalCps.length, size: 100, number: 1 } } });
     }
@@ -2183,5 +2186,25 @@ describe('Feature: Region fetch error resilience', () => {
     expect(projects).toHaveLength(1);
     expect(projects[0].konnectControlPlaneId).toBe('cp-us');
     expect(result.controlPlanes.created).toBe(1);
+  });
+
+  it('Scenario: Does not delete projects from a region that failed to fetch', async () => {
+    const usCp = makeCp({ id: 'cp-us', name: 'US Plane', region: 'us', config: { cluster_type: 'CLUSTER_TYPE_HYBRID', control_plane_endpoint: 'https://abc.us.cp0.konghq.com', cloud_gateway: true } });
+    const euCp = makeCp({ id: 'cp-eu', name: 'EU Plane', region: 'eu', config: { cluster_type: 'CLUSTER_TYPE_HYBRID', control_plane_endpoint: 'https://abc.eu.cp0.konghq.com', cloud_gateway: true } });
+
+    // First sync: both regions succeed
+    vi.stubGlobal('fetch', mockFetch([usCp, euCp], [], []));
+    await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    // Second sync: EU region fails — cp-eu should NOT be deleted
+    vi.stubGlobal('fetch', mockFetch([usCp], [], [], { failRegion: 'eu' }));
+    const result = await syncKonnect({ pat: 'kpat_test', organizationId: ORG_ID });
+
+    const projects = konnectProjects(await db.find(models.project.type, { parentId: ORG_ID }));
+    expect(projects).toHaveLength(2);
+    expect(projects.map((p: any) => p.konnectControlPlaneId).sort()).toEqual(['cp-eu', 'cp-us']);
+    expect(result.controlPlanes.deleted).toBe(0);
+    expect(result.skippedRegions).toHaveLength(1);
+    expect(result.skippedRegions[0]).toMatch(/^eu:/);
   });
 });
