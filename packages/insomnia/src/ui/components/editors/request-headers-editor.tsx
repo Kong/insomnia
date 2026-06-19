@@ -8,7 +8,8 @@ import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
-import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
+import { useRequestGroupPatcher } from '../../hooks/use-request';
+import { useUndoableRequestPatcher } from '../../hooks/use-undoable-request-patcher';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
@@ -41,7 +42,7 @@ export const RequestHeadersEditor: FC<Props> = ({
   disableUserAgentHeader,
   onDescriptionToggle,
 }) => {
-  const patchRequest = useRequestPatcher();
+  const patchRequest = useUndoableRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const isRequestGroup = requestType === 'RequestGroup';
   const patcher = isRequestGroup ? patchRequestGroup : patchRequest;

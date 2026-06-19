@@ -15,6 +15,9 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { utf8ByteLength } from '~/common/utils/utf8-bytes';
+import { UNDO_MAX_SNAPSHOT_BYTES } from '~/ui/context/app/undo-context';
+
 import {
   CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
@@ -69,9 +72,14 @@ export const ContentTypeDropdown: FC = () => {
     const willPreserveForm = isFormUrlEncoded && willBeMultipart;
 
     if (!isEmpty && !willPreserveText && !willPreserveForm) {
+      // A large body cannot be restored from the undo stack, so say so explicitly.
+      const bodyBytes = utf8ByteLength(body.text || '');
+      const tooLargeToUndo = bodyBytes > UNDO_MAX_SNAPSHOT_BYTES;
       showModal(AlertModal, {
         title: 'Switch Body Type?',
-        message: 'Current body will be lost. Are you sure you want to continue?',
+        message: tooLargeToUndo
+          ? 'Current body will be lost. This cannot be undone. Do you wish to continue?'
+          : 'Current body will be lost. Are you sure you want to continue?',
         addCancel: true,
         onConfirm: async () => {
           patchRequest(requestId, { body: { mimeType } });

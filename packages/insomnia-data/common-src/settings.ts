@@ -60,7 +60,9 @@ export type KeyboardShortcut =
   | 'tab_nextTab'
   | 'tab_previousTab'
   | 'tab_reopenClosedTab'
-  | 'request_openInNewTab';
+  | 'request_openInNewTab'
+  | 'request_undo'
+  | 'request_redo';
 
 /**
  * The collection of defined hotkeys.

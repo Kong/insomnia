@@ -7,7 +7,7 @@ import {
   useRequestLoaderData,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
-import { useRequestPatcher } from '~/ui/hooks/use-request';
+import { useUndoableRequestPatcher } from '~/ui/hooks/use-undoable-request-patcher';
 
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -20,7 +20,7 @@ interface Props {
 export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onDescriptionToggle }) => {
   const { requestId } = useParams() as { requestId: string };
   const { activeRequest } = useRequestLoaderData() as RequestLoaderData;
-  const patchRequest = useRequestPatcher();
+  const patchRequest = useUndoableRequestPatcher();
   const handleBulkUpdate = useCallback(
     (paramsString: string) => {
       const parameters: {

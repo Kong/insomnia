@@ -40,6 +40,8 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   tab_previousTab: 'Previous Tab',
   tab_reopenClosedTab: 'Reopen Closed Tab',
   request_openInNewTab: 'Open Request in New Tab',
+  request_undo: 'Undo (up to 50 steps)',
+  request_redo: 'Redo (up to 50 steps)',
 };
 
 /**
@@ -187,6 +189,14 @@ const defaultRegistry: HotKeyRegistry = {
   request_openInNewTab: {
     macKeys: [{ meta: true, shift: true, keyCode: keyboardKeys.o.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.o.keyCode }],
+  },
+  request_undo: {
+    macKeys: [{ meta: true, keyCode: keyboardKeys.z.keyCode }],
+    winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.z.keyCode }],
+  },
+  request_redo: {
+    macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.z.keyCode }],
+    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.z.keyCode }],
   },
 };
 

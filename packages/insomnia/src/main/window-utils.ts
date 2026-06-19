@@ -306,14 +306,16 @@ export function createWindow(): ElectronBrowserWindow {
     label: `${MNEMONIC_SYM}Edit`,
     submenu: [
       {
+        // No accelerator/role: the renderer owns Cmd/Ctrl+Z so the global undo stack (and
+        // multiline-editor native undo) can decide what to do. This menu item drives the
+        // same behavior for pointer users via IPC. The shortcut is shown/rebindable in
+        // Preferences → Keyboard Shortcuts (request_undo).
         label: `${MNEMONIC_SYM}Undo`,
-        accelerator: 'CmdOrCtrl+Z',
-        role: 'undo',
+        click: () => BrowserWindow.getFocusedWindow()?.webContents.send('app-undo'),
       },
       {
         label: `${MNEMONIC_SYM}Redo`,
-        accelerator: 'Shift+CmdOrCtrl+Z',
-        role: 'redo',
+        click: () => BrowserWindow.getFocusedWindow()?.webContents.send('app-redo'),
       },
       {
         type: 'separator',

@@ -1,7 +1,7 @@
 import type { RequestParameter, Settings } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { deconstructQueryStringToParams, getContentTypeFromHeaders } from 'insomnia-data/common';
-import React, { type FC, Fragment, useRef, useState } from 'react';
+import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
@@ -17,7 +17,9 @@ import {
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../../ui/analytics';
-import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
+import { type RequestSubTab, useUndoContext } from '../../context/app/undo-context';
+import { useRequestMetaPatcher, useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
+import { useUndoableRequestPatcher } from '../../hooks/use-undoable-request-patcher';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
@@ -48,6 +50,32 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
+  const patchRequestUndoable = useUndoableRequestPatcher();
+  const patchRequestMeta = useRequestMetaPatcher();
+  const { registerActivePane, unregisterActivePane, finalizeGroup, undoRevision } = useUndoContext();
+
+  // Controlled request-pane sub-tab so undo/redo can bring the relevant tab into view.
+  const [activeSubTab, setActiveSubTab] = useState<RequestSubTab>(
+    (activeRequestMeta?.activeRequestPaneTab as RequestSubTab) || 'params',
+  );
+  // Reset to the saved sub-tab when switching to a different request.
+  useEffect(() => {
+    setActiveSubTab((activeRequestMeta?.activeRequestPaneTab as RequestSubTab) || 'params');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestId]);
+  // Let the undo manager reveal a sub-tab (same-request undo) and know the current sub-tab.
+  useEffect(() => {
+    registerActivePane(requestId, activeSubTab, subTab => setActiveSubTab(subTab));
+    return () => unregisterActivePane(requestId);
+  }, [requestId, activeSubTab, registerActivePane, unregisterActivePane]);
+
+  const handleSubTabChange = (subTabRaw: string) => {
+    const subTab = subTabRaw as RequestSubTab;
+    setActiveSubTab(subTab);
+    // Switching sub-tabs ends the current coalescing group.
+    finalizeGroup();
+    patchRequestMeta(requestId, { activeRequestPaneTab: subTab });
+  };
 
   const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
   const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
@@ -67,7 +95,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
 
     // Only update if url changed
     if (url !== activeRequest.url) {
-      patchRequest(requestId, { url, parameters });
+      patchRequestUndoable(requestId, { url, parameters });
       /**
        * Currently the OneLineEditor is a uncontrolled component, and the value is asynchronously, if we change the component to controlled, users need to wait for the value to be updated when inputting, that's not a good experience.
        * So as a workaround, we need to manually update the url bar value.
@@ -78,8 +106,9 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const gitVersion = useGitVCSVersion();
 
   const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
-  // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}`;
+  // Force re-render when we switch requests, the environment gets modified, the (Git|Sync)VCS version changes,
+  // or an undo/redo applied a change (so uncontrolled editors refresh to the reverted value).
+  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}::${undoRevision}`;
 
   if (!activeRequest) {
     return <PlaceholderRequestPane />;
@@ -87,7 +116,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const pathParameters = getCombinedPathParametersFromUrl(activeRequest.url, activeRequest.pathParameters || []);
 
   const onPathParameterChange = (pathParameters: RequestParameter[]) => {
-    patchRequest(requestId, { pathParameters });
+    patchRequestUndoable(requestId, { pathParameters });
   };
 
   const parametersCount = pathParameters.length + activeRequest.parameters.filter(p => !p.disabled).length;
@@ -114,7 +143,12 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
           />
         </ErrorBoundary>
       </PaneHeader>
-      <Tabs aria-label="Request pane tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        aria-label="Request pane tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        selectedKey={activeSubTab}
+        onSelectionChange={key => handleSubTabChange(String(key))}
+      >
         <TabList
           className="scrollbar-thin flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"

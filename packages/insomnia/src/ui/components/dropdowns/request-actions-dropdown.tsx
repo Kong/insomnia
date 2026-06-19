@@ -19,6 +19,7 @@ import { useRootLoaderData } from '~/root';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { useUndoContext } from '~/ui/context/app/undo-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 
@@ -65,6 +66,7 @@ export const RequestActionsDropdown = ({
   const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const deleteRequestFetcher = useRequestDeleteActionFetcher();
+  const { recordDelete } = useUndoContext();
 
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -184,6 +186,20 @@ export const RequestActionsDropdown = ({
       color: 'danger',
       onDone: async (isYes: boolean) => {
         if (isYes) {
+          // Snapshot the request (and its meta) so the deletion can be undone.
+          try {
+            const metaDoc = (await services.requestMeta.getByParentId(request._id)) || null;
+            recordDelete({
+              organizationId,
+              projectId,
+              workspaceId,
+              requestId: request._id,
+              requestDoc: { ...request },
+              metaDoc: metaDoc ? { ...metaDoc } : null,
+            });
+          } catch {
+            // best-effort snapshot; deletion proceeds regardless
+          }
           services.stats.incrementDeletedRequests();
           deleteRequestFetcher.submit({
             organizationId,

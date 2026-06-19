@@ -22,6 +22,8 @@ export interface BaseRequestMeta {
   downloadPath: string | null;
   expandedAccordionKeys: Partial<Record<RequestAccordionKeys, boolean>>;
   activeMcpPrimitive?: string | null;
+  /** The request-pane sub-tab last shown (params/headers/auth/body/scripts/docs). Used by undo to bring edits into view. */
+  activeRequestPaneTab?: string | null;
 }
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
@@ -41,5 +43,6 @@ export function init() {
     downloadPath: null,
     expandedAccordionKeys: {},
     activeMcpPrimitive: null,
+    activeRequestPaneTab: null,
   };
 }
