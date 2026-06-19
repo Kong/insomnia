@@ -51,6 +51,8 @@ interface UndoContextValue {
   /** request-pane reports which request + sub-tab is currently visible, and how to reveal a sub-tab. */
   registerActivePane: (requestId: string, subTab: RequestSubTab, reveal: (subTab: RequestSubTab) => void) => void;
   unregisterActivePane: (requestId: string) => void;
+  /** request-pane consumes a queued cross-request reveal once it mounts the target request. */
+  consumePendingReveal: (requestId: string) => RequestSubTab | null;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -72,6 +74,7 @@ const UndoContext = createContext<UndoContextValue>({
   finalizeGroup: noop,
   registerActivePane: noop,
   unregisterActivePane: noop,
+  consumePendingReveal: () => null,
   undo: noop,
   redo: noop,
   canUndo: false,
@@ -94,6 +97,8 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
     subTab: RequestSubTab;
     reveal: (subTab: RequestSubTab) => void;
   } | null>(null);
+  // A cross-request undo/redo queues the target sub-tab here; the request-pane applies it when it mounts.
+  const pendingRevealRef = useRef<{ requestId: string; subTab: RequestSubTab } | null>(null);
 
   // Bump to re-render consumers of canUndo / canRedo.
   const [, setVersion] = useState(0);
@@ -137,20 +142,23 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
         active.reveal(location.subTab);
         return;
       }
-      // Cross-request: persist the target sub-tab so its pane shows it on mount, then navigate.
-      try {
-        await services.requestMeta.updateOrCreateByParentId(location.requestId, {
-          activeRequestPaneTab: location.subTab,
-        });
-      } catch {
-        // best-effort
-      }
+      // Cross-request: queue the target sub-tab, then navigate. The request-pane consumes it on arrival.
+      pendingRevealRef.current = { requestId: location.requestId, subTab: location.subTab };
       navigate(
         `/organization/${location.organizationId}/project/${location.projectId}/workspace/${location.workspaceId}/debug/request/${location.requestId}`,
       );
     },
     [navigate],
   );
+
+  const consumePendingReveal = useCallback((requestId: string): RequestSubTab | null => {
+    if (pendingRevealRef.current?.requestId === requestId) {
+      const subTab = pendingRevealRef.current.subTab;
+      pendingRevealRef.current = null;
+      return subTab;
+    }
+    return null;
+  }, []);
 
   const restoreRequest = useCallback(
     async (entry: DeleteEntry) => {
@@ -269,6 +277,7 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
       finalizeGroup,
       registerActivePane,
       unregisterActivePane,
+      consumePendingReveal,
       undo,
       redo,
       canUndo: undoStackRef.current.length > 0,
@@ -283,6 +292,7 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
       finalizeGroup,
       registerActivePane,
       unregisterActivePane,
+      consumePendingReveal,
       undo,
       redo,
       undoRevision,

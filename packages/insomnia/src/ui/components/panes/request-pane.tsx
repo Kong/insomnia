@@ -51,17 +51,19 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
   const patchRequestUndoable = useUndoableRequestPatcher();
-  const { registerActivePane, unregisterActivePane, finalizeGroup, undoRevision } = useUndoContext();
+  const { registerActivePane, unregisterActivePane, finalizeGroup, consumePendingReveal, undoRevision } =
+    useUndoContext();
 
-  // Controlled request-pane sub-tab so undo/redo can bring the relevant tab into view.
-  const [activeSubTab, setActiveSubTab] = useState<RequestSubTab>(
-    (activeRequestMeta?.activeRequestPaneTab as RequestSubTab) || 'params',
-  );
-  // Reset to the saved sub-tab when switching to a different request.
+  // Controlled request-pane sub-tab. Stays sticky across request switches (matching the previous
+  // uncontrolled behavior) so navigating between requests keeps the same sub-tab in view.
+  const [activeSubTab, setActiveSubTab] = useState<RequestSubTab>('params');
+  // When switching requests, apply any cross-request undo/redo reveal; otherwise keep the sticky tab.
   useEffect(() => {
-    setActiveSubTab((activeRequestMeta?.activeRequestPaneTab as RequestSubTab) || 'params');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requestId]);
+    const pending = consumePendingReveal(requestId);
+    if (pending) {
+      setActiveSubTab(pending);
+    }
+  }, [requestId, consumePendingReveal]);
   // Let the undo manager reveal a sub-tab (same-request undo) and know the current sub-tab.
   useEffect(() => {
     registerActivePane(requestId, activeSubTab, subTab => setActiveSubTab(subTab));
@@ -71,9 +73,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const handleSubTabChange = (subTabRaw: string) => {
     const subTab = subTabRaw as RequestSubTab;
     setActiveSubTab(subTab);
-    // Switching sub-tabs ends the current coalescing group. We intentionally do NOT persist the
-    // sub-tab on every switch — that revalidation churn detaches popovers mid-interaction. Undo's
-    // cross-request reveal persists it directly when needed.
+    // Switching sub-tabs ends the current coalescing group.
     finalizeGroup();
   };
 
