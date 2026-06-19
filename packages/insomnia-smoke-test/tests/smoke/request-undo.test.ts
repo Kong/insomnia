@@ -39,6 +39,8 @@ test('global undo restores a deleted request', async ({ page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   const workspaceName = 'Undo delete collection';
+  await insomnia.navigationSidebar.selectProject('Personal Workspace');
+  await insomnia.projectPage.waitForProjectDashboard();
   await insomnia.projectPage.createCollection(workspaceName);
   await insomnia.navigationSidebar.selectWorkspaceDropdownOption({
     workspaceName,

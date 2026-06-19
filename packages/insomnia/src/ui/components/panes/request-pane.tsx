@@ -18,7 +18,7 @@ import {
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../../ui/analytics';
 import { type RequestSubTab, useUndoContext } from '../../context/app/undo-context';
-import { useRequestMetaPatcher, useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
+import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useUndoableRequestPatcher } from '../../hooks/use-undoable-request-patcher';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -51,7 +51,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
   const patchRequestUndoable = useUndoableRequestPatcher();
-  const patchRequestMeta = useRequestMetaPatcher();
   const { registerActivePane, unregisterActivePane, finalizeGroup, undoRevision } = useUndoContext();
 
   // Controlled request-pane sub-tab so undo/redo can bring the relevant tab into view.
@@ -72,9 +71,10 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const handleSubTabChange = (subTabRaw: string) => {
     const subTab = subTabRaw as RequestSubTab;
     setActiveSubTab(subTab);
-    // Switching sub-tabs ends the current coalescing group.
+    // Switching sub-tabs ends the current coalescing group. We intentionally do NOT persist the
+    // sub-tab on every switch — that revalidation churn detaches popovers mid-interaction. Undo's
+    // cross-request reveal persists it directly when needed.
     finalizeGroup();
-    patchRequestMeta(requestId, { activeRequestPaneTab: subTab });
   };
 
   const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
