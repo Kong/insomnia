@@ -126,8 +126,10 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
         method: 'POST',
         encType: 'application/json',
       });
-      // Release the suppression after the write settles; revalidation does not re-record,
-      // this only guards against an editor's onChange firing during the re-render.
+      // Release the suppression on the next tick. This only guards against a synchronous
+      // onChange firing during the submit-triggered re-render; the later remount (driven by
+      // `undoRevision` once the fetcher goes idle) refreshes uncontrolled editors without
+      // emitting onChange, so it does not need the guard.
       setTimeout(() => {
         suppressed.current = false;
       }, 0);
@@ -285,6 +287,9 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
       undoRevision,
       suppressed,
     }),
+    // The `*Ref.current.length` deps are not reactive on their own; they are re-read only
+    // because `bump()` (setVersion) forces the re-render that recomputes this memo, keeping
+    // canUndo/canRedo in sync after every stack mutation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       recordEdit,

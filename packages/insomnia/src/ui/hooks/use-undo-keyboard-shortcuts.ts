@@ -21,6 +21,22 @@ const focusedMultilineCodeMirror = (): { undo: () => void; redo: () => void } | 
   return (codeMirror as unknown as { CodeMirror?: { undo: () => void; redo: () => void } }).CodeMirror ?? null;
 };
 
+/**
+ * True when focus is in a plain native editable field (a non-CodeMirror `<input>`, `<textarea>`,
+ * or contenteditable) — e.g. a sidebar rename, search box, settings field, or modal input. Those
+ * keep their own browser-native undo, so the global request undo stack must NOT hijack Cmd+Z there.
+ * Request form fields (URL bar, key/value rows) are OneLineEditor instances and live inside a
+ * `.CodeMirror` wrapper, so they are deliberately excluded here and fall through to the app stack.
+ */
+const focusedNativeEditable = (): boolean => {
+  const active = document.activeElement as HTMLElement | null;
+  if (!active || active.closest('.CodeMirror')) {
+    return false;
+  }
+  const tag = active.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || active.isContentEditable;
+};
+
 export const useUndoKeyboardShortcuts = () => {
   const { undo, redo } = useUndoContext();
 
@@ -29,11 +45,19 @@ export const useUndoKeyboardShortcuts = () => {
   useEffect(() => {
     const offUndo = window.main.on('app-undo', () => {
       const cm = focusedMultilineCodeMirror();
-      cm ? cm.undo() : undo();
+      if (cm) {
+        cm.undo();
+      } else if (!focusedNativeEditable()) {
+        undo();
+      }
     });
     const offRedo = window.main.on('app-redo', () => {
       const cm = focusedMultilineCodeMirror();
-      cm ? cm.redo() : redo();
+      if (cm) {
+        cm.redo();
+      } else if (!focusedNativeEditable()) {
+        redo();
+      }
     });
     return () => {
       offUndo();
@@ -44,8 +68,8 @@ export const useUndoKeyboardShortcuts = () => {
   // Keyboard path: capture-phase so single-line CodeMirror does not also self-undo.
   useDocBodyKeyboardShortcuts({
     request_undo: event => {
-      if (focusedMultilineCodeMirror()) {
-        // let the multiline editor's native keymap handle it
+      // Multiline editors and plain native fields keep their own native undo.
+      if (focusedMultilineCodeMirror() || focusedNativeEditable()) {
         return;
       }
       event.preventDefault();
@@ -53,7 +77,7 @@ export const useUndoKeyboardShortcuts = () => {
       undo();
     },
     request_redo: event => {
-      if (focusedMultilineCodeMirror()) {
+      if (focusedMultilineCodeMirror() || focusedNativeEditable()) {
         return;
       }
       event.preventDefault();

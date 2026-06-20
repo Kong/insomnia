@@ -38,7 +38,7 @@ export const CheckForUpdatesButton = () => {
 
   const button = (
     <button
-      className={`btn btn--outlined btn--super-compact flex items-center gap-2${updatesDisabledInDev ? 'pointer-events-none' : ''}`}
+      className={`btn btn--outlined btn--super-compact flex items-center gap-2${updatesDisabledInDev ? ' pointer-events-none' : ''}`}
       disabled={isBusy || updatesDisabledInDev}
       onClick={() => {
         if (isReadyToRestart) {
@@ -48,10 +48,7 @@ export const CheckForUpdatesButton = () => {
         window.main.manualUpdateCheck();
       }}
     >
-      <Icon
-        className={isBusy ? 'animate-spin' : ''}
-        icon={isReadyToRestart ? 'rotate' : isBusy ? 'refresh' : 'check'}
-      />
+      <Icon className={isBusy ? 'animate-spin' : ''} icon={isReadyToRestart ? 'rotate' : isBusy ? 'refresh' : 'check'} />
       {STATUS_LABELS[status]}
     </button>
   );
