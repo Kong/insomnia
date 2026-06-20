@@ -276,6 +276,22 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }
     }, [readOnly, getKeyMap]);
 
+    // Reflect external `defaultValue` changes (programmatic url updates, undo/redo, etc.) into the
+    // editor without remounting. Skipped while focused so it never clobbers in-progress typing; the
+    // user's own edits flow out via onChange and arrive back equal to the current value (a no-op
+    // here). Mirrors the imperative `setValue` handle, which is already used in production.
+    useEffect(() => {
+      const editor = codeMirror.current;
+      if (!editor || editor.hasFocus()) {
+        return;
+      }
+      if (defaultValue !== editor.getValue()) {
+        const cursor = editor.getCursor();
+        editor.setValue(defaultValue || '');
+        editor.setCursor(cursor);
+      }
+    }, [defaultValue]);
+
     useEffect(() => {
       // Prevent these things if we're type === "password"
       const preventDefault = (_: CodeMirror.Editor, event: Event) =>
