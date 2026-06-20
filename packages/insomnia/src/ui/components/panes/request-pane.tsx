@@ -1,7 +1,7 @@
-import type { RequestParameter, Settings } from 'insomnia-data';
+import type { RequestPaneTab, RequestParameter, Settings } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { deconstructQueryStringToParams, getContentTypeFromHeaders } from 'insomnia-data/common';
-import React, { type FC, Fragment, useRef, useState } from 'react';
+import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
@@ -17,7 +17,7 @@ import {
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../../ui/analytics';
-import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
+import { useRequestMetaPatcher, useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
@@ -48,6 +48,23 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
+  const patchRequestMeta = useRequestMetaPatcher();
+
+  // Selected sub-tab is persisted per request on RequestMeta. Local state mirrors it for an
+  // instant switch (no DB round-trip). Legacy meta docs predate this field, so default to 'params'.
+  const persistedSubTab = activeRequestMeta?.activeRequestPaneTab ?? 'params';
+  const [activeSubTab, setActiveSubTab] = useState<RequestPaneTab>(persistedSubTab);
+  // Sync local state to the persisted value when switching requests, and reflect external writes.
+  // (Clicking a tab sets local state first, then persists, so this re-sync is a no-op for own edits.)
+  useEffect(() => {
+    setActiveSubTab(persistedSubTab);
+  }, [requestId, persistedSubTab]);
+
+  const handleSubTabChange = (key: string) => {
+    const subTab = key as RequestPaneTab;
+    setActiveSubTab(subTab);
+    patchRequestMeta(requestId, { activeRequestPaneTab: subTab });
+  };
 
   const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
   const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
@@ -114,7 +131,12 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
           />
         </ErrorBoundary>
       </PaneHeader>
-      <Tabs aria-label="Request pane tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        aria-label="Request pane tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        selectedKey={activeSubTab}
+        onSelectionChange={key => handleSubTabChange(String(key))}
+      >
         <TabList
           className="scrollbar-thin flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"

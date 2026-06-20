@@ -10,12 +10,17 @@ export const canSync = false;
 
 export type RequestAccordionKeys = 'OAuth2AdvancedOptions';
 
+/** The request-pane sub-tabs whose selection is persisted per request. */
+export type RequestPaneTab = 'params' | 'content-type' | 'auth' | 'headers' | 'scripts' | 'docs';
+
 export interface BaseRequestMeta {
   parentId: string;
   previewMode: PreviewMode;
   responseFilter: string;
   responseFilterHistory: string[];
   activeResponseId: string | null;
+  /** Selected request-pane sub-tab, restored when the request is reopened. */
+  activeRequestPaneTab: RequestPaneTab;
   savedRequestBody: Record<string, any>;
   pinned: boolean;
   lastActive: number;
@@ -35,6 +40,7 @@ export function init() {
     responseFilter: '',
     responseFilterHistory: [],
     activeResponseId: null,
+    activeRequestPaneTab: 'params',
     savedRequestBody: {},
     pinned: false,
     lastActive: 0,

@@ -1,4 +1,4 @@
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
 describe('create()', () => {
@@ -13,4 +13,10 @@ describe('create()', () => {
   //     'Expected the parent of RequestMeta to be a Request',
   //   );
   // });
+});
+
+describe('init()', () => {
+  it('defaults activeRequestPaneTab to params', () => {
+    expect(models.requestMeta.init().activeRequestPaneTab).toBe('params');
+  });
 });
