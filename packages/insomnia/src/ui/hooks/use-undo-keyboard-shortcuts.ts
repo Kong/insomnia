@@ -22,19 +22,21 @@ const focusedMultilineCodeMirror = (): { undo: () => void; redo: () => void } | 
 };
 
 /**
- * True when focus is in a plain native editable field (a non-CodeMirror `<input>`, `<textarea>`,
- * or contenteditable) — e.g. a sidebar rename, search box, settings field, or modal input. Those
- * keep their own browser-native undo, so the global request undo stack must NOT hijack Cmd+Z there.
- * Request form fields (URL bar, key/value rows) are OneLineEditor instances and live inside a
- * `.CodeMirror` wrapper, so they are deliberately excluded here and fall through to the app stack.
+ * True when focus is in a plain native editable field where the user is deliberately typing and
+ * expects browser-native undo — a non-CodeMirror `<input>` (sidebar rename, search, settings) or a
+ * contenteditable. The global request undo stack must NOT hijack Cmd+Z there.
+ *
+ * Plain `<textarea>` is intentionally NOT guarded: the only always-mounted one is the empty-collection
+ * "first request" view, which auto-focuses and would otherwise swallow Cmd+Z right after deleting the
+ * last request (blocking delete-restore). Request form fields (URL bar, key/value rows) are
+ * OneLineEditor instances inside a `.CodeMirror` wrapper, so they also fall through to the app stack.
  */
 const focusedNativeEditable = (): boolean => {
   const active = document.activeElement as HTMLElement | null;
   if (!active || active.closest('.CodeMirror')) {
     return false;
   }
-  const tag = active.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || active.isContentEditable;
+  return active.tagName === 'INPUT' || active.isContentEditable;
 };
 
 export const useUndoKeyboardShortcuts = () => {

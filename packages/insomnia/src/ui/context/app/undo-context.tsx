@@ -172,14 +172,13 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
           // meta may already exist; ignore
         }
       }
-      navigate(
-        `/organization/${entry.location.organizationId}/project/${entry.location.projectId}/workspace/${entry.location.workspaceId}/debug/request/${entry.location.requestId}`,
-      );
-      // Direct DB writes don't trigger React Router revalidation, so the sidebar loaders
-      // won't show the restored request without an explicit revalidate.
-      revalidator.revalidate();
+      // Direct DB writes don't trigger React Router revalidation, so the sidebar loaders won't
+      // show the restored request without an explicit revalidate. Do NOT navigate here — a
+      // concurrent navigation supersedes the revalidation and leaves the debug layout (sidebar)
+      // loader stale; revalidating in place reliably brings the request back into the tree.
+      await revalidator.revalidate();
     },
-    [navigate, revalidator],
+    [revalidator],
   );
 
   const redeleteRequest = useCallback(
