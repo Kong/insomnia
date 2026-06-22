@@ -105,6 +105,7 @@ export const SidebarWorkspaceDropdown = ({
   const workspaceName = workspace.name;
   const projectName = project.name || getProductName();
   const isCollection = workspace.scope === 'collection';
+  const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
 
   const createRequest = (requestType: CreateRequestType) => {
     newRequestFetcher.submit({
@@ -321,7 +322,38 @@ export const SidebarWorkspaceDropdown = ({
     ],
   };
 
-  const allSections: ActionSection[] = [...createSections, actionSection];
+  const scratchpadActionList: ActionSection = {
+    name: 'Actions',
+    id: 'Actions',
+    icon: 'cog',
+    items: [
+      {
+        id: 'Export',
+        name: 'Export',
+        icon: 'file-export',
+        action: () => {
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.exportStarted,
+            properties: { source: `${workspace.scope}-list` },
+          });
+          if (workspace.scope === 'mock-server') {
+            return exportMockServerToFile(workspace);
+          }
+          if (workspace.scope === 'environment') {
+            return exportGlobalEnvironmentToFile(workspace);
+          }
+          if (workspace.scope === 'mcp') {
+            return exportMcpClientToFile(workspace);
+          }
+          return setIsExportModalOpen(true);
+        },
+      },
+    ],
+  };
+
+  const allSections: ActionSection[] = isScratchpadWorkspace
+    ? [...createSections, scratchpadActionList]
+    : [...createSections, actionSection];
 
   return (
     <Fragment>
