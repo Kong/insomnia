@@ -24,6 +24,10 @@ export function getByParentId(parentId: string) {
   return db.findOne<McpRequest>(type, { parentId });
 }
 
+export function findByParentId(parentId: string) {
+  return db.find<McpRequest>(type, { parentId });
+}
+
 export function getById(id: string) {
   return db.findOne<McpRequest>(type, { _id: id });
 }

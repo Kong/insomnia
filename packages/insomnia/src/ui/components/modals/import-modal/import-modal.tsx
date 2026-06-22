@@ -391,9 +391,10 @@ export const ImportModal: FC<ImportModalProps> = ({
               importFetcher.submit({
                 organizationId,
                 projectId: targetProjectId,
-                workspaceId: hasApiSpecScanResult
-                  ? undefined
-                  : selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
+                workspaceId:
+                  hasApiSpecScanResult || newProjectName
+                    ? undefined
+                    : selectedWorkspaceId || (shouldImportToWorkspace ? defaultWorkspaceId : undefined),
                 endpoint: from.endpoint,
                 operationId: from.operationId,
                 skipImportIfDuplicate: autoScan,
