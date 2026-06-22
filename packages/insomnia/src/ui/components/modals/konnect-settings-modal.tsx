@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 import { database } from '~/common/database';
-import { validatePat } from '~/konnect/api';
+import { fetchKonnectOrganizationId, validatePat } from '~/konnect/api';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 
@@ -16,7 +16,7 @@ export const KonnectSettingsModal = ({
   onDisconnect,
 }: {
   onClose: () => void;
-  syncKonnectProjectsAndNotifyRef: React.MutableRefObject<() => Promise<void>>;
+  syncKonnectProjectsAndNotifyRef: React.MutableRefObject<(konnectOrganizationId?: string | null) => Promise<void>>;
   onDisconnect?: () => void;
 }) => {
   const { settings } = useRootLoaderData()!;
@@ -25,25 +25,30 @@ export const KonnectSettingsModal = ({
   const [pat, setPat] = useState('');
   const [isPatVisible, setIsPatVisible] = useState(false);
   // 'idle' | 'validating' | 'valid' | 'invalid'
-  const [status, setStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
+  const [status, setStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>(settings.hasKonnectPat ? 'validating' : 'idle');
   const [validationError, setValidationError] = useState<string | null>(null);
   // Controls whether the disconnect confirmation screen is shown
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
 
-  // Validate the given PAT against the Konnect API and update status/error state accordingly.
-  const validateAndSetStatus = async (trimmed: string) => {
-    setStatus('validating');
-    setValidationError(null);
+  const validateAndSetStatus = async (trimmed: string): Promise<{ valid: boolean; orgId?: string }> => {
     const result = await validatePat(trimmed);
+    const orgId = result.valid ? await fetchKonnectOrganizationId(trimmed) : undefined;
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.kongKonnectPatValidated,
+      properties: {
+        validation_status: result.valid ? 'valid' : 'invalid',
+        ...(orgId ? { konnect_organization_id: orgId } : {}),
+      },
+    });
     setStatus(result.valid ? 'valid' : 'invalid');
     if (!result.valid) {
       setValidationError(result.error ?? 'Invalid PAT. Check your input and try again.');
     }
-    return result;
+    return { valid: result.valid, orgId };
   };
 
-  // On mount: if a PAT is already stored, load it from secure storage and validate it.
+  // On mount: if a PAT is already stored, load and re-validate it to update the status indicator.
   useEffect(() => {
     if (settings.hasKonnectPat) {
       window.main.secretStorage.getSecret('konnectPat').then(secret => {
@@ -62,14 +67,16 @@ export const KonnectSettingsModal = ({
     if (!trimmed) {
       return;
     }
-    const result = await validateAndSetStatus(trimmed);
-    if (result.valid) {
-      await window.main.secretStorage.setSecret('konnectPat', trimmed);
-      patchSettings({ hasKonnectPat: true });
-      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.kongKonnectPatValidated });
-      syncKonnectProjectsAndNotifyRef.current();
-      onClose();
+    setStatus('validating');
+    setValidationError(null);
+    const { valid, orgId } = await validateAndSetStatus(trimmed);
+    if (!valid) {
+      return;
     }
+    await window.main.secretStorage.setSecret('konnectPat', trimmed);
+    patchSettings({ hasKonnectPat: true, konnectOrganizationId: orgId ?? null });
+    syncKonnectProjectsAndNotifyRef.current(orgId ?? null);
+    onClose();
   };
 
   // Delete all Konnect-synced projects from the local DB, remove the stored PAT, and close the modal.
@@ -87,7 +94,7 @@ export const KonnectSettingsModal = ({
         await database.flushChanges(bufferId);
       }
       await window.main.secretStorage.deleteSecret('konnectPat');
-      patchSettings({ hasKonnectPat: false });
+      patchSettings({ hasKonnectPat: false, konnectOrganizationId: null });
       onDisconnect?.();
       onClose();
     } finally {
