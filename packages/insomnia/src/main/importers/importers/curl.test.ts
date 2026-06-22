@@ -305,6 +305,15 @@ describe('curl', () => {
         headers: [{ name: 'Accept-Encoding', value: 'deflate, gzip' }],
       },
     },
+    {
+      name: 'does not swallow the URL when -G immediately precedes it',
+      curl: "curl -G https://example.com -d 'a=b'",
+      expected: {
+        url: 'https://example.com',
+        method: 'GET',
+        parameters: [{ name: 'a', value: 'b' }],
+      },
+    },
   ];
 
   it.each(testCases)('$name', async ({ curl, expected }) => {
