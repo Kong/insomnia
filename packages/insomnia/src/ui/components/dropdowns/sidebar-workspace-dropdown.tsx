@@ -4,8 +4,8 @@ import {
   exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
-import type { Project, Workspace } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import type { MockServer, Project, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useState } from 'react';
 import {
@@ -91,7 +91,7 @@ export const SidebarWorkspaceDropdown = ({
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [settingsData, setSettingsData] = useState<{ mockServer: MockServer | null; gitFilePath: string | null }>();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
 
@@ -305,7 +305,11 @@ export const SidebarWorkspaceDropdown = ({
         id: 'Settings',
         name: 'Settings',
         icon: 'gear',
-        action: () => setIsSettingsModalOpen(true),
+        action: async () =>
+          setSettingsData({
+            mockServer: (await services.mockServer.getByParentId(workspaceId)) ?? null,
+            gitFilePath: (await services.workspaceMeta.getByParentId(workspaceId))?.gitFilePath ?? null,
+          }),
       },
       {
         id: 'Delete',
@@ -422,8 +426,14 @@ export const SidebarWorkspaceDropdown = ({
       {isExportModalOpen && (
         <ExportRequestsModal workspaceIdToExport={workspaceId} onClose={() => setIsExportModalOpen(false)} />
       )}
-      {isSettingsModalOpen && (
-        <WorkspaceSettingsModal workspace={workspace} project={project} onClose={() => setIsSettingsModalOpen(false)} />
+      {settingsData && (
+        <WorkspaceSettingsModal
+          workspace={workspace}
+          mockServer={settingsData.mockServer}
+          gitFilePath={settingsData.gitFilePath}
+          project={project}
+          onClose={() => setSettingsData(undefined)}
+        />
       )}
       {isDeleteModalOpen && (
         <ModalOverlay

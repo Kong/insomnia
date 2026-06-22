@@ -12,8 +12,7 @@ import { invariant } from '~/common/utils/invariant';
 
 import appConfig from '../../config/config.json';
 import packageJSON from '../../package.json';
-import { CHECK_FOR_UPDATES_INTERVAL, isDevelopment } from '../common/constants';
-import { delay } from '../common/misc';
+import { CHECK_FOR_UPDATES_INTERVAL, isDevelopment, type UpdateStatus } from '../common/constants';
 import { ipcMainOn } from './ipc/electron';
 
 const isUpdateSupported = () => {
@@ -66,10 +65,41 @@ const showUpdateStatusToast = (title: string, description?: string) => {
   }
 };
 
+let currentUpdateStatus: UpdateStatus = 'idle';
+
+let performInstall: (() => void) | null = null;
+
+const sendUpdateStatus = (status: UpdateStatus) => {
+  currentUpdateStatus = status;
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send('update-status-changed', status);
+  }
+};
+
+const quitAndInstallAuto = () => {
+  if (process.platform !== 'win32') {
+    autoUpdater.quitAndInstall();
+    return;
+  }
+  // Workaround for the windows secure wrapper breaking quitAndInstall logic.
+  // This is related to PR 8451 / CVE-2025-1353 / which broke the auto restart after an in-place update
+  const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
+  spawn(updateExe, ['--processStartAndWait', 'Insomnia.exe'], {
+    detached: true,
+    windowsHide: true,
+  });
+  app.quit();
+};
+
+const quitAndInstallNsis = () => {
+  electronUpdater.quitAndInstall();
+};
+
 export const init = async () => {
   // nsis installer uses electron-updater package rather than electron.autoUpdater
   const isNsis = await isNsisInstaller();
   const checkForUpdates = isNsis ? initNsisUpdater() : initAutoUpdater();
+  performInstall = isNsis ? quitAndInstallNsis : quitAndInstallAuto;
   const settings = await services.settings.get();
   const updateSupported = isUpdateSupported();
   // perhaps disable this method of upgrading just in case it trigger before backup is complete
@@ -86,14 +116,22 @@ export const init = async () => {
       }
     }, CHECK_FOR_UPDATES_INTERVAL);
   }
+  ipcMainOn('getUpdateStatus', event => {
+    event.returnValue = currentUpdateStatus;
+  });
+  ipcMainOn('applyUpdateAndRestart', () => {
+    if (currentUpdateStatus !== 'readyToRestart') {
+      return;
+    }
+    performInstall?.();
+  });
   // on check now button pushed
   ipcMainOn('manualUpdateCheck', async () => {
     if (!updateSupported) {
       return;
     }
+    sendUpdateStatus('checking');
     showUpdateStatusToast('Checking for updates...');
-
-    await delay(300); // Pacing
 
     checkForUpdates(await services.settings.get());
   });
@@ -110,6 +148,7 @@ const initAutoUpdater = () => {
       autoUpdater.checkForUpdates();
     } catch (err) {
       console.warn('[updater] Failed to check for updates:', err.message);
+      sendUpdateStatus('idle');
       showUpdateStatusToast('Update Error', err.message);
     }
   };
@@ -117,18 +156,22 @@ const initAutoUpdater = () => {
 const createListeners = () => {
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
+    sendUpdateStatus('idle');
     showUpdateStatusToast('Update Error', error.message);
   });
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
+    sendUpdateStatus('idle');
     showUpdateStatusToast(`Up to Date`, packageJSON.version);
   });
   autoUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
+    sendUpdateStatus('downloading');
     showUpdateStatusToast('Downloading update...');
   });
   autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
+    sendUpdateStatus('readyToRestart');
     showUpdateStatusToast('Performing backup...');
     showUpdateStatusToast(`Downloaded ${releaseName}`, 'Restart to apply the updates.');
     // documented: https://www.electronjs.org/docs/latest/tutorial/updates#step-3-notifying-users-when-updates-are-available
@@ -142,18 +185,7 @@ const createListeners = () => {
       })
       .then(returnValue => {
         if (returnValue.response === 0) {
-          if (process.platform !== 'win32') {
-            autoUpdater.quitAndInstall();
-            return;
-          }
-          // Workaround for the windows secure wrapper breaking quitAndInstall logic.
-          // This is related to PR 8451 / CVE-2025-1353 / which broke the auto restart after an in-place update
-          const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
-          spawn(updateExe, ['--processStartAndWait', 'Insomnia.exe'], {
-            detached: true,
-            windowsHide: true,
-          });
-          app.quit();
+          quitAndInstallAuto();
         }
       });
   });
@@ -189,6 +221,7 @@ const initNsisUpdater = () => {
       electronUpdater.checkForUpdates();
     } catch (err) {
       console.warn('[NSIS updater] Failed to check for updates:', err.message);
+      sendUpdateStatus('idle');
       showUpdateStatusToast('Update Error');
     }
   };
@@ -197,18 +230,22 @@ const initNsisUpdater = () => {
 const createNSISListeners = () => {
   electronUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
+    sendUpdateStatus('idle');
     showUpdateStatusToast('Update Error', error.message);
   });
   electronUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
+    sendUpdateStatus('idle');
     showUpdateStatusToast(`Up to Date`, packageJSON.version);
   });
   electronUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
+    sendUpdateStatus('downloading');
     showUpdateStatusToast('Downloading update...');
   });
   electronUpdater.on('update-downloaded', async ({ version }) => {
     console.log(`[NSIS updater] Downloaded ${version}`);
+    sendUpdateStatus('readyToRestart');
     showUpdateStatusToast('Performing backup...');
     showUpdateStatusToast(`Downloaded ${version}`, 'Restart to apply the updates.');
     // documented: https://www.electronjs.org/docs/latest/tutorial/updates#step-3-notifying-users-when-updates-are-available
@@ -222,7 +259,7 @@ const createNSISListeners = () => {
       })
       .then(returnValue => {
         if (returnValue.response === 0) {
-          electronUpdater.quitAndInstall();
+          quitAndInstallNsis();
         }
       });
   });

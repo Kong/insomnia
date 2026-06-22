@@ -592,15 +592,20 @@ export const importResourcesToNewWorkspace = async ({
   const ResourceIdMap = new Map();
   let newWorkspace: Workspace;
   // support import from both insomnia export and api spec yaml
-  if (resources.find(isApiSpec) || isApiSpecImport(resourceCacheItem.importer)) {
+  const apiSpecResource = resources.find(isApiSpec);
+  if (apiSpecResource || isApiSpecImport(resourceCacheItem.importer)) {
     newWorkspace = await services.workspace.create({
       name: workspaceToImport?.name,
       scope: 'design',
       parentId: projectId,
     });
 
+    // For an Insomnia v5 export the parsed spec resource already holds just the
+    // OpenAPI document. Use it directly so the round-trip stays deterministic.
+    // For a raw API spec import (openapi3/swagger2) there is no spec resource,
+    // so fall back to the imported file content, which is the spec itself.
     await services.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
-      contents: resourceCacheItem.content as string | undefined,
+      contents: apiSpecResource ? apiSpecResource.contents : (resourceCacheItem.content as string | undefined),
       contentType: 'yaml',
       fileName: workspaceToImport?.name,
     });

@@ -20,8 +20,8 @@ describe('insomnia-sync', () => {
 
     global.window = {
       main: {
+        on,
         sync: {
-          on,
           resolveConflict: vi.fn(),
           cancelConflict: vi.fn(),
         },
@@ -51,8 +51,8 @@ describe('insomnia-sync', () => {
 
     global.window = {
       main: {
+        on,
         sync: {
-          on,
           resolveConflict,
           cancelConflict,
         },

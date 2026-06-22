@@ -42,6 +42,7 @@ export const getAppBundlePlugins = () => appConfig.bundlePlugins;
 // Must specify full `process.env.INSOMNIA_ENV` here because esbuild define is a build-time replacement and won't inject to runtime
 export const getAppEnvironment = () => env.INSOMNIA_ENV || process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
+export const allowUpdatesInDev = () => Boolean(env.ALLOW_UPDATES_IN_DEV);
 export const getSegmentWriteKey = () =>
   appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
@@ -65,6 +66,8 @@ export function updatesSupported() {
 
   return true;
 }
+
+export type UpdateStatus = 'idle' | 'checking' | 'downloading' | 'readyToRestart';
 
 export const getClientString = () => `${getAppEnvironment()}::${platform}::${getAppVersion()}`;
 

@@ -1,0 +1,17 @@
+type: environment.insomnia.rest/5.0
+schema_version: "5.1"
+name: Production Environment
+meta:
+  id: wrk_359184e6c5fa4e86a4f92a586a6f7dd4
+  created: 1778528107896
+  modified: 1778528107896
+  description: ""
+environments:
+  name: Production
+  meta:
+    id: env_f77d857e60ce4a3eb0a626ff95f145e9
+    created: 1778268347067
+    modified: 1778531998213
+    isPrivate: false
+  data:
+    base_url: https://2110842ae3.us.serverless.gateways.konggateway.com

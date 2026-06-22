@@ -31,7 +31,7 @@
     "chai": "^4.3.4",
     "cheerio": "^1.0.0-rc.12",
     "crypto-js": "^4.2.0",
-    "csv-parse": "^5.5.5",
+    "csv-parse": "^6.2.1",
     "deep-equal": "2.2.3",
     "es-toolkit": "^1.39.8",
     "moment": "^2.30.1",
