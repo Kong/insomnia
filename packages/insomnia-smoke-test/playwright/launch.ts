@@ -20,6 +20,7 @@ export interface EnvOptions {
   INSOMNIA_VAULT_SALT: string;
   INSOMNIA_VAULT_SRP_SECRET: string;
   KONNECT_API_URL: string;
+  KONNECT_API_REGIONS?: string;
 }
 
 /**

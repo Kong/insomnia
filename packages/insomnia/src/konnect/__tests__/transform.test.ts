@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
   deriveProxyVarDefaults,
-  extractRegionFromEndpoint,
   generatePathPlaceholder,
   konnectHeadersChanged,
   mergeHeaders,
@@ -10,50 +9,6 @@ import {
   pathParametersChanged,
   sanitizeRoute,
 } from '../transform';
-
-// ─── extractRegionFromEndpoint ───────────────────────────────────────────────
-
-describe('extractRegionFromEndpoint', () => {
-  it('extracts "us" from a US control plane endpoint', () => {
-    expect(extractRegionFromEndpoint('https://abc123.us.cp0.konghq.com')).toBe('us');
-  });
-
-  it('extracts "eu" from an EU control plane endpoint', () => {
-    expect(extractRegionFromEndpoint('https://xyz789.eu.cp0.konghq.com')).toBe('eu');
-  });
-
-  it('extracts "au" from an AU control plane endpoint', () => {
-    expect(extractRegionFromEndpoint('https://def456.au.cp0.konghq.com')).toBe('au');
-  });
-
-  it('extracts "me" from a ME control plane endpoint', () => {
-    expect(extractRegionFromEndpoint('https://def456.me.cp0.konghq.com')).toBe('me');
-  });
-
-  it('extracts "in" from an IN control plane endpoint', () => {
-    expect(extractRegionFromEndpoint('https://def456.in.cp0.konghq.com')).toBe('in');
-  });
-
-  it('extracts "eu" from a EU control plane endpoint with bare "cp" subdomain', () => {
-    expect(extractRegionFromEndpoint('https://xyz789.eu.cp.konghq.com')).toBe('eu');
-  });
-
-  it('extracts "us" from a US control plane endpoint with bare "cp" subdomain', () => {
-    expect(extractRegionFromEndpoint('https://abc123.us.cp.konghq.com')).toBe('us');
-  });
-
-  it('defaults to "us" for a malformed URL', () => {
-    expect(extractRegionFromEndpoint('not-a-url')).toBe('us');
-  });
-
-  it('defaults to "us" for an unexpected hostname format (no cp0 segment)', () => {
-    expect(extractRegionFromEndpoint('https://api.konghq.com')).toBe('us');
-  });
-
-  it('defaults to "us" for an empty string', () => {
-    expect(extractRegionFromEndpoint('')).toBe('us');
-  });
-});
 
 // ─── sanitizeRoute ───────────────────────────────────────────────────────────
 

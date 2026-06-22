@@ -1,14 +1,13 @@
-import { getKonnectApiBaseURL } from '../common/constants';
+import { getKonnectApiRegions, getKonnectApiUrl } from '../common/constants';
 
-function getGlobalApi(): string {
-  return getKonnectApiBaseURL();
-}
+export type KonnectRegion = string;
 
 const PAGE_SIZE = 100;
 // Maximum number of retry attempts after the first 429 response (5 retries = 6 total attempts).
 const MAX_RETRY_ATTEMPTS = 5;
 const BASE_DELAY_MS = 1000;
 const MAX_DELAY_MS = 30_000;
+const REQUEST_TIMEOUT_MS = 30_000;
 
 export interface KonnectProxyUrl {
   host: string;
@@ -20,6 +19,7 @@ export interface KonnectControlPlane {
   id: string;
   name: string;
   description: string;
+  region: KonnectRegion;
   config: {
     cluster_type: string;
     control_plane_endpoint: string;
@@ -52,13 +52,15 @@ export interface KonnectRoute {
   service: { id: string } | null;
 }
 
+export const getActiveRegions = getKonnectApiRegions;
+
 // Boundary normalizers — coerce any missing nullable field to `null` so the
 // declared `T | null` types are honest. Defending against `undefined` once
 // here lets every downstream consumer use strict `=== null` checks and skip
 // the `?? null` / `arr == null` defensive plumbing that otherwise leaks
 // through sanitizeRoute, sync.ts, expression-parser, etc.
-function normalizeControlPlane(cp: KonnectControlPlane): KonnectControlPlane {
-  return { ...cp, proxy_urls: cp.proxy_urls ?? null };
+function normalizeControlPlane(cp: KonnectControlPlane, region: KonnectRegion): KonnectControlPlane {
+  return { ...cp, region, proxy_urls: cp.proxy_urls ?? null };
 }
 
 function normalizeService(s: KonnectService): KonnectService {
@@ -84,7 +86,9 @@ async function fetchWithRetry(url: string, pat: string, signal?: AbortSignal): P
   while (true) {
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${pat}` },
-      signal,
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)])
+        : AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     if (response.status !== 429 || attempt >= MAX_RETRY_ATTEMPTS) {
@@ -120,7 +124,7 @@ export interface PatValidationResult {
 
 export async function validatePat(pat: string): Promise<PatValidationResult> {
   try {
-    const response = await fetch(`${getGlobalApi()}/v2/control-planes?page[size]=1`, {
+    const response = await fetch(`${regionalApiBase('us')}/v2/control-planes?page[size]=1`, {
       headers: { Authorization: `Bearer ${pat}` },
     });
     if (response.ok) {
@@ -138,12 +142,16 @@ export async function validatePat(pat: string): Promise<PatValidationResult> {
   }
 }
 
-export async function* fetchAllControlPlanes(pat: string, signal?: AbortSignal): AsyncGenerator<KonnectControlPlane[]> {
+export async function* fetchAllControlPlanes(
+  pat: string,
+  region: KonnectRegion,
+  signal?: AbortSignal,
+): AsyncGenerator<KonnectControlPlane[]> {
   let page = 1;
   let totalPages = 1;
 
   do {
-    const url = `${getGlobalApi()}/v2/control-planes?page[size]=${PAGE_SIZE}&page[number]=${page}`;
+    const url = `${regionalApiBase(region)}/v2/control-planes?page[size]=${PAGE_SIZE}&page[number]=${page}`;
     const response = await fetchWithRetry(url, pat, signal);
 
     if (!response.ok) {
@@ -154,7 +162,7 @@ export async function* fetchAllControlPlanes(pat: string, signal?: AbortSignal):
     const total: number = body?.meta?.page?.total ?? 0;
     totalPages = Math.ceil(total / PAGE_SIZE) || 1;
 
-    yield (body.data as KonnectControlPlane[]).map(normalizeControlPlane);
+    yield (body.data as KonnectControlPlane[]).map(cp => normalizeControlPlane(cp, region));
     page++;
   } while (page <= totalPages);
 }
@@ -216,7 +224,11 @@ export async function fetchRoutesForService(
 }
 
 function regionalApiBase(region: string): string {
-  const url = new URL(getGlobalApi());
-  url.hostname = url.hostname.replace('global', region);
-  return url.origin;
+  const url = getKonnectApiUrl();
+  // If KONNECT_API_URL is already a full URL (e.g. http://localhost:4010 in tests),
+  // use it as-is without prepending a region subdomain or https scheme.
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url.replace(/\/$/, '');
+  }
+  return `https://${region}.${url.replace(/\/$/, '')}`;
 }

@@ -34,6 +34,7 @@ export function useKonnectSync(): UseKonnectSyncResult {
         services: zeroCounts(),
         routes: zeroCounts(),
         skippedRoutes: [],
+        skippedRegions: [],
         durationMs: 0,
       };
     }
@@ -52,6 +53,7 @@ export function useKonnectSync(): UseKonnectSyncResult {
         services: zeroCounts(),
         routes: zeroCounts(),
         skippedRoutes: [],
+        skippedRegions: [],
         durationMs: 0,
       };
     }
