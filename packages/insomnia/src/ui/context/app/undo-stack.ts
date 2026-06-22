@@ -96,22 +96,19 @@ export interface RecordEditInput {
 /**
  * Record a field edit onto the undo stack, coalescing consecutive edits to the same field
  * within {@link COALESCE_MS} into a single step. Structural changes (add/delete/reorder a row)
- * are detected via the array shape and recorded as their own atomic, sealed step. Mutates and
- * returns the same `stack` array for use with refs; returns `skipped: true` when the snapshot
- * exceeds {@link UNDO_MAX_SNAPSHOT_BYTES} (the edit is left un-undoable).
+ * are detected via the array shape and recorded as their own atomic, sealed step. Mutates `stack`
+ * in place; reports `skipped: true` when the snapshot exceeds {@link UNDO_MAX_SNAPSHOT_BYTES} (the
+ * edit is left un-undoable) and `merged: true` when it coalesced into the current step.
  */
-export const recordEdit = (
-  stack: UndoEntry[],
-  input: RecordEditInput,
-): { stack: UndoEntry[]; skipped: boolean; merged: boolean } => {
+export const recordEdit = (stack: UndoEntry[], input: RecordEditInput): { skipped: boolean; merged: boolean } => {
   const { location, before, after, now } = input;
   const keys = Object.keys(after);
   if (keys.length === 0) {
-    return { stack, skipped: true, merged: false };
+    return { skipped: true, merged: false };
   }
   if (snapshotBytes(after) > UNDO_MAX_SNAPSHOT_BYTES || snapshotBytes(before) > UNDO_MAX_SNAPSHOT_BYTES) {
     finalizeTop(stack);
-    return { stack, skipped: true, merged: false };
+    return { skipped: true, merged: false };
   }
 
   const beforeShape = shapeOf(before, keys);
@@ -135,7 +132,7 @@ export const recordEdit = (
     // Keep the original `before`; advance `after` and slide the coalescing window.
     top.after = after;
     top.createdAt = now;
-    return { stack, skipped: false, merged: true };
+    return { skipped: false, merged: true };
   }
 
   stack.push({
@@ -150,13 +147,13 @@ export const recordEdit = (
     createdAt: now,
   });
   enforceMax(stack);
-  return { stack, skipped: false, merged: false };
+  return { skipped: false, merged: false };
 };
 
 export const recordDelete = (
   stack: UndoEntry[],
   params: { location: UndoLocation; requestDoc: Record<string, any>; metaDoc: Record<string, any> | null; now: number },
-): UndoEntry[] => {
+): void => {
   stack.push({
     kind: 'delete-request',
     id: nextEntryId++,
@@ -167,16 +164,14 @@ export const recordDelete = (
     createdAt: params.now,
   });
   enforceMax(stack);
-  return stack;
 };
 
 /** Ends the current coalescing group so the next edit starts a new step. */
-export const finalizeTop = (stack: UndoEntry[]): UndoEntry[] => {
+export const finalizeTop = (stack: UndoEntry[]): void => {
   const top = stack[stack.length - 1];
   if (top && top.kind === 'patch') {
     top.sealed = true;
   }
-  return stack;
 };
 
 const enforceMax = (stack: UndoEntry[]) => {

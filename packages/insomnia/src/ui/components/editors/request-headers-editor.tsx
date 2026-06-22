@@ -10,7 +10,7 @@ import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/com
 import { generateId } from '../../../common/misc';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { useUndoableRequestPatcher } from '../../hooks/use-undoable-request-patcher';
-import { KeyValueEditor } from '../key-value-editor/key-value-editor';
+import { KeyValueEditor, parseBulkPairs } from '../key-value-editor/key-value-editor';
 
 interface Props {
   headers: RequestHeader[];
@@ -70,27 +70,7 @@ export const RequestHeadersEditor: FC<Props> = ({
   );
   const handleBulkUpdate = useCallback(
     (headersString: string) => {
-      const headersArray: {
-        name: string;
-        value: string;
-      }[] = [];
-
-      const rows = headersString.split(/\n+/);
-      for (const row of rows) {
-        const [rawName, rawValue] = row.split(/:(.*)$/);
-        const name = (rawName || '').trim();
-        const value = (rawValue || '').trim();
-
-        if (!name && !value) {
-          continue;
-        }
-
-        headersArray.push({
-          name,
-          value,
-        });
-      }
-      patchHeaders(headersArray);
+      patchHeaders(parseBulkPairs(headersString));
     },
     [patchHeaders],
   );

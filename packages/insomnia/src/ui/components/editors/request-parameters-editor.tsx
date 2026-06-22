@@ -9,7 +9,7 @@ import {
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { useUndoableRequestPatcher } from '~/ui/hooks/use-undoable-request-patcher';
 
-import { KeyValueEditor } from '../key-value-editor/key-value-editor';
+import { KeyValueEditor, parseBulkPairs } from '../key-value-editor/key-value-editor';
 
 interface Props {
   bulk: boolean;
@@ -23,27 +23,7 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onD
   const patchRequest = useUndoableRequestPatcher();
   const handleBulkUpdate = useCallback(
     (paramsString: string) => {
-      const parameters: {
-        name: string;
-        value: string;
-      }[] = [];
-
-      const rows = paramsString.split(/\n+/);
-      for (const row of rows) {
-        const [rawName, rawValue] = row.split(/:(.*)$/);
-        const name = (rawName || '').trim();
-        const value = (rawValue || '').trim();
-
-        if (!name && !value) {
-          continue;
-        }
-
-        parameters.push({
-          name,
-          value,
-        });
-      }
-      patchRequest(requestId, { parameters });
+      patchRequest(requestId, { parameters: parseBulkPairs(paramsString) });
     },
     [patchRequest, requestId],
   );

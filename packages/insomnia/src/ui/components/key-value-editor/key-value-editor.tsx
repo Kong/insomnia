@@ -23,6 +23,21 @@ import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { CodePromptModal } from '../modals/code-prompt-modal';
 
+/** Parse bulk-editor text ("name: value" per line) into pairs, skipping blank lines. */
+export const parseBulkPairs = (text: string): { name: string; value: string }[] => {
+  const pairs: { name: string; value: string }[] = [];
+  for (const row of text.split(/\n+/)) {
+    const [rawName, rawValue] = row.split(/:(.*)$/);
+    const name = (rawName || '').trim();
+    const value = (rawValue || '').trim();
+    if (!name && !value) {
+      continue;
+    }
+    pairs.push({ name, value });
+  }
+  return pairs;
+};
+
 interface Pair {
   id?: string;
   name: string;

@@ -36,8 +36,18 @@ describe('shapeOf', () => {
 describe('recordEdit coalescing', () => {
   it('merges consecutive value edits to the same field into one step', () => {
     const stack: UndoEntry[] = [];
-    recordEdit(stack, { location: loc(), before: { headers: [header('a', '')] }, after: { headers: [header('a', 'h')] }, now: 1000 });
-    const second = recordEdit(stack, { location: loc(), before: { headers: [header('a', 'h')] }, after: { headers: [header('a', 'he')] }, now: 1100 });
+    recordEdit(stack, {
+      location: loc(),
+      before: { headers: [header('a', '')] },
+      after: { headers: [header('a', 'h')] },
+      now: 1000,
+    });
+    const second = recordEdit(stack, {
+      location: loc(),
+      before: { headers: [header('a', 'h')] },
+      after: { headers: [header('a', 'he')] },
+      now: 1100,
+    });
 
     expect(second.merged).toBe(true);
     expect(stack).toHaveLength(1);
@@ -49,15 +59,35 @@ describe('recordEdit coalescing', () => {
 
   it('starts a new step once the coalescing window elapses', () => {
     const stack: UndoEntry[] = [];
-    recordEdit(stack, { location: loc(), before: { headers: [header('a', '')] }, after: { headers: [header('a', 'h')] }, now: 1000 });
-    recordEdit(stack, { location: loc(), before: { headers: [header('a', 'h')] }, after: { headers: [header('a', 'he')] }, now: 5000 });
+    recordEdit(stack, {
+      location: loc(),
+      before: { headers: [header('a', '')] },
+      after: { headers: [header('a', 'h')] },
+      now: 1000,
+    });
+    recordEdit(stack, {
+      location: loc(),
+      before: { headers: [header('a', 'h')] },
+      after: { headers: [header('a', 'he')] },
+      now: 5000,
+    });
     expect(stack).toHaveLength(2);
   });
 
   it('does not merge across sub-tabs', () => {
     const stack: UndoEntry[] = [];
-    recordEdit(stack, { location: loc({ subTab: 'params' }), before: { parameters: [header('a', '')] }, after: { parameters: [header('a', 'p')] }, now: 1000 });
-    recordEdit(stack, { location: loc({ subTab: 'headers' }), before: { headers: [header('a', '')] }, after: { headers: [header('a', 'h')] }, now: 1100 });
+    recordEdit(stack, {
+      location: loc({ subTab: 'params' }),
+      before: { parameters: [header('a', '')] },
+      after: { parameters: [header('a', 'p')] },
+      now: 1000,
+    });
+    recordEdit(stack, {
+      location: loc({ subTab: 'headers' }),
+      before: { headers: [header('a', '')] },
+      after: { headers: [header('a', 'h')] },
+      now: 1100,
+    });
     expect(stack).toHaveLength(2);
   });
 });
@@ -66,10 +96,20 @@ describe('recordEdit structural changes are atomic', () => {
   it('adding a row creates a sealed step that later typing does not merge into', () => {
     const stack: UndoEntry[] = [];
     // add a row: shape changes from [a] -> [a,b]
-    recordEdit(stack, { location: loc(), before: { headers: [header('a', '1')] }, after: { headers: [header('a', '1'), header('b', '')] }, now: 1000 });
+    recordEdit(stack, {
+      location: loc(),
+      before: { headers: [header('a', '1')] },
+      after: { headers: [header('a', '1'), header('b', '')] },
+      now: 1000,
+    });
     expect((stack[0] as PatchEntry).sealed).toBe(true);
     // type into the new row (same shape) shortly after — must not merge into the sealed add step
-    recordEdit(stack, { location: loc(), before: { headers: [header('a', '1'), header('b', '')] }, after: { headers: [header('a', '1'), header('b', 'v')] }, now: 1100 });
+    recordEdit(stack, {
+      location: loc(),
+      before: { headers: [header('a', '1'), header('b', '')] },
+      after: { headers: [header('a', '1'), header('b', 'v')] },
+      now: 1100,
+    });
     expect(stack).toHaveLength(2);
   });
 
@@ -119,7 +159,12 @@ describe('stack bounds', () => {
   it('does not record edits whose snapshot exceeds the byte threshold', () => {
     const stack: UndoEntry[] = [];
     const big = 'x'.repeat(UNDO_MAX_SNAPSHOT_BYTES + 10);
-    const res = recordEdit(stack, { location: loc({ subTab: 'content-type' }), before: { body: { text: '' } }, after: { body: { text: big } }, now: 1000 });
+    const res = recordEdit(stack, {
+      location: loc({ subTab: 'content-type' }),
+      before: { body: { text: '' } },
+      after: { body: { text: big } },
+      now: 1000,
+    });
     expect(res.skipped).toBe(true);
     expect(stack).toHaveLength(0);
   });
@@ -128,9 +173,19 @@ describe('stack bounds', () => {
 describe('finalizeTop', () => {
   it('seals the current group so the next edit starts a new step', () => {
     const stack: UndoEntry[] = [];
-    recordEdit(stack, { location: loc(), before: { headers: [header('a', '')] }, after: { headers: [header('a', 'h')] }, now: 1000 });
+    recordEdit(stack, {
+      location: loc(),
+      before: { headers: [header('a', '')] },
+      after: { headers: [header('a', 'h')] },
+      now: 1000,
+    });
     finalizeTop(stack);
-    recordEdit(stack, { location: loc(), before: { headers: [header('a', 'h')] }, after: { headers: [header('a', 'he')] }, now: 1100 });
+    recordEdit(stack, {
+      location: loc(),
+      before: { headers: [header('a', 'h')] },
+      after: { headers: [header('a', 'he')] },
+      now: 1100,
+    });
     expect(stack).toHaveLength(2);
   });
 });

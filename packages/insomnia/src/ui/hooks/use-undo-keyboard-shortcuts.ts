@@ -41,51 +41,44 @@ const focusedNativeEditable = (): boolean => {
 
 export const useUndoKeyboardShortcuts = () => {
   const { undo, redo } = useUndoContext();
+  const apply = (kind: 'undo' | 'redo') => {
+    if (kind === 'undo') {
+      undo();
+    } else {
+      redo();
+    }
+  };
 
-  // Pointer path: the native Edit menu sends these (it has no accelerator, so it never
-  // competes with the keyboard path below).
+  // Pointer path: the native Edit menu sends these via IPC (it has no accelerator, so it never
+  // competes with the keyboard path below). A focused multiline editor still gets native undo;
+  // a plain native field is left alone; otherwise drive the app stack.
   useEffect(() => {
-    const offUndo = window.main.on('app-undo', () => {
+    const onMenu = (kind: 'undo' | 'redo') => () => {
       const cm = focusedMultilineCodeMirror();
       if (cm) {
-        cm.undo();
+        cm[kind]();
       } else if (!focusedNativeEditable()) {
-        undo();
+        apply(kind);
       }
-    });
-    const offRedo = window.main.on('app-redo', () => {
-      const cm = focusedMultilineCodeMirror();
-      if (cm) {
-        cm.redo();
-      } else if (!focusedNativeEditable()) {
-        redo();
-      }
-    });
-    return () => {
-      offUndo();
-      offRedo();
     };
+    const unsubscribers = [window.main.on('app-undo', onMenu('undo')), window.main.on('app-redo', onMenu('redo'))];
+    return () => unsubscribers.forEach(unsubscribe => unsubscribe());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [undo, redo]);
 
-  // Keyboard path: capture-phase so single-line CodeMirror does not also self-undo.
+  // Keyboard path: capture-phase so a single-line CodeMirror does not also self-undo. Multiline
+  // editors and plain native fields keep their own native undo.
+  const onKey = (kind: 'undo' | 'redo') => (event: KeyboardEvent) => {
+    if (focusedMultilineCodeMirror() || focusedNativeEditable()) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    apply(kind);
+  };
   useDocBodyKeyboardShortcuts({
-    request_undo: event => {
-      // Multiline editors and plain native fields keep their own native undo.
-      if (focusedMultilineCodeMirror() || focusedNativeEditable()) {
-        return;
-      }
-      event.preventDefault();
-      event.stopPropagation();
-      undo();
-    },
-    request_redo: event => {
-      if (focusedMultilineCodeMirror() || focusedNativeEditable()) {
-        return;
-      }
-      event.preventDefault();
-      event.stopPropagation();
-      redo();
-    },
+    request_undo: onKey('undo'),
+    request_redo: onKey('redo'),
   });
 };
 

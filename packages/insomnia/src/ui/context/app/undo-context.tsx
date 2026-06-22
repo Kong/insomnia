@@ -25,6 +25,10 @@ import {
 export { UNDO_MAX_SNAPSHOT_BYTES, UNDO_STACK_MAX } from './undo-stack';
 export type { RequestSubTab } from './undo-stack';
 
+const debugBaseUrl = (l: UndoLocation) =>
+  `/organization/${l.organizationId}/project/${l.projectId}/workspace/${l.workspaceId}/debug`;
+const debugRequestUrl = (l: UndoLocation) => `${debugBaseUrl(l)}/request/${l.requestId}`;
+
 export interface RecordEditParams {
   organizationId: string;
   projectId: string;
@@ -120,7 +124,7 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
     (location: UndoLocation, patch: Record<string, any>) => {
       suppressed.current = true;
       pendingBumpRef.current = true;
-      const url = `/organization/${location.organizationId}/project/${location.projectId}/workspace/${location.workspaceId}/debug/request/${location.requestId}/update`;
+      const url = `${debugRequestUrl(location)}/update`;
       fetcher.submit(JSON.stringify(patch), {
         action: url,
         method: 'POST',
@@ -146,9 +150,7 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       // Cross-request: queue the target sub-tab, then navigate. The request-pane consumes it on arrival.
       pendingRevealRef.current = { requestId: location.requestId, subTab: location.subTab };
-      navigate(
-        `/organization/${location.organizationId}/project/${location.projectId}/workspace/${location.workspaceId}/debug/request/${location.requestId}`,
-      );
+      navigate(debugRequestUrl(location));
     },
     [navigate],
   );
@@ -187,9 +189,7 @@ export const UndoProvider: FC<PropsWithChildren> = ({ children }) => {
       if (req) {
         await services.helpers.removeRequest(req);
       }
-      navigate(
-        `/organization/${entry.location.organizationId}/project/${entry.location.projectId}/workspace/${entry.location.workspaceId}/debug`,
-      );
+      navigate(debugBaseUrl(entry.location));
       revalidator.revalidate();
     },
     [navigate, revalidator],
