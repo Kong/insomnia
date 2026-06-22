@@ -25,7 +25,7 @@ export const KonnectSettingsModal = ({
   const [pat, setPat] = useState('');
   const [isPatVisible, setIsPatVisible] = useState(false);
   // 'idle' | 'validating' | 'valid' | 'invalid'
-  const [status, setStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>(settings.hasKonnectPat ? 'validating' : 'idle');
+  const [status, setStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
   const [validationError, setValidationError] = useState<string | null>(null);
   // Controls whether the disconnect confirmation screen is shown
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
@@ -48,13 +48,12 @@ export const KonnectSettingsModal = ({
     return { valid: result.valid, orgId };
   };
 
-  // On mount: if a PAT is already stored, load and re-validate it to update the status indicator.
+  // On mount: if a PAT is already stored, load it into the input field.
   useEffect(() => {
     if (settings.hasKonnectPat) {
       window.main.secretStorage.getSecret('konnectPat').then(secret => {
         if (secret) {
           setPat(secret);
-          validateAndSetStatus(secret);
         }
       });
     }
@@ -102,8 +101,7 @@ export const KonnectSettingsModal = ({
     }
   };
 
-  // A connected state means the PAT is saved and has not been found invalid.
-  const isConnected = settings.hasKonnectPat && status !== 'invalid';
+  const hasStoredPat = settings.hasKonnectPat && status !== 'invalid';
 
   return (
     <ModalOverlay
@@ -178,7 +176,7 @@ export const KonnectSettingsModal = ({
                         type={isPatVisible ? 'text' : 'password'}
                         className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1.5 pr-8 text-(--color-font) focus:border-(--hl-lg) focus:outline-hidden"
                         placeholder={
-                          isConnected
+                          hasStoredPat
                             ? 'Enter new PAT to replace existing'
                             : 'e.g. kpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
                         }
@@ -206,9 +204,6 @@ export const KonnectSettingsModal = ({
                         {validationError ?? 'Invalid PAT. Check your input and try again.'}
                       </p>
                     )}
-                    {(status === 'valid' || (isConnected && status === 'idle')) && (
-                      <p className="text-sm text-(--color-success)">Connected</p>
-                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -219,7 +214,7 @@ export const KonnectSettingsModal = ({
                     >
                       {status === 'validating' ? <Icon icon="spinner" className="animate-spin" /> : 'Connect & Sync'}
                     </Button>
-                    {isConnected && (
+                    {hasStoredPat && (
                       <Button
                         className="rounded-xs px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs)"
                         onPress={() => setShowDisconnectConfirm(true)}
