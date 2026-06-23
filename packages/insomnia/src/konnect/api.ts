@@ -138,7 +138,28 @@ export async function validatePat(pat: string): Promise<PatValidationResult> {
   }
 }
 
+<<<<<<< HEAD
 export async function* fetchAllControlPlanes(pat: string, signal?: AbortSignal): AsyncGenerator<KonnectControlPlane[]> {
+=======
+export async function fetchKonnectOrganizationId(pat: string, signal?: AbortSignal): Promise<string | undefined> {
+  try {
+    const response = await fetchWithRetry(`${regionalApiBase('us')}/v3/organizations/me`, pat, signal);
+    if (!response.ok) {
+      return undefined;
+    }
+    const data = (await response.json()) as { id?: string };
+    return data.id;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function* fetchAllControlPlanes(
+  pat: string,
+  region: KonnectRegion,
+  signal?: AbortSignal,
+): AsyncGenerator<KonnectControlPlane[]> {
+>>>>>>> 86d837d88 (feat: add additional konnect analytics event properties (#10137))
   let page = 1;
   let totalPages = 1;
 
