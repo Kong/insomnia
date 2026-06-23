@@ -1,9 +1,6 @@
 name: Release Build
 
 on:
-  push:
-    branches:
-      - 'release/**'
   workflow_dispatch:
 
 permissions: {}
@@ -15,6 +12,7 @@ concurrency:
 jobs:
   # shared kong github action for security checking
   generate-sbom-and-upload-assets:
+    if: startsWith(github.ref_name, 'release/')
     runs-on: ubuntu-24.04
     permissions:
       contents: read # Required for actions/checkout
@@ -34,6 +32,7 @@ jobs:
           dir: .
           upload-sbom-release-assets: false
   build-and-upload-release-artifacts:
+    if: startsWith(github.ref_name, 'release/')
     timeout-minutes: 45
     runs-on: ${{ matrix.os }}
     permissions:
@@ -368,6 +367,7 @@ jobs:
             !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:
+    if: startsWith(github.ref_name, 'release/')
     timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
     runs-on: ubuntu-24.04
