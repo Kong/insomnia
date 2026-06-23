@@ -305,15 +305,15 @@ export function createWindow(): ElectronBrowserWindow {
   const editMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Edit`,
     submenu: [
+      // No accelerator/role: the renderer owns Cmd/Ctrl+Z so it can drive the editor undo stack
+      // (and let multiline CodeMirror keep its native undo). Native inputs still undo via Chromium.
       {
         label: `${MNEMONIC_SYM}Undo`,
-        accelerator: 'CmdOrCtrl+Z',
-        role: 'undo',
+        click: () => BrowserWindow.getFocusedWindow()?.webContents.send('app-undo'),
       },
       {
         label: `${MNEMONIC_SYM}Redo`,
-        accelerator: 'Shift+CmdOrCtrl+Z',
-        role: 'redo',
+        click: () => BrowserWindow.getFocusedWindow()?.webContents.send('app-redo'),
       },
       {
         type: 'separator',

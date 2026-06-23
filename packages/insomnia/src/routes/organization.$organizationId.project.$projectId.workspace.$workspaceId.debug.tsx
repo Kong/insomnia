@@ -89,6 +89,7 @@ import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
+import { EditorUndoProvider } from '~/ui/context/app/editor-undo-context';
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
 import { useFilteredRequests } from '~/ui/hooks/use-filtered-requests';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
@@ -1151,6 +1152,7 @@ const Debug = () => {
           </>
         )}
         <Panel id="workspace-content" order={2} className="flex flex-col">
+          <EditorUndoProvider>
           <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
             {isRunner ? (
               <Runner />
@@ -1217,6 +1219,7 @@ const Debug = () => {
               </>
             )}
           </PanelGroup>
+          </EditorUndoProvider>
         </Panel>
       </PanelGroup>
     </div>

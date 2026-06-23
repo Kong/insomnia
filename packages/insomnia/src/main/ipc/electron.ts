@@ -262,8 +262,11 @@ export type MainOnChannels =
   | 'writeText';
 
 export type RendererOnChannels =
+  | 'app-undo'
+  | 'app-redo'
   | 'contextMenuCommand'
   | 'db.changes'
+  | 'db.operations'
   | 'plugins.uiAlert'
   | 'plugins.uiDialog'
   | 'ui.prompt'

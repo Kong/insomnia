@@ -39,6 +39,24 @@ export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [event: ChangeT
 
 export type ChangeListener = (changes: ChangeBufferEvent[]) => void;
 
+/** A single reversible database mutation, expressed as a concrete document write. */
+export interface OperationDescriptor {
+  kind: ChangeType;
+  doc: BaseModel;
+}
+
+/**
+ * A mutation paired with its inverse: `apply` re-performs the change (redo) and `invert` reverses it (undo).
+ * The data layer emits one of these for every mutation to an undoable model type, so a consumer can build an
+ * undo stack centrally instead of each call site opting in.
+ */
+export interface UndoableOperation {
+  apply: OperationDescriptor;
+  invert: OperationDescriptor;
+  /** For `update` operations: the field names that changed. Used by consumers to coalesce edits. */
+  keys?: string[];
+}
+
 /**
  * Database interface for IoC pattern.
  * Main process uses NeDBDatabaseImpl, renderer uses BridgeDatabaseImpl.
@@ -138,6 +156,13 @@ export interface IDatabase<O = DataStoreOptions> {
    * Update a document.
    */
   update<T extends BaseModel>(doc: T, patches?: Partial<T>[]): Promise<T>;
+
+  /**
+   * Apply an undo/redo operation descriptor (writing a prior or next document state). The resulting
+   * write still notifies change listeners so the UI revalidates, but is NOT re-emitted on the
+   * operation stream, so undoing/redoing does not itself create a new undo entry.
+   */
+  applyUndoOperation(descriptor: OperationDescriptor): Promise<void>;
 
   /**
    * Get all ancestors of a document including the original.

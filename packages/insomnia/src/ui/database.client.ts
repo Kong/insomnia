@@ -1,7 +1,7 @@
 // Bridge Database implementation for renderer process
 // Uses window.database.invoke API exposed by contextBridge from preload
 
-import type { AllTypes, BaseModel, IDatabase, Operation, Query } from 'insomnia-data';
+import type { AllTypes, BaseModel, IDatabase, Operation, OperationDescriptor, Query } from 'insomnia-data';
 
 /**
  * Bridge database implementation for renderer process.
@@ -83,6 +83,10 @@ export const database: IDatabase = {
 
   update: async function <T extends BaseModel>(doc: T, patches: Partial<T>[] = []) {
     return window.database.invoke<T>('update', doc, patches);
+  },
+
+  applyUndoOperation: async function (descriptor: OperationDescriptor) {
+    return window.database.invoke<void>('applyUndoOperation', descriptor);
   },
 
   withAncestors: async function <T extends BaseModel>(doc: T | undefined, types: AllTypes[] = []) {

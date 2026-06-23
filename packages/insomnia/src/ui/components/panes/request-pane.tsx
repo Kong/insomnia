@@ -1,7 +1,7 @@
 import type { RequestParameter, Settings } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { deconstructQueryStringToParams, getContentTypeFromHeaders } from 'insomnia-data/common';
-import React, { type FC, Fragment, useRef, useState } from 'react';
+import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams } from 'react-router';
@@ -9,6 +9,7 @@ import * as reactUse from 'react-use';
 
 import { extractQueryStringFromUrl } from '~/common/utils/url/querystring';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { type RequestSubTab, useEditorUndoContext } from '~/ui/context/app/editor-undo-context';
 
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -50,6 +51,15 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const patchRequest = useRequestPatcher();
 
   const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
+
+  // Editor-scoped undo: report the visible form (request + sub-tab) so undo records against it, and
+  // fold undoRevision into editor remount keys so uncontrolled editors refresh after an undo write.
+  const { registerActiveForm, finalizeGroup, undoRevision } = useEditorUndoContext();
+  const [activeSubTab, setActiveSubTab] = useState<RequestSubTab>('params');
+  useEffect(() => {
+    registerActiveForm(requestId, activeSubTab);
+  }, [requestId, activeSubTab, registerActiveForm]);
+
   const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
   const handleImportQueryFromUrl = () => {
     let query;
@@ -78,8 +88,9 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const gitVersion = useGitVCSVersion();
 
   const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
-  // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}`;
+  // Force re-render when we switch requests, the environment gets modified, the (Git|Sync)VCS version
+  // changes, or an undo/redo write lands (so uncontrolled editors refresh to the reverted value).
+  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}::${undoRevision}`;
 
   if (!activeRequest) {
     return <PlaceholderRequestPane />;
@@ -114,7 +125,15 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
           />
         </ErrorBoundary>
       </PaneHeader>
-      <Tabs aria-label="Request pane tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        aria-label="Request pane tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        onSelectionChange={key => {
+          // Switching sub-tabs ends the current coalescing group and moves undo to the new visible form.
+          finalizeGroup();
+          setActiveSubTab(key as RequestSubTab);
+        }}
+      >
         <TabList
           className="scrollbar-thin flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
@@ -259,7 +278,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                           </span>
                           <div className="flex h-full items-center border-b border-solid border-(--hl-md) px-2">
                             <OneLineEditor
-                              key={activeRequest._id}
+                              key={`${activeRequest._id}::${undoRevision}`}
                               id={'key-value-editor__name' + pathParameter.name}
                               placeholder="Parameter value"
                               defaultValue={pathParameter.value || ''}

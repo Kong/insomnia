@@ -20,8 +20,10 @@ import type {
   GitRepository,
   IDatabase,
   Operation,
+  OperationDescriptor,
   ProjectLintRuleset,
   Query,
+  UndoableOperation,
   Workspace,
   WorkspaceMeta,
 } from 'insomnia-data';
@@ -394,6 +396,9 @@ export const createNedbDatabase = <O = initOptions>(
     insert: async function <T extends BaseModel>(doc: T) {
       const docWithDefaults = await initModel<T>(doc.type, doc);
       const newDoc = await nedbBucket[doc.type].insertAsync(docWithDefaults);
+      if (isUndoableMutation(newDoc.type)) {
+        emitOperation({ apply: { kind: 'insert', doc: newDoc }, invert: { kind: 'remove', doc: newDoc } });
+      }
       notifyOfChange('insert', newDoc);
       return newDoc;
     },
@@ -424,7 +429,12 @@ export const createNedbDatabase = <O = initOptions>(
         ),
       );
 
-      docs.map(d => notifyOfChange('remove', d));
+      docs.forEach(d => {
+        if (isUndoableMutation(d.type)) {
+          emitOperation({ apply: { kind: 'remove', doc: d }, invert: { kind: 'insert', doc: d } });
+        }
+        notifyOfChange('remove', d);
+      });
       await database.flushChanges(flushId);
     },
 
@@ -463,9 +473,38 @@ export const createNedbDatabase = <O = initOptions>(
 
     update: async function <T extends BaseModel>(doc: T, patches: Partial<T>[] = []) {
       const docWithDefaults = await initModel<T>(doc.type, doc);
+      // Capture the prior state so the inverse operation can restore it. Gated to undoable types so
+      // the extra read only happens for documents that participate in undo.
+      const priorDoc = isUndoableMutation(doc.type)
+        ? await nedbBucket[doc.type].findOneAsync<T>({ _id: docWithDefaults._id })
+        : null;
       await nedbBucket[doc.type].updateAsync({ _id: docWithDefaults._id }, docWithDefaults, { upsert: true });
+      if (isUndoableMutation(docWithDefaults.type)) {
+        emitOperation({
+          apply: { kind: 'update', doc: docWithDefaults },
+          // An upsert with no prior doc was really an insert; its inverse is a remove.
+          invert: priorDoc ? { kind: 'update', doc: priorDoc } : { kind: 'remove', doc: docWithDefaults },
+          keys: [...new Set(patches.flatMap(patch => (patch ? Object.keys(patch) : [])))],
+        });
+      }
       notifyOfChange('update', docWithDefaults, patches);
       return docWithDefaults;
+    },
+
+    /** Write a prior/next document state for undo/redo without emitting a new operation (so it isn't itself recorded). */
+    applyUndoOperation: async function (descriptor: OperationDescriptor) {
+      suppressOperationEmit = true;
+      try {
+        if (descriptor.kind === 'remove') {
+          await database.remove(descriptor.doc);
+        } else if (descriptor.kind === 'insert') {
+          await database.insert(descriptor.doc);
+        } else {
+          await database.update(descriptor.doc);
+        }
+      } finally {
+        suppressOperationEmit = false;
+      }
     },
 
     /** get all ancestors of specified types of a document including the original, the order of the returned array is leaf to root */
@@ -588,6 +627,40 @@ let changeBuffer: ChangeBufferEvent[] = [];
 
 let changeListeners: ChangeListener[] = [];
 
+// ~~~~~~~~~~~~~~~~~~~ //
+// Undo Operations     //
+// ~~~~~~~~~~~~~~~~~~~ //
+
+/**
+ * Model types whose mutations are recorded as undoable operations. Limited to the request types
+ * edited in the debug request pane, so the extra prior-state read on `update` is only paid where
+ * the undo feature actually consumes it.
+ */
+const UNDOABLE_TYPES = new Set<string>(['Request', 'GrpcRequest', 'WebSocketRequest', 'SocketIORequest', 'McpRequest']);
+const isUndoableMutation = (type: string) => UNDOABLE_TYPES.has(type);
+
+// Set true while applyUndoOperation writes, so undoing/redoing does not emit a fresh operation.
+let suppressOperationEmit = false;
+
+// Operations gathered since the last flush. Emitted (and cleared) by flushChangesImpl, aligned with
+// the change batch they belong to.
+let operationBuffer: UndoableOperation[] = [];
+
+// The renderer-facing sink for operations, registered by the main process. When unset (e.g. the
+// send-request Node context), operations are simply dropped on flush.
+let operationEmitter: ((operations: UndoableOperation[]) => void) | null = null;
+
+/** Register the sink that forwards undoable operations to consumers (the main process wires this to IPC). */
+export const setOperationEmitter = (emitter: ((operations: UndoableOperation[]) => void) | null) => {
+  operationEmitter = emitter;
+};
+
+const emitOperation = (operation: UndoableOperation) => {
+  if (!suppressOperationEmit) {
+    operationBuffer.push(operation);
+  }
+};
+
 /** trigger all changeListeners */
 export const flushChangesImpl = async function (id = 0, fake = false): Promise<ChangeBufferEvent[] | void> {
   // Only flush if ID is 0 or the current flush ID is the same as passed
@@ -606,11 +679,19 @@ export const flushChangesImpl = async function (id = 0, fake = false): Promise<C
 
   if (fake) {
     console.log(`[db] Dropped ${changes.length} changes.`);
+    operationBuffer = [];
     return;
   }
   // Notify local listeners too
   for (const fn of changeListeners) {
     await fn(changes);
+  }
+
+  // Forward any undoable operations gathered during these changes to the registered sink.
+  const operations = operationBuffer;
+  operationBuffer = [];
+  if (operations.length > 0 && operationEmitter) {
+    operationEmitter(operations);
   }
 
   return changes;
