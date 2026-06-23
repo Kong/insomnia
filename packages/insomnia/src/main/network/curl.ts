@@ -150,9 +150,9 @@ const openCurlConnection = async (
   const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
   try {
-    if (!options.url) {
-      throw new Error('URL is required');
-    }
+    invariant(options.url, 'URL must be defined');
+    invariant(!options.url.startsWith('file://'), 'Local file URIs are not supported');
+    
     const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const settings = await services.settings.get();
