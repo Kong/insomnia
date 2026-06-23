@@ -153,6 +153,15 @@ const openCurlConnection = async (
     if (!options.url) {
       throw new Error('URL is required');
     }
+
+    // Use headers and auth from options (if available) which contain inherited and evaluated data
+    if (options.headers) {
+      request.headers = options.headers;
+    }
+    if (options.authentication) {
+      request.authentication = options.authentication;
+    }
+
     const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const settings = await services.settings.get();
