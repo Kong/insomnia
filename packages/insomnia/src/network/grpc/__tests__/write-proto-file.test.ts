@@ -166,6 +166,65 @@ describe('writeProtoFile', () => {
       expect(writeFileSpy).toHaveBeenCalledWith(expectedFullPath.nested, pfNested.protoText);
     });
 
+    it('rejects proto file name containing path traversal', async () => {
+      // Arrange
+      const w = await services.workspace.create();
+      const pd = await services.protoDirectory.create({
+        parentId: w._id,
+        name: 'dirName',
+      });
+      const pf = await services.protoFile.create({
+        parentId: pd._id,
+        name: '../../escape.proto',
+        protoText: 'text',
+      });
+
+      _configureSpies(path.join('.', 'foo', 'bar', 'baz'), false);
+
+      // Act & Assert — must throw before any file is written
+      await expect(writeProtoFile(pf)).rejects.toThrow('illegal path characters');
+      expect(writeFileSpy).not.toHaveBeenCalled();
+    });
+
+    it('rejects proto directory name containing path traversal', async () => {
+      // Arrange
+      const w = await services.workspace.create();
+      const pd = await services.protoDirectory.create({
+        parentId: w._id,
+        name: '../../evil',
+      });
+      const pf = await services.protoFile.create({
+        parentId: pd._id,
+        name: 'hello.proto',
+        protoText: 'text',
+      });
+
+      _configureSpies(path.join('.', 'foo', 'bar', 'baz'), false);
+
+      // Act & Assert — must throw before any file is written
+      await expect(writeProtoFile(pf)).rejects.toThrow('illegal path characters');
+      expect(writeFileSpy).not.toHaveBeenCalled();
+    });
+
+    it('rejects proto file name containing a path separator', async () => {
+      // Arrange
+      const w = await services.workspace.create();
+      const pd = await services.protoDirectory.create({
+        parentId: w._id,
+        name: 'dirName',
+      });
+      const pf = await services.protoFile.create({
+        parentId: pd._id,
+        name: 'sub/escape.proto',
+        protoText: 'text',
+      });
+
+      _configureSpies(path.join('.', 'foo', 'bar', 'baz'), false);
+
+      await expect(writeProtoFile(pf)).rejects.toThrow('illegal path characters');
+      expect(writeFileSpy).not.toHaveBeenCalled();
+    });
+
     it('should not write file if it already exists', async () => {
       // Arrange
       const w = await services.workspace.create();

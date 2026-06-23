@@ -15,30 +15,47 @@ interface WriteResult {
   dirs: string[];
 }
 
+const assertSafeName = (name: string): void => {
+  if (path.isAbsolute(name) || name.includes('/') || name.includes('\\') || name === '..' || name === '.') {
+    throw new Error(`Proto name contains illegal path characters: "${name}"`);
+  }
+};
+
+const assertWithinRoot = (sandboxRoot: string, candidatePath: string): void => {
+  const relative = path.relative(sandboxRoot, candidatePath);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error(`Proto path escapes temporary directory: "${candidatePath}"`);
+  }
+};
+
 const recursiveWriteProtoDirectory = async (
   dir: ProtoDirectory,
   descendants: BaseModel[],
   currentDirPath: string,
+  sandboxRoot: string,
 ): Promise<string[]> => {
-  // Increment folder path
+  assertSafeName(dir.name);
   const dirPath = path.join(currentDirPath, dir.name);
+  assertWithinRoot(sandboxRoot, dirPath);
   fs.mkdirSync(dirPath, { recursive: true });
   // Get and write proto files
   const files = descendants.filter(isProtoFile).filter(f => f.parentId === dir._id);
   await Promise.all(
     files.map(protoFile => {
+      assertSafeName(protoFile.name);
       const fullPath = path.join(dirPath, protoFile.name);
+      assertWithinRoot(sandboxRoot, fullPath);
       if (fs.existsSync(fullPath)) {
         return;
       }
-      fs.promises.writeFile(fullPath, protoFile.protoText);
+      return fs.promises.writeFile(fullPath, protoFile.protoText);
     }),
   );
   // Get and write subdirectories
   const createdDirs = await Promise.all(
     descendants
       .filter(f => isProtoDirectory(f) && f.parentId === dir._id)
-      .map(f => recursiveWriteProtoDirectory(f, descendants, dirPath)),
+      .map(f => recursiveWriteProtoDirectory(f, descendants, dirPath, sandboxRoot)),
   );
   return [dirPath, ...createdDirs.flat()];
 };
@@ -74,14 +91,16 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     }
     // Find all descendants of the root ancestor directory
     const descendants = await db.getWithDescendants(rootAncestorProtoDirectory);
+    const sandboxRoot = path.join(
+      os.tmpdir(),
+      'insomnia-grpc',
+      `${rootAncestorProtoDirectory._id}.${rootAncestorProtoDirectory.modified}`,
+    );
     const treeRootDirs = await recursiveWriteProtoDirectory(
       rootAncestorProtoDirectory,
       descendants,
-      path.join(
-        os.tmpdir(),
-        'insomnia-grpc',
-        `${rootAncestorProtoDirectory._id}.${rootAncestorProtoDirectory.modified}`,
-      ),
+      sandboxRoot,
+      sandboxRoot,
     );
     return {
       filePath: path.join(
