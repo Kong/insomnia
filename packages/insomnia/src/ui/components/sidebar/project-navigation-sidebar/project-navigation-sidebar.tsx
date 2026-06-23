@@ -64,6 +64,7 @@ import {
   flattenCollectionChildren,
   getAllRequestsAndMetaByWorkspace,
   getWorkspacesByProjectIds,
+  type WorkspaceWithSyncStatus,
 } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
@@ -270,7 +271,7 @@ const ProjectNavigationSidebarInner = (
   reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
   const activeFilter = ((isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '').trim();
   // ref to cache queried workspaces by project id
-  const cachedWorkspacesRef = useRef<Map<string, Workspace[]>>(new Map());
+  const cachedWorkspacesRef = useRef<Map<string, WorkspaceWithSyncStatus[]>>(new Map());
   // ref to cache queried collection children (request & requestGroups) data and meta by workspace id
   const cachedCollectionChildrenAndMetaRef = useRef<Map<string, AllRequestsAndMetaInWorkspace>>(new Map());
   // ref to track whether we are currently fetching unsynced files for cloud sync projects to avoid duplicate requests
@@ -609,20 +610,25 @@ const ProjectNavigationSidebarInner = (
               hidden: activeFilter ? !unsyncedWorkspaceMatchesFilter : isProjectCollapsed,
             });
           } else {
-            const { scope, _id: workspaceId } = workspace as Workspace;
+            const workspaceWithSyncStatus = workspace as WorkspaceWithSyncStatus;
+            const { scope, _id: workspaceId } = workspaceWithSyncStatus;
             const isCollection = scope === 'collection';
             // Only collection workspace has nested children
             const isWorkspaceCollapsed = !(
               isCollection && (expandedProjectAndWorkspaceIds ?? []).includes(workspaceId)
             );
+            // Change indicators apply to git and cloud (remote) projects only
+            const showSyncStatus = models.project.isRemoteProject(project) || models.project.isGitProject(project);
 
             items.push({
               kind: 'workspace',
               organizationId,
               project: project,
-              doc: workspace as Workspace,
+              doc: workspaceWithSyncStatus,
               collapsed: isWorkspaceCollapsed,
               hidden: isProjectCollapsed,
+              hasUncommittedChanges: showSyncStatus ? workspaceWithSyncStatus.hasUncommittedChanges : false,
+              hasUnpushedChanges: showSyncStatus ? workspaceWithSyncStatus.hasUnpushedChanges : false,
             });
 
             const allRequestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceId.get(workspaceId);
