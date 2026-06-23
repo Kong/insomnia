@@ -34,12 +34,11 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
     if (asyncTaskList.includes(AsyncTask.MigrateProjects)) {
       const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-      invariant(organizations, 'Failed to fetch organizations.');
-      const personalOrganization = models.organization.findPersonalOrganization(organizations, accountId);
-      invariant(personalOrganization, 'personalOrganization is required');
-      invariant(personalOrganization.id, 'personalOrganizationId is required');
+      invariant(organizations.length, 'Failed to fetch organizations.');
       invariant(sessionId, 'sessionId is required');
-      taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
+      // TODO: when migrating to /v3/users/me/spaces, target the owned space with total_members === 1
+      // so legacy orphan local projects land in the user's solo space rather than a shared owned space.
+      taskPromiseList.push(migrateProjectsUnderOrganization(organizations[0].id, sessionId));
     }
 
     if (asyncTaskList.includes(AsyncTask.SyncProjects)) {

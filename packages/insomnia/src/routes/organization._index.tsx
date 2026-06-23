@@ -1,5 +1,5 @@
 import type { Organization } from 'insomnia-api';
-import { models, services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
@@ -16,13 +16,10 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
     invariant(organizations.length, 'Failed to fetch organizations. Check your network connection and try again.');
 
-    const personalOrganization = models.organization.findPersonalOrganization(organizations, accountId);
-    invariant(
-      personalOrganization,
-      'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.',
-    );
-    const personalOrganizationId = personalOrganization.id;
-    await migrateProjectsUnderOrganization(personalOrganizationId, sessionId);
+    const landingOrganizationId = organizations[0].id;
+    // TODO: when migrating to /v3/users/me/spaces, target the owned space with total_members === 1
+    // so legacy orphan local projects land in the user's solo space rather than a shared owned space.
+    await migrateProjectsUnderOrganization(landingOrganizationId, sessionId);
 
     const specificOrgRedirectAfterAuthorize = window.localStorage.getItem('specificOrgRedirectAfterAuthorize');
     if (specificOrgRedirectAfterAuthorize && specificOrgRedirectAfterAuthorize !== '') {
@@ -30,13 +27,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
       return redirect(`/organization/${specificOrgRedirectAfterAuthorize}`);
     }
 
-    if (personalOrganization) {
-      return redirect(`/organization/${personalOrganizationId}`);
-    }
-
-    if (organizations.length > 0) {
-      return redirect(`/organization/${organizations[0].id}`);
-    }
+    return redirect(`/organization/${landingOrganizationId}`);
   }
 
   await session.logout();
