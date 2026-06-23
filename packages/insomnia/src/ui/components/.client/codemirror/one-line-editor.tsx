@@ -5,7 +5,15 @@ import clone from 'clone';
 import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codemirror';
 import type { KeyCombination } from 'insomnia-data/common';
 import { isMac } from 'insomnia-data/common';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import * as reactUse from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
@@ -67,6 +75,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
+    // We need to track editor version in order to re-apply some effects when the editor is re-initialized.
+    const [editorVersion, setEditorVersion] = useState(0);
     const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
@@ -230,6 +240,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           id,
         );
       }
+      setEditorVersion(version => version + 1);
     }, [
       defaultValue,
       getAutocompleteConstants,
@@ -301,7 +312,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         codeMirror.current?.off('cut', preventDefault);
         codeMirror.current?.off('dragstart', preventDefault);
       };
-    }, [type]);
+    }, [editorVersion, type]);
 
     useEffect(() => {
       const fn = misc.debounce((doc: CodeMirror.Editor) => {
@@ -311,7 +322,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }, DEBOUNCE_MILLIS);
       codeMirror.current?.on('changes', fn);
       return () => codeMirror.current?.off('changes', fn);
-    }, [onChange]);
+    }, [editorVersion, onChange]);
 
     useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
@@ -321,7 +332,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       };
       codeMirror.current?.on('blur', flushOnBlur);
       return () => codeMirror.current?.off('blur', flushOnBlur);
-    }, [onChange]);
+    }, [editorVersion, onChange]);
 
     useEffect(() => {
       const unsubscribe = window.main.on(
