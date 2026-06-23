@@ -6,7 +6,7 @@ import { getUserEmail } from './test-utils';
 const testUser = getUserEmail();
 
 test('Can invite users in app', async ({ page }) => {
-  await page.getByLabel('Invite collaborators').click();
+  await page.getByLabel('Invite collaborators').filter({ visible: true }).click();
 
   // invite a new member
   await page.getByPlaceholder('Enter emails, separated by').click();

@@ -1,83 +1,97 @@
+import { createTeamProject, deleteTeamProject, isApiError, updateTeamProject } from 'insomnia-api';
+import type { WorkspaceMeta } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
-import * as models from '~/models';
-import type { OauthProviderName } from '~/models/git-credentials';
-import type { GitCredentials } from '~/models/git-repository';
-import { EMPTY_GIT_PROJECT_ID } from '~/models/project';
-import type { WorkspaceMeta } from '~/models/workspace-meta';
-import { SegmentEvent } from '~/ui/analytics';
-import { insomniaFetch } from '~/ui/insomniaFetch';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { showToast } from '~/ui/components/toast-notification';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.update';
 
 interface UpdateProjectInputData {
   name: string;
   storageType: 'local' | 'remote' | 'git';
-  authorName?: string;
-  authorEmail?: string;
+  credentialsId?: string | null;
   uri?: string;
   ref?: string;
-  username?: string;
-  password?: string;
-  token?: string;
-  oauth2format?: OauthProviderName;
   connectRepositoryLater?: boolean;
+  selectedAuthorEmail?: string | null;
 }
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
-  const { name, storageType, ...projectData } = (await request.json()) as UpdateProjectInputData;
+  const {
+    name,
+    storageType,
+    selectedAuthorEmail = null,
+    ...projectData
+  } = (await request.json()) as UpdateProjectInputData;
 
   invariant(typeof name === 'string', 'Name is required');
   invariant(storageType === 'local' || storageType === 'remote' || storageType === 'git', 'Project type is required');
 
   const { organizationId, projectId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
-  const user = await models.userSession.getOrCreate();
+  const effectiveRepoId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
+  const gitRepository = effectiveRepoId ? await services.gitRepository.getById(effectiveRepoId) : null;
+
+  const user = await services.userSession.get();
   const sessionId = user.id;
 
   try {
     await projectLock.lock();
     // If its a cloud project, and we are renaming, then patch
     if (sessionId && project.remoteId && storageType === 'remote' && name !== project.name) {
-      const response = await insomniaFetch<void | {
-        error: string;
-        message?: string;
-      }>({
-        path: `/v1/organizations/${project.parentId}/team-projects/${project.remoteId}`,
-        method: 'PATCH',
-        sessionId,
-        data: {
+      try {
+        await updateTeamProject({
+          organizationId: project.parentId,
+          projectRemoteId: project.remoteId,
+          sessionId,
           name,
-        },
-      });
+        });
+      } catch (error: unknown) {
+        if (isApiError(error)) {
+          let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+          if (error.name === 'FORBIDDEN') {
+            errorMessage = 'You do not have permission to create a cloud project in this organization.';
+          }
 
-      if (response && 'error' in response) {
-        let error = 'An unexpected error occurred while updating your project. Please try again.';
-        if (response.error === 'FORBIDDEN') {
-          error = 'You do not have permission to create a cloud project in this organization.';
+          if (error.name === 'NEEDS_TO_UPGRADE') {
+            errorMessage = 'Upgrade your account in order to create new Cloud Projects.';
+          }
+
+          if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
+            errorMessage = 'The owner of the organization allows only Local Vault project creation, please try again.';
+          }
+
+          showToast({
+            title: 'Error updating project',
+            description: errorMessage,
+            icon: 'warning',
+            status: 'error',
+          });
+
+          return {
+            error: errorMessage,
+          };
         }
-
-        if (response.error === 'NEEDS_TO_UPGRADE') {
-          error = 'Upgrade your account in order to create new Cloud Projects.';
-        }
-
-        if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
-          error = 'The owner of the organization allows only Local Vault project creation, please try again.';
-        }
-
-        return {
-          error,
-        };
+        throw error;
       }
 
-      await models.project.update(project, { name });
+      await services.project.update(project, { name });
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
       return {
         success: true,
       };
@@ -85,177 +99,179 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // convert from cloud to local
     if (storageType === 'local' && project.remoteId) {
-      const response = await insomniaFetch<void | {
-        error: string;
-        message?: string;
-      }>({
-        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-        method: 'DELETE',
-        sessionId,
-      });
+      try {
+        await deleteTeamProject({
+          organizationId,
+          projectRemoteId: project.remoteId,
+          sessionId,
+        });
 
-      if (response && !response.error) {
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.projectUpdated,
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'local',
+            project_id: project._id,
           },
         });
+      } catch (error: unknown) {
+        if (isApiError(error)) {
+          let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+
+          if (error.name === 'FORBIDDEN') {
+            errorMessage = 'You do not have permission to change this project.';
+          }
+
+          if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
+            errorMessage = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
+          }
+
+          showToast({
+            title: 'Error updating project',
+            description: errorMessage,
+            icon: 'warning',
+            status: 'error',
+          });
+
+          return {
+            error: errorMessage,
+          };
+        }
+        throw error;
       }
 
-      if (response && 'error' in response) {
-        let error = 'An unexpected error occurred while updating your project. Please try again.';
+      await services.project.update(project, { name, remoteId: null });
 
-        if (response.error === 'FORBIDDEN') {
-          error = 'You do not have permission to change this project.';
-        }
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
 
-        if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
-          error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
-        }
-
-        return {
-          error,
-        };
-      }
-
-      await models.project.update(project, { name, remoteId: null });
       return {
         success: true,
       };
     }
     // convert from local/git to cloud
     if (storageType === 'remote' && !project.remoteId) {
-      const newCloudProject = await insomniaFetch<
-        | {
-            id: string;
-            name: string;
-          }
-        | {
-            error: string;
-            message?: string;
-          }
-      >({
-        path: `/v1/organizations/${organizationId}/team-projects`,
-        method: 'POST',
-        data: {
+      try {
+        const newCloudProject = await createTeamProject({
+          sessionId,
+          organizationId,
           name,
-        },
-        sessionId,
-      });
+        });
 
-      if (newCloudProject && !('error' in newCloudProject)) {
-        window.main.trackSegmentEvent({
-          event: SegmentEvent.projectUpdated,
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'remote',
+            project_id: project._id,
           },
         });
-      }
 
-      if (!newCloudProject || 'error' in newCloudProject) {
-        let error = 'An unexpected error occurred while updating your project. Please try again.';
-        if (newCloudProject.error === 'FORBIDDEN') {
-          error = newCloudProject.error;
+        if (models.project.isConnectedGitProject(project)) {
+          const gitRepository = await services.gitRepository.getById(models.project.getEffectiveRepoId(project) || '');
+
+          gitRepository && (await services.gitRepository.remove(gitRepository));
         }
 
-        if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
-          error = 'Upgrade your account in order to create new Cloud Projects.';
-        }
+        await services.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
 
-        if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
-          error = 'The owner of the organization allows only Local Vault project creation, please try again.';
-        }
+        project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
+
+        showToast({
+          title: 'Project updated',
+          status: 'success',
+        });
 
         return {
-          error,
+          success: true,
         };
+      } catch (error: unknown) {
+        if (isApiError(error)) {
+          let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+          if (error.name === 'FORBIDDEN') {
+            errorMessage = error.message;
+          }
+
+          if (error.name === 'NEEDS_TO_UPGRADE') {
+            errorMessage = 'Upgrade your account in order to create new Cloud Projects.';
+          }
+          if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
+            errorMessage = 'The owner of the organization allows only Local Vault project creation, please try again.';
+          }
+
+          showToast({
+            title: 'Error updating project',
+            description: errorMessage,
+            icon: 'warning',
+            status: 'error',
+          });
+
+          return {
+            error: errorMessage,
+          };
+        }
+        throw error;
       }
-
-      if (project.gitRepositoryId) {
-        const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
-
-        gitRepository && (await models.gitRepository.remove(gitRepository));
-      }
-
-      await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
-      return {
-        success: true,
-      };
     }
 
     // convert to git
     if (storageType === 'git' && !project.gitRepositoryId) {
       if (project.remoteId) {
-        const response = await insomniaFetch<void | {
-          error: string;
-          message?: string;
-        }>({
-          path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-          method: 'DELETE',
-          sessionId,
-        });
+        try {
+          await deleteTeamProject({
+            organizationId,
+            projectRemoteId: project.remoteId,
+            sessionId,
+          });
 
-        if (response && !response.error) {
-          window.main.trackSegmentEvent({
-            event: SegmentEvent.projectUpdated,
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.projectUpdated,
             properties: {
               storage: 'git',
+              project_id: project._id,
             },
           });
-        }
+        } catch (error: unknown) {
+          if (isApiError(error)) {
+            let errorMessage = 'An unexpected error occurred while updating your project. Please try again.';
+            if (error.name === 'FORBIDDEN') {
+              errorMessage = 'You do not have permission to change this project.';
+            }
 
-        if (response && 'error' in response) {
-          let error = 'An unexpected error occurred while updating your project. Please try again.';
+            if (error.name === 'PROJECT_STORAGE_RESTRICTION') {
+              errorMessage = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
+            }
 
-          if (response.error === 'FORBIDDEN') {
-            error = 'You do not have permission to change this project.';
+            showToast({
+              title: 'Error updating project',
+              description: errorMessage,
+              icon: 'warning',
+              status: 'error',
+            });
+
+            return {
+              error: errorMessage,
+            };
           }
-
-          if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
-            error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
-          }
-
-          return {
-            error,
-          };
+          throw error;
         }
       }
 
       if (projectData.connectRepositoryLater) {
-        await models.project.update(project, { name, gitRepositoryId: EMPTY_GIT_PROJECT_ID });
+        await services.project.update(project, { name, gitRepositoryId: models.project.EMPTY_GIT_PROJECT_ID });
       } else {
-        let credentials: GitCredentials | undefined = undefined;
-        if (projectData.oauth2format) {
-          credentials = {
-            oauth2format: projectData.oauth2format,
-            token: projectData.token ?? '',
-            username: projectData.username ?? '',
-          };
-        } else if (projectData.username && projectData.password) {
-          credentials = {
-            username: projectData.username,
-            password: projectData.password,
-          };
-        }
-
+        invariant(projectData.credentialsId, 'Credentials ID is required to clone git repository');
         const { errors } = await window.main.git.cloneGitRepo({
           organizationId,
           cloneIntoProjectId: project._id,
-          author: {
-            name: projectData.authorName ?? '',
-            email: projectData.authorEmail ?? '',
-          },
           uri: projectData.uri ?? '',
-          credentials: credentials || {
-            username: '',
-            password: '',
-          },
+          credentialsId: projectData.credentialsId,
           ref: projectData.ref,
           name,
+          selectedAuthorEmail,
         });
 
-        const projectWorkspaces = await models.workspace.findByParentId(project._id);
+        const projectWorkspaces = await services.workspace.findByParentId(project._id);
         const bufferId = await database.bufferChanges();
         const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
           parentId: { $in: projectWorkspaces.map(w => w._id) },
@@ -263,7 +279,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
         for (const workspaceMeta of workspaceMetas) {
           if (!workspaceMeta.gitFilePath) {
-            await models.workspaceMeta.update(workspaceMeta, {
+            await services.workspaceMeta.update(workspaceMeta, {
               gitFilePath: `insomnia.${workspaceMeta.parentId}.yaml`,
             });
           }
@@ -272,11 +288,50 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         await database.flushChanges(bufferId);
 
         if (errors) {
+          showToast({
+            title: 'Error updating project',
+            description: errors.join(', '),
+            icon: 'warning',
+            status: 'error',
+          });
+
           return {
             error: errors.join(', '),
           };
         }
       }
+
+      reportGitProjectCount(organizationId, sessionId);
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
+      return {
+        success: true,
+      };
+    }
+
+    // connect to git repo
+    if (
+      storageType === 'git' &&
+      (project.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID || !gitRepository?.credentialsId) &&
+      !projectData.connectRepositoryLater
+    ) {
+      invariant(projectData.credentialsId, 'Credentials ID is required to clone git repository');
+      await window.main.git.updateGitRepo({
+        projectId: project._id,
+        uri: projectData.uri ?? '',
+        credentialsId: projectData.credentialsId,
+        ref: projectData.ref,
+        selectedAuthorEmail,
+      });
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
 
       return {
         success: true,
@@ -285,10 +340,36 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // convert from git to local
     if (storageType === 'local' && project.gitRepositoryId) {
-      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+      const effectiveId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
+      const gitRepository = effectiveId ? await services.gitRepository.getById(effectiveId) : null;
 
-      gitRepository && (await models.gitRepository.remove(gitRepository));
-      await models.project.update(project, { name, gitRepositoryId: null });
+      gitRepository && (await services.gitRepository.remove(gitRepository));
+      await services.project.update(project, { name, gitRepositoryId: null });
+
+      reportGitProjectCount(organizationId, sessionId);
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
+
+      return {
+        success: true,
+      };
+    }
+
+    // update existing git repository settings (author email override)
+    if (storageType === 'git' && gitRepository?.credentialsId) {
+      services.gitRepository.update(gitRepository, { selectedAuthorEmail });
+
+      if (name !== project.name) {
+        await services.project.update(project, { name });
+      }
+
+      showToast({
+        title: 'Project updated',
+        status: 'success',
+      });
 
       return {
         success: true,
@@ -296,13 +377,19 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     // local project rename
-    await models.project.update(project, { name });
+    await services.project.update(project, { name });
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.projectUpdated,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.projectUpdated,
       properties: {
         storage: 'local',
+        project_id: project._id,
       },
+    });
+
+    showToast({
+      title: 'Project updated',
+      status: 'success',
     });
 
     return {

@@ -1,6 +1,5 @@
+import { type PersonalPlanType } from 'insomnia-api';
 import { Button, Heading } from 'react-aria-components';
-
-import type { PersonalPlanType } from '~/models/organization';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { InsomniaLogo } from './insomnia-icon';
@@ -19,7 +18,7 @@ export const UpgradeNotice = (props: UpgradeNoticeProps) => {
     : 'Please contact the organization owner to upgrade the plan.';
   const message = `${featureName} is only enabled for ${planDetail}.`;
   const handleUpgradePlan = () => {
-    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team&source=app_${featureName}`);
   };
 
   return (
@@ -29,7 +28,7 @@ export const UpgradeNotice = (props: UpgradeNoticeProps) => {
       <p>{message}</p>
       <p>{upgradeDetail}</p>
       {isOwner && (
-        <Button aria-label="Upgrade Plan" className="btn btn--clicky mt-[--padding-md]" onPress={handleUpgradePlan}>
+        <Button aria-label="Upgrade Plan" className="btn btn--clicky mt-(--padding-md)" onPress={handleUpgradePlan}>
           Upgrade <i className="fa fa-external-link" />
         </Button>
       )}

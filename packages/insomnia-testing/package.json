@@ -2,7 +2,7 @@
   "private": true,
   "name": "insomnia-testing",
   "license": "Apache-2.0",
-  "version": "11.6.1",
+  "version": "12.5.1-alpha.0",
   "author": "Kong <office@konghq.com>",
   "repository": {
     "type": "git",
@@ -12,12 +12,13 @@
   "bugs": {
     "url": "https://github.com/Kong/insomnia/issues"
   },
-  "main": "src/index.ts",
-  "types": "src/index.ts",
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test": "vitest run",
-    "type-check": "tsc --noEmit --project tsconfig.json"
+    "type-check": "tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "chai-json-schema": "1.5.1"
   },
   "homepage": "https://github.com/Kong/insomnia#readme",
   "description": ""

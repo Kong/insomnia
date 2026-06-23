@@ -25,6 +25,9 @@ export function routableFSClient(defaultFS: git.PromiseFsClient, otherFS: Record
   const execMethod = async (method: Methods, filePath: string, ...args: any[]) => {
     filePath = path.normalize(filePath);
 
+    // Route by path prefix: if a prefix matches (e.g. '.insomnia' or '.git')
+    // delegate the call to that specific fs client; otherwise fall through
+    // to the defaultFS below.
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(path.normalize(prefix)) === 0) {
         // TODO: remove non-null assertion
@@ -39,9 +42,8 @@ export function routableFSClient(defaultFS: git.PromiseFsClient, otherFS: Record
     // TODO: remove non-null assertion
 
     const result = await defaultFS.promises[method]!(filePath, ...args);
-    // If the method is returning a list of files for the root directory
-    // we need to return the actual result plus inject the .insomnia directory
-    // so that git will try to find changes inside that directory
+    // Special-case root readdir: inject '.insomnia' so isomorphic-git
+    // can discover and traverse virtual DB-backed files in that dir.
     if (method === 'readdir' && filePath === '.') {
       // console.log('[routablefs] Executing', method, filePath, { args });
       return ['.insomnia', ...result];

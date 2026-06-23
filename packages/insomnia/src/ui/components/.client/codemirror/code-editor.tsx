@@ -4,26 +4,27 @@ import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, {
   type CodeMirrorLinkClickCallback,
+  type EditorChange,
   type EditorConfiguration,
   type ShowHintOptions,
 } from 'codemirror';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
+import type { KeyCombination } from 'insomnia-data/common';
+import { isMac } from 'insomnia-data/common';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Toolbar } from 'react-aria-components';
-import * as reactUse from 'react-use';
+import { useLatest, useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
-import { DEBOUNCE_MILLIS, isMac } from '~/common/constants';
+import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import type { KeyCombination } from '~/common/settings';
-import { getTemplateTags } from '~/plugins';
+import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
+import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/index';
-import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
-import { extractNunjucksTagFromCoords } from '~/templating/utils';
+import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { FilterHelpModal } from '~/ui/components/modals/filter-help-modal';
@@ -34,13 +35,15 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
-import { ednPrettify } from '~/utils/prettify/edn';
-import { jsonPrettify } from '~/utils/prettify/json';
-import { queryXPath } from '~/utils/xpath/query';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import { getTagDefinitions } from '~/ui/templating/renderer-safe';
+import { ednPrettify } from '~/ui/utils/prettify/edn';
+import { jsonPrettify } from '~/ui/utils/prettify/json';
+import { queryXPath } from '~/ui/utils/xpath/query';
 
-import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
+import { normalizeIrregularWhitespace } from './normalize-irregular-whitespace';
 const TAB_SIZE = 4;
-const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
+const MAX_SIZE_FOR_LINTING = 1_000_000; // Around 1MB
 
 interface EditorState {
   scroll: CodeMirror.ScrollInfo;
@@ -105,9 +108,10 @@ export interface CodeEditorProps {
   // used only for saving env editor state, focusEvent doesn't work well
   onBlur?: (e: FocusEvent) => void;
   onFocus?: (e: Event, editor?: CodeMirror.Editor) => void;
-  onChange?: (value: string) => void;
+  onChange?: (value: string, changeObj: EditorChange[]) => void;
   onCursorActivity?: (doc: CodeMirror.Editor) => void;
   onPaste?: (value: string) => string;
+  onPrettify?: () => void;
   onClickLink?: CodeMirrorLinkClickCallback;
   pinToBottom?: boolean;
   placeholder?: string;
@@ -184,6 +188,7 @@ export const CodeEditor = memo(
         onChange,
         onCursorActivity,
         onPaste,
+        onPrettify,
         onClickLink,
         pinToBottom,
         placeholder,
@@ -206,14 +211,14 @@ export const CodeEditor = memo(
       const extraKeys = useMemo(
         () => ({
           'Ctrl-Q': (cm: CodeMirror.Editor) => cm.foldCode(cm.getCursor()),
-          [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
+          [isMac ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
           // Autocomplete
           'Ctrl-Space': 'autocomplete',
           // Change default find command from "find" to "findPersistent" so the
           // search box stays open after pressing Enter
-          [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
-          [isMac() ? 'Shift-Cmd--' : 'Shift-Ctrl--']: 'foldAll',
-          [isMac() ? 'Shift-Cmd-=' : 'Shift-Ctrl-=']: 'unfoldAll',
+          [isMac ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
+          [isMac ? 'Shift-Cmd--' : 'Shift-Ctrl--']: 'foldAll',
+          [isMac ? 'Shift-Cmd-=' : 'Shift-Ctrl-=']: 'unfoldAll',
           'Shift-Tab': 'indentLess',
           // Indent with tabs or spaces
           // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
@@ -254,7 +259,7 @@ export const CodeEditor = memo(
                   const results = JSONPath({ json: codeObj, path: filter.trim() });
                   jsonString = JSON.stringify(results);
                 } catch (err) {
-                  console.log('[jsonpath] Error: ', err);
+                  console.log('[jsonpath] Error:', err);
                   jsonString = '[]';
                 }
               }
@@ -410,12 +415,10 @@ export const CodeEditor = memo(
             doc.scrollTo(0, scrollPosition);
           }
 
-          if (onPaste) {
-            if (change.origin === 'paste' && change.update) {
-              const translatedText = onPaste(change.text.join('\n')).split('\n');
+          if (onPaste && change.origin === 'paste' && change.update) {
+            const translatedText = onPaste(change.text.join('\n')).split('\n');
 
-              change.update(change.from, change.to, translatedText);
-            }
+            change.update(change.from, change.to, translatedText);
           }
         });
 
@@ -483,7 +486,7 @@ export const CodeEditor = memo(
         maybePrettifyAndSetValue(defaultValue || '', false, filter);
         // Clear history so we can't undo the initial set
         codeMirror.current?.clearHistory();
-        // Setup nunjucks listeners
+        // Setup Liquid template listeners
         if (!readOnly && isNunjucksEnabled && !settings.nunjucksPowerUserMode) {
           codeMirror.current?.enableNunjucksTags(
             handleRender,
@@ -510,7 +513,6 @@ export const CodeEditor = memo(
             codeMirror.current.foldCode(from, to);
           }
         }
-        // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [
         hideGutters,
@@ -521,7 +523,6 @@ export const CodeEditor = memo(
         settings.hotKeyRegistry,
         settings.autocompleteDelay,
         settings.nunjucksPowerUserMode,
-        settings.pluginsAllowElevatedAccess,
         settings.showVariableSourceAndValue,
         noLint,
         readOnly,
@@ -556,10 +557,10 @@ export const CodeEditor = memo(
         codeMirror.current = null;
       }, []);
 
-      reactUse.useMount(() => {
+      useMount(() => {
         initEditor();
       });
-      reactUse.useUnmount(() => {
+      useUnmount(() => {
         persistState();
         cleanUpEditor();
       });
@@ -571,9 +572,11 @@ export const CodeEditor = memo(
 
       useEditorRefresh(reinitialize);
 
+      const latestOnChangeRef = useLatest(onChange);
+
       useEffect(() => {
-        const fn = misc.debounce((doc: CodeMirror.Editor) => {
-          if (onChange) {
+        const fn = misc.debounce((doc: CodeMirror.Editor, changeObj: EditorChange[]) => {
+          if (latestOnChangeRef.current) {
             const value = doc.getValue()?.trim() || '';
             // Disable linting if the document reaches a maximum size or is empty
             const withinLintingThresholds = value.length > 0 && value.length < MAX_SIZE_FOR_LINTING;
@@ -589,14 +592,14 @@ export const CodeEditor = memo(
               const errorMessage = err instanceof Error ? err.message : String(err);
               console.log('[codemirror] Failed to set CodeMirror option', errorMessage);
             }
-            onChange(doc.getValue() || '');
+            latestOnChangeRef.current(doc.getValue() || '', changeObj);
             setOriginalCode(doc.getValue() || '');
           }
         }, DEBOUNCE_MILLIS);
 
         codeMirror.current?.on('changes', fn);
         return () => codeMirror.current?.off('changes', fn);
-      }, [lintOptions, noLint, onChange]);
+      }, [lintOptions, noLint, latestOnChangeRef]);
 
       useEffect(() => {
         const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
@@ -741,17 +744,14 @@ export const CodeEditor = memo(
               return;
             }
             event.preventDefault();
-            const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
-              // Skip unsupported objects like functions in template tag to send in IPC
-              templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
-            }));
+            const pluginTemplateTags = await plugins.getTemplateTags();
             const target = event.target as HTMLElement;
-            // right click on nunjucks tag
+            // right click on Liquid template tag
             if (target?.classList?.contains('nunjucks-tag')) {
               const { clientX, clientY } = event;
               const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
               if (nunjucksTag) {
-                // show context menu for nunjucks tag
+                // show context menu for Liquid template tag
                 window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
               }
             } else {
@@ -775,7 +775,7 @@ export const CodeEditor = memo(
           {showFilter || showPrettify ? (
             <div
               key={uniquenessKey}
-              className="flex h-[--line-height-sm] w-full items-center border-t border-solid border-[--hl-md] text-[--font-size-sm]"
+              className="flex h-(--line-height-sm) w-full items-center border-t border-solid border-(--hl-md) text-(--font-size-sm)"
             >
               {showFilter ? (
                 <input
@@ -786,6 +786,9 @@ export const CodeEditor = memo(
                   title="Filter response body"
                   defaultValue={filter || ''}
                   placeholder={mode?.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
+                  onFocus={() => {
+                    trackOnceDaily(AnalyticsEvent.responsePreviewJSONPathEntered);
+                  }}
                   onKeyDown={createKeybindingsHandler({
                     Enter: () => {
                       const filter = inputRef.current?.value;
@@ -810,7 +813,7 @@ export const CodeEditor = memo(
                   <MenuTrigger>
                     <Button
                       aria-label="Filter History"
-                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     >
                       <Icon icon="clock" />
                     </Button>
@@ -834,11 +837,11 @@ export const CodeEditor = memo(
                           name: filter,
                           key: index,
                         }))}
-                        className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                        className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
                       >
                         {item => (
                           <MenuItem
-                            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                            className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
                             aria-label={item.name}
                           >
                             <span>{item.name}</span>
@@ -853,12 +856,13 @@ export const CodeEditor = memo(
                 {showPrettify ? (
                   <Button
                     key="prettify"
-                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     aria-label="Auto-format request body whitespace"
                     onPress={() => {
                       if (mode?.includes('json') || mode?.includes('xml')) {
                         maybePrettifyAndSetValue(codeMirror.current?.getValue(), true);
                       }
+                      onPrettify?.();
                     }}
                   >
                     Beautify {mode?.includes('json') ? 'JSON' : mode?.includes('xml') ? 'XML' : ''}

@@ -1,4 +1,4 @@
-import path, { dirname } from 'node:path';
+import nodePath from 'node:path';
 
 import log from 'electron-log/main';
 
@@ -8,6 +8,17 @@ import { isDevelopment } from '../common/constants';
 log.initialize();
 
 export const initializeLogging = () => {
+  // EPIPE is emitted asynchronously on process.stdout when the read end of the
+  // pipe is closed (e.g. launched from a desktop entry, or `app | head -0`).
+  // It surfaces as an 'error' event after the write is dispatched, so it
+  // escapes any try/catch around the console.log call itself.  Without a
+  // handler it becomes an uncaught exception that crashes the main process.
+  process.stdout.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code !== 'EPIPE') {
+      throw err;
+    }
+  });
+
   if (isDevelopment()) {
     // Disable file logging during development
     log.transports.file.level = false;
@@ -17,9 +28,9 @@ export const initializeLogging = () => {
     // let log from renderer processes could be written to renderer.log
     fileTransport.resolvePathFn = (variables, msg) => {
       if (msg?.variables?.processType === 'renderer') {
-        return path.join(variables.libraryDefaultDir, 'renderer.log');
+        return nodePath.join(variables.libraryDefaultDir, 'renderer.log');
       }
-      return path.join(variables.libraryDefaultDir, variables.fileName || 'main.log');
+      return nodePath.join(variables.libraryDefaultDir, variables.fileName || 'main.log');
     };
     const mainLogFile = fileTransport.getFile();
     const rendererLogFile = fileTransport.getFile({ variables: { processType: 'renderer' } });
@@ -39,7 +50,7 @@ export const initializeLogging = () => {
 
 export function getLogDirectory() {
   const logPath = log.transports.file.getFile().path;
-  return dirname(logPath);
+  return nodePath.dirname(logPath);
 }
 
 export default log;

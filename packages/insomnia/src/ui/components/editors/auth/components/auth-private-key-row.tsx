@@ -1,6 +1,7 @@
 import React, { type FC, type ReactNode, useCallback } from 'react';
 
 import { toKebabCase } from '~/common/misc';
+import { invariant } from '~/common/utils/invariant';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -12,7 +13,6 @@ import {
 import { showModal } from '~/ui/components/modals';
 import { CodePromptModal } from '~/ui/components/modals/code-prompt-modal';
 import { useRequestGroupPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
-import { invariant } from '~/utils/invariant';
 
 import { AuthRow } from './auth-row';
 

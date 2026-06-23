@@ -1,45 +1,57 @@
-import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, Route, Routes, useLocation } from 'react-router';
 
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
+import { KongLogo } from '~/ui/components/kong-logo';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
-import git_projects from '~/ui/images/onboarding/git_projects.png';
-import multiple_tabs from '~/ui/images/onboarding/multiple_tabs.png';
-import secret_vaults from '~/ui/images/onboarding/secret_vaults.png';
+import custom_linting from '~/ui/images/onboarding/custom_linting.png';
+import first_request from '~/ui/images/onboarding/first_request.png';
+import konnect_integration from '~/ui/images/onboarding/konnect_integration.png';
+import sidebar_navigation from '~/ui/images/onboarding/sidebar_navigation.png';
 
 const features = [
   {
-    id: 'multiple_tabs',
-    icon: 'window-restore',
-    title: 'Multiple Tabs',
-    description:
-      'Finally you can work on multiple collections and design documents with the multiple tabs capability that allows you to easily switch between one and another.',
-    image: multiple_tabs,
+    id: 'navigation_ux',
+    icon: <FontAwesomeIcon icon={['fas', 'mouse-pointer']} className="text-xl" />,
+    label: 'Updated sidebar navigation',
+    title: 'Introducing a simpler way to navigate',
+    description: 'The new sidebar experience makes it easier than ever to get to the resources you are working with.',
+    image: sidebar_navigation,
   },
   {
-    id: 'git_sync',
-    icon: 'git',
-    title: 'New Git Sync',
+    id: 'konnect_integration',
+    icon: <KongLogo />,
+    label: 'Konnect Integration',
+    title: 'Auto-sync your gateway service routes from Konnect',
     description:
-      'An entirely rebuilt Git Sync experience, where your entire project can be connected to a Git repository and we will import multiple Insomnia resources at once.',
-    image: git_projects,
+      'Get right into testing your gateway configuration in Insomnia with the new Konnect platform integration.',
+    image: konnect_integration,
   },
   {
-    id: 'secret_vaults',
-    icon: 'cloud',
-    title: 'Secret Vaults',
+    id: 'first_request_ux',
+    icon: <FontAwesomeIcon icon={['fas', 'add']} className="text-xl" />,
+    label: 'New Create Request Experience',
+    title: 'Need to send a new request? No problem!',
     description:
-      'With this enterprise capability we now support connecting your secrets with AWS secret Manager, Azure Key Vault, GCP Secret Manager and Hashicorp Vault.',
-    image: secret_vaults,
-    rounded: true,
+      'The new project home page provides you with a quick way to configure and send a new request -- all while saving it automatically for when you need it later.',
+    image: first_request,
+  },
+  {
+    id: 'custom_linting',
+    icon: <FontAwesomeIcon icon={['fas', 'file']} className="text-xl" />,
+    label: 'Custom Spec Linting',
+    title: 'Upload custom spec linting rules',
+    description:
+      'Now you can user your own spectral linting rules to help you edit API design files in Insomnia with confidence.',
+    image: custom_linting,
   },
 ] satisfies {
   id: string;
-  icon: IconName;
+  icon: React.ReactNode;
+  label: string;
   title: string;
   description: string;
   image: string;
-  rounded?: boolean;
 }[];
 
 const FeatureWizardView = () => {
@@ -48,15 +60,15 @@ const FeatureWizardView = () => {
       <Route
         path="/"
         element={
-          <ul className="grid grid-cols-1 justify-center gap-2 p-4">
+          <ul className="grid grid-cols-2 justify-center gap-2">
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
-                  className="flex w-full select-none items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--hl-xs] px-8 py-4 transition-colors hover:bg-[--hl-sm] hover:no-underline"
+                  className="flex h-34 w-full flex-col items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xs) p-4 transition-colors select-none hover:bg-(--hl-sm) hover:no-underline"
                   to={`/onboarding/${feature.id}`}
                 >
-                  <i className={`fa fa-${feature.icon} text-xl`} />
-                  <span className="text-center text-sm">{feature.title}</span>
+                  {feature.icon}
+                  <span className="text-center text-sm">{feature.label}</span>
                 </Link>
               </li>
             ))}
@@ -73,26 +85,22 @@ const FeatureWizardView = () => {
               key={feature.id}
               path={feature.id}
               element={
-                <div className="relative flex h-80 flex-col gap-4 bg-[--color-bg] p-4 text-left">
+                <div className="relative flex flex-col gap-4 bg-(--color-bg) p-4 text-left">
                   <h1 className="flex justify-between text-lg">
                     <span>{feature.title}</span>
                     <span>
                       {index + 1}
-                      <span className="text-[--hl-xl]">/{features.length}</span>
+                      <span className="text-(--hl-xl)">/{features.length}</span>
                     </span>
                   </h1>
-                  <div className="flex max-h-72 flex-col items-center gap-3 overflow-y-auto">
-                    <p className="text-sm text-[--color-font]">
+                  <div className="flex flex-1 flex-col items-center gap-3">
+                    <p className="text-md text-(--hl)">
                       <span>{feature.description}</span>
                     </p>
-                    <div className="h-32">
-                      {feature.rounded ? (
-                        <img className="aspect-auto max-h-32 rounded-md" src={feature.image} />
-                      ) : (
-                        <img className="aspect-auto max-h-32" src={feature.image} />
-                      )}
+                    <div className="flex-1 py-2">
+                      <img className="aspect-auto" src={feature.image} />
                     </div>
-                    <div className="sticky bottom-0 left-0 flex w-full justify-between bg-gradient-to-t from-[--color-bg] to-[rgba(var(--color-bg-rgb),80%)] p-4 text-sm font-normal">
+                    <div className="flex w-full shrink-0 justify-between bg-linear-to-t from-(--color-bg) to-(--color-bg)/80 p-4 text-sm font-normal">
                       {prevPath ? (
                         <Link className="hover:no-underline" to={prevPath}>
                           <i className="fa fa-arrow-left" /> Previous feature
@@ -126,21 +134,24 @@ const Component = () => {
   const location = useLocation();
 
   return (
-    <div className="relative flex h-full w-full bg-[--color-bg] text-left">
+    <div className="relative flex h-full w-full bg-(--color-bg) text-left">
       <TrailLinesContainer>
-        <div className="flex h-full min-h-[465px] w-[600px] flex-col items-center justify-center">
-          <div className="relative flex h-[465px] w-full flex-col items-center justify-center gap-[var(--padding-sm)] rounded-[var(--radius-md)] border border-solid border-[--hl-sm] bg-[--hl-xs] p-[--padding-lg] pt-12">
-            <InsomniaLogo className="absolute left-1/2 top-0 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
-            <div className="flex h-full flex-col gap-6 text-[--color-font]">
-              <h1 className="text-center text-xl">🚀 Welcome to Insomnia 11!</h1>
-              <div>
-                <p>We shipped hundreds of improvements including the following notable features:</p>
+        <div className="flex h-full min-h-[500px] w-[600px] flex-col items-center justify-center">
+          <div className="relative flex h-auto w-full flex-col items-center justify-center gap-(--padding-sm) rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-(--padding-lg) pt-12">
+            <InsomniaLogo className="absolute top-0 left-1/2 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
+            <div className="flex h-full flex-col gap-6 text-(--color-font)">
+              <div className="flex flex-col gap-4 py-4">
+                <h1 className="text-center text-xl">🚀 Welcome to Insomnia 13!</h1>
+                <p className="text-center">
+                  A faster, more connected API workflow with unified navigation, Konnect gateway sync, and custom API
+                  governance support.
+                </p>
               </div>
               <div className="relative w-full flex-1">
                 <FeatureWizardView />
               </div>
-              <div className="flex items-center justify-between">
-                {location.pathname !== '/onboarding' ? (
+              <div className="flex shrink-0 items-center justify-between">
+                {location.pathname !== '/onboarding' && location.pathname !== '/onboarding/' ? (
                   <Link className="flex items-center gap-2 px-4 text-sm hover:no-underline" to="/onboarding">
                     <i className="fa fa-border-all" />
                     See all features
@@ -149,9 +160,9 @@ const Component = () => {
                   <span />
                 )}
                 <Link
-                  className="rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-sm text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                   to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
-                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV11', 'true')}
+                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV13', 'true')}
                 >
                   Continue
                 </Link>

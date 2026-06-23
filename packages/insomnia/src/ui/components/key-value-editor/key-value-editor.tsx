@@ -1,4 +1,4 @@
-import React, { type FC, Fragment, useCallback, useMemo } from 'react';
+import React, { type FC, Fragment, useCallback, useMemo, useState } from 'react';
 import {
   Button,
   DropIndicator,
@@ -13,6 +13,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { describeByteSize, generateId } from '../../../common/misc';
@@ -31,6 +32,7 @@ interface Pair {
   type?: string;
   disabled?: boolean;
   multiline?: boolean | string;
+  canDisable?: boolean;
 }
 
 function createEmptyPair() {
@@ -58,6 +60,9 @@ interface Props {
   valuePlaceholder?: string;
   onBlur?: (e: FocusEvent) => void;
   readOnlyPairs?: Pair[];
+  readOnlyDisabledByName?: Record<string, boolean>;
+  onReadOnlyDisabledChange?: (name: string, disabled: boolean) => void;
+  onDescriptionToggle?: () => void;
 }
 
 export const KeyValueEditor: FC<Props> = ({
@@ -72,8 +77,13 @@ export const KeyValueEditor: FC<Props> = ({
   pairs,
   valuePlaceholder,
   readOnlyPairs,
+  readOnlyDisabledByName,
+  onReadOnlyDisabledChange,
+  onDescriptionToggle,
 }) => {
-  const [showDescription, setShowDescription] = React.useState(false);
+  const [showDescription, setShowDescription] = useState(
+    pairs.some(p => p.description && p.description.trim() !== '') || false,
+  );
   let pairsListItems = useMemo(
     () =>
       pairs.length > 0 ? pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) : [createEmptyPair()],
@@ -102,6 +112,7 @@ export const KeyValueEditor: FC<Props> = ({
     }
     return allItems;
   };
+
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: keys =>
       [...keys].map(key => ({ 'text/plain': `${pairsListItems.find(item => item.id === key.toString())?.id}` })),
@@ -121,7 +132,7 @@ export const KeyValueEditor: FC<Props> = ({
 
       const isFile = 'type' in pair && pair.type === 'file';
       const isMultiline = 'type' in pair && pair.type === 'text' && pair.multiline;
-      const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+      const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
 
       let valueEditor = (
         <div className="relative flex h-full w-full flex-1 px-2">
@@ -142,7 +153,7 @@ export const KeyValueEditor: FC<Props> = ({
             showFileName
             showFileIcon
             disabled
-            className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
             path={pair.fileName || ''}
             onChange={() => {}}
           />
@@ -153,7 +164,7 @@ export const KeyValueEditor: FC<Props> = ({
         valueEditor = (
           <Button
             isDisabled
-            className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+            className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           >
             <i className="fa fa-pencil-square-o space-right" />
             {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
@@ -163,16 +174,16 @@ export const KeyValueEditor: FC<Props> = ({
 
       return (
         <div
-          className="flex h-[--line-height-sm] flex-shrink-0 items-center gap-2 bg-[--color-bg] px-2 outline-none"
+          className="flex h-(--line-height-sm) shrink-0 items-center gap-2 bg-(--color-bg) px-2 outline-hidden"
           style={{
             width: element?.clientWidth,
           }}
         >
           <div
             slot="drag"
-            className="invisible flex w-5 flex-shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-[--hl-sm]"
+            className="invisible flex w-5 shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-(--hl-sm)"
           >
-            <Icon icon="grip-vertical" className="w-2 text-[--hl]" />
+            <Icon icon="grip-vertical" className="w-2 text-(--hl)" />
           </div>
           <div className="relative flex h-full w-full flex-1 px-2">
             <OneLineEditor
@@ -195,7 +206,7 @@ export const KeyValueEditor: FC<Props> = ({
               />
             </div>
           )}
-          <div className="flex w-[5.75rem] flex-shrink-0 items-center gap-2" />
+          <div className="flex w-23 shrink-0 items-center gap-2" />
         </div>
       );
     },
@@ -203,7 +214,7 @@ export const KeyValueEditor: FC<Props> = ({
       return (
         <DropIndicator
           target={target}
-          className="z-10 outline outline-1 data-[drop-target]:outline-[--color-surprise]"
+          className="z-10 outline-1 outline-solid data-drop-target:outline-(--color-surprise)"
         />
       );
     },
@@ -218,21 +229,21 @@ export const KeyValueEditor: FC<Props> = ({
   */
   const onKeyDownOuter = useCallback<React.KeyboardEventHandler>(event => {
     if (event.key === ' ') {
-      event.key = '\u00a0';
+      event.key = '\u00A0';
     }
   }, []);
 
   const onKeyDownInner = useCallback<React.KeyboardEventHandler>(event => {
-    if (event.key === '\u00a0') {
+    if (event.key === '\u00A0') {
       event.key = ' ';
     }
   }, []);
 
   return (
     <Fragment>
-      <Toolbar className="content-box sticky top-0 z-10 flex h-[var(--line-height-sm)] flex-shrink-0 border-b border-[var(--hl-md)] bg-[var(--color-bg)] text-[var(--font-size-sm)]">
+      <Toolbar className="content-box sticky top-0 z-10 flex h-(--line-height-sm) shrink-0 border-b border-(--hl-md) bg-(--color-bg) text-(--font-size-sm)">
         <Button
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => {
             const id = generateId('pair');
             upsertPair(pairsListItems, { id, name: '', value: '', description: '', disabled: false });
@@ -246,20 +257,23 @@ export const KeyValueEditor: FC<Props> = ({
             pairsListItems = [createEmptyPair()];
             onChange([]);
           }}
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
           <Icon icon="trash-can" />
           <span>Delete all</span>
         </PromptButton>
         <ToggleButton
-          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
-          onChange={setShowDescription}
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+          onChange={value => {
+            setShowDescription(value);
+            onDescriptionToggle?.();
+          }}
           isSelected={showDescription}
         >
           {({ isSelected }) => (
             <>
               <Icon
-                className={isSelected ? 'text-[--color-success]' : ''}
+                className={isSelected ? 'text-(--color-success)' : ''}
                 icon={isSelected ? 'toggle-on' : 'toggle-off'}
               />
               <span>Description</span>
@@ -278,19 +292,19 @@ export const KeyValueEditor: FC<Props> = ({
           {pair => {
             const isFile = pair.type === 'file';
             const isMultiline = pair.type === 'text' && pair.multiline;
-            const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+            const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
+            const lowerName = pair.name.toLowerCase();
+            const isPairDisabled = !!readOnlyDisabledByName?.[lowerName];
 
             let valueEditor = (
-              <div className="relative flex h-full w-full flex-1 px-2">
-                <OneLineEditor
-                  id={'key-value-editor__value' + pair.id}
-                  placeholder={valuePlaceholder || 'Value'}
-                  defaultValue={pair.value}
-                  readOnly
-                  getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
-                  onChange={() => {}}
-                />
-              </div>
+              <OneLineEditor
+                id={'key-value-editor__value' + pair.id}
+                placeholder={valuePlaceholder || 'Value'}
+                defaultValue={pair.value}
+                readOnly
+                getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
+                onChange={() => {}}
+              />
             );
 
             if (isFile) {
@@ -299,7 +313,7 @@ export const KeyValueEditor: FC<Props> = ({
                   showFileName
                   showFileIcon
                   disabled
-                  className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   path={pair.fileName || ''}
                   onChange={() => {}}
                 />
@@ -310,7 +324,7 @@ export const KeyValueEditor: FC<Props> = ({
               valueEditor = (
                 <Button
                   isDisabled
-                  className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
                   <i className="fa fa-pencil-square-o space-right" />
                   {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
@@ -321,15 +335,16 @@ export const KeyValueEditor: FC<Props> = ({
             return (
               <ListBoxItem
                 textValue={pair.name + '-' + pair.value}
-                className="flex h-[--line-height-sm] flex-shrink-0 items-center gap-2 bg-[--color-bg] px-2 outline-none"
+                style={{ opacity: isPairDisabled ? '0.4' : '1' }}
+                className={`relative grid h-(--line-height-sm) shrink-0 gap-2 bg-(--color-bg) px-2 outline-hidden ${showDescription ? 'grid-cols-[max-content_1fr_1fr_1fr_max-content]' : 'grid-cols-[max-content_1fr_1fr_max-content]'}`}
               >
                 <div
                   slot="drag"
-                  className="invisible flex w-5 flex-shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-[--hl-sm]"
+                  className="invisible flex w-5 shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-(--hl-sm)"
                 >
-                  <Icon icon="grip-vertical" className="w-2 text-[--hl]" />
+                  <Icon icon="grip-vertical" className="w-2 text-(--hl)" />
                 </div>
-                <div className="relative flex h-full w-full flex-1 px-2">
+                <div>
                   <OneLineEditor
                     id={'key-value-editor__name' + pair.id}
                     placeholder={namePlaceholder || 'Name'}
@@ -338,9 +353,9 @@ export const KeyValueEditor: FC<Props> = ({
                     onChange={() => {}}
                   />
                 </div>
-                {valueEditor}
+                <div>{valueEditor}</div>
                 {showDescription && (
-                  <div className="relative flex h-full w-full flex-1 px-2">
+                  <div>
                     <OneLineEditor
                       id={'key-value-editor__description' + pair.id}
                       placeholder={descriptionPlaceholder || 'Description'}
@@ -350,7 +365,20 @@ export const KeyValueEditor: FC<Props> = ({
                     />
                   </div>
                 )}
-                <div className="flex w-[5.75rem] flex-shrink-0 items-center gap-2" />
+                <Toolbar className="flex items-center gap-1">
+                  {pair.canDisable && onReadOnlyDisabledChange ? (
+                    <ToggleButton
+                      className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                      onChange={isSelected => onReadOnlyDisabledChange(lowerName, !isSelected)}
+                      isSelected={!isPairDisabled}
+                    >
+                      <Icon icon={isPairDisabled ? 'square' : 'check-square'} />
+                    </ToggleButton>
+                  ) : (
+                    <div aria-hidden="true" className="aspect-square h-7" />
+                  )}
+                  <div aria-hidden="true" className="aspect-square h-7" />
+                </Toolbar>
               </ListBoxItem>
             );
           }}
@@ -368,7 +396,8 @@ export const KeyValueEditor: FC<Props> = ({
           {pair => {
             const isFile = pair.type === 'file';
             const isMultiline = pair.type === 'text' && pair.multiline;
-            const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+            const bytes = isMultiline ? utf8ByteLength(pair.value) : 0;
+            const isOnlyTextAllowed = !allowFile && !allowMultiline;
 
             let valueEditor = (
               <OneLineEditor
@@ -388,7 +417,7 @@ export const KeyValueEditor: FC<Props> = ({
                   showFileName
                   showFileIcon
                   disabled={pair.disabled || isDisabled}
-                  className="flex h-full w-full flex-1 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-full w-full flex-1 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   path={pair.fileName || ''}
                   onChange={fileName => upsertPair(pairsListItems, { ...pair, fileName })}
                 />
@@ -399,7 +428,7 @@ export const KeyValueEditor: FC<Props> = ({
               valueEditor = (
                 <Button
                   isDisabled={pair.disabled || isDisabled}
-                  className="flex h-full w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-full w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={() =>
                     showModal(CodePromptModal, {
                       submitName: 'Done',
@@ -431,13 +460,13 @@ export const KeyValueEditor: FC<Props> = ({
                 key={pair.id}
                 textValue={pair.name + '-' + pair.value}
                 style={{ opacity: pair.disabled ? '0.4' : '1' }}
-                className={`relative grid h-[--line-height-sm] flex-shrink-0 gap-2 bg-[--color-bg] px-2 outline-none ${showDescription ? '[grid-template-columns:max-content_1fr_1fr_1fr_max-content]' : '[grid-template-columns:max-content_1fr_1fr_max-content]'}`}
+                className={`relative grid h-(--line-height-sm) shrink-0 gap-2 bg-(--color-bg) px-2 outline-hidden ${showDescription ? 'grid-cols-[max-content_1fr_1fr_1fr_max-content]' : 'grid-cols-[max-content_1fr_1fr_max-content]'}`}
               >
                 <div
                   slot="drag"
-                  className="flex w-5 flex-shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-[--hl-sm]"
+                  className="flex w-5 shrink-0 cursor-grab items-center justify-center p-2 focus-visible:bg-(--hl-sm)"
                 >
-                  <Icon icon="grip-vertical" className="w-2 text-[--hl]" />
+                  <Icon icon="grip-vertical" className="w-2 text-(--hl)" />
                 </div>
                 <div onKeyDownCapture={onKeyDownInner}>
                   <OneLineEditor
@@ -466,65 +495,67 @@ export const KeyValueEditor: FC<Props> = ({
                   </div>
                 )}
                 <Toolbar className="flex items-center gap-1">
-                  <MenuTrigger>
-                    <Button
-                      aria-label="Text mode"
-                      className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                    >
-                      <Icon icon="caret-down" />
-                    </Button>
-                    <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                      <Menu
-                        className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
-                        aria-label="Create a new request"
-                        selectionMode="single"
-                        selectedKeys={[selectedValueType]}
-                        items={[
-                          {
-                            id: 'text',
-                            name: 'Text',
-                            textValue: 'Text',
-                            onAction: () => upsertPair(pairsListItems, { ...pair, type: 'text', multiline: false }),
-                          },
-                          ...(allowMultiline
-                            ? [
-                                {
-                                  id: 'multiline-text',
-                                  name: 'Multiline text',
-                                  textValue: 'Multiline text',
-                                  onAction: () =>
-                                    upsertPair(pairsListItems, { ...pair, type: 'text', multiline: true }),
-                                },
-                              ]
-                            : []),
-                          ...(allowFile
-                            ? [
-                                {
-                                  id: 'file',
-                                  name: 'File',
-                                  textValue: 'File',
-                                  onAction: () => upsertPair(pairsListItems, { ...pair, type: 'file' }),
-                                },
-                              ]
-                            : []),
-                        ]}
+                  {!isOnlyTextAllowed && (
+                    <MenuTrigger>
+                      <Button
+                        aria-label="Text mode"
+                        className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       >
-                        {item => (
-                          <MenuItem
-                            key={item.id}
-                            id={item.id}
-                            onAction={item.onAction}
-                            className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
-                            aria-label={item.name}
-                          >
-                            <span>{item.name}</span>
-                          </MenuItem>
-                        )}
-                      </Menu>
-                    </Popover>
-                  </MenuTrigger>
+                        <Icon icon="caret-down" />
+                      </Button>
+                      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                        <Menu
+                          className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                          aria-label="Select value type"
+                          selectionMode="single"
+                          selectedKeys={[selectedValueType]}
+                          items={[
+                            {
+                              id: 'text',
+                              name: 'Text',
+                              textValue: 'Text',
+                              onAction: () => upsertPair(pairsListItems, { ...pair, type: 'text', multiline: false }),
+                            },
+                            ...(allowMultiline
+                              ? [
+                                  {
+                                    id: 'multiline-text',
+                                    name: 'Multiline text',
+                                    textValue: 'Multiline text',
+                                    onAction: () =>
+                                      upsertPair(pairsListItems, { ...pair, type: 'text', multiline: true }),
+                                  },
+                                ]
+                              : []),
+                            ...(allowFile
+                              ? [
+                                  {
+                                    id: 'file',
+                                    name: 'File',
+                                    textValue: 'File',
+                                    onAction: () => upsertPair(pairsListItems, { ...pair, type: 'file' }),
+                                  },
+                                ]
+                              : []),
+                          ]}
+                        >
+                          {item => (
+                            <MenuItem
+                              key={item.id}
+                              id={item.id}
+                              onAction={item.onAction}
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                              aria-label={item.name}
+                            >
+                              <span>{item.name}</span>
+                            </MenuItem>
+                          )}
+                        </Menu>
+                      </Popover>
+                    </MenuTrigger>
+                  )}
                   <ToggleButton
-                    className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+                    className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                     onChange={isSelected => upsertPair(pairsListItems, { ...pair, disabled: !isSelected })}
                     isSelected={!pair.disabled}
                     isDisabled={isDisabled}
@@ -533,7 +564,7 @@ export const KeyValueEditor: FC<Props> = ({
                   </ToggleButton>
                   <PromptButton
                     disabled={pair.id === 'pair-empty' || isDisabled}
-                    className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-50 aria-pressed:bg-[--hl-sm]"
+                    className="flex aspect-square h-7 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                     confirmMessage=""
                     doneMessage=""
                     onClick={() => {

@@ -22,8 +22,8 @@ const pathToSwagger = (swagger: any, path: string[]) => {
   return path.reduce((acc, v: string) => {
     try {
       acc = acc[v];
-    } catch (e) {
-      return undefined;
+    } catch {
+      return;
     }
     return acc;
   }, swagger);
@@ -106,18 +106,15 @@ export const convert: FilePathConverter = async importEntry => {
     if (!verifyWsdl(rawData)) {
       return null;
     }
-  } catch (error) {
+  } catch {
     return null;
   }
 
   try {
-    let input;
-    if (importEntry.oriFilePath) {
-      // here we prioritize using the original file path because the apiconnect-wsdl library can recognize 'import', 'include' tags in a wsdl file and find the referenced xsd files automatically.
-      input = importEntry.oriFilePath;
-    } else {
-      input = `<?xml version="1.0" encoding="UTF-8" ?>${rawData}`;
-    }
+    // here we prioritize using the original file path because the apiconnect-wsdl library can recognize 'import', 'include' tags in a wsdl file and find the referenced xsd files automatically.
+    const input = importEntry.oriFilePath
+      ? importEntry.oriFilePath
+      : `<?xml version="1.0" encoding="UTF-8" ?>${rawData}`;
     const postmanData = await convertWsdlToPostman(input);
     postmanData.info.schema += 'collection.json';
     const postmanJson = JSON.stringify(postmanData);
@@ -139,7 +136,7 @@ function verifyWsdl(fileContent: string) {
       mainWsdlDocument.documentElement?.namespaceURI === wsdlNamespaceUri &&
       mainWsdlDocument.documentElement.localName === 'definitions'
     );
-  } catch (error) {
+  } catch {
     return false;
   }
 }

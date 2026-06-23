@@ -1,6 +1,9 @@
 import * as fs from 'node:fs';
 
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import type { Compression } from 'insomnia-data';
+
+import { servicesProxy } from '~/ui/renderer-services-proxy';
 
 import {
   asyncTasksAllSettled,
@@ -10,9 +13,8 @@ import {
   resetAsyncTasks,
   stopMonitorAsyncTasks,
 } from '../../insomnia-scripting-environment/src/objects';
-import type { Compression } from './models/response';
 // this will also import lots of node_modules into the preload script, consider moving this file insomnia-scripting-environment
-import { requireInterceptor } from './requireInterceptor';
+import { requireInterceptor } from './scripting/require-interceptor';
 
 export interface HiddenBrowserWindowToMainBridgeAPI {
   requireInterceptor: (module: string) => any;
@@ -62,7 +64,9 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('bridge', bridge);
   contextBridge.exposeInMainWorld('Promise', ProxiedPromise);
+  contextBridge.exposeInMainWorld('_dataServices', servicesProxy);
 } else {
   window.bridge = bridge;
   window.Promise = ProxiedPromise;
+  window._dataServices = servicesProxy;
 }

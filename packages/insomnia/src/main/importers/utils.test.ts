@@ -11,7 +11,6 @@ describe('setDefaults()', () => {
     const obj = {
       _type: 'weird',
     };
-    // @ts-expect-error -- this is an intentionally unrecognized `_type`
     expect(setDefaults(obj)).toBe(obj);
   });
 

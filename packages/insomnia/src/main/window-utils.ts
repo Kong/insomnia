@@ -15,31 +15,28 @@ import {
   screen,
   shell,
 } from 'electron';
+import { isLinux, isMac } from 'insomnia-data/common';
 
-import {
-  getAppBuildDate,
-  getAppVersion,
-  getProductName,
-  isDevelopment,
-  isLinux,
-  isMac,
-  MNEMONIC_SYM,
-} from '../common/constants';
+import { invariant } from '~/common/utils/invariant';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
+
+import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import { invariant } from '../utils/invariant';
-import ElectronStorage from './electron-storage';
+import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
+import { createPluginWindow, destroyPluginWindow } from './plugin-window';
+import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
-let electronStorage: ElectronStorage | null = null;
+export function getMainWindow(): ElectronBrowserWindow | null {
+  return browserWindows.get('Insomnia') ?? null;
+}
 let hiddenWindowIsBusy = false;
-
 interface Bounds {
   height?: number;
   width?: number;
@@ -47,9 +44,6 @@ interface Bounds {
   y?: number;
 }
 
-export function init() {
-  initElectronStorage();
-}
 const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => {
   return await new Promise<void>(resolve => {
     // overwrite the closed handler
@@ -201,7 +195,7 @@ export function createWindow(): ElectronBrowserWindow {
     backgroundColor: '#2C2C2C',
     fullscreen: fullscreen,
     fullscreenable: true,
-    title: getProductName(),
+    title: `${getProductName()} ${getAppVersion()}`,
     width: width || DEFAULT_WIDTH,
     height: height || DEFAULT_HEIGHT,
     minHeight: MINIMUM_HEIGHT,
@@ -211,12 +205,11 @@ export function createWindow(): ElectronBrowserWindow {
     webPreferences: {
       preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
-      nodeIntegration: true,
-      nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs
       webviewTag: true,
-      // TODO: enable context isolation
-      contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',
+      // Security-critical flags (nodeIntegration/contextIsolation). Pinned by window-security.test.ts.
+      // Spread last so nothing below can override them. Do not weaken — see ./window-security.
+      ...MAIN_WINDOW_SECURITY,
     },
   });
   browserWindows.set('Insomnia', mainBrowserWindow);
@@ -280,6 +273,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: `${MNEMONIC_SYM}Preferences`,
         click: () => {
+          trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
           mainBrowserWindow.webContents?.send('toggle-preferences');
         },
       },
@@ -447,7 +441,7 @@ export function createWindow(): ElectronBrowserWindow {
         role: 'minimize',
       },
       // @ts-expect-error -- TSCONVERSION missing in official electron types
-      ...(isMac()
+      ...(isMac
         ? [
             {
               label: `${MNEMONIC_SYM}Close`,
@@ -465,7 +459,7 @@ export function createWindow(): ElectronBrowserWindow {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Help and Support`,
-        ...(isMac() ? {} : { accelerator: 'F1' }),
+        ...(isMac ? {} : { accelerator: 'F1' }),
         click: () => {
           const { protocol } = new URL(docsBase);
           if (protocol === 'http:' || protocol === 'https:') {
@@ -518,7 +512,7 @@ export function createWindow(): ElectronBrowserWindow {
   const aboutMenuClickHandler = async () => {
     const copy = 'Copy';
     const ok = 'OK';
-    const buttons = isLinux() ? [copy, ok] : [ok, copy];
+    const buttons = isLinux ? [copy, ok] : [ok, copy];
     const detail = [
       `Version: ${getProductName()} ${getAppVersion()}`,
       `Build date: ${getAppBuildDate()}`,
@@ -546,7 +540,7 @@ export function createWindow(): ElectronBrowserWindow {
     }
   };
 
-  if (isMac()) {
+  if (isMac) {
     // @ts-expect-error -- TSCONVERSION type splitting
     applicationMenu.submenu?.unshift(
       {
@@ -610,7 +604,10 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `R${MNEMONIC_SYM}estart`,
-        click: window?.main.restart,
+        click: () => {
+          app.relaunch();
+          app.exit();
+        },
       },
       {
         label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,
@@ -657,29 +654,31 @@ export function createWindow(): ElectronBrowserWindow {
     ],
   };
   const template: MenuItemConstructorOptions[] = [];
-  template.push(applicationMenu);
-  template.push({
-    label: `${MNEMONIC_SYM}File`,
-    submenu: [
-      {
-        label: `${MNEMONIC_SYM}New Window`,
-        click: () => {
-          createWindow();
+  template.push(
+    applicationMenu,
+    {
+      label: `${MNEMONIC_SYM}File`,
+      submenu: [
+        {
+          label: `${MNEMONIC_SYM}New Window`,
+          click: () => {
+            createWindow();
+          },
         },
-      },
-    ],
-  });
-  template.push(editMenu);
-  template.push(viewMenu);
-  template.push(windowMenu);
-  template.push(toolsMenu);
-  template.push(helpMenu);
+      ],
+    },
+    editMenu,
+    viewMenu,
+    windowMenu,
+    toolsMenu,
+    helpMenu,
+  );
 
   if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
     template.push(developerMenu);
   }
 
-  if (isMac()) {
+  if (isMac) {
     Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   } else {
     // setMenu only works for Windows and Linux
@@ -722,6 +721,7 @@ function saveBounds() {
   }
 
   const fullscreen = browserWindow?.isFullScreen();
+  const electronStorage = getElectronStorage();
 
   // Only save the size if we're not in fullscreen
   if (!fullscreen) {
@@ -739,6 +739,7 @@ function getBounds() {
   let maximize = false;
 
   try {
+    const electronStorage = getElectronStorage();
     bounds = electronStorage?.getItem('bounds', {});
     fullscreen = electronStorage?.getItem('fullscreen', false);
     maximize = electronStorage?.getItem('maximize', false);
@@ -760,6 +761,7 @@ const ZOOM_MIN = 0.05;
 
 const getZoomFactor = () => {
   try {
+    const electronStorage = getElectronStorage();
     return electronStorage?.getItem('zoomFactor', ZOOM_DEFAULT);
   } catch (error) {
     // This should never happen, but if it does...!
@@ -781,21 +783,21 @@ export const setZoom = (transformer: (current: number) => number) => () => {
   const actual = Math.min(Math.max(ZOOM_MIN, desired), ZOOM_MAX);
 
   browserWindow.webContents.setZoomLevel(actual);
+  const electronStorage = getElectronStorage();
   electronStorage?.setItem('zoomFactor', actual);
 };
-
-export function initElectronStorage() {
-  const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
-  if (!electronStorage) {
-    electronStorage = new ElectronStorage(electronStoragePath);
-  }
-  return electronStorage;
-}
 
 export function createWindowsAndReturnMain() {
   const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }
+  // Create the plugin window after the main window finishes its initial load so
+  // that Playwright's firstWindow() always returns the main app window. Creating
+  // it on did-finish-load still parses the 12 MB bundle well before any user
+  // plugin call would occur.
+  mainWindow.webContents.once('did-finish-load', () => createPluginWindow());
   return mainWindow;
 }
+
+export { destroyPluginWindow };

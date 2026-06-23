@@ -1,9 +1,9 @@
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import * as models from '~/models';
-import { SegmentEvent } from '~/ui/analytics';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.new';
 
@@ -14,12 +14,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
 
-  const unitTestSuite = await models.unitTestSuite.create({
+  const unitTestSuite = await services.unitTestSuite.create({
     parentId: workspaceId,
     name,
   });
 
-  window.main.trackSegmentEvent({ event: SegmentEvent.testSuiteCreate });
+  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.testSuiteCreate });
 
   return redirect(
     href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId', {

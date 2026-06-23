@@ -1,31 +1,29 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { SegmentEvent } from '~/ui/analytics';
-import { remoteCompareCache, vcsSegmentEventProperties } from '~/ui/sync-utils';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { remoteCompareCache, vcsEventProperties } from '~/ui/sync-utils';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.push';
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { projectId, workspaceId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
   invariant(project.remoteId, 'Project is not remote');
 
   try {
-    const vcs = VCSInstance();
-    await vcs.push({
+    await window.main.sync.push({
       teamId: project.parentId,
       teamProjectId: project.remoteId,
     });
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.vcsAction,
-      properties: vcsSegmentEventProperties('remote', 'push'),
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.vcsAction,
+      properties: vcsEventProperties('remote', 'push'),
     });
 
     delete remoteCompareCache[workspaceId];
@@ -36,9 +34,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pushing to remote.';
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.vcsAction,
-      properties: vcsSegmentEventProperties('remote', 'push', errorMessage),
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.vcsAction,
+      properties: vcsEventProperties('remote', 'push', errorMessage),
     });
 
     return {

@@ -1,4 +1,5 @@
 const insomniaDocs = (slug: string) => `https://docs.insomnia.rest${slug}`;
+const newInsomniaDocs = (slug: string) => `https://developer.konghq.com/insomnia${slug}`;
 
 export const docsBase = insomniaDocs('/');
 export const docsGitSync = insomniaDocs('/insomnia/git-sync');
@@ -13,6 +14,11 @@ export const docsUnitTesting = insomniaDocs('/insomnia/unit-testing');
 export const docsIntroductionToInsoCLI = insomniaDocs('/inso-cli/introduction');
 export const docsPreRequestScript = insomniaDocs('/insomnia/pre-request-script');
 export const docsAfterResponseScript = insomniaDocs('/insomnia/after-response-script');
+export const docsMcpClient = newInsomniaDocs('/mcp-clients-in-insomnia');
+export const docsMcpAuthentication = newInsomniaDocs('/mcp-clients-in-insomnia/#mcp-authentication');
+export const docsPricingLearnMoreLink = newInsomniaDocs(
+  '/storage/#what-are-the-user-and-git-sync-limits-for-the-essentials-plan',
+);
 
 export const docsGitAccessToken = {
   github: 'https://docs.github.com/github/authenticating-to-github/creating-a-personal-access-token',

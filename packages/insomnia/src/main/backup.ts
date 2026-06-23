@@ -2,25 +2,28 @@ import { copyFile, mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 import electron from 'electron';
+import { services } from 'insomnia-data';
 
-import appConfig from '../../config/config.json';
+import { getUpdateUrl } from '~/main/updates';
+
 import { version } from '../../package.json';
-import { getClientString, getUpdatesBaseURL } from '../common/constants';
-import * as models from '../models';
+import { getClientString } from '../common/constants';
 
 export async function backupIfNewerVersionAvailable() {
   try {
-    const settings = await models.settings.get();
-    console.log('[main] Checking for newer version than ', version);
-    const response = await electron.net.fetch(
-      `${getUpdatesBaseURL()}/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`,
-      {
-        method: 'GET',
-        headers: new Headers({
-          'X-Insomnia-Client': getClientString(),
-        }),
-      },
-    );
+    const settings = await services.settings.get();
+    console.log('[main] Checking for newer version than', version);
+    const url = getUpdateUrl(settings.updateChannel);
+    if (!url) {
+      console.log('[main] Update URL not found, skipping backup check');
+      return;
+    }
+    const response = await electron.net.fetch(url, {
+      method: 'GET',
+      headers: new Headers({
+        'X-Insomnia-Client': getClientString(),
+      }),
+    });
     if (response) {
       console.log('[main] Found newer version');
       await backup();

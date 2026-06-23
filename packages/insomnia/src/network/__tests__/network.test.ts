@@ -1,31 +1,45 @@
+// @ts-nocheck
 import fs from 'node:fs';
-import { join as pathJoin, resolve as pathResolve } from 'node:path';
+import nodePath from 'node:path';
 
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { models, services } from 'insomnia-data';
+import { HttpVersions } from 'insomnia-data/common';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { version } from '../../../package.json';
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
-import { HttpVersions } from '../../common/settings';
-import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
-import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
-import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
-import * as models from '../../models';
+import { getAuthHeader } from '../../main/network/get-auth-header';
+import { _parseHeaders, curlRequest, getHttpVersion } from '../../main/network/libcurl-promise';
+import { _getAwsAuthHeaders } from '../../network/parse-header-strings';
+import { DEFAULT_BOUNDARY } from '../multipart-constants';
 import * as networkUtils from '../network';
-import { getSetCookiesFromResponseHeaders } from '../network';
+import { getAuthQueryParams, getSetCookiesFromResponseHeaders } from '../network';
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
   (await getRenderedRequestAndContext(args)).request;
+describe('getAuthQueryParams', () => {
+  it('Creates a query param with key as parameter name and value as parameter value, when addTo is "queryParams"', async () => {
+    const authentication = {
+      type: 'apikey',
+      key: 'x-api-key',
+      value: 'test',
+      addTo: 'queryParams',
+    };
 
-describe('sendCurlAndWriteTimeline()', () => {
-  beforeEach(async () => {
-    await models.project.all();
+    const header = getAuthQueryParams(authentication);
+    expect(header).toEqual({
+      name: 'x-api-key',
+      value: 'test',
+    });
   });
-
+});
+describe('sendCurlAndWriteTimeline()', () => {
   it('sends a generic request', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -48,8 +62,8 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
     ];
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
-    await models.cookieJar.update(cookieJar, {
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies,
     });
@@ -98,7 +112,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -127,9 +141,9 @@ describe('sendCurlAndWriteTimeline()', () => {
         POSTFIELDS: 'foo=bar',
         POST: 1,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -137,8 +151,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('sends a urlencoded', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -177,7 +191,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -200,9 +214,9 @@ describe('sendCurlAndWriteTimeline()', () => {
         NOPROGRESS: true,
         POSTFIELDS: 'foo=bar&bar=&=value',
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -210,8 +224,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('skips sending and storing cookies with setting', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -234,7 +248,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
     ];
-    await models.cookieJar.create({
+    await services.cookieJar.create({
       parentId: workspace._id,
       cookies,
     });
@@ -281,7 +295,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -304,9 +318,9 @@ describe('sendCurlAndWriteTimeline()', () => {
         NOPROGRESS: true,
         POSTFIELDS: 'foo=bar',
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -314,13 +328,13 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('sends a file', async () => {
-    const workspace = await models.workspace.create();
-    let settings = await models.settings.getOrCreate();
-    settings = await models.settings.update(settings, { dataFolders: [pathResolve(__dirname)] });
-    await models.cookieJar.create({
+    const workspace = await services.workspace.create();
+    let settings = await services.settings.getOrCreate();
+    settings = await services.settings.update(settings, { dataFolders: [nodePath.resolve(__dirname)] });
+    await services.cookieJar.create({
       parentId: workspace._id,
     });
-    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
+    const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -346,7 +360,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -371,10 +385,10 @@ describe('sendCurlAndWriteTimeline()', () => {
         INFILESIZE_LARGE: 26,
         PROXY: '',
         READDATA: fs.readFileSync(fileName, 'utf8'),
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         UPLOAD: 1,
         URL: 'http://localhost/',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -382,12 +396,12 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('sends multipart form data', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
-    await models.cookieJar.create({
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
+    await services.cookieJar.create({
       parentId: workspace._id,
     });
-    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
+    const fileName = nodePath.resolve(nodePath.join(__dirname, './testfile.txt'));
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -430,7 +444,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -467,10 +481,10 @@ describe('sendCurlAndWriteTimeline()', () => {
           '',
         ].join('\r\n'),
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/',
         UPLOAD: 1,
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -478,8 +492,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('uses unix socket', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -495,7 +509,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -511,10 +525,10 @@ describe('sendCurlAndWriteTimeline()', () => {
         MAXREDIRS: 10,
         NOPROGRESS: true,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://my/path',
         UNIX_SOCKET_PATH: '/my/socket',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -522,8 +536,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('uses works with HEAD', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -539,7 +553,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -555,9 +569,9 @@ describe('sendCurlAndWriteTimeline()', () => {
         MAXREDIRS: 10,
         NOPROGRESS: true,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost:3000/foo/bar',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -565,8 +579,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('uses works with "unix" host', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -582,7 +596,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -598,9 +612,9 @@ describe('sendCurlAndWriteTimeline()', () => {
         MAXREDIRS: 10,
         NOPROGRESS: true,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://unix:3000/my/path',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -608,8 +622,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('uses netrc', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -626,7 +640,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -642,10 +656,10 @@ describe('sendCurlAndWriteTimeline()', () => {
         MAXREDIRS: 10,
         NOPROGRESS: true,
         PROXY: '',
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         NETRC: CurlNetrc.Required,
         URL: '',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -657,8 +671,8 @@ describe('sendCurlAndWriteTimeline()', () => {
       // skipped this test, due to SSL_VERIFYHOST being disabled for MacOS on libcurl-promise.ts
       return;
     }
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -681,8 +695,8 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
     ];
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
-    await models.cookieJar.update(cookieJar, {
+    const cookieJar = await services.cookieJar.getOrCreateForParentId(workspace._id);
+    await services.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies,
     });
@@ -731,7 +745,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    const bodyBuffer = await models.response.getBodyBuffer(response);
+    const bodyBuffer = await services.helpers.getResponseBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -762,9 +776,9 @@ describe('sendCurlAndWriteTimeline()', () => {
         PROXY: '',
         SSL_VERIFYHOST: 0, // should disable SSL
         SSL_VERIFYPEER: 0, // should disable SSL
-        TIMEOUT_MS: 30000,
+        TIMEOUT_MS: 30_000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
-        USERAGENT: '',
+        USERAGENT: `insomnia/${version}`,
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
       },
@@ -772,8 +786,8 @@ describe('sendCurlAndWriteTimeline()', () => {
   });
 
   it('sets HTTP version', async () => {
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
+    const workspace = await services.workspace.create();
+    const settings = await services.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -790,7 +804,9 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id',
     );
-    expect(JSON.parse(String(await models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
+    expect(JSON.parse(String(await services.helpers.getResponseBodyBuffer(responseV1))).options.HTTP_VERSION).toBe(
+      'V1_0',
+    );
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
     expect(getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
@@ -1065,6 +1081,32 @@ describe('getCurrentUrl for tough-cookie', () => {
     ];
     const finalUrl = 'http://mergemyshit.dev';
     expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/biscuit');
+  });
+});
+
+describe('getOrInheritAuthentication', () => {
+  it('should prefer the closest parent folder auth over higher-level folder auth', () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'basic', username: 'closest', password: 'closest-pass' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({
+      type: 'basic',
+      username: 'closest',
+      password: 'closest-pass',
+    });
+  });
+
+  it("should stop inheritance when the closest parent folder auth is { type: 'none' }", () => {
+    const request = { authentication: {} };
+    const requestGroups = [
+      { authentication: { type: 'none' } },
+      { authentication: { type: 'basic', username: 'root', password: 'root-pass' } },
+    ];
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({ type: 'none' });
   });
 });
 

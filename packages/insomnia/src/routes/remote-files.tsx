@@ -1,11 +1,10 @@
+import { getUserFiles, type Organization, type RemoteFile } from 'insomnia-api';
+import type { Project } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import { project, userSession } from '~/models';
-import { type Organization } from '~/models/organization';
-import { type Project } from '~/models/project';
-import { insomniaFetch } from '~/ui/insomniaFetch';
-import { createFetcherLoadHook } from '~/utils/router';
+import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/remote-files';
 
@@ -20,20 +19,12 @@ export interface CommandRemoteItem<TItem> {
   item: TItem;
 }
 
-interface RemoteFile {
-  id: string;
-  name: string;
-  projectId: string;
-  teamProjectId: string;
-  organizationId: string;
-}
-
 export interface RemoteFilesLoaderResult {
   files: CommandRemoteItem<RemoteFile & { teamProjectLocalId: string; scope: 'unsynced' }>[];
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id: sessionId, accountId } = await userSession.get();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (!sessionId) {
     return {
@@ -42,11 +33,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
   }
 
   try {
-    const remoteFiles = await insomniaFetch<RemoteFile[]>({
-      method: 'GET',
-      path: '/v1/user/files',
-      sessionId,
-    });
+    const remoteFiles = await getUserFiles({ sessionId });
 
     const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 
@@ -55,7 +42,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
 
     const organizations = allOrganizations.filter(org => allRemoteFilesOrganizationIds.includes(org.id));
 
-    const projects = await database.find<Project>(project.type, {
+    const projects = await database.find<Project>(models.project.type, {
       remoteId: {
         $in: allRemoteFilesProjectIds,
       },

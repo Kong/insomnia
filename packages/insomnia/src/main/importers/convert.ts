@@ -32,14 +32,9 @@ export const convert = async (
     importers = importers.filter(i => i.id === importerId);
   }
   for (const importer of importers) {
-    let resources;
-    if (importer.acceptFilePath === true) {
-      // FilePathImporter
-      resources = await importer.convert(importEntry);
-    } else {
-      // ContentStrImporter
-      resources = await importer.convert(importEntry.contentStr);
-    }
+    const resources = await (importer.acceptFilePath === true
+      ? importer.convert(importEntry)
+      : importer.convert(importEntry.contentStr));
 
     if (!resources) {
       continue;
@@ -52,13 +47,6 @@ export const convert = async (
     }
 
     dotInKeyNameInvariant(resources);
-
-    // Each postman's collection has its variable, we map it to request group's environment in Insomnia
-    // I think it's better to check if the resource's type is 'request_group' rather than to check it by index 0, but let's just leave it as it is
-    if (resources.length > 0 && resources[0].variable) {
-      resources[0].environment = resources[0].variable;
-    }
-
     const convertedResult = {
       type: {
         id: importer.id,

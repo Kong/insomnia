@@ -1,8 +1,10 @@
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import type { OAuth2AuthorizationStatusType } from '../../../network/o-auth-2/constants';
-import { invariant } from '../../../utils/invariant';
-import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../eventBus';
+import type { OAuth2AuthorizationStatusType } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
+import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
+
+import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../event-bus';
 import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -12,6 +14,29 @@ export const OAuthAuthorizationStatusModal: FC = () => {
   const [status, setStatus] = useState<OAuth2AuthorizationStatusType>('none');
   const [authCodeUrlStr, setAuthCodeUrlStr] = useState<string | undefined>();
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('show-oauth-authorization-modal', (_, authCodeUrlStr: string) => {
+      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
+        status: 'getting_code',
+        authCodeUrlStr,
+      });
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('hide-oauth-authorization-modal', _ => {
+      uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
+        status: 'none',
+      });
+    });
+
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     const handleStatusChange = ({
@@ -41,6 +66,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
     } else if (status === 'getting_code') {
       modalRef.current?.show();
       setSubmitting(false);
+      setError(null);
     }
   }, [status]);
 
@@ -49,6 +75,8 @@ export const OAuthAuthorizationStatusModal: FC = () => {
       centered
       ref={modalRef}
       onHide={() => {
+        setStatus('none');
+        setSubmitting(false);
         window.main.cancelAuthorizationInDefaultBrowser('Canceled by user.');
       }}
     >
@@ -57,8 +85,8 @@ export const OAuthAuthorizationStatusModal: FC = () => {
         {status === 'none' && 'Not in Authorization'}
         {status === 'getting_code' && (
           <>
-            <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
-              See your browser to finish authorization, if the browser didn’t open automatically, copy and paste this
+            <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
+              See your browser to finish authorization, if the browser didn't open automatically, copy and paste this
               URL into your browser to authorize.
             </p>
             <div className="form-control form-control--outlined no-pad-top flex">
@@ -78,25 +106,42 @@ export const OAuthAuthorizationStatusModal: FC = () => {
                 Copy
               </button>
             </div>
-            <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
+            <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
               Please copy the full redirect URL showed in the redirect page and paste it below after you complete the
               authorization in your browser.
             </p>
             <form
               onSubmit={e => {
-                e.preventDefault();
-                const form = e.currentTarget;
-                const data = new FormData(form);
+                try {
+                  e.preventDefault();
+                  const form = e.currentTarget;
+                  const data = new FormData(form);
 
-                const url = data.get('url');
-                invariant(typeof url === 'string', 'Expected code to be a string');
-                if (url.length === 0) {
+                  const url = data.get('url');
+                  invariant(typeof url === 'string', 'Expected code to be a string');
+                  if (url.length === 0) {
+                    return;
+                  }
+                  setError(null);
+                  setSubmitting(true);
+                  const parsedUrl = new URL(url);
+                  const params = Object.fromEntries(parsedUrl.searchParams);
+                  const { encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
+                  if (encryptedRedirectUrl && encryptedKey && iv) {
+                    return redirectToDefaultBrowserSubmit({
+                      encryptedRedirectUrl,
+                      encryptedKey,
+                      iv,
+                    });
+                  }
+                  return redirectToDefaultBrowserSubmit({
+                    redirectUrl: url,
+                  });
+                } catch (error) {
+                  setError(error instanceof Error ? error.message : String(error));
+                  setSubmitting(false);
                   return;
                 }
-                setSubmitting(true);
-                window.main.onDefaultBrowserOAuthRedirect({
-                  url,
-                });
               }}
             >
               <div className="form-control form-control--outlined no-pad-top" style={{ display: 'flex' }}>
@@ -115,6 +160,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
                   Proceed
                 </button>
               </div>
+              {error && <p className="text-danger">Error: {error}</p>}
             </form>
           </>
         )}

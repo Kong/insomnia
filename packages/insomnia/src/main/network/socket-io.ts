@@ -5,20 +5,25 @@ import tls from 'node:tls';
 import electron, { BrowserWindow } from 'electron';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import type {
+  BaseSocketIORequest,
+  CookieJar,
+  RequestAuthentication,
+  RequestHeader,
+  SocketIOResponse,
+} from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
 import { v4 as uuidV4 } from 'uuid';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+
+import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
-import * as models from '../../models';
-import { socketIORequest } from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
-import { type RequestAuthentication, type RequestHeader } from '../../models/request';
-import type { BaseSocketIORequest } from '../../models/socket-io-request';
-import type { SocketIOResponse } from '../../models/socket-io-response.ts';
 import { filterClientCertificates } from '../../network/certificate';
-import { invariant } from '../../utils/invariant';
-import { setDefaultProtocol } from '../../utils/url/protocol';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
 
@@ -88,7 +93,17 @@ const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
 const protocolName = 'socketIO';
-const getEventNotificationChannel = (responseId: string) => `${protocolName}.${responseId}.newEventReceived`;
+const getEventNotificationChannel = (responseId: string) =>
+  `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
+
+const sendToOpenWindows = (channel: string, ...args: unknown[]) => {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) {
+      continue;
+    }
+    window.webContents.send(channel, ...args);
+  }
+};
 
 const writeEventLogAndNotify = ({
   requestId,
@@ -100,24 +115,25 @@ const writeEventLogAndNotify = ({
   clearRequestIdMap?: boolean;
 }) => {
   eventLogFileStreams.get(requestId)?.write(data, () => {
+    const resId = requestIdToResponseIdMap.get(requestId);
+    if (!resId) {
+      return;
+    }
+
     // notify all renderers of new event has been received
-    for (const window of BrowserWindow.getAllWindows()) {
-      const resId = requestIdToResponseIdMap.get(requestId);
-      if (resId) {
-        const notifyChannel = getEventNotificationChannel(resId);
-        notifyChannel && window.webContents.send(notifyChannel);
-        if (clearRequestIdMap) {
-          // clean up maps after last event has been written to file
-          requestIdToResponseIdMap.delete(requestId);
-        }
-      }
+    const notifyChannel = getEventNotificationChannel(resId);
+    sendToOpenWindows(notifyChannel);
+    if (clearRequestIdMap) {
+      // clean up maps after last event has been written to file
+      requestIdToResponseIdMap.delete(requestId);
     }
   });
 };
 
-const buildTimeline = (url: string) => {
+const buildTimeline = (url: string, path?: string) => {
   const timeline = [
-    { value: `Connected to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Connecting to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Handshake path: ${path || '/socket.io'}`, name: 'Text', timestamp: Date.now() },
     { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
   ];
   return timeline;
@@ -131,7 +147,9 @@ interface OpenSocketIORequestOptions {
   headers: RequestHeader[];
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
+  path?: string;
   initialPayload?: string;
+  suppressUserAgent?: boolean;
 }
 
 const getCertificates = async ({
@@ -144,14 +162,14 @@ const getCertificates = async ({
   requestId: string;
 }) => {
   // attach certificates to the request
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
   const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   // allow to read the file as it is chosen by user
   const caCertificate =
     (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
   const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
   const pemCertificates: string[] = [];
   const pemCertificateKeys: string[] = [];
@@ -166,7 +184,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+      pemCertificates.push(fs.readFileSync(cert, 'utf8'));
     }
 
     if (key) {
@@ -175,7 +193,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pemCertificateKeys.push(fs.readFileSync(key, 'utf-8'));
+      pemCertificateKeys.push(fs.readFileSync(key, 'utf8'));
     }
 
     if (pfx) {
@@ -184,7 +202,7 @@ const getCertificates = async ({
         ?.write(
           JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
         );
-      pfxCertificates.push(fs.readFileSync(pfx, 'utf-8'));
+      pfxCertificates.push(fs.readFileSync(pfx, 'utf8'));
     }
   });
 
@@ -211,7 +229,7 @@ const createErrorResponse = async (
   timelinePath: string,
   message: string,
 ) => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
@@ -220,8 +238,8 @@ const createErrorResponse = async (
     statusMessage: 'Error',
     error: message,
   };
-  const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const openSocketIOConnection = async (
@@ -236,7 +254,7 @@ const openSocketIOConnection = async (
     return;
   }
 
-  const request = await socketIORequest.getById(options.requestId);
+  const request = await services.socketIORequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
@@ -250,10 +268,10 @@ const openSocketIOConnection = async (
   requestIdToResponseIdMap.set(options.requestId, responseId);
 
   // fallback to base environment
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await services.environment.getOrCreateForParentId(options.workspaceId));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
@@ -261,7 +279,7 @@ const openSocketIOConnection = async (
     if (!options.url) {
       throw new Error('URL is required');
     }
-    const readyStateChannel = `socketIO.${request._id}.readyState`;
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
       acc: Record<string, string>,
@@ -270,9 +288,13 @@ const openSocketIOConnection = async (
     const headers = options.headers;
     const url = options.url;
 
+    const hasUserAgentHeader = headers.some(({ name }) => name?.toLowerCase() === 'user-agent');
     const lowerCasedEnabledHeaders = headers
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+    if (!options.suppressUserAgent && !request.disableUserAgentHeader && !hasUserAgentHeader) {
+      lowerCasedEnabledHeaders['user-agent'] = `insomnia/${version}`;
+    }
 
     // attach cookies to the request
     if (request.settingSendCookies && options.cookieJar.cookies.length) {
@@ -286,7 +308,7 @@ const openSocketIOConnection = async (
       url: options.url,
       requestId: options.requestId,
     });
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
 
     const socketIOoptions: Partial<ManagerOptions & SocketOptions> = {
       extraHeaders: lowerCasedEnabledHeaders,
@@ -310,14 +332,19 @@ const openSocketIOConnection = async (
       };
     }
 
+    if (options.path) {
+      socketIOoptions.path = options.path;
+    }
+
+    const timeline = buildTimeline(url, options.path);
+    timeline.forEach(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+
     const socket = SocketIOClient(url, socketIOoptions);
     SocketIOConnections.set(options.requestId, socket);
     const openedEvents = request.eventListeners.filter(event => event.isOpen && event.eventName);
 
     socket.on('connect', async () => {
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, socket.connected);
-      }
+      sendToOpenWindows(readyStateChannel, socket.connected);
 
       const openEvent: SocketIOpenEvent = {
         _id: uuidV4(),
@@ -338,8 +365,6 @@ const openSocketIOConnection = async (
         writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(infoEvent) + '\n' });
       }
 
-      const timeline = buildTimeline(url);
-      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<SocketIOResponse> = {
         _id: responseId,
         parentId: request._id,
@@ -350,8 +375,8 @@ const openSocketIOConnection = async (
         url: url,
       };
 
-      const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+      const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+      services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
     });
 
     const engine = socket.io.engine;
@@ -373,9 +398,7 @@ const openSocketIOConnection = async (
         timestamp: Date.now(),
       };
       deleteRequestMaps(request._id, reason, closeEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, socket.connected);
-      }
+      sendToOpenWindows(readyStateChannel, socket.connected);
     });
 
     socket.on('connect_error', error => {
@@ -564,7 +587,7 @@ const removeSocketIOListener = (options: { eventName: string; requestId: string 
 };
 
 const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[]> => {
-  const response = await models.socketIOResponse.getById(options.responseId);
+  const response = await services.socketIOResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }

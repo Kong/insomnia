@@ -1,9 +1,9 @@
+import type { RequestGroupMeta } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import type { RequestGroupMeta } from '~/models/request-group-meta';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId.update';
 
@@ -11,12 +11,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const { requestGroupId } = params;
   invariant(typeof requestGroupId === 'string', 'Request Group ID is required');
   const patch = (await request.json()) as Partial<RequestGroupMeta>;
-  const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
+  const requestGroupMeta = await services.requestGroupMeta.getByParentId(requestGroupId);
   if (requestGroupMeta) {
-    await models.requestGroupMeta.update(requestGroupMeta, patch);
+    await services.requestGroupMeta.update(requestGroupMeta, patch);
     return null;
   }
-  await models.requestGroupMeta.create({ parentId: requestGroupId, collapsed: Boolean(patch?.collapsed) });
+  await services.requestGroupMeta.create({ parentId: requestGroupId, collapsed: Boolean(patch?.collapsed) });
   return null;
 }
 

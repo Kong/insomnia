@@ -2,24 +2,23 @@ import type { BinaryToTextEncoding } from 'node:crypto';
 import crypto from 'node:crypto';
 import os from 'node:os';
 
-import { shell } from 'electron';
+import { app, clipboard, dialog, shell } from 'electron';
 import iconv from 'iconv-lite';
+import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
+
+import { jarFromCookies } from '~/common/cookies';
+import { type Plugin, type TemplateTag } from '~/common/plugins/types';
+import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '~/common/templating/types';
+import { getPluginCommonContext, getTemplateTags } from '~/plugins';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
-import * as models from '../models';
-import type { CloudProviderCredential } from '../models/cloud-credential';
-import type { Request as DBRequest } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import { readCurlResponse } from '../models/response';
-import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
-import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
-import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
+import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
@@ -65,6 +64,22 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
   return {};
 };
 
+// Run a resolved plugin template tag with a freshly-built common context. Shared by the bundle
+// and user-plugin execute handlers so both build context (incl. renderPurpose) identically.
+const runPluginTag = (
+  run: (context: any, ...args: any[]) => any,
+  body: {
+    args: any[];
+    pluginName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  },
+) => {
+  const { pluginName, args, context: originContext } = body;
+  const { meta, renderPurpose, context } = originContext;
+  const commonContext = getPluginCommonContext({ plugin: { name: pluginName }, renderPurpose });
+  return run({ meta, renderPurpose, context, ...commonContext }, ...args);
+};
+
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string }) => {
@@ -88,61 +103,69 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return crypto.createHash('md5').update(body.input).digest(body.encoding);
   },
   'request.getById': async (body: { id: string }) => {
-    return await models.request.getById(body.id);
+    return await services.request.getById(body.id);
   },
-  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: models.AllTypes[] }) => {
+  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: AllTypes[] }) => {
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
   },
   'workspace.getById': async (body: { id: string }) => {
-    return await models.workspace.getById(body.id);
+    return await services.workspace.getById(body.id);
   },
   'oAuth2Token.getByRequestId': async (body: { parentId: string }) => {
-    return await models.oAuth2Token.getByParentId(body.parentId);
+    return await services.oAuth2Token.getByParentId(body.parentId);
   },
   'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
-    return await models.cookieJar.getOrCreateForParentId(body.parentId);
+    return await services.cookieJar.getOrCreateForParentId(body.parentId);
+  },
+  'cookieJar.getCookiesForUrl': async (body: { parentId: string; url: string }) => {
+    const cookies = await services.cookieJar.getOrCreateForParentId(body.parentId);
+    const jar = jarFromCookies(cookies.cookies);
+    return jar.getCookiesSync(body.url).map(c => c.toJSON());
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
-    return await models.response.getLatestForRequestId(body.requestId, body.environmentId);
+    return await services.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
-  'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
-    return await models.response.getBodyBuffer(body.response, body.readFailureValue);
+  'response.getBodyBuffer': async (body: {
+    response?: { bodyPath?: string; bodyCompression?: any };
+    readFailureValue?: string;
+  }) => {
+    return await services.helpers.getResponseBodyBuffer(body.response, body.readFailureValue);
   },
   'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
-    const doc = await models.pluginData.getByKey(body.pluginName, body.key);
+    const doc = await services.pluginData.getByKey(body.pluginName, body.key);
     return doc !== null;
   },
   'pluginData.setItem': async (body: { pluginName: string; key: string; value: string }) => {
-    return models.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
+    return services.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
   },
   'pluginData.getItem': async (body: { pluginName: string; key: string }) => {
-    const doc = await models.pluginData.getByKey(body.pluginName, body.key);
+    const doc = await services.pluginData.getByKey(body.pluginName, body.key);
     return doc ? doc.value : null;
   },
   'pluginData.removeItem': async (body: { pluginName: string; key: string }) => {
-    return models.pluginData.removeByKey(body.pluginName, body.key);
+    return services.pluginData.removeByKey(body.pluginName, body.key);
   },
   'pluginData.clear': async (body: { pluginName: string }) => {
-    return models.pluginData.removeAll(body.pluginName);
+    return services.pluginData.removeAll(body.pluginName);
   },
   'pluginData.all': async (body: { pluginName: string }) => {
-    const docs = (await models.pluginData.all(body.pluginName)) || [];
+    const docs = (await services.pluginData.all(body.pluginName)) || [];
     return docs.map(d => ({
       value: d.value,
       key: d.key,
     }));
   },
   'cloudCredential.getById': async (body: { id: string }) => {
-    return await models.cloudCredential.getById(body.id);
+    return await services.cloudCredential.getById(body.id);
   },
   'cloudCredential.update': async (body: {
     originCredential: CloudProviderCredential;
     patch: Partial<CloudProviderCredential>;
   }) => {
-    return await models.cloudCredential.update(body.originCredential, body.patch);
+    return await services.cloudCredential.update(body.originCredential, body.patch);
   },
   'settings.get': async () => {
-    return await models.settings.get();
+    return await services.settings.get();
   },
   'openInBrowser': async (body: { url: string }) => {
     const { url } = body;
@@ -169,7 +192,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
       timelinePath,
       responseId,
     );
-    return await models.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
+    return await services.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
   },
   // use libcurl to send request without side effects(do not write to database about request and response)
   'network.sendRequestWithoutSideEffects': async (body: {
@@ -179,7 +202,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     };
   }) => {
     const requestId = uuidv4();
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
     const { request: originRequest, caCertficatePath = null } = body.options;
     const response = await curlRequest({
@@ -213,7 +236,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     if (!lastRedirect) {
       throw new Error('Error in response: the lastRedirect is not defined');
     }
-    const bodyResult = await readCurlResponse({
+    const bodyResult = await services.helpers.readCurlResponse({
       bodyPath: responseBodyPath,
       bodyCompression: patch.bodyCompression,
     });
@@ -267,19 +290,99 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     tagName: string;
     context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
   }) => {
-    const { tagName, pluginName, args, context: originContext } = body;
-    const { meta, renderPurpose, context } = originContext;
+    const { tagName, pluginName } = body;
     const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
     if (appBundlePluginNames.includes(pluginName)) {
       const module = getBundlePluginModule(pluginName);
       const templateTags = module?.templateTags || [];
       const targetTag = templateTags.find(tag => tag.name === tagName);
       if (targetTag) {
-        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
-        // @ts-expect-error -- TSCONVERSION: Bundle plugin tag context do not have node functions in utils
-        return targetTag.run({ meta, renderPurpose, context, ...commonContext }, ...args);
+        return runPluginTag(targetTag.run, body);
       }
     }
     throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
+  },
+  // generate the template tags for user-installed plugins and send back to the web worker.
+  // Bundle plugins are handled separately by `plugin.getBundlePluginTemplateTags`.
+  'plugin.getUserPluginTemplateTags': async () => {
+    const tags = await getTemplateTags();
+    // Bundle plugins have an empty `directory`; everything else is user-installed.
+    return tags
+      .filter(({ plugin }) => plugin.directory !== '')
+      .map(({ plugin, templateTag }) => ({
+        plugin: {
+          name: plugin.name,
+          description: plugin.description,
+          version: plugin.version,
+          directory: plugin.directory,
+          config: plugin.config,
+        },
+        templateTag,
+      }));
+  },
+  // execute a user-installed plugin tag with the given parameters, in the main process where
+  // Node built-ins (e.g. crypto) the plugin requires are available.
+  'plugin.executeUserPluginTag': async (body: {
+    args: any[];
+    pluginName: string;
+    tagName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  }) => {
+    const { tagName, pluginName } = body;
+    const tags = await getTemplateTags();
+    const targetTag = tags.find(t => t.plugin.name === pluginName && t.templateTag.name === tagName);
+    if (targetTag) {
+      return runPluginTag(targetTag.templateTag.run, body);
+    }
+    throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
+  },
+  // execute the plugin exported main action with the given parameters
+  'plugin.executeBundlePluginMainAction': async (body: {
+    pluginName: string;
+    actionName: string;
+    context?: Record<string, any>;
+    params?: Record<string, any>;
+  }) => {
+    const { pluginName, actionName, context, params } = body;
+    const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
+    if (appBundlePluginNames.includes(pluginName)) {
+      const module = getBundlePluginModule(pluginName);
+      const pluginActions = module?.unsafePluginMainActions || [];
+      const targetAction = pluginActions.find(action => action.name === actionName);
+      if (targetAction) {
+        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
+        return targetAction.action({ ...commonContext, ...context }, params);
+      }
+    }
+    throw new Error(`Unsupported action named ${actionName} for plugin ${pluginName}`);
+  },
+  'app.alert': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.dialog': async (body: { title: string; message?: string }) => {
+    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  },
+  'app.prompt': async (body: { title: string; options?: { label?: string; defaultValue?: string } }) => {
+    return requestPromptFromRenderer({
+      title: body.title,
+      label: body.options?.label ?? body.title,
+      defaultValue: body.options?.defaultValue ?? '',
+    });
+  },
+  'app.getPath': async (body: { name: string }) => {
+    return app.getPath(body.name as Parameters<typeof app.getPath>[0]);
+  },
+  'app.showSaveDialog': async (body: { options?: { defaultPath?: string } }) => {
+    const result = await dialog.showSaveDialog(body.options ?? {});
+    return result.canceled ? null : result.filePath;
+  },
+  'app.clipboard.readText': async () => {
+    return clipboard.readText();
+  },
+  'app.clipboard.writeText': async (body: { text: string }) => {
+    clipboard.writeText(body.text);
+  },
+  'app.clipboard.clear': async () => {
+    clipboard.clear();
   },
 };

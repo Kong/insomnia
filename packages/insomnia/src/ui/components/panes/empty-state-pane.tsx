@@ -16,11 +16,11 @@ export const EmptyStatePane: FC<{
       <div className="font-bold">{title}</div>
       {Boolean(secondaryAction) && (
         <>
-          <div className="bg-font max-w-500 mb-4 mt-4 h-1 w-full opacity-20" />
+          <div className="bg-font mt-4 mb-4 h-1 w-full max-w-500 opacity-20" />
           <div>{secondaryAction}</div>
         </>
       )}
-      <div className="mb-4 mt-8 flex flex-col flex-wrap items-center justify-end">
+      <div className="mt-8 mb-4 flex flex-col flex-wrap items-center justify-end">
         {documentationLinks.map(({ title, url }) => (
           <a key={title} href={url} className="text-font pointer-events-auto mt-4 flex font-normal">
             {title}

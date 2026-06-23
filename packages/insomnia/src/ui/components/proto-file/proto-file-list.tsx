@@ -1,8 +1,7 @@
+import type { ProtoDirectory, ProtoFile } from 'insomnia-data';
 import React, { type FunctionComponent } from 'react';
 import { Checkbox } from 'react-aria-components';
 
-import type { ProtoDirectory } from '../../../models/proto-directory';
-import type { ProtoFile } from '../../../models/proto-file';
 import { Button } from '../themed-button';
 
 export type SelectProtoFileHandler = (id: string) => void;
@@ -109,7 +108,6 @@ const recursiveRender = (
           <Button
             variant="text"
             title="Delete Proto File"
-            bg="danger"
             onClick={event => {
               event.stopPropagation();
               handleDelete(f);
@@ -136,7 +134,7 @@ const recursiveRender = (
 ];
 
 export const ProtoFileList: FunctionComponent<Props> = props => (
-  <ul className="divide-y divide-solid divide-[--hl]">
+  <ul className="divide-y divide-solid divide-(--hl)">
     {!props.protoDirectories.length && <li>No proto files exist for this workspace</li>}
     {props.protoDirectories.map(dir =>
       recursiveRender(

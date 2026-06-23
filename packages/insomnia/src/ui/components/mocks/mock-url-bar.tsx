@@ -1,17 +1,13 @@
-import React, { useRef, useState } from 'react';
+import { services } from 'insomnia-data';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
-import {
-  useMockRouteLoaderData,
-  useMockRoutePatcher,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import type { OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 
-import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
-import * as models from '../../../models';
-import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
+import { getMockServiceBinURL } from '../../../common/constants';
+import { useTimeoutWhen } from '../../hooks/use-timeout-when';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -20,23 +16,19 @@ import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { PromptModal } from '../modals/prompt-modal';
 
-export const MockUrlBar = ({
-  onPathUpdate,
-  onSend,
-}: {
-  onPathUpdate: (path: string) => void;
-  onSend: (path: string) => void;
-}) => {
+export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
   const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
-  const patchMockRoute = useMockRoutePatcher();
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);
-  const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
-  const inputRef = useRef<OneLineEditorHandle>(null);
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
-  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>();
+
+  useEffect(() => {
+    setPathInput(mockRoute.name);
+  }, [mockRoute.name]);
+
   const send = () => {
     setCurrentTimeout(undefined);
     onSend(pathInput);
@@ -44,16 +36,10 @@ export const MockUrlBar = ({
   reactUse.useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
   useDocBodyKeyboardShortcuts({
-    request_focusUrl: () => {
-      inputRef.current?.selectAll();
-    },
     request_send: () => {
       if (mockRoute.name) {
         send();
       }
-    },
-    request_toggleHttpMethodMenu: () => {
-      methodDropdownRef.current?.toggle();
     },
     request_showOptions: () => {
       dropdownRef.current?.toggle(true);
@@ -61,62 +47,41 @@ export const MockUrlBar = ({
   });
   const isCancellable = currentInterval || currentTimeout;
   return (
-    <div className="flex w-full justify-between self-stretch">
-      <Dropdown
-        ref={methodDropdownRef}
-        triggerButton={
-          <Button className="pad-right pad-left vertically-center hover:bg-[--color-surprise] focus:bg-[--color-surprise]">
-            <span className={`http-method-${mockRoute.method}`}>{mockRoute.method}</span>{' '}
-            <i className="fa fa-caret-down space-left" />
-          </Button>
-        }
-      >
-        {HTTP_METHODS.map(method => (
-          <DropdownItem key={method}>
-            <ItemContent
-              className={`http-method-${method}`}
-              label={method}
-              onClick={() => patchMockRoute(mockRoute._id, { method })}
-            />
-          </DropdownItem>
-        ))}
-      </Dropdown>
-      <div className="flex p-1">
-        <Button
-          className="rounded-sm bg-[--hl-sm] px-3"
-          onPress={() => {
-            showModal(AlertModal, {
-              title: 'Full URL',
-              message: getMockServiceBinURL(mockServer, pathInput),
-              onConfirm: () => window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput)),
-              addCancel: true,
-              okLabel: 'Copy',
-            });
-          }}
-        >
-          <Icon icon="eye" /> Show URL
-        </Button>
+    <div className="flex w-full items-center gap-2 self-stretch p-2">
+      <div className="shrink-0 rounded-xs bg-(--hl-xs) px-3 py-1">
+        <span className={`http-method-${mockRoute.method} text-sm font-medium`}>{mockRoute.method}</span>
+      </div>
+      <div className="flex flex-1 items-center rounded-sm border border-(--hl-sm) bg-(--color-bg) px-3 py-1">
+        <span className="flex-1 font-mono text-sm text-(--color-font)">{pathInput}</span>
       </div>
 
-      <div className="flex flex-1 items-center p-1">
-        <input
-          className="flex-1"
-          onBlur={() => onPathUpdate(pathInput)}
-          value={pathInput}
-          onChange={e => setPathInput(e.currentTarget.value)}
-        />
-      </div>
-      <div className="flex p-1">
+      <Button
+        className="shrink-0 rounded-xs bg-(--hl-sm) px-3 py-1 text-sm text-(--color-font) hover:bg-(--hl-xs) focus:bg-(--hl-xs)"
+        onPress={() => {
+          showModal(AlertModal, {
+            title: 'Full URL',
+            message: getMockServiceBinURL(mockServer, pathInput),
+            onConfirm: () => window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput)),
+            addCancel: true,
+            okLabel: 'Copy',
+          });
+        }}
+      >
+        <Icon icon="eye" /> Show URL
+      </Button>
+
+      <Button
+        className="shrink-0 rounded-xs bg-(--hl-sm) px-3 py-1 text-sm text-(--color-font) hover:bg-(--hl-xs) focus:bg-(--hl-xs)"
+        onPress={() => {
+          window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
+        }}
+      >
+        <Icon icon="copy" /> Copy
+      </Button>
+
+      <div className="flex shrink-0">
         <Button
-          className="rounded-sm bg-[--hl-sm] px-3 aria-pressed:bg-[--hl-xs] data-[pressed]:bg-[--hl-xs]"
-          onPress={() => {
-            window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
-          }}
-        >
-          <Icon icon="copy" />
-        </Button>
-        <Button
-          className="ml-1 rounded-l-sm bg-[--color-surprise] px-5 text-[--color-font-surprise] hover:bg-opacity-90 focus:bg-opacity-90"
+          className="ml-1 rounded-l-sm bg-(--color-surprise) px-5 text-(--color-font-surprise) hover:bg-(--color-surprise)/90 focus:bg-(--color-surprise)/90"
           onPress={() => {
             if (isCancellable) {
               setCurrentInterval(null);
@@ -136,7 +101,7 @@ export const MockUrlBar = ({
           closeOnSelect={false}
           triggerButton={
             <Button
-              className="rounded-r-sm bg-[--color-surprise] px-1 text-[--color-font-surprise]"
+              className="rounded-r-sm bg-(--color-surprise) px-1 text-(--color-font-surprise)"
               style={{
                 borderTopRightRadius: '0.125rem',
                 borderBottomRightRadius: '0.125rem',
@@ -160,7 +125,7 @@ export const MockUrlBar = ({
                 icon="code"
                 label="Generate Client Code"
                 onClick={async () => {
-                  const request = await models.request.getByParentId(mockRoute._id);
+                  const request = await services.request.getByParentId(mockRoute._id);
                   request &&
                     showModal(GenerateCodeModal, {
                       request: { ...request, url: getMockServiceBinURL(mockServer, pathInput) },

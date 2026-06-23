@@ -1,6 +1,7 @@
 import clone from 'clone';
 import { isValid } from 'date-fns';
-import React, { useState } from 'react';
+import type { Cookie, CookieJar } from 'insomnia-data';
+import React, { useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -18,15 +19,12 @@ import {
   TextField,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
-import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
 import { useUpdateCookieJarActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
-import { cookieToString } from '../../../common/cookies';
 import { fuzzyMatch } from '../../../common/misc';
-import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { PromptButton } from '../base/prompt-button';
@@ -35,7 +33,7 @@ import { RenderedText } from '../rendered-text';
 
 // Use tough-cookie MAX_DATE value
 // https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
-const MAX_TIME = 2147483647000;
+const MAX_TIME = 2_147_483_647_000;
 const ItemsPerPage = 5;
 
 export function chunkArray<T>(array: T[], chunkSize: number = ItemsPerPage): T[][] {
@@ -85,7 +83,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     for (const cookie of activeCookieJar?.cookies || []) {
       try {
         renderedCookies.push(await handleRender(cookie));
-      } catch (err) {
+      } catch {
         renderedCookies.push(cookie);
       }
     }
@@ -153,7 +151,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     const cookieJar = clone(activeCookieJar);
     const index = activeCookieJar.cookies.findIndex(c => c.id === cookie.id);
 
-    if (index < 0) {
+    if (index === -1) {
       console.warn(`Could not find cookie with id=${cookie.id} to edit`);
       return;
     }
@@ -167,10 +165,10 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
       isDismissable={true}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full justify-center bg-[--color-bg] py-[100px]"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-black/30 py-[100px]"
     >
-      <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
-        <Dialog className="relative outline-none">
+      <Modal className="max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
+        <Dialog className="relative outline-hidden" aria-label="Cookies Modal">
           {({ close }) => (
             <>
               {activeCookieJar && (
@@ -178,10 +176,10 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
                   <Heading slot="title" className="mb-[14px] text-[22px] leading-[34px]">
                     Manage Cookies
                   </Heading>
-                  <Button onPress={close} className="fa fa-times absolute right-0 top-0 text-xl" />
+                  <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
 
                   <div className="flex justify-between gap-4">
-                    <Group className="flex w-[50%] items-center gap-2 rounded bg-[--hl-xs] px-[8px] py-[4px]">
+                    <Group className="flex w-[50%] items-center gap-2 rounded-sm bg-(--hl-xs) px-[8px] py-[4px]">
                       <i className="fa fa-search" />
                       <TextField
                         value={filter}
@@ -199,13 +197,13 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
                     </Group>
                     <div className="flex items-end gap-4">
                       <Button
-                        className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+                        className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
                         onPress={handleAddCookie}
                       >
                         <Icon icon="plus" /> Add Cookie
                       </Button>
                       <PromptButton
-                        className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+                        className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
                         confirmMessage="Confirm"
                         onClick={handleDeleteAll}
                       >
@@ -216,7 +214,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
                   <hr className="my-[14px] border" />
                   {filteredCookies.length === 0 ? (
                     <div className="flex h-[200px] items-center justify-center">
-                      <p className="text-[12px] text-[--color-font]">
+                      <p className="text-[12px] text-(--color-font)">
                         {filter ? `No cookies match your search: "${filter}"` : 'No cookies found.'}
                       </p>
                     </div>
@@ -244,10 +242,10 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
                   )}
                 </div>
               )}
-              <div className="mt-[2rem] flex items-center justify-between gap-3">
+              <div className="mt-8 flex items-center justify-between gap-3">
                 <div className="text-[12px] italic">* cookies are automatically sent with relevant requests</div>
                 <Button
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   onPress={close}
                 >
                   Done
@@ -269,13 +267,27 @@ export interface CookieListProps {
 
 const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps) => {
   const [cookieToEdit, setCookieToEdit] = useState<Cookie | null>(null);
+  const [cookieStrings, setCookieStrings] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(
+      cookies.map(async cookie => ({ id: cookie.id, str: await window.main.cookies.toString(cookie).catch(() => '') })),
+    ).then(results => {
+      if (!cancelled) {
+        setCookieStrings(Object.fromEntries(results.map(({ id, str }) => [id, str])));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [cookies]);
 
   return (
     <>
       <ListBox aria-label="Cookies list" className="flex min-h-[200px] w-full flex-col">
         {cookies.map((cookie, index) => {
-          const cookieJSON = ToughCookie.fromJSON(cookie);
-          const cookieString = cookieJSON ? cookieToString(cookieJSON) : '';
+          const cookieString = cookieStrings[cookie.id] || '';
 
           if (cookie.expires && !isValid(new Date(cookie.expires))) {
             cookie.expires = null;
@@ -287,9 +299,9 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               id={cookie.id}
               data-testid={`cookie-test-iteration-${index}`}
               textValue={cookie.domain}
-              className="flex min-h-[40px] justify-between gap-2 rounded-sm px-2 py-1 leading-[36px] outline-none odd:bg-[--hl-xs]"
+              className="flex min-h-[40px] justify-between gap-2 rounded-xs px-2 py-1 leading-[36px] outline-hidden odd:bg-(--hl-xs)"
             >
-              <span className="flex min-w-[20%] items-center break-all leading-relaxed" data-testid="cookie-domain">
+              <span className="flex min-w-[20%] items-center leading-relaxed break-all" data-testid="cookie-domain">
                 <RenderedText>{cookie.domain || ''}</RenderedText>
               </span>
               <div className="flex w-[70%] items-center leading-relaxed">
@@ -299,13 +311,13 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               </div>
               <div className="flex min-w-[10%] items-center justify-end gap-1">
                 <Button
-                  className="flex min-w-[35px] items-center justify-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+                  className="flex min-w-[35px] items-center justify-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
                   onPress={() => setCookieToEdit(cookie)}
                 >
                   Edit
                 </Button>
                 <PromptButton
-                  className="flex min-w-[15px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+                  className="flex min-w-[15px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
                   confirmMessage=""
                   doneMessage=""
                   onClick={() => onCookieDelete(cookie.id)}
@@ -355,24 +367,24 @@ const PaginationBar = ({
 
   return (
     <div className="flex flex-col items-end">
-      <div className="flex h-[50px] w-full flex-shrink-0 items-center justify-between">
+      <div className="flex h-[50px] w-full shrink-0 items-center justify-between">
         <Button
           isDisabled={isPrevDisabled}
           aria-label="previous page"
           className="flex h-[25px] items-center justify-center gap-[5px] p-1"
           onPress={onPrevPress}
         >
-          <Icon icon="arrow-left" className="text h-[12px] w-[12px] text-[--color-font] disabled:text-[#00000080]" />
-          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+          <Icon icon="arrow-left" className="text h-[12px] w-[12px] text-(--color-font) disabled:text-[#00000080]" />
+          <p className="m-0 text-[12px] leading-[15px] font-normal text-(--color-font) capitalize disabled:text-[#00000080]">
             Previous
           </p>
         </Button>
         <div className="flex items-center gap-2">
-          <p className="m-0 text-[10px] font-normal leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+          <p className="m-0 text-[10px] leading-[15px] font-normal text-(--color-font) disabled:text-[#00000080]">
             {page}
           </p>
-          <p className="m-0 text-[10px] font-normal leading-[15px] text-[--color-font] disabled:text-[#00000080]">of</p>
-          <p className="m-0 text-[10px] font-normal leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+          <p className="m-0 text-[10px] leading-[15px] font-normal text-(--color-font) disabled:text-[#00000080]">of</p>
+          <p className="m-0 text-[10px] leading-[15px] font-normal text-(--color-font) disabled:text-[#00000080]">
             {totalPages}
           </p>
         </div>
@@ -382,10 +394,10 @@ const PaginationBar = ({
           className="flex h-[25px] items-center justify-center gap-[5px] p-1"
           onPress={onNextPress}
         >
-          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+          <p className="m-0 text-[12px] leading-[15px] font-normal text-(--color-font) capitalize disabled:text-[#00000080]">
             Next
           </p>
-          <Icon icon="arrow-right" className="h-[12px] w-[12px] text-[--color-font] disabled:text-[#00000080]" />
+          <Icon icon="arrow-right" className="h-[12px] w-[12px] text-(--color-font) disabled:text-[#00000080]" />
         </Button>
       </div>
     </div>
@@ -401,23 +413,18 @@ interface CookieModifyModalProps {
 
 const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: CookieModifyModalProps) => {
   const [editCookie, setEditCookie] = useState<Cookie>(cookie);
+  const [rawValue, setRawValue] = useState('');
+
+  useEffect(() => {
+    window.main.cookies
+      .toString(cookie)
+      .then(str => setRawValue(str))
+      .catch(() => setRawValue(''));
+  }, [cookie]);
 
   let localDateTime: string;
   if (editCookie && editCookie.expires && isValid(new Date(editCookie.expires))) {
     localDateTime = new Date(editCookie.expires).toISOString().slice(0, 16);
-  }
-
-  let rawDefaultValue;
-  if (!editCookie) {
-    rawDefaultValue = '';
-  } else {
-    try {
-      const c = ToughCookie.fromJSON(JSON.stringify(editCookie));
-      rawDefaultValue = c ? cookieToString(c) : '';
-    } catch (err) {
-      console.warn('Failed to parse cookie string', err);
-      rawDefaultValue = '';
-    }
   }
 
   return (
@@ -425,10 +432,10 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
       isDismissable={true}
       isOpen={isOpen}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full justify-center bg-[--color-bg] py-[100px]"
+      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-(--color-bg) py-[100px]"
     >
-      <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
-        <Dialog className="relative outline-none">
+      <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
+        <Dialog className="relative outline-hidden">
           {({ close }) => (
             <>
               {editCookie && (
@@ -437,21 +444,21 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                     <Heading slot="title" className="mb-[14px] text-[22px] leading-[34px]">
                       Manage Cookies
                     </Heading>
-                    <Button onPress={close} className="fa fa-times absolute right-0 top-0 text-xl" />
+                    <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
 
                     <Tabs aria-label="Cookie modify tabs" className="flex h-full w-full flex-1 flex-col">
                       <TabList
-                        className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                        className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
                         aria-label="Request pane tabs"
                       >
                         <Tab
-                          className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                          className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                           id="friendly"
                         >
                           Friendly
                         </Tab>
                         <Tab
-                          className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                          className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                           id="raw"
                         >
                           Raw
@@ -554,10 +561,12 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                             Raw Cookie String
                             <input
                               type="text"
-                              onChange={event => {
+                              value={rawValue}
+                              onChange={async event => {
+                                const str = event.target.value;
+                                setRawValue(str);
                                 try {
-                                  // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-                                  const parsed = ToughCookie.parse(event.target.value, { loose: true })?.toJSON();
+                                  const parsed = await window.main.cookies.parse(str);
                                   if (parsed) {
                                     // Make sure cookie has an id and keep its host-only-flag
                                     parsed.id = editCookie.id;
@@ -565,11 +574,9 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                                     setEditCookie(parsed as Cookie);
                                   }
                                 } catch (err) {
-                                  console.warn(`Failed to parse cookie string "${event.target.value}"`, err);
-                                  return;
+                                  console.warn(`Failed to parse cookie string "${str}"`, err);
                                 }
                               }}
-                              defaultValue={rawDefaultValue}
                             />
                           </label>
                         </div>
@@ -578,9 +585,9 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                   </div>
                 </>
               )}
-              <div className="mt-[2rem] flex items-center justify-end">
+              <div className="mt-8 flex items-center justify-end">
                 <Button
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   onPress={() => {
                     onUpdateCookie(editCookie as Cookie);
                     setIsOpen(false);

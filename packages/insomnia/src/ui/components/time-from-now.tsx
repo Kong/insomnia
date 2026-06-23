@@ -20,12 +20,7 @@ export function getTimeFromNow(timestamp: string | number | Date, titleCase: boo
   const date = new Date(timestamp);
   let text = formatDistanceToNowStrict(date, { addSuffix: true });
   const now = new Date();
-  let lessThanOneMinuteAgo;
-  if (now > date) {
-    lessThanOneMinuteAgo = differenceInMinutes(now, date) < 1;
-  } else {
-    lessThanOneMinuteAgo = differenceInMinutes(date, now) < 1;
-  }
+  const lessThanOneMinuteAgo = now > date ? differenceInMinutes(now, date) < 1 : differenceInMinutes(date, now) < 1;
   if (lessThanOneMinuteAgo) {
     text = 'just now';
   }
@@ -47,6 +42,16 @@ function useTimeNowLabel(timestamp: number | Date | string, titleCase?: boolean,
   );
 
   return text;
+}
+
+/**
+  Finds epoch's digit count and converts it to make it exactly 13 digits.
+  Which is the epoch millisecond representation. (trims last 2 digits)
+*/
+export function convertEpochToMilliseconds(epoch: number) {
+  epoch = Math.floor(epoch);
+  const expDigitCount = epoch.toString().length;
+  return Number.parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
 }
 
 export const TimeFromNow: FC<Props> = ({ className, timestamp, titleCase, title, intervalSeconds }) => {

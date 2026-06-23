@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-inso",
-  "version": "11.6.1",
+  "version": "12.5.1-alpha.0",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
@@ -32,32 +32,35 @@
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test:unit": "cross-env NO_COLOR=1 vitest run --exclude '**/cli.test.ts'",
+    "test:unit:color": "vitest run --exclude '**/cli.test.ts'",
     "test:bundle": "vitest cli.test.ts -t \"inso dev bundle\"",
     "test:binary": "vitest cli.test.ts -t \"inso packaged binary\"",
-    "type-check": "tsc --noEmit --project tsconfig.json",
+    "type-check": "tsc --project tsconfig.json",
     "build": "esr esbuild.ts",
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",
     "start": "ESBUILD_WATCH=true esr esbuild.ts",
     "prepackage": "npm run build:production && rm -rf binaries/inso",
-    "package": "npx -y @yao-pkg/pkg@6.3.2 . --output binaries/inso --targets host",
+    "package": "npx -y @yao-pkg/pkg@6.14.1 . --output binaries/inso --targets host",
     "postpackage": "node src/scripts/verify-pkg.js",
     "artifacts": "esr src/scripts/artifacts.ts"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "esbuild": "^0.25.10",
     "esbuild-runner": "^2.2.2",
     "shellwords": "^1.0.1"
   },
   "dependencies": {
     "@seald-io/nedb": "^4.1.1",
-    "@stoplight/spectral-core": "^1.20.0",
+    "@stoplight/spectral-core": "^1.22.0",
     "@stoplight/spectral-formats": "^1.8.2",
-    "@stoplight/spectral-ruleset-bundler": "1.6.3",
-    "@stoplight/spectral-rulesets": "^1.22.0",
+    "@stoplight/spectral-ruleset-bundler": "1.7.0",
+    "@stoplight/spectral-rulesets": "^1.22.1",
     "@stoplight/types": "^14.1.1",
     "commander": "^12.1.0",
-    "consola": "^2.15.3",
+    "consola": "^3.4.2",
+    "fast-string-width": "^3.0.2",
+    "is-unicode-supported": "^2.1.0",
     "cosmiconfig": "^9.0.0",
     "enquirer": "^2.4.1",
     "picocolors": "^1.1.1",
@@ -65,6 +68,6 @@
     "yaml": "^2.7.1"
   },
   "optionalDependencies": {
-    "@kong/insomnia-plugin-external-vault": "0.1.1-dev.0.20250902151320"
+    "@kong/insomnia-plugin-external-vault": "0.1.4-dev.20251224090833"
   }
 }

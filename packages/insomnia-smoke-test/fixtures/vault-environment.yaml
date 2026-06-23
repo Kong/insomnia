@@ -8,7 +8,7 @@ resources:
     parentId: proj_668d3ef4abb1456f9926ee9e0adee62b
     modified: 1735021392122
     created: 1735021392122
-    name: Global env with secret vault
+    name: Global env workspace with secret vault
     description: ""
     scope: environment
     _type: workspace

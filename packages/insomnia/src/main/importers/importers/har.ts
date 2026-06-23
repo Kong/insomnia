@@ -103,7 +103,7 @@ export const convert: Converter = rawData => {
     const data = JSON.parse(rawData);
     const requests = extractRequests(data);
     return requests.map(importRequest);
-  } catch (error) {
+  } catch {
     return null;
   }
 };

@@ -19,7 +19,7 @@ export const convert: Converter = rawData => {
 
   try {
     data = YAML.parse(rawData);
-  } catch (error) {
+  } catch {
     return null;
   }
 

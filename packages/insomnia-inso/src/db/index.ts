@@ -1,55 +1,11 @@
 import { stat } from 'node:fs/promises';
 
-import type { CaCertificate } from 'insomnia/src/models/ca-certificate';
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import type { CloudProviderCredential } from 'insomnia/src/models/cloud-credential';
-import type { CookieJar } from 'insomnia/src/models/cookie-jar';
-
-import { logger } from '../cli';
+import { logger } from '../logger';
 import gitAdapter from './adapters/git-adapter';
 import insomniaExportAdapter from './adapters/insomnia-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
-import type {
-  ApiSpec,
-  BaseModel,
-  Environment,
-  UnitTest,
-  UnitTestSuite,
-  Workspace,
-  WorkspaceMeta,
-} from './models/types';
-
-export interface Database {
-  ApiSpec: ApiSpec[];
-  Environment: Environment[];
-  Request: BaseModel[];
-  RequestGroup: BaseModel[];
-  Workspace: Workspace[];
-  WorkspaceMeta: WorkspaceMeta[];
-  UnitTestSuite: UnitTestSuite[];
-  UnitTest: UnitTest[];
-  ClientCertificate: ClientCertificate[];
-  CaCertificate: CaCertificate[];
-  CookieJar: CookieJar[];
-  CloudCredential: CloudProviderCredential[];
-}
-
-export const emptyDb = (): Database => ({
-  ApiSpec: [],
-  Environment: [],
-  Request: [],
-  RequestGroup: [],
-  Workspace: [],
-  WorkspaceMeta: [],
-  UnitTest: [],
-  UnitTestSuite: [],
-  ClientCertificate: [],
-  CaCertificate: [],
-  CookieJar: [],
-  CloudCredential: [],
-});
-
-export type DbAdapter = (dir: string, filterTypes?: (keyof Database)[]) => Promise<Database | null>;
+import type { Database } from './types';
+import { emptyDb } from './types';
 
 interface Options {
   pathToSearch: string;
@@ -59,7 +15,7 @@ interface Options {
 export const isFile = async (path: string) => {
   try {
     return (await stat(path)).isFile();
-  } catch (error) {
+  } catch {
     return false;
   }
 };

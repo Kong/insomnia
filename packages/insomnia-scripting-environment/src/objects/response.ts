@@ -1,8 +1,8 @@
 import { Ajv, type ErrorObject } from 'ajv';
 import * as chai from 'chai';
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
-import { readCurlResponse } from 'insomnia/src/models/response';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
+import { services } from 'insomnia-data';
 
 import { Cookie, type CookieOptions } from './cookies';
 import { CookieList } from './cookies';
@@ -60,7 +60,7 @@ export class Response extends Property {
     this.originalRequest = options.originalRequest;
     this.responseTime = options.responseTime;
     this.stream = options.stream;
-    this.status = options.reason || RESPONSE_CODE_REASONS[options.code]|| "";
+    this.status = options.reason || RESPONSE_CODE_REASONS[options.code] || '';
     this.bytesRead = options.bytesRead || 0;
   }
 
@@ -97,7 +97,7 @@ export class Response extends Property {
     const mimeInfo = {
       mimeType: 'application/octet-stream',
       mimeFormat: '', // TODO: it's definition is unknown
-      charset: 'utf-8',
+      charset: 'utf8',
     };
 
     const contentType = this.headers.find(header => header.key === 'Content-Type');
@@ -131,7 +131,7 @@ export class Response extends Property {
         if (dir.startsWith('filename')) {
           const fileName = (fileInfo.extension = dir.slice(dir.indexOf('=') + 1));
           fileInfo.name = fileName.slice(1, fileName.lastIndexOf('.')); // ignore '"' arounds the file name
-          fileInfo.extension = fileName.slice(fileName.lastIndexOf('.') + 1, fileName.length - 1);
+          fileInfo.extension = fileName.slice(fileName.lastIndexOf('.') + 1, -1);
         }
       });
     }
@@ -198,11 +198,11 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined | string = undefined;
+        let respBody: object | undefined | string;
 
         try {
           respBody = resp.body ? resp.json() : undefined;
-        } catch (e) {
+        } catch {
           respBody = resp.body;
         }
 
@@ -239,10 +239,10 @@ export class Response extends Property {
         const resp = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined | string = undefined;
+        let respBody: object | undefined | string;
         try {
           respBody = resp.body ? resp.json() : undefined;
-        } catch (e) {
+        } catch {
           respBody = resp.body;
         }
 
@@ -290,10 +290,10 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined = undefined;
+        let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
-        } catch (e) {
+        } catch {
           respBody = {};
         }
 
@@ -308,10 +308,10 @@ export class Response extends Property {
         const resp: Response = utils.flag(respAssertion, 'object');
         const negate: boolean = utils.flag(respAssertion, 'negate');
 
-        let respBody: object | undefined = undefined;
+        let respBody: object | undefined;
         try {
           respBody = resp.body ? resp.json() : {};
-        } catch (e) {
+        } catch {
           respBody = {};
         }
 
@@ -394,8 +394,7 @@ export async function readBodyFromPath(
   } else if (!response.bodyPath) {
     return '';
   }
-  const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
-  const readResponseResult = await nodejsReadCurlResponse({
+  const readResponseResult = await services.helpers.readCurlResponse({
     bodyPath: response.bodyPath,
     bodyCompression: response.bodyCompression,
   });

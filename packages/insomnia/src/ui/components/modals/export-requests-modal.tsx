@@ -1,22 +1,20 @@
 import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
+import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { requestGroup } from '../../../models';
-import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, type Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import {
   type Child,
   useWorkspaceLoaderFetcher,
   type WorkspaceLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { SegmentEvent } from '../../analytics';
+import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
+
+const { isRequest } = models.request;
 
 export interface Node {
   doc: Request | WebSocketRequest | GrpcRequest | RequestGroup | SocketIORequest;
@@ -57,10 +55,10 @@ export const RequestGroupRow: FC<{
           onChange={isSelected => handleSetItemSelected(requestGroup._id, isSelected)}
           className="group flex h-full items-center p-0"
         >
-          <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+          <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
             <Icon
               icon={isIndeterminate ? 'minus' : 'check'}
-              className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+              className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
             />
           </div>
         </Checkbox>
@@ -70,7 +68,7 @@ export const RequestGroupRow: FC<{
         >
           <Icon icon={isCollapsed ? 'folder' : 'folder-open'} />
           {requestGroup.name}
-          <span className="text-sm text-[--hl]">{totalRequests} requests</span>
+          <span className="text-sm text-(--hl)">{totalRequests} requests</span>
         </Button>
       </div>
 
@@ -95,43 +93,43 @@ export const RequestRow: FC<{
         }}
         className="group flex h-full items-center p-0"
       >
-        <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+        <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
           <Icon
             icon="check"
-            className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[selected]:opacity-100"
+            className="h-3 w-3 opacity-0 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
           />
         </div>
       </Checkbox>
       <div className="flex w-full items-center gap-2">
         {isRequest(request) && (
           <span
-            className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${
+            className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${
               {
-                GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-[--color-font-surprise]',
-                POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-[--color-font-success]',
-                HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
-                DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-[--color-font-danger]',
-                PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-[--color-font-warning]',
-                PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-[--color-font-notice]',
-              }[request.method] || 'bg-[--hl-md] text-[--color-font]'
+                GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-(--color-font-surprise)',
+                POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-(--color-font-success)',
+                HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-(--color-font-info)',
+                DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-(--color-font-danger)',
+                PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-(--color-font-warning)',
+                PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-(--color-font-notice)',
+              }[request.method] || 'bg-(--hl-md) text-(--color-font)'
             }`}
           >
             {getMethodShortHand(request)}
           </span>
         )}
-        {isWebSocketRequest(request) && (
-          <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
+        {models.webSocketRequest.isWebSocketRequest(request) && (
+          <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             WS
           </span>
         )}
-        {isGrpcRequest(request) && (
-          <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]">
+        {models.grpcRequest.isGrpcRequest(request) && (
+          <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
             gRPC
           </span>
         )}
-        {isSocketIORequest(request) && (
-          <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
+        {models.socketIORequest.isSocketIORequest(request) && (
+          <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
             IO
           </span>
         )}
@@ -151,7 +149,12 @@ export const Tree: FC<{
       return null;
     }
 
-    if (isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc)) {
+    if (
+      isRequest(node.doc) ||
+      models.grpcRequest.isGrpcRequest(node.doc) ||
+      models.webSocketRequest.isWebSocketRequest(node.doc) ||
+      models.socketIORequest.isSocketIORequest(node.doc)
+    ) {
       return (
         <RequestRow
           key={node.doc._id}
@@ -214,9 +217,9 @@ export const ExportRequestsModal = ({
     const createTreeNode = (child: Child): Node => {
       const docIsRequest =
         isRequest(child.doc) ||
-        isWebSocketRequest(child.doc) ||
-        isGrpcRequest(child.doc) ||
-        isSocketIORequest(child.doc);
+        models.grpcRequest.isGrpcRequest(child.doc) ||
+        models.webSocketRequest.isWebSocketRequest(child.doc) ||
+        models.socketIORequest.isSocketIORequest(child.doc);
       const children = child.children.map((child: Child) => createTreeNode(child));
       const totalRequests = +docIsRequest + children.reduce((acc, { totalRequests }) => acc + totalRequests, 0);
       return {
@@ -232,9 +235,9 @@ export const ExportRequestsModal = ({
     setState({
       treeRoot: {
         doc: {
-          ...requestGroup.init(),
+          ...models.requestGroup.init(),
           _id: 'all',
-          type: requestGroup.type,
+          type: models.requestGroup.type,
           name: 'All requests',
           parentId: '',
           modified: 0,
@@ -259,7 +262,10 @@ export const ExportRequestsModal = ({
 
   const getSelectedRequestIds = (node: Node): string[] => {
     const docIsRequest =
-      isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc);
+      isRequest(node.doc) ||
+      models.grpcRequest.isGrpcRequest(node.doc) ||
+      models.webSocketRequest.isWebSocketRequest(node.doc) ||
+      models.socketIORequest.isSocketIORequest(node.doc);
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }
@@ -304,15 +310,15 @@ export const ExportRequestsModal = ({
         !isOpen && onClose();
       }}
       isDismissable
-      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex max-h-full w-full max-w-4xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
+        className="flex max-h-full w-full max-w-4xl flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
       >
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex items-center justify-between gap-2">
@@ -320,13 +326,13 @@ export const ExportRequestsModal = ({
                   Export requests
                 </Heading>
                 <Button
-                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className="max-h-96 min-h-[20rem] w-full select-none overflow-y-auto rounded border border-solid border-[--hl-sm]">
+              <div className="max-h-96 min-h-80 w-full overflow-y-auto rounded-sm border border-solid border-(--hl-sm) select-none">
                 <Tree
                   root={state?.treeRoot}
                   handleSetRequestGroupCollapsed={(requestGroupId: string, isCollapsed: boolean) => {
@@ -341,18 +347,18 @@ export const ExportRequestsModal = ({
                   }}
                 />
               </div>
-              <div className="flex flex-1 flex-shrink-0 items-center justify-end gap-2">
+              <div className="flex flex-1 shrink-0 items-center justify-end gap-2">
                 <Button
                   onPress={close}
-                  className="flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
                 >
                   Cancel
                 </Button>
                 <Button
                   onPress={() => {
                     if (state?.treeRoot) {
-                      window.main.trackSegmentEvent({
-                        event: SegmentEvent.exportRequestsChosen,
+                      window.main.trackAnalyticsEvent({
+                        event: AnalyticsEvent.exportRequestsChosen,
                         properties: {
                           totalRequests: state.treeRoot.totalRequests,
                           exported_requests: state.treeRoot.selectedRequests,
@@ -363,7 +369,7 @@ export const ExportRequestsModal = ({
                     close();
                   }}
                   isDisabled={isExportDisabled}
-                  className="flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+                  className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                 >
                   <Icon icon="save" /> Export
                 </Button>

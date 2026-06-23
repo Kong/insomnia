@@ -1,4 +1,4 @@
-import type { BaseModel } from '../models';
+import type { BaseModel } from 'insomnia-data';
 
 export interface Team {
   id: string;
@@ -9,6 +9,19 @@ export interface BackendProject {
   id: string;
   name: string;
   rootDocumentId: string;
+}
+
+export interface BackendProjectWithTeams extends BackendProject {
+  teams: Team[];
+}
+
+export interface BackendProjectWithTeamsAndTeamProjectId extends BackendProject {
+  teams: Team[];
+  teamProjectId: string;
+}
+
+export interface BackendProjectWithTeam extends BackendProject {
+  team: Team;
 }
 
 export type DocumentKey = string;
@@ -106,6 +119,11 @@ export interface MergeConflict {
    * - "manual": The user manually edited and provided the final content in mergeResult.
    */
   resolutionSource?: ResolutionSource;
+}
+
+export interface AutoResolvedConflict {
+  filepath: string;
+  action: 'use-theirs' | 'delete';
 }
 
 export type Stage = Record<DocumentKey, StageEntry>;

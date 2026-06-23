@@ -1,6 +1,5 @@
-import { Cookie, CookieJar, type CookieJSON } from 'tough-cookie';
-
-import type { Cookie as CookieModel } from '../models/cookie-jar';
+import type { Cookie } from 'insomnia-data';
+import { Cookie as ToughCookie, CookieJar, type CookieJSON } from 'tough-cookie';
 
 /**
  * Get a list of cookie objects from a request.jar()
@@ -9,7 +8,7 @@ export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => {
   return new Promise(resolve => {
     cookieJar.store.getAllCookies((err, cookies) => {
       if (err) {
-        console.warn('Failed to get cookies form jar', err);
+        console.warn('Failed to get cookies from jar', err);
         resolve([]);
       } else {
         // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
@@ -22,13 +21,19 @@ export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => {
 /**
  * Get a request.jar() from a list of cookie objects
  */
-export const jarFromCookies = (cookies: Cookie[] | CookieModel[]) => {
+export const jarFromCookies = (cookies: Cookie[] | ToughCookie[]) => {
   let jar: CookieJar;
 
   try {
+    const sanitizedCookies = cookies.map(cookie => ({
+      ...cookie,
+      // TODO: null will make getCookiesSync unhappy
+      // probably it should be `undefined` when types of tough cookie is updated
+      expires: cookie.expires === null || cookie.expires === undefined ? 'Infinity' : cookie.expires,
+    }));
     // For some reason, fromJSON modifies `cookies`.
     // Create a copy first just to be sure.
-    const copy = JSON.stringify({ cookies });
+    const copy = JSON.stringify({ cookies: sanitizedCookies });
     jar = CookieJar.fromJSON(copy);
   } catch (error) {
     console.log('[cookies] Failed to initialize cookie jar', error);
@@ -41,10 +46,10 @@ export const jarFromCookies = (cookies: Cookie[] | CookieModel[]) => {
   return jar;
 };
 
-export const cookieToString = (cookie: Parameters<typeof Cookie.fromJSON>[0] | Cookie) => {
+export const cookieToString = (cookie: Parameters<typeof ToughCookie.fromJSON>[0] | ToughCookie) => {
   // Cookie can either be a plain JS object or Cookie instance
-  if (!(cookie instanceof Cookie)) {
-    cookie = Cookie.fromJSON(cookie) as Cookie;
+  if (!(cookie instanceof ToughCookie)) {
+    cookie = ToughCookie.fromJSON(cookie) as ToughCookie;
 
     if (cookie === null) {
       throw new Error(`Unable to read cookie: ${cookie}`);
@@ -54,8 +59,8 @@ export const cookieToString = (cookie: Parameters<typeof Cookie.fromJSON>[0] | C
 
   // tough-cookie toString() doesn't put domain on all the time.
   // This hack adds when tough-cookie won't
-  if ((cookie as Cookie).domain && (cookie as Cookie).hostOnly) {
-    str += `; Domain=${(cookie as Cookie).domain}`;
+  if ((cookie as ToughCookie).domain && (cookie as ToughCookie).hostOnly) {
+    str += `; Domain=${(cookie as ToughCookie).domain}`;
   }
 
   return str;

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { addDotGit } from '../utils';
+import { addDotGit, expiresAtFromOAuthExpiresIn } from '../utils';
 
 const links = {
   scp: {
@@ -34,5 +34,29 @@ describe('addDotGit', () => {
     expect(addDotGit(links.ssh.dotGit)).toEqual(links.ssh.dotGit);
     expect(addDotGit(links.http.dotGit)).toEqual(links.http.dotGit);
     expect(addDotGit(links.https.dotGit)).toEqual(links.https.dotGit);
+  });
+});
+
+describe('expiresAtFromOAuthExpiresIn', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('returns an absolute timestamp for valid positive seconds', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+
+    const expectedNow = Date.now();
+    expect(expiresAtFromOAuthExpiresIn(30)).toBe(expectedNow + 30 * 1000);
+    // Floors fractional values to whole seconds before conversion.
+    expect(expiresAtFromOAuthExpiresIn(1.9)).toBe(expectedNow + 1 * 1000);
+  });
+
+  it('returns undefined for invalid values', () => {
+    expect(expiresAtFromOAuthExpiresIn()).toBeUndefined();
+    expect(expiresAtFromOAuthExpiresIn(0)).toBeUndefined();
+    expect(expiresAtFromOAuthExpiresIn(-1)).toBeUndefined();
+    expect(expiresAtFromOAuthExpiresIn(Number.NaN)).toBeUndefined();
+    expect(expiresAtFromOAuthExpiresIn(Number.POSITIVE_INFINITY)).toBeUndefined();
   });
 });

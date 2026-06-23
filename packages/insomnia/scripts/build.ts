@@ -20,8 +20,8 @@ export const start = async () => {
 
   console.log(`[build] node: ${process.version}`.trim());
 
-  if (process.version.indexOf('v22.') !== 0) {
-    console.log('[build] Node 22.x.x is required to build');
+  if (process.version.indexOf('v24.') !== 0) {
+    console.log('[build] Node 24.x.x is required to build');
     process.exit(1);
   }
 
@@ -44,7 +44,21 @@ export const start = async () => {
   await copyFiles('../src/static', path.join(buildFolder, 'static'));
   await copyFiles('../src/icons', buildFolder);
   await copyFiles('../src/main/lint-process.mjs', path.join(buildFolder, 'main/lint-process.mjs'));
+  // copy utility process scripts
+  await copyFiles(
+    '../src/main/mock-generation-process.mjs',
+    path.join(buildFolder, 'main/mock-generation-process.mjs'),
+  );
+  await copyFiles(
+    '../src/main/git-commit-generation-process.mjs',
+    path.join(buildFolder, 'main/git-commit-generation-process.mjs'),
+  );
+  await copyFiles(
+    '../src/main/mcp-generate-sampling-response.mjs',
+    path.join(buildFolder, 'main/mcp-generate-sampling-response.mjs'),
+  );
   await copyFiles('../src/hidden-window.html', path.join(buildFolder, 'hidden-window.html'));
+  await copyFiles('../src/plugin-window.html', path.join(buildFolder, 'plugin-window.html'));
 
   console.log('[build] Complete!');
 };

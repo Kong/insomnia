@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Dialog, Modal as RACModal } from 'react-aria-components';
+import { Dialog, Modal as RACModal, ModalOverlay } from 'react-aria-components';
 
 export interface ModalProps {
   centered?: boolean;
@@ -19,6 +19,7 @@ export interface ModalProps {
   onHide?: () => void;
   children?: ReactNode;
   className?: string;
+  dataTestId?: string;
   maskClosable?: boolean;
   keyboardClosable?: boolean;
 }
@@ -35,6 +36,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
       centered,
       children,
       className,
+      dataTestId,
       onHide: onHideProp,
       onShow,
       skinny,
@@ -104,24 +106,28 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(
     }, [hide, open, maskClosable, keyboardClosable]);
 
     return open ? (
-      <RACModal
-        ref={containerRef}
+      <ModalOverlay
         isOpen={open}
-        isDismissable={keyboardClosable}
         onOpenChange={isOpen => {
           !isOpen && hide();
         }}
+        isDismissable={keyboardClosable}
+        className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-center justify-center bg-black/30"
       >
-        <Dialog aria-label="Modal" className={classes}>
-          <div
-            className="modal__backdrop overlay theme--transparent-overlay"
-            {...(maskClosable ? { 'data-close-modal': true } : {})}
-          />
-          <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
-            <div className="modal__content">{children}</div>
-          </div>
-        </Dialog>
-      </RACModal>
+        <RACModal ref={containerRef}>
+          <Dialog aria-label="Modal" className={classes}>
+            <div
+              className="modal__backdrop overlay theme--transparent-overlay"
+              {...(maskClosable ? { 'data-close-modal': true } : {})}
+            />
+            <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
+              <div className="modal__content" data-testid={dataTestId}>
+                {children}
+              </div>
+            </div>
+          </Dialog>
+        </RACModal>
+      </ModalOverlay>
     ) : null;
   },
 );

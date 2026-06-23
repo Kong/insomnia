@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import type { RunnerTestResult } from 'insomnia-data';
 import React, { type FC } from 'react';
 import {
   Cell,
@@ -12,7 +13,6 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 
-import type { RunnerTestResult } from '../../..//models/runner-test-result';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { getTimeAndUnit } from '../tags/time-tag';
@@ -56,7 +56,7 @@ export const RunnerResultHistoryPane: FC<Props> = ({
     const createdAt = format(runnerResult.created, 'yyyy-MM-dd HH:mm:ss');
 
     return (
-      <Row key={runnerResult._id} className="leading-9 hover:bg-[--hl-sm]" style={{ outline: 'none' }}>
+      <Row key={runnerResult._id} className="leading-9 hover:bg-(--hl-sm)" style={{ outline: 'none' }}>
         <Cell className="capitalize hover:underline">
           <div
             onClick={() => {
@@ -98,7 +98,7 @@ export const RunnerResultHistoryPane: FC<Props> = ({
 
   return (
     <>
-      <div className="mb-12 flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto">
+      <div className="mb-12 flex h-full flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto">
         <ResizableTableContainer className="mt-3">
           <Table aria-label="Results" selectionMode="multiple" className="w-full text-center">
             <TableHeader>

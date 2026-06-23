@@ -3,17 +3,16 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codemirror';
+import type { KeyCombination } from 'insomnia-data/common';
+import { isMac } from 'insomnia-data/common';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import * as reactUse from 'react-use';
 
-import { DEBOUNCE_MILLIS, isMac } from '~/common/constants';
+import { DEBOUNCE_MILLIS } from '~/common/constants';
 import * as misc from '~/common/misc';
-import type { KeyCombination } from '~/common/settings';
-import { getTemplateTags } from '~/plugins';
+import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/common/templating/types';
+import { extractNunjucksTagFromCoords } from '~/common/templating/utils';
 import { useRootLoaderData } from '~/root';
-import { getTagDefinitions } from '~/templating/index';
-import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '~/templating/types';
-import { extractNunjucksTagFromCoords } from '~/templating/utils';
 import { showModal } from '~/ui/components/modals';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
 import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
@@ -21,6 +20,8 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -118,7 +119,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         keyMap: getKeyMap(),
         extraKeys: CodeMirror.normalizeKeyMap({
           'Ctrl-Space': 'autocomplete',
-          [isMac() ? 'Cmd-F' : 'Ctrl-F']: () => {},
+          [isMac ? 'Cmd-F' : 'Ctrl-F']: () => {},
         }),
         gutters: [],
         mode: !handleRender
@@ -218,7 +219,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       codeMirror.current?.setValue(defaultValue || '');
       // Clear history so we can't undo the initial set
       codeMirror.current?.clearHistory();
-      // Setup nunjucks listeners
+      // Setup Liquid template listeners
       if (handleRender && !settings.nunjucksPowerUserMode) {
         codeMirror.current?.enableNunjucksTags(
           handleRender,
@@ -227,8 +228,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           id,
         );
       }
-      // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       defaultValue,
       getAutocompleteConstants,
@@ -243,7 +242,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       getKeyMap,
       settings.hotKeyRegistry,
       settings.nunjucksPowerUserMode,
-      settings.pluginsAllowElevatedAccess,
       settings.showVariableSourceAndValue,
       eventListeners,
       id,
@@ -301,6 +299,16 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }, DEBOUNCE_MILLIS);
       codeMirror.current?.on('changes', fn);
       return () => codeMirror.current?.off('changes', fn);
+    }, [onChange]);
+
+    useEffect(() => {
+      const flushOnBlur = (doc: CodeMirror.Editor) => {
+        if (onChange) {
+          onChange(doc.getValue() || '');
+        }
+      };
+      codeMirror.current?.on('blur', flushOnBlur);
+      return () => codeMirror.current?.off('blur', flushOnBlur);
     }, [onChange]);
 
     useEffect(() => {
@@ -379,17 +387,14 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             return;
           }
           event.preventDefault();
-          const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
-            // Skip unsupported objects like functions in template tag to send in IPC
-            templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
-          }));
+          const pluginTemplateTags = await plugins.getTemplateTags();
           const target = event.target as HTMLElement;
-          // right click on nunjucks tag
+          // right click on Liquid template tag
           if (target?.classList?.contains('nunjucks-tag')) {
             const { clientX, clientY } = event;
             const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
             if (nunjucksTag) {
-              // show context menu for nunjucks tag
+              // show context menu for Liquid template tag
               window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
             }
           } else {

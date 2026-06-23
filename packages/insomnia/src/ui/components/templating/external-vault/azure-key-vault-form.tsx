@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-import type { NunjucksParsedTag } from '../../../../templating/types';
+import type { NunjucksParsedTag } from '~/common/templating/types';
+
 import { HelpTooltip } from '../../help-tooltip';
 import type { AzureSecretConfig } from './types';
 
@@ -49,7 +50,7 @@ export const AzureKeyVaultForm = (props: AzureKeyVaultFormProps) => {
               }}
             />
             {!isValidIdentifier && (
-              <p className="notice error mt-[--padding-md] w-full" style={{ marginBottom: 0 }}>
+              <p className="notice error mt-(--padding-md) w-full" style={{ marginBottom: 0 }}>
                 Invalid Secret Identifier, please check and input again.
               </p>
             )}

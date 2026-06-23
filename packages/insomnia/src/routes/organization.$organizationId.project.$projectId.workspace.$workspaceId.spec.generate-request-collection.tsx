@@ -1,40 +1,37 @@
-import path from 'node:path';
-
 import type { IRuleResult } from '@stoplight/spectral-core';
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
-import * as models from '~/models';
-import { isGitProject } from '~/models/project';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const apiSpec = await services.apiSpec.getByParentId(workspaceId);
   invariant(apiSpec, 'No API Specification was found');
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
 
   invariant(workspace, 'Workspace not found');
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-
   const isLintError = (result: IRuleResult) => result.severity === 0;
 
-  const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const projectLintRuleset = await services.projectLintRuleset.getByParentId(projectId);
+  const rulesetContent = projectLintRuleset?.rulesetContent ?? '';
 
-  const rulesetPath = gitRepositoryId
-    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
-    : '';
-
-  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  const { diagnostics, error } = await window.main.lintSpec({
+    documentContent: apiSpec.contents,
+    projectId,
+    rulesetContent,
+  });
   if (error) {
     throw error;
   }
@@ -43,7 +40,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     throw new Error('Error Generating Configuration');
   }
 
-  await scanResources([
+  const scannedResources = await scanResources([
     {
       contentStr: apiSpec.contents,
     },
@@ -51,6 +48,13 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   await importResourcesToWorkspace({
     workspaceId,
+  });
+
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.generateCollection,
+    properties: {
+      count_requests: scannedResources.map(r => r.requests?.length ?? 0).reduce((a, b) => a + b, 0),
+    },
   });
 
   return redirect(

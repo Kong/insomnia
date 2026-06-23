@@ -1,10 +1,10 @@
+import type { UnitTest } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import * as models from '~/models';
-import type { UnitTest } from '~/models/unit-test';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.update';
 
@@ -17,7 +17,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   });
   invariant(unitTest, 'Test not found');
 
-  await models.unitTest.update(unitTest, data);
+  await services.unitTest.update(unitTest, data);
 
   return null;
 }

@@ -1,5 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC, useEffect, useState } from 'react';
+import type { GitRepository } from 'insomnia-data';
+import { type FC, useEffect, useState } from 'react';
 import {
   Button,
   Collection,
@@ -20,9 +21,8 @@ import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
+import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
 
-import type { GitRepository } from '../../../models/git-repository';
-import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
@@ -35,7 +35,7 @@ import { GitStagingModal } from '../modals/git-staging-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
 
 interface Props {
-  gitRepository: GitRepository | null;
+  gitRepository: GitRepository;
   isInsomniaSyncEnabled: boolean;
   showDeprecatedWarning: boolean;
 }
@@ -217,6 +217,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                             projectId,
                             workspaceId,
                             handledMergeConflicts: conflicts,
+                            autoResolvedConflicts: result.autoResolvedConflicts,
                             commitMessage: result.commitMessage,
                             commitParent: result.commitParent,
                           })
@@ -379,8 +380,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   return (
     <>
       {showDeprecatedWarning && (
-        <div className="p-[--padding-sm]">
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-xs] text-[--color-font-warning]">
+        <div className="p-(--padding-sm)">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-(--color-warning)/50 p-(--padding-xs) text-(--color-font-warning)">
             <p className="text-sm">
               <Icon icon="exclamation-triangle" className="mr-2" />
               You are using the legacy Git integration in this project, learn more about converting to the new Git Sync
@@ -396,17 +397,17 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         </div>
       )}
       <MenuTrigger>
-        <div className="flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+        <div className="flex h-(--line-height-sm) w-full items-center text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
           <Button
             data-testid="git-dropdown"
             aria-label="Git Sync"
-            className="flex h-full flex-1 items-center gap-2 truncate px-[--padding-md]"
+            className="flex h-full flex-1 items-center gap-2 truncate px-(--padding-md)"
           >
             <Icon icon={isLoading ? 'refresh' : iconClassName} className={`w-5 ${isLoading ? 'animate-spin' : ''}`} />
             <span className="truncate">{isSynced ? currentBranch : 'Not synced'}</span>
           </Button>
           <TooltipTrigger>
-            <Button className={`h-full px-[--padding-md] ${status?.localChanges ? 'text-[--color-warning]' : ''}`}>
+            <Button className={`h-full px-(--padding-md) ${status?.localChanges ? 'text-(--color-warning)' : ''}`}>
               <Icon
                 icon={loadingStatus ? 'refresh' : 'cube'}
                 className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : ''}`}
@@ -415,13 +416,13 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
             <Tooltip
               placement="top end"
               offset={8}
-              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+              className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
             >
               {commitToolTipMsg}
             </Tooltip>
           </TooltipTrigger>
         </div>
-        <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
+        <Popover className="max-w-lg min-w-max overflow-hidden" placement="top end" offset={8}>
           <Menu
             aria-label="Git Sync Menu"
             selectionMode="single"
@@ -430,19 +431,19 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
               const item = allSyncMenuActionList.find(item => item.id === key);
               item?.action();
             }}
-            className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+            className="max-h-[85vh] max-w-lg overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
           >
-            <MenuSection className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
+            <MenuSection className="border-b border-solid border-(--hl-sm) pb-2 empty:border-none empty:pb-0">
               <Collection items={switchToInsomniaSyncList}>
                 {item => (
                   <MenuItem
                     textValue={item.label}
                     className={
-                      'text-md group flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
+                      'group flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                     }
                     aria-label={item.label}
                   >
-                    <div className="group-pressed:opacity-80 flex w-full items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-1 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] group-hover:bg-opacity-80 group-hover:ring-inset group-focus:bg-opacity-80 group-focus:ring-inset aria-pressed:opacity-80">
+                    <div className="group-pressed:opacity-80 flex w-full items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all group-hover:bg-(--color-surprise)/80 group-hover:ring-inset group-focus:bg-(--color-surprise)/80 group-focus:ring-inset hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80">
                       <Icon icon={item.icon} />
                       <div>{item.label}</div>
                     </div>
@@ -450,12 +451,12 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 )}
               </Collection>
             </MenuSection>
-            <MenuSection className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
+            <MenuSection className="border-b border-solid border-(--hl-sm) pb-2 empty:border-none empty:pb-0">
               <Collection items={gitSyncActions}>
                 {item => (
                   <MenuItem
                     className={
-                      'text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
+                      'flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                     }
                     aria-label={item.label}
                   >
@@ -465,14 +466,14 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 )}
               </Collection>
             </MenuSection>
-            <MenuSection className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
+            <MenuSection className="border-b border-solid border-(--hl-sm) pb-2 empty:border-none empty:pb-0">
               <Collection items={branchesActionList}>
                 {item => (
                   <MenuItem
-                    className={`text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
+                    className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
                     aria-label={item.label}
                   >
-                    <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
+                    <Icon icon={item.icon} className={item.isActive ? 'text-(--color-success)' : ''} />
                     <span className="truncate">{item.label}</span>
                   </MenuItem>
                 )}
@@ -483,7 +484,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 {item => (
                   <MenuItem
                     className={
-                      'text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
+                      'flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                     }
                     aria-label={item.label}
                   >
@@ -497,10 +498,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         </Popover>
       </MenuTrigger>
       {isGitRepoSettingsModalOpen && (
-        <GitRepositorySettingsModal
-          gitRepository={gitRepository ?? undefined}
-          onHide={() => setIsGitRepoSettingsModalOpen(false)}
-        />
+        <GitRepositorySettingsModal gitRepository={gitRepository} onHide={() => setIsGitRepoSettingsModalOpen(false)} />
       )}
       {isGitBranchesModalOpen && gitRepository && (
         <GitBranchesModal

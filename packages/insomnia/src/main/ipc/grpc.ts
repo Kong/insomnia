@@ -27,13 +27,14 @@ import type {
 import * as protoLoader from '@grpc/proto-loader';
 import electron, { type IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
+import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from 'insomnia-data';
+import { services } from 'insomnia-data';
+
+import { invariant } from '~/common/utils/invariant';
 
 import { version } from '../../../package.json';
-import * as models from '../../models';
-import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '../../models/grpc-request';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
-import { writeProtoFile } from '../../network/grpc/write-proto-file';
-import { invariant } from '../../utils/invariant';
+import { writeProtoFile } from '../../network/grpc/write-proto-file.node';
 import { mockRequestMethods } from './automock';
 import { ipcMainHandle, ipcMainOn } from './electron';
 
@@ -60,16 +61,8 @@ export interface gRPCBridgeAPI {
   loadMethods: typeof loadMethods;
   loadMethodsFromReflection: typeof loadMethodsFromReflection;
   closeAll: typeof closeAll;
-}
-
-export function registergRPCHandlers() {
-  ipcMainOn('grpc.start', start);
-  ipcMainOn('grpc.sendMessage', sendMessage);
-  ipcMainOn('grpc.commit', (_, requestId) => commit(requestId));
-  ipcMainOn('grpc.cancel', (_, requestId) => cancel(requestId));
-  ipcMainOn('grpc.closeAll', closeAll);
-  ipcMainHandle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
-  ipcMainHandle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
+  writeProtoFile: (protoFileId: string) => Promise<{ filePath: string; dirs: string[] }>;
+  validateProtoFile: (filePath: string) => Promise<void>;
 }
 
 const grpcOptions = {
@@ -79,6 +72,34 @@ const grpcOptions = {
   defaults: true,
   oneofs: true,
 };
+
+export const writeProtoFileById = async (protoFileId: string): Promise<{ filePath: string; dirs: string[] }> => {
+  const protoFile = await services.protoFile.getById(protoFileId);
+  invariant(protoFile, `Proto file ${protoFileId} not found`);
+  const result = await writeProtoFile(protoFile);
+  await protoLoader.load(result.filePath, {
+    ...grpcOptions,
+    includeDirs: result.dirs,
+  });
+  return result;
+};
+
+export const validateProtoFileByPath = async (filePath: string): Promise<void> => {
+  await protoLoader.load(filePath, grpcOptions);
+};
+
+export function registergRPCHandlers() {
+  ipcMainOn('grpc.start', start);
+  ipcMainOn('grpc.sendMessage', sendMessage);
+  ipcMainOn('grpc.commit', (_, requestId) => commit(requestId));
+  ipcMainOn('grpc.cancel', (_, requestId) => cancel(requestId));
+  ipcMainOn('grpc.closeAll', closeAll);
+  ipcMainHandle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
+  ipcMainHandle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
+  ipcMainHandle('grpc.writeProtoFile', (_, protoFileId: string) => writeProtoFileById(protoFileId));
+  ipcMainHandle('grpc.validateProtoFile', (_, filePath: string) => validateProtoFileByPath(filePath));
+}
+
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
   const definition = await protoLoader.load(filePath, {
     ...grpcOptions,
@@ -87,7 +108,7 @@ const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]):
   return getMethodsFromPackageDefinition(definition);
 };
 const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
-  const protoFile = await models.protoFile.getById(protoFileId);
+  const protoFile = await services.protoFile.getById(protoFileId);
   invariant(protoFile, `Proto file ${protoFileId} not found`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
   const methods = await loadMethodsFromFilePath(filePath, dirs);
@@ -106,7 +127,10 @@ interface MethodDefs {
   example?: Record<string, any>;
 }
 
-const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflectionApi']): Promise<MethodDefs[]> => {
+const getMethodsFromReflectionServer = async (
+  reflectionApi: GrpcRequest['reflectionApi'],
+  disableUserAgentHeader: boolean,
+): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
   const GetFileDescriptorSetRequest = proto3.makeMessageType('buf.reflect.v1beta1.GetFileDescriptorSetRequest', () => [
     { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
@@ -149,7 +173,7 @@ const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflec
   });
   const client = createPromiseClient(FileDescriptorSetService, transport);
   const headers: HeadersInit = {
-    'User-Agent': `insomnia/${version}`,
+    ...(disableUserAgentHeader ? {} : { 'User-Agent': `insomnia/${version}` }),
     ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
   };
   try {
@@ -199,12 +223,13 @@ const getMethodsFromReflection = async (
   metadata: GrpcRequestHeader[],
   rejectUnauthorized: boolean,
   reflectionApi: GrpcRequest['reflectionApi'],
+  disableUserAgentHeader: boolean,
   clientCert?: string,
   clientKey?: string,
   caCertificate?: string,
 ): Promise<MethodDefs[]> => {
   if (reflectionApi.enabled) {
-    return getMethodsFromReflectionServer(reflectionApi);
+    return getMethodsFromReflectionServer(reflectionApi, disableUserAgentHeader);
   }
   const { url, path } = parseGrpcUrl(host);
   const client = new grpcReflection.Client(
@@ -252,6 +277,7 @@ export const loadMethodsFromReflection = async (options: {
   metadata: GrpcRequestHeader[];
   rejectUnauthorized: boolean;
   reflectionApi: GrpcRequest['reflectionApi'];
+  disableUserAgentHeader?: boolean;
   clientCert?: string;
   clientKey?: string;
   caCertificate?: string;
@@ -262,6 +288,7 @@ export const loadMethodsFromReflection = async (options: {
     options.metadata,
     options.rejectUnauthorized,
     options.reflectionApi,
+    options.disableUserAgentHeader ?? false,
     options.clientCert,
     options.clientKey,
     options.caCertificate,
@@ -297,19 +324,20 @@ export const getSelectedMethod = async (
   ipcParams: GrpcIpcRequestParams,
 ): Promise<MethodDefs | undefined> => {
   if (request.protoFileId) {
-    const protoFile = await models.protoFile.getById(request.protoFileId);
+    const protoFile = await services.protoFile.getById(request.protoFileId);
     invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
     const { filePath, dirs } = await writeProtoFile(protoFile);
     const methods = await loadMethodsFromFilePath(filePath, dirs);
     invariant(methods, 'No methods found');
     return methods.find(c => c.path === request.protoMethodName);
   }
-  const settings = await models.settings.getOrCreate();
+  const settings = await services.settings.getOrCreate();
   const methods = await getMethodsFromReflection(
     request.url,
     request.metadata,
     settings.validateSSL,
     request.reflectionApi,
+    request.disableUserAgentHeader ?? false,
     ipcParams.clientCert,
     ipcParams.clientKey,
     ipcParams.caCertificate,
@@ -390,7 +418,7 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
 
       if (!url) {
         event.reply('grpc.error', request._id, new Error('URL not specified'));
-        return undefined;
+        return;
       }
       // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
       const Client = makeGenericClientConstructor({});
@@ -453,7 +481,7 @@ export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
           throw new Error(`Unsupported method type: ${methodType}`);
         }
         // Update request stats
-        models.stats.incrementExecutedRequests();
+        services.stats.incrementExecutedRequests();
         event.reply('grpc.start', request._id);
       } catch (error) {
         // TODO: How do we want to handle this case, where the message cannot be parsed?

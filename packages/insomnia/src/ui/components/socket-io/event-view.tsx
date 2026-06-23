@@ -1,8 +1,8 @@
+import { services } from 'insomnia-data';
 import React, { type FC } from 'react';
 
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
 import type { SocketIOEvent, SocketIOMessageEvent } from '../../../main/network/socket-io';
-import * as models from '../../../models';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -16,12 +16,21 @@ interface Props<T> {
 
 export const MessageEventView: FC<Props<SocketIOMessageEvent>> = ({ event }) => {
   const stringify = (raw: any) => {
-    try {
-      const parsed = JSON.parse(raw);
-      return JSON.stringify(parsed, null, '\t');
-    } catch (err) {
-      return raw;
+    // If raw is already an object or array, stringify it directly
+    if (typeof raw === 'object' && raw !== null) {
+      return JSON.stringify(raw, null, '\t');
     }
+    // If raw is a string, try to parse and re-stringify for formatting
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return JSON.stringify(parsed, null, '\t');
+      } catch {
+        return raw;
+      }
+    }
+    // For primitives (number, boolean, etc.), convert to string
+    return String(raw);
   };
   const args = event.data.map((item, index) => ({
     id: index.toString(),
@@ -41,7 +50,7 @@ export const MessageEventView: FC<Props<SocketIOMessageEvent>> = ({ event }) => 
     }
     const requestId = activeResponse.parentId;
     await patchRequestMeta(requestId, { responseFilter });
-    const meta = await models.requestMeta.getByParentId(requestId);
+    const meta = await services.requestMeta.getByParentId(requestId);
     if (!meta) {
       return;
     }

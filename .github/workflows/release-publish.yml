@@ -6,7 +6,7 @@ on:
     inputs:
       version:
         required: true
-        description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
+        description: Release version (e.g. 12.5.0)
 
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
@@ -15,13 +15,15 @@ env:
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   ARTIFACTS_VERIFY_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts_verify
-  INSO_DOCKER_IMAGE: &INSO_DOCKER_IMAGE "kong/inso" # By default, registry is docker.io
-  NOTARY_REPOSITORY: &NOTARY_REPOSITORY "kong/notary" # All signatures will be pushed to public notary repository
+  INSO_DOCKER_IMAGE: &INSO_DOCKER_IMAGE 'kong/inso' # By default, registry is docker.io
+  NOTARY_REPOSITORY: &NOTARY_REPOSITORY 'kong/notary' # All signatures will be pushed to public notary repository
+
+permissions: {}
 
 jobs:
   publish:
     timeout-minutes: 30
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       NOTARY_REPOSITORY: ${{ env.NOTARY_REPOSITORY }}
       INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE: ${{ steps.cli_binary_hashes.outputs.handle }}
@@ -35,29 +37,49 @@ jobs:
       contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       packages: write
     steps:
+      - name: Calculate Release Branch
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
+
+          # Rewrite the release branch to follow our new flow
+          echo "RELEASE_BRANCH=release/$MAJOR_MINOR" >> $GITHUB_ENV
+
       - name: Checkout branch # Check out the release branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
+          node-version-file: '.nvmrc'
+          cache: 'npm'
           cache-dependency-path: package-lock.json
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@kong"
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
 
       - name: Install packages
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+      - name: Compare input version with package.json version
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          PKG_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "Input version $VERSION does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
 
       - name: Download all artifacts from release-build.yml
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
+        uses: dawidd6/action-download-artifact@8305c0f1062bb0d184d09ef4493ecb9288447732 # v20
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: release-build.yml
@@ -74,30 +96,30 @@ jobs:
           echo "ELECTRON_ARTIFACT_BASE64_FILE=${{env.ELECTRON_ARTIFACT_BASE64_FILE}}" >> $GITHUB_ENV
           ./.github/scripts/generate-binary-digest.sh
         env:
-          ARTIFACT_PATH: "${{ env.ARTIFACTS_DOWNLOAD_PATH }}"
+          ARTIFACT_PATH: '${{ env.ARTIFACTS_DOWNLOAD_PATH }}'
           CLI_ARTIFACT_SHAFILE: ${{runner.temp}}/cli.sha256
           ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
           CLI_ARTIFACT_BASE64_FILE: ${{runner.temp}}/cli_digests_file.text
           ELECTRON_ARTIFACT_BASE64_FILE: ${{runner.temp}}/electron_digests_file.text
 
       - name: Calculate CLI Binary base64 file handle
-        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
+        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.1.0
         id: cli_binary_hashes
         with:
           path: ${{ env.CLI_ARTIFACT_BASE64_FILE }}
 
       - name: Calculate Electron Binary base64 file handle
-        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
+        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.1.0
         id: electron_binary_hashes
         with:
           path: ${{ env.ELECTRON_ARTIFACT_BASE64_FILE }}
 
       - name: Create Tag and Release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         id: core_tag_and_release
         with:
           tag: ${{ env.RELEASE_CORE_TAG }}
-          name: "${{ env.RELEASE_VERSION }} 📦"
+          name: '${{ env.RELEASE_VERSION }} 📦'
           generateReleaseNotes: true
           commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
@@ -106,28 +128,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts to release
-        uses: xresloader/upload-to-github-release@d29300fdff9f0fcd7c3eb960c490b2a6640fbf50 # v1
+        uses: xresloader/upload-to-github-release@7c5757a90c0bcf0c0e1741da8f2abd7b85e675d0 # v1.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
+          file: './artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json'
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
           overwrite: true
 
       - name: Upload sourcemaps to Sentry
         env:
-          SENTRY_AUTH_TOKEN: "${{ secrets.SENTRY_AUTH_TOKEN }}"
-          SENTRY_ORG: "${{ secrets.SENTRY_ORG }}"
-          SENTRY_PROJECT: "${{ secrets.SENTRY_PROJECT }}"
+          SENTRY_AUTH_TOKEN: '${{ secrets.SENTRY_AUTH_TOKEN }}'
+          SENTRY_ORG: '${{ secrets.SENTRY_ORG }}'
+          SENTRY_PROJECT: '${{ secrets.SENTRY_PROJECT }}'
         run: |
           curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
 
           sentry-cli releases new ${{ env.RELEASE_VERSION }}
           sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
-          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
+          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/macOS-X64-sentry
 
       # TODO: also take care of aarch64 image
       - name: Load the Inso CLI Docker Archive
@@ -136,14 +158,14 @@ jobs:
           docker image ls
 
       - name: Login to Docker Hub
-        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.1.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ secrets.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Docker meta for Inso CLI Docker Image
         id: inso_docker_meta
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
         with:
           images: ${{ env.INSO_DOCKER_IMAGE }}
           tags: |
@@ -151,7 +173,7 @@ jobs:
             type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
             type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
             type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
-          sep-tags: ","
+          sep-tags: ','
 
       - name: Push Inso CLI docker image tags to Docker Hub
         run: |
@@ -225,13 +247,15 @@ jobs:
 
       - name: Upload x64 Linux snap to snapcraft (beta and stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
-        uses: canonical/action-publish@214b86e5ca036ead1668c79afb81e550e6c54d40 # v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
-        with:
-          # TODO-ARM64: Replace to *-amd64.snap when we have ARM64 build from insomnia-ee
-          snap: artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
-          release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+          SNAP_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+        # TODO-ARM64: Replace to *-amd64.snap when we have ARM64 build from insomnia-ee
+        run: |
+          sudo snap install snapcraft --classic
+          snapcraft upload \
+            --release="$SNAP_CHANNEL" \
+            "artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap"
 
       # TODO: also release for aarch64 Linux?
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
@@ -243,7 +267,7 @@ jobs:
           PULP_HOST: ${{ secrets.PULP_HOST }}
           VERBOSE: ${{ runner.debug == '1' && '1' || '' }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          CLOUDSMITH_DRY_RUN: ""
+          CLOUDSMITH_DRY_RUN: ''
           IGNORE_CLOUDSMITH_FAILURES: ${{ vars.IGNORE_CLOUDSMITH_FAILURES }}
           USE_CLOUDSMITH: ${{ vars.USE_CLOUDSMITH }}
           USE_PULP: ${{ vars.USE_PULP }}
@@ -257,21 +281,6 @@ jobs:
             --dist-version focal
             --package-type insomnia
             ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
-
-      - name: Configure Git user
-        uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
-        with:
-          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
-
-      - name: Merge git branch into develop
-        run: |
-          remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git checkout develop
-          git merge --no-ff ${{ env.RELEASE_BRANCH }}
-          git status
-          git push "${remote_repo}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   artifact-provenance:
     needs: [publish]
@@ -289,9 +298,9 @@ jobs:
           - product: inso
             binary_artifacts_subject_as_file: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}
     # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
     with:
-      base64-subjects-as-file: "${{ matrix.binary_artifacts_subject_as_file }}"
+      base64-subjects-as-file: '${{ matrix.binary_artifacts_subject_as_file }}'
       upload-assets: true
       upload-tag-name: ${{ needs.publish.outputs.INSOMNIA_RELEASE_TAG }}
       provenance-name: ${{ matrix.product }}-provenance.intoto.jsonl
@@ -305,7 +314,7 @@ jobs:
       packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     with:
       image: *INSO_DOCKER_IMAGE
       digest: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST }}

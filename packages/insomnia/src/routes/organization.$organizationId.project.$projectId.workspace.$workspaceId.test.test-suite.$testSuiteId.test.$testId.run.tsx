@@ -1,13 +1,12 @@
-import { generate, runTests, type Test, type TestResults } from 'insomnia-testing';
+import type { TestResults, UnitTest } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { generate, type Test } from 'insomnia-testing/src/generate/generate';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import * as models from '~/models';
-import type { UnitTest } from '~/models/unit-test';
-import { getSendRequestCallback } from '~/network/unit-test-feature';
-import { SegmentEvent } from '~/ui/analytics';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.run';
 
@@ -28,8 +27,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   ];
   const src = generate([{ name: 'My Suite', suites: [], tests }]);
 
-  const sendRequest = getSendRequestCallback();
-
   let results: TestResults = {
     failures: [],
     passes: [],
@@ -48,12 +45,12 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   };
 
   try {
-    results = await runTests(src, { sendRequest });
-    const testResult = await models.unitTestResult.create({
+    results = await window.main.runTests(src);
+    const testResult = await services.unitTestResult.create({
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       href(
@@ -90,11 +87,11 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       id: '',
       title: unitTest.name,
     });
-    const testResult = await models.unitTestResult.create({
+    const testResult = await services.unitTestResult.create({
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
+    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       href(

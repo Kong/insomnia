@@ -4,10 +4,37 @@
  * https://github.com/mochajs/mocha/blob/9d4a8ec2d22ee154aecb1f8eeb25af8e6309faa8/lib/reporters/json.js
  */
 import type { MochaOptions, Runnable, Runner, Test } from 'mocha';
+import type { Stats } from 'mocha';
 import Mocha, { reporters } from 'mocha';
+interface TestErr {
+  generatedMessage: boolean;
+  name: string;
+  code: string;
+  actual: string;
+  expected: string;
+  operator: string;
+}
 
-import type { TestResult, TestResults } from './entities';
-
+interface NodeErr {
+  message: string;
+  stack: string;
+}
+interface TestResult {
+  id: string;
+  title: string;
+  fullTitle: string;
+  file?: string;
+  duration?: number;
+  currentRetry: number;
+  err: TestErr | NodeErr | {};
+}
+interface TestResults {
+  failures: TestResult[];
+  passes: TestResult[];
+  pending: TestResult[];
+  stats: Stats;
+  tests: TestResult[];
+}
 export class JavaScriptReporter extends reporters.Base {
   description = 'single JS object';
 

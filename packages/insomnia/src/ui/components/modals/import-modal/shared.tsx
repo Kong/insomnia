@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
+import { type ProjectScopeKeys, scopeToLabelMap } from '~/common/get-workspace-label';
 import type { ScanResult } from '~/common/import';
 
 export const validImportExtensions = [
@@ -21,7 +22,7 @@ export const disclaimer =
   'Insomnia provides features that may automatically execute code. Only import files from trusted sources.';
 
 const Pill: FC<PropsWithChildren> = ({ children }) => (
-  <div className="flex items-center gap-[var(--padding-xs)] rounded-[var(--radius-md)] p-[var(--padding-sm)] text-[length:var(--font-size-xs)]">
+  <div className="flex items-center gap-(--padding-xs) rounded-md p-(--padding-sm) text-(length:--font-size-xs)">
     {children}
   </div>
 );
@@ -49,7 +50,7 @@ const InsomniaIcon = (props: React.SVGProps<SVGSVGElement>) => {
           x1={16.1807}
           y1={27.3898}
           x2={16.1807}
-          y2={4.61017}
+          y2={4.610_17}
           gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#7400E1" />
@@ -90,7 +91,7 @@ const OpenAPIIcon = (props: React.SVGProps<SVGSVGElement>) => {
   );
 };
 
-const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
+export const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 123.184 102.926" {...props}>
       <defs>
@@ -146,8 +147,8 @@ const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
 export const SupportedFormats = () => {
   return (
     <div>
-      <div className="pb-[var(--padding-sm)]">Supported Formats</div>
-      <div className="flex flex-wrap gap-[var(--padding-sm)]">
+      <div className="pb-(--padding-sm)">Supported Formats</div>
+      <div className="flex flex-wrap gap-(--padding-sm)">
         <Pill>
           <InsomniaIcon />
           Insomnia
@@ -181,13 +182,29 @@ export const SupportedFormats = () => {
   );
 };
 
+export function isApiSpecScanResult(scanResult: ScanResult) {
+  return (
+    (scanResult.apiSpecs?.length ?? 0) > 0 || scanResult.type?.id === 'openapi3' || scanResult.type?.id === 'swagger2'
+  );
+}
+
+function getWorkspaceCountsByScope(workspaces: { scope?: string }[], scanResult: ScanResult) {
+  const defaultScope = isApiSpecScanResult(scanResult) ? 'design' : 'collection';
+  const counts = new Map<string, number>();
+  for (const w of workspaces) {
+    const scope = w.scope ?? defaultScope;
+    counts.set(scope, (counts.get(scope) ?? 0) + 1);
+  }
+  return Array.from(counts.entries(), ([scope, count]) => ({ scope, count }));
+}
+
 export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const keyRandom = useMemo(() => Math.random(), [scanResults]);
 
   if (!scanResults.length) {
     return (
-      <div className="flex items-center gap-[var(--padding-sm)] border border-solid border-[color:var(--hl-md)] bg-[color:var(--hl-xxs)] p-[var(--padding-sm)]">
+      <div className="flex items-center gap-(--padding-sm) border border-solid border-(--hl-md) bg-(--hl-xxs) p-(--padding-sm)">
         <i className="fa-regular fa-file fa-lg" />
         No valid resources found
       </div>
@@ -203,13 +220,13 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
           return (
             <React.Fragment key={uniqueKey}>
               <tr className="table--no-outline-row">
-                <td className="bg-[color:var(--hl-xxs)]">
+                <td className="bg-(--hl-xxs)">
                   <div
                     className={classNames(
                       {
                         'text-danger': hasErrors,
                       },
-                      'flex items-center gap-[var(--padding-sm)]',
+                      'flex items-center gap-(--padding-sm)',
                     )}
                   >
                     {hasErrors ? (
@@ -242,13 +259,16 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
                 </tr>
               ) : (
                 <Fragment>
-                  {scanResult.workspaces && scanResult.workspaces?.length > 0 && (
-                    <tr key={scanResult.workspaces[0]._id} className="table--no-outline-row">
-                      <td>
-                        {scanResult.workspaces.length} {scanResult.workspaces.length === 1 ? 'Workspace' : 'Workspaces'}
-                      </td>
-                    </tr>
-                  )}
+                  {scanResult.workspaces &&
+                    scanResult.workspaces.length > 0 &&
+                    getWorkspaceCountsByScope(scanResult.workspaces, scanResult).map(({ scope, count }) => (
+                      <tr key={scope} className="table--no-outline-row">
+                        <td>
+                          {count} {scopeToLabelMap[scope as ProjectScopeKeys] ?? 'Workspace'}
+                          {count > 1 ? 's' : ''}
+                        </td>
+                      </tr>
+                    ))}
                   {scanResult.requests && scanResult.requests?.length > 0 && (
                     <tr key={scanResult.requests[0]._id} className="table--no-outline-row">
                       <td>
@@ -259,7 +279,7 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
                   {scanResult.apiSpecs && scanResult.apiSpecs?.length > 0 && (
                     <tr key={scanResult.apiSpecs[0]._id} className="table--no-outline-row">
                       <td>
-                        <div className="flex items-center gap-[var(--padding-md)]">
+                        <div className="flex items-center gap-(--padding-md)">
                           {scanResult.apiSpecs.length}{' '}
                           {scanResult.apiSpecs.length === 1 ? 'OpenAPI Spec' : 'OpenAPI Specs'}
                         </div>

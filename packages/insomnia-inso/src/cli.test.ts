@@ -1,8 +1,11 @@
 import type { ExecException } from 'node:child_process';
 import { exec } from 'node:child_process';
+import fs from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { beforeAll, describe, expect, it } from 'vitest';
+
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.
 
@@ -39,12 +42,16 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/examples/folder-inheritance-document.yml spc_a8144e --verbose --disableCertValidation',
 
   // run collection
+  // with auth
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/auth-types.yaml wrk_ca4cb9',
   // export file
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e production wrk_dc393c',
   // with regex filter
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e production --requestNamePattern "example http" wrk_dc393c',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response.yml wrk_616795 --verbose',
+  // transient variables
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/transient-variables.yml wrk_3d6697b --verbose',
   // select request by id
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -i req_6063adcdab5b409e9b4f00f47322df4a wrk_c992d40',
   // setNextRequest runs the next request then ends
@@ -53,6 +60,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/with-missing-env-vars.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --env-var firstkey=first --env-var secondkey=second wrk_c992d40',
   // globals file path env overrides
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/with-missing-env-vars.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --globals packages/insomnia-inso/src/examples/global-environment.yml wrk_c992d40',
+  // with timeout success
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/timeout-test.yml -i req_two_seconds --requestTimeout 3000 wrk_timeout_test',
 ];
 
 const shouldReturnErrorCode = [
@@ -64,6 +73,8 @@ const shouldReturnErrorCode = [
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v5/with-tests.yaml -e env_env_7c2769 uts_1c6207',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response-failed-test.yml wrk_616795 --verbose',
+  // with timeout failure
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/timeout-test.yml -i req_two_seconds --requestTimeout 1000 wrk_timeout_test',
 ];
 beforeAll(async () => {
   // ensure the test server is running
@@ -144,8 +155,7 @@ describe('inso dev bundle', () => {
     });
 
     it('send request with client cert and key', async () => {
-      const input =
-        `$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer" wrk_0b96eff -f $PWD/packages`;
+      const input = `$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer" wrk_0b96eff -f $PWD/packages`;
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
@@ -184,6 +194,69 @@ describe('inso dev bundle', () => {
         '$PWD/packages/insomnia-inso/bin/inso run collection wrk_cfacae2b022e49c8851c2376674cc890 -w packages/insomnia-inso/src/examples/script-folder-environments.yml --requestNamePattern "updateFolderValue" --verbose';
       const result = await runCliFromRoot(input);
       expect(result.stdout).toContain('updated value from folder: 666');
+    });
+  });
+
+  describe('run collection report generation', () => {
+    it.each([
+      {
+        name: 'default report',
+        input:
+          '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af',
+        expectedReportFile: './fixtures/run-collection-report/default-report.json',
+      },
+      {
+        name: 'redact report',
+        input:
+          '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af --includeFullData=redact --acceptRisk',
+        expectedReportFile: './fixtures/run-collection-report/redact-report.json',
+      },
+      {
+        name: 'plaintext report',
+        input:
+          '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/run-collection-result-report.yml wrk_c5d5b5 -e env_1072af --includeFullData=plaintext --acceptRisk',
+        expectedReportFile: './fixtures/run-collection-report/plaintext-report.json',
+      },
+    ])('generate report: $name', async ({ input, expectedReportFile }) => {
+      const root = path.join(tmpdir(), 'insomnia-cli-test-output');
+      const outputFilePath = path.resolve(root, 'run-collection-report-output.json');
+
+      const result = await runCliFromRoot(`${input} --output ${outputFilePath}`);
+      expect(result.code).toBe(0);
+
+      const expectedReport = JSON.parse(fs.readFileSync(path.resolve(__dirname, expectedReportFile), 'utf8'));
+      expect(fs.existsSync(outputFilePath)).toBe(true);
+      const report = JSON.parse(fs.readFileSync(outputFilePath, 'utf8'));
+
+      // Some fields are dynamic so we use expect.any to validate their types/ existence
+      expect(report).toEqual({
+        ...expectedReport,
+        executions: expectedReport.executions.map((exec: any) => ({
+          ...exec,
+          response: {
+            ...exec.response,
+            // executionTime can vary so just check it's a number
+            responseTime: expect.any(Number),
+            headers: exec.response.headers
+              ? {
+                  ...exec.response.headers,
+                  date: expect.any(String),
+                }
+              : undefined,
+          },
+          tests: exec.tests.map((test: any) => ({
+            ...test,
+            executionTime: expect.any(Number),
+          })),
+        })),
+        timing: {
+          started: expect.any(Number),
+          completed: expect.any(Number),
+          responseAverage: expect.any(Number),
+          responseMin: expect.any(Number),
+          responseMax: expect.any(Number),
+        },
+      });
     });
   });
 });

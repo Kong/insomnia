@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: simple
 meta:
   id: wrk_dc393cdd96524c44a632fdc3b09aa5c5
@@ -107,6 +108,7 @@ collection:
     reflectionApi:
       enabled: false
       url: https://buf.build
+      apiKey: ""
       module: buf.build/connectrpc/eliza
   - url: ws://localhost:4010
     name: example websocket
@@ -121,6 +123,7 @@ collection:
         send: true
         store: true
   - name: New Request
+    url: http://localhost:4010/echo
     meta:
       id: req_845c9ad3b2934f2098cb77a5dce8b0f5
       created: 1745481338217
@@ -138,18 +141,16 @@ collection:
             }
           disabled: false
           multiline: true
-          id: pair_473715d5390a427fa70284c0222bcffc
           type: text
     parameters:
-      - id: pair_eee575c573bd4c7da4fa6c7a2cf131d4
-        name: test
+      - name: test
         value: |-
           {
           	"A": 1
           }
         disabled: false
         type: text
-        multiline: application/json
+        multiline: true
     headers:
       - name: Content-Type
         value: multipart/form-data

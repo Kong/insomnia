@@ -1,17 +1,17 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.delete';
 
 export async function clientAction({ params }: Route.ClientActionArgs) {
   const { workspaceId } = params;
 
-  const caCertificate = await models.caCertificate.findByParentId(workspaceId);
+  const caCertificate = await services.caCertificate.getByParentId(workspaceId);
   invariant(caCertificate, 'CA Certificate not found');
-  await models.caCertificate.removeWhere(workspaceId);
+  await services.caCertificate.removeWhere(workspaceId);
   return null;
 }
 

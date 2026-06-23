@@ -1,16 +1,16 @@
+import { getVault } from 'insomnia-api';
+import { services } from 'insomnia-data';
 import { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
-import { userSession as sessionModel } from '~/models';
-import { SegmentEvent } from '~/ui/analytics';
+import { invariant } from '~/common/utils/invariant';
+import { getVaultKeyFromStorage } from '~/common/utils/vault';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
-import { insomniaFetch } from '~/ui/insomniaFetch';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 import { validateVaultKey } from '~/ui/vault-key.client';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
-import { getVaultKeyFromStorage } from '~/utils/vault';
 
 import type { Route } from './+types/auth.authorize';
 
@@ -32,25 +32,18 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     };
   }
   console.log('Login successful');
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.loginSuccess,
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.loginSuccess,
   });
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
-  const userSession = await sessionModel.getOrCreate();
+  const userSession = await services.userSession.get();
   const { accountId, id: sessionId } = userSession;
   try {
     // check vault salt exists in server
-    const { salt: vaultSalt } = await insomniaFetch<{
-      salt?: string;
-      error?: string;
-    }>({
-      method: 'GET',
-      path: '/v1/user/vault',
-      sessionId,
-    });
+    const { salt: vaultSalt } = await getVault({ sessionId });
     if (vaultSalt) {
       // save vault salt to session
-      await sessionModel.update(userSession, { vaultSalt });
+      await services.userSession.update({ vaultSalt });
       // get vault key saved in local
       const localVaultKey = await getVaultKeyFromStorage(accountId);
       if (localVaultKey) {
@@ -59,7 +52,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
         if (validateResult) {
           // Encrypt vault key and save encrypted vault key & raw vault salt to session
           const encryptedVaultKey = await window.main.secretStorage.encryptString(localVaultKey);
-          await sessionModel.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
+          await services.userSession.update({ vaultKey: encryptedVaultKey, vaultSalt });
         }
       }
     }
@@ -98,7 +91,7 @@ const Component = () => {
   // 2 login and migration
   // 3 login and redirect back with token
   return (
-    <div className="flex flex-col gap-[--padding-md] text-[--color-font]">
+    <div className="flex flex-col gap-(--padding-md) text-(--color-font)">
       <Heading className="px-3 text-center text-2xl font-bold">Authorizing Insomnia</Heading>
       {
         <Fragment>
@@ -106,8 +99,8 @@ const Component = () => {
             A new page should have opened in your default web browser. Please log in. If you choose to login with SSO
             and it uses a different email to your previous login your teams will not be migrated.
           </p>
-          <div className="flex flex-col gap-3 rounded-md bg-[--hl-sm] p-[--padding-md]">
-            <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
+          <div className="flex flex-col gap-3 rounded-md bg-(--hl-sm) p-(--padding-md)">
+            <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
               If you were not redirected back here after creating an account, please copy and paste the following URL
               into your browser to complete login.
             </p>
@@ -126,7 +119,7 @@ const Component = () => {
                 Copy
               </button>
             </div>
-            <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
+            <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
               If your browser does not open the Insomnia app automatically you can manually add the generated token
               here.
             </p>

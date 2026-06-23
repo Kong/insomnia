@@ -48,12 +48,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('../models', () => ({
-  settings: {
-    get: vi.fn(() => Promise.resolve({})),
-  },
-}));
-
 // Mock the entire install-plugin module
 vi.mock('../main/install-plugin', async () => {
   const actual = await vi.importActual('../main/install-plugin');
@@ -70,6 +64,13 @@ vi.mock('../main/install-plugin', async () => {
     buildProxyEnv: vi.fn(),
   };
 });
+
+vi.mock('../main/analytics', () => ({
+  trackAnalyticsEvent: vi.fn(),
+  AnalyticsEvent: {
+    installPlugin: 'Plugin Installed',
+  },
+}));
 
 import installPlugin, {
   buildProxyEnv,
@@ -96,11 +97,11 @@ describe('Plugin Installation', () => {
     });
 
     vi.mocked(hasUnexpectedBinaryData).mockImplementation(output => {
-      return output.includes('\x00');
+      return output.includes('\u0000');
     });
 
     vi.mocked(safeTrim).mockImplementation(value => {
-      if (typeof value !== 'string') return undefined;
+      if (typeof value !== 'string') return;
       const trimmed = value.trim();
       return trimmed || undefined;
     });
@@ -188,7 +189,7 @@ describe('Plugin Installation', () => {
   describe('runYarnCommand', () => {
     it('should execute yarn command successfully', async () => {
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from('success'), Buffer.from(''));
         return {} as any;
       });
@@ -201,7 +202,7 @@ describe('Plugin Installation', () => {
 
     it('should handle yarn stderr with only deprecation warnings', async () => {
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from('success'), Buffer.from('warning: deprecated: This feature is deprecated'));
         return {} as any;
       });
@@ -213,7 +214,7 @@ describe('Plugin Installation', () => {
 
     it('should throw error for non-deprecation stderr messages', async () => {
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from('success'), Buffer.from('Error: Something went wrong'));
         return {} as any;
       });
@@ -245,7 +246,7 @@ describe('Plugin Installation', () => {
       };
 
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from(JSON.stringify(mockYarnOutput)), Buffer.from(''));
         return {} as any;
       });
@@ -269,7 +270,7 @@ describe('Plugin Installation', () => {
       };
 
       const mockExecFile = vi.mocked(execFile);
-      mockExecFile.mockImplementation((cmd, args, options, callback) => {
+      mockExecFile.mockImplementation((_cmd, _args, _options, callback) => {
         callback?.(null, Buffer.from(JSON.stringify(mockYarnOutput)), Buffer.from(''));
         return {} as any;
       });

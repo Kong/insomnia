@@ -1,25 +1,42 @@
 import fs from 'node:fs/promises';
 import inspector from 'node:inspector';
+import { arch, release } from 'node:os';
 import path from 'node:path';
 
-import electron, { app, session } from 'electron';
-import { BrowserWindow } from 'electron';
+import electron, { app, BrowserWindow, net, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import { configureFetch } from 'insomnia-api';
+import type { Project, RemoteProject, Stats } from 'insomnia-data';
+import { database, initDatabase, initServices, models, services } from 'insomnia-data';
+import { isMac } from 'insomnia-data/common';
+import { servicesNodeImpl } from 'insomnia-data/node';
+
+import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
+import { mainDatabase } from '~/main/database.main';
+import { initElectronStorage } from '~/main/electron-storage';
+import { runGitCredentialsMigration } from '~/main/git/migrations';
+import { registerPathHandlers } from '~/main/ipc/path';
+import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { initRuntime } from '~/runtimes';
+import { nodeRuntime } from '~/runtimes/runtime.node';
 
 import { userDataFolder } from '../config/config.json';
-import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
-import { SegmentEvent, trackSegmentEvent } from './main/analytics';
+import { getAppVersion, getProductName, isDevelopment } from './common/constants';
+import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
+import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { registerGitServiceAPI } from './main/git-service';
+import { registerCookieHandlers } from './main/ipc/cookies';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
+import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import log, { initializeLogging } from './main/log';
 import { registerCurlHandlers } from './main/network/curl';
+import { registerMcpHandlers } from './main/network/mcp';
 import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';
@@ -27,9 +44,6 @@ import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import * as models from './models/index';
-import type { Project, RemoteProject } from './models/project';
-import type { Stats } from './models/stats';
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
@@ -37,13 +51,25 @@ import type { Stats } from './models/stats';
 const dataPath =
   process.env.INSOMNIA_DATA_PATH ||
   path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+
 app.setPath('userData', dataPath);
 
 initializeLogging();
+initElectronStorage(dataPath);
 
 initializeSentry();
 
 registerInsomniaProtocols();
+
+let openDeepLinkUrl = async (url: string) => {
+  console.warn('[main] openDeepLinkUrl function not initialized yet, cannot open URL:', url);
+};
+configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => openDeepLinkUrl(uri) }));
+// net.fetch picks up the proxy + OS certs like the renderer; node fetch does neither.
+// only works post-ready, which is fine — nothing calls this earlier. 'omit' = no cookies, same as before.
+setFetchImplementation((input, init) =>
+  net.fetch(input, { ...init, credentials: 'omit', bypassCustomProtocolHandlers: true }),
+);
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -69,12 +95,18 @@ app.on('ready', async () => {
   registerElectronHandlers();
   // @TODO - Maybe move the register stuff in the registerMainHandlers function
   registerMainHandlers();
+  registerPathHandlers();
   registergRPCHandlers();
+  registerCookieHandlers();
   registerGitServiceAPI();
+  registerLLMConfigServiceAPI();
   registerWebSocketHandlers();
   registerSocketIOHandlers();
   registerCurlHandlers();
+  registerMcpHandlers();
   registerSecretStorageHandlers();
+  registerElectronStorageHandlers();
+  registerSyncHandlers();
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
@@ -94,18 +126,24 @@ app.on('ready', async () => {
       const names = await Promise.all(extensions.map(extension => installExtension(extension)));
       console.log(`[electron-extensions] Added DevTools Extension${extensionsPlural}: ${names.join(', ')}`);
     } catch (err) {
-      console.log('[electron-extensions] An error occurred: ', err);
+      console.log('[electron-extensions] An error occurred:', err);
     }
   }
 
   // Init some important things first
-  await database.init();
+  await initDatabase(mainDatabase);
+  // Initialize services for main process
+  initServices(servicesNodeImpl);
+  initRuntime(nodeRuntime);
   await _createModelInstances();
+  // proxy has to be set up before backup's net.fetch below
+  await watchProxySettings();
   // backup needs the channel from settings which needs the database
   await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
-  watchProxySettings();
-  windowUtils.init();
+
+  await runGitCredentialsMigration();
+
   await _launchApp();
 
   // Init the rest
@@ -158,16 +196,14 @@ if (defaultProtocolSuccessful) {
   }
 }
 app.on('quit', () => {
-  if (isDevelopment()) {
-    // stop the inspector if active to unblock electron app exit in development mode
-    if (inspector.url()) {
-      inspector.close();
-    }
+  // stop the inspector if active to unblock electron app exit in development mode
+  if (isDevelopment() && inspector.url()) {
+    inspector.close();
   }
 });
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
-  if (!isMac()) {
+  if (!isMac) {
     app.quit();
   }
 });
@@ -178,7 +214,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
     try {
       console.log('[main] creating new window for MacOS activate event');
       windowUtils.createWindow();
-    } catch (error) {
+    } catch {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.
       console.log('[main] App not ready to "activate" yet');
@@ -196,11 +232,11 @@ const _launchApp = async () => {
     console.log('[main] Check args and create windows', args);
     if (args.length) {
       window = windowUtils.createWindowsAndReturnMain();
-      window.webContents.send('shell:open', args.join());
+      window.webContents.send('shell:open', args.join(','));
     }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
-  if (!process.env.PLAYWRIGHT) {
+  if (!process.env.PLAYWRIGHT_TEST) {
     // Deep linking logic - https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app
     const gotTheLock = app.requestSingleInstanceLock();
     if (!gotTheLock) {
@@ -217,12 +253,13 @@ const _launchApp = async () => {
           }
           window.focus();
         }
-        const lastArg = args.slice(-1).join();
+        const lastArg = args.slice(-1).join(',');
         console.log('[main] Open Deep Link URL sent from second instance', lastArg);
         window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain();
-      const openDeepLinkUrl = (url: string) => {
+
+      openDeepLinkUrl = async (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
@@ -233,8 +270,9 @@ const _launchApp = async () => {
         } else {
           window = windowUtils.createWindowsAndReturnMain();
         }
-        window.webContents.send('shell:open', url);
+        return window.webContents.send('shell:open', url);
       };
+
       app.on('open-url', (_event, url) => {
         openDeepLinkUrl(url);
       });
@@ -262,14 +300,14 @@ const _launchApp = async () => {
   To avoid that, create them explicitly prior to any initialization steps
  */
 async function _createModelInstances() {
-  await models.stats.get();
-  await models.settings.getOrCreate();
+  await services.stats.get();
+  await services.settings.getOrCreate();
   try {
-    const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
-    const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
+    const scratchpadProject = await services.project.get(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchPad = await services.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
-      await models.project.create({
+      await services.project.create({
         _id: models.project.SCRATCHPAD_PROJECT_ID,
         name: getProductName(),
         remoteId: null,
@@ -279,7 +317,7 @@ async function _createModelInstances() {
 
     if (!scratchPad) {
       console.log('[main] Initializing Scratch Pad');
-      await models.workspace.create({
+      await services.workspace.create({
         _id: models.workspace.SCRATCHPAD_WORKSPACE_ID,
         name: 'Scratch Pad',
         parentId: models.project.SCRATCHPAD_PROJECT_ID,
@@ -291,10 +329,36 @@ async function _createModelInstances() {
   }
 }
 
+function getOperatingSystem(): string {
+  switch (process.platform) {
+    case 'darwin': {
+      return 'macOS';
+    }
+    case 'win32': {
+      return 'Windows';
+    }
+    case 'linux': {
+      return 'Linux';
+    }
+    case 'freebsd': {
+      return 'FreeBSD';
+    }
+    case 'openbsd': {
+      return 'OpenBSD';
+    }
+    case 'aix': {
+      return 'AIX';
+    }
+    default: {
+      return process.platform;
+    }
+  }
+}
+
 async function _trackStats() {
   // Handle the stats
-  const oldStats = await models.stats.get();
-  const stats: Stats = await models.stats.update({
+  const oldStats = await services.stats.get();
+  const stats: Stats = await services.stats.update({
     currentLaunch: Date.now(),
     lastLaunch: oldStats.currentLaunch,
     currentVersion: getAppVersion(),
@@ -313,12 +377,18 @@ async function _trackStats() {
     parentId: { $ne: null },
   });
 
-  trackSegmentEvent(SegmentEvent.appStarted, {
+  const settings = await services.settings.get();
+
+  trackAnalyticsEvent(AnalyticsEvent.appStarted, {
     localProjects,
     remoteProjects,
     createdRequests: stats.createdRequests,
     deletedRequests: stats.deletedRequests,
     executedRequests: stats.executedRequests,
+    themeName: settings.theme,
+    operatingSystem: getOperatingSystem(),
+    osVersion: release(),
+    architecture: arch(),
   });
 
   ipcMainOnce('halfSecondAfterAppStart', async () => {

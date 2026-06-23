@@ -1,22 +1,22 @@
+import type { GitRepository } from 'insomnia-data';
 import * as git from 'isomorphic-git';
 
-import type { GitRepository } from '../../models/git-repository';
 import { GIT_CLONE_DIR, GIT_INTERNAL_DIR } from './git-vcs';
 import { httpClient } from './http-client';
 import { gitCallbacks } from './utils';
 
 interface Options {
   fsClient: git.FsClient;
-  gitRepository: Pick<GitRepository, 'credentials' | 'uri'>;
+  gitRepository: Pick<GitRepository, 'credentialsId' | 'uri'>;
   ref?: string;
 }
 
 /**
  * Create a shallow clone into the provided FS plugin.
  * */
-export const shallowClone = async ({ fsClient, gitRepository, ref = undefined }: Options) => {
+export const shallowClone = async ({ fsClient, gitRepository, ref }: Options) => {
   await git.clone({
-    ...gitCallbacks(gitRepository.credentials),
+    ...gitCallbacks(gitRepository.credentialsId),
     ...(ref ? { ref } : {}),
     fs: fsClient,
     http: httpClient,

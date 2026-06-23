@@ -1,6 +1,8 @@
+import type { GitRepository } from 'insomnia-data';
+
+import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
+
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import type { GitRepository } from '../../models/git-repository';
-import { getOauth2FormatName } from '../../sync/git/utils';
 
 interface ConfigLinkProps {
   small?: boolean;

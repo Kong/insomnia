@@ -1,6 +1,7 @@
 import { getExistingConsole } from './console';
 import { getInterpolator } from './interpolator';
 
+
 /**
  * Represents an environment object that stores key-value pairs and provides methods to interact with them.
  *
@@ -120,8 +121,16 @@ export class Environment {
    *
    * @param template - The template string containing placeholders to be replaced.
    * @returns The rendered string with placeholders replaced by their corresponding values.
+   * 
+   * @throws Will throw an error if template is not a string or object.
    */
-  replaceIn = (template: string) => {
+  replaceIn = async (template: string | object) => {
+    if (typeof template === 'object') {
+      template = template.toString();
+    } else if (typeof template !== 'string') {
+      throw new TypeError('The template must be a string or an object');
+    }
+
     return getInterpolator().render(template, this.toObject());
   };
 
@@ -272,7 +281,7 @@ export class Variables {
    * @returns The value of the variable if found, otherwise undefined
    */
   get = (variableName: string) => {
-    let finalVal: boolean | number | string | object | undefined = undefined;
+    let finalVal: boolean | number | string | object | undefined;
     [
       this.localVars,
       mergeFolderLevelVars(this.folderLevelVars),
@@ -317,8 +326,16 @@ export class Variables {
    *
    * @param template - The template string containing placeholders to be replaced.
    * @returns The rendered string with placeholders replaced by their corresponding values.
+   * 
+   * @throws Will throw an error if template is not a string or object.
    */
-  replaceIn = (template: string) => {
+  replaceIn = async (template: string | object) => {
+    if (typeof template === 'object') {
+      template = template.toString();
+    } else if (typeof template !== 'string') {
+      throw new TypeError('The template must be a string or an object');
+    }
+
     const context = this.toObject();
     return getInterpolator().render(template, context);
   };
@@ -387,13 +404,13 @@ export class Vault extends Environment {
       // throw error on get or set method call if enableVaultInScripts is false
       get: (target, prop, receiver) => {
         if (!enableVaultInScripts) {
-          throw 'Vault is disabled in script';
+          throw new Error('Vault is disabled in script');
         }
         return Reflect.get(target, prop, receiver);
       },
       set: (target, prop, value, receiver) => {
         if (!enableVaultInScripts) {
-          throw 'Vault is disabled in script';
+          throw new Error('Vault is disabled in script');
         }
         return Reflect.set(target, prop, value, receiver);
       },
@@ -402,16 +419,16 @@ export class Vault extends Environment {
 
   /** @ignore */
   unset = () => {
-    throw 'Vault can not be unset in script';
+    throw new Error('Vault can not be unset in script');
   };
 
   /** @ignore */
   clear = () => {
-    throw 'Vault can not be cleared in script';
+    throw new Error('Vault can not be cleared in script');
   };
 
   /** @ignore */
   set = () => {
-    throw 'Vault can not be set in script';
+    throw new Error('Vault can not be set in script');
   };
 }

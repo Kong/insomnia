@@ -1,4 +1,4 @@
-import { InsoError } from '../../cli';
+import { InsoError } from '../../errors';
 import type { BaseModel } from './types';
 
 export const matchIdIsh = ({ _id }: BaseModel, identifier: string) => _id.startsWith(identifier);
@@ -10,7 +10,7 @@ function indent(level: number, code: string, tab = '  |'): string {
     return code;
   }
 
-  const prefix = new Array(level + 1).join(tab);
+  const prefix = Array.from({ length: level + 1 }).join(tab);
   return `${prefix} ${code}`;
 }
 

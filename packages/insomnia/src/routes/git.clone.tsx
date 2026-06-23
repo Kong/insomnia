@@ -1,8 +1,7 @@
 import { href, redirect } from 'react-router';
 
-import type { GitCredentials } from '~/models/git-repository';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/git.clone';
 
@@ -14,7 +13,9 @@ interface CloneGitRepoData {
     name: string;
     email: string;
   };
-  credentials: GitCredentials;
+  credentialsId: string | null;
+  ref: string;
+  selectedAuthorEmail?: string | null;
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {

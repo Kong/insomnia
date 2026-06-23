@@ -1,11 +1,12 @@
-import { type ClientCertificate, init as initClientCertificate } from 'insomnia/src/models/client-certificate';
 import type {
+  ClientCertificate,
   Request as InsomniaRequest,
   RequestBody as InsomniaRequestBody,
   RequestBodyParameter,
   RequestPathParameter,
-} from 'insomnia/src/models/request';
-import type { Settings } from 'insomnia/src/models/settings';
+  Settings,
+} from 'insomnia-data';
+import { models } from 'insomnia-data';
 
 import { type AuthOptions, type AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import type { CertificateOptions } from './certificates';
@@ -18,6 +19,8 @@ import type { Url } from './urls';
 import { QueryParam, toUrlObject } from './urls';
 import type { Variable, VariableList } from './variables';
 
+const { init: initClientCertificate } = models.clientCertificate;
+
 export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'file' | 'graphql';
 
 export interface RequestBodyOptions {
@@ -28,7 +31,7 @@ export interface RequestBodyOptions {
   raw?: string;
   urlencoded?: {
     key: string;
-    value: string;
+    value?: string;
     type?: string;
     disabled?: boolean;
     multiline?: boolean | string;
@@ -91,7 +94,7 @@ function getClassFields(opts: RequestBodyOptions) {
       )
     : undefined;
 
-  let urlencoded = undefined;
+  let urlencoded;
   if (opts.urlencoded != null) {
     if (typeof opts.urlencoded === 'string') {
       const queryParamObj = QueryParam.parse(opts.urlencoded);
@@ -247,14 +250,12 @@ function requestOptionsToClassFields(options: RequestOptions) {
 
   let headers: HeaderList<Header>;
   if (options.header != null) {
-    if (Array.isArray(options.header)) {
-      headers = new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : []);
-    } else {
-      headers = new HeaderList(
-        undefined,
-        Object.entries(options.header).map(entry => new Header({ key: entry[0], value: entry[1] })),
-      );
-    }
+    headers = Array.isArray(options.header)
+      ? new HeaderList(undefined, options.header ? options.header.map(header => new Header(header)) : [])
+      : new HeaderList(
+          undefined,
+          Object.entries(options.header).map(entry => new Header({ key: entry[0], value: entry[1] })),
+        );
   } else {
     headers = new HeaderList(undefined, new Array<Header>());
   }

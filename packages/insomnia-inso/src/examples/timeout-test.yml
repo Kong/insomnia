@@ -1,0 +1,43 @@
+_type: export
+__export_format: 4
+__export_date: 2021-01-21T00:00:00.000Z
+__export_source: insomnia.desktop.app:v2024.1.0
+resources:
+  - _id: req_two_seconds
+    parentId: wrk_timeout_test
+    modified: 1611212400000
+    created: 1611212400000
+    url: http://127.0.0.1:4010/delay/seconds/2
+    name: request that takes 2 seconds
+    description: ''
+    method: GET
+    body: {}
+    parameters: []
+    metaSortKey: -2
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_timeout_test
+    parentId: null
+    modified: 1611212400000
+    created: 1611212400000
+    name: Timeout Test Collection
+    description: ''
+    scope: collection
+    _type: workspace
+  - _id: env_timeout_base
+    parentId: wrk_timeout_test
+    modified: 1611212400000
+    created: 1611212400000
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1
+    _type: environment

@@ -40,7 +40,7 @@ const importFolderItem =
 const parseDocument = (rawData: string) => {
   try {
     return unthrowableParseJson(rawData) || YAML.parse(rawData);
-  } catch (err) {
+  } catch {
     return null;
   }
 };

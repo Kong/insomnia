@@ -1,6 +1,10 @@
+import classNames from 'classnames';
+import { checkSeats, type CheckSeatsResponse, needsToIncreaseSeats, needsToUpgrade, type Role } from 'insomnia-api';
+import { models } from 'insomnia-data';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
+  Heading,
   type Key,
   ListBox,
   ListBoxItem,
@@ -11,13 +15,18 @@ import {
 } from 'react-aria-components';
 import { useParams, useSearchParams } from 'react-router';
 
+import { getAppWebsiteBaseURL } from '~/common/constants';
+import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { debounce } from '~/common/misc';
+import { useRootLoaderData } from '~/root';
+import { useOrganizationLoaderData } from '~/routes/organization';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
+import { useIsLightTheme } from '~/ui/hooks/theme';
 
 import { startInvite } from './encryption';
-import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
+import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
 
 export function getSearchParamsString(
   searchParams: URLSearchParams,
@@ -38,8 +47,54 @@ export function getSearchParamsString(
 
 interface EmailsInputProps {
   allRoles: Role[];
+  senderRole: Role;
   onInviteCompleted?: () => void;
 }
+
+const upgradeBannerWording = {
+  [needsToUpgrade]: {
+    ownerTitle: 'Upgrade plan to invite more people',
+    memberTitle: 'Ask plan owner to upgrade to invite more people',
+    ownerDescription: (
+      <>
+        Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members. Upgrade to
+        collaborate with unlimited users.{' '}
+        <a href={docsPricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
+    memberDescription: (
+      <>
+        Your Essentials plan contains Git Sync projects, so you can only collaborate with up to 3 members. Contact your
+        plan owner to upgrade your team's plan to collaborate with more people.{' '}
+        <a href={docsPricingLearnMoreLink} className="underline">
+          Learn more ↗
+        </a>
+      </>
+    ),
+    submitText: 'Upgrade',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing?source=app_invite_modal',
+  },
+  [needsToIncreaseSeats]: {
+    ownerTitle: 'You have consumed all of your seats',
+    memberTitle: 'Your team has consumed all of its seats',
+    ownerDescription: (
+      <>
+        Your team has reached your plan’s total purchased seats. To invite any new people, purchase more seats by
+        clicking Increase Seats below. You can still invite existing users to different organizations.
+      </>
+    ),
+    memberDescription: (
+      <>
+        Your team has reached your plan’s total purchased seats. Tell your plan's owner to increase the number of seats
+        to continue inviting new people. You can still invite existing users to different organizations.
+      </>
+    ),
+    submitText: 'Increase seats',
+    submitLink: getAppWebsiteBaseURL() + '/app/pricing?source=app_invite_modal',
+  },
+};
 
 export interface EmailInput {
   email: string;
@@ -58,10 +113,23 @@ const isValidEmail = (email: string): boolean => {
 
 const defaultRoleName = 'member';
 
-export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) => {
+export const InviteForm = ({
+  allRoles,
+  onInviteCompleted,
+  senderRole,
+  checkSeatsResponseData,
+}: EmailsInputProps & { checkSeatsResponseData: CheckSeatsResponse | undefined }) => {
+  const organizationId = useParams().organizationId as string;
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const organizationId = useParams().organizationId as string;
+  const { userSession } = useRootLoaderData()!;
+  const organizationData = useOrganizationLoaderData();
+  const organization = organizationData?.organizations.find(o => o.id === organizationId);
+  const isUserOwner =
+    organization &&
+    userSession.accountId &&
+    models.organization.isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const sessionId = userSession.id;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -75,16 +143,44 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
   const selectedRoleRef = React.useRef<Role>(allRoles.find(role => role.name === defaultRoleName) as Role);
 
   const collaboratorSearchLoader = useCollaboratorsSearchLoaderFetcher();
+  let upgradeBannerStatus: 'closed' | typeof needsToUpgrade | typeof needsToIncreaseSeats = 'closed';
+  if (checkSeatsResponseData && !checkSeatsResponseData.isAllowed) {
+    if (checkSeatsResponseData.code === needsToUpgrade) {
+      upgradeBannerStatus = needsToUpgrade;
+    } else if (checkSeatsResponseData.code === needsToIncreaseSeats) {
+      upgradeBannerStatus = needsToIncreaseSeats;
+    }
+  }
+
+  /* Why is inviting others still allowed when there are no seats available?
+  This is because a specific scenario might occur: User A has purchased 3 seats and owns two organizations, X and Y.
+  User B has already been invited to Organization X, which now has 3 members (full).
+  At this point, even though User A has run out of seats, they can still invite User B to Organization Y. */
+  const isFormDisabled =
+    checkSeatsResponseData && !checkSeatsResponseData.isAllowed && checkSeatsResponseData.code !== needsToIncreaseSeats;
 
   const searchResult = useMemo(() => collaboratorSearchLoader.data || [], [collaboratorSearchLoader.data]);
 
   useEffect(() => {
-    if (searchResult.length > 0) {
-      setShowResults(true);
-    } else {
-      setShowResults(false);
-    }
+    setShowResults(searchResult.length > 0);
   }, [searchResult]);
+
+  useEffect(() => {
+    const checkSeatsFn = async () => {
+      const validEmails = emails.filter(e => e.isValid);
+      if (validEmails.length === 0) {
+        setError('');
+      } else {
+        const data = await checkSeats({
+          organizationId,
+          sessionId,
+          emails: validEmails.map(e => e.email),
+        });
+        setError(data.isAllowed ? '' : 'You cannot invite more people than the seats you have remaining');
+      }
+    };
+    checkSeatsFn();
+  }, [emails, organizationId, sessionId]);
 
   const addEmail = ({
     email,
@@ -154,11 +250,43 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
     }
   };
 
+  const isLightTheme = useIsLightTheme();
+
   return (
     <div className="flex w-full flex-col gap-1">
+      {upgradeBannerStatus !== 'closed' && (
+        <div
+          className={classNames('mt-3 mb-5 flex items-start justify-start gap-5 rounded-md px-6 py-5', {
+            'bg-[#292535]': !isLightTheme,
+            'bg-[#EEEBFF]': isLightTheme,
+          })}
+        >
+          <Icon icon="circle-info" className="pt-1.5" />
+          <div className="flex flex-col items-start justify-start gap-3.5">
+            <Heading className="text-lg font-bold">
+              {isUserOwner
+                ? upgradeBannerWording[upgradeBannerStatus].ownerTitle
+                : upgradeBannerWording[upgradeBannerStatus].memberTitle}
+            </Heading>
+            <p>
+              {isUserOwner
+                ? upgradeBannerWording[upgradeBannerStatus].ownerDescription
+                : upgradeBannerWording[upgradeBannerStatus].memberDescription}
+            </p>
+            {isUserOwner && (
+              <a
+                href={upgradeBannerWording[upgradeBannerStatus].submitLink}
+                className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
+              >
+                {upgradeBannerWording[upgradeBannerStatus].submitText}
+              </a>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex w-full items-center gap-4">
         <div
-          className="flex flex-1 justify-between gap-3 rounded-md border border-[#4c4c4c] bg-[--hl-xs] p-2"
+          className="flex flex-1 justify-between gap-3 rounded-md border border-[#4c4c4c] bg-(--hl-xs) p-2"
           ref={triggerRef}
         >
           <div
@@ -168,7 +296,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
             {emails.map(({ picture, email, isValid }: EmailInput) => (
               <span
                 key={email}
-                className={`flex h-7 items-center gap-2 rounded-full bg-[--hl-xs] pl-1 pr-2 text-sm leading-6 text-[--color-font] ${isValid ? 'bg-[--hl-xs]' : 'border border-dashed border-orange-400 bg-orange-400 bg-opacity-40'}`}
+                className={`flex h-7 items-center gap-2 rounded-full bg-(--hl-xs) pr-2 pl-1 text-sm leading-6 text-(--color-font) ${isValid ? 'bg-(--hl-xs)' : 'border border-dashed border-orange-400 bg-orange-400/40'}`}
               >
                 <TooltipTrigger delay={0}>
                   <Button
@@ -188,7 +316,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
                   <Tooltip
                     offset={8}
                     placement="top"
-                    className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                    className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                   >
                     Click to edit
                   </Tooltip>
@@ -200,19 +328,20 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
                     removeEmail(email);
                   }}
                 >
-                  <Icon icon="xmark" className="h-4 w-4 cursor-default text-[--color-font]" />
+                  <Icon icon="xmark" className="h-4 w-4 cursor-default text-(--color-font)" />
                 </Button>
               </span>
             ))}
             <input
               ref={inputRef}
               type="text"
-              className="min-h-[24px] grow-[inherit] border-none px-2 py-1 leading-6 outline-none"
+              className="min-h-[24px] grow-[inherit] border-none px-2 py-1 leading-6 outline-hidden disabled:cursor-not-allowed"
               placeholder={emails.length > 0 ? 'Enter more emails...' : 'Enter emails, separated by comma...'}
               onKeyDown={handleInputKeyPress}
               onBlur={handleInputBlur}
               onPaste={handlePaste}
               onChange={e => handleSearch(e.currentTarget.value)}
+              disabled={isFormDisabled}
             />
           </div>
           <div className="flex w-[81px] items-center">
@@ -228,9 +357,9 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
           </div>
         </div>
         <Button
-          className="h-[40px] w-[67px] shrink-0 self-end rounded bg-[#4000bf] text-center text-[--color-font-surprise] disabled:opacity-70"
-          isDisabled={loading}
-          onPress={() => {
+          className="h-[40px] w-[67px] shrink-0 self-end rounded-sm bg-[#4000bf] text-center text-(--color-font-surprise) disabled:cursor-not-allowed disabled:opacity-70"
+          isDisabled={loading || isFormDisabled}
+          onPress={async () => {
             if (emails.some(({ isValid }) => !isValid)) {
               setError('Some emails are invalid, please correct them before inviting.');
               return;
@@ -251,12 +380,13 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
             })
               .then(
                 () => {
-                  window.main.trackSegmentEvent({
-                    event: SegmentEvent.inviteMember,
+                  window.main.trackAnalyticsEvent({
+                    event: AnalyticsEvent.inviteMember,
                     properties: {
                       numberOfInvites: emailsToInvite.length,
                       numberOfTeams: groupsToInvite.length,
-                      role: selectedRoleRef.current.name,
+                      receiver_role: selectedRoleRef.current.name,
+                      sender_role: senderRole.name,
                     },
                   });
 
@@ -277,14 +407,14 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
         </Button>
         <Popover
           placement="bottom start"
-          className="w-[--trigger-width] min-w-[650px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] shadow-md"
+          className="w-(--trigger-width) min-w-[650px] rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) shadow-md"
           ref={popoverRef}
           triggerRef={triggerRef}
           isOpen={showResults}
           onOpenChange={setShowResults}
         >
           <ListBox
-            className="p-1 outline-none"
+            className="p-1 outline-hidden"
             selectionMode="single"
             aria-label="Organization members"
             onAction={(email: Key) => {
@@ -330,7 +460,7 @@ const UserItem = (props: ListBoxItemProps & { children: React.ReactNode; isSelec
   return (
     <ListBoxItem
       {...props}
-      className="group flex cursor-pointer select-none items-center gap-2 rounded px-1 py-1 outline-none hover:bg-[--hl-xs] hover:text-[--color-font] focus:bg-[--hl-xs] focus:text-[--color-font]"
+      className="group flex cursor-pointer items-center gap-2 rounded-sm px-1 py-1 outline-hidden select-none hover:bg-(--hl-xs) hover:text-(--color-font) focus:bg-(--hl-xs) focus:text-(--color-font)"
     >
       <span className="group-selected:font-medium flex flex-1 items-center gap-3 truncate font-normal">
         {props.children}

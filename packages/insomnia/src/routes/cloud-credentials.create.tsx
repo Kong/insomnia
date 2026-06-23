@@ -1,11 +1,11 @@
+import type { CloudProviderCredential } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
-import * as models from '~/models';
-import type { CloudProviderCredential } from '~/models/cloud-credential';
-import { executePluginMainAction } from '~/plugins';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/cloud-credentials.create';
 
@@ -22,20 +22,18 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   invariant(credentials, 'Credentials are required');
   if (isAuthenticated) {
     // find credential with same name for oauth authenticated cloud service
-    const existingCredential = await models.cloudCredential.getByName(name, provider);
-    if (existingCredential.length === 0) {
-      await models.cloudCredential.create(patch);
-    } else {
-      await models.cloudCredential.update(existingCredential[0], patch);
-    }
+    const existingCredential = await services.cloudCredential.getByName(name, provider);
+    await (existingCredential.length === 0
+      ? services.cloudCredential.create(patch)
+      : services.cloudCredential.update(existingCredential[0], patch));
     return credentials;
   }
-  const authenticateResponse = await executePluginMainAction({
+  const authenticateResponse = await plugins.executePluginMainAction({
     pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
     actionName: 'authenticate',
     params: { provider, credentials },
   });
-  const { success, error, result } = authenticateResponse!;
+  const { success, error, result } = authenticateResponse as any;
   if (error) {
     return {
       error: `${error.errorMessage}`,
@@ -48,7 +46,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       patch.credentials['access_token'] = access_token;
       patch.credentials['expires_at'] = expires_at;
     }
-    await models.cloudCredential.create(patch);
+    await services.cloudCredential.create(patch);
     return result as { access_token: string; expires_at: number };
   }
   return { error: 'Unexpected response from ' + provider };

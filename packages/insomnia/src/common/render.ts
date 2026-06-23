@@ -1,36 +1,39 @@
 import clone from 'clone';
+import type {
+  Environment,
+  GrpcRequest,
+  GrpcRequestBody,
+  McpRequest,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  UserUploadEnvironment,
+  WebSocketRequest,
+  Workspace,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
-import * as models from '../models';
-import {
-  type Environment,
-  type UserUploadEnvironment,
-  vaultEnvironmentPath,
-  vaultEnvironmentRuntimePath,
-} from '../models/environment';
-import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import { isProject } from '../models/project';
-import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
-import { isRequestGroup, type RequestGroup } from '../models/request-group';
-import type { SocketIORequest } from '../models/socket-io-request';
-import type { WebSocketRequest } from '../models/websocket-request';
-import { isWorkspace, type Workspace } from '../models/workspace';
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
-import * as templating from '../templating';
-import { RenderError } from '../templating/render-error';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
+import { RenderError } from '~/common/templating/render-error';
 import type {
   BaseRenderContext,
   BaseRenderContextOptions,
   RenderContextAncestor,
   RenderContextOptions,
   RenderedRequest,
-  RenderInputType,
-} from '../templating/types';
-import * as templatingUtils from '../templating/utils';
-import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { setDefaultProtocol } from '../utils/url/protocol';
+} from '~/common/templating/types';
+import * as templatingUtils from '~/common/templating/utils';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
+import { getRuntime } from '../runtimes';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
+
+const { applyPathParametersToUrl } = models.request;
+const { isRequestGroup } = models.requestGroup;
 
 export async function buildRenderContext({
   ancestors,
@@ -56,7 +59,7 @@ export async function buildRenderContext({
   if (rootGlobalEnvironment) {
     const ordered = orderedJSON.order(
       rootGlobalEnvironment.data,
-      rootGlobalEnvironment.dataPropertyOrder,
+      rootGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -65,7 +68,7 @@ export async function buildRenderContext({
   if (subGlobalEnvironment) {
     const ordered = orderedJSON.order(
       subGlobalEnvironment.data,
-      subGlobalEnvironment.dataPropertyOrder,
+      subGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -75,12 +78,16 @@ export async function buildRenderContext({
   // Then get sub environment keys in correct order
   // Then get ancestor (folder) environment keys in correct order
   if (rootEnvironment) {
-    const ordered = orderedJSON.order(rootEnvironment.data, rootEnvironment.dataPropertyOrder, JSON_ORDER_SEPARATOR);
+    const ordered = orderedJSON.order(
+      rootEnvironment.data,
+      rootEnvironment.dataPropertyOrder ?? null,
+      JSON_ORDER_SEPARATOR,
+    );
     envObjects.push(ordered);
   }
 
   if (subEnvironment) {
-    const ordered = orderedJSON.order(subEnvironment.data, subEnvironment.dataPropertyOrder, JSON_ORDER_SEPARATOR);
+    const ordered = orderedJSON.order(subEnvironment.data, subEnvironment.dataPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
     envObjects.push(ordered);
   }
 
@@ -89,7 +96,7 @@ export async function buildRenderContext({
     const { environment, environmentPropertyOrder } = ancestor;
 
     if (typeof environment === 'object' && environment !== null) {
-      const ordered = orderedJSON.order(environment, environmentPropertyOrder, JSON_ORDER_SEPARATOR);
+      const ordered = orderedJSON.order(environment, environmentPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
       envObjects.push(ordered);
     }
   }
@@ -98,7 +105,7 @@ export async function buildRenderContext({
   if (userUploadEnvironment) {
     const ordered = orderedJSON.order(
       userUploadEnvironment.data,
-      userUploadEnvironment.dataPropertyOrder,
+      userUploadEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -108,7 +115,7 @@ export async function buildRenderContext({
   if (transientVariables) {
     const ordered = orderedJSON.order(
       transientVariables.data,
-      transientVariables.dataPropertyOrder,
+      transientVariables.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -126,6 +133,9 @@ export async function buildRenderContext({
     const keys = _getOrderedEnvironmentKeys(subObject);
 
     for (const key of keys) {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        continue;
+      }
       /*
        * If we're overwriting a string, try to render it first using the same key from the base
        * environment to support same-variable recursion. This allows for the following scenario:
@@ -140,20 +150,13 @@ export async function buildRenderContext({
       if (Object.prototype.toString.call(subObject[key]) === '[object String]') {
         const isSelfRecursive = subObject[key].match(`{{ ?${key}[ |][^}]*}}`);
 
-        if (isSelfRecursive) {
-          // If we're overwriting a variable that contains itself, make sure we
-          // render it first
-          subContext[key] = await render(
-            subObject[key],
-            subContext, // Only render with key being overwritten
-            null,
-            'keep',
-            'Environment',
-          );
-        } else {
-          // Otherwise it's just a regular replacement
-          subContext[key] = subObject[key];
-        }
+        // If we're overwriting a variable that contains itself, make sure we
+        // render it first
+        // Only render with key being overwritten
+        // Otherwise it's just a regular replacement
+        subContext[key] = isSelfRecursive
+          ? await render(subObject[key], subContext, null, 'keep', 'Environment')
+          : subObject[key];
       } else if (Object.prototype.toString.call(subContext[key]) === '[object Object]') {
         // Context is of Type object, Call this function recursively to handle nested objects.
         subContext[key] = await renderSubContext(subObject[key], subContext[key]);
@@ -173,31 +176,31 @@ export async function buildRenderContext({
   }
 
   const vaultEnvironmentData = await maskOrDecryptVaultDataIfNecessary(
-    finalRenderContext[vaultEnvironmentPath],
+    finalRenderContext[models.environment.vaultEnvironmentPath],
     renderContext?.getPurpose(),
   );
   if (vaultEnvironmentData) {
     // avoid add undefined data to render context
-    finalRenderContext[vaultEnvironmentPath] = vaultEnvironmentData;
+    finalRenderContext[models.environment.vaultEnvironmentPath] = vaultEnvironmentData;
   }
   // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
-  if (finalRenderContext[vaultEnvironmentPath]) {
+  if (finalRenderContext[models.environment.vaultEnvironmentPath]) {
     if (
-      finalRenderContext[vaultEnvironmentRuntimePath] &&
-      typeof finalRenderContext[vaultEnvironmentRuntimePath] !== 'object'
+      finalRenderContext[models.environment.vaultEnvironmentRuntimePath] &&
+      typeof finalRenderContext[models.environment.vaultEnvironmentRuntimePath] !== 'object'
     ) {
-      const errorMsg = `${vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename your environment with vault as key.`;
+      const errorMsg = `${models.environment.vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename your environment with vault as key.`;
       const newError = new RenderError(errorMsg);
       newError.type = 'render';
       newError.message = errorMsg;
       throw newError;
     }
-    finalRenderContext[vaultEnvironmentRuntimePath] = {
-      ...finalRenderContext[vaultEnvironmentPath],
-      ...finalRenderContext[vaultEnvironmentRuntimePath],
+    finalRenderContext[models.environment.vaultEnvironmentRuntimePath] = {
+      ...finalRenderContext[models.environment.vaultEnvironmentPath],
+      ...finalRenderContext[models.environment.vaultEnvironmentRuntimePath],
     };
-    delete finalRenderContext[vaultEnvironmentPath];
+    delete finalRenderContext[models.environment.vaultEnvironmentPath];
   }
 
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
@@ -229,13 +232,6 @@ export async function buildRenderContext({
 
   return finalRenderContext;
 }
-const renderInThisProcess = async (input: RenderInputType) => {
-  return templating.render(input.input, {
-    context: input.context,
-    path: input.path,
-    ignoreUndefinedEnvVariable: input.ignoreUndefinedEnvVariable,
-  });
-};
 /**
  * Recursively render any JS object and return a new one
  * @param {*} obj - object to render
@@ -290,21 +286,8 @@ export async function render<T>(
       }
 
       try {
-        // Some plugins may, at the moment, require unique and intrusive access. Templates exposed by these
-        // plugins will not function correctly when rendering in a separate process or thread. The user can
-        // explicitly configure rendering to happen on the same thread/process as the rest of the app, in
-        // which case it's okay to render locally.
-
-        const settings = await models.settings.get();
-        const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
-        const currentProcessIsRendererAndPluginsAreRestricted =
-          process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
-        const renderFork = currentProcessIsRendererAndPluginsAreRestricted
-          ? (await import('../ui/worker/templating-handler')).renderInWorker
-          : renderInThisProcess;
-
         // @ts-expect-error -- TSCONVERSION
-        input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
+        input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
@@ -312,7 +295,7 @@ export async function render<T>(
         // @ts-expect-error -- TSCONVERSION
         if (input.includes('{%')) {
           // @ts-expect-error -- TSCONVERSION
-          input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
+          input = await getRuntime().templating.renderTemplate({ input, context, path, ignoreUndefinedEnvVariable });
         }
       } catch (err) {
         console.log(`Failed to render element ${path}`, input);
@@ -381,19 +364,19 @@ export async function getRenderContext({
 }: RenderContextOptions): Promise<BaseRenderContext> {
   const ancestors = _ancestors || (await getRenderContextAncestors(request));
 
-  const project = ancestors.find(isProject);
-  const workspace = ancestors.find(isWorkspace);
+  const project = ancestors.find(models.project.isProject);
+  const workspace = ancestors.find(models.workspace.isWorkspace);
   if (!workspace) {
     throw new Error('Failed to render. Could not find workspace');
   }
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+  const workspaceMeta = await services.workspaceMeta.getByParentId(workspace._id);
 
   let rootGlobalEnvironment: Environment | null = null;
   let subGlobalEnvironment: Environment | null = null;
 
   if (workspaceMeta?.activeGlobalEnvironmentId) {
-    const activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId);
+    const activeGlobalEnvironment = await services.environment.getById(workspaceMeta.activeGlobalEnvironmentId);
 
     if (activeGlobalEnvironment) {
       if (activeGlobalEnvironment?.parentId.startsWith('wrk_')) {
@@ -401,7 +384,7 @@ export async function getRenderContext({
       } else {
         subGlobalEnvironment = activeGlobalEnvironment;
 
-        const baseGlobalEnvironment = await models.environment.getById(activeGlobalEnvironment.parentId);
+        const baseGlobalEnvironment = await services.environment.getById(activeGlobalEnvironment.parentId);
 
         if (baseGlobalEnvironment) {
           rootGlobalEnvironment = baseGlobalEnvironment;
@@ -411,13 +394,13 @@ export async function getRenderContext({
   }
 
   const rootEnvironment =
-    baseEnvironment || (await models.environment.getOrCreateForParentId(workspace ? workspace._id : 'n/a'));
+    baseEnvironment || (await services.environment.getOrCreateForParentId(workspace ? workspace._id : 'n/a'));
   const subEnvironmentId = environment ? (typeof environment === 'string' ? environment : environment._id) : 'n/a';
   const subEnvironment = environment
     ? typeof environment === 'string'
-      ? await models.environment.getById(environment)
+      ? await services.environment.getById(environment)
       : environment
-    : await models.environment.getById('n/a');
+    : await services.environment.getById('n/a');
 
   const keySource: Record<string, string> = {};
   // Function that gets Keys and stores their Source location
@@ -442,7 +425,7 @@ export async function getRenderContext({
     }
   }
 
-  const inKey = templating.NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
+  const inKey = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
 
   if (rootGlobalEnvironment) {
     getKeySource(rootGlobalEnvironment.data || {}, inKey, 'rootGlobal');
@@ -478,7 +461,7 @@ export async function getRenderContext({
     getKeySource(transientVariables.data || {}, inKey, transientVariables.name || 'scriptLocalVariables');
   }
 
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
 
   // Add meta data helper function
   const baseContext: BaseRenderContext = {
@@ -556,11 +539,12 @@ export async function getRenderedRequestAndContext({
   context: Record<string, any>;
 }> {
   const ancestors = await getRenderContextAncestors(request);
-  const workspace = ancestors.find(isWorkspace);
+  const workspace = ancestors.find(models.workspace.isWorkspace);
+  // requestGroups is of order leaf to root
   const requestGroups = ancestors.filter(isRequestGroup);
 
   const parentId = workspace ? workspace._id : 'n/a';
-  const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
+  const cookieJar = await services.cookieJar.getOrCreateForParentId(parentId);
   const renderContext = await getRenderContext({
     request,
     environment,
@@ -580,7 +564,7 @@ export async function getRenderedRequestAndContext({
       o.query = o.query.replace(/#}/g, '# }');
       request.body.text = JSON.stringify(o);
     }
-  } catch (err) {}
+  } catch {}
 
   // Render description separately because it's lower priority
   const description = request.description;
@@ -605,9 +589,11 @@ export async function getRenderedRequestAndContext({
   const renderedCookieJar = renderResult._cookieJar;
   renderedRequest.description = await render(description, renderContext, null, 'keep');
   const userAgentHeaders = request.headers.filter(h => h.name.toLowerCase() === 'user-agent');
-  const noUserAgents = userAgentHeaders.length === 0;
-  const allUserAgentHeadersDisabled = userAgentHeaders.every(h => h.disabled === true);
-  const suppressUserAgent = noUserAgents || allUserAgentHeadersDisabled;
+  const hasUserAgentHeader = userAgentHeaders.length > 0;
+  const allUserAgentHeadersDisabled = hasUserAgentHeader && userAgentHeaders.every(h => h.disabled === true);
+  // Suppress the default User-Agent when the request opts out via disableUserAgentHeader,
+  // or when the user added their own User-Agent header(s) and disabled all of them.
+  const suppressUserAgent = request.disableUserAgentHeader || allUserAgentHeadersDisabled;
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
   // Remove disabled headers
@@ -630,22 +616,7 @@ export async function getRenderedRequestAndContext({
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
-  // Render path parameters
-  if (renderedRequest.pathParameters) {
-    // Replace path parameters in URL with their rendered values
-    // Path parameters are path segments that start with a colon, e.g. :id
-    renderedRequest.url = renderedRequest.url.replace(PATH_PARAMETER_REGEX, match => {
-      const paramName = match.replace('\/:', '');
-      const param = renderedRequest.pathParameters?.find(p => p.name === paramName);
-
-      if (param && param.value) {
-        // The parameter value needs to be URL encoded
-        return `/${encodeURIComponent(param.value)}`;
-      }
-
-      return match;
-    });
-  }
+  renderedRequest.url = applyPathParametersToUrl(renderedRequest.url, renderedRequest.pathParameters);
 
   return {
     context: renderContext,
@@ -673,6 +644,7 @@ export async function getRenderedRequestAndContext({
       settingStoreCookies: renderedRequest.settingStoreCookies,
       settingRebuildPath: renderedRequest.settingRebuildPath,
       settingFollowRedirects: renderedRequest.settingFollowRedirects,
+      disableUserAgentHeader: renderedRequest.disableUserAgentHeader,
       type: renderedRequest.type,
       url: renderedRequest.url,
       preRequestScript: renderedRequest.preRequestScript,
@@ -704,12 +676,13 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
 }
 
 export async function getRenderContextAncestors(
-  base?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup | Workspace,
+  base?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | McpRequest | RequestGroup | Workspace,
 ): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base, [
     models.request.type,
     models.grpcRequest.type,
     models.webSocketRequest.type,
+    models.mcpRequest.type,
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,

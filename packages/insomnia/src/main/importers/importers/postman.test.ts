@@ -7,31 +7,35 @@ describe('postman', () => {
   const postmanSchema = ({
     requests = [],
     version = 'v2.0.0',
+    variables = {},
   }: {
     requests?: Request1[];
     version?: string;
+    variables?: Record<string, any>;
   } = {}) =>
-    JSON.parse(
-      JSON.stringify({
-        info: {
-          name: 'Postman Schema',
-          schema: `https://schema.getpostman.com/json/collection/${version}/collection.json`,
+    structuredClone({
+      info: {
+        name: 'Postman Schema',
+        schema: `https://schema.getpostman.com/json/collection/${version}/collection.json`,
+      },
+      item: [
+        {
+          request: {},
+          name: 'Projects',
+          item: [
+            ...requests,
+            {
+              name: 'Request 1',
+              request: {},
+            },
+          ],
         },
-        item: [
-          {
-            request: {},
-            name: 'Projects',
-            item: [
-              ...requests,
-              {
-                name: 'Request 1',
-                request: {},
-              },
-            ],
-          },
-        ],
-      }),
-    ) as HttpsSchemaGetpostmanComJsonCollectionV210;
+      ],
+      variable: Object.entries(variables).map(([key, value]) => ({
+        key,
+        value,
+      })),
+    }) as HttpsSchemaGetpostmanComJsonCollectionV210;
 
   describe('transformPostmanToNunjucksString', () => {
     it('should transform to nunjucks syntax', () => {
@@ -535,6 +539,30 @@ describe('postman', () => {
           value: "{% faker 'guid' %}",
         },
       ]);
+    });
+
+    it('should import collection variable as Insomnia base environment', () => {
+      const request: Request1 = {
+        method: 'GET',
+        header: [],
+        url: {
+          raw: 'https://httpbin.org/anything/:path',
+          protocol: 'https',
+          host: ['httpbin', 'org'],
+          path: ['anything', ':path'],
+        },
+      };
+      const variables = {
+        key: 'path',
+        foo: 'bar',
+      };
+      const schema = postmanSchema({ requests: [request], version: 'v2.1.0', variables });
+      const postman = new ImportPostman(schema);
+      const result = postman.importCollection();
+
+      const baseEnvironment = result.find(i => i._type === 'environment' && i.parentId !== null);
+      expect(baseEnvironment).toBeDefined();
+      expect(baseEnvironment?.data).toEqual(variables);
     });
   });
 });

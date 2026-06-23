@@ -1,12 +1,9 @@
+import type { CloudProviderCredential, CloudProviderName } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import React, { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { debounce } from '../../../../common/misc';
-import {
-  type CloudProviderCredential,
-  type CloudProviderName,
-  type as cloudCredentialType,
-} from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
 import { CloudCredentialModal } from '../../modals/cloud-credential-modal/cloud-credential-modal';
 import type { ArgConfigFormProps } from '../tag-editor-arg-sub-form';
@@ -21,6 +18,8 @@ import type {
   GCPSecretConfig,
   HashiCorpSecretConfig,
 } from './types';
+
+const cloudCredentialType = models.cloudCredential.type;
 
 export const ExternalVaultForm = (props: ArgConfigFormProps) => {
   const { onChange, configValue, activeTagData, docs } = props;
@@ -89,7 +88,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
     <>
       {selectedCredentialDoc && provider !== 'azure' && (
         <Button
-          className="mb-[--padding-sm] flex h-full items-center justify-center gap-2 px-2 py-1 text-xs text-[--color-info] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="mb-(--padding-sm) flex h-full items-center justify-center gap-2 px-2 py-1 text-xs text-(--color-info) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           style={{ marginTop: 'calc(var(--padding-sm) * -1)' }}
           onPress={() => setShowModal(true)}
         >

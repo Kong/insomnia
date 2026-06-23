@@ -1,7 +1,6 @@
 import { href } from 'react-router';
 
-import type { GitCredentials } from '~/models/git-repository';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/git.init-clone';
 
@@ -9,9 +8,7 @@ interface RepoInitCloneData {
   organizationId: string;
   projectId?: string;
   uri: string;
-  authorName: string;
-  authorEmail: string;
-  credentials: Required<GitCredentials>;
+  credentialsId?: string;
   ref?: string;
 }
 

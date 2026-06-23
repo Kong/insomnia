@@ -13,7 +13,7 @@ paths:
     get:
       responses:
         "200":
-          "description": string
+          description: string
       summary: get pet by id
       operationId: findPetById
       tags:

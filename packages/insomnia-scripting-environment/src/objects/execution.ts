@@ -24,7 +24,7 @@ export class Execution {
       this._skipRequest = skipRequest;
       this._nextRequestIdOrName = nextRequestIdOrName;
     } else {
-      throw new Error('Location input must be array of string');
+      throw new TypeError('Location input must be array of string');
     }
   }
 

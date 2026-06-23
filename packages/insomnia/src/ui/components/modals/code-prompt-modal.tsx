@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
-import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -40,6 +40,7 @@ export interface CodePromptModalHandle {
 }
 export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
+  const codeEditorRef = useRef<CodeEditorHandle>(null);
   const [error, setError] = useState('');
   const [state, setState] = useState<CodePromptModalOptions>({
     title: 'Not Set',
@@ -109,8 +110,9 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
             />
           </div>
         ) : (
-          <div className="tall rounded bg-[--hl-xs]">
+          <div className="tall rounded-sm bg-(--hl-xs)">
             <CodeEditor
+              ref={codeEditorRef}
               id="code-prompt-modal"
               hideLineNumbers
               showPrettifyButton
@@ -128,7 +130,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
           <Dropdown
             aria-label="Select a mode"
             triggerButton={
-              <Button className="!hover:no-underline !hover:bg-opacity-90 !rounded-sm !border !border-solid !border-[--hl-md] !bg-transparent !px-3 !py-2 !text-[--color-font] !transition-colors">
+              <Button className="rounded-xs! border! border-solid! border-(--hl-md)! bg-transparent! px-3! py-2! text-(--color-font)! transition-colors! hover:no-underline!">
                 {MODES[mode]}
                 <i className="fa fa-caret-down space-left" />
               </Button>
@@ -158,7 +160,13 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
         )}
         <button
           className="btn"
-          onClick={() => modalRef.current?.hide()}
+          onClick={() => {
+            const currentValue = codeEditorRef.current?.getValue();
+            if (currentValue !== undefined) {
+              onChange(currentValue);
+            }
+            modalRef.current?.hide();
+          }}
           disabled={error !== ''}
           aria-label="Modal Submit"
         >

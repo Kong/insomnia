@@ -1,17 +1,15 @@
-import fs from 'node:fs';
-
-import React, { type FC, useCallback } from 'react';
+import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
+import React, { type FC, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
 
-import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { utf8StringFromBytes } from '~/common/utils/utf8-bytes';
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
-import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { showError } from '../modals';
 import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
 
 interface Props<T> {
@@ -20,11 +18,13 @@ interface Props<T> {
 
 export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent>> = ({ event }) => {
   const { requestId } = useParams() as { requestId: string };
+  const editorRef = useRef<CodeEditorHandle>(null);
+
   let raw = event.data.toString();
   // Best effort to parse the binary data as a string
   try {
     if ('data' in event && typeof event.data === 'object' && 'data' in event.data && Array.isArray(event.data.data)) {
-      raw = Buffer.from(event.data.data).toString();
+      raw = utf8StringFromBytes(new Uint8Array(event.data.data));
     }
   } catch (err) {
     console.error('Failed to parse event data to string, defaulting to JSON.stringify', err);
@@ -40,20 +40,10 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
     if (canceled || !outputPath) {
       return;
     }
-
-    const to = fs.createWriteStream(outputPath);
-
-    to.on('error', err => {
-      showError({
-        title: 'Save Failed',
-        message: 'Failed to save response body',
-        error: err,
-      });
+    await window.main.writeFile({
+      path: outputPath,
+      content: raw,
     });
-
-    to.write(raw);
-
-    to.end();
   }, [raw]);
 
   const handleCopyResponseToClipboard = useCallback(() => {
@@ -73,21 +63,25 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   const previewMode = ('previewMode' in activeRequestMeta && activeRequestMeta.previewMode) || PREVIEW_MODE_SOURCE;
   return (
     <div className="flex h-full flex-col">
-      <div className="box-border flex h-8 flex-row border-b border-gray-300 p-2">
+      <div className="box-border flex h-8 items-center border-b border-(--hl-sm) p-2">
         <WebSocketPreviewModeDropdown
           download={handleDownloadResponseBody}
           copyToClipboard={handleCopyResponseToClipboard}
           previewMode={previewMode}
-          setPreviewMode={previewMode => patchRequestMeta(requestId, { previewMode })}
+          setPreviewMode={previewMode => {
+            patchRequestMeta(requestId, { previewMode });
+            editorRef.current?.setValue(previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw);
+          }}
         />
       </div>
-      <div className="flex-grow p-4">
+      <div className="grow p-4">
         <CodeEditor
           id="websocket-body-preview"
           hideLineNumbers
           mode={previewMode === PREVIEW_MODE_RAW ? 'text/plain' : 'text/json'}
           defaultValue={previewMode === PREVIEW_MODE_FRIENDLY ? pretty : raw}
           uniquenessKey={event._id}
+          ref={editorRef}
           readOnly
         />
       </div>

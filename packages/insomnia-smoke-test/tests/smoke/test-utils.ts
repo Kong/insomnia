@@ -21,5 +21,5 @@ export function getRandomId() {
  * @returns Random team name
  */
 export function getTeamName() {
-  return `Insomnia ${crypto.randomInt(0, 100000)}`;
+  return `Insomnia ${crypto.randomInt(0, 100_000)}`;
 }

@@ -1,4 +1,5 @@
-import type { PlatformKeyCombinations } from '../../../../common/settings';
+import type { PlatformKeyCombinations } from 'insomnia-data/common';
+
 import { Hotkey } from '../../hotkey';
 
 interface Props {
@@ -6,5 +7,5 @@ interface Props {
 }
 
 export const DropdownHint = (props: Props) => {
-  return <Hotkey className="ml-auto pl-[--padding-lg] text-[--hl-xl]" keyBindings={props.keyBindings} />;
+  return <Hotkey className="ml-auto pl-(--padding-lg) text-(--hl-xl)" keyBindings={props.keyBindings} />;
 };

@@ -1,6 +1,6 @@
 import type { CurlRequestOutput } from 'insomnia/src/main/network/libcurl-promise';
-import { readCurlResponse } from 'insomnia/src/models/response';
-import type { Settings } from 'insomnia/src/models/settings';
+import type { Settings } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,14 +14,13 @@ export async function sendRequest(
   request: string | Request | RequestOptions,
   cb: (error?: string, response?: Response) => void,
   settings: Settings,
-): Promise<Response | undefined> {
+): Promise<Response | void> {
   return new Promise(async (resolve, reject) => {
     try {
       const requestOptions = requestToCurlOptions(request, settings);
-      const nodejsCurlRequest =
-        process.type === 'renderer'
-          ? window.bridge.curlRequest
-          : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
+      const nodejsCurlRequest = __IS_RENDERER__
+        ? window.bridge.curlRequest
+        : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
 
       const output = (await nodejsCurlRequest(requestOptions)) as CurlRequestOutput;
       const transformedOutput = await curlOutputToResponse(output, request);
@@ -32,8 +31,8 @@ export async function sendRequest(
       return resolve(transformedOutput);
     } catch (e) {
       if (cb) {
-        cb(e, undefined);
-        resolve(undefined);
+        cb(e);
+        resolve();
       } else {
         reject(e);
       }
@@ -263,8 +262,7 @@ async function curlOutputToResponse(
       originalRequest,
     });
   }
-  const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
-  const bodyResult = await nodejsReadCurlResponse({
+  const bodyResult = await services.helpers.readCurlResponse({
     bodyPath: result.responseBodyPath,
     bodyCompression: result.patch.bodyCompression,
   });

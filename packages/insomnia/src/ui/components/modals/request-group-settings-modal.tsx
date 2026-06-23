@@ -1,14 +1,14 @@
+import type { RequestGroup } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useNavigate, useParams } from 'react-router';
 
+import { invariant } from '~/common/utils/invariant';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
-import type { RequestGroup } from '../../../models/request-group';
 import { revalidateWorkspaceActiveRequestByFolder } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -46,7 +46,7 @@ export const RequestGroupSettingsModal = ({
     projectLoaderData?.files
       .map(w => w.workspace)
       .filter(isNotNullOrUndefined)
-      .filter(w => w.scope !== 'mock-server') || [];
+      .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
   const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   const patchRequestGroup = useRequestGroupPatcher();
 
@@ -132,7 +132,7 @@ export const RequestGroupSettingsModal = ({
               <div className="form-control form-control--no-label width-auto">
                 <button
                   disabled={!workspaceToCopyTo}
-                  className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                  className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                   onClick={handleCopyToWorkspace}
                 >
                   Copy
@@ -141,7 +141,7 @@ export const RequestGroupSettingsModal = ({
               <div className="form-control form-control--no-label width-auto">
                 <button
                   disabled={!workspaceToCopyTo}
-                  className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                  className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                   onClick={handleMoveToWorkspace}
                 >
                   Move

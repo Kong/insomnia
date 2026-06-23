@@ -1,9 +1,9 @@
+import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '~/common/templating/types';
+
 import { RESPONSE_CODE_REASONS } from '../../common/constants';
-import * as models from '../../models';
-import type { Request } from '../../models/request';
-import { readCurlResponse, type ResponseHeader } from '../../models/response';
 import {
   fetchRequestData,
   responseTransform,
@@ -11,24 +11,6 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
-import type { PluginTemplateTagContext } from '../../templating/types';
-
-type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
-  Partial<Pick<Request, 'body' | 'authentication'>>;
-export interface NodeCurlRequestOptions {
-  request: NodeCurlRequestType;
-  caCertficatePath?: string;
-}
-export interface NodeCurlResponseType {
-  body: string;
-  code: number;
-  reason: string;
-  status: string;
-  responseTime: number;
-  headers: ResponseHeader[];
-  json: () => any;
-  ok?: boolean;
-}
 
 export function init(): {
   network: PluginTemplateTagContext['network'];
@@ -68,19 +50,18 @@ export function init(): {
           renderedRequest,
           renderResult.context,
         );
-        return models.response.create(responsePatch, settings.maxHistoryResponses);
+        return services.response.create(responsePatch, settings.maxHistoryResponses);
       },
       // using node-curl to send a request directly, without context render and database write for request and response
       async sendRequestWithoutSideEffects(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType> {
         const requestId = uuidv4();
-        const settings = await models.settings.get();
+        const settings = await services.settings.get();
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
         const { request: originRequest, caCertficatePath = null } = options;
-        const curlRequest =
-          process.type === 'renderer' || process.type === 'worker'
-            ? window.main.curlRequest
-            : // when exeucted in Inso;
-              (await import('../../main/network/libcurl-promise')).curlRequest;
+        const curlRequest = __IS_RENDERER__
+          ? window.main.curlRequest
+          : // when exeucted in Inso;
+            (await import('../../main/network/libcurl-promise')).curlRequest;
         const response = await curlRequest({
           requestId: `no-sideEffects-request-${requestId}`,
           req: {
@@ -112,7 +93,7 @@ export function init(): {
         if (!lastRedirect) {
           throw new Error('Error in response: the lastRedirect is not defined');
         }
-        const bodyResult = await readCurlResponse({
+        const bodyResult = await services.helpers.readCurlResponse({
           bodyPath: responseBodyPath,
           bodyCompression: patch.bodyCompression,
         });

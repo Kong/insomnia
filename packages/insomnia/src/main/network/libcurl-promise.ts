@@ -1,7 +1,5 @@
 // NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
-import { invariant } from '../../utils/invariant';
-invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';
@@ -19,17 +17,17 @@ import {
 } from '@getinsomnia/node-libcurl';
 import { isValid } from 'date-fns';
 import electron from 'electron';
+import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
+
+import { invariant } from '~/common/utils/invariant';
 
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
-import { describeByteSize, hasAuthHeader } from '../../common/misc';
-import type { ClientCertificate } from '../../models/client-certificate';
-import type { RequestHeader } from '../../models/request';
-import type { ResponseHeader } from '../../models/response';
+import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
+import { parseHeaderStrings } from '../../network/parse-header-strings';
 import { insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
-import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {
   requestId: string; // for cancellation
   req: RequestUsedHere;
@@ -69,12 +67,6 @@ interface SettingsUsedHere {
   dataFolders: string[];
 }
 
-export interface ResponseTimelineEntry {
-  name: keyof typeof CurlInfoDebug;
-  timestamp: number;
-  value: string;
-}
-
 export interface CurlRequestOutput {
   patch: ResponsePatch;
   debugTimeline: ResponseTimelineEntry[];
@@ -103,7 +95,6 @@ export interface ResponsePatch {
   timelinePath?: string;
   url?: string;
 }
-const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
@@ -111,6 +102,7 @@ export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]()
 export const curlRequest = (options: CurlRequestOptions) =>
   new Promise<CurlRequestOutput>(async resolve => {
     try {
+      const userdataDirectory = process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
       const responsesDir = path.join(userdataDirectory, 'responses');
       // TODO: remove this check, its only used for network.test.ts
       await fs.promises.mkdir(responsesDir, { recursive: true });
@@ -161,10 +153,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       const { authentication } = req;
       if (requestBodyPath) {
         const { isAllowed, securedPath } = isPathAllowed(requestBodyPath, settings.dataFolders);
-        invariant(
-          isAllowed,
-          `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security`,
-        );
+        invariant(isAllowed, cannotAccessPathError(securedPath));
 
         // AWS IAM file upload not supported
         const isAWSIAM = 'type' in authentication && authentication.type === 'iam';
@@ -184,7 +173,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
       }
 
       // NOTE: temporary workaround for testing mockbin api
-      if (process.env.PLAYWRIGHT) {
+      if (process.env.PLAYWRIGHT_TEST) {
         req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
       }
 
@@ -334,16 +323,25 @@ export const createConfiguredCurlInstance = ({
   certificates.forEach(validCert => {
     const { passphrase, cert, key, pfx } = validCert;
     if (cert) {
+      const { isAllowed, securedPath } = isPathAllowed(cert, settings.dataFolders);
+      invariant(isAllowed, cannotAccessPathError(securedPath));
+
       curl.setOpt(Curl.option.SSLCERT, cert);
       curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
       debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
     }
     if (pfx) {
+      const { isAllowed, securedPath } = isPathAllowed(pfx, settings.dataFolders);
+      invariant(isAllowed, cannotAccessPathError(securedPath));
+
       curl.setOpt(Curl.option.SSLCERT, pfx);
       curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
       debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
     }
     if (key) {
+      const { isAllowed, securedPath } = isPathAllowed(key, settings.dataFolders);
+      invariant(isAllowed, cannotAccessPathError(securedPath));
+
       curl.setOpt(Curl.option.SSLKEY, key);
       debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
     }
@@ -370,8 +368,8 @@ export const createConfiguredCurlInstance = ({
     const { protocol } = urlParse(req.url);
     const { httpProxy, httpsProxy, noProxy } = settings;
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-    const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-    debugTimeline.push({ value: `Enable network proxy for ${protocol || ''}`, name: 'Text', timestamp: Date.now() });
+    const proxy = proxyHost ? setDefaultProtocol(proxyHost) : '';
+    debugTimeline.push({ value: `Using proxy: ${proxy}`, name: 'Text', timestamp: Date.now() });
     if (proxy) {
       curl.setOpt(Curl.option.PROXY, proxy);
       curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
@@ -503,7 +501,7 @@ export function _parseHeaders(buffer: Buffer): HeaderResult[] {
       const [version, code, ...other] = first.split(/ +/g);
       return {
         version,
-        code: parseInt(code, 10),
+        code: Number.parseInt(code, 10),
         reason: other.join(' '),
         headers,
       };
@@ -545,7 +543,7 @@ const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
     return body.text || '';
   }
 
-  return undefined;
+  return;
 };
 const parseRequestBodyPath = async (body: any) => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;

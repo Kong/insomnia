@@ -1,11 +1,12 @@
+import { deleteTeamProject, isApiError } from 'insomnia-api';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
-import * as models from '~/models';
-import { insomniaFetch } from '~/ui/insomniaFetch';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
+import { createFetcherSubmitHook, getInitialRouteForOrganization } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.delete';
 
@@ -13,10 +14,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
-  const project = await models.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
-  const user = await models.userSession.getOrCreate();
+  const user = await services.userSession.get();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to delete a project');
 
@@ -24,40 +25,59 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     await projectLock.lock();
     const bufferId = await database.bufferChanges();
     if (project.remoteId) {
-      const response = await insomniaFetch<void | {
-        error: string;
-        message?: string;
-      }>({
-        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-        method: 'DELETE',
+      await deleteTeamProject({
+        organizationId,
+        projectRemoteId: project.remoteId,
         sessionId,
       });
-
-      if (response && 'error' in response) {
-        return {
-          error:
-            response.error === 'FORBIDDEN'
-              ? 'You do not have permission to delete this project.'
-              : 'An unexpected error occurred while deleting the project. Please try again.',
-        };
-      }
     }
 
-    if (project.gitRepositoryId) {
-      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
-      gitRepository && (await models.gitRepository.remove(gitRepository));
+    if (models.project.isConnectedGitProject(project)) {
+      const effectiveRepoId = models.project.isGitProject(project) ? models.project.getEffectiveRepoId(project) : null;
+      const gitRepository = effectiveRepoId ? await services.gitRepository.getById(effectiveRepoId) : null;
+      gitRepository && (await services.gitRepository.remove(gitRepository));
     }
 
-    await models.stats.incrementDeletedRequestsForDescendents(project);
-    await models.project.remove(project);
+    await services.stats.incrementDeletedRequestsForDescendents(project);
+    await services.projectLintRuleset.remove(projectId);
+    await services.project.remove(project);
 
     await database.flushChanges(bufferId);
+
+    await window.main.deleteCompiledRuleset({ projectId });
+
+    project.gitRepositoryId && reportGitProjectCount(organizationId, sessionId);
+
+    // If the deleted project is a Konnect project, navigate to another Konnect project
+    if (project.konnectControlPlaneId) {
+      const remainingKonnectProjects = (await services.project.list({ organizationId })).filter(
+        p => p.konnectControlPlaneId != null && p._id !== projectId,
+      );
+
+      if (remainingKonnectProjects.length > 0) {
+        const targetProject = remainingKonnectProjects[0];
+        return redirect(
+          href('/organization/:organizationId/project/:projectId', {
+            organizationId,
+            projectId: targetProject._id,
+          }),
+        );
+      }
+    }
 
     // When redirect to `/organizations/:organizationId`, it sometimes doesn't reload the index loader, so manually redirect to the initial route for the organization
     const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
     return redirect(initialOrganizationRoute);
-  } catch (err) {
+  } catch (err: unknown) {
     console.log(err);
+    if (isApiError(err)) {
+      return {
+        error:
+          err.name === 'FORBIDDEN'
+            ? 'You do not have permission to delete this project.'
+            : 'An unexpected error occurred while deleting the project. Please try again.',
+      };
+    }
     return {
       error:
         err instanceof Error

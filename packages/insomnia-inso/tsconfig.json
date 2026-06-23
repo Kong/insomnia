@@ -5,25 +5,17 @@
     "skipLibCheck": true,
     "target": "es2022",
     "allowJs": true,
-    "checkJs": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
+    "noEmit": true,
     "paths": {
-      "~/*": [
-        "../insomnia/src/*"
-      ],
-      "electron": [
-        "../insomnia/send-request/electron"
-      ]
+      "~/*": ["../insomnia/src/*"]
     },
     /* Transpiling Options */
-    "module": "CommonJS",
+    "module": "ESNext",
     "sourceMap": true,
-    "lib": [
-      "ES2023",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2023", "DOM.Iterable"],
     /* Strictness */
     "strict": true,
     "noImplicitReturns": true,
@@ -32,13 +24,7 @@
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false
   },
-  "include": [
-    ".eslintrc.js",
-    "esbuild.ts",
-    "package.json",
-    "src",
-    "../insomnia/types",
-  ],
+  "include": ["esbuild.ts", "package.json", "src", "../insomnia/types"],
   "exclude": [
     "**/*.test.ts",
     "**/__mocks__/*",

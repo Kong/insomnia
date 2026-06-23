@@ -1,18 +1,24 @@
-import { createWriteStream } from 'node:fs';
-import path from 'node:path';
-
 import contentDisposition from 'content-disposition';
-import { extension as mimeExtension } from 'mime-types';
+import type {
+  Environment,
+  Request,
+  RequestGroup,
+  RequestMeta,
+  RequestTestResult,
+  ResponseInfo,
+  RunnerResultPerRequestPerIteration,
+  UserUploadEnvironment,
+} from 'insomnia-data';
+import { database as db, models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
+import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
 import { getContentDispositionHeader } from '~/common/misc';
+import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
+import { invariant } from '~/common/utils/invariant';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
 import type { TimingStep } from '~/main/network/request-timing';
-import * as models from '~/models';
-import type { Environment, UserUploadEnvironment } from '~/models/environment';
-import type { RequestMeta } from '~/models/request-meta';
-import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '~/models/runner-test-result';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -24,15 +30,15 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
-import { parseGraphQLReqeustBody } from '~/utils/graph-ql';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { AnalyticsEvent, type ImportAttribution, importAttributionKey } from '~/ui/analytics';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
-import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 
 export interface SendActionParams {
   requestId: string;
+  workspaceId: string;
+  projectId: string;
   shouldPromptForPathAfterResponse?: boolean;
   ignoreUndefinedEnvVariable?: boolean;
 }
@@ -62,7 +68,7 @@ export interface RunnerContextForRequest {
   responseId: string;
 }
 
-const writeToDownloadPath = (
+const writeToDownloadPath = async (
   downloadPathAndName: string,
   responsePatch: ResponsePatch,
   requestMeta: RequestMeta,
@@ -70,29 +76,32 @@ const writeToDownloadPath = (
 ) => {
   invariant(downloadPathAndName, 'filename should be set by now');
 
-  const to = createWriteStream(downloadPathAndName);
-  const readStream = models.response.getBodyStream(responsePatch);
-  if (!readStream || typeof readStream === 'string') {
-    return null;
-  }
-  readStream.pipe(to);
-
-  return new Promise(resolve => {
-    readStream.on('end', async () => {
+  try {
+    if (!responsePatch.bodyPath) {
+      responsePatch.error = `Failed to save to ${downloadPathAndName}: unable to read response body`;
+    } else {
+      await window.main.writeResponseBodyToFile({
+        sourcePath: responsePatch.bodyPath,
+        destinationPath: downloadPathAndName,
+        bodyCompression: responsePatch.bodyCompression,
+      });
       responsePatch.error = `Saved to ${downloadPathAndName}`;
-      const response = await models.response.create(responsePatch, maxHistoryResponses);
-      await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      resolve(null);
-    });
-    readStream.on('error', async err => {
-      console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-      const response = await models.response.create(responsePatch, maxHistoryResponses);
-      await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      resolve(null);
-    });
-  });
+    }
+  } catch (err) {
+    responsePatch.error = `Failed to save to ${downloadPathAndName}`;
+    console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+  }
+
+  const response = await services.response.create(responsePatch, maxHistoryResponses);
+  await services.requestMeta.update(requestMeta, { activeResponseId: response._id });
+  return null;
 };
 
+// Can fail with errors from:
+// 1. pre-request script
+// 2. request sending
+// 3. after-response script
+// In each case we create a new response with the error message and set it to active response
 export const sendActionImplementation = async (options: {
   requestId: string;
   shouldPromptForPathAfterResponse: boolean | undefined;
@@ -103,7 +112,7 @@ export const sendActionImplementation = async (options: {
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
   runtime?: SendActionRuntime;
-}) => {
+}): Promise<{ nextRequestIdOrName: string | undefined } | undefined> => {
   const {
     requestId,
     userUploadEnvironment,
@@ -118,7 +127,7 @@ export const sendActionImplementation = async (options: {
 
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
-  const requestMeta = await models.requestMeta.getByParentId(requestId);
+  const requestMeta = await services.requestMeta.getOrCreateByParentId(requestId);
   const transientVariables = nullableTransientVariables || {
     ...models.environment.init(),
     _id: uuidv4(),
@@ -139,37 +148,42 @@ export const sendActionImplementation = async (options: {
     iterationCount,
     runtime,
   );
+
   if ('error' in mutatedContext) {
-    window.main.completeExecutionStep({ requestId });
-    throw {
-      // create response with error info, so that we can store response in db and show it in response viewer
-      response: {
+    const createdResponse = await services.response.create(
+      {
         _id: requestData.responseId,
         parentId: requestId,
-        environemntId: requestData.environment,
+        environmentId: requestData.environment._id,
         statusMessage: 'Error',
         error: mutatedContext.error,
+        timelinePath: requestData.timelinePath,
       },
-      maxHistoryResponses: requestData.settings.maxHistoryResponses,
-      requestMeta,
-      error: mutatedContext.error,
-    };
+      requestData.settings.maxHistoryResponses,
+    );
+    await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
+    window.main.completeExecutionStep({ requestId });
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
+
   if (mutatedContext.execution?.skipRequest) {
     // cancel request running if skipRequest in pre-request script
-    const responseId = requestData.responseId;
-    const responsePatch = {
-      _id: responseId,
-      parentId: requestId,
-      environemntId: requestData.environment,
-      statusMessage: 'Cancelled',
-      error: 'Request was cancelled by pre-request script',
-    };
+
     // create and update response to activeResponse
-    await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
-    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: responseId });
+    const createdResponse = await services.response.create(
+      {
+        _id: requestData.responseId,
+        parentId: requestId,
+        environmentId: requestData.environment._id,
+        statusMessage: 'Cancelled',
+        error: 'Request was cancelled by pre-request script',
+        timelinePath: requestData.timelinePath,
+      },
+      requestData.settings.maxHistoryResponses,
+    );
+    await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
     window.main.completeExecutionStep({ requestId });
-    return mutatedContext;
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
   window.main.completeExecutionStep({ requestId });
@@ -198,8 +212,6 @@ export const sendActionImplementation = async (options: {
   // TODO: remove this temporary hack to support GraphQL variables in the request body properly
   parseGraphQLReqeustBody(renderedRequest);
 
-  invariant(requestMeta, 'RequestMeta not found');
-
   window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
   const response = await sendCurlAndWriteTimeline(
     renderedRequest,
@@ -211,18 +223,22 @@ export const sendActionImplementation = async (options: {
     runtime,
   );
   window.main.completeExecutionStep({ requestId });
+
   if ('error' in response) {
-    throw {
-      response: await responseTransform(
-        response,
-        requestData.activeEnvironmentId,
-        renderedRequest,
-        renderedResult.context,
-      ),
-      maxHistoryResponses: requestData.settings.maxHistoryResponses,
-      requestMeta,
-      error: response.error,
-    };
+    const createdResponse = await services.response.create(
+      {
+        _id: requestData.responseId,
+        parentId: requestId,
+        environmentId: requestData.environment._id,
+        statusMessage: 'Error',
+        error: response.error,
+        timelinePath: requestData.timelinePath,
+      },
+      requestData.settings.maxHistoryResponses,
+    );
+    await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
+    window.main.completeExecutionStep({ requestId });
+    return { nextRequestIdOrName: mutatedContext.execution?.nextRequestIdOrName };
   }
 
   const baseResponsePatch = await responseTransform(
@@ -249,29 +265,28 @@ export const sendActionImplementation = async (options: {
     iterationCount,
     runtime,
   });
+
   if ('error' in postMutatedContext) {
-    throw {
-      response: await responseTransform(
-        response,
-        requestData.activeEnvironmentId,
-        renderedRequest,
-        renderedResult.context,
-      ),
-      maxHistoryResponses: requestData.settings.maxHistoryResponses,
-      requestMeta,
-      error: postMutatedContext.error,
-    };
+    const createdResponse = await services.response.create(
+      {
+        _id: requestData.responseId,
+        parentId: requestId,
+        environmentId: requestData.environment._id,
+        statusMessage: 'Error',
+        error: postMutatedContext.error,
+        timelinePath: requestData.timelinePath,
+      },
+      requestData.settings.maxHistoryResponses,
+    );
+    await services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: createdResponse._id });
+    window.main.completeExecutionStep({ requestId });
+    return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
 
   window.main.completeExecutionStep({ requestId });
 
-  const preTestResults = (mutatedContext.requestTestResults || []).map(
-    (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'pre-request' }),
-  );
-  const postTestResults =
-    (postMutatedContext?.requestTestResults || []).map(
-      (result: RequestTestResult): RequestTestResult => ({ ...result, category: 'after-response' }),
-    ) || [];
+  const preTestResults = mutatedContext.requestTestResults || [];
+  const postTestResults = postMutatedContext?.requestTestResults || [];
   if (testResultCollector) {
     testResultCollector.results = [...testResultCollector.results, ...preTestResults, ...postTestResults];
     const timingSteps = await window.main.getExecution({ requestId });
@@ -289,22 +304,23 @@ export const sendActionImplementation = async (options: {
     : baseResponsePatch;
 
   if (!shouldWriteToFile) {
-    const response = await models.response.create(responsePatch, requestData.settings.maxHistoryResponses);
-    await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-    return postMutatedContext;
+    const response = await services.response.create(responsePatch, requestData.settings.maxHistoryResponses);
+    await services.requestMeta.update(requestMeta, { activeResponseId: response._id });
+    return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
 
   if (requestMeta.downloadPath) {
     const header = getContentDispositionHeader(responsePatch.headers || []);
     const name = header
       ? contentDisposition.parse(header.value).parameters.filename
-      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${(responsePatch.contentType && mimeExtension(responsePatch.contentType)) || 'unknown'}`;
-    return writeToDownloadPath(
-      path.join(requestMeta.downloadPath, name),
+      : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.unknown`;
+    await writeToDownloadPath(
+      window.path.join(requestMeta.downloadPath, name),
       responsePatch,
       requestMeta,
       requestData.settings.maxHistoryResponses,
     );
+    return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
   const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
   const { filePath } = await window.dialog.showSaveDialog({
@@ -314,52 +330,115 @@ export const sendActionImplementation = async (options: {
     ...(defaultPath ? { defaultPath } : {}),
   });
   if (!filePath) {
-    return null;
+    return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
   }
   window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-  return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  await writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  return { nextRequestIdOrName: postMutatedContext.execution?.nextRequestIdOrName };
 };
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { requestId } = params;
-  const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } = (await request.json()) as SendActionParams;
+  const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable, workspaceId, projectId } =
+    (await request.json()) as SendActionParams;
 
   try {
-    return await sendActionImplementation({
+    await sendActionImplementation({
       requestId,
       shouldPromptForPathAfterResponse,
       ignoreUndefinedEnvVariable,
     });
-  } catch (error) {
-    const err = error as unknown as {
-      error: any;
-      response?: ResponsePatch & { _id: string };
-      requestMeta?: RequestMeta;
-      maxHistoryResponses?: number;
-    };
 
-    console.log('[request] Failed to send request', err);
-    const e = err.error || err;
+    const requestMeta = await services.requestMeta.getByParentId(requestId);
+
+    if (requestMeta?.activeResponseId) {
+      const response = await services.response.getById(requestMeta.activeResponseId);
+      if (response) {
+        const settings = await services.settings.getOrCreate();
+        const activeRequest = await services.request.getById(requestId);
+
+        if (activeRequest) {
+          const [requestAndAncestors, clientCertificates] = await Promise.all([
+            db.withAncestors<Request | RequestGroup>(activeRequest as Request, [
+              models.request.type,
+              models.requestGroup.type,
+            ]),
+            services.clientCertificate.findByParentId(workspaceId),
+          ]);
+          const docsWithScripts = requestAndAncestors.filter(
+            (doc): doc is Request | RequestGroup =>
+              models.request.isRequest(doc) || models.requestGroup.isRequestGroup(doc),
+          );
+          const allPreScripts = docsWithScripts.map(doc => doc.preRequestScript).filter((s): s is string => !!s);
+          const allPostScripts = docsWithScripts.map(doc => doc.afterResponseScript).filter((s): s is string => !!s);
+
+          const requestType =
+            activeRequest.body?.mimeType === CONTENT_TYPE_GRAPHQL
+              ? 'GraphQL'
+              : models.request.isEventStreamRequest(activeRequest)
+                ? 'Event Stream'
+                : 'HTTP';
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.requestExecuted,
+            properties: {
+              project_id: projectId,
+              collection_id: workspaceId,
+              request_key_id: requestId,
+              preferredHttpVersion: settings.preferredHttpVersion,
+              // @ts-expect-error -- who cares
+              authenticationType: activeRequest.authentication?.type,
+              mimeType: activeRequest.body.mimeType,
+              protocol: activeRequest.type,
+              response_header_names: activeRequest.headers.map(h => h.name),
+              count_headers: response.headers.length,
+              count_cookies: response.headers.find(h => h.name === 'set-cookie')?.value.split(',').length || 0,
+              count_tests: response.requestTestResults?.length || 0,
+              has_prescript: allPreScripts.length > 0,
+              has_postscript: allPostScripts.length > 0,
+              count_prescript_lines: allPreScripts.reduce((sum, s) => sum + s.split('\n').length, 0),
+              count_postscript_lines: allPostScripts.reduce((sum, s) => sum + s.split('\n').length, 0),
+              count_query_parameters: activeRequest.parameters?.length ?? 0,
+              count_path_parameters: activeRequest.pathParameters?.length ?? 0,
+              has_docs: !!activeRequest.description,
+              count_certificates: clientCertificates.length,
+              request_type: requestType,
+              source: 'request-pane',
+            },
+          });
+
+          const attributionStorageKey = importAttributionKey(requestId);
+          const jsonImportAttribution = window.localStorage.getItem(attributionStorageKey);
+          if (jsonImportAttribution) {
+            try {
+              const importAttribution = JSON.parse(jsonImportAttribution) as ImportAttribution;
+              window.main.trackAnalyticsEvent({
+                event: AnalyticsEvent.importedRequestFirstSend,
+                properties: {
+                  ...importAttribution,
+                  protocol: activeRequest.type,
+                },
+              });
+            } finally {
+              window.localStorage.removeItem(attributionStorageKey);
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[request] Failed to send request', error);
+    // TODO: consider if interpolation errors should be handled in the send request catch block
+    // idea: move missing env variable detection to tryToInterpolateRequest
     const url = new URL(request.url);
 
-    // when after-script error, there is no error in response, we need to set error info into response, so that we can show it in response viewer
-    if (err.response && err.requestMeta && err.response._id) {
-      if (!err.response.error) {
-        err.response.error = e;
-        err.response.statusMessage = 'Error';
-        err.response.statusCode = 0;
-      }
-      // this part is for persisting useful info (e.g. timeline) for debugging, even there is an error
-      const existingResponse = await models.response.getById(err.response._id);
-      const response = existingResponse || (await models.response.create(err.response, err.maxHistoryResponses));
-      await models.requestMeta.update(err.requestMeta, { activeResponseId: response._id });
-    } else {
-      // if the error is not from response, we need to set it to url param and show it in modal
-      url.searchParams.set('error', e);
-      if (e?.extraInfo && e?.extraInfo?.subType === 'environmentVariable') {
-        url.searchParams.set('envVariableMissing', '1');
-        url.searchParams.set('undefinedEnvironmentVariables', e?.extraInfo?.undefinedEnvironmentVariables);
-      }
+    // if the error is not from response, we need to set it to url param and show it in modal
+    const e = error.error || error;
+    url.searchParams.set('error', e);
+    if (e?.extraInfo && e?.extraInfo?.subType === 'environmentVariable') {
+      url.searchParams.set('envVariableMissing', '1');
+      url.searchParams.set('undefinedEnvironmentVariables', e?.extraInfo?.undefinedEnvironmentVariables);
     }
 
     window.main.completeExecutionStep({ requestId });

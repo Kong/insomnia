@@ -1,11 +1,11 @@
 import CodeMirror, { type Token } from 'codemirror';
 
 import * as misc from '~/common/misc';
-import { getTagDefinitions } from '~/templating/index';
-import type { HandleRender, RenderContextAndKeys } from '~/templating/types';
-import { tokenizeTag } from '~/templating/utils';
+import type { HandleRender, RenderContextAndKeys } from '~/common/templating/types';
+import { tokenizeTag } from '~/common/templating/utils';
 import { showModal } from '~/ui/components/modals/index';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
+import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
 CodeMirror.defineExtension(
   'enableNunjucksTags',
@@ -66,6 +66,7 @@ async function _highlightNunjucksTags(
 
   // Only mark up Nunjucks tokens that are in the viewport
   const vp = this.getViewport();
+  const readOnly = this.isReadOnly();
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
@@ -134,9 +135,9 @@ async function _highlightNunjucksTags(
       const el = document.createElement('span');
       el.className = `nunjucks-tag ${tok.type}`;
       el.setAttribute('draggable', 'true');
-      el.setAttribute('data-error', 'off');
-      el.setAttribute('data-template', tok.string);
-      el.innerHTML = '<label></label>' + tok.string;
+      el.dataset.error = 'off';
+      el.dataset.template = tok.string;
+      el.replaceChildren(document.createElement('label'), document.createTextNode(tok.string));
       const mark = this.markText(start, end, {
         // @ts-expect-error not a known property of TextMarkerOptions
         __nunjucks: true,
@@ -156,6 +157,7 @@ async function _highlightNunjucksTags(
       });
       activeMarks.push(mark);
       el.addEventListener('click', async () => {
+        if (readOnly) return;
         // Define the dialog HTML
         showModal(NunjucksModal, {
           // @ts-expect-error not a known property of TextMarkerOptions
@@ -195,8 +197,7 @@ async function _highlightNunjucksTags(
       el.addEventListener('dragstart', event => {
         // Setup the drag contents
         if (event.dataTransfer) {
-          const template = (event.target as typeof el)?.getAttribute('data-template') || '';
-          event.dataTransfer.setData('text/plain', template);
+          event.dataTransfer.setData('text/plain', event.target as unknown as string);
           event.dataTransfer.effectAllowed = 'copyMove';
           event.dataTransfer.dropEffect = 'move';
         }
@@ -294,7 +295,7 @@ async function _updateElementText(
           // @ts-expect-error -- TSCONVERSION
           const foundOption = firstArg.options.find(d => d.value === argData.value);
           const option = foundOption || firstArg.options[0];
-          innerHTML = `${tagDefinition.displayName} &rArr; ${option.displayName}`;
+          innerHTML = `${tagDefinition.displayName} ⇒ ${option.displayName}`;
         } else {
           innerHTML = tagDefinition.displayName || tagData.name;
         }
@@ -328,13 +329,17 @@ async function _updateElementText(
   }
 
   el.title = title;
-  el.setAttribute('data-ignore', dataIgnore);
+  el.dataset.ignore = dataIgnore;
 
   if (dataError === 'on') {
-    el.setAttribute('data-error', dataError);
-    el.innerHTML = '<label><i class="fa fa-exclamation-triangle"></i></label>' + cleanedStr;
+    el.dataset.error = dataError;
+    const label = document.createElement('label');
+    const icon = document.createElement('i');
+    icon.className = 'fa fa-exclamation-triangle';
+    label.append(icon);
+    el.replaceChildren(label, document.createTextNode(cleanedStr));
   } else {
-    el.innerHTML = '<label></label>' + innerHTML;
+    el.replaceChildren(document.createElement('label'), document.createTextNode(innerHTML));
   }
 
   mark.changed();

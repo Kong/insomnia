@@ -1,3 +1,10 @@
+import type {
+  ResponseTimelineEntry,
+  RunnerResultPerRequest,
+  RunnerTestResult,
+  UserUploadEnvironment,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -22,18 +29,15 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
-import type { ResponseTimelineEntry } from '~/main/network/libcurl-promise';
+import { invariant } from '~/common/utils/invariant';
 import type { TimingStep } from '~/main/network/request-timing';
-import * as models from '~/models';
-import type { UserUploadEnvironment } from '~/models/environment';
-import type { RunnerResultPerRequest, RunnerTestResult } from '~/models/runner-test-result';
-import { cancelRequestById } from '~/network/cancellation';
+import { cancelRequestById } from '~/network/cancellation.renderer';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { sendActionImplementation } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
-import { SegmentEvent } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { HelpTooltip } from '~/ui/components/help-tooltip';
@@ -49,29 +53,29 @@ import { ResponseTimer } from '~/ui/components/response-timer';
 import { getTimeAndUnit } from '~/ui/components/tags/time-tag';
 import { Tooltip } from '~/ui/components/tooltip';
 import { ResponseTimelineViewer } from '~/ui/components/viewers/response-timeline-viewer';
+import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
+import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
-import { moveAfter, moveBefore } from '~/utils';
-import { invariant } from '~/utils/invariant';
+import { moveAfter, moveBefore } from '~/ui/utils';
 
-import { type RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 
 const inputStyle =
-  'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
+  'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-xs border-2 border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden focus:ring-1 focus:ring-(--hl-md) transition-colors';
 const iterationInputStyle =
-  'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
+  'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-xs border-2 border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) focus:outline-hidden focus:ring-1 focus:ring-(--hl-md) transition-colors';
 
 // TODO: improve the performance for a lot of logs
 async function aggregateAllTimelines(errorMsg: string | null, testResult: RunnerTestResult) {
-  let timelines = new Array<ResponseTimelineEntry>();
+  let timelines: ResponseTimelineEntry[] = [];
   const responsesInfo = testResult.responsesInfo;
 
   for (const respInfo of responsesInfo) {
-    const resp = await models.response.getById(respInfo.responseId);
+    const resp = await services.response.getById(respInfo.responseId);
 
     if (resp) {
-      const timeline = models.response.getTimeline(resp, true) as unknown as ResponseTimelineEntry[];
+      const timeline = (await services.helpers.getResponseTimeline(resp, true)) as unknown as ResponseTimelineEntry[];
       timelines = [
         ...timelines,
         {
@@ -135,7 +139,7 @@ const defaultAdvancedConfig = {
   keepLog: true,
 };
 
-export const Runner: FC<{}> = () => {
+export const Runner: FC = () => {
   const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
@@ -160,7 +164,10 @@ export const Runner: FC<{}> = () => {
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
   );
 
+  const { updateTabById } = useInsomniaTabContext();
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
+  const [zeroableIterationCount, setZeroableIterationCount] = useState<string>('1');
+  const [clearableDelay, setClearableDelay] = useState<string>('0');
   const {
     iterationCount = 1,
     delay = 0,
@@ -171,6 +178,14 @@ export const Runner: FC<{}> = () => {
     filePath,
   } = runnerStateMap?.[organizationId]?.[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
+
+  useEffect(() => {
+    setZeroableIterationCount(String(iterationCount));
+  }, [iterationCount]);
+
+  useEffect(() => {
+    setClearableDelay(String(delay));
+  }, [delay]);
 
   const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
 
@@ -225,9 +240,9 @@ export const Runner: FC<{}> = () => {
     },
     renderDragPreview(items) {
       return (
-        <div className="rounded bg-slate-800 px-2 py-0.5">
+        <div className="rounded-sm bg-slate-800 px-2 py-0.5">
           <mark
-            className="text-extrabold rounded bg-green-400 px-2 text-lg dark:bg-green-400"
+            className="text-extrabold rounded-sm bg-green-400 px-2 text-lg dark:bg-green-400"
             style={{ color: 'black' }}
           >{` ${items.length}`}</mark>{' '}
           item(s)
@@ -242,7 +257,7 @@ export const Runner: FC<{}> = () => {
             <DropIndicator
               target={target}
               className={({ isDropTarget }) => {
-                return `${isDropTarget ? 'border border-solid border-[--hl-sm]' : ''}`;
+                return `${isDropTarget ? 'border border-solid border-(--hl-sm)' : ''}`;
               }}
             />
           );
@@ -259,11 +274,12 @@ export const Runner: FC<{}> = () => {
     }
     setIsRunning(true);
 
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.collectionRunExecute,
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.collectionRunExecute,
       properties: { plan: organizationData?.currentPlan?.type || 'scratchpad', iterations: iterationCount },
     });
 
+    updateTabById?.(buildRunnerTabId(workspaceId, targetFolderId), { temporary: false });
     const requests = selectedKeys === 'all' ? reqList : reqList.filter(item => (selectedKeys as Set<Key>).has(item.id));
 
     // convert uploadData to environment data
@@ -309,7 +325,7 @@ export const Runner: FC<{}> = () => {
   const onToggleSelection = () => {
     if (selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length) {
       // unselect all
-      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set([]) });
+      updateRunnerState(organizationId, runnerId, { selectedKeys: new Set() });
     } else {
       // select all
       const allKeys = reqList.map(item => item.id);
@@ -320,7 +336,7 @@ export const Runner: FC<{}> = () => {
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
   useEffect(() => {
     const readResults = async () => {
-      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
+      const results = (await services.runnerTestResult.findByParentId(runnerId)) || [];
       setTestHistory(results.reverse());
     };
     readResults();
@@ -336,7 +352,7 @@ export const Runner: FC<{}> = () => {
   const [timelines, setTimelines] = useState<ResponseTimelineEntry[]>([]);
   const gotoExecutionResult = useCallback(
     async (executionId: string) => {
-      const result = await models.runnerTestResult.getById(executionId);
+      const result = await services.runnerTestResult.getById(executionId);
       if (result) {
         setExecutionResult(result);
       }
@@ -388,7 +404,7 @@ export const Runner: FC<{}> = () => {
         unit: durationUnit,
       });
     } else {
-      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
+      const results = (await services.runnerTestResult.findByParentId(runnerId)) || [];
       // show execution result
       if (results.length > 0) {
         setTestHistory(results.reverse());
@@ -423,23 +439,21 @@ export const Runner: FC<{}> = () => {
     let passedTestCount = 0;
     let totalTestCount = 0;
 
-    if (!isRunning) {
-      if (executionResult?.iterationResults) {
-        for (const iteration of executionResult.iterationResults) {
-          for (const requests of iteration) {
-            for (const testCase of requests.results) {
-              if (testCase.status === 'passed') {
-                passedTestCount++;
-              }
-              totalTestCount++;
+    if (!isRunning && executionResult?.iterationResults) {
+      for (const iteration of executionResult.iterationResults) {
+        for (const requests of iteration) {
+          for (const testCase of requests.results) {
+            if (testCase.status === 'passed') {
+              passedTestCount++;
             }
+            totalTestCount++;
           }
         }
       }
     }
 
     const testResultCountTagColor =
-      totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-[var(--hl-sm)]';
+      totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-(--hl-sm)';
 
     return { passedTestCount, totalTestCount, testResultCountTagColor };
   }, [executionResult, isRunning]);
@@ -457,7 +471,7 @@ export const Runner: FC<{}> = () => {
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
   const deleteHistoryItem = (item: RunnerTestResult) => {
-    models.runnerTestResult.remove(item);
+    services.runnerTestResult.remove(item);
     setDeletedItems([...deletedItems, item._id]);
   };
 
@@ -475,49 +489,74 @@ export const Runner: FC<{}> = () => {
         <ErrorBoundary showAlert>
           <Pane type="request">
             <PaneHeader>
-              <Heading className="flex h-[--line-height-sm] w-full items-center pl-[--padding-md]">
+              <Heading className="flex h-(--line-height-sm) w-full items-center pl-(--padding-md)">
                 <div className="h-full w-full overflow-hidden text-left">
                   <div className="h-full min-w-[500px]">
                     <span className="mr-6 text-sm">
                       <input
-                        value={iterationCount}
+                        value={zeroableIterationCount}
                         name="Iterations"
                         disabled={isRunning}
                         onChange={e => {
+                          // Internal state "iterationCount" and the GUI state "zeroableIterationCount" have different
+                          // valid values: zeroableIterationCount = {iterationCount, ''}
                           try {
-                            if (parseInt(e.target.value, 10) > 0) {
+                            const intValue = Number.parseInt(e.target.value, 10);
+
+                            // An empty string is a valid value to render in the GUI—a user can clear the field in order
+                            // to enter a new value—but not valid for the internal state.
+                            if (e.target.value === '' || intValue === iterationCount) {
+                              setZeroableIterationCount(e.target.value);
+                            }
+
+                            if (intValue > 0) {
                               updateRunnerState(organizationId, runnerId, {
-                                iterationCount: parseInt(e.target.value, 10),
+                                iterationCount: intValue,
                               });
                             }
                           } catch {}
                         }}
+                        onBlur={() => {
+                          setZeroableIterationCount(String(iterationCount));
+                        }}
                         type="number"
                         className={iterationInputStyle}
                       />
-                      <span className="border">Iterations</span>
+                      <span>Iterations</span>
                     </span>
                     <span className="mr-6 text-sm">
                       <input
-                        value={delay}
+                        value={clearableDelay}
                         disabled={isRunning}
                         name="Delay"
                         onChange={e => {
+                          // Internal state "delay" and the local state "clearableDelay" have different
+                          // valid values: clearableDelay = {delay, ''}
                           try {
-                            const delay = parseInt(e.target.value, 10);
-                            if (delay >= 0) {
-                              updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
+                            const intValue = Number.parseInt(e.target.value, 10);
+
+                            // An empty string is a valid value to render in the GUI—a user can clear the field in order
+                            // to enter a new value—but not valid for the internal state.
+                            if (e.target.value === '' || intValue === delay) {
+                              setClearableDelay(e.target.value);
+                            }
+
+                            if (intValue >= 0) {
+                              updateRunnerState(organizationId, runnerId, { delay: intValue });
                             }
                           } catch {}
+                        }}
+                        onBlur={() => {
+                          setClearableDelay(String(delay));
                         }}
                         type="number"
                         className={inputStyle}
                       />
-                      <span className="mr-1 border">Delay (ms)</span>
+                      <span className="mr-1">Delay (ms)</span>
                     </span>
                     <Button
                       onPress={() => setShowUploadModal(true)}
-                      className="mr-6 h-full rounded-sm border-[--hl-sm] px-1 py-0.5 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+                      className="mr-6 h-full rounded-xs border-(--hl-sm) px-1 py-0.5 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
                       isDisabled={isRunning}
                     >
                       <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
@@ -527,7 +566,7 @@ export const Runner: FC<{}> = () => {
                 <div className="flex self-stretch p-1">
                   <Button
                     isDisabled={isDisabled}
-                    className="ml-1 rounded-l-sm bg-[--color-surprise] px-5 text-[--color-font-surprise] hover:bg-opacity-90 focus:bg-opacity-90"
+                    className="ml-1 rounded-l-sm bg-(--color-surprise) px-5 text-(--color-font-surprise) hover:bg-(--color-surprise)/90 focus:bg-(--color-surprise)/90"
                     onPress={onRun}
                   >
                     Run
@@ -541,7 +580,7 @@ export const Runner: FC<{}> = () => {
                     triggerButton={
                       <Button
                         isDisabled={isDisabled}
-                        className="rounded-r-sm bg-[--color-surprise] px-1 text-[--color-font-surprise]"
+                        className="rounded-r-sm bg-(--color-surprise) px-1 text-(--color-font-surprise)"
                         style={{
                           borderTopRightRadius: '0.125rem',
                           borderBottomRightRadius: '0.125rem',
@@ -563,18 +602,18 @@ export const Runner: FC<{}> = () => {
             </PaneHeader>
             <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
               <TabList
-                className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
                 aria-label="Request pane tabs"
               >
                 <Tab
-                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                   id="request-order"
                 >
                   <i className="fa fa-sort fa-1x mr-2 h-4" />
                   Request Order
                 </Tab>
                 <Tab
-                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                   id="advanced"
                 >
                   <i className="fa fa-gear fa-1x mr-2 h-4" />
@@ -582,7 +621,7 @@ export const Runner: FC<{}> = () => {
                 </Tab>
               </TabList>
               <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="request-order">
-                <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+                <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
                   <span className="mr-2">
                     {selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length ? (
                       <span onClick={onToggleSelection}>
@@ -620,8 +659,8 @@ export const Runner: FC<{}> = () => {
                         return (
                           <TooltipTrigger key={`parent-folder-${id}=${name}`}>
                             <Tooltip message={name}>
-                              <i className="fa fa-folder fa-1x mr-0.3 h-4 text-[--color-font]" />
-                              <i className="fa fa-caret-right fa-1x mr-0.3 text-[--color-font]-50 h-4 opacity-50" />
+                              <i className="fa fa-folder fa-1x mr-0.3 h-4" />
+                              <i className="fa fa-caret-right fa-1x mr-0.3 h-4 opacity-50" />
                             </Tooltip>
                           </TooltipTrigger>
                         );
@@ -632,11 +671,11 @@ export const Runner: FC<{}> = () => {
                       return (
                         <GridListItem
                           textValue={item.name}
-                          className={`runner-request-list-${item.name} border border-solid border-transparent text-[--color-font]`}
+                          className={`runner-request-list-${item.name} border border-solid border-transparent text-(--color-font)`}
                           style={{ outline: 'none' }}
                         >
                           <Button slot="drag" className="hover:cursor-grab">
-                            <Icon icon="grip-vertical" className="mr-2 w-2 text-[--hl]" />
+                            <Icon icon="grip-vertical" className="mr-2 w-2 text-(--hl)" />
                           </Button>
                           <Checkbox slot="selection">
                             {({ isSelected }) => (
@@ -655,7 +694,7 @@ export const Runner: FC<{}> = () => {
                           {parentFolderContainer}
                           <span className={`ml-2 text-xs uppercase http-method-${item.method}`}>{item.method}</span>
                           <span
-                            className="ml-2 cursor-pointer text-[--hl] hover:underline"
+                            className="ml-2 cursor-pointer text-(--hl) hover:underline"
                             onClick={() => goToRequest(item.id)}
                           >
                             {item.name}
@@ -752,11 +791,11 @@ export const Runner: FC<{}> = () => {
         </ErrorBoundary>
       </Panel>
       <PanelResizeHandle
-        className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+        className={direction === 'horizontal' ? 'h-full w-px bg-(--hl-md)' : 'h-px w-full bg-(--hl-md)'}
       />
       <Panel id="pane-two" className="pane-two theme--pane">
         <PaneHeader className="row-spaced">
-          <Heading className="flex h-[--line-height-sm] w-full items-center border-b border-solid border-b-[--hl-md] pl-3">
+          <Heading className="flex h-(--line-height-sm) w-full items-center border-b border-solid border-b-(--hl-md) pl-3">
             {executionResult?.duration ? (
               <div className="bg-info tag">
                 <strong>{`${totalTime.duration} ${totalTime.unit}`}</strong>
@@ -773,17 +812,17 @@ export const Runner: FC<{}> = () => {
           className="flex h-full w-full flex-1 flex-col"
         >
           <TabList
-            className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+            className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
             aria-label="Request pane tabs"
           >
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="test-results"
             >
               <div>
                 <span>Tests</span>
                 <span
-                  className={`test-result-count ml-1 rounded-sm px-1 ${testResultCountTagColor}`}
+                  className={`test-result-count ml-1 rounded-xs px-1 ${testResultCountTagColor}`}
                   style={{ color: 'white' }}
                 >
                   {`${passedTestCount} / ${totalTestCount}`}
@@ -791,13 +830,13 @@ export const Runner: FC<{}> = () => {
               </div>
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="history"
             >
               History
             </Tab>
             <Tab
-              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="console"
             >
               Console
@@ -816,7 +855,7 @@ export const Runner: FC<{}> = () => {
           </TabPanel>
           <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="test-results">
             {isRunning && (
-              <div className="text-md flex h-full w-full items-center">
+              <div className="flex h-full w-full items-center">
                 <ResponseTimer
                   handleCancel={() => cancelExecution(runnerId)}
                   activeRequestId={runnerId}
@@ -952,7 +991,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       while (j < requests.length) {
         // TODO: we might find a better way to do runner cancellation
         if (getExecution(runnerId) === undefined) {
-          throw 'Runner has been stopped';
+          throw new Error('Runner has been stopped');
         }
 
         const targetRequest = requests[j];
@@ -994,14 +1033,14 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
           });
 
-          const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(targetRequest.id, {
+          const activeRequestMeta = await services.requestMeta.updateOrCreateByParentId(targetRequest.id, {
             lastActive: Date.now(),
           });
           invariant(activeRequestMeta, 'Request meta not found');
 
           await new Promise(resolve => setTimeout(resolve, delay));
 
-          const mutatedContext = (await sendActionImplementation({
+          const execution = await sendActionImplementation({
             requestId: targetRequest.id,
             iteration: i + 1,
             iterationCount,
@@ -1011,9 +1050,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             testResultCollector: resultCollector,
             runtime,
             transientVariables: testCtx.transientVariables,
-          })) as RequestContext | null;
-          if (mutatedContext?.execution?.nextRequestIdOrName) {
-            nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
+          });
+          if (execution?.nextRequestIdOrName) {
+            nextRequestIdOrName = execution.nextRequestIdOrName || '';
           }
 
           const requestResults: RunnerResultPerRequest = {
@@ -1086,15 +1125,13 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     window.main.completeExecutionStep({ requestId: runnerId });
   } catch (e) {
     // the error could be from third party
-    const errMsg = e.error || e;
-    updateExecution(runnerId, {
-      error: errMsg,
-    });
+    const errMsg = e.message || e.error || e;
+    updateExecution(runnerId, { error: errMsg });
     return null;
   } finally {
     cancelExecution(runnerId);
 
-    await models.runnerTestResult.create({
+    await services.runnerTestResult.create({
       parentId: runnerId,
       source: testCtx.source,
       iterations: testCtx.iterationCount,

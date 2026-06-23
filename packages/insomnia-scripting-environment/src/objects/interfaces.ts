@@ -1,12 +1,7 @@
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import type { CookieJar as InsomniaCookieJar } from 'insomnia/src/models/cookie-jar';
-import type { Request } from 'insomnia/src/models/request';
-import type { Settings } from 'insomnia/src/models/settings';
-import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
+import type { ClientCertificate, CookieJar, Request, RequestTestResult, Settings } from 'insomnia-data';
 
 import type { ExecutionOption } from './execution';
 import type { RequestInfoOption } from './request-info';
-import type { RequestTestResult } from './test';
 
 /** @ignore */
 export interface IEnvironment {
@@ -30,9 +25,9 @@ export interface RequestContext {
   timeout: number;
   settings: Settings;
   clientCertificates: ClientCertificate[];
-  cookieJar: InsomniaCookieJar;
-  // only for the after-response script
-  response?: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError;
+  cookieJar: CookieJar;
+  // Callback types defined elsewhere to avoid circular imports
+  response?: any;
   requestTestResults?: RequestTestResult[];
   requestInfo: RequestInfoOption;
   execution: ExecutionOption;

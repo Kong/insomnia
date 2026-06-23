@@ -1,8 +1,9 @@
+import { models } from 'insomnia-data';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { vaultEnvironmentMaskValue, vaultEnvironmentRuntimePath } from '../../../models/environment';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import type { RenderPurpose } from '../../../templating/types';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import type { RenderPurpose } from '~/common/templating/types';
+
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
 interface Props {
@@ -27,8 +28,8 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
       .replace('{{', '')
       .replace('}}', '')
       .trim()
-      .startsWith(`${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}.${vaultEnvironmentRuntimePath}`) &&
-    preview === vaultEnvironmentMaskValue;
+      .startsWith(`${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}.${models.environment.vaultEnvironmentRuntimePath}`) &&
+    preview === models.environment.vaultEnvironmentMaskValue;
 
   useEffect(() => {
     let isMounted = true;

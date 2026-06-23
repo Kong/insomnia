@@ -1,46 +1,36 @@
-import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
-import type { Environment } from 'nunjucks';
+import { localTemplateTags } from 'insomnia/src/common/templating/local-template-tags';
+import type { Liquid } from 'liquidjs';
 
-import BaseExtension from './base-extension';
-import { nunjucks } from './nunjucks.client';
-import { extractUndefinedVariableKey, RenderError } from './render-error';
+import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import { buildLiquidEngine, stripLiquidComments } from '~/common/templating/liquid-engine';
+import { extractUndefinedVariableKey, translateLiquidError } from '~/common/templating/render-error';
 
-// Some constants
-export const RENDER_ALL = 'all';
-export const RENDER_VARS = 'variables';
-export const RENDER_TAGS = 'tags';
-export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
+import { createLiquidTag } from './liquid-extension';
+export { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME };
 
-type NunjucksEnvironment = Environment & {
-  extensions: Record<string, any>;
-};
-
-// Cached globals
-let nunjucksVariablesOnly: NunjucksEnvironment | null = null;
-let nunjucksTagsOnly: NunjucksEnvironment | null = null;
-let nunjucksAll: NunjucksEnvironment | null = null;
+// Cached engine instances
+let liquidAll: Liquid | null = null;
+let liquidAllTagMetadata: Map<string, any> | null = null;
 
 /**
  * Render text based on stuff
- * @param {String} text - Nunjucks template in text form
+ * @param {String} text - Liquid template in text form
  * @param {Object} [config] - Config options for rendering
  * @param {Object} [config.context] - Context to render with
  * @param {Object} [config.path] - Path to include in the error message
- * @param {Object} [config.renderMode] - Only render variables (not tags)
  */
 export function render(
   text: string,
   config: {
     context?: Record<string, any>;
     path?: string;
-    renderMode?: string;
     ignoreUndefinedEnvVariable?: boolean;
   } = {},
 ) {
-  const hasNunjucksInterpolationSymbols = text.includes('{{') && text.includes('}}');
-  const hasNunjucksCustomTagSymbols = text.includes('{%') && text.includes('%}');
-  const hasNunjucksCommentSymbols = text.includes('{#') && text.includes('#}');
-  if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols && !hasNunjucksCommentSymbols) {
+  const hasTemplateInterpolationSymbols = text.includes('{{') && text.includes('}}');
+  const hasTemplateTagSymbols = text.includes('{%') && text.includes('%}');
+  const hasTemplateCommentSymbols = text.includes('{#') && text.includes('#}');
+  if (!hasTemplateInterpolationSymbols && !hasTemplateTagSymbols && !hasTemplateCommentSymbols) {
     return text;
   }
   const context = config.context || {};
@@ -49,163 +39,88 @@ export function render(
   // new: {{ _['arr-name-with-dash'][0].prop }}
   const templatingContext = { ...context, [NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME]: context };
   const path = config.path || null;
-  const renderMode = config.renderMode || RENDER_ALL;
+
   return new Promise<string | null>(async (resolve, reject) => {
-    // NOTE: this is added as a breadcrumb because renderString sometimes hangs
-    const id = setTimeout(() => console.log('[templating] Warning: nunjucks failed to respond within 5 seconds'), 5000);
-    const nj = await getNunjucks(renderMode, config.ignoreUndefinedEnvVariable);
-    nj?.renderString(text, templatingContext, (err: Error | null, result: any) => {
+    // NOTE: this is added as a breadcrumb because rendering sometimes hangs
+    const id = setTimeout(() => console.log('[templating] Warning: liquid failed to respond within 5 seconds'), 5000);
+    try {
+      const { engine } = await getLiquid(config.ignoreUndefinedEnvVariable);
+      const preprocessed = stripLiquidComments(text);
+      const result = await engine.parseAndRender(preprocessed, templatingContext);
       clearTimeout(id);
-      if (!err) {
-        return resolve(result);
-      }
-      console.warn('[templating] Error rendering template', err);
-      const sanitizedMsg = err.message
-        .replace(/\(unknown path\)\s/, '')
-        .replace(/\[Line \d+, Column \d*]/, '')
-        .replace(/^\s*Error:\s*/, '')
-        .trim();
-      const location = err.message.match(/\[Line (\d+), Column (\d+)*]/);
-      const line = location ? parseInt(location[1]) : 1;
-      const column = location ? parseInt(location[2]) : 1;
-      const reason = err.message.includes('attempted to output null or undefined value') ? 'undefined' : 'error';
-      const newError = new RenderError(sanitizedMsg);
-      newError.path = path || '';
-      newError.message = sanitizedMsg;
-      newError.location = {
-        line,
-        column,
-      };
-      newError.type = 'render';
-      newError.reason = reason;
-      // regard as environment variable missing
-      if (hasNunjucksInterpolationSymbols && reason === 'undefined') {
+      resolve(result);
+    } catch (err: any) {
+      clearTimeout(id);
+      const newError = translateLiquidError(err, text, templatingContext, path);
+      if (hasTemplateInterpolationSymbols && newError.reason === 'undefined') {
         newError.extraInfo = {
           subType: 'environmentVariable',
           undefinedEnvironmentVariables: extractUndefinedVariableKey(text, templatingContext),
         };
       }
       reject(newError);
-    });
+    }
   });
 }
 
 /**
- * Reload Nunjucks environments. Useful for if plugins change.
+ * Reload Liquid engine. Useful when plugins change.
  */
 export function reload() {
-  nunjucksAll = null;
-  nunjucksVariablesOnly = null;
-  nunjucksTagsOnly = null;
+  liquidAll = null;
+  liquidAllTagMetadata = null;
 }
 
 /**
  * Get definitions of template tags
  */
 export async function getTagDefinitions() {
-  const env = await getNunjucks(RENDER_ALL);
+  const { tagMetadata } = await getLiquid();
 
-  return Object.keys(env.extensions)
-    .map(k => env.extensions[k])
-    .filter(ext => !ext.isDeprecated())
-    .sort((a, b) => (a.getPriority() > b.getPriority() ? 1 : -1))
+  return Array.from(tagMetadata.values())
+    .filter(ext => !ext.deprecated)
+    .sort((a, b) => (a.priority > b.priority ? 1 : -1))
     .map(ext => ({
-      name: ext.getTag() || '',
-      displayName: ext.getName() || '',
-      liveDisplayName: ext.getLiveDisplayName(),
-      description: ext.getDescription(),
-      disablePreview: ext.getDisablePreview(),
-      args: ext.getArgs(),
-      actions: ext.getActions(),
+      name: ext.name || '',
+      displayName: typeof ext.displayName === 'string' ? ext.displayName : ext.name || '',
+      liveDisplayName: ext.liveDisplayName || (() => ''),
+      description: ext.description,
+      disablePreview: ext.disablePreview || (() => false),
+      args: ext.args || [],
+      actions: ext.actions || [],
     }));
 }
 
-async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: boolean): Promise<NunjucksEnvironment> {
-  let throwOnUndefined = true;
-  if (ignoreUndefinedEnvVariable) {
-    throwOnUndefined = false;
-  } else {
-    if (renderMode === RENDER_VARS && nunjucksVariablesOnly) {
-      return nunjucksVariablesOnly;
-    }
-    if (renderMode === RENDER_TAGS && nunjucksTagsOnly) {
-      return nunjucksTagsOnly;
-    }
-    if (renderMode === RENDER_ALL && nunjucksAll) {
-      return nunjucksAll;
-    }
+async function getLiquid(
+  ignoreUndefinedEnvVariable?: boolean,
+): Promise<{ engine: Liquid; tagMetadata: Map<string, any> }> {
+  if (!ignoreUndefinedEnvVariable && liquidAll && liquidAllTagMetadata) {
+    return { engine: liquidAll, tagMetadata: liquidAllTagMetadata };
   }
 
-  // ~~~~~~~~~~~~ //
-  // Setup Config //
-  // ~~~~~~~~~~~~ //
-  const config = {
-    autoescape: false,
-    // Don't escape HTML
-    throwOnUndefined,
-    // Strict mode
-    tags: {
-      blockStart: '{%',
-      blockEnd: '%}',
-      variableStart: '{{',
-      variableEnd: '}}',
-      commentStart: '{#',
-      commentEnd: '#}',
-    },
-  };
-
-  if (renderMode === RENDER_VARS) {
-    // Set tag syntax to something that will never happen naturally
-    config.tags.blockStart = '<[{[{[{[{[$%';
-    config.tags.blockEnd = '%$]}]}]}]}]>';
-  }
-
-  if (renderMode === RENDER_TAGS) {
-    // Set tag syntax to something that will never happen naturally
-    config.tags.variableStart = '<[{[{[{[{[$%';
-    config.tags.variableEnd = '%$]}]}]}]}]>';
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // Create Env with Extensions //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
-  nunjucksEnvironment.addGlobal('range', undefined);
-  nunjucksEnvironment.addGlobal('cycler', undefined);
-  nunjucksEnvironment.addGlobal('joiner', undefined);
   const pluginTemplateTags = await (await import('../plugins')).getTemplateTags();
 
-  const allExtensions = [
+  const allTags = [
     ...localTemplateTags,
-
     // Spread after local tags to allow plugins to override them.
-    // TODO: Determine if this is in fact the behavior we've explicitly decided to support.
     ...pluginTemplateTags,
   ];
 
-  for (const extension of allExtensions) {
-    const { templateTag, plugin } = extension;
-    templateTag.priority = templateTag.priority || allExtensions.indexOf(extension);
-    const instance = new BaseExtension(templateTag, plugin);
-    nunjucksEnvironment.addExtension(instance.getTag() || '', instance);
-    // Hidden helper filter to debug complicated things
-    // eg. `{{ foo | urlencode | debug | upper }}`
-    nunjucksEnvironment.addFilter('debug', (o: any) => o);
+  // Assign priorities
+  allTags.forEach((ext, i) => {
+    ext.templateTag.priority = ext.templateTag.priority ?? i;
+  });
+
+  const { engine, tagMetadata } = buildLiquidEngine({
+    strictVariables: !ignoreUndefinedEnvVariable,
+    tagFactory: (ext, plugin) => createLiquidTag(ext, plugin, (str, opts) => Promise.resolve(render(str, opts))),
+    tags: allTags.map(ext => ({ templateTag: ext.templateTag, plugin: ext.plugin })),
+  });
+
+  if (!ignoreUndefinedEnvVariable) {
+    liquidAll = engine;
+    liquidAllTagMetadata = tagMetadata;
   }
 
-  // ~~~~~~~~~~~~~~~~~~~~ //
-  // Cache Env and Return (when ignoreUndefinedEnvVariable is false) //
-  // ~~~~~~~~~~~~~~~~~~~~ //
-  if (ignoreUndefinedEnvVariable) {
-    return nunjucksEnvironment;
-  }
-  if (renderMode === RENDER_VARS) {
-    nunjucksVariablesOnly = nunjucksEnvironment;
-  } else if (renderMode === RENDER_TAGS) {
-    nunjucksTagsOnly = nunjucksEnvironment;
-  } else {
-    nunjucksAll = nunjucksEnvironment;
-  }
-
-  return nunjucksEnvironment;
+  return { engine, tagMetadata };
 }

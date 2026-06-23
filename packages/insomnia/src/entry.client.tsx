@@ -1,30 +1,52 @@
-import './ui/rendererListeners';
+import './ui/renderer-listeners';
 import './ui/log';
 
+import { configureFetch } from 'insomnia-api';
+import { initDatabase, initServices, services } from 'insomnia-data';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-import type { SessionData } from 'react-router';
 import { HydratedRouter } from 'react-router/dom';
 
-import { migrateFromLocalStorage, setSessionData, setVaultSessionData } from './account/session';
+import { insomniaFetch } from '~/common/insomnia-fetch';
+import { initRuntime } from '~/runtimes';
+import { rendererRuntime } from '~/runtimes/runtime.renderer';
+import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '~/ui/account/session';
+import { database as clientDatabase } from '~/ui/database.client';
+import { applyColorScheme } from '~/ui/plugins/misc';
+import { createServicesProxy } from '~/ui/services-proxy';
+import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
+import { getInitialEntry } from '~/ui/utils/router';
+
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { settings } from './models';
-import { initNewOAuthSession } from './network/o-auth-2/get-token';
-import { init as initPlugins } from './plugins';
-import { applyColorScheme } from './plugins/misc';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
 import { PromptModal } from './ui/components/modals/prompt-modal';
 import { WrapperModal } from './ui/components/modals/wrapper-modal';
 import { initializeSentry } from './ui/sentry';
-import { getInitialEntry } from './utils/router';
+import { registerSyncMergeConflictListener } from './ui/utils/insomnia-sync';
 
 initializeSentry();
 
-await initPlugins();
+// Initialize database for renderer process
+await initDatabase(clientDatabase);
+// Initialize services for renderer process.
+// With contextIsolation the preload exposes a flat invoke (a Proxy can't cross
+// the bridge), so rebuild the Proxy here. Without it, the Proxy is on window directly.
+const dataServices =
+  window._dataServices ?? (window._dataServicesInvoke ? createServicesProxy(window._dataServicesInvoke) : undefined);
+if (!dataServices) {
+  throw new Error(
+    'Services bridge is not available. This entrypoint must run in an environment with the preload bridge.',
+  );
+}
+initServices(dataServices);
+initRuntime(rendererRuntime);
+
+configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));
 
 await migrateFromLocalStorage();
+registerSyncMergeConflictListener();
 
 try {
   window.showAlert = options => showModal(AlertModal, options);
@@ -44,12 +66,45 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboardingV11', skipOnboarding.toString());
+    window.localStorage.setItem('hasSeenOnboardingV13', skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
   console.log('[onboarding] Failed to parse session data', e);
 }
+
+// Workaround for iframe redirect issue caused by api.protocol.ts
+// Problem: The https protocol handler (registerInsomniaProtocols) intercepts all https requests
+// to solve CORS issues. However, when an iframe redirects from https://renderer.gist.build to
+// https://code.gist.build, the protocol handler auto-follows the redirect but the iframe's
+// location doesn't update. This causes the Customer.io SDK to fail origin validation.
+//
+// Solution: Intercept postMessage events from renderer.gist.build in the capture phase,
+// stop propagation, and re-dispatch with origin changed to code.gist.build. This makes
+// the SDK think the message came from the expected redirected URL.
+window.addEventListener(
+  'message',
+  (event: MessageEvent) => {
+    // If origin is renderer.gist.build (original URL), stop propagation and dispatch a new event
+    if (event.origin === 'https://renderer.gist.build') {
+      // Stop the original event from reaching other listeners
+      event.stopImmediatePropagation();
+
+      // Create and dispatch a new MessageEvent with modified origin
+      // Note: 'ports' property is read-only and cannot be set, but the SDK doesn't use it
+      const newEvent = new MessageEvent('message', {
+        data: event.data,
+        origin: 'https://code.gist.build',
+        lastEventId: event.lastEventId,
+        source: event.source,
+      });
+
+      window.dispatchEvent(newEvent);
+      return;
+    }
+  },
+  true, // Use capture phase to intercept before other listeners
+);
 
 // Check if there is a Session provided by an env variable and use this
 const insomniaSession = getInsomniaSession();
@@ -76,10 +131,10 @@ if (insomniaSession) {
   }
 }
 
-const appSettings = await settings.getOrCreate();
+const appSettings = await services.settings.getOrCreate();
 
 if (appSettings.clearOAuth2SessionOnRestart) {
-  initNewOAuthSession();
+  await clearOAuthWindowSessionId();
 }
 
 applyColorScheme(appSettings);

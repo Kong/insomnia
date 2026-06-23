@@ -38,7 +38,7 @@ export const PasswordViewer: FC<{
   return (
     <span className="monospace">
       <i
-        className={`fa ${textVisible ? 'fa-eye' : 'fa-eye-slash'} cursor-pointer pr-[--padding-xs]`}
+        className={`fa ${textVisible ? 'fa-eye' : 'fa-eye-slash'} cursor-pointer pr-(--padding-xs)`}
         onClick={toggleVisible}
       />
       {textVisible ? <span className="selectable">{text}</span> : mask}

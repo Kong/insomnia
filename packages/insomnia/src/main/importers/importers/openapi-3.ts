@@ -5,7 +5,8 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import YAML from 'yaml';
 
-import type { Authentication, Converter, ImportRequest } from '../entities';
+import { pathWithParamsAsPathParameters } from '../../../common/path-with-params';
+import type { Converter, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
 
 export const id = 'openapi3';
@@ -109,7 +110,7 @@ const resolveVariables = (server: OpenAPIV3.ServerObject) => {
 const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
   try {
     return (unthrowableParseJson(rawData) || YAML.parse(rawData)) as OpenAPIV3.Document;
-  } catch (err) {
+  } catch {
     return null;
   }
 };
@@ -131,13 +132,7 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
     return [];
   }
 
-  let servers: OpenAPIV3.ServerObject[] | undefined;
-
-  if (!document.servers) {
-    servers = [{ url: 'http://example.com/' }];
-  } else {
-    servers = document.servers;
-  }
+  const servers = !document.servers ? [{ url: 'http://example.com/' }] : document.servers;
 
   const securityVariables = getSecurityEnvVariables(
     document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
@@ -255,11 +250,11 @@ const importFolderItem =
   };
 
 /**
- * Return path with parameters replaced by insomnia variables
+ * Return path with parameters replaced by insomnia path parameters
  *
- * I.e. "/foo/:bar" => "/foo/{{ bar }}"
+ * I.e. "/foo/{bar}" => "/foo/:bar"
  */
-const pathWithParamsAsVariables = (path?: string) => path?.replace(VARIABLE_SEARCH_VALUE, '{{ _.$1 }}') ?? '';
+export { pathWithParamsAsPathParameters };
 
 /**
  * Return Insomnia request
@@ -285,11 +280,11 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
+    url: `{{ _.base_url }}${pathWithParamsAsPathParameters(endpointSchema.path)}`,
     body: body,
     description: endpointSchema.description || '',
     headers: [...paramHeaders, ...securityHeaders],
-    authentication: authentication as Authentication,
+    authentication: authentication,
     parameters: [...prepareQueryParams(endpointSchema), ...securityParams],
   };
 };
@@ -598,10 +593,23 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
   }
 
   if (schema instanceof Object) {
-    const { type, format, example, readOnly, default: defaultValue } = schema;
+    const {
+      type,
+      format,
+      example,
+      readOnly,
+      default: defaultValue,
+      allOf,
+      oneOf,
+      anyOf,
+    } = schema as OpenAPIV3.SchemaObject & {
+      allOf?: OpenAPIV3.SchemaObject[];
+      oneOf?: OpenAPIV3.SchemaObject[];
+      anyOf?: OpenAPIV3.SchemaObject[];
+    };
 
     if (readOnly) {
-      return undefined;
+      return;
     }
 
     if (example) {
@@ -610,6 +618,28 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
 
     if (defaultValue) {
       return defaultValue;
+    }
+
+    // Handle allOf by merging examples from all schemas
+    if (allOf && Array.isArray(allOf)) {
+      const mergedExample: Record<string, unknown> = {};
+      for (const subSchema of allOf) {
+        const subExample = generateParameterExample(subSchema as OpenAPIV3.SchemaObject);
+        if (subExample && typeof subExample === 'object' && !Array.isArray(subExample)) {
+          Object.assign(mergedExample, subExample);
+        }
+      }
+      return mergedExample;
+    }
+
+    // Handle oneOf by using the first schema (validates against exactly one)
+    if (oneOf && Array.isArray(oneOf) && oneOf.length > 0) {
+      return generateParameterExample(oneOf[0] as OpenAPIV3.SchemaObject);
+    }
+
+    // Handle anyOf by using the first schema (validates against any/one or more)
+    if (anyOf && Array.isArray(anyOf) && anyOf.length > 0) {
+      return generateParameterExample(anyOf[0] as OpenAPIV3.SchemaObject);
     }
 
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion

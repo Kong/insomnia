@@ -1,6 +1,6 @@
+import type { MockServer } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
-import type { MockServer } from '../../models/mock-server';
 import {
   FLEXIBLE_URL_REGEX,
   getContentTypeName,
@@ -60,7 +60,7 @@ describe('isValidActivity', () => {
     // @ts-expect-error intentionally invalid
     expect(isValidActivity(null)).toBe(false);
     // @ts-expect-error intentionally invalid
-    expect(isValidActivity(undefined)).toBe(false);
+    expect(isValidActivity()).toBe(false);
   });
 });
 

@@ -1,17 +1,30 @@
+import type { MockServer } from 'insomnia-data';
+import {
+  CONTENT_TYPE_FORM_URLENCODED,
+  CONTENT_TYPE_GRAPHQL,
+  CONTENT_TYPE_JSON,
+  isLinux,
+  isMac,
+  isWindows,
+  METHOD_GET,
+  platform,
+} from 'insomnia-data/common';
+
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import type { MockServer } from '../models/mock-server';
-import type { KeyCombination } from './settings';
 
-// Vite is filtering out process.env variables that are not prefixed with VITE_.
+// In the renderer (nodeIntegration disabled) env vars come from the preload via window.env.
+// In the inso CLI and main process, fall back to process.env.
 const ENV = 'env';
 
-const env = process[ENV];
+// eslint-disable-next-line no-restricted-globals -- isomorphic: guarded by `typeof window`. Renderer reads env from the preload (`window.env`); main process, UtilityProcess and the inso CLI fall back to process.env.
+const env = typeof window !== 'undefined' && window.env ? window.env : process[ENV];
 
 export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
-export const PLAYWRIGHT = env.PLAYWRIGHT;
+export const PLAYWRIGHT_TEST = env.PLAYWRIGHT_TEST;
+export const OAUTH_WINDOW_SESSION_ID_KEY = 'current-oauth-session-id';
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
@@ -23,45 +36,40 @@ export const getInsomniaVaultKey = () => env.INSOMNIA_VAULT_KEY;
 export const getInsomniaVaultSrpSecret = () => env.INSOMNIA_VAULT_SRP_SECRET;
 export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
-export const getAppDefaultTheme = () => appConfig.theme;
-export const getAppDefaultLightTheme = () => appConfig.lightTheme;
-export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
-export const getAppPlatform = () => process.platform;
 export const getAppBundlePlugins = () => appConfig.bundlePlugins;
-export const isMac = () => getAppPlatform() === 'darwin';
-export const isLinux = () => getAppPlatform() === 'linux';
-export const isWindows = () => getAppPlatform() === 'win32';
-export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
+// Must specify full `process.env.INSOMNIA_ENV` here because esbuild define is a build-time replacement and won't inject to runtime
+export const getAppEnvironment = () => env.INSOMNIA_ENV || process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
+export const allowUpdatesInDev = () => Boolean(env.ALLOW_UPDATES_IN_DEV);
 export const getSegmentWriteKey = () =>
-  appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'];
+  appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
-export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
-
-export const getBrowserUserAgent = () =>
-  encodeURIComponent(
-    String(window.navigator.userAgent)
-      .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
-      .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
-  ).replace('%2C', ',');
+export const getCioWriteKey = () =>
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].writeKey;
+export const getCioSiteId = () =>
+  appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].siteId;
+// Must specify full `process.env.BUILD_DATE` here because esbuild define is a build-time replacement and won't inject to runtime
+export const getAppBuildDate = () => new Date((env.BUILD_DATE || process.env.BUILD_DATE) ?? '').toLocaleDateString();
 
 export function updatesSupported() {
   // Updates are not supported on Linux
-  if (isLinux()) {
+  if (isLinux) {
     return false;
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows() && process.env['PORTABLE_EXECUTABLE_DIR']) {
+  if (isWindows && env.PORTABLE_EXECUTABLE_DIR) {
     return false;
   }
 
   return true;
 }
 
-export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
+export type UpdateStatus = 'idle' | 'checking' | 'downloading' | 'readyToRestart';
+
+export const getClientString = () => `${getAppEnvironment()}::${platform}::${getAppVersion()}`;
 
 // Global Stuff
 export const DEBOUNCE_MILLIS = 100;
@@ -77,6 +85,8 @@ export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;
 
 export const ACCEPTED_NODE_CA_FILE_EXTS = ['.pem', '.crt', '.cer', '.p12'];
 
+export const LLM_BACKENDS = ['gguf', 'claude', 'openai', 'gemini', 'url'] as const;
+
 // Available editor key map
 export enum EditorKeyMap {
   default = 'default',
@@ -87,53 +97,11 @@ export enum EditorKeyMap {
 
 // Hotkey
 // For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
-export const MNEMONIC_SYM = isMac() ? '' : '&';
-
-export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) => {
-  const mac = isMac();
-  switch (key) {
-    case 'ctrl': {
-      return mac ? '⌃' : 'Ctrl';
-    }
-
-    case 'alt': {
-      return mac ? '⌥' : 'Alt';
-    }
-
-    case 'shift': {
-      return mac ? '⇧' : 'Shift';
-    }
-
-    case 'meta': {
-      if (mac) {
-        return '⌘';
-      }
-
-      if (isWindows()) {
-        // Note: Although this unicode character for the Windows doesn't exist, the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
-        // see: https://en.wikipedia.org/wiki/Windows_key
-        return 'Win';
-      }
-
-      // Note: To avoid using a Microsoft trademark, much Linux documentation refers to the key as "Super". This can confuse some users who still consider it a "Windows key". In KDE Plasma documentation it is called the Meta key even though the X11 "Super" shift bit is used.
-      // see: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
-      return 'Super';
-    }
-
-    default: {
-      throw new Error(key + 'unrecognized key');
-    }
-  }
-};
-
-// Update
-export enum UpdateURL {
-  mac = 'https://updates.insomnia.rest/builds/check/mac',
-  windows = 'https://updates.insomnia.rest/updates/win',
-}
+export const MNEMONIC_SYM = isMac ? '' : '&';
 
 // Oauth redirect URL
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
+export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomnia.rest/oauth/relay';
 
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
@@ -150,8 +118,14 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
 };
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
-
-export const getUpdatesBaseURL = () => env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
+export const getKonnectApiUrl = () => env.KONNECT_API_URL || 'api.konghq.com';
+export const getKonnectApiRegions = (): string[] => {
+  const regions = (env.KONNECT_API_REGIONS ?? '')
+    .split(',')
+    .map((r: string) => r.trim())
+    .filter(Boolean);
+  return regions.length > 0 ? regions : ['us', 'eu', 'au', 'in', 'sg'];
+};
 
 // App website
 export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
@@ -188,7 +162,6 @@ export const isDesignActivity = (activity?: string): activity is GlobalActivity 
       return true;
     }
 
-    case 'home':
     default: {
       return false;
     }
@@ -201,9 +174,6 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
       return true;
     }
 
-    case 'spec':
-    case 'unittest':
-    case 'home':
     default: {
       return false;
     }
@@ -226,7 +196,7 @@ export const isValidActivity = (activity: string): activity is GlobalActivity =>
 };
 
 // HTTP Methods
-export const METHOD_GET = 'GET';
+export { METHOD_GET };
 export const METHOD_POST = 'POST';
 export const METHOD_PUT = 'PUT';
 export const METHOD_PATCH = 'PATCH';
@@ -246,28 +216,15 @@ export const HTTP_METHODS = [
 // Additional methods
 export const METHOD_GRPC = 'GRPC';
 
-// Preview Modes
-export const PREVIEW_MODE_FRIENDLY = 'friendly';
-export const PREVIEW_MODE_SOURCE = 'source';
-export const PREVIEW_MODE_RAW = 'raw';
-const previewModeMap = {
-  [PREVIEW_MODE_FRIENDLY]: ['Preview', 'Visual Preview'],
-  [PREVIEW_MODE_SOURCE]: ['Source', 'Source Code'],
-  [PREVIEW_MODE_RAW]: ['Raw', 'Raw Data'],
-};
-export const PREVIEW_MODES = Object.keys(previewModeMap) as (keyof typeof previewModeMap)[];
-
 // Content Types
-export const CONTENT_TYPE_JSON = 'application/json';
+export { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON } from 'insomnia-data/common';
 export const CONTENT_TYPE_PLAINTEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'application/yaml';
 export const CONTENT_TYPE_EVENT_STREAM = 'text/event-stream';
 export const CONTENT_TYPE_EDN = 'application/edn';
-export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
-export const CONTENT_TYPE_GRAPHQL = 'application/graphql';
 export const CONTENT_TYPE_OTHER = '';
 export const contentTypesMap: Record<string, string[]> = {
   [CONTENT_TYPE_EDN]: ['EDN', 'EDN'],
@@ -299,6 +256,55 @@ export type AuthTypes =
 
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
+
+//oauth 1
+export type OAuth1SignatureMethod = 'HMAC-SHA1' | 'RSA-SHA1' | 'HMAC-SHA256' | 'PLAINTEXT';
+
+export const SIGNATURE_METHOD_HMAC_SHA1: OAuth1SignatureMethod = 'HMAC-SHA1';
+export const SIGNATURE_METHOD_HMAC_SHA256: OAuth1SignatureMethod = 'HMAC-SHA256';
+export const SIGNATURE_METHOD_RSA_SHA1: OAuth1SignatureMethod = 'RSA-SHA1';
+export const SIGNATURE_METHOD_PLAINTEXT: OAuth1SignatureMethod = 'PLAINTEXT';
+
+//oauth 2
+export const GRANT_TYPE_AUTHORIZATION_CODE = 'authorization_code';
+export const GRANT_TYPE_IMPLICIT = 'implicit';
+export const GRANT_TYPE_PASSWORD = 'password';
+export const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
+export const GRANT_TYPE_REFRESH = 'refresh_token';
+export const GRANT_TYPE_MCP_AUTH_FLOW = 'mcp_auth_flow';
+
+export type AuthKeys =
+  | 'access_token'
+  | 'id_token'
+  | 'client_id'
+  | 'client_secret'
+  | 'audience'
+  | 'resource'
+  | 'code_challenge'
+  | 'code_challenge_method'
+  | 'code_verifier'
+  | 'code'
+  | 'nonce'
+  | 'error'
+  | 'error_description'
+  | 'error_uri'
+  | 'expires_in'
+  | 'grant_type'
+  | 'password'
+  | 'redirect_uri'
+  | 'refresh_token'
+  | 'response_type'
+  | 'scope'
+  | 'state'
+  | 'token_type'
+  | 'username'
+  | 'xError'
+  | 'xResponseId';
+
+export const PKCE_CHALLENGE_S256 = 'S256';
+export const PKCE_CHALLENGE_PLAIN = 'plain';
+
+export type OAuth2AuthorizationStatusType = 'none' | 'getting_code' | 'getting_token';
 
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';
@@ -336,7 +342,8 @@ export const sortOrderName: Record<SortOrder, string> = {
   'type-asc': 'Requests First',
 };
 
-export const EXTERNAL_VAULT_PLUGIN_NAME = getAppBundlePlugins()[0].name;
+export const EXTERNAL_VAULT_PLUGIN_NAME = '@kong/insomnia-plugin-external-vault';
+export const AI_PLUGIN_NAME = '@kong/insomnia-plugin-ai';
 
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 
@@ -356,14 +363,6 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
   'modified-desc': 'Last Modified',
 };
 
-export type PreviewMode = 'friendly' | 'source' | 'raw';
-
-export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
-  if (previewMode in previewModeMap) {
-    return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
-  }
-  return '';
-}
 export function getMimeTypeFromContentType(contentType: string) {
   // Check if the Content-Type header is provided
   if (!contentType) {
@@ -389,15 +388,6 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
   }
 
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
-}
-
-export function getContentTypeFromHeaders(headers: any[], defaultValue: string | null = null) {
-  if (!Array.isArray(headers)) {
-    return null;
-  }
-
-  const header = headers.find(({ name }) => name.toLowerCase() === 'content-type');
-  return header ? header.value : defaultValue;
 }
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
@@ -550,3 +540,10 @@ export const RESPONSE_CODE_REASONS: Record<number, string> = {
 
 // (ms) curently server timeout is 30s
 export const INSOMNIA_FETCH_TIME_OUT = 30_000;
+
+// channel names for real time events (websocket/socket-io/mcp)
+export const REALTIME_EVENTS_CHANNELS = {
+  READY_STATE: 'readyState',
+  NEW_EVENT: 'newEventReceived',
+  MCP_NOTIFICATION: 'mcpNotification',
+};

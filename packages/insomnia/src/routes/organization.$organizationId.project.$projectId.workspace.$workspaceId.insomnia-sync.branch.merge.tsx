@@ -2,24 +2,23 @@ import { href } from 'react-router';
 
 import type { Operation } from '~/common/database';
 import { database } from '~/common/database';
-import { UserAbortResolveMergeConflictError, VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { getSyncItems, remoteCompareCache } from '~/ui/sync-utils';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
+import { getSyncItems, remoteCompareCache, reparentSyncDelta } from '~/ui/sync-utils';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.merge';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
-  const { workspaceId } = params;
+  const { projectId, workspaceId } = params;
 
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-  const vcs = VCSInstance();
   const { syncItems } = await getSyncItems({ workspaceId });
   let delta;
   try {
-    delta = await vcs.merge(syncItems, branch);
+    delta = await window.main.sync.merge(syncItems, branch);
   } catch (err) {
     if (err instanceof UserAbortResolveMergeConflictError) {
       return null;
@@ -28,7 +27,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   }
   try {
     // This is to synchronize the local database with the branch changes
-    await database.batchModifyDocs(delta as Operation);
+    await database.batchModifyDocs(reparentSyncDelta(delta as Operation, projectId));
     delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while merging branch.';

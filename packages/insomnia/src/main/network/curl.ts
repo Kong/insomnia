@@ -4,22 +4,20 @@ import type { Readable } from 'node:stream';
 
 import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
+import type { CookieJar, RequestAuthentication, RequestHeader, Response } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { v4 as uuidV4 } from 'uuid';
 
+import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
 import { insecureReadFile } from '~/main/secure-read-file';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
-import * as models from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
-import type { RequestAuthentication, RequestHeader } from '../../models/request';
-import type { Response } from '../../models/response';
-import { readCurlResponse } from '../../models/response';
 import { filterClientCertificates } from '../../network/certificate';
+import { parseHeaderStrings } from '../../network/parse-header-strings';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
-import { invariant } from '../../utils/invariant';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { createConfiguredCurlInstance } from './libcurl-promise';
-import { parseHeaderStrings } from './parse-header-strings';
 
 export interface CurlConnection extends Curl {
   _id: string;
@@ -64,9 +62,38 @@ export interface CurlCloseEvent {
 
 export type CurlEvent = CurlOpenEvent | CurlMessageEvent | CurlErrorEvent | CurlCloseEvent;
 
+const protocolName = 'curl';
 const CurlConnections = new Map<string, Curl>();
+const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+
+const getEventNotificationChannel = (responseId: string) =>
+  `${protocolName}.${responseId}.${REALTIME_EVENTS_CHANNELS.NEW_EVENT}`;
+const writeEventLogAndNotify = ({
+  requestId,
+  data,
+  clearRequestIdMap = false,
+}: {
+  requestId: string;
+  data: any;
+  clearRequestIdMap?: boolean;
+}) => {
+  eventLogFileStreams.get(requestId)?.write(data, () => {
+    // notify all renderers of new event has been received
+    for (const window of BrowserWindow.getAllWindows()) {
+      const resId = requestIdToResponseIdMap.get(requestId);
+      if (resId) {
+        const notifyChannel = getEventNotificationChannel(resId);
+        notifyChannel && window.webContents.send(notifyChannel);
+        if (clearRequestIdMap) {
+          // clean up maps after last event has been written to file
+          requestIdToResponseIdMap.delete(requestId);
+        }
+      }
+    }
+  });
+};
 
 const parseHeadersAndBuildTimeline = (url: string, headersWithStatus: HeaderInfo) => {
   const { result, ...headers } = headersWithStatus;
@@ -98,7 +125,7 @@ const openCurlConnection = async (
     console.warn('Connection still open to ' + existingConnection.getInfo(Curl.info.EFFECTIVE_URL));
     return;
   }
-  const request = await models.request.getById(options.requestId);
+  const request = await services.request.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     console.warn('Could not find request for ' + options.requestId);
@@ -111,24 +138,26 @@ const openCurlConnection = async (
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+  requestIdToResponseIdMap.set(options.requestId, responseId);
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
-  const environment = await models.environment.getById(environmentId || 'n/a');
+  const environment = await services.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
-  const caCert = await models.caCertificate.findByParentId(options.workspaceId);
+  const caCert = await services.caCertificate.getByParentId(options.workspaceId);
   const caCertficatePath = caCert?.path || null;
   const caCertificate = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
   try {
     invariant(options.url, 'URL must be defined');
     invariant(!options.url.startsWith('file://'), 'Local file URIs are not supported');
-    const readyStateChannel = `curl.${request._id}.readyState`;
+    
+    const readyStateChannel = `${protocolName}.${request._id}.${REALTIME_EVENTS_CHANNELS.READY_STATE}`;
 
-    const settings = await models.settings.get();
+    const settings = await services.settings.get();
     const start = performance.now();
-    const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
+    const clientCertificates = await services.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = filterClientCertificates(clientCertificates, options.url, 'https:');
     const { curl, debugTimeline } = createConfiguredCurlInstance({
       req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },
@@ -156,14 +185,14 @@ const openCurlConnection = async (
         error,
         timestamp: Date.now(),
       };
-      console.error('curl - error: ', error, errorCode);
+      console.error('curl - error:', error, errorCode);
       CurlConnections.get(options.requestId)?.close();
       deleteRequestMaps(request._id, error.message, errorEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, false);
       }
       if (errorCode) {
-        const res = await models.response.getById(responseId);
+        const res = await services.response.getById(responseId);
         if (!res) {
           createErrorResponse(
             responseId,
@@ -231,9 +260,9 @@ const openCurlConnection = async (
           settingStoreCookies: request.settingStoreCookies,
           bodyCompression: null,
         };
-        const settings = await models.settings.get();
-        const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
-        models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+        const settings = await services.settings.get();
+        const res = await services.response.create(responsePatch, settings.maxHistoryResponses);
+        services.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
         if (request.settingStoreCookies) {
           const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
@@ -250,7 +279,7 @@ const openCurlConnection = async (
             );
             const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
             if (hasCookiesToPersist) {
-              await models.cookieJar.update(options.cookieJar, { cookies });
+              await services.cookieJar.update(options.cookieJar, { cookies });
               timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
             }
           }
@@ -267,7 +296,7 @@ const openCurlConnection = async (
             timestamp: Date.now(),
             direction: 'INCOMING',
           };
-          eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+          writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
         }
 
         // NOTE: when stream is closed by remote server
@@ -310,7 +339,7 @@ const createErrorResponse = async (
   timelinePath: string,
   message: string,
 ) => {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
@@ -319,13 +348,17 @@ const createErrorResponse = async (
     statusMessage: 'Error',
     error: message,
   };
-  const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+  const res = await services.response.create(responsePatch, settings.maxHistoryResponses);
+  services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
   if (event) {
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+    writeEventLogAndNotify({
+      requestId: requestId,
+      data: JSON.stringify(event) + '\n',
+      clearRequestIdMap: true,
+    });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
@@ -367,7 +400,7 @@ const closeCurlConnection = (_event: Electron.IpcMainInvokeEvent, options: { req
 const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.isOpen && curl.close());
 
 const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> => {
-  const response = await models.response.getById(options.responseId);
+  const response = await services.response.getById(options.responseId);
   if (!response || !response.bodyPath) {
     return [];
   }
@@ -401,7 +434,9 @@ export const registerCurlHandlers = () => {
   ipcMainOn('curl.closeAll', closeAllCurlConnections);
   ipcMainHandle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
   ipcMainHandle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
-  ipcMainHandle('readCurlResponse', (_, options: Parameters<typeof readCurlResponse>[0]) => readCurlResponse(options));
+  ipcMainHandle('readCurlResponse', (_, options: Parameters<typeof services.helpers.readCurlResponse>[0]) =>
+    services.helpers.readCurlResponse(options),
+  );
 };
 
 electron.app.on('window-all-closed', closeAllCurlConnections);

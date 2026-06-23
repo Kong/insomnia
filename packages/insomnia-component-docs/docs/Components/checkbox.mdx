@@ -1,0 +1,132 @@
+---
+id: checkbox
+sidebar_label: 'Checkbox'
+sidebar_position: 4
+---
+
+# Checkbox
+
+A flexible checkbox component built on React Aria's `Checkbox` component with support for individual checkboxes and checkbox groups. Features indeterminate state, custom styling, and full accessibility support.
+
+## Checkbox Props
+
+| Prop              | Type                            | Default | Description                                                         |
+| ----------------- | ------------------------------- | ------- | ------------------------------------------------------------------- |
+| `children`        | `ReactNode`                     | -       | **Required** - Label text or content displayed next to the checkbox |
+| `isSelected`      | `boolean`                       | `false` | Whether the checkbox is checked (controlled)                        |
+| `defaultSelected` | `boolean`                       | `false` | Initial checked state (uncontrolled)                                |
+| `isIndeterminate` | `boolean`                       | `false` | Whether to show indeterminate state (mixed/partial selection)       |
+| `onChange`        | `(isSelected: boolean) => void` | -       | Called when checkbox state changes                                  |
+| `isDisabled`      | `boolean`                       | `false` | Whether the checkbox is disabled                                    |
+| `isReadOnly`      | `boolean`                       | `false` | Whether the checkbox is read-only                                   |
+| `isRequired`      | `boolean`                       | `false` | Whether the checkbox is required                                    |
+| `value`           | `string`                        | -       | Value used when checkbox is part of a group                         |
+| `className`       | `string`                        | -       | Additional CSS classes for the checkbox container                   |
+
+Extends all [React Aria CheckboxProps](https://react-spectrum.adobe.com/react-aria/Checkbox.html#props).
+
+## CheckboxGroup Props
+
+| Prop           | Type                                 | Default | Description                                    |
+| -------------- | ------------------------------------ | ------- | ---------------------------------------------- |
+| `options`      | `{ label: string; value: string }[]` | -       | **Required** - Array of checkbox options       |
+| `value`        | `string[]`                           | -       | Array of selected values (controlled)          |
+| `defaultValue` | `string[]`                           | -       | Initial selected values (uncontrolled)         |
+| `onChange`     | `(value: string[]) => void`          | -       | Called when selection changes                  |
+| `isDisabled`   | `boolean`                            | `false` | Whether all checkboxes are disabled            |
+| `isReadOnly`   | `boolean`                            | `false` | Whether all checkboxes are read-only           |
+| `isRequired`   | `boolean`                            | `false` | Whether at least one checkbox must be selected |
+
+Extends all [React Aria CheckboxGroupProps](https://react-spectrum.adobe.com/react-aria/CheckboxGroup.html#props).
+
+## Usage Examples
+
+### Basic Checkbox
+
+```tsx live
+<Checkbox>Accept terms and conditions</Checkbox>
+```
+
+### Default Selected
+
+```tsx live
+<Checkbox defaultSelected={true}>Remember me</Checkbox>
+```
+
+### Disabled State
+
+```tsx live
+<Checkbox isDisabled>This option is not available</Checkbox>
+```
+
+### CheckboxGroup
+
+```tsx live
+<CheckboxGroup
+  options={[
+    { label: 'Apple', value: 'apple' },
+    { label: 'Banana', value: 'banana' },
+    { label: 'Orange', value: 'orange' },
+  ]}
+/>
+```
+
+### Select All Pattern
+
+```tsx live
+function SelectAll() {
+  const allOptions = [
+    { label: 'Feature A', value: 'a' },
+    { label: 'Feature B', value: 'b' },
+    { label: 'Feature C', value: 'c' },
+  ];
+
+  const [selectedFeatures, setSelectedFeatures] = useState(['a']);
+
+  const allSelected = selectedFeatures.length === allOptions.length;
+  const someSelected = selectedFeatures.length > 0 && !allSelected;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedFeatures(allOptions.map(opt => opt.value));
+    } else {
+      setSelectedFeatures([]);
+    }
+  };
+
+  return (
+    <div>
+      <Checkbox isSelected={allSelected} isIndeterminate={someSelected} onChange={handleSelectAll}>
+        Select All Features
+      </Checkbox>
+
+      <hr className="my-2" />
+
+      <CheckboxGroup value={selectedFeatures} onChange={setSelectedFeatures} options={allOptions} />
+    </div>
+  );
+}
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-font`: Checkbox text color
+- `--hl-sm`: Standard border color
+- `--hl-xs`: Highlight for hover/selected/indeterminate
+- `--color-success`: Checkmark color
+
+You can customize these variables in your CSS to theme the checkbox appearance.
+
+## Checkbox vs Switch
+
+| Use Checkbox When                         | Use Switch When                 |
+| ----------------------------------------- | ------------------------------- |
+| Multiple selections allowed               | Single on/off toggle            |
+| Form with multiple options                | Settings that apply immediately |
+| Selection doesn't take effect immediately | Action happens instantly        |
+| Need indeterminate state                  | Need instant feedback           |
+| Example: Select features to enable        | Example: Enable dark mode       |

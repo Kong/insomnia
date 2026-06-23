@@ -3,10 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 import electron from 'electron';
+import { services } from 'insomnia-data';
 
-import { invariant } from '~/utils/invariant';
+import { invariant } from '~/common/utils/invariant';
 
-import * as models from '../models/index';
+import { SECURITY_SETTINGS_PATH_LABEL } from '../common/misc';
 
 export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   const allowList = getSecuredFolderAllowList(userAllowList);
@@ -24,12 +25,12 @@ const getSecuredFolderAllowList = (userAllowList: string[]) => {
 };
 // For reading files specified by plugins, environment variables, and scripts which could come from an imported collection
 export const secureReadFile = async (filePath: string): Promise<string> => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await services.settings.getOrCreate();
   const { isAllowed, securedPath } = isPathAllowed(filePath, settings.dataFolders);
 
   invariant(
     isAllowed,
-    `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in Insomnia Preferences → Security`,
+    `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`,
   );
 
   return fs.promises.readFile(securedPath, { encoding: 'utf8' });

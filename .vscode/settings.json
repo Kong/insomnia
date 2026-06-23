@@ -30,6 +30,7 @@
     "Dismissable",
     "getinsomnia",
     "inso",
+    "Konnect",
     "libcurl",
     "mockbin",
     "Revalidator",
@@ -43,5 +44,6 @@
   ],
   "[cpp]": {
     "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
-  }
+  },
+  "editor.formatOnPaste": true
 }

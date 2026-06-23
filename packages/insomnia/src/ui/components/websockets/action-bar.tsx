@@ -1,17 +1,16 @@
+import type { SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
 import {
   type ConnectActionParams,
   useRequestConnectActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
+import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 
-import * as models from '../../../models';
-import type { SocketIORequest } from '../../../models/socket-io-request';
-import type { WebSocketRequest } from '../../../models/websocket-request';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { DisconnectButton } from './disconnect-button';
@@ -60,20 +59,10 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     );
 
     const generateConnectParams = useCallback(async () => {
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
-
-      const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
-      const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+      const rendered = await renderRealtimeConnectPayload({
         request,
         environmentId,
-        payload: {
-          url: request.url,
-          headers: request.headers,
-          authentication: request.authentication,
-          parameters: request.parameters.filter(p => !p.disabled),
-          workspaceCookieJar,
-        },
+        workspaceId,
       });
       if (request.type === 'WebSocketRequest' && rendered) {
         return {
@@ -96,6 +85,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
         return {
           url: rendered.url,
           query,
+          path: request.settingPath,
           headers: rendered.headers,
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,
@@ -118,8 +108,15 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
         return;
       }
       const connectParams = await generateConnectParams();
-      connectParams && connect(connectParams);
-    }, [connect, generateConnectParams, isOpen, request._id, request.type, updateTabById]);
+      if (connectParams) {
+        recordProjectRecentRequest({
+          projectId,
+          requestId: request._id,
+          workspaceId,
+        });
+        connect(connectParams);
+      }
+    }, [connect, generateConnectParams, isOpen, projectId, request._id, request.type, updateTabById, workspaceId]);
 
     const setUrl = useCallback(
       (url: string) => {
@@ -168,11 +165,11 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     return (
       <>
         {!isOpen && (
-          <span className="flex items-center pl-[--padding-md] text-[--color-notice]">{getRequestLabel()}</span>
+          <span className="flex items-center pl-(--padding-md) text-(--color-notice)">{getRequestLabel()}</span>
         )}
         {isOpen && (
-          <span className="text-success flex items-center pl-[--padding-md]">
-            <span className="mr-[--padding-sm] h-2.5 w-2.5 rounded-[50%] bg-[--color-success]" />
+          <span className="text-success flex items-center pl-(--padding-md)">
+            <span className="mr-(--padding-sm) h-2.5 w-2.5 rounded-[50%] bg-(--color-success)" />
             CONNECTED
           </span>
         )}
@@ -183,7 +180,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
             handleSubmit();
           }}
         >
-          <div className="box-border h-full w-full px-[--padding-md]">
+          <div className="box-border h-full w-full px-(--padding-md)">
             <OneLineEditor
               id="websocket-url-bar"
               ref={oneLineEditorRef}
@@ -202,7 +199,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
               <DisconnectButton requestId={request._id} />
             ) : (
               <button
-                className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
+                className="rounded-xs bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
                 type="submit"
               >
                 Connect

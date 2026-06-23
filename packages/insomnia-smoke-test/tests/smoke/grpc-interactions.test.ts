@@ -1,4 +1,3 @@
-import type { Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { loadFixture } from '../../playwright/paths';
@@ -7,7 +6,7 @@ import { test } from '../../playwright/test';
 test.describe('gRPC interactions', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test('can send all types of requests', async ({ page, app }) => {
+  test('can send all types of requests', async ({ page, app, insomnia }) => {
     const text = await loadFixture('grpc.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
@@ -15,7 +14,6 @@ test.describe('gRPC interactions', () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByLabel('PreRelease gRPC').click();
 
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
@@ -23,16 +21,16 @@ test.describe('gRPC interactions', () => {
     });
     const streamMessage = page.locator('[data-testid="request-pane"] button:has-text("Stream")');
 
-    await page.getByLabel('Request Collection').getByTestId('Unary').click();
+    await insomnia.navigationSidebar.clickRequestOrFolder('Unary');
     await page.locator('[data-testid="request-pane"] >> text=Unary').click();
     await page.click('text=Send');
 
     // Check for the single Unary response
-    await page.click('text=Response 1');
+    await page.getByRole('tab', { name: 'Response 1', exact: true }).click();
     await expect.soft(statusTag).toContainText('0 OK');
     await expect.soft(responseBody).toContainText('Berkshire Valley Management Area Trail');
 
-    await page.getByLabel('Request Collection').getByTestId('Bidirectional Stream').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('Bidirectional Stream');
     await page.locator('text=Bi-directional Streaming').click();
     await page.click('text=Start');
 
@@ -42,14 +40,14 @@ test.describe('gRPC interactions', () => {
     await streamMessage.click();
 
     // Check for the 3rd stream and response
-    await page.locator('text=Stream 3').click();
-    await page.locator('text=Response 3').click();
+    await page.getByRole('tab', { name: 'Stream 3', exact: true }).click();
+    await page.getByRole('tab', { name: 'Response 3', exact: true }).click();
 
     // Finish the stream
     await page.locator('text=Commit').click();
     await expect.soft(statusTag).toContainText('0 OK');
 
-    await page.getByLabel('Request Collection').getByTestId('Client Stream').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('Client Stream');
     await page.click('text=Client Streaming');
     await page.click('text=Start');
 
@@ -60,18 +58,18 @@ test.describe('gRPC interactions', () => {
 
     // Finish the stream and check response
     await page.locator('text=Commit').click();
-    await page.locator('text=Stream 3').click();
-    await page.locator('text=Response 1').click();
+    await page.getByRole('tab', { name: 'Stream 3', exact: true }).click();
+    await page.getByRole('tab', { name: 'Response 1', exact: true }).click();
     await expect.soft(statusTag).toContainText('0 OK');
     await expect.soft(responseBody).toContainText('point_count": 3');
 
-    await page.getByLabel('Request Collection').getByTestId('Server Stream').press('Enter');
+    await insomnia.navigationSidebar.clickRequestOrFolder('Server Stream');
     await page.click('text=Server Streaming');
     await page.click('text=Start');
 
     // Check response
     await expect.soft(statusTag).toContainText('0 OK');
     await expect.soft(responseBody).toContainText('Patriots Path');
-    await page.locator('text=Response 64').click();
+    await page.getByRole('tab', { name: 'Response 64', exact: true }).click();
   });
 });

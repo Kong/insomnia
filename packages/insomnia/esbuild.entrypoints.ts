@@ -4,6 +4,16 @@ import path from 'node:path';
 
 import esbuild, { type BuildOptions, type Plugin } from 'esbuild';
 
+// Redirects *.renderer imports to their *.node equivalents for node/main-process builds.
+const rendererToNodePlugin: Plugin = {
+  name: 'renderer-to-node',
+  setup(build) {
+    build.onResolve({ filter: /\.renderer$/ }, args => ({
+      path: path.resolve(args.resolveDir, args.path.replace('.renderer', '.node') + '.ts'),
+    }));
+  },
+};
+
 import pkg from './package.json';
 interface Options {
   mode?: 'development' | 'production';
@@ -42,6 +52,9 @@ export default async function build(options: Options) {
     sourcemap: true,
     format: 'cjs',
     external: ['electron'],
+    define: {
+      __IS_RENDERER__: JSON.stringify(true),
+    },
   };
 
   const hiddenBrowserWindowPreloadBuildOptions: BuildOptions = {
@@ -55,6 +68,9 @@ export default async function build(options: Options) {
     external: ['electron'],
     loader: {
       '.node': 'copy',
+    },
+    define: {
+      __IS_RENDERER__: JSON.stringify(true),
     },
   };
 
@@ -71,6 +87,40 @@ export default async function build(options: Options) {
     loader: {
       '.node': 'copy',
     },
+    define: {
+      __IS_RENDERER__: JSON.stringify(true),
+    },
+  };
+
+  const pluginWindowBuildOptions: BuildOptions = {
+    entryPoints: ['./src/entry.plugin-window.ts'],
+    outfile: path.join(outdir, 'entry.plugin-window.min.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'node',
+    sourcemap: true,
+    format: 'cjs',
+    external: ['electron'],
+    loader: {
+      '.node': 'copy',
+    },
+    define: {
+      __IS_RENDERER__: JSON.stringify(true),
+    },
+  };
+
+  const pluginWindowPreloadBuildOptions: BuildOptions = {
+    entryPoints: ['./src/entry.plugin-window-preload.ts'],
+    outfile: path.join(outdir, 'entry.plugin-window-preload.min.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'node',
+    sourcemap: true,
+    format: 'cjs',
+    external: ['electron'],
+    define: {
+      __IS_RENDERER__: JSON.stringify(true),
+    },
   };
 
   const mainBuildOptions: BuildOptions = {
@@ -80,8 +130,41 @@ export default async function build(options: Options) {
     platform: 'node',
     sourcemap: true,
     format: 'cjs',
-    define: env,
-    external: ['electron', '@getinsomnia/node-libcurl', 'fsevents', ...Object.keys(builtinModules)],
+    plugins: [rendererToNodePlugin],
+    define: {
+      ...env,
+      // Electron main = "browser"
+      'process.type': '"browser"',
+      '__IS_RENDERER__': JSON.stringify(false),
+    },
+    external: [
+      'electron',
+      '@getinsomnia/node-libcurl',
+      'fsevents',
+      '@node-llama-cpp/mac-arm64-metal',
+      '@node-llama-cpp/mac-x64',
+      '@node-llama-cpp/linux-arm64',
+      '@node-llama-cpp/linux-armv7l',
+      '@node-llama-cpp/linux-x64',
+      '@node-llama-cpp/linux-x64-cuda',
+      '@node-llama-cpp/linux-x64-cuda-ext',
+      '@node-llama-cpp/linux-x64-vulkan',
+      '@node-llama-cpp/win-arm64',
+      '@node-llama-cpp/win-x64',
+      '@node-llama-cpp/win-x64-cuda',
+      '@node-llama-cpp/win-x64-cuda-ext',
+      '@node-llama-cpp/win-x64-vulkan',
+      '@reflink/reflink-darwin-arm64',
+      '@reflink/reflink-darwin-x64',
+      '@reflink/reflink-linux-arm64-gnu',
+      '@reflink/reflink-linux-arm64-musl',
+      '@reflink/reflink-linux-x64-gnu',
+      '@reflink/reflink-linux-x64-musl',
+      '@reflink/reflink-win32-arm64-msvc',
+      '@reflink/reflink-win32-x64-msvc',
+      'apiconnect-wsdl',
+      ...Object.keys(builtinModules),
+    ],
   };
 
   let electronProcess: ChildProcess;
@@ -105,11 +188,11 @@ export default async function build(options: Options) {
         });
         build.onEnd(() => {
           buildCount++;
-          // first build after main/preload/hiddenWindows is built
-          if (buildCount === 3) {
+          // first build after main/preload/hiddenWindows/pluginWindows is built
+          if (buildCount === 6) {
             console.log('[Dev Build] Build complete, start Electron');
             startElectron();
-          } else if (buildCount > 3) {
+          } else if (buildCount > 6) {
             console.log(`[Dev Build] Finish rebuilding ${scriptName}, restarting Electron`);
             restartElectronProcess();
           } else {
@@ -134,6 +217,14 @@ export default async function build(options: Options) {
       ...hiddenBrowserWindowPreloadBuildOptions,
       plugins: [restartElectronPlugin('hidden-browser-window-preload')],
     });
+    const pluginWindowContext = await esbuild.context({
+      ...pluginWindowBuildOptions,
+      plugins: [restartElectronPlugin('plugin-window')],
+    });
+    const pluginWindowPreloadContext = await esbuild.context({
+      ...pluginWindowPreloadBuildOptions,
+      plugins: [restartElectronPlugin('plugin-window-preload')],
+    });
 
     const restartElectronProcess = () => {
       console.log('[Dev Build] Start restarting Electron');
@@ -153,13 +244,31 @@ export default async function build(options: Options) {
     const hiddenWindowWatch = await hiddenBrowserWindowContext.watch();
     const mainWatch = await mainContext.watch();
     const hiddenWindowPreloadWatch = await hiddenPreloadContext.watch();
-    return Promise.all([preloadWatch, hiddenWindowPreloadWatch, mainWatch, hiddenWindowWatch]);
+    const pluginWindowWatch = await pluginWindowContext.watch();
+    const pluginWindowPreloadWatch = await pluginWindowPreloadContext.watch();
+    return Promise.all([
+      preloadWatch,
+      hiddenWindowPreloadWatch,
+      mainWatch,
+      hiddenWindowWatch,
+      pluginWindowWatch,
+      pluginWindowPreloadWatch,
+    ]);
   }
   const preload = esbuild.build(preloadBuildOptions);
   const hiddenBrowserWindow = esbuild.build(hiddenBrowserWindowBuildOptions);
   const hiddenBrowserWindowPreload = esbuild.build(hiddenBrowserWindowPreloadBuildOptions);
+  const pluginWindow = esbuild.build(pluginWindowBuildOptions);
+  const pluginWindowPreload = esbuild.build(pluginWindowPreloadBuildOptions);
   const main = esbuild.build(mainBuildOptions);
-  return Promise.all([main, preload, hiddenBrowserWindow, hiddenBrowserWindowPreload]).catch(err => {
+  return Promise.all([
+    main,
+    preload,
+    hiddenBrowserWindow,
+    hiddenBrowserWindowPreload,
+    pluginWindow,
+    pluginWindowPreload,
+  ]).catch(err => {
     console.error('[Build] Build failed:', err);
   });
 }

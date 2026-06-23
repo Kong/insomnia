@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: grpc
 meta:
   id: wrk_a72883345e264d6696ef9294857f29c7
@@ -31,6 +32,7 @@ collection:
     reflectionApi:
       enabled: false
       url: https://buf.build
+      apiKey: ""
       module: buf.build/connectrpc/eliza
 cookieJar:
   name: Default Jar

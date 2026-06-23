@@ -1,6 +1,6 @@
+import { models } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
-import { grpcRequest, request, requestGroup } from '../../models';
 import {
   METHOD_DELETE,
   METHOD_GET,
@@ -17,6 +17,8 @@ import {
   metaSortKeySort,
   sortMethodMap,
 } from '../sorting';
+
+const { request, requestGroup, grpcRequest } = models;
 
 describe('Sorting methods', () => {
   it('defaults to ascending metaSortKey aka descending but flipped (* -1)', () => {
@@ -306,10 +308,10 @@ describe('Sorting methods', () => {
     expect(
       createdFirstSort(
         {
-          created: 123456789,
+          created: 123_456_789,
         },
         {
-          created: 123456789,
+          created: 123_456_789,
         },
       ),
     ).toBe(0);
@@ -357,10 +359,10 @@ describe('Sorting methods', () => {
     expect(
       createdLastSort(
         {
-          created: 123456789,
+          created: 123_456_789,
         },
         {
-          created: 123456789,
+          created: 123_456_789,
         },
       ),
     ).toBe(0);
@@ -955,9 +957,11 @@ describe('Sorting methods', () => {
     expect(
       metaSortKeySort(
         {
+          _id: 'id_1',
           metaSortKey: 1,
         },
         {
+          _id: 'id_2',
           metaSortKey: 2,
         },
       ),
@@ -965,9 +969,11 @@ describe('Sorting methods', () => {
     expect(
       metaSortKeySort(
         {
+          _id: 'id_1',
           metaSortKey: 2,
         },
         {
+          _id: 'id_2',
           metaSortKey: 1,
         },
       ),
@@ -975,9 +981,11 @@ describe('Sorting methods', () => {
     expect(
       metaSortKeySort(
         {
+          _id: 'id_1',
           metaSortKey: -2,
         },
         {
+          _id: 'id_2',
           metaSortKey: 1,
         },
       ),
@@ -985,9 +993,11 @@ describe('Sorting methods', () => {
     expect(
       metaSortKeySort(
         {
+          _id: 'id_1',
           metaSortKey: 1,
         },
         {
+          _id: 'id_2',
           metaSortKey: -2,
         },
       ),
@@ -996,11 +1006,11 @@ describe('Sorting methods', () => {
       metaSortKeySort(
         {
           metaSortKey: 1,
-          _id: 2,
+          _id: 'id_2',
         },
         {
           metaSortKey: 1,
-          _id: 1,
+          _id: 'id_1',
         },
       ),
     ).toBe(-1);
@@ -1008,11 +1018,11 @@ describe('Sorting methods', () => {
       metaSortKeySort(
         {
           metaSortKey: 1,
-          _id: 1,
+          _id: 'id_1',
         },
         {
           metaSortKey: 1,
-          _id: 2,
+          _id: 'id_2',
         },
       ),
     ).toBe(1);

@@ -1,0 +1,104 @@
+---
+id: button
+sidebar_label: 'Button'
+sidebar_position: 1
+---
+
+# Button
+
+A flexible button component built on React Aria's `Button` component with multiple variants, sizes, and states.
+
+## Props
+
+| Prop         | Type                                        | Default      | Description                    |
+| ------------ | ------------------------------------------- | ------------ | ------------------------------ |
+| `variant`    | `'solid' \| 'outlined' \| 'text' \| 'link'` | `'outlined'` | Visual style variant           |
+| `primary`    | `boolean`                                   | `false`      | Apply primary color styling    |
+| `danger`     | `boolean`                                   | `false`      | Apply danger color styling     |
+| `size`       | `'sm' \| 'md' \| 'lg'`                      | `'md'`       | Button size                    |
+| `isLoading`  | `boolean`                                   | `false`      | Show loading state             |
+| `isDisabled` | `boolean`                                   | `false`      | Whether the button is disabled |
+| `icon`       | `ReactNode`                                 | -            | Optional icon to display       |
+| `children`   | `ReactNode`                                 | -            | Button content/label           |
+| `className`  | `string`                                    | -            | Additional CSS classes         |
+
+Extends all [React Aria ButtonProps](https://react-spectrum.adobe.com/react-aria/Button.html#props).
+
+## Usage Examples
+
+### Different Sizes
+
+```tsx live
+function Buttons() {
+  return (
+    <div className="flex gap-4">
+      <Button primary size="sm" variant="solid">
+        Click Me
+      </Button>
+      <Button primary variant="solid">
+        Click Me
+      </Button>
+      <Button primary size="lg" variant="solid">
+        Click Me
+      </Button>
+    </div>
+  );
+}
+```
+
+### Different types
+
+```tsx live
+function Buttons() {
+  return (
+    <div className="flex gap-4">
+      <Button primary variant="solid">
+        primary
+      </Button>
+      <Button danger variant="solid">
+        danger
+      </Button>
+      <Button>default</Button>
+      <Button variant="text">text</Button>
+    </div>
+  );
+}
+```
+
+### Disabled
+
+```tsx live
+function Buttons() {
+  return (
+    <div className="flex gap-4">
+      <Button isDisabled primary variant="solid">
+        primary
+      </Button>
+      <Button isDisabled danger variant="solid">
+        danger
+      </Button>
+      <Button isDisabled>default</Button>
+      <Button isDisabled variant="text">
+        text
+      </Button>
+    </div>
+  );
+}
+```
+
+## Styling
+
+### CSS Variables
+
+The component uses the following CSS variables for theming:
+
+- `--color-font`: Default button text color
+- `--color-font-surprise`: Primary button text color
+- `--color-font-danger`: Danger button text color
+- `--color-bg`: Button background color (default)
+- `--color-surprise`: Primary button background color
+- `--color-danger`: Danger button background color
+- `--hl`: Default border color (outlined)
+- `--hl-xs`: Subtle highlight (hover, pressed, focus)
+
+You can customize these variables in your CSS to theme the button appearance.

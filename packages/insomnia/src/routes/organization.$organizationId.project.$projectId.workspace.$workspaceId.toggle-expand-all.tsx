@@ -1,18 +1,19 @@
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import * as models from '~/models';
-import { isRequestGroup } from '~/models/request-group';
-import { isRequestGroupMeta } from '~/models/request-group-meta';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
+
+const { isRequestGroup } = models.requestGroup;
+const { isRequestGroupMeta } = models.requestGroupMeta;
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { workspaceId } = params;
 
-  const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await services.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
   const data = (await request.json()) as {
     toggle: 'collapse-all' | 'expand-all';
@@ -30,9 +31,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       const requestGroupMeta = requestGroupMetas.find(meta => meta.parentId === requestGroup._id);
 
       if (requestGroupMeta) {
-        return models.requestGroupMeta.update(requestGroupMeta, { collapsed: isCollapsed });
+        return services.requestGroupMeta.update(requestGroupMeta, { collapsed: isCollapsed });
       }
-      return models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: isCollapsed });
+      return services.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: isCollapsed });
     }),
   );
   return null;

@@ -30,6 +30,7 @@ import { SvgIcnGitBranch } from './assets/svgr/IcnGitBranch';
 import { SvgIcnGithubLogo } from './assets/svgr/IcnGithubLogo';
 import { SvgIcnGitlabLogo } from './assets/svgr/IcnGitlabLogo';
 import { SvgIcnGlobe } from './assets/svgr/IcnGlobe';
+import { SvgIcnGraphql } from './assets/svgr/IcnGraphql';
 import { SvgIcnGui } from './assets/svgr/IcnGui';
 import { SvgIcnHashiCorp } from './assets/svgr/IcnHashiCorp';
 import { SvgIcnHeart } from './assets/svgr/IcnHeart';
@@ -51,6 +52,7 @@ import { SvgIcnReceive } from './assets/svgr/IcnReceive';
 import { SvgIcnSearch } from './assets/svgr/IcnSearch';
 import { SvgIcnSecCert } from './assets/svgr/IcnSecCert';
 import { SvgIcnSent } from './assets/svgr/IcnSent';
+import { SvgIcnSparkles } from './assets/svgr/IcnSparkles';
 import { SvgIcnSuccess } from './assets/svgr/IcnSuccess';
 import { SvgIcnSync } from './assets/svgr/IcnSync';
 import { SvgIcnSystemEvent } from './assets/svgr/IcnSystemEvent';
@@ -120,6 +122,7 @@ export const IconEnum = {
   questionFill: 'question-fill',
   search: 'search',
   secCert: 'sec-cert',
+  sparkles: 'sparkles',
   success: 'success',
   sync: 'sync',
   trashcan: 'trashcan',
@@ -137,6 +140,7 @@ export const IconEnum = {
   gcpLogo: 'gcp-logo',
   azureLogo: 'azure-logo',
   hashiCorp: 'hashicorp',
+  graphql: 'graphql',
   /** Blank icon */
   empty: 'empty',
 } as const;
@@ -185,6 +189,7 @@ const icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElem
   [IconEnum.question]: [ThemeEnum.default, SvgIcnQuestion],
   [IconEnum.search]: [ThemeEnum.default, SvgIcnSearch],
   [IconEnum.secCert]: [ThemeEnum.default, SvgIcnSecCert],
+  [IconEnum.sparkles]: [ThemeEnum.surprise, SvgIcnSparkles],
   [IconEnum.success]: [ThemeEnum.success, SvgIcnSuccess],
   [IconEnum.sync]: [ThemeEnum.default, SvgIcnSync],
   [IconEnum.trashcan]: [ThemeEnum.default, SvgIcnTrashcan],
@@ -202,6 +207,7 @@ const icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElem
   [IconEnum.gcpLogo]: [ThemeEnum.default, SvgIcnGCPLogo],
   [IconEnum.azureLogo]: [ThemeEnum.default, SvgIcnAzureLogo],
   [IconEnum.hashiCorp]: [ThemeEnum.default, SvgIcnHashiCorp],
+  [IconEnum.graphql]: [ThemeEnum.default, SvgIcnGraphql],
 };
 
 export type IconId = ValueOf<typeof IconEnum>;
@@ -219,7 +225,6 @@ function getThemeClassName(theme: ThemeKeys) {
     case ThemeEnum.highlight: {
       return 'fill-hl text-danger';
     }
-    case ThemeEnum.default:
     default: {
       return 'fill-current text-current';
     }
@@ -244,7 +249,7 @@ export const SvgIcon = ({
   }
 
   return (
-    <div className={`inline-flex items-center whitespace-nowrap ${label ? 'mr-[var(--padding-xs)]' : ''}`}>
+    <div className={`inline-flex items-center whitespace-nowrap ${label ? 'mr-(--padding-xs)' : ''}`}>
       <IconComponent className={`${getThemeClassName(iconTheme)} ${className}`} style={style} />
       {label && <span>{label}</span>}
     </div>

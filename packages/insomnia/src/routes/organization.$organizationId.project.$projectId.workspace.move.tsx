@@ -1,13 +1,12 @@
-import { href, redirect } from 'react-router';
+import type { Project } from 'insomnia-data';
+import { services } from 'insomnia-data';
+import { href } from 'react-router';
 
 import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
-import * as models from '~/models';
-import type { Project } from '~/models/project';
-import { scopeToActivity } from '~/models/workspace';
+import { invariant } from '~/common/utils/invariant';
 import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.move';
 
@@ -23,11 +22,11 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     invariant(newProjectId, 'Project ID is required');
     const newWorkspaceName = formData.get('name') as string;
 
-    const oldWorkspace = await models.workspace.getById(oldWorkspaceId);
+    const oldWorkspace = await services.workspace.getById(oldWorkspaceId);
     invariant(oldWorkspace, 'Workspace not found');
 
     // duplicate the workspace to the new project
-    const newProject = (await models.project.getById(newProjectId)) as Project;
+    const newProject = (await services.project.get(newProjectId)) as Project;
     const workspaceExport = await getInsomniaV5DataExport({
       workspaceId: oldWorkspace._id,
       includePrivateEnvironments: true,
@@ -52,14 +51,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       },
       syncNewWorkspaceIfNeeded,
     });
-
-    return redirect(
-      `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
-        organizationId: newOrgId,
-        projectId: newProjectId,
-        workspaceId: newWorkspace._id,
-      })}/${scopeToActivity(newWorkspace.scope)}`,
-    );
+    return {
+      organizationId: newOrgId,
+      projectId: newProjectId,
+      workspaceId: newWorkspace._id,
+      workspaceScope: newWorkspace.scope,
+    };
   } catch (error) {
     return {
       error: 'Failed to duplicate workspace: ' + (error instanceof Error ? error.message : String(error)),

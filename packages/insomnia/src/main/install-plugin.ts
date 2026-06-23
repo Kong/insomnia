@@ -4,21 +4,25 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
-import { app, net } from 'electron';
+import { app } from 'electron';
+import { services } from 'insomnia-data';
+
+import { validatePluginName } from '~/common/utils/plugin-name';
+import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';
-import * as models from '../models';
-import { validatePluginName } from '../utils/plugin';
 
 // Promisified version of execFile to use async/await
 export const execFilePromise = promisify(execFile);
 
-// Allowed tarball hostnames for security
+// Default allowed tarball hostnames for security
 // This is a security measure to prevent downloading from untrusted sources
 // and to ensure that the tarball is from a known source.
 // The list can be expanded as needed, but should be kept minimal for security.
 // Currently, only npmjs.org and GitHub Packages are allowed.
-const allowedTarballHostnames = ['registry.npmjs.org', 'npm.pkg.github.com'];
+const defaultAllowedTarballHostnames = ['registry.npmjs.org', 'npm.pkg.github.com'];
+
+const DEFAULT_NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 interface InsomniaPlugin {
   // Insomnia attribute from package.json
@@ -96,24 +100,23 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
       throw new Error('Invalid plugin metadata: missing tarball URL');
     }
 
-    // Step 3: Ensure the plugin tarball can be fetched
+    // Step 3: only allow tarballs from known hosts
+    let tarballUrl: URL;
     try {
-      // After fetching info, check the info.dist.tarball. This prevents downloading from weird hosts.
-      const tarballUrl = new URL(info.dist.tarball);
-      if (!allowedTarballHostnames.includes(tarballUrl.hostname)) {
-        throw new Error(`Tarball must come from an allowed host. Got: ${tarballUrl.hostname}`);
-      }
-
-      // Fetch the tarball to ensure it's accessible
-      // This is a simple check to ensure the tarball URL is valid and accessible
-      const tarballResponse = await net.fetch(info.dist.tarball);
-
-      // Check if the response is OK (status code 200)
-      if (!tarballResponse.ok) {
-        throw new Error(`Failed to fetch tarball: ${tarballResponse.statusText}`);
-      }
-    } catch (err: any) {
-      throw new Error(`Failed to fetch plugin tarball ${info.dist.tarball}: ${err.message}`);
+      tarballUrl = new URL(info.dist.tarball);
+    } catch {
+      throw new Error(`Invalid tarball URL in plugin metadata: ${info.dist.tarball}`);
+    }
+    const allowedTarballHostnames = await getAllowedTarballHostnames();
+    if (!allowedTarballHostnames.includes(tarballUrl.hostname)) {
+      throw new Error(`Tarball must come from an allowed host. Got: ${tarballUrl.hostname}`);
+    }
+    // and require https, unless it's the user's own http registry (same host:port)
+    const registryUrl = new URL(await getRegistryUrl());
+    const isUsersHttpRegistry =
+      registryUrl.protocol === 'http:' && tarballUrl.protocol === 'http:' && tarballUrl.host === registryUrl.host;
+    if (tarballUrl.protocol !== 'https:' && !isUsersHttpRegistry) {
+      throw new Error(`Tarball must be served over https. Got: ${info.dist.tarball}`);
     }
 
     // Step 4: Install the plugin into a temporary directory
@@ -154,6 +157,11 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
           await cp(src, dest, { recursive: true, verbatimSymlinks: true });
         }),
     );
+
+    trackAnalyticsEvent(AnalyticsEvent.installPlugin, {
+      pluginName: moduleName,
+      pluginVersion: info.version,
+    });
   } catch (err) {
     // Log and rethrow any installation errors
     console.error(`[plugins] Failed to install plugin ${pluginName}:`, err);
@@ -204,7 +212,8 @@ export async function getPluginInfo(lookupName: string, allowScopedPackageNames 
 
   console.log('[plugins] Fetching module info from npm');
 
-  const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', 'https://registry.npmjs.org/']);
+  const registryUrl = await getRegistryUrl();
+  const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', registryUrl]);
 
   let yarnOutput;
   try {
@@ -250,11 +259,12 @@ export async function installPluginToTmpDir(lookupName: string, allowScopedPacka
     await writeFile(
       path.resolve(tmpDir, 'package.json'),
       JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
-      'utf-8',
+      'utf8',
     );
 
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
 
+    const registryUrl = await getRegistryUrl();
     await runYarnCommand(
       [
         'add',
@@ -268,7 +278,7 @@ export async function installPluginToTmpDir(lookupName: string, allowScopedPacka
         '--no-progress',
         '--ignore-workspace-root-check',
         '--registry',
-        'https://registry.npmjs.org/',
+        registryUrl,
       ],
       tmpDir,
     );
@@ -382,8 +392,8 @@ export function containsOnlyDeprecationWarnings(output: string): boolean {
  */
 export function hasUnexpectedBinaryData(output: string): boolean {
   for (let i = 0; i < output.length; i++) {
-    const code = output.charCodeAt(i);
-    if (!(code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code <= 0x7e))) {
+    const code = output.codePointAt(i);
+    if (code && !(code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code <= 0x7e))) {
       return true;
     }
   }
@@ -407,7 +417,7 @@ export function safeTrim(value: unknown): string | undefined {
  * Pulls settings from the application models.
  */
 export async function getYarnEnvValues(): Promise<Record<string, string>> {
-  const settings = await models.settings.get();
+  const settings = await services.settings.get();
 
   const yarnEnv: Record<string, string> = {
     NODE_ENV: 'production',
@@ -423,6 +433,12 @@ export async function getYarnEnvValues(): Promise<Record<string, string>> {
   // Add proxy settings if enabled
   if (settings.proxyEnabled === true) {
     Object.assign(yarnEnv, buildProxyEnv(settings));
+  }
+
+  if (isDevelopment()) {
+    const NODE_AUTH_TOKEN = process.env['NODE_AUTH_TOKEN'];
+    // In development, set a default NODE_AUTH_TOKEN for .npmrc if not exists
+    yarnEnv.NODE_AUTH_TOKEN = NODE_AUTH_TOKEN || 'PLACEHOLDER_TOKEN_VALUE';
   }
 
   return yarnEnv;
@@ -450,6 +466,49 @@ export function buildProxyEnv(settings: any): Record<string, string> {
   }
 
   return proxyEnv;
+}
+
+/**
+ * Returns the npm registry URL from settings, falling back to the default.
+ */
+export async function getRegistryUrl(): Promise<string> {
+  const settings = await services.settings.get();
+  const customRegistry = safeTrim(settings.npmRegistryUrl);
+  if (customRegistry) {
+    // Validate it's a proper URL
+    try {
+      const parsed = new URL(customRegistry);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+        console.warn(`[plugins] npmRegistryUrl must be http/https, got "${parsed.protocol}", using default`);
+        return DEFAULT_NPM_REGISTRY;
+      }
+    } catch {
+      console.warn(`[plugins] Invalid npmRegistryUrl "${customRegistry}", using default`);
+      return DEFAULT_NPM_REGISTRY;
+    }
+    // Ensure trailing slash for consistency
+    return customRegistry.endsWith('/') ? customRegistry : customRegistry + '/';
+  }
+  return DEFAULT_NPM_REGISTRY;
+}
+
+/**
+ * Returns the list of allowed tarball hostnames, including the custom registry hostname if configured.
+ */
+export async function getAllowedTarballHostnames(): Promise<string[]> {
+  const settings = await services.settings.get();
+  const customRegistry = safeTrim(settings.npmRegistryUrl);
+  if (customRegistry) {
+    try {
+      const registryHostname = new URL(customRegistry).hostname;
+      if (!defaultAllowedTarballHostnames.includes(registryHostname)) {
+        return [...defaultAllowedTarballHostnames, registryHostname];
+      }
+    } catch {
+      // Invalid URL, just use defaults
+    }
+  }
+  return defaultAllowedTarballHostnames;
 }
 
 /**

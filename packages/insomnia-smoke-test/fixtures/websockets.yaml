@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: WebSockets
 meta:
   id: wrk_de19497fcefa48c0a8d131f4d05bb19a
@@ -76,9 +77,23 @@ collection:
         send: true
         store: true
     headers:
-      - id: pair_d5c62785928d4cc3a09b297bfbb847f7
-        name: duration
+      - name: duration
         value: "5"
+  - url: ws://localhost:4010/chat/:id
+    name: path-param
+    meta:
+      id: ws-req_path_param_test
+      created: 1666695713693
+      modified: 1666696265532
+    pathParameters:
+      - name: id
+        value: "1234"
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
 cookieJar:
   name: Default Jar
   meta:

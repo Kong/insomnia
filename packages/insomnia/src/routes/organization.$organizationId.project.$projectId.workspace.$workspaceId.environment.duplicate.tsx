@@ -1,8 +1,8 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import * as models from '~/models';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
 
@@ -13,10 +13,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   invariant(typeof environmentId === 'string', 'Environment ID is required');
 
-  const environment = await models.environment.getById(environmentId);
+  const environment = await services.environment.getById(environmentId);
   invariant(environment, 'Environment not found');
 
-  const newEnvironment = await models.environment.duplicate(environment);
+  const newEnvironment = await services.environment.duplicate(environment);
 
   return newEnvironment;
 }

@@ -143,7 +143,7 @@ export const oauthRoutes = async (port: number) => {
     try {
       const validated = await oidc.IdToken.validate(extractToken(authorizationHeader), client);
       res.status(200).json(validated);
-    } catch (err) {
+    } catch {
       res.status(500).header('Content-Type', 'text/plain').send('Invalid authorization header');
     }
   });
@@ -250,7 +250,7 @@ function registerROPC(oidc: Provider) {
       }
 
       if (typeof params.username !== 'string' || typeof params.password !== 'string') {
-        throw new Error('invalid credentials provided');
+        throw new TypeError('invalid credentials provided');
       }
 
       const account = await ctx.oidc.provider.Account.findAccount(ctx, params.username);

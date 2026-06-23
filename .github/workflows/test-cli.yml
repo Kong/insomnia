@@ -15,16 +15,21 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   Test:
     timeout-minutes: 10
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -34,11 +39,12 @@ jobs:
 
       - name: Install packages
         run: npm ci
-        env: 
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Install node version of node-libcurl for inso tests
-        run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+        run: npm run install-libcurl-node
 
       - name: Build Inso
         run: npm run build -w insomnia-inso
@@ -57,7 +63,7 @@ jobs:
         shell: bash
         run: |
           INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
-          PKG_NAME="inso-ubuntu-22.04-$INSO_VERSION"
+          PKG_NAME="inso-ubuntu-24.04-$INSO_VERSION"
           echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
 
@@ -77,7 +83,7 @@ jobs:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       - name: Upload Inso CLI artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           if-no-files-found: ignore
           name: ${{ steps.inso-variables.outputs.pkg-name }}

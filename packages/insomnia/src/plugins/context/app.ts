@@ -1,19 +1,18 @@
-import { getAppPlatform, getAppVersion } from 'insomnia/src/common/constants';
-import type { AppContext, RenderPurpose } from 'insomnia/src/templating/types';
-import { invariant } from 'insomnia/src/utils/invariant';
+import { getAppVersion } from 'insomnia/src/common/constants';
+import type { AppContext, RenderPurpose } from 'insomnia/src/common/templating/types';
+import { platform } from 'insomnia-data/common';
 
-// TODO: consider how this would work in a webworker context
-const isRenderer = process.type === 'renderer';
+import { invariant } from '~/common/utils/invariant';
 
 export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContext } => ({
   app: {
-    alert: (title: string, message?: string) => {
-      if (isRenderer) {
+    alert: async (title: string, message?: string) => {
+      if (__IS_RENDERER__) {
         return window.showAlert({ title, message });
       }
     },
-    dialog: (title, body, options = {}) => {
-      if (isRenderer) {
+    dialog: async (title, body, options = {}) => {
+      if (__IS_RENDERER__) {
         window.showWrapper({
           ...options,
           title,
@@ -22,7 +21,7 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
       }
     },
     prompt: (title, options) => {
-      if (!isRenderer) {
+      if (!__IS_RENDERER__) {
         return Promise.resolve(options?.defaultValue || '');
       }
       // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden
@@ -40,12 +39,12 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
       });
     },
 
-    getPath: (name: string) => {
+    getPath: async (name: string) => {
       invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
       return window.app.getPath('desktop');
     },
 
-    getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
+    getInfo: () => ({ version: getAppVersion(), platform: platform }),
 
     showSaveDialog: async (options = {}) => {
       const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
@@ -62,9 +61,9 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
     },
 
     clipboard: {
-      readText: () => window.clipboard.readText(),
-      writeText: text => window.clipboard.writeText(text),
-      clear: () => window.clipboard.clear(),
+      readText: async () => window.clipboard.readText(),
+      writeText: async (text: string) => window.clipboard.writeText(text),
+      clear: async () => window.clipboard.clear(),
     },
   },
 });

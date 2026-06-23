@@ -1,50 +1,47 @@
+import type { Request, RequestBody, RequestParameter } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import {
   CONTENT_TYPE_EVENT_STREAM,
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
-  getAppVersion,
   METHOD_GET,
   METHOD_POST,
 } from '~/common/constants';
-import * as models from '~/models';
-import type { Request, RequestBody, RequestParameter } from '~/models/request';
-import { SegmentEvent } from '~/ui/analytics';
+import { invariant } from '~/common/utils/invariant';
+import type { RequestCreatedMetricsProperties } from '~/ui/analytics';
+import { AnalyticsEvent } from '~/ui/analytics';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId } = params;
 
-  const { requestType, parentId, req } = (await request.json()) as {
+  const { requestType, parentId, req, metrics } = (await request.json()) as {
     requestType: CreateRequestType;
     parentId?: string;
-    req?: Request;
+    req?: Partial<Request>;
+    metrics?: RequestCreatedMetricsProperties;
   };
-
-  const settings = await models.settings.getOrCreate();
-  const defaultHeaders = settings.disableAppVersionUserAgent
-    ? []
-    : [{ name: 'User-Agent', value: `insomnia/${getAppVersion()}` }];
 
   let activeRequestId;
   if (requestType === 'HTTP') {
     activeRequestId = (
-      await models.request.create({
+      await services.request.create({
         parentId: parentId || workspaceId,
         method: METHOD_GET,
-        name: 'New Request',
-        headers: defaultHeaders,
+        name: req?.name || 'New Request',
+        url: req?.url || '',
+        headers: [],
       })
     )._id;
   }
   if (requestType === 'gRPC') {
     activeRequestId = (
-      await models.grpcRequest.create({
+      await services.grpcRequest.create({
         parentId: parentId || workspaceId,
         name: 'New Request',
       })
@@ -52,44 +49,46 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   if (requestType === 'GraphQL') {
     activeRequestId = (
-      await models.request.create({
+      await services.request.create({
         parentId: parentId || workspaceId,
         method: METHOD_POST,
-        headers: [...defaultHeaders, { name: 'Content-Type', value: CONTENT_TYPE_JSON }],
+        headers: [{ name: 'Content-Type', value: CONTENT_TYPE_JSON }],
         body: {
           mimeType: CONTENT_TYPE_GRAPHQL,
-          text: '',
+          text: req?.body?.text || '',
         },
-        name: 'New Request',
+        name: req?.name || 'New Request',
+        url: req?.url || '',
+        authentication: req?.authentication,
       })
     )._id;
   }
   if (requestType === 'Event Stream') {
     activeRequestId = (
-      await models.request.create({
+      await services.request.create({
         parentId: parentId || workspaceId,
         method: METHOD_GET,
         url: '',
-        headers: [...defaultHeaders, { name: 'Accept', value: CONTENT_TYPE_EVENT_STREAM }],
+        headers: [{ name: 'Accept', value: CONTENT_TYPE_EVENT_STREAM }],
         name: 'New Event Stream',
       })
     )._id;
   }
   if (requestType === 'WebSocket') {
     activeRequestId = (
-      await models.webSocketRequest.create({
+      await services.webSocketRequest.create({
         parentId: parentId || workspaceId,
         name: 'New WebSocket Request',
-        headers: defaultHeaders,
+        headers: [],
       })
     )._id;
   }
   if (requestType === 'SocketIO') {
     activeRequestId = (
-      await models.socketIORequest.create({
+      await services.socketIORequest.create({
         parentId: parentId || workspaceId,
         name: 'New Socket.IO Request',
-        headers: defaultHeaders,
+        headers: [],
       })
     )._id;
   }
@@ -99,9 +98,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     }
     try {
       activeRequestId = (
-        await models.request.create({
+        await services.request.create({
           parentId: parentId || workspaceId,
           url: req.url,
+          name: req.name || 'New Request',
           method: req.method,
           headers: req.headers,
           body: req.body as RequestBody,
@@ -115,17 +115,46 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
     }
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
-  models.stats.incrementCreatedRequests();
-  window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType } });
+  services.stats.incrementCreatedRequests();
 
-  // add a created query param to the URL to indicate that the request was just created, this is for distinguishing if we will create a temporary or permanent tab
+  const certificates = await services.clientCertificate.findByParentId(workspaceId);
+
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.requestCreated,
+    properties: {
+      requestType,
+      protocol: requestType,
+      project_id: projectId,
+      collection_id: workspaceId,
+      request_key_id: activeRequestId,
+      has_prescript: !!req?.preRequestScript,
+      has_postscript: !!req?.afterResponseScript,
+      request_header_names: req?.headers?.map(h => h.name) || [],
+      count_cookies: req?.headers?.find(h => h.name.toLowerCase() === 'cookie')
+        ? req.headers?.find(h => h.name.toLowerCase() === 'cookie')?.value.split(';').length
+        : 0,
+      count_certificates: certificates.length,
+      count_headers: req?.headers?.length || 0,
+      count_query_parameters: req?.parameters?.length || 0,
+      count_path_parameters: req?.pathParameters?.length || 0,
+      count_prescript_lines: req?.preRequestScript ? req.preRequestScript.split('\n').length : 0,
+      count_postscript_lines: req?.afterResponseScript ? req.afterResponseScript.split('\n').length : 0,
+      auth_type:
+        req?.authentication && typeof req.authentication === 'object' && 'type' in req.authentication
+          ? req.authentication.type
+          : 'none',
+      has_docs: !!req?.description,
+      source: metrics?.source,
+    },
+  });
+
   return redirect(
-    `${href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
+    href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {
       organizationId,
       projectId,
       workspaceId,
       requestId: activeRequestId,
-    })}?created=true`,
+    }),
   );
 }
 
@@ -138,6 +167,7 @@ export const useRequestNewActionFetcher = createFetcherSubmitHook(
       requestType,
       parentId,
       req,
+      metrics,
     }: {
       organizationId: string;
       projectId: string;
@@ -145,6 +175,7 @@ export const useRequestNewActionFetcher = createFetcherSubmitHook(
       requestType: CreateRequestType;
       parentId?: string;
       req?: Partial<Request>;
+      metrics?: RequestCreatedMetricsProperties;
     }) => {
       const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/new', {
         organizationId,
@@ -152,7 +183,7 @@ export const useRequestNewActionFetcher = createFetcherSubmitHook(
         workspaceId,
       });
 
-      return submit(JSON.stringify({ requestType, parentId, req }), {
+      return submit(JSON.stringify({ requestType, parentId, req, metrics }), {
         action: url,
         method: 'POST',
         encType: 'application/json',

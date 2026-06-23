@@ -1,7 +1,7 @@
+import type { UnitTestResult } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import type { UnitTestResult } from '~/models/unit-test-result';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId._index';
 

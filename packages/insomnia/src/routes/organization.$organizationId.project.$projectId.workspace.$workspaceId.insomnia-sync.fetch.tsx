@@ -1,29 +1,28 @@
+import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { database } from '~/common/database';
-import * as models from '~/models';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { reparentSyncDelta } from '~/ui/sync-utils';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.fetch';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { projectId } = params;
 
-  const project = await models.project.getById(projectId);
+  const project = await services.project.get(projectId);
   invariant(project, 'Project not found');
 
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-  const vcs = VCSInstance();
-  const currentBranch = await vcs.getCurrentBranchName();
+  const currentBranch = await window.main.sync.getCurrentBranchName();
 
   try {
     invariant(project.remoteId, 'Project is not remote');
-    await vcs.checkout([], branch);
-    const delta = await vcs.pull({
+    await window.main.sync.checkout([], branch);
+    const delta = await window.main.sync.pull({
       candidates: [],
       teamId: project.parentId,
       teamProjectId: project.remoteId,
@@ -31,9 +30,9 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     });
 
     // This is to synchronize the local database with the branch changes
-    await database.batchModifyDocs(delta);
+    await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
   } catch (err) {
-    await vcs.checkout([], currentBranch);
+    await window.main.sync.checkout([], currentBranch);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while fetching remote branch.';
     return {
       error: errorMessage,

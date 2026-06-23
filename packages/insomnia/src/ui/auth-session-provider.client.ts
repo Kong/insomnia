@@ -1,26 +1,25 @@
-import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
+import { invariant } from '~/common/utils/invariant';
+import * as session from '~/ui/account/session';
 
-import * as session from '../account/session';
 import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
-import { invariant } from '../utils/invariant';
 
 interface AuthBox {
   token: string;
   key: string;
 }
 
-const sessionKeyPair = keyPair();
-encodeBase64(sessionKeyPair.publicKey).then(res => {
+const sessionKeyPairPromise = window.main.sealedBox.keyPair();
+sessionKeyPairPromise.then(async kp => {
   try {
-    window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || res);
-  } catch (error) {
+    const pub = await encodeBase64(kp.publicKey);
+    window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || pub);
+  } catch {
     console.error('Failed to store public key in localStorage.');
   }
-});
-encodeBase64(sessionKeyPair.secretKey).then(res => {
   try {
-    window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || res);
-  } catch (error) {
+    const sec = await encodeBase64(kp.secretKey);
+    window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || sec);
+  } catch {
     console.error('Failed to store secret key in localStorage.');
   }
 });
@@ -69,7 +68,7 @@ export async function submitAuthCode(code: string) {
     const rawBox = await decodeBase64(code.trim());
     const publicKey = await decodeBase64(window.localStorage.getItem('insomnia.publicKey') || '');
     const secretKey = await decodeBase64(window.localStorage.getItem('insomnia.secretKey') || '');
-    const boxData = open(rawBox, publicKey, secretKey);
+    const boxData = await window.main.sealedBox.open(rawBox, publicKey, secretKey);
     invariant(boxData, 'Invalid authentication code.');
 
     const decoder = new TextDecoder();

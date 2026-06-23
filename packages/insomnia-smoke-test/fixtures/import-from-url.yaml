@@ -1,4 +1,5 @@
 type: collection.insomnia.rest/5.0
+schema_version: "5.1"
 name: simple
 meta:
   id: wrk_dc393cdd96524c44a632fdc3b09aa5c5

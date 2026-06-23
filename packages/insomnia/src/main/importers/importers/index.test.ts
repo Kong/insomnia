@@ -3,7 +3,13 @@ import path from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type * as constants from '../../../common/constants';
 import { convert } from '../convert';
+
+vi.mock('../../../common/constants', async importOriginal => {
+  const actual = await importOriginal<typeof constants>();
+  return { ...actual, getAppVersion: () => 'TEST' };
+});
 
 const fixturesPath = path.join(__dirname, './fixtures');
 const fixtures = fs.readdirSync(fixturesPath);
@@ -23,7 +29,7 @@ describe('Fixtures', () => {
       }
 
       it(input, async () => {
-        vi.spyOn(Date, 'now').mockImplementation(() => 1622117984000);
+        vi.spyOn(Date, 'now').mockImplementation(() => 1_622_117_984_000);
 
         expect.assertions(3);
 

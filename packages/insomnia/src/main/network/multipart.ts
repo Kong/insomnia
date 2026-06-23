@@ -1,16 +1,11 @@
-if (process.type === 'renderer') {
-  throw new Error('multipart.ts unavailable in renderer');
-}
-
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import type { RequestBodyParameter } from 'insomnia-data';
 import { lookup } from 'mime-types';
 
-import type { RequestBodyParameter } from '../../models/request';
-
-export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
+import { DEFAULT_BOUNDARY } from '../../network/multipart-constants';
 
 interface Multipart {
   boundary: typeof DEFAULT_BOUNDARY;

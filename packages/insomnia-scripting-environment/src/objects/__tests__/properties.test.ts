@@ -14,7 +14,7 @@ describe('test Property objects', () => {
     });
   });
 
-  it('Property: basic operations', () => {
+  it('Property: basic operations', async () => {
     const prop = new Property('id', 'name', false, { id: 'real_id', name: 'real_name' });
 
     expect(prop.toJSON()).toEqual({
@@ -23,9 +23,9 @@ describe('test Property objects', () => {
       name: 'real_name',
     });
 
-    expect(Property.replaceSubstitutions('{{ hehe }}', { hehe: 777 })).toEqual('777');
+    expect(await Property.replaceSubstitutions('{{ hehe }}', { hehe: 777 })).toEqual('777');
     expect(
-      Property.replaceSubstitutionsIn(
+      await Property.replaceSubstitutionsIn(
         {
           value: '{{ hehe }}',
         },

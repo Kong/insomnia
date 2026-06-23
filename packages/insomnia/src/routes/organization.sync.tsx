@@ -1,11 +1,12 @@
-import { userSession } from '~/models';
+import { services } from 'insomnia-data';
+
 import { syncOrganizations } from '~/ui/organization-utils';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.sync';
 
 export async function clientAction(_args: Route.ClientActionArgs) {
-  const { id: sessionId, accountId } = await userSession.getOrCreate();
+  const { id: sessionId, accountId } = await services.userSession.get();
 
   if (sessionId) {
     await syncOrganizations(sessionId, accountId);

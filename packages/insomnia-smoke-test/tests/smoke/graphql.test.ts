@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test('can render schema and send GraphQL requests', async ({ app, page }) => {
+test('can render schema and send GraphQL requests', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   // Copy the collection with the graphql query to clipboard
@@ -15,10 +15,10 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Smoke GraphQL').click();
 
   // Open the graphql request
-  await page.getByLabel('Request Collection').getByTestId('GraphQL request').press('Enter');
+  // await page.getByLabel('Request Collection').getByTestId('GraphQL request').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('GraphQL request');
   await page.getByRole('tab', { name: 'Body' }).click();
   // Assert the schema is fetched after switching to GraphQL request
   await expect.soft(page.getByText('Schema fetched just now')).toBeVisible();
@@ -54,7 +54,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await expect.soft(responseBody).toContainText('"echoNum": 777');
 });
 
-test('can render schema and send GraphQL requests with object variables', async ({ app, page }) => {
+test('can render schema and send GraphQL requests with object variables', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   // Copy the collection with the graphql query to clipboard
@@ -66,10 +66,8 @@ test('can render schema and send GraphQL requests with object variables', async 
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Smoke GraphQL').click();
-
   // Open the graphql request
-  await page.getByLabel('Request Collection').getByTestId('GraphQL request with variables').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('GraphQL request with variables');
   await page.getByRole('tab', { name: 'Body' }).click();
   // Assert the schema is fetched after switching to GraphQL request
   await expect.soft(page.getByText('Schema fetched just now')).toBeVisible();
@@ -94,7 +92,7 @@ test('can render schema and send GraphQL requests with object variables', async 
   await expect.soft(responseBody2).toContainText('"echoVars": null');
 });
 
-test('can render numeric environment', async ({ app, page }) => {
+test('can render numeric environment', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   // Copy the collection with the graphql query to clipboard
@@ -106,10 +104,10 @@ test('can render numeric environment', async ({ app, page }) => {
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Smoke GraphQL').click();
 
   // Open the graphql request
-  await page.getByLabel('Request Collection').getByTestId('GraphQL request with number').press('Enter');
+  // await page.getByLabel('Request Collection').getByTestId('GraphQL request with number').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('GraphQL request with number');
   await page.getByRole('tab', { name: 'Body' }).click();
   // Assert the schema is fetched after switching to GraphQL request
   await expect.soft(page.getByText('Schema fetched just now')).toBeVisible();
@@ -134,7 +132,7 @@ test('can render numeric environment', async ({ app, page }) => {
   await expect.soft(responseBody2).toContainText('"echoNum": 777');
 });
 
-test('can send GraphQL requests after editing and prettifying query', async ({ app, page }) => {
+test('can send GraphQL requests after editing and prettifying query', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   const text = await loadFixture('graphql.yaml');
@@ -143,8 +141,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Smoke GraphQL').click();
-  await page.getByLabel('Request Collection').getByTestId('GraphQL request').press('Enter');
+  await insomnia.navigationSidebar.clickRequestOrFolder('GraphQL request');
 
   // Edit and prettify query
   await page.getByRole('tab', { name: 'Body' }).click();

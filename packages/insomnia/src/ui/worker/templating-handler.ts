@@ -1,9 +1,10 @@
-import { extractUndefinedVariableKey, RenderError } from '../../templating/render-error';
-import type { RenderInputType } from '../../templating/types';
+import { serializeRenderContext } from '~/common/templating/render-context-serialization';
+import { extractUndefinedVariableKey, RenderError } from '~/common/templating/render-error';
+import type { RenderInputType } from '~/common/templating/types';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
 // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
-const worker = new Worker(new URL('templating-worker.ts', import.meta.url), { type: 'module' });
+const worker = new Worker(new URL('templating.worker.ts', import.meta.url), { type: 'module' });
 
 // Triggered by a mistake in the work initialization code above
 worker.addEventListener('error', event => {
@@ -11,20 +12,7 @@ worker.addEventListener('error', event => {
 });
 
 export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: RenderInputType): Promise<string> {
-  const newContext = {
-    ...context,
-    serializedFunctions: {
-      requestId: context.getMeta().requestId,
-      workspaceId: context.getMeta().workspaceId,
-      environmentId: context.getEnvironmentId(),
-      extraInfo: context.getExtraInfo(),
-      globalEnvironmentId: context.getGlobalEnvironmentId(),
-      keysContext: context.getKeysContext(),
-      projectId: context.getProjectId(),
-      purpose: context.getPurpose(),
-      settings: context.getSettings(),
-    },
-  };
+  const newContext = serializeRenderContext(context);
 
   // Id to avoid race conditions
   const id = window.crypto.randomUUID();

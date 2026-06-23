@@ -1,50 +1,64 @@
-import path from 'node:path';
-
 import { type ActionFunctionArgs, href } from 'react-router';
 
-import type { ScanResult } from '~/common/import';
-import { fetchImportContentFromURI, getFilesFromPostmanExportedDataDump, scanResources } from '~/common/import';
+import type { ImportSourceType, ScanResult } from '~/common/import';
+import {
+  fetchImportContentFromURI,
+  getFilesFromPostmanExportedDataDump,
+  IMPORT_SOURCE_TYPES,
+  mcpUrlToInsomniaV5Yaml,
+  scanResources,
+} from '~/common/import';
+import { invariant } from '~/common/utils/invariant';
 import type { ImportEntry } from '~/main/importers/entities';
-import { SegmentEvent } from '~/ui/analytics';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
-
-type SourceType = 'file' | 'uri' | 'clipboard';
+import { AnalyticsEvent, trackImportEvent } from '~/ui/analytics';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 export const scanImportResources = async (data: {
-  source: SourceType;
+  source: ImportSourceType;
   uri?: string;
+  curl?: string;
+  mcp?: string;
   filePaths?: string | string[];
   postmanArchiveFile?: string | null;
 }): Promise<ScanResult[]> => {
   const { source, postmanArchiveFile } = data;
+  const isZipFilePath = (filePath: string) => filePath.toLowerCase().endsWith('.zip');
 
   invariant(typeof source === 'string', 'Source is required.');
-  invariant(['file', 'uri', 'clipboard'].includes(source), 'Unsupported import type');
+  invariant(IMPORT_SOURCE_TYPES.includes(source), 'Unsupported import type');
 
-  window.main.trackSegmentEvent({
-    event: SegmentEvent.importScanned,
-    properties: {
-      source,
-    },
-  });
+  trackImportEvent(AnalyticsEvent.importScanned, { source });
 
   const contentList: ImportEntry[] = [];
 
   if (source === 'uri') {
     const { uri } = data;
     invariant(typeof uri === 'string' && uri.length, 'URI is required');
-
     contentList.push({
       contentStr: await fetchImportContentFromURI({ uri }),
       oriFileName: uri,
+    });
+  } else if (source === 'curl') {
+    const { curl } = data;
+    invariant(typeof curl === 'string' && curl.length, 'cURL command is required');
+    contentList.push({
+      contentStr: curl,
+    });
+  } else if (source === 'mcp') {
+    const { mcp } = data;
+    invariant(typeof mcp === 'string' && mcp.length, 'MCP server URL is required');
+    const importYaml = mcpUrlToInsomniaV5Yaml(mcp);
+    invariant(importYaml, 'Failed to convert MCP URL to Insomnia v5 YAML');
+    contentList.push({
+      contentStr: importYaml,
+      oriFileName: 'mcp',
     });
   } else if (source === 'file') {
     let filePaths: string[];
     try {
       filePaths = typeof data.filePaths === 'string' ? JSON.parse(data.filePaths) : data.filePaths;
       if (!Array.isArray(filePaths)) {
-        throw new Error('filePaths is not an array');
+        throw new TypeError('filePaths is not an array');
       }
       filePaths = filePaths.filter(filePath => typeof filePath === 'string' && filePath);
       if (filePaths.length === 0) {
@@ -54,17 +68,18 @@ export const scanImportResources = async (data: {
       throw new Error('File is required');
     }
 
-    const zipFilePaths = filePaths.filter(filePath => path.extname(filePath) === '.zip');
-    const nonZipFilePaths = filePaths.filter(filePath => path.extname(filePath) !== '.zip');
+    const zipFilePaths = filePaths.filter(isZipFilePath);
+    const nonZipFilePaths = filePaths.filter(filePath => !isZipFilePath(filePath));
 
     // zip file is for postman data dump
     for (const zipFilePath of zipFilePaths) {
       const postmanDataDumpRawData = await getFilesFromPostmanExportedDataDump(zipFilePath);
+      const zipBaseName = window.path.basename(zipFilePath);
 
       function trans({ contentStr, oriFileName }: ImportEntry): ImportEntry {
         return {
           contentStr,
-          oriFileName: `${oriFileName} in ${path.basename(zipFilePath)}`,
+          oriFileName: `${oriFileName} in ${zipBaseName}`,
         };
       }
 
@@ -83,7 +98,7 @@ export const scanImportResources = async (data: {
           path: postmanArchiveFile,
         });
         postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent);
-      } catch (err) {
+      } catch {
         return [
           {
             oriFileName: postmanArchiveFile,
@@ -104,14 +119,14 @@ export const scanImportResources = async (data: {
             jsonData._postman_variable_scope = 'environment';
             contentStr = JSON.stringify(jsonData);
           }
-        } catch (error) {
+        } catch {
           // It's not a valid JSON, shouldn't be a postman environment
         }
       }
 
       contentList.push({
         contentStr,
-        oriFileName: path.basename(filePath),
+        oriFileName: window.path.basename(filePath),
         oriFilePath: filePath,
       });
     }
@@ -133,8 +148,10 @@ export const scanImportResources = async (data: {
 };
 
 interface ImportScanInputData {
-  source: SourceType;
+  source: ImportSourceType;
   uri?: string;
+  curl?: string;
+  mcp?: string;
   filePaths?: string | string[];
   postmanArchiveFile?: string | null;
 }

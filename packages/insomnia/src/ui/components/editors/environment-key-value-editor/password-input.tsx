@@ -33,7 +33,7 @@ export const PasswordInput = (props: PasswordInputProps) => {
         {isHidden ? (
           <input
             value={value}
-            className="h-full w-full placeholder-[--hl-lg]"
+            className="h-full w-full placeholder-(--hl-lg)"
             onChange={event => onChange(event.target.value)}
             placeholder={placeholder}
             readOnly={!enabled}

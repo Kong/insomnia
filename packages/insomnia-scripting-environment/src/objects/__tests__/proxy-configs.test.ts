@@ -54,7 +54,7 @@ describe('test ProxyConfig object', () => {
 
   proxyUrls.forEach(url => {
     it(`test proxy transforming: ${url}`, () => {
-      const proxy = new ProxyConfig(transformToSdkProxyOptions(url, '', true, ''));
+      const proxy = new ProxyConfig(transformToSdkProxyOptions('http:', url, '', true, ''));
       expect(proxy.getProxyUrl()).toEqual(url);
     });
   });

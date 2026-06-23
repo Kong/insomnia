@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import type { RequestHeader } from 'insomnia/src/models/request';
-import type { Settings } from 'insomnia/src/models/settings';
 import { filterClientCertificates } from 'insomnia/src/network/certificate';
+import type { ClientCertificate, RequestHeader, RequestTestResult, Settings } from 'insomnia-data';
 
 import { toPreRequestAuth } from './auth';
 import { getExistingConsole } from './console';
@@ -17,7 +15,7 @@ import { RequestInfo } from './request-info';
 import type { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
-import { type RequestTestResult, skip, test, type TestHandler } from './test';
+import { skip, test, type TestHandler } from './test';
 import { toUrlObject } from './urls';
 import { checkIfUrlIncludesTag } from './utils';
 
@@ -119,7 +117,7 @@ export class InsomniaObject {
   };
 
   get settings() {
-    return undefined;
+    return;
   }
 
   toObject = () => {
@@ -231,14 +229,15 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
         pfx: { src: matchedCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
       };
 
+  const reqUrl = toUrlObject(rawObj.request.url);
   const proxy = transformToSdkProxyOptions(
+    reqUrl.protocol,
     rawObj.settings.httpProxy,
     rawObj.settings.httpsProxy,
     rawObj.settings.proxyEnabled,
     rawObj.settings.noProxy,
   );
 
-  const reqUrl = toUrlObject(rawObj.request.url);
   reqUrl.addQueryParams(
     rawObj.request.parameters.map(param => ({ key: param.name, value: param.value, disabled: param.disabled })),
   );

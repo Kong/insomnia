@@ -4,7 +4,7 @@ const isModuleInstalled = (moduleName: string) => {
   try {
     require.resolve(moduleName);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 };

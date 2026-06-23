@@ -21,7 +21,7 @@ interface Props {
 export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, disabled, children }) => {
   const reqData = useRequestLoaderData() as RequestLoaderData;
   const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup || {};
+  const { authentication } = reqData?.activeRequest || groupData?.activeRequestGroup || {};
   const isDisabled = (authentication && 'disabled' in authentication && authentication.disabled) || disabled;
   return (
     <tr key={labelFor}>

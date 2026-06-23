@@ -16,27 +16,33 @@ on:
         required: false
         description: force version of the release (e.g. 9.0.0) if previous release was successful, this should auto increment
 
+permissions: {}
+
 jobs:
   setup-release-branch:
     timeout-minutes: 5
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: develop
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
+          node-version-file: '.nvmrc'
+          cache: 'npm'
           cache-dependency-path: package-lock.json
 
       - name: Install packages
         run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       # ############################################################
       # SETUP RELEASE_VERSION and RELEASE_BRANCH
@@ -47,40 +53,49 @@ jobs:
 
       - name: App version (stable, with a specific version)
         if: github.event.inputs.channel == 'stable' && github.event.inputs.version
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: npm --workspaces version "$VERSION"
 
       - name: App version (alpha/beta, patch latest alpha/beta)
         if: github.event.inputs.channel != 'stable' && !github.event.inputs.version
-        run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
+        env:
+          CHANNEL: ${{ github.event.inputs.channel }}
+        run: npm --workspaces version --preid "$CHANNEL" prerelease
 
       - name: App version (alpha/beta, with a specific version)
         if: github.event.inputs.channel != 'stable' && github.event.inputs.version
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: npm --workspaces version "$VERSION"
 
       # ############################################################
 
       - name: Get version
         shell: bash
         run: |
-          echo "RELEASE_VERSION=$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
-          echo "RELEASE_BRANCH=release/$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
+          VERSION=$(node -p "require('./packages/insomnia/package.json').version")
+          MAJOR_MINOR=$(echo $VERSION | cut -d. -f1,2)
+
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH=release/$MAJOR_MINOR" >> $GITHUB_ENV
 
       - name: Create Branch # Create a branch if it doesn't exist
-        uses: peterjgrainger/action-create-branch@c2800a3a9edbba2218da6861fa46496cf8f3195a # v2.2.0
+        uses: peterjgrainger/action-create-branch@4b81ce657e255acd677cc6c55c9c763654be3aef # v4.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           branch: ${{ env.RELEASE_BRANCH }}
 
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           persist-credentials: false
 
       - name: Configure Git user
         id: configure_git_user
-        uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
+        uses: Homebrew/actions/git-user-config@6eaeff80e7e5c43087c0e5eb5aa82120399e9c91 # master
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
@@ -93,15 +108,21 @@ jobs:
 
       - name: (Re-run) App version (stable, with a specific version)
         if: github.event.inputs.channel == 'stable' && github.event.inputs.version
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: npm --workspaces version "$VERSION"
 
       - name: (Re-run) App version (alpha/beta, patch latest alpha/beta)
         if: github.event.inputs.channel != 'stable' && !github.event.inputs.version
-        run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
+        env:
+          CHANNEL: ${{ github.event.inputs.channel }}
+        run: npm --workspaces version --preid "$CHANNEL" prerelease
 
       - name: (Re-run) App version (alpha/beta, with a specific version)
         if: github.event.inputs.channel != 'stable' && github.event.inputs.version
-        run: npm --workspaces version "${{ github.event.inputs.version }}"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: npm --workspaces version "$VERSION"
 
       # ############################################################
 

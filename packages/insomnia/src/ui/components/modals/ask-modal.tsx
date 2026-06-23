@@ -11,11 +11,13 @@ interface State {
   noText: string;
   color: string;
   onDone?: (success: boolean) => Promise<void>;
+  onHide?: () => void;
 }
 export interface AskModalOptions {
   title?: string;
   message: React.ReactNode;
   onDone?: (success: boolean) => Promise<void>;
+  onHide?: () => void;
   yesText?: string;
   noText?: string;
   color?: string;
@@ -41,7 +43,7 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
       hide: () => {
         modalRef.current?.hide();
       },
-      show: ({ title, message, onDone, yesText, noText, color }) => {
+      show: ({ title, message, onDone, onHide, yesText, noText, color }) => {
         setState({
           title: title || 'Confirm',
           message: message || 'No message provided',
@@ -49,15 +51,16 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
           noText: noText || 'No',
           color: color || 'surprise',
           onDone,
+          onHide,
         });
         modalRef.current?.show();
       },
     }),
     [],
   );
-  const { message, title, yesText, noText, color, onDone } = state;
+  const { message, title, yesText, noText, color, onDone, onHide } = state;
   return (
-    <Modal ref={modalRef}>
+    <Modal ref={modalRef} onHide={onHide}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
       <ModalBody className="wide pad">{message}</ModalBody>
       <ModalFooter>
@@ -65,8 +68,8 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
           <button
             className="btn"
             onClick={() => {
-              modalRef.current?.hide();
               onDone?.(false);
+              modalRef.current?.hide();
             }}
           >
             {noText}
@@ -76,8 +79,8 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
             autoFocus
             style={{ color: `var(--color-font-${color})`, backgroundColor: `var(--color-${color})` }}
             onClick={() => {
-              modalRef.current?.hide();
               onDone?.(true);
+              modalRef.current?.hide();
             }}
           >
             {yesText}

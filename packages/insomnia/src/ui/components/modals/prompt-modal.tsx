@@ -166,7 +166,7 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
     'form-control--outlined': inputType !== 'checkbox',
   });
   return (
-    <Modal ref={modalRef} onHide={state.onHide}>
+    <Modal ref={modalRef} onHide={state.onHide} maskClosable={false}>
       <ModalHeader>{title}</ModalHeader>
       <ModalBody className="wide">
         <form onSubmit={handleSubmit} className="wide pad">

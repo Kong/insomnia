@@ -35,7 +35,7 @@ describe('test request and response objects', () => {
         { key: 'header2', value: 'val2' },
         { key: 'Content-Length', value: '100' },
         { key: 'Content-Disposition', value: 'attachment; filename="filename.txt"' },
-        { key: 'Content-Type', value: 'text/plain; charset=utf-8' },
+        { key: 'Content-Type', value: 'text/plain; charset=utf8' },
       ],
       cookie: [
         { key: 'header1', value: 'val1' },
@@ -54,8 +54,8 @@ describe('test request and response objects', () => {
       key: 888,
     });
     expect(resp.contentInfo()).toEqual({
-      charset: 'utf-8',
-      contentType: 'text/plain; charset=utf-8',
+      charset: 'utf8',
+      contentType: 'text/plain; charset=utf8',
       fileExtension: 'txt',
       fileName: 'filename',
       mimeFormat: '',

@@ -1,19 +1,25 @@
+import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import * as models from '~/models';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { AnalyticsEvent } from '~/ui/analytics';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId, workspaceId, mockRouteId } = params;
   invariant(typeof mockRouteId === 'string', 'Mock route id is required');
-  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  const mockRoute = await services.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'mockRoute not found');
   const { isSelected } = await request.json();
 
-  await models.mockRoute.remove(mockRoute);
+  await services.mockRoute.remove(mockRoute);
+
+  window.main.trackAnalyticsEvent({
+    event: AnalyticsEvent.mockRouteDelete,
+  });
+
   if (isSelected) {
     return redirect(
       href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server', {

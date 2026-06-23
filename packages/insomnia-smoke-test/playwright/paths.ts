@@ -12,7 +12,7 @@ export const getFixturePath = (fixturePath: string) => path.join(__dirname, '..'
 
 export const loadFixture = async (fixturePath: string) => {
   const buffer = await fs.promises.readFile(path.join(__dirname, '..', 'fixtures', fixturePath));
-  return buffer.toString('utf-8');
+  return buffer.toString('utf8');
 };
 
 export const copyFixtureDatabase = async (fixturePath: string, dataPath: string) => {
@@ -69,7 +69,7 @@ const hasBinaryBeenBuilt = fs.existsSync(path.resolve(cwd, insomniaBinary));
 // NOTE: guard against missing build artifacts
 if (bundleType() === 'dev' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
-  Have you run "npm run watch:app"?`);
+  Ensure that playwright has run npm run watch:app`);
   exit(1);
 }
 if (bundleType() === 'build' && !hasMainBeenBuilt) {

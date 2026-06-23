@@ -1,9 +1,9 @@
+import type { KeyboardShortcut } from 'insomnia-data/common';
+import { keyboardShortcutDescriptions } from 'insomnia-data/common';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { useRootLoaderData } from '~/root';
 
-import { keyboardShortcutDescriptions } from '../../../common/hotkeys';
-import type { KeyboardShortcut } from '../../../common/settings';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
@@ -22,7 +22,7 @@ export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children })
             'environment_showEditor',
             'preferences_showKeyboardShortcuts',
           ].map(shortcut => (
-            <div key={shortcut} className="m-[--padding-sm] flex w-full items-center justify-between">
+            <div key={shortcut} className="m-(--padding-sm) flex w-full items-center justify-between">
               <div className="mr-8">{keyboardShortcutDescriptions[shortcut as KeyboardShortcut]}</div>
               <code>
                 <Hotkey keyBindings={hotKeyRegistry[shortcut as KeyboardShortcut]} useFallbackMessage />

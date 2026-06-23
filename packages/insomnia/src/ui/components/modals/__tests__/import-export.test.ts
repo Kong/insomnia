@@ -1,22 +1,34 @@
-import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/main/har';
+import { database as db, services } from 'insomnia-data';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { database as db } from '../../../../common/database';
-import * as models from '../../../../models';
+vi.mock('~/runtimes', () => ({
+  getRuntime: () => ({
+    network: {
+      getTimelinePath: () => Promise.resolve(''),
+      appendToTimelineOnError: () => Promise.resolve(),
+      appendTimelineLines: () => Promise.resolve(),
+      getAuthHeader: () => Promise.resolve(),
+      executeCurlRequest: () => Promise.resolve({}),
+      runScript: () => Promise.resolve({}),
+      applyRequestHooks: (request: any) => Promise.resolve(request),
+      applyResponseHooks: (response: any) => Promise.resolve(response),
+    },
+  }),
+}));
 
 // @vitest-environment jsdom
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
-    await models.project.all();
-    await models.settings.getOrCreate();
+    await services.settings.getOrCreate();
   });
 
   it('exports a single workspace and some requests only as an HTTP Archive', async () => {
-    const wrk1 = await models.workspace.create({
+    const wrk1 = await services.workspace.create({
       _id: 'wrk_1',
       name: 'Workspace 1',
     });
-    const req1 = await models.request.create({
+    const req1 = await services.request.create({
       _id: 'req_1',
       name: 'Request 1',
       parentId: wrk1._id,
@@ -28,34 +40,34 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
       ],
       metaSortKey: 0,
     });
-    const req2 = await models.request.create({
+    const req2 = await services.request.create({
       _id: 'req_2',
       name: 'Request 2',
       parentId: wrk1._id,
       metaSortKey: 1,
     });
-    let env1Base = await models.environment.getOrCreateForParentId(wrk1._id);
-    env1Base = await models.environment.update(env1Base, {
+    let env1Base = await services.environment.getOrCreateForParentId(wrk1._id);
+    env1Base = await services.environment.update(env1Base, {
       data: {
         envvalue: 'base1',
       },
     });
-    const env1Private = await models.environment.create({
+    const env1Private = await services.environment.create({
       name: 'Private',
       parentId: env1Base._id,
       data: {
         envvalue: 'private1',
       },
     });
-    await models.workspaceMeta.create({
+    await services.workspaceMeta.create({
       parentId: wrk1._id,
       activeEnvironmentId: env1Private._id,
     });
-    const wrk2 = await models.workspace.create({
+    const wrk2 = await services.workspace.create({
       _id: 'wrk_2',
       name: 'Workspace 2',
     });
-    await models.request.create({
+    await services.request.create({
       _id: 'req_3',
       name: 'Request 3',
       parentId: wrk2._id,
@@ -109,17 +121,17 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   });
 
   it('exports all workspaces as an HTTP Archive', async () => {
-    await db.init({ inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true);
 
-    const wrk1 = await models.workspace.create({
+    const wrk1 = await services.workspace.create({
       _id: 'wrk_1',
       name: 'Workspace 1',
     });
-    const wrk2 = await models.workspace.create({
+    const wrk2 = await services.workspace.create({
       _id: 'wrk_2',
       name: 'Workspace 2',
     });
-    await models.request.create({
+    await services.request.create({
       _id: 'req_1',
       name: 'Request 1',
       parentId: wrk1._id,
@@ -130,7 +142,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
         },
       ],
     });
-    await models.request.create({
+    await services.request.create({
       _id: 'req_2',
       name: 'Request 2',
       parentId: wrk2._id,
@@ -141,26 +153,26 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
         },
       ],
     });
-    let env1Base = await models.environment.getOrCreateForParentId(wrk1._id);
-    env1Base = await models.environment.update(env1Base, {
+    let env1Base = await services.environment.getOrCreateForParentId(wrk1._id);
+    env1Base = await services.environment.update(env1Base, {
       data: {
         envvalue: 'base1',
       },
     });
-    const env1Public = await models.environment.create({
+    const env1Public = await services.environment.create({
       name: 'Public',
       parentId: env1Base._id,
       data: {
         envvalue: 'public1',
       },
     });
-    const env2Base = await models.environment.getOrCreateForParentId(wrk2._id);
-    await models.environment.update(env2Base, {
+    const env2Base = await services.environment.getOrCreateForParentId(wrk2._id);
+    await services.environment.update(env2Base, {
       data: {
         envvalue: 'base2',
       },
     });
-    const env2Private = await models.environment.create({
+    const env2Private = await services.environment.create({
       name: 'Private',
       isPrivate: true,
       parentId: env1Base._id,
@@ -168,11 +180,11 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
         envvalue: 'private2',
       },
     });
-    await models.workspaceMeta.create({
+    await services.workspaceMeta.create({
       parentId: wrk1._id,
       activeEnvironmentId: env1Public._id,
     });
-    await models.workspaceMeta.create({
+    await services.workspaceMeta.create({
       parentId: wrk2._id,
       activeEnvironmentId: env2Private._id,
     });

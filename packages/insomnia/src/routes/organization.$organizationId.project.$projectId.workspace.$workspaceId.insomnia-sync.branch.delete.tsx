@@ -1,9 +1,9 @@
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { invariant } from '~/common/utils/invariant';
 import { remoteBranchesCache } from '~/ui/sync-utils';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.delete';
 
@@ -15,11 +15,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   invariant(typeof branch === 'string', 'Branch is required');
 
   try {
-    const vcs = VCSInstance();
-    await vcs.removeRemoteBranch(branch);
+    await window.main.sync.removeRemoteBranch(branch);
     try {
-      await vcs.removeBranch(branch);
-    } catch (err) {
+      await window.main.sync.removeBranch(branch);
+    } catch {
       // Branch doesn't exist locally, ignore
     }
 
@@ -31,12 +30,15 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     };
   }
 
+  const workspace = await services.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+
   return redirect(
-    href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug`, {
+    `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
       organizationId,
       projectId,
       workspaceId,
-    }),
+    })}/${models.workspace.scopeToActivity(workspace?.scope)}`,
   );
 }
 

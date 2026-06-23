@@ -1,3 +1,18 @@
+import type {
+  GrpcRequest,
+  GrpcRequestMeta,
+  McpPayload,
+  McpRequest,
+  Request,
+  RequestGroup,
+  RequestGroupMeta,
+  RequestMeta,
+  Settings,
+  SocketIOPayload,
+  SocketIORequest,
+  WebSocketRequest,
+  WorkspaceMeta,
+} from 'insomnia-data';
 import { useParams } from 'react-router';
 
 import { useRequestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
@@ -8,96 +23,84 @@ import { useRequestGroupUpdateMetaActionFetcher } from '~/routes/organization.$o
 import { useWorkspaceUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
 import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
 
-import type { GrpcRequest } from '../../models/grpc-request';
-import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
-import type { Request } from '../../models/request';
-import type { RequestGroup } from '../../models/request-group';
-import type { RequestGroupMeta } from '../../models/request-group-meta';
-import type { RequestMeta } from '../../models/request-meta';
-import type { Settings } from '../../models/settings';
-import type { SocketIOPayload } from '../../models/socket-io-payload';
-import type { SocketIORequest } from '../../models/socket-io-request';
-import type { WebSocketRequest } from '../../models/websocket-request';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
-import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
-
-export const useRequestPatcher = () => {
+export const useRequestPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestUpdateActionFetcher();
   return (
     requestId: string,
-    patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest> | Partial<SocketIORequest>,
+    patch:
+      | Partial<GrpcRequest>
+      | Partial<Request>
+      | Partial<WebSocketRequest>
+      | Partial<SocketIORequest>
+      | Partial<McpRequest>,
   ) => {
-    updateTabById?.(requestId, { temporary: false });
     fetcher.submit({
       organizationId,
       patch,
       projectId,
       requestId,
-      workspaceId,
+      // If workspaceId is not available in params, use the workspaceId from the argument. This is used in global navigation side bar where workspaceId might not in the url params
+      workspaceId: workspaceId || requestWorkspaceId,
     });
   };
 };
 
-export const useRequestMetaPatcher = () => {
+export const useRequestMetaPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestUpdateMetaActionFetcher();
   return (requestId: string, patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>) => {
-    updateTabById?.(requestId, { temporary: false });
     fetcher.submit({
       organizationId,
       projectId,
-      workspaceId,
+      // If workspaceId is not available in params, use the workspaceId from the argument. This is used in global navigation side bar where workspaceId might not in the url params
+      workspaceId: workspaceId || requestWorkspaceId,
       requestId,
       patch,
     });
   };
 };
 
-export const useRequestGroupPatcher = () => {
+export const useRequestGroupPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestGroupUpdateActionFetcher();
   return (requestGroupId: string, patch: Partial<RequestGroup>) => {
-    updateTabById?.(requestGroupId, { temporary: false });
     fetcher.submit({
       organizationId,
       projectId,
-      workspaceId,
+      // If workspaceId is not available in params, use the workspaceId from the argument. This is used in global navigation side bar where workspaceId might not in the url params
+      workspaceId: workspaceId || requestWorkspaceId,
       requestGroupId,
       patch,
     });
   };
 };
 
-export const useRequestGroupMetaPatcher = () => {
+export const useRequestGroupMetaPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
   };
-  const { updateTabById } = useInsomniaTabContext();
   const fetcher = useRequestGroupUpdateMetaActionFetcher();
   return (requestGroupId: string, patch: Partial<RequestGroupMeta>) => {
-    updateTabById?.(requestGroupId, { temporary: false });
     fetcher.submit({
       organizationId,
       projectId,
-      workspaceId,
+      // If workspaceId is not available in params, use the workspaceId from the argument. This is used in global navigation side bar where workspaceId might not in the url params
+      workspaceId: workspaceId || requestWorkspaceId,
       requestGroupId,
       patch,
     });
@@ -131,7 +134,7 @@ export const useRequestPayloadPatcher = () => {
     workspaceId: string;
   };
   const fetcher = useRequestUpdatePayloadActionFetcher();
-  return async (requestId: string, payload: Partial<SocketIOPayload>) => {
+  return async (requestId: string, payload: Partial<SocketIOPayload> | Partial<McpPayload>) => {
     await fetcher.submit({
       organizationId,
       projectId,

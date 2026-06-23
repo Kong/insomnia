@@ -1,65 +1,57 @@
+import type { StorageRules } from 'insomnia-api';
+import type { GitCredentials, GitRepository, Project, ProviderEmail } from 'insomnia-data';
+import { models } from 'insomnia-data';
+import { platform } from 'insomnia-data/common';
 import type { FC } from 'react';
-import React, { useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
-  Cell,
-  Checkbox,
-  Column,
-  Heading,
   Input,
   Label,
-  Radio,
-  RadioGroup,
-  Row,
-  Tab,
-  Table,
-  TableBody,
-  TableHeader,
-  TabList,
-  TabPanel,
-  Tabs,
+  ListBox,
+  ListBoxItem,
+  Popover,
+  Select,
+  SelectValue,
   TextField,
+  Tooltip,
+  TooltipTrigger,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { isGitCredentialsOAuth } from '~/models/git-repository';
-import type { StorageRules } from '~/models/organization';
+import { Banner } from '~/basic-components/banner';
+import { Divider } from '~/basic-components/divider';
+import { LearnMoreLink } from '~/basic-components/link';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
-import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
+import { useGitValidateCredentialsFetcher } from '~/routes/git.validate-credentials';
+import { useGitProviderEmailsLoaderFetcher } from '~/routes/git-provider.emails';
+import type { GitProviderOption } from '~/sync/git/providers/types';
+import { GitConnectionInfo } from '~/ui/components/git/connection-info';
+import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
+import { GitRepoForm } from '~/ui/components/project/git-repo-form';
+import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
+import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
+import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
+import { useActiveView } from '~/ui/components/project/utils';
+import { useIsLightTheme } from '~/ui/hooks/theme';
+import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
 
-import type { OauthProviderName } from '../../../models/git-credentials';
-import type { GitRepository } from '../../../models/git-repository';
-import {
-  getDefaultProjectStorageType,
-  getProjectStorageTypeLabel,
-  isGitProject,
-  isRemoteProject,
-  type Project,
-} from '../../../models/project';
-import {
-  scopeToBgColorMap,
-  scopeToIconMap,
-  scopeToLabelMap,
-  scopeToTextColorMap,
-} from '../../../routes/organization.$organizationId.project.$projectId._index';
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
-import { ErrorBoundary } from '../error-boundary';
-import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
-import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-repository-settings-form';
-import { GitLabRepositorySetupFormGroup } from '../git-credentials/gitlab-repository-settings-form';
 import { Icon } from '../icon';
-import { InsomniaLogo } from '../insomnia-icon';
+
+const FORMID = 'git-repo-form';
+const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
 function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
+  if (storageType === 'git' && !models.project.isGitProject(project)) {
     return true;
   }
 
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
+  if (storageType === 'local' && (models.project.isRemoteProject(project) || models.project.isGitProject(project))) {
     return true;
   }
 
-  if (storageType === 'remote' && !isRemoteProject(project)) {
+  if (storageType === 'remote' && !models.project.isRemoteProject(project)) {
     return true;
   }
 
@@ -68,84 +60,83 @@ function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote
 
 interface Props {
   storageRules: StorageRules;
-  isGitSyncEnabled: boolean;
   project?: Project;
   gitRepository?: GitRepository;
   defaultProjectName?: string;
   onCancel?(): void;
   onSuccessUpdate?(): void;
+  credentials: GitCredentials[];
+  providers: GitProviderOption[];
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
   storageRules,
-  isGitSyncEnabled,
   project,
   gitRepository,
   defaultProjectName = 'My Project',
   onCancel,
   onSuccessUpdate,
+  credentials,
+  providers,
+  onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
+  const isGitSyncEnabled = useIsGitSyncEnabled(organizationId);
+
+  const isLightTheme = useIsLightTheme();
+
   const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(
-    getDefaultProjectStorageType(storageRules, project),
+    models.project.getDefaultProjectStorageType(storageRules, project),
   );
-  const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results' | 'switch-storage-type'>(
-    'project',
-  );
-  const [selectedTab, setTab] = useState<OauthProviderName>('github');
+
+  const { activeView, setActiveView } = useActiveView();
+
+  const showSwitchBanner = useMemo(() => {
+    return isSwitchingStorageType(project!, storageType);
+  }, [project, storageType]);
 
   const [error, setError] = useState<string | null>(null);
+  const [isGitCredentialInvalid, setIsGitCredentialInvalid] = useState(false);
 
   const [projectData, setProjectData] = useState<{
     name: string;
-    authorName?: string;
-    authorEmail?: string;
     uri?: string;
     ref?: string;
-    username?: string;
-    password?: string;
-    token?: string;
-    oauth2format?: OauthProviderName;
+    credentialsId?: string;
     connectRepositoryLater?: boolean;
+    selectedAuthorEmail?: string | null;
   }>({
     name: project?.name || defaultProjectName,
-    authorName: gitRepository?.author?.name || '',
-    authorEmail: gitRepository?.author?.email || '',
     uri: gitRepository?.uri || '',
-    username: gitRepository?.credentials?.username || '',
-    password:
-      gitRepository?.credentials && 'password' in gitRepository.credentials ? gitRepository?.credentials?.password : '',
-    token: gitRepository?.credentials && 'token' in gitRepository.credentials ? gitRepository?.credentials?.token : '',
-    oauth2format:
-      gitRepository?.credentials && 'oauth2format' in gitRepository.credentials
-        ? (gitRepository?.credentials?.oauth2format ?? 'github')
-        : undefined,
+    credentialsId: gitRepository?.credentialsId ?? undefined,
     connectRepositoryLater: false,
+    selectedAuthorEmail: gitRepository?.selectedAuthorEmail ?? null,
   });
 
   const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
+  const validateCredentialsFetcher = useGitValidateCredentialsFetcher();
   const updateProjectFetcher = useProjectUpdateActionFetcher();
-  const newProjectFetcher = useProjectNewActionFetcher();
 
-  const showStorageRestrictionMessage =
-    !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
   const insomniaFiles =
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
       ? initCloneGitRepositoryFetcher.data.files
       : [];
 
+  const changedFieldCount = [
+    projectData.name !== project?.name,
+    isSwitchingStorageType(project!, storageType),
+    project?.gitRepositoryId && projectData.uri !== gitRepository?.uri,
+    project?.gitRepositoryId && projectData.credentialsId !== gitRepository?.credentialsId,
+    project?.gitRepositoryId && projectData.selectedAuthorEmail !== gitRepository?.selectedAuthorEmail,
+  ].filter(Boolean).length;
+
   useEffect(() => {
-    if (updateProjectFetcher.data && updateProjectFetcher.data.success && onSuccessUpdate) {
+    if (updateProjectFetcher?.data && updateProjectFetcher?.data?.success && onSuccessUpdate) {
       onSuccessUpdate();
     }
   }, [onSuccessUpdate, updateProjectFetcher.data]);
-
-  useEffect(() => {
-    if (newProjectFetcher.state === 'idle' && newProjectFetcher.data && newProjectFetcher.data?.error) {
-      setError(newProjectFetcher.data.error);
-    }
-  }, [newProjectFetcher.data, newProjectFetcher.state]);
 
   useEffect(() => {
     if (updateProjectFetcher.state === 'idle' && updateProjectFetcher.data && updateProjectFetcher.data?.error) {
@@ -153,54 +144,11 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [updateProjectFetcher.data, updateProjectFetcher.state]);
 
-  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository & { ref?: string }>) => {
-    const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
-      gitRepositoryPatch;
-
-    setProjectData({
-      ...projectData,
-      ...credentials,
-      authorName: author?.name || '',
-      authorEmail: author?.email || '',
-      uri: repoPatch.uri,
-      ref: repoPatch.ref,
-    });
-
-    initCloneGitRepositoryFetcher.submit({
-      ...repoPatch,
-      authorName: author?.name || '',
-      authorEmail: author?.email || '',
-      ...(credentials
-        ? isGitCredentialsOAuth(credentials)
-          ? {
-              credentials: {
-                token: credentials.token || '',
-                oauth2format: credentials.oauth2format || 'github',
-                username: credentials.username || '',
-              },
-            }
-          : {
-              credentials,
-            }
-        : {
-            credentials: {
-              password: '',
-              username: '',
-            },
-          }),
-      uri: repoPatch.uri || '',
-      organizationId,
-    });
-
-    setActiveView('git-results');
-  };
+  useEffect(() => {
+    if (onDirtyChange) onDirtyChange(changedFieldCount > 1);
+  }, [onDirtyChange, changedFieldCount]);
 
   const onUpsertProject = () => {
-    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, storageType)) {
-      setActiveView('switch-storage-type');
-      return;
-    }
-
     if (project) {
       updateProjectFetcher.submit({
         organizationId,
@@ -210,533 +158,461 @@ export const ProjectSettingsForm: FC<Props> = ({
           storageType,
         },
       });
-    } else {
-      newProjectFetcher.submit({
-        organizationId,
-        projectData: {
-          ...projectData,
-          storageType,
-        },
-      });
     }
   };
 
+  const selectedCredential = credentials.find(c => c._id === projectData.credentialsId);
+  const selectedProvider = providers.find(p => p.type === selectedCredential?.provider);
+
+  const hideActionButtons = storageType === 'git' && !projectData.connectRepositoryLater && credentials.length === 0;
+
+  const showGitConnectionInfo =
+    storageType === 'git' &&
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID &&
+    gitRepository?.credentialsId &&
+    selectedProvider;
+
+  const showRepoPath =
+    storageType === 'git' &&
+    !isSwitchingStorageType(project!, storageType) &&
+    project?.gitRepositoryId !== models.project.EMPTY_GIT_PROJECT_ID &&
+    Boolean(gitRepository?._id);
+
+  const repoPath = showRepoPath
+    ? window.path.join(window.app.getPath('userData'), 'version-control', 'git', gitRepository!._id)
+    : '';
+
+  const showGitRepoForm =
+    storageType === 'git' &&
+    ((isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) ||
+      (!isSwitchingStorageType(project!, storageType) &&
+        project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID));
+
+  const emailsFetcher = useGitProviderEmailsLoaderFetcher();
+  const isLoadingEmails = emailsFetcher.state !== 'idle';
+
+  const availableEmails = useMemo(() => {
+    const fetchedEmails = emailsFetcher.data?.emails || [];
+    if (fetchedEmails.length > 0) {
+      return fetchedEmails;
+    }
+    if (selectedCredential && isGitCredentialsV2(selectedCredential) && isOAuthCredential(selectedCredential)) {
+      return selectedCredential.credentials?.emails || [];
+    }
+    return [];
+  }, [selectedCredential, emailsFetcher.data?.emails]);
+
+  const canFetchEmails =
+    selectedCredential &&
+    isGitCredentialsV2(selectedCredential) &&
+    isOAuthCredential(selectedCredential) &&
+    selectedProvider?.supportsFetchEmails;
+
+  const showEmailSelector = showGitConnectionInfo && canFetchEmails;
+  const [isEmailSelectOpen, setIsEmailSelectOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (canFetchEmails && selectedCredential && emailsFetcher.state === 'idle' && !emailsFetcher.data) {
+      emailsFetcher.load({ credentialsId: selectedCredential._id });
+    }
+  }, [canFetchEmails, selectedCredential, emailsFetcher]);
+
+  const validateCredentialsFetcherLoad = validateCredentialsFetcher.load;
+
+  // Load credentials data (and surface auth errors) for HTTP 4xx fallback when expiresAt is unknown.
+  // No data guard here so that a project ID change always re-fetches fresh data.
+  useEffect(() => {
+    if (showGitConnectionInfo && gitRepository?.uri && gitRepository?._id && project?._id) {
+      validateCredentialsFetcherLoad({ projectId: project._id });
+    }
+  }, [showGitConnectionInfo, gitRepository?.uri, gitRepository?._id, project?._id, validateCredentialsFetcherLoad]);
+
+  const credentialsValidationErrors =
+    validateCredentialsFetcher.data && 'errors' in validateCredentialsFetcher.data
+      ? validateCredentialsFetcher.data.errors
+      : undefined;
+
   return (
-    <div className="flex w-full max-w-[600px] flex-col gap-4">
-      {error && (
-        <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-danger]">
-          <Icon icon="triangle-exclamation" />
-          <span>{error}</span>
+    <>
+      {/* Content */}
+      <div className="flex flex-col gap-2 overflow-y-auto">
+        {error && (
+          <div className="flex items-center gap-2 rounded-xs bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-(--color-font-danger)">
+            <Icon icon="triangle-exclamation" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Important Note: We want to keep the state of the components so we only hide the contents */}
+        <div
+          className={`flex w-full flex-col justify-start gap-4 pb-2 text-left ${activeView === 'project' ? '' : 'hidden'}`}
+        >
+          <TextField
+            autoFocus
+            name="name"
+            value={projectData.name}
+            onChange={name => setProjectData({ ...projectData, name })}
+            className="group relative flex flex-col gap-2 px-0.5"
+          >
+            <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
+            <Input
+              placeholder="My project"
+              className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+            />
+          </TextField>
+          {project?.konnectControlPlaneId ? (
+            <div className="flex flex-col gap-2">
+              <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
+                Type
+              </Label>
+              <div className="flex h-7.5 items-center rounded-sm border border-(--hl-sm) px-2 opacity-75">
+                <div className="flex items-center gap-2">
+                  <Icon icon="laptop" />
+                  <span>Synced from Konnect</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <ProjectTypeSelect
+              storageRules={storageRules}
+              value={storageType}
+              onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+            />
+          )}
+          <ProjectTypeWarning
+            isGitSyncEnabled={isGitSyncEnabled}
+            storageType={storageType}
+            storageRules={storageRules}
+          />
+
+          {showSwitchBanner && storageType === 'remote' && (
+            <Banner
+              type="info"
+              className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
+              title={
+                models.project.isGitProject(project!)
+                  ? 'Removing Git Sync connection'
+                  : 'Converting to Cloud Sync project'
+              }
+              message={
+                models.project.isGitProject(project!)
+                  ? 'Changing this project to a Cloud Sync project will remove the connection to your repo. This does not delete the project files on the remote repo.'
+                  : 'Anything added in the project will be securely synced to the Insomnia cloud and enables you to collaborate on projects with others. '
+              }
+              footer={
+                <LearnMoreLink
+                  href={`https://developer.konghq.com/insomnia/storage/${
+                    models.project.isGitProject(project!)
+                      ? '#what-happens-if-i-change-a-git-sync-project-into-a-cloud-sync-project'
+                      : '#can-i-change-a-local-vault-project-into-a-cloud-sync-project'
+                  }`}
+                >
+                  Learn more about changing project types
+                </LearnMoreLink>
+              }
+            />
+          )}
+          {showSwitchBanner && storageType === 'local' && (
+            <Banner
+              type="info"
+              className={`${isLightTheme ? 'bg-[#EEEBFF]' : 'bg-[#292535]'}`}
+              title={
+                models.project.isGitProject(project!)
+                  ? 'Removing Git Sync connection'
+                  : 'Converting to Local Vault project'
+              }
+              message={
+                models.project.isGitProject(project!)
+                  ? 'Changing this project to a Local Vault project will remove the connection to your repo. This does not delete the project files on the remote repo.'
+                  : 'Your files will now be stored on your local machine. You will no longer be able to collaborate with others on this project.'
+              }
+              footer={
+                <LearnMoreLink
+                  href={`https://developer.konghq.com/insomnia/storage/${
+                    models.project.isGitProject(project!)
+                      ? '#can-i-change-a-git-sync-project-into-a-local-vault-project'
+                      : '#can-i-change-a-cloud-sync-project-into-a-local-vault-project'
+                  }`}
+                >
+                  Learn more about changing project types
+                </LearnMoreLink>
+              }
+            />
+          )}
+
+          {showRepoPath && (
+            <>
+              <div className="flex flex-col gap-1">
+                <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
+                  Path to local files
+                </Label>
+                <div className="text-xs text-(--hl-xl)">
+                  Can be used to manage file changes with git.{' '}
+                  <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
+                    Learn more ↗
+                  </a>
+                </div>
+                <div className="flex items-center justify-between rounded-xs bg-(--hl-xxs) px-2 py-2 font-mono text-(--color-font)">
+                  <span className="min-w-0 flex-1 truncate" title={repoPath}>
+                    {repoPath}
+                  </span>
+                  <Button
+                    onPress={() => {
+                      const cmd =
+                        platform === 'win32'
+                          ? `cd "${repoPath.replace(/"/g, '\\"')}"`
+                          : `cd '${repoPath.replace(/'/g, "'\\''")}'`;
+                      window.clipboard.writeText(cmd);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+                    aria-label="Copy cd command for repository path"
+                  >
+                    <Icon icon={copied ? 'check' : 'copy'} className="size-4" />
+                  </Button>
+                  <TooltipTrigger>
+                    <Button
+                      onPress={() => window.shell.openPath(repoPath)}
+                      className="flex items-center justify-center rounded-xs p-1 hover:bg-(--hl-xs)"
+                      aria-label="Open in file system"
+                    >
+                      <Icon icon="folder-open" className="size-4" />
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-2 text-sm text-(--color-font) shadow-lg"
+                    >
+                      Open in file system
+                    </Tooltip>
+                  </TooltipTrigger>
+                </div>
+              </div>
+            </>
+          )}
+
+          {showGitConnectionInfo && (
+            <>
+              <Divider />
+              <GitConnectionInfo
+                gitRepository={gitRepository}
+                providerInfo={selectedProvider}
+                authorName={selectedCredential?.author.name || selectedCredential?.author.email}
+                projectId={project!._id}
+              />
+              <GitOauthAuthBanner
+                selectedCredential={selectedCredential}
+                gitRepository={gitRepository}
+                repoLoadErrors={credentialsValidationErrors}
+                provider={selectedProvider}
+              />
+              {showEmailSelector && !credentialsValidationErrors?.length ? (
+                <div className="flex flex-col gap-2">
+                  {isLoadingEmails ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon icon="spinner" className="animate-spin" />
+                      <span>Loading emails...</span>
+                    </div>
+                  ) : availableEmails.length > 1 ? (
+                    <Select
+                      onOpenChange={setIsEmailSelectOpen}
+                      isOpen={isEmailSelectOpen}
+                      aria-label="Author Email"
+                      selectedKey={projectData.selectedAuthorEmail || selectedCredential?.author.email}
+                      onSelectionChange={email => {
+                        setProjectData(prev => ({
+                          ...prev,
+                          selectedAuthorEmail: email,
+                        }));
+                      }}
+                    >
+                      <Label className="mb-2 px-0.5 pt-0 text-sm">Author Email</Label>
+                      <Button className="flex w-full flex-1 items-center justify-between gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-(--color-font) ring-1 ring-transparent transition-colors placeholder:italic hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)">
+                        <SelectValue<ProviderEmail> className="flex items-center justify-center gap-2 truncate">
+                          {({ selectedItem }) => {
+                            if (selectedItem) {
+                              return (
+                                <Fragment>
+                                  <span>{selectedItem.email}</span>
+                                  {selectedItem.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                                </Fragment>
+                              );
+                            }
+                            return (
+                              projectData.selectedAuthorEmail || selectedCredential?.author.email || 'Select an email'
+                            );
+                          }}
+                        </SelectValue>
+                        <Icon icon="caret-down" />
+                      </Button>
+                      <Popover className="isolate flex w-(--trigger-width) min-w-max flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-sm shadow-lg select-none">
+                        <ListBox
+                          items={availableEmails}
+                          className="min-w-max overflow-y-auto py-2 focus:outline-hidden"
+                        >
+                          {item => (
+                            <ListBoxItem
+                              id={item.email}
+                              key={item.email}
+                              className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                              aria-label={item.email}
+                              textValue={item.email}
+                              value={item}
+                            >
+                              {({ isSelected }) => (
+                                <Fragment>
+                                  <span>{item.email}</span>
+                                  {item.primary && <span className="text-xs text-(--hl-lg)">(primary)</span>}
+                                  {isSelected && (
+                                    <Icon icon="check" className="justify-self-end text-(--color-success)" />
+                                  )}
+                                </Fragment>
+                              )}
+                            </ListBoxItem>
+                          )}
+                        </ListBox>
+                      </Popover>
+                    </Select>
+                  ) : (
+                    <div className="text-[12px]">
+                      <div className="flex">
+                        <div className="w-[110px] font-semibold">Author Email</div>
+                        <div>
+                          {projectData.selectedAuthorEmail || selectedCredential?.author.email || 'No email available'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : selectedCredential?.author.email && !credentialsValidationErrors?.length ? (
+                <div className="text-[12px]">
+                  <div className="flex">
+                    <div className="w-[110px] font-semibold">Author Email</div>
+                    <div>{selectedCredential?.author.email}</div>
+                  </div>
+                </div>
+              ) : null}
+            </>
+          )}
+          {showGitRepoForm && (
+            <GitRepoForm
+              projectData={projectData}
+              setProjectData={setProjectData}
+              initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+              organizationId={organizationId}
+              setActiveView={setActiveView}
+              credentials={credentials}
+              providers={providers}
+              formId={FORMID}
+              onCredentialValidationChange={setIsGitCredentialInvalid}
+            />
+          )}
+        </div>
+
+        <div className={activeView === 'git-results' ? '' : 'hidden'}>
+          <GitRepoScanResult
+            initCloneGitRepositoryFetcher={initCloneGitRepositoryFetcher}
+            insomniaFiles={insomniaFiles}
+            repoURI={projectData.uri}
+          />
+        </div>
+      </div>
+
+      {/* Actions */}
+
+      {activeView === 'project' && !hideActionButtons && (
+        <div className="flex w-full items-center justify-end gap-2 px-0.5">
+          <div className="flex items-center gap-2">
+            {onCancel && (
+              <Button
+                onPress={onCancel}
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+              >
+                Cancel
+              </Button>
+            )}
+            {storageType === 'git' &&
+            !projectData.connectRepositoryLater &&
+            (isSwitchingStorageType(project!, storageType) ||
+              project?.gitRepositoryId === models.project.EMPTY_GIT_PROJECT_ID ||
+              !gitRepository?.credentialsId) ? (
+              <Button
+                isDisabled={
+                  (!isGitSyncEnabled && isSwitchingStorageType(project!, storageType)) || isGitCredentialInvalid
+                }
+                form={FORMID}
+                type="submit"
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+              >
+                <span>Scan for files</span>
+              </Button>
+            ) : (
+              <Button
+                onPress={onUpsertProject}
+                isDisabled={
+                  updateProjectFetcher.state !== 'idle' ||
+                  (!isSwitchingStorageType(project!, storageType) &&
+                    project?.name.trim() === projectData.name.trim() &&
+                    (gitRepository?.selectedAuthorEmail ?? null) === (projectData.selectedAuthorEmail ?? null))
+                }
+                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+              >
+                {updateProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                <span>Update</span>
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
-      {activeView === 'project' && (
-        <>
-          <div className="mt-4 flex w-full flex-col justify-start gap-8 overflow-y-auto pb-2 text-left">
-            <TextField
-              autoFocus
-              name="name"
-              value={projectData.name}
-              onChange={name => setProjectData({ ...projectData, name })}
-              className="group relative flex flex-col gap-2 px-0.5"
-            >
-              <Label className="text-sm text-[--hl]">Project name</Label>
-              <Input
-                placeholder="My project"
-                className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
-              />
-            </TextField>
-            <RadioGroup
-              name="type"
-              className="flex flex-col gap-2 px-0.5"
-              onChange={value => {
-                error && setError(null);
-                setStorageType(value as 'local' | 'remote' | 'git');
-              }}
-              value={storageType}
-            >
-              <Label className="text-sm text-[--hl]">Project type</Label>
-              <div className="flex gap-2">
-                <Radio
-                  isDisabled={!storageRules.enableLocalVault}
-                  value="local"
-                  className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon icon="laptop" />
-                    <Heading className="text-lg font-bold">Local Vault</Heading>
-                  </div>
-                  <p className="pt-2">Stored locally only, with no cloud. Ideal when collaboration is not needed.</p>
-                </Radio>
-
-                <Radio
-                  isDisabled={!storageRules.enableCloudSync}
-                  value="remote"
-                  className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon icon="globe" />
-                    <Heading className="text-lg font-bold">Cloud Sync</Heading>
-                  </div>
-                  <p className="pt-2">
-                    Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
-                  </p>
-                </Radio>
-                <Radio
-                  isDisabled={!isGitSyncEnabled || !storageRules.enableGitSync}
-                  value="git"
-                  className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon icon={['fab', 'git-alt']} />
-                    <Heading className="text-lg font-bold">Git Sync</Heading>
-                  </div>
-                  <p className="pt-2">
-                    Stored locally and synced to a Git repository. Ideal for version control and collaboration.
-                  </p>
-                </Radio>
-              </div>
-            </RadioGroup>
-            {showStorageRestrictionMessage && (
-              <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-warning-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-warning]">
-                <Icon icon="triangle-exclamation" />
-                <span>
-                  The organization owner mandates that projects must be created and stored using{' '}
-                  {getProjectStorageTypeLabel(storageRules)}.
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="mt-4 flex w-full items-center justify-end gap-2 px-0.5 pb-10">
-            <div className="flex items-center gap-2">
-              {onCancel && (
-                <Button
-                  onPress={onCancel}
-                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
-                >
-                  Cancel
-                </Button>
-              )}
-              {storageType === 'git' && (
-                <Button
-                  onPress={() => setActiveView('git-clone')}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                >
-                  Next
-                </Button>
-              )}
-              {storageType !== 'git' && (
-                <Button
-                  onPress={onUpsertProject}
-                  isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                >
-                  {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
-                    <Icon icon="spinner" className="animate-spin" />
-                  )}
-                  <span>{project ? 'Update' : 'Create'}</span>
-                </Button>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {activeView === 'git-clone' && (
-        <>
-          <Label className="flex items-center gap-2">
-            <Checkbox
-              slot={null}
-              isSelected={projectData.connectRepositoryLater}
-              onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
-              className="group flex h-full items-center p-0"
-            >
-              <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
-                <Icon
-                  icon="check"
-                  className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
-                />
-              </div>
-            </Checkbox>
-            <span className="text-sm text-[--hl]">Connect repository later</span>
-          </Label>
-          {project && !gitRepository && projectData.connectRepositoryLater ? (
-            <div className="flex h-full w-full flex-col items-center justify-center rounded-sm border border-dashed border-[--hl-sm] p-4">
-              <Icon icon="link" className="mb-4 text-[30px] text-[--hl]" />
-              <Heading className="text-lg font-bold text-[--hl]">Your project is already set up to start.</Heading>
-              <p className="text-sm text-[--hl]">
-                Want to connect a repository now? You can uncheck “Connect repository later” to do so.
-              </p>
-            </div>
-          ) : projectData.connectRepositoryLater ? (
-            <div className="flex h-full w-full flex-col items-center justify-center rounded-sm border border-dashed border-[--hl-sm] p-4">
-              <Icon icon="link" className="mb-4 text-[30px] text-[--hl]" />
-              <Heading className="text-lg font-bold text-[--hl]">You're all set to start your project.</Heading>
-              <p className="text-sm text-[--hl]">You can connect a repository anytime from the project settings.</p>
-            </div>
-          ) : (
-            <ErrorBoundary>
-              <Tabs
-                selectedKey={selectedTab}
-                onSelectionChange={key => {
-                  setTab(key as OauthProviderName);
-                }}
-                aria-label="Git repository settings tabs"
-                className="mt-4 flex h-full w-full flex-col"
-              >
-                <TabList
-                  className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
-                  aria-label="Request pane tabs"
-                >
-                  <Tab
-                    className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-                    id="github"
-                  >
-                    <div className="flex items-center gap-2">
-                      <i className="fa fa-github" /> GitHub
-                    </div>
-                  </Tab>
-                  <Tab
-                    className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-                    id="gitlab"
-                  >
-                    <div className="flex items-center gap-2">
-                      <i className="fa fa-gitlab" /> GitLab
-                    </div>
-                  </Tab>
-                  <Tab
-                    className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-                    id="custom"
-                  >
-                    <div className="flex items-center gap-2">
-                      <i className="fa fa-code-fork" /> Git
-                    </div>
-                  </Tab>
-                </TabList>
-                <TabPanel className="h-full w-full overflow-y-auto py-2" id="github">
-                  <GitHubRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
-                </TabPanel>
-                <TabPanel className="h-full w-full overflow-y-auto py-2" id="gitlab">
-                  <GitLabRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
-                </TabPanel>
-                <TabPanel className="h-full w-full overflow-y-auto py-2" id="custom">
-                  <CustomRepositorySettingsFormGroup onSubmit={onGitRepoFormSubmit} />
-                </TabPanel>
-              </Tabs>
-            </ErrorBoundary>
-          )}
-          <div className="flex w-full items-center justify-end gap-2 pb-10">
-            <div className="flex items-center gap-2">
-              <Button
-                onPress={() => {
-                  setError(null);
-                  setActiveView('project');
-                }}
-                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
-              >
-                Back
-              </Button>
-              {!projectData.connectRepositoryLater ? (
-                <Button
-                  type="submit"
-                  form={selectedTab}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                >
-                  Clone
-                </Button>
-              ) : project && projectData.connectRepositoryLater && !gitRepository ? (
-                <Button
-                  onPress={onCancel}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                >
-                  Close
-                </Button>
-              ) : (
-                <Button
-                  onPress={onUpsertProject}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                >
-                  {project ? 'Update' : 'Create'}
-                </Button>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
       {activeView === 'git-results' && (
-        <>
-          {initCloneGitRepositoryFetcher.state !== 'idle' && (
-            <div className="flex w-full flex-col items-center justify-center gap-2 pt-4">
-              <div className="flex w-full flex-col items-center gap-2 rounded-sm bg-[--hl-xs] p-4 text-sm text-[--color-font-success]">
-                <span className="relative flex items-center justify-center">
-                  <InsomniaLogo className="h-12 w-12" />
-                </span>
-                <p className="p-2 text-center font-bold text-[--color-font]">Loading Insomnia files from repository</p>
-              </div>
-            </div>
-          )}
-          {insomniaFiles?.length === 0 && initCloneGitRepositoryFetcher.state === 'idle' && (
-            <div className="flex w-full flex-col items-center justify-center gap-2 pt-4">
-              <div className="flex w-full flex-col items-center gap-2 rounded-sm bg-[--hl-xs] p-4 text-sm text-[--color-font-success]">
-                <span className="relative flex items-center justify-center">
-                  <InsomniaLogo className="h-12 w-12" />
-                </span>
-                <p className="p-2 text-center font-bold text-[--color-font]">
-                  We didn't find any Insomnia files in this repository.
-                </p>
-                <p className="p-2 text-center font-bold text-[--color-font]">
-                  Clone this repository to start a new project.
-                </p>
-                <p className="p-2 text-center text-[--color-font]">
-                  Add your collections, documents, environments and mock servers, and share them using Git.
-                </p>
-              </div>
-            </div>
-          )}
-          {insomniaFiles && insomniaFiles?.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <Heading className="text-base">We found {insomniaFiles.length} Insomnia files in your repository</Heading>
-              <div className="max-h-96 w-full select-none overflow-y-auto overflow-x-hidden rounded border border-solid border-[--hl-sm]">
-                <Table
-                  selectionMode="none"
-                  aria-label="Insomnia files"
-                  className="w-full table-fixed border-separate border-spacing-0"
-                >
-                  <TableHeader>
-                    <Column
-                      isRowHeader
-                      className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none"
-                    >
-                      Name
-                    </Column>
-                    <Column className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                      Type
-                    </Column>
-                    <Column className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                      File path
-                    </Column>
-                  </TableHeader>
-                  <TableBody
-                    className="divide divide-solid divide-[--hl-sm]"
-                    items={insomniaFiles.map(file => ({ id: file.path, ...file }))}
-                  >
-                    {file => (
-                      <Row className="group transition-colors focus-within:bg-[--hl-xxs] focus:outline-none">
-                        <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
-                          <div className="flex items-center gap-2 px-2 py-2">
-                            <span
-                              className={`${scopeToBgColorMap[file.scope]} ${scopeToTextColorMap[file.scope]} flex aspect-square h-6 items-center justify-center rounded`}
-                            >
-                              <Icon icon={scopeToIconMap[file.scope]} className="w-4" />
-                            </span>
-                            <span className="truncate">{file.name}</span>
-                            {file.path === '.insomnia' && (
-                              <span className="flex items-center gap-2 text-[--color-warning]">
-                                <Icon icon="triangle-exclamation" />
-                              </span>
-                            )}
-                          </div>
-                        </Cell>
-                        <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
-                          <span className="flex items-center gap-1 px-2 text-[--hl]">
-                            {scopeToLabelMap[file.scope]}
-                          </span>
-                        </Cell>
-                        <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
-                          <span className="flex items-center gap-1 italic text-[--hl]">
-                            <Icon icon={file.path === '.insomnia' ? 'folder' : 'file'} className="text-[--hl]" />
-                            <span className="truncate px-2 text-[--hl]">{file.path}</span>
-                          </span>
-                        </Cell>
-                      </Row>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
-          {insomniaFiles && insomniaFiles?.some(file => file.path === '.insomnia') && (
-            <div className="rounded-sm bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
-              <Heading className="flex items-center gap-2 text-lg font-bold">
-                <Icon icon="triangle-exclamation" className="text-[--color-font-warning]" />
-                We found legacy Insomnia files in your repository
-              </Heading>
-              <p className="pt-2">
-                This Git repository contains legacy Insomnia git files. These will be imported and migrated to the new
-                format supported in Insomnia 11+.
-              </p>
-              <p className="pt-2">
-                By migrating these <strong>a new commit will be created</strong> which once synced will result in any
-                users on older versions of Insomnia no longer being able to access these collections.
-              </p>
-            </div>
-          )}
-          <div className="flex items-center justify-end gap-2 pb-10">
-            <Button
-              isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
-              onPress={() => {
-                setActiveView('git-clone');
-                setError(null);
-              }}
-              className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
-            >
-              Back
-            </Button>
-            <Button
-              isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
-              onPress={onUpsertProject}
-              className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-            >
-              {updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle' ? (
-                <>
-                  <Icon icon="spinner" className="animate-spin" />
-                  <span>Cloning</span>
-                </>
-              ) : (
-                <>
-                  <span>{insomniaFiles && insomniaFiles?.length > 0 ? 'Import all' : 'Clone'}</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </>
-      )}
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            isDisabled={updateProjectFetcher.state !== 'idle' || initCloneGitRepositoryFetcher.state !== 'idle'}
+            onPress={() => {
+              setActiveView('project');
+              setError(null);
+            }}
+            className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
+          >
+            Back
+          </Button>
 
-      {activeView === 'switch-storage-type' && (
-        <>
-          <div className="flex flex-col justify-start gap-2 overflow-y-auto px-10">
-            {storageType === 'git' && (
-              <div className="flex flex-col gap-4 text-[--color-font]">
-                <div className="flex flex-col gap-4">
-                  <p>
-                    {project && isRemoteProject(project)
-                      ? 'We will be converting your Cloud Sync project into a Git project, and permanently remove all cloud data for this project from the cloud.'
-                      : 'We will be converting your project into a Git project.'}
-                  </p>
-                  <ul className="flex flex-col gap-2 text-left">
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> Your collaborators can synchronize files using Git.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> The project will be stored locally also for every
-                      existing collaborator.
-                    </li>
-                  </ul>
-                  <p>You can synchronize a local project back to the cloud if you decide to do so.</p>
-                  {project && isRemoteProject(project) && (
-                    <p className="flex items-center gap-2">
-                      <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
-                      Remember to pull your latest project updates before this operation
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-            {storageType === 'local' && (
-              <div className="flex flex-col gap-4 text-[--color-font]">
-                <div className="flex flex-col gap-4">
-                  <p>
-                    {project && isGitProject(project)
-                      ? 'We will be converting your Git project into a local project.'
-                      : 'We will be converting your Cloud Sync project into a local project, and permanently remove all cloud data for this project from the cloud.'}
-                  </p>
-                  {project && isGitProject(project) && (
-                    <ul className="flex flex-col gap-2 text-left">
-                      <li>
-                        <i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.
-                      </li>
-                      <li>
-                        <i className="fa fa-check text-emerald-600" /> You will not be able to synchronize this project
-                        using Git anymore.
-                      </li>
-                      <li>
-                        <i className="fa fa-check text-emerald-600" /> This action will not delete your remote
-                        repository.
-                      </li>
-                    </ul>
-                  )}
-                  {project && isRemoteProject(project) && (
-                    <>
-                      <ul className="flex flex-col gap-2 text-left">
-                        <li>
-                          <i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.
-                        </li>
-                        <li>
-                          <i className="fa fa-check text-emerald-600" /> Your collaborators will not be able to push and
-                          pull files anymore.
-                        </li>
-                        <li>
-                          <i className="fa fa-check text-emerald-600" /> The project will become local also for every
-                          existing collaborator.
-                        </li>
-                      </ul>
-                      <p>
-                        You can still use Git Sync for local projects without using the cloud, and you can synchronize a
-                        local project back to the cloud if you decide to do so.
-                      </p>
-                    </>
-                  )}
-                  <p className="flex items-center gap-2">
-                    <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
-                    Remember to pull your latest project updates before this operation
-                  </p>
-                </div>
-              </div>
-            )}
-            {storageType === 'remote' && (
-              <div className="flex flex-col gap-4 text-[--color-font]">
-                <div className="flex flex-col gap-4">
-                  <p>
-                    We will be synchronizing your local project to Insomnia's Cloud in a secure encrypted format which
-                    will enable cloud collaboration.
-                  </p>
-                  <ul className="flex flex-col gap-2 text-left">
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> Your data in the cloud is encrypted and secure.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> You can now collaborate with any amount of users
-                      and use cloud features.
-                    </li>
-                    <li>
-                      <i className="fa fa-check text-emerald-600" /> Your project will be always available on any client
-                      after logging in.
-                    </li>
-                  </ul>
-                  <p>You can still use Git Sync for cloud projects.</p>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center justify-end gap-2 px-10 pb-10">
-            <div className="flex items-center gap-2">
-              <Button
-                onPress={() => {
-                  setError(null);
-                  setActiveView('project');
-                }}
-                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
-              >
-                Back
-              </Button>
-              <Button
-                onPress={onUpsertProject}
-                isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
-                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-              >
-                {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
-                  <Icon icon="spinner" className="animate-spin" />
-                )}
-                <span>Update</span>
-              </Button>
-            </div>
-          </div>
-        </>
+          {initCloneGitRepositoryFetcher.state !== 'idle' ? (
+            <Button
+              isDisabled={true}
+              type="button"
+              className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+            >
+              Create
+            </Button>
+          ) : (
+            <Button
+              isDisabled={updateProjectFetcher.state !== 'idle'}
+              onPress={onUpsertProject}
+              className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+            >
+              {updateProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+              <span>
+                {(() => {
+                  if (insomniaFiles) {
+                    if (insomniaFiles.length > 0) {
+                      if (insomniaFiles.some(file => file.path === '.insomnia')) {
+                        return 'Import and Migrate';
+                      }
+                      return 'Update';
+                    }
+                    return 'Update';
+                  }
+                  return 'Update';
+                })()}
+              </span>
+            </Button>
+          )}
+        </div>
       )}
-    </div>
+    </>
   );
 };

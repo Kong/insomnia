@@ -3,6 +3,7 @@ import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
 import { getProductName } from '~/common/constants';
+import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '~/common/utils/vault';
 import { useRootLoaderData } from '~/root';
 import { useCreateVaultKeyFetcher } from '~/routes/auth.create-vault-key';
 import { useUpdateVaultSaltFetcher } from '~/routes/auth.update-vault-salt';
@@ -12,7 +13,6 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
-import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '~/utils/vault';
 
 import { BooleanSetting } from './boolean-setting';
 
@@ -41,7 +41,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
   };
 
   return (
-    <div className="flex w-full items-center gap-3 border border-solid border-[--hl-sm] bg-[--hl-xs] px-2 py-1">
+    <div className="flex w-full items-center gap-3 border border-solid border-(--hl-sm) bg-(--hl-xs) px-2 py-1">
       <div
         className="w-[calc(100%-50px)] truncate"
         data-testid="VaultKeyDisplayPanel"
@@ -163,7 +163,7 @@ export const VaultKeyPanel = () => {
             aria-label="Generate Vault Key"
           >
             {isGenerating && (
-              <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />
+              <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />
             )}
             Generate Vault Key
             <HelpTooltip className="space-left">
@@ -176,7 +176,7 @@ export const VaultKeyPanel = () => {
       {vaultSaltExists && vaultKeyExists && vaultKeyValue !== '' && (
         <>
           <div className="form-row pad-top-sm flex-col">
-            <div className="mb-[var(--padding-xs)]">
+            <div className="mb-(--padding-xs)">
               <span className="font-semibold">Vault Key</span>
               <HelpTooltip className="space-left">The vault key will be needed when you login again.</HelpTooltip>
             </div>

@@ -1,11 +1,8 @@
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
-import * as models from '~/models';
-import { scopeToActivity } from '~/models/workspace';
-import { VCSInstance } from '~/sync/vcs/insomnia-sync';
-import { pullBackendProject } from '~/sync/vcs/pull-backend-project';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.insomnia-sync.pull-remote-file';
 
@@ -20,38 +17,19 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const remoteId = formData.get('remoteId');
     invariant(typeof remoteId === 'string', 'Remote Id is required');
 
-    const vcs = VCSInstance();
-
-    const remoteBackendProjects = await vcs.remoteBackendProjects({
-      teamId: organizationId,
-      teamProjectId: remoteId,
+    const { projectId, workspaceId } = await window.main.sync.pullRemoteBackendProject({
+      organizationId,
+      backendProjectId,
+      remoteId,
     });
+    invariant(typeof workspaceId === 'string', 'Workspace not found after pulling remote collection');
 
-    const backendProject = remoteBackendProjects.find(p => p.id === backendProjectId);
-
-    invariant(backendProject, 'Backend project not found');
-
-    const project = await models.project.getByRemoteId(remoteId);
-
-    invariant(project?.remoteId, 'Project is not a remote project');
-
-    // Clone old VCS so we don't mess anything up while working on other backend projects
-    const newVCS = vcs.newInstance();
-    // Remove all backend projects for workspace first
-    await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
-
-    const { workspaceId } = await pullBackendProject({
-      vcs: newVCS,
-      backendProject,
-      remoteProject: project,
-    });
-
-    const workspace = await models.workspace.getById(workspaceId);
+    const workspace = await services.workspace.getById(workspaceId);
 
     invariant(workspace, 'Workspace not found');
-    const activity = scopeToActivity(workspace?.scope);
+    const activity = models.workspace.scopeToActivity(workspace?.scope);
 
-    return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${workspaceId}/${activity}`);
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${activity}`);
   } catch (e) {
     console.warn('Failed to pull remote collection', e);
     return {
