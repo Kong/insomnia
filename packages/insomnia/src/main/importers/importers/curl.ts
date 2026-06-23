@@ -34,6 +34,53 @@ const SUPPORTED_ARGS = [
   'compressed',
 ];
 
+// cURL flags that take a value (e.g. `-o file.csv`) but which Insomnia does
+// not import. Their value still has to be consumed while parsing, otherwise it
+// is left behind and later mistaken for the request URL.
+const IGNORED_VALUE_ARGS = [
+  'o',
+  'output',
+  'A',
+  'user-agent', // TODO: support
+  'e',
+  'referer', // TODO: support
+  'x',
+  'proxy',
+  'U',
+  'proxy-user',
+  'm',
+  'max-time',
+  'connect-timeout',
+  'retry',
+  'max-redirs',
+  'limit-rate',
+  'cacert',
+  'capath',
+  'E',
+  'cert',
+  'cert-type',
+  'key',
+  'key-type',
+  'T',
+  'upload-file',
+  'w',
+  'write-out',
+  'D',
+  'dump-header',
+  'r',
+  'range',
+  'C',
+  'continue-at',
+  'c',
+  'cookie-jar',
+  'K',
+  'config',
+  'resolve',
+  'connect-to',
+  'interface',
+  'oauth2-bearer',
+];
+
 type PairsByName = Record<string, (string | boolean)[]>;
 
 const importCommand = (parseEntries: ParseEntry[]) => {
@@ -57,6 +104,12 @@ const importCommand = (parseEntries: ParseEntry[]) => {
       let name = parseEntry.replace(/^-{1,2}/, '');
 
       if (!SUPPORTED_ARGS.includes(name)) {
+        const isShortFlag = isSingleDash && name.length > 1;
+        const followingEntry = parseEntries[i + 1];
+        const followingEntryIsValue = typeof followingEntry === 'string' && !followingEntry.startsWith('-');
+        if (!isShortFlag && followingEntryIsValue && IGNORED_VALUE_ARGS.includes(name)) {
+          i++; // Skip the value for this ignored flag
+        }
         continue;
       }
 
@@ -117,7 +170,15 @@ const extractAuth = (pairsByName: PairsByName): RequestAuthentication | {} => {
     const [_, value] = bearerAuthHeader.split(/:(.*)$/);
     return { type: 'bearer', token: value.trim().slice(7) };
   }
-  if (allHeaders.some(h => h.split(/:(.*)$/)[0].trim().toLowerCase() === 'authorization')) {
+  if (
+    allHeaders.some(
+      h =>
+        h
+          .split(/:(.*)$/)[0]
+          .trim()
+          .toLowerCase() === 'authorization',
+    )
+  ) {
     return {};
   }
   return username
@@ -247,7 +308,10 @@ const buildRequestObject = ({
       value: cookieHeaderValue,
     });
   }
-  if (getPairValue(pairsByName, false, ['compressed']) && !headers.some(header => header.name.toLowerCase() === 'accept-encoding')) {
+  if (
+    getPairValue(pairsByName, false, ['compressed']) &&
+    !headers.some(header => header.name.toLowerCase() === 'accept-encoding')
+  ) {
     headers.push({ name: 'Accept-Encoding', value: 'deflate, gzip' });
   }
   const dataParameters = pairsToDataParameters(pairsByName);
