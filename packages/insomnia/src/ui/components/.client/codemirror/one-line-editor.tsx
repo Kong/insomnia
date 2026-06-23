@@ -89,7 +89,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [settings.enableKeyMapForInlineTextEditors, settings.editorKeyMap, readOnly]);
 
     const initEditor = useCallback(() => {
-      if (!textAreaRef.current || codeMirror.current) {
+      if (!textAreaRef.current || codeMirror.current || !editorContainerRef.current?.offsetWidth) {
         return;
       }
 
