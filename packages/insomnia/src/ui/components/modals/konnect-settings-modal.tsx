@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 import { database } from '~/common/database';
-import { validatePat } from '~/konnect/api';
+import { fetchKonnectOrganizationId, validatePat } from '~/konnect/api';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 
@@ -16,7 +16,7 @@ export const KonnectSettingsModal = ({
   onDisconnect,
 }: {
   onClose: () => void;
-  syncKonnectProjectsAndNotifyRef: React.MutableRefObject<() => Promise<void>>;
+  syncKonnectProjectsAndNotifyRef: React.MutableRefObject<(konnectOrganizationId?: string | null) => Promise<void>>;
   onDisconnect?: () => void;
 }) => {
   const { settings } = useRootLoaderData()!;
@@ -31,25 +31,29 @@ export const KonnectSettingsModal = ({
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
 
-  // Validate the given PAT against the Konnect API and update status/error state accordingly.
-  const validateAndSetStatus = async (trimmed: string) => {
-    setStatus('validating');
-    setValidationError(null);
+  const validateAndSetStatus = async (trimmed: string): Promise<{ valid: boolean; orgId?: string }> => {
     const result = await validatePat(trimmed);
+    const orgId = result.valid ? await fetchKonnectOrganizationId(trimmed) : undefined;
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.kongKonnectPatValidated,
+      properties: {
+        validation_status: result.valid ? 'valid' : 'invalid',
+        ...(orgId ? { konnect_organization_id: orgId } : {}),
+      },
+    });
     setStatus(result.valid ? 'valid' : 'invalid');
     if (!result.valid) {
       setValidationError(result.error ?? 'Invalid PAT. Check your input and try again.');
     }
-    return result;
+    return { valid: result.valid, orgId };
   };
 
-  // On mount: if a PAT is already stored, load it from secure storage and validate it.
+  // On mount: if a PAT is already stored, load it into the input field.
   useEffect(() => {
     if (settings.hasKonnectPat) {
       window.main.secretStorage.getSecret('konnectPat').then(secret => {
         if (secret) {
           setPat(secret);
-          validateAndSetStatus(secret);
         }
       });
     }
@@ -62,14 +66,16 @@ export const KonnectSettingsModal = ({
     if (!trimmed) {
       return;
     }
-    const result = await validateAndSetStatus(trimmed);
-    if (result.valid) {
-      await window.main.secretStorage.setSecret('konnectPat', trimmed);
-      patchSettings({ hasKonnectPat: true });
-      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.kongKonnectPatValidated });
-      syncKonnectProjectsAndNotifyRef.current();
-      onClose();
+    setStatus('validating');
+    setValidationError(null);
+    const { valid, orgId } = await validateAndSetStatus(trimmed);
+    if (!valid) {
+      return;
     }
+    await window.main.secretStorage.setSecret('konnectPat', trimmed);
+    patchSettings({ hasKonnectPat: true, konnectOrganizationId: orgId ?? null });
+    syncKonnectProjectsAndNotifyRef.current(orgId ?? null);
+    onClose();
   };
 
   // Delete all Konnect-synced projects from the local DB, remove the stored PAT, and close the modal.
@@ -87,7 +93,7 @@ export const KonnectSettingsModal = ({
         await database.flushChanges(bufferId);
       }
       await window.main.secretStorage.deleteSecret('konnectPat');
-      patchSettings({ hasKonnectPat: false });
+      patchSettings({ hasKonnectPat: false, konnectOrganizationId: null });
       onDisconnect?.();
       onClose();
     } finally {
@@ -95,8 +101,7 @@ export const KonnectSettingsModal = ({
     }
   };
 
-  // A connected state means the PAT is saved and has not been found invalid.
-  const isConnected = settings.hasKonnectPat && status !== 'invalid';
+  const hasStoredPat = settings.hasKonnectPat && status !== 'invalid';
 
   return (
     <ModalOverlay
@@ -171,7 +176,7 @@ export const KonnectSettingsModal = ({
                         type={isPatVisible ? 'text' : 'password'}
                         className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1.5 pr-8 text-(--color-font) focus:border-(--hl-lg) focus:outline-hidden"
                         placeholder={
-                          isConnected
+                          hasStoredPat
                             ? 'Enter new PAT to replace existing'
                             : 'e.g. kpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
                         }
@@ -199,9 +204,6 @@ export const KonnectSettingsModal = ({
                         {validationError ?? 'Invalid PAT. Check your input and try again.'}
                       </p>
                     )}
-                    {(status === 'valid' || (isConnected && status === 'idle')) && (
-                      <p className="text-sm text-(--color-success)">Connected</p>
-                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -212,7 +214,7 @@ export const KonnectSettingsModal = ({
                     >
                       {status === 'validating' ? <Icon icon="spinner" className="animate-spin" /> : 'Connect & Sync'}
                     </Button>
-                    {isConnected && (
+                    {hasStoredPat && (
                       <Button
                         className="rounded-xs px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs)"
                         onPress={() => setShowDisconnectConfirm(true)}

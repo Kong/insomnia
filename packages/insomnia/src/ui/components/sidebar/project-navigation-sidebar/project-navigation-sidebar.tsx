@@ -276,7 +276,9 @@ const ProjectNavigationSidebarInner = (
   // ref to track whether we are currently fetching unsynced files for cloud sync projects to avoid duplicate requests
   const isFetchingUnsyncedFilesRef = useRef(false);
 
-  const syncKonnectProjectsAndNotifyRef = useRef<() => Promise<void>>(async () => {});
+  const syncKonnectProjectsAndNotifyRef = useRef<(konnectOrganizationId?: string | null) => Promise<void>>(
+    async () => {},
+  );
 
   const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
 
@@ -373,9 +375,12 @@ const ProjectNavigationSidebarInner = (
     return setUnsyncedFilesByProjectId(result);
   }, [organizationId, cloudSyncProjectIdsKey]);
 
-  const syncKonnectProjectsAndNotify = async () => {
+  const syncKonnectProjectsAndNotify = async (konnectOrganizationId?: string | null) => {
     const isFirstSync = lastSyncedAt == null;
-    const result = await startSync(organizationId);
+    const result = await startSync(
+      organizationId,
+      konnectOrganizationId !== undefined ? konnectOrganizationId : settings.konnectOrganizationId,
+    );
     setLastSyncResult(result ?? null);
     setShowSyncDetails(false);
     setCopiedReason(null);
@@ -1121,7 +1126,11 @@ const ProjectNavigationSidebarInner = (
                         if (routeInfo?.resourceId === docId) {
                           toggleProjectOrWorkspace(docId);
                         } else {
-                          !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched, properties: { project_id: docId } });
+                          !isScratchPad &&
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.projectSwitched,
+                              properties: { project_id: docId },
+                            });
                           !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
                         }
                       } else if (item.kind === 'workspace') {
@@ -1236,11 +1245,19 @@ const ProjectNavigationSidebarInner = (
               <div className="flex min-w-0 items-start gap-3">
                 <Icon
                   icon={
-                    lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0 && lastSyncResult.skippedRegions.length === 0
+                    lastSyncResult.success &&
+                    lastSyncResult.skippedRoutes.length === 0 &&
+                    lastSyncResult.skippedRegions.length === 0
                       ? 'circle-check'
                       : 'exclamation-triangle'
                   }
-                  className={lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0 && lastSyncResult.skippedRegions.length === 0 ? 'mt-1.5' : 'mt-1'}
+                  className={
+                    lastSyncResult.success &&
+                    lastSyncResult.skippedRoutes.length === 0 &&
+                    lastSyncResult.skippedRegions.length === 0
+                      ? 'mt-1.5'
+                      : 'mt-1'
+                  }
                 />
                 <div className="min-w-0">
                   <p className="font-semibold text-(--color-font)">
@@ -1264,68 +1281,72 @@ const ProjectNavigationSidebarInner = (
                             lastSyncResult.routes.updated > 0 && `${lastSyncResult.routes.updated} request(s) updated`,
                             lastSyncResult.routes.deleted > 0 && `${lastSyncResult.routes.deleted} request(s) deleted`,
                             lastSyncResult.routes.skipped > 0 && `${lastSyncResult.routes.skipped} route(s) skipped`,
-                            lastSyncResult.skippedRegions.length > 0 && `${lastSyncResult.skippedRegions.length} region(s) skipped`,
+                            lastSyncResult.skippedRegions.length > 0 &&
+                              `${lastSyncResult.skippedRegions.length} region(s) skipped`,
                           ]
                             .filter(Boolean)
                             .join(', ') + '.'}
                   </p>
-                  {lastSyncResult.success && (lastSyncResult.skippedRoutes.length > 0 || lastSyncResult.skippedRegions.length > 0) && (
-                    <>
-                      <button
-                        className="mt-1 flex items-center gap-1 text-(--hl) hover:text-(--color-font)"
-                        onClick={() => setShowSyncDetails(prev => !prev)}
-                      >
-                        <Icon icon={showSyncDetails ? 'chevron-down' : 'chevron-right'} className="h-2.5 w-2.5" />
-                        {showSyncDetails ? 'Hide details' : 'Show details'}
-                      </button>
-                      {showSyncDetails && (
-                        <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
-                          {lastSyncResult.skippedRegions.length > 0 && (
-                            <div>
-                              <p className="text-(--hl)">Failed to fetch control planes for the following regions:</p>
-                              <ul className="mt-1 space-y-0.5 pl-3">
-                                {lastSyncResult.skippedRegions.map(r => (
-                                  <li key={r} className="list-disc text-(--color-font)">{r}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          {[...skippedRoutesByReason.entries()].map(([reason, routes]) => {
-                            const MAX_SHOW = 5;
-                            const visible = routes.slice(0, MAX_SHOW);
-                            const extra = routes.length - MAX_SHOW;
-                            return (
-                              <div key={reason}>
-                                <p className="text-(--hl)">{reason} for the following routes:</p>
+                  {lastSyncResult.success &&
+                    (lastSyncResult.skippedRoutes.length > 0 || lastSyncResult.skippedRegions.length > 0) && (
+                      <>
+                        <button
+                          className="mt-1 flex items-center gap-1 text-(--hl) hover:text-(--color-font)"
+                          onClick={() => setShowSyncDetails(prev => !prev)}
+                        >
+                          <Icon icon={showSyncDetails ? 'chevron-down' : 'chevron-right'} className="h-2.5 w-2.5" />
+                          {showSyncDetails ? 'Hide details' : 'Show details'}
+                        </button>
+                        {showSyncDetails && (
+                          <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
+                            {lastSyncResult.skippedRegions.length > 0 && (
+                              <div>
+                                <p className="text-(--hl)">Failed to fetch control planes for the following regions:</p>
                                 <ul className="mt-1 space-y-0.5 pl-3">
-                                  {visible.map(r => (
+                                  {lastSyncResult.skippedRegions.map(r => (
                                     <li key={r} className="list-disc text-(--color-font)">
                                       {r}
                                     </li>
                                   ))}
                                 </ul>
-                                {extra > 0 && (
-                                  <div className="mt-1 flex items-center gap-2 pl-3 text-(--hl)">
-                                    <span>+ {extra} more</span>
-                                    <button
-                                      className="underline hover:text-(--color-font)"
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(routes.join('\n'));
-                                        setCopiedReason(reason);
-                                        setTimeout(() => setCopiedReason(null), 2000);
-                                      }}
-                                    >
-                                      {copiedReason === reason ? 'Copied' : 'Copy full list'}
-                                    </button>
-                                  </div>
-                                )}
                               </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </>
-                  )}
+                            )}
+                            {[...skippedRoutesByReason.entries()].map(([reason, routes]) => {
+                              const MAX_SHOW = 5;
+                              const visible = routes.slice(0, MAX_SHOW);
+                              const extra = routes.length - MAX_SHOW;
+                              return (
+                                <div key={reason}>
+                                  <p className="text-(--hl)">{reason} for the following routes:</p>
+                                  <ul className="mt-1 space-y-0.5 pl-3">
+                                    {visible.map(r => (
+                                      <li key={r} className="list-disc text-(--color-font)">
+                                        {r}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  {extra > 0 && (
+                                    <div className="mt-1 flex items-center gap-2 pl-3 text-(--hl)">
+                                      <span>+ {extra} more</span>
+                                      <button
+                                        className="underline hover:text-(--color-font)"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(routes.join('\n'));
+                                          setCopiedReason(reason);
+                                          setTimeout(() => setCopiedReason(null), 2000);
+                                        }}
+                                      >
+                                        {copiedReason === reason ? 'Copied' : 'Copy full list'}
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )}
                 </div>
               </div>
               <button

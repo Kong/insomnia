@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchAllControlPlanes, fetchAllServices, fetchRoutesForService, validatePat } from '../api';
+import {
+  fetchAllControlPlanes,
+  fetchAllServices,
+  fetchKonnectOrganizationId,
+  fetchRoutesForService,
+  validatePat,
+} from '../api';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -551,6 +557,61 @@ describe('retry on 429', () => {
 
     expect(pages).toHaveLength(1);
     expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, region: 'us', proxy_urls: null })));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ─── fetchKonnectOrganizationId ───────────────────────────────────────────────
+
+describe('fetchKonnectOrganizationId', () => {
+  it('returns the organization id on a 200 response', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 'org-abc-123' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchKonnectOrganizationId('good-token');
+
+    expect(result).toBe('org-abc-123');
+    expect(fetchMock.mock.calls[0][0]).toContain('/v3/organizations/me');
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer good-token');
+  });
+
+  it('returns undefined on a non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 403 })));
+
+    const result = await fetchKonnectOrganizationId('bad-token');
+
+    expect(result).toBeUndefined();
+  });
+
+  it('returns undefined when fetch throws', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network failure')));
+
+    const result = await fetchKonnectOrganizationId('any-token');
+
+    expect(result).toBeUndefined();
+  });
+
+  it('returns undefined when the response body has no id field', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({})));
+
+    const result = await fetchKonnectOrganizationId('good-token');
+
+    expect(result).toBeUndefined();
+  });
+
+  it('retries on 429 and returns the org id after success', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(rateLimitResponse())
+      .mockResolvedValueOnce(jsonResponse({ id: 'org-retried' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const promise = fetchKonnectOrganizationId('good-token');
+    await drainRetryTimers();
+
+    const result = await promise;
+
+    expect(result).toBe('org-retried');
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
