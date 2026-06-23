@@ -663,7 +663,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   );
 
   const specPaneToolbar = apiSpec.contents ? (
-    <div className="flex h-(--line-height-sm) shrink-0 items-center gap-2 overflow-hidden border-b border-solid border-(--hl-md) px-(--padding-sm)">
+    <div className="flex h-[40px] shrink-0 items-center gap-2 overflow-hidden border-b border-solid border-(--hl-md) px-(--padding-sm)">
       <span className="truncate text-sm text-(--hl) italic">
         {parsedSpec?.openapi ? `OpenAPI ${parsedSpec.openapi}` : ''}
       </span>
