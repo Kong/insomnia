@@ -57,8 +57,10 @@ test('LiquidJS blocked file-loading tags produce render errors', async ({ page, 
     await sendButton.click();
 
     const dialog = page.getByRole('dialog');
+    await dialog.waitFor({ state: 'visible' });
     await expect.soft(dialog, `${requestName}: expected a render error dialog`).toBeVisible();
     await expect.soft(dialog, `${requestName}: expected "disabled" in error message`).toContainText('disabled');
     await dialog.getByRole('button', { name: 'OK' }).click();
+    await dialog.waitFor({ state: 'hidden' });
   }
 });
