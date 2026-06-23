@@ -165,7 +165,7 @@ interface GroupedLintMessage {
 interface SpecActionItem {
   id: string;
   name: string;
-  icon: ReactNode;
+  icon?: ReactNode;
   isDisabled?: boolean;
   action: () => void;
 }
@@ -554,11 +554,15 @@ const Component = ({ params }: Route.ComponentProps) => {
     });
   };
 
-  const specActionList: SpecActionItem[] = [
+  const generateActionList: SpecActionItem[] = [
     {
       id: 'generate-request-collection',
-      name: 'Generate collection',
-      icon: <Icon className="w-3" icon="file-code" />,
+      name: 'Collection',
+      icon: (
+        <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-(--color-surprise) text-(--color-font-surprise)">
+          <Icon className="w-3" icon="bars" />
+        </span>
+      ),
       isDisabled: !apiSpec.contents || lintErrors.length > 0 || generateRequestCollectionFetcher.state !== 'idle',
       action: () =>
         generateRequestCollectionFetcher.submit({
@@ -567,42 +571,42 @@ const Component = ({ params }: Route.ComponentProps) => {
           workspaceId,
         }),
     },
-    {
-      id: 'toggle-preview',
-      name: 'Toggle preview',
-      icon: <Icon className="w-3" icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
-      action: () => {
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.designerPreviewToggled,
-          properties: {
-            status: !isSpecPaneOpen ? 'open' : 'collapsed',
-          },
-        });
-        setIsSpecPaneOpen(!isSpecPaneOpen);
-      },
-    },
-    ...(specFormat === 'json'
+    ...(isGenerateMockServersWithAIEnabled
       ? [
           {
-            id: 'convert-to-yaml',
-            name: 'Convert to YAML',
-            icon: <Icon className="w-3" icon="sync-alt" />,
-            action: () => switchFormat('yaml'),
+            id: 'generate-mock-server',
+            name: 'Mock Server',
+            icon: (
+              <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-(--color-warning) text-(--color-font-warning)">
+                <Icon className="w-3" icon="server" />
+              </span>
+            ),
+            isDisabled: !apiSpec.contents,
+            action: () => {
+              window.main.trackAnalyticsEvent({
+                event: AnalyticsEvent.designerGenerateMockClicked,
+              });
+              setNewMockServerModalOpen(true);
+            },
           },
         ]
-      : specFormat === 'yaml'
-        ? [
-            {
-              id: 'convert-to-json',
-              name: 'Convert to JSON',
-              icon: <Icon className="w-3" icon="sync-alt" />,
-              action: () => switchFormat('json'),
-            },
-          ]
-        : []),
+      : []),
   ];
 
-  const disabledKeys = specActionList.filter(item => item.isDisabled).map(item => item.id);
+  const specFormatActionList: SpecActionItem[] = [
+    {
+      id: 'json',
+      name: 'JSON',
+      action: () => switchFormat('json'),
+    },
+    {
+      id: 'yaml',
+      name: 'YAML',
+      action: () => switchFormat('yaml'),
+    },
+  ];
+
+  const generateDisabledKeys = generateActionList.filter(item => item.isDisabled).map(item => item.id);
 
   const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${vcsVersion}`;
 
@@ -657,6 +661,110 @@ const Component = ({ params }: Route.ComponentProps) => {
       )}
     </div>
   );
+
+  const specPaneToolbar = apiSpec.contents ? (
+    <div className="flex h-(--line-height-sm) shrink-0 items-center gap-2 overflow-hidden border-b border-solid border-(--hl-md) px-(--padding-sm)">
+      <span className="truncate text-sm text-(--hl) italic">
+        {parsedSpec?.openapi ? `OpenAPI ${parsedSpec.openapi}` : ''}
+      </span>
+      <span className="flex-1" />
+      <TooltipTrigger delay={0}>
+        <ToggleButton
+          aria-label="Toggle preview"
+          data-testid="preview-toggle"
+          isSelected={isSpecPaneOpen}
+          className="flex items-center justify-center rounded-md p-1.5 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          onChange={value => {
+            setIsSpecPaneOpen(value);
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.designerPreviewToggled,
+              properties: {
+                status: !value ? 'open' : 'collapsed',
+              },
+            });
+          }}
+        >
+          {({ isSelected }) => <Icon icon={isSelected ? 'eye-slash' : 'eye'} />}
+        </ToggleButton>
+        <Tooltip
+          offset={8}
+          className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-sm text-(--color-font) shadow-lg"
+        >
+          {isSpecPaneOpen ? 'Hide docs preview' : 'Show docs preview'}
+        </Tooltip>
+      </TooltipTrigger>
+      <MenuTrigger>
+        <Button
+          aria-label="Generate"
+          className="flex shrink-0 items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-2.5 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+        >
+          <span>Generate</span>
+          <Icon icon="chevron-down" className="w-2.5 text-(--hl)" />
+        </Button>
+        <Popover className="flex min-w-max flex-col overflow-y-hidden">
+          <Menu
+            aria-label="Generate menu"
+            selectionMode="single"
+            disabledKeys={generateDisabledKeys}
+            onAction={key => {
+              const item = generateActionList.find(item => item.id === key);
+              if (item) {
+                item.action();
+              }
+            }}
+            items={generateActionList}
+            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+          >
+            {item => (
+              <MenuItem
+                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
+                aria-label={item.name}
+              >
+                {item.icon}
+                <span>{item.name}</span>
+              </MenuItem>
+            )}
+          </Menu>
+        </Popover>
+      </MenuTrigger>
+      <MenuTrigger>
+        <Button
+          aria-label="Spec format"
+          className="flex shrink-0 items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-2.5 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+        >
+          <span>{specFormat ? specFormat.toUpperCase() : 'JSON'}</span>
+          <Icon icon="chevron-down" className="w-2.5 text-(--hl)" />
+        </Button>
+        <Popover className="flex min-w-max flex-col overflow-y-hidden">
+          <div className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none">
+            <span className="block px-(--padding-md) py-1 text-xs text-(--hl)">Spec format</span>
+            <Menu
+              aria-label="Spec format menu"
+              selectionMode="single"
+              selectedKeys={specFormat ? [specFormat] : []}
+              onAction={key => {
+                const item = specFormatActionList.find(item => item.id === key);
+                if (item) {
+                  item.action();
+                }
+              }}
+              items={specFormatActionList}
+              className="min-w-max focus:outline-hidden"
+            >
+              {item => (
+                <MenuItem
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden aria-selected:font-bold"
+                  aria-label={item.name}
+                >
+                  <span>{item.name}</span>
+                </MenuItem>
+              )}
+            </Menu>
+          </div>
+        </Popover>
+      </MenuTrigger>
+    </div>
+  ) : null;
 
   const lintToolbar = (
     <div
@@ -864,77 +972,6 @@ const Component = ({ params }: Route.ComponentProps) => {
             />
             <div className="flex shrink-0 items-center gap-2 p-(--padding-sm)">
               <Heading className="text-(--hl) uppercase">Spec</Heading>
-              <span className="flex-1" />
-              {isGenerateMockServersWithAIEnabled && (
-                <Button
-                  onPress={() => {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.designerGenerateMockClicked,
-                    });
-                    setNewMockServerModalOpen(true);
-                  }}
-                  isDisabled={!apiSpec.contents}
-                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-xs px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="server" className="w-5 shrink-0" />
-                  <span className="truncate">Generate Mock</span>
-                </Button>
-              )}
-              <ToggleButton
-                aria-label="Toggle preview"
-                data-testid="preview-toggle"
-                isSelected={isSpecPaneOpen}
-                className="flex h-full items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                onChange={value => {
-                  setIsSpecPaneOpen(value);
-                  window.main.trackAnalyticsEvent({
-                    event: AnalyticsEvent.designerPreviewToggled,
-                    properties: {
-                      status: !value ? 'open' : 'collapsed',
-                    },
-                  });
-                }}
-              >
-                {({ isSelected }) => (
-                  <>
-                    <Icon icon={isSelected ? 'eye' : 'eye-slash'} />
-                    <span>Preview</span>
-                  </>
-                )}
-              </ToggleButton>
-              <MenuTrigger>
-                <Button
-                  aria-label="Spec actions"
-                  className="flex aspect-square h-full items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                >
-                  <Icon icon="gear" />
-                </Button>
-                <Popover className="flex min-w-max flex-col overflow-y-hidden">
-                  <Menu
-                    aria-label="Spec actions menu"
-                    selectionMode="single"
-                    disabledKeys={disabledKeys}
-                    onAction={key => {
-                      const item = specActionList.find(item => item.id === key);
-                      if (item) {
-                        item.action();
-                      }
-                    }}
-                    items={specActionList}
-                    className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
-                  >
-                    {item => (
-                      <MenuItem
-                        className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
-                        aria-label={item.name}
-                      >
-                        {item.icon}
-                        <span>{item.name}</span>
-                      </MenuItem>
-                    )}
-                  </Menu>
-                </Popover>
-              </MenuTrigger>
             </div>
             <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto">
               {/* Info */}
@@ -1347,6 +1384,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
             <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
               <div className="flex h-full w-full flex-col">
+                {specPaneToolbar}
                 <PanelGroup autoSaveId="insomnia-spec-vertical" direction="vertical" className="min-h-0 flex-1">
                   <Panel id="spec-editor" defaultSize={80} minSize={20} className="relative overflow-hidden">
                     {specEditor}
