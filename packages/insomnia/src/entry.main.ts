@@ -407,7 +407,11 @@ async function _trackStats() {
           content: {
             title: `Updated to ${currentVersion}`,
             status: 'info',
-            description: "See What's New https://insomnia.rest/changelog",
+            link: {
+              label: "See What's New",
+              url: 'https://insomnia.rest/changelog',
+              external: true,
+            },
           },
         });
       }

@@ -12,6 +12,8 @@ import {
 } from 'react-aria-components';
 import { flushSync } from 'react-dom';
 
+import { Link } from '~/ui/components/base/link';
+
 type Status = 'info' | 'success' | 'warning' | 'error';
 
 // Define the type for your toast content.
@@ -19,6 +21,11 @@ export interface RAToastContent {
   icon?: IconProp;
   title: string;
   description?: string | React.ReactNode;
+  link?: {
+    label: string;
+    url: string;
+    external: boolean;
+  };
   status?: Status;
   time?: string;
 }
@@ -129,6 +136,16 @@ export const Toaster = () => (
                 <Text slot="description" className="max-w-md text-xs">
                   {toast.content.description}
                 </Text>
+              )}
+              {toast.content.link && (
+                <Link
+                  href={toast.content.link.url}
+                  noTheme
+                  className="inline-flex w-fit items-center gap-1 text-xs text-(--color-surprise) hover:opacity-80"
+                >
+                  <span className="underline">{toast.content.link.label}</span>
+                  {toast.content.link.external && <FontAwesomeIcon icon="arrow-up-right-from-square" className="size-3" />}
+                </Link>
               )}
             </div>
           </div>
