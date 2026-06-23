@@ -50,6 +50,7 @@ import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationI
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { Badge } from '~/ui/components/base/badge';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { Icon } from '~/ui/components/icon';
@@ -166,6 +167,7 @@ interface SpecActionItem {
   id: string;
   name: string;
   icon?: ReactNode;
+  badge?: ReactNode;
   isDisabled?: boolean;
   action: () => void;
 }
@@ -571,26 +573,23 @@ const Component = ({ params }: Route.ComponentProps) => {
           workspaceId,
         }),
     },
-    ...(isGenerateMockServersWithAIEnabled
-      ? [
-          {
-            id: 'generate-mock-server',
-            name: 'Mock Server',
-            icon: (
-              <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-(--color-warning) text-(--color-font-warning)">
-                <Icon className="w-3" icon="server" />
-              </span>
-            ),
-            isDisabled: !apiSpec.contents,
-            action: () => {
-              window.main.trackAnalyticsEvent({
-                event: AnalyticsEvent.designerGenerateMockClicked,
-              });
-              setNewMockServerModalOpen(true);
-            },
-          },
-        ]
-      : []),
+    {
+      id: 'generate-mock-server',
+      name: 'Mock Server',
+      icon: (
+        <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-(--color-warning) text-(--color-font-warning)">
+          <Icon className="w-3" icon="server" />
+        </span>
+      ),
+      badge: <Badge icon="sparkles" color="surprise" label="AI" style={{ marginLeft: 'auto', marginRight: '0' }} />,
+      isDisabled: !apiSpec.contents || !isGenerateMockServersWithAIEnabled,
+      action: () => {
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.designerGenerateMockClicked,
+        });
+        setNewMockServerModalOpen(true);
+      },
+    },
   ];
 
   const specFormatActionList: SpecActionItem[] = [
@@ -673,7 +672,7 @@ const Component = ({ params }: Route.ComponentProps) => {
           aria-label="Toggle preview"
           data-testid="preview-toggle"
           isSelected={isSpecPaneOpen}
-          className="flex items-center justify-center rounded-md p-1.5 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+          className="flex shrink-0 items-center justify-center rounded-md border border-solid border-(--hl-md) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
           onChange={value => {
             setIsSpecPaneOpen(value);
             window.main.trackAnalyticsEvent({
@@ -684,7 +683,11 @@ const Component = ({ params }: Route.ComponentProps) => {
             });
           }}
         >
-          {({ isSelected }) => <Icon icon={isSelected ? 'eye-slash' : 'eye'} />}
+          {({ isSelected }) => (
+            <span className="flex h-5 items-center">
+              <Icon icon={isSelected ? 'eye-slash' : 'eye'} />
+            </span>
+          )}
         </ToggleButton>
         <Tooltip
           offset={8}
@@ -717,11 +720,14 @@ const Component = ({ params }: Route.ComponentProps) => {
           >
             {item => (
               <MenuItem
-                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
+                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-sm) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-(--hl-md) aria-selected:font-bold"
                 aria-label={item.name}
               >
                 {item.icon}
                 <span>{item.name}</span>
+                {item.badge && (
+                  <span className="flex origin-left scale-90 items-center pl-2 text-xs">{item.badge}</span>
+                )}
               </MenuItem>
             )}
           </Menu>
@@ -753,7 +759,7 @@ const Component = ({ params }: Route.ComponentProps) => {
             >
               {item => (
                 <MenuItem
-                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden aria-selected:font-bold"
+                  className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-sm) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden aria-selected:font-bold"
                   aria-label={item.name}
                 >
                   <span>{item.name}</span>
@@ -970,9 +976,6 @@ const Component = ({ params }: Route.ComponentProps) => {
               workspaceId={workspaceId}
               className="border-b border-solid border-(--hl-sm)"
             />
-            <div className="flex shrink-0 items-center gap-2 p-(--padding-sm)">
-              <Heading className="text-(--hl) uppercase">Spec</Heading>
-            </div>
             <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto">
               {/* Info */}
               {info && (
@@ -1381,10 +1384,10 @@ const Component = ({ params }: Route.ComponentProps) => {
         </Panel>
         <PanelResizeHandle className="h-full w-px bg-(--hl-md)" />
         <Panel id="workspace-content" className="flex flex-col">
-          <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
+          {specPaneToolbar}
+          <PanelGroup autoSaveId="insomnia-panels" direction={direction} className="min-h-0 flex-1">
             <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
               <div className="flex h-full w-full flex-col">
-                {specPaneToolbar}
                 <PanelGroup autoSaveId="insomnia-spec-vertical" direction="vertical" className="min-h-0 flex-1">
                   <Panel id="spec-editor" defaultSize={80} minSize={20} className="relative overflow-hidden">
                     {specEditor}
