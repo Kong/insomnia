@@ -14,14 +14,25 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Button, GridList, GridListItem, Input, SearchField, Tab, TabList, Tabs } from 'react-aria-components';
+import {
+  Button,
+  GridList,
+  GridListItem,
+  Input,
+  SearchField,
+  Tab,
+  TabList,
+  Tabs,
+  Tooltip,
+  TooltipTrigger,
+} from 'react-aria-components';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { Button as BasicButton } from '~/basic-components/button';
 import type { SortOrder } from '~/common/constants';
 import { fuzzyMatchAll } from '~/common/misc';
-import { getAllRemoteBackendProjectsOfOrg, getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
+import { getUnsyncedRemoteWorkspaces, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import type { SyncResult } from '~/konnect/sync';
 import { useRootLoaderData } from '~/root';
@@ -33,6 +44,7 @@ import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
+import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-env-onboarding';
 import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
@@ -40,8 +52,10 @@ import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
+import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { isPrimaryClickModifier } from '~/ui/utils';
+import { getAllRemoteBackendProjectsOfOrg } from '~/ui/utils/remote-projects';
 
 import { Icon } from '../../icon';
 import {
@@ -72,6 +86,27 @@ export interface ProjectNavigationSidebarHandle {
 }
 
 export type ProjectNavigationSidebarTabId = 'projects' | 'konnect';
+
+function LastSyncedLabel({ lastSyncedAt }: { lastSyncedAt: number | null }) {
+  return lastSyncedAt ? `Last synced: ${getRelativeTimeString(lastSyncedAt, Date.now())}` : 'Not yet synced';
+}
+
+function getRelativeTimeString(timestamp: number, now: number = Date.now()): string {
+  const seconds = Math.floor((now - timestamp) / 1000);
+  if (seconds < 60) {
+    return `${seconds}s ago`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes}m ${seconds % 60}s ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours}h ${minutes % 60}m ago`;
+  }
+  const days = Math.floor(hours / 24);
+  return `${days}d ${hours % 24}h ago`;
+}
 
 const SidebarSearchField = ({
   value,
@@ -201,12 +236,39 @@ const ProjectNavigationSidebarInner = (
   );
   const isProjectTabActive = activeTab === 'projects';
   const { syncing, progress, startSync, cancelSync } = useKonnectSync();
+  const [lastSyncedAt, setLastSyncedAt] = reactUse.useLocalStorage<number | null>(
+    `${organizationId}:konnect-last-synced-at`,
+    null,
+  );
 
   const nonKonnectProjects = projects.filter(p => !p.konnectControlPlaneId);
   const konnectProjects = projects.filter(p => p.konnectControlPlaneId != null);
   const [filterInputValue, setFilterInputValue] = useState(projectNavigationSidebarFilter || '');
+  const [konnectFilterInputValue, setKonnectFilterInputValue] = useState(konnectFilter || '');
+
+  useEffect(() => {
+    // Keep input state aligned with storage only when organization context switches.
+    // Read directly from localStorage to bypass react-use's stale state on key change.
+    const readLocalStorageString = (key: string): string => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw == null) {
+          return '';
+        }
+        const parsed: unknown = JSON.parse(raw);
+        return typeof parsed === 'string' ? parsed : '';
+      } catch {
+        return '';
+      }
+    };
+    setFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-sidebar-filter`));
+    setKonnectFilterInputValue(readLocalStorageString(`${organizationId}:project-navigation-konnect-filter`));
+  }, [organizationId]);
+
   // Debounce update filter
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
+  reactUse.useDebounce(() => setKonnectFilter(konnectFilterInputValue), 300, [konnectFilterInputValue]);
+  const activeFilter = ((isProjectTabActive ? projectNavigationSidebarFilter : konnectFilter) || '').trim();
   // ref to cache queried workspaces by project id
   const cachedWorkspacesRef = useRef<Map<string, Workspace[]>>(new Map());
   // ref to cache queried collection children (request & requestGroups) data and meta by workspace id
@@ -312,10 +374,39 @@ const ProjectNavigationSidebarInner = (
   }, [organizationId, cloudSyncProjectIdsKey]);
 
   const syncKonnectProjectsAndNotify = async () => {
+    const isFirstSync = lastSyncedAt == null;
     const result = await startSync(organizationId);
     setLastSyncResult(result ?? null);
     setShowSyncDetails(false);
     setCopiedReason(null);
+    if (result?.success) {
+      setLastSyncedAt(Date.now());
+      // Navigate to and expand the first Konnect project after a successful sync
+      const allProjects = await services.project.list({ organizationId });
+      const sortedKonnectProjects = models.project.sortProjects(
+        allProjects.filter(p => p.konnectControlPlaneId != null),
+      );
+      const firstKonnectProject = sortedKonnectProjects[0];
+      if (firstKonnectProject) {
+        const workspaces = await services.workspace.findByParentId(firstKonnectProject._id);
+        const envWorkspace = workspaces.find(w => w.scope === 'environment');
+        if (envWorkspace) {
+          // Show environment onboarding after first successful sync
+          if (isFirstSync) {
+            setOnboardingEnvWorkspaceId(envWorkspace._id);
+          }
+          navigate(
+            `/organization/${organizationId}/project/${firstKonnectProject._id}/workspace/${envWorkspace._id}/environment`,
+          );
+        } else {
+          navigate(`/organization/${organizationId}/project/${firstKonnectProject._id}`);
+        }
+        setExpandedProjectAndWorkspaceIds(prev => {
+          const ids = prev || [];
+          return ids.includes(firstKonnectProject._id) ? ids : [...ids, firstKonnectProject._id];
+        });
+      }
+    }
   };
   syncKonnectProjectsAndNotifyRef.current = syncKonnectProjectsAndNotify;
 
@@ -375,12 +466,15 @@ const ProjectNavigationSidebarInner = (
   };
 
   useEffect(() => {
-    if (projectNavigationSidebarFilter) {
+    if (projectNavigationSidebarFilter || konnectFilter) {
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.projectListFiltered,
+        properties: {
+          project_id: activeProjectId,
+        },
       });
     }
-  }, [projectNavigationSidebarFilter]);
+  }, [projectNavigationSidebarFilter, konnectFilter]);
 
   useEffect(() => {
     getAllRemoteFilesByProjectId();
@@ -423,6 +517,7 @@ const ProjectNavigationSidebarInner = (
     const buildWorkspaceAndCollectionData = async () => {
       const items: FlatItem[] = [];
       // Array of project and collection workspace ids that should get data from db
+      const activeFilterLower = activeFilter.toLowerCase();
 
       const projectIds = projectsWithPresence.map(p => p._id);
       const collectionWorkspaceIds: string[] = [];
@@ -433,7 +528,7 @@ const ProjectNavigationSidebarInner = (
           if (
             wk.scope === 'collection' &&
             // Fetch collection children and meta if 1) the workspace is expanded or 2) there is an active filter
-            (!!projectNavigationSidebarFilter || (expandedProjectAndWorkspaceIds || []).includes(wk._id))
+            (!!activeFilter || (expandedProjectAndWorkspaceIds || []).includes(wk._id))
           ) {
             collectionWorkspaceIds.push(wk._id);
           }
@@ -475,7 +570,7 @@ const ProjectNavigationSidebarInner = (
           : [];
         const allWorkspaces = [...sortedWorkspaces, ...unsyncedWorkspaces];
         // If there is no workspace under the project, show an empty workspace if no active filter
-        if (allWorkspaces.length === 0 && !projectNavigationSidebarFilter) {
+        if (allWorkspaces.length === 0 && !activeFilter) {
           items.push({
             kind: 'emptyProject',
             organizationId,
@@ -487,6 +582,15 @@ const ProjectNavigationSidebarInner = (
 
         for (const workspace of allWorkspaces) {
           if (workspace.scope === 'unsynced') {
+            // When a filter is active, show the unsynced workspace only if its name matches the filter.
+            const unsyncedWorkspaceMatchesFilter =
+              !activeFilter ||
+              Boolean(
+                fuzzyMatchAll(activeFilterLower, [workspace.name?.toLowerCase() || ''], {
+                  splitSpace: true,
+                  loose: true,
+                })?.indexes,
+              );
             items.push({
               kind: 'unsyncedWorkspace',
               organizationId,
@@ -497,7 +601,7 @@ const ProjectNavigationSidebarInner = (
                 ...workspace,
               },
               collapsed: false,
-              hidden: isProjectCollapsed,
+              hidden: activeFilter ? !unsyncedWorkspaceMatchesFilter : isProjectCollapsed,
             });
           } else {
             const { scope, _id: workspaceId } = workspace as Workspace;
@@ -520,7 +624,7 @@ const ProjectNavigationSidebarInner = (
             // build collection children if it's a collection workspace and parent workspace and project are not collapsed or there is an active filter
             const shouldHideCollectionChildren = isWorkspaceCollapsed || isProjectCollapsed;
             let collectionChildren =
-              (!shouldHideCollectionChildren || !!projectNavigationSidebarFilter) && allRequestsAndMetaInWorkspace
+              (!shouldHideCollectionChildren || !!activeFilter) && allRequestsAndMetaInWorkspace
                 ? flattenCollectionChildren(
                     workspaceId,
                     shouldHideCollectionChildren,
@@ -529,13 +633,13 @@ const ProjectNavigationSidebarInner = (
                   )
                 : [];
 
-            if (projectNavigationSidebarFilter) {
+            if (activeFilter) {
               // apply filter to collection children first
-              collectionChildren = filterCollection(collectionChildren, projectNavigationSidebarFilter);
+              collectionChildren = filterCollection(collectionChildren, activeFilter);
               const collectionChildMatchesFilter = collectionChildren.some(child => !child.hidden);
               const workspaceMatchesFilter = Boolean(
                 fuzzyMatchAll(
-                  projectNavigationSidebarFilter.toLowerCase(),
+                  activeFilterLower,
                   // Todo: support remote files (cloud sync) in filter
                   [workspace.name?.toLowerCase() || ''],
                   { splitSpace: true, loose: true },
@@ -549,9 +653,7 @@ const ProjectNavigationSidebarInner = (
             const pinnedCollectionChildren = shouldHideCollectionChildren
               ? []
               : // Filter out pinned requests by pinned attribute. Besides, when there is an active filter, also filter out un-matched requests.
-                collectionChildren.filter(
-                  child => child.pinned && !(projectNavigationSidebarFilter ? child.hidden : false),
-                );
+                collectionChildren.filter(child => child.pinned && !(activeFilter ? child.hidden : false));
 
             if (pinnedCollectionChildren.length > 0) {
               items.push({
@@ -596,7 +698,7 @@ const ProjectNavigationSidebarInner = (
               if (
                 models.requestGroup.isRequestGroupId(child.doc._id) &&
                 child.children?.length === 0 &&
-                !projectNavigationSidebarFilter
+                !activeFilter
               ) {
                 // If there is a request group with no children, add an empty folder node
                 items.push({
@@ -612,7 +714,7 @@ const ProjectNavigationSidebarInner = (
               }
             });
 
-            if (collectionChildren.length === 0 && !shouldHideCollectionChildren && !projectNavigationSidebarFilter) {
+            if (collectionChildren.length === 0 && !shouldHideCollectionChildren && !activeFilter) {
               items.push({
                 kind: 'emptyCollection',
                 organizationId,
@@ -626,12 +728,10 @@ const ProjectNavigationSidebarInner = (
         }
 
         // If project or any of its descendant workspace/collection child matches the filter, show the project; otherwise hide
-        if (projectNavigationSidebarFilter) {
-          const projectMatchesFilter = project.name
-            ?.toLowerCase()
-            .includes(projectNavigationSidebarFilter.toLowerCase());
+        if (activeFilter) {
+          const projectMatchesFilter = project.name?.toLowerCase().includes(activeFilterLower);
           const hasVisibleWorkspace = items.some(
-            i => i.kind === 'workspace' && i.project._id === projectId && !i.hidden,
+            i => (i.kind === 'workspace' || i.kind === 'unsyncedWorkspace') && i.project._id === projectId && !i.hidden,
           );
           const shouldHideProject = !projectMatchesFilter && !hasVisibleWorkspace;
           items.find(i => i.kind === 'project' && i.doc._id === projectId)!.hidden = shouldHideProject;
@@ -639,7 +739,7 @@ const ProjectNavigationSidebarInner = (
       }
 
       // If there is an active filter, expand all items to show matched results and their ancestors
-      if (projectNavigationSidebarFilter) {
+      if (activeFilter) {
         items.forEach(item => {
           if ('collapsed' in item) {
             item.collapsed = false;
@@ -651,13 +751,13 @@ const ProjectNavigationSidebarInner = (
     };
     buildWorkspaceAndCollectionData();
   }, [
+    activeFilter,
     collectionSortOrders,
     projectWorkspaceSortOrder,
     expandedProjectAndWorkspaceIds,
     isProjectTabActive,
     localWorkspaceOrders,
     organizationId,
-    projectNavigationSidebarFilter,
     projectsWithPresence,
     unsyncedFilesByProjectId,
   ]);
@@ -707,7 +807,7 @@ const ProjectNavigationSidebarInner = (
   const toggleProjectOrWorkspace = useCallback(
     (projectOrWorkspaceId: string) => {
       // Do not update toggle state if there is an active filter
-      if (!projectNavigationSidebarFilter) {
+      if (!activeFilter) {
         const expandedIds = expandedProjectAndWorkspaceIds || [];
         const isExpanded = expandedIds.includes(projectOrWorkspaceId);
         setExpandedProjectAndWorkspaceIds(
@@ -715,13 +815,13 @@ const ProjectNavigationSidebarInner = (
         );
       }
     },
-    [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
+    [expandedProjectAndWorkspaceIds, activeFilter, setExpandedProjectAndWorkspaceIds],
   );
 
   const expandProjectOrWorkspaces = useCallback(
     (projectOrWorkspaceIds: string[]) => {
       // Do not update toggle state if there is an active filter
-      if (!projectNavigationSidebarFilter) {
+      if (!activeFilter) {
         const expandedIds = expandedProjectAndWorkspaceIds || [];
         const newExpandedIds = Array.from(new Set([...expandedIds, ...projectOrWorkspaceIds]));
         // Avoid updating state if there is no change in expanded ids to prevent unnecessary re-render
@@ -731,7 +831,7 @@ const ProjectNavigationSidebarInner = (
         }
       }
     },
-    [expandedProjectAndWorkspaceIds, projectNavigationSidebarFilter, setExpandedProjectAndWorkspaceIds],
+    [expandedProjectAndWorkspaceIds, activeFilter, setExpandedProjectAndWorkspaceIds],
   );
 
   useImperativeHandle(
@@ -750,7 +850,7 @@ const ProjectNavigationSidebarInner = (
         return;
       }
 
-      if (projectNavigationSidebarFilter) {
+      if (activeFilter) {
         return;
       }
 
@@ -857,7 +957,7 @@ const ProjectNavigationSidebarInner = (
         }, previousFlatItems),
       );
     },
-    [projectNavigationSidebarFilter],
+    [activeFilter],
   );
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -894,6 +994,13 @@ const ProjectNavigationSidebarInner = (
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
   const [showSyncDetails, setShowSyncDetails] = useState(false);
   const [copiedReason, setCopiedReason] = useState<string | null>(null);
+  const [onboardingEnvWorkspaceId, setOnboardingEnvWorkspaceId] = useState<string | null>(null);
+  const [envOnboardingNode, setEnvOnboardingNode] = useState<HTMLDivElement | null>(null);
+
+  const dismissEnvOnboarding = useCallback(() => {
+    setOnboardingEnvWorkspaceId(null);
+  }, []);
+
   const skippedRoutesByReason = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const { routeName, reason, serviceName } of lastSyncResult?.skippedRoutes ?? []) {
@@ -920,9 +1027,9 @@ const ProjectNavigationSidebarInner = (
         <>
           <div className="flex justify-between gap-1 p-(--padding-sm)">
             <SidebarSearchField
-              value={isProjectTabActive ? filterInputValue : (konnectFilter ?? '')}
+              value={isProjectTabActive ? filterInputValue : konnectFilterInputValue}
               isDisabled={projects.length === 0}
-              onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilter}
+              onChange={isProjectTabActive ? setFilterInputValue : setKonnectFilterInputValue}
             />
             {isProjectTabActive ? (
               !isScratchPad && <NewProjectButton onPress={onCreateProject} isDisabled={projects.length === 0} />
@@ -938,14 +1045,22 @@ const ProjectNavigationSidebarInner = (
                     <Icon icon="stop-circle" />
                   </Button>
                 ) : (
-                  <Button
-                    aria-label="Sync Konnect"
-                    onPress={handleSync}
-                    className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
-                  >
-                    <Icon icon="refresh" />
-                    Sync
-                  </Button>
+                  <TooltipTrigger delay={300}>
+                    <Button
+                      aria-label="Sync Konnect"
+                      onPress={handleSync}
+                      className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
+                    >
+                      <Icon icon="refresh" />
+                      Sync
+                    </Button>
+                    <Tooltip
+                      placement="bottom"
+                      className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-1.5 text-xs text-(--color-font) shadow-lg select-none"
+                    >
+                      <LastSyncedLabel lastSyncedAt={lastSyncedAt ?? null} />
+                    </Tooltip>
+                  </TooltipTrigger>
                 )}
                 <Button
                   aria-label="Konnect settings"
@@ -1006,7 +1121,7 @@ const ProjectNavigationSidebarInner = (
                         if (routeInfo?.resourceId === docId) {
                           toggleProjectOrWorkspace(docId);
                         } else {
-                          !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched });
+                          !isScratchPad && window.main.trackAnalyticsEvent({ event: AnalyticsEvent.projectSwitched, properties: { project_id: docId } });
                           !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
                         }
                       } else if (item.kind === 'workspace') {
@@ -1022,6 +1137,10 @@ const ProjectNavigationSidebarInner = (
                             },
                             { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
                           );
+                        }
+                        // Dismiss onboarding when user navigates to the highlighted environment
+                        if (docId === onboardingEnvWorkspaceId) {
+                          dismissEnvOnboarding();
                         }
                       } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
                         if (
@@ -1081,6 +1200,8 @@ const ProjectNavigationSidebarInner = (
                             });
                           }
                         }}
+                        highlighted={item.doc._id === onboardingEnvWorkspaceId}
+                        nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
                       />
                     )}
 
@@ -1107,7 +1228,7 @@ const ProjectNavigationSidebarInner = (
               className={`m-2 flex items-start justify-between gap-2 rounded-sm p-3 text-xs ${
                 !lastSyncResult.success
                   ? 'bg-[rgba(58,18,8,1)]'
-                  : lastSyncResult.skippedRoutes.length > 0
+                  : lastSyncResult.skippedRoutes.length > 0 || lastSyncResult.skippedRegions.length > 0
                     ? 'bg-[rgba(250,173,20,0.15)]'
                     : 'bg-[rgba(82,196,26,0.15)]'
               }`}
@@ -1115,16 +1236,16 @@ const ProjectNavigationSidebarInner = (
               <div className="flex min-w-0 items-start gap-3">
                 <Icon
                   icon={
-                    lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0
+                    lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0 && lastSyncResult.skippedRegions.length === 0
                       ? 'circle-check'
                       : 'exclamation-triangle'
                   }
-                  className={lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0 ? 'mt-1.5' : 'mt-1'}
+                  className={lastSyncResult.success && lastSyncResult.skippedRoutes.length === 0 && lastSyncResult.skippedRegions.length === 0 ? 'mt-1.5' : 'mt-1'}
                 />
                 <div className="min-w-0">
                   <p className="font-semibold text-(--color-font)">
                     {lastSyncResult.success
-                      ? lastSyncResult.skippedRoutes.length > 0
+                      ? lastSyncResult.skippedRoutes.length > 0 || lastSyncResult.skippedRegions.length > 0
                         ? 'Sync complete, with warnings'
                         : 'Sync complete'
                       : 'Sync failed'}
@@ -1135,18 +1256,20 @@ const ProjectNavigationSidebarInner = (
                       : lastSyncResult.routes.created === 0 &&
                           lastSyncResult.routes.updated === 0 &&
                           lastSyncResult.routes.deleted === 0 &&
-                          lastSyncResult.routes.skipped === 0
+                          lastSyncResult.routes.skipped === 0 &&
+                          lastSyncResult.skippedRegions.length === 0
                         ? 'Already up-to-date with Konnect.'
                         : [
                             lastSyncResult.routes.created > 0 && `${lastSyncResult.routes.created} request(s) added`,
                             lastSyncResult.routes.updated > 0 && `${lastSyncResult.routes.updated} request(s) updated`,
                             lastSyncResult.routes.deleted > 0 && `${lastSyncResult.routes.deleted} request(s) deleted`,
                             lastSyncResult.routes.skipped > 0 && `${lastSyncResult.routes.skipped} route(s) skipped`,
+                            lastSyncResult.skippedRegions.length > 0 && `${lastSyncResult.skippedRegions.length} region(s) skipped`,
                           ]
                             .filter(Boolean)
                             .join(', ') + '.'}
                   </p>
-                  {lastSyncResult.success && lastSyncResult.skippedRoutes.length > 0 && (
+                  {lastSyncResult.success && (lastSyncResult.skippedRoutes.length > 0 || lastSyncResult.skippedRegions.length > 0) && (
                     <>
                       <button
                         className="mt-1 flex items-center gap-1 text-(--hl) hover:text-(--color-font)"
@@ -1157,6 +1280,16 @@ const ProjectNavigationSidebarInner = (
                       </button>
                       {showSyncDetails && (
                         <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
+                          {lastSyncResult.skippedRegions.length > 0 && (
+                            <div>
+                              <p className="text-(--hl)">Failed to fetch control planes for the following regions:</p>
+                              <ul className="mt-1 space-y-0.5 pl-3">
+                                {lastSyncResult.skippedRegions.map(r => (
+                                  <li key={r} className="list-disc text-(--color-font)">{r}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                           {[...skippedRoutesByReason.entries()].map(([reason, routes]) => {
                             const MAX_SHOW = 5;
                             const visible = routes.slice(0, MAX_SHOW);
@@ -1210,7 +1343,12 @@ const ProjectNavigationSidebarInner = (
         <KonnectSettingsModal
           onClose={() => setShowKonnectConfigModal(false)}
           syncKonnectProjectsAndNotifyRef={syncKonnectProjectsAndNotifyRef}
+          onDisconnect={() => setLastSyncedAt(null)}
         />
+      )}
+
+      {onboardingEnvWorkspaceId && envOnboardingNode && (
+        <KonnectEnvOnboarding triggerElement={envOnboardingNode} onDismiss={dismissEnvOnboarding} />
       )}
     </div>
   );
@@ -1223,12 +1361,13 @@ export const ProjectNavigationSidebar = forwardRef<ProjectNavigationSidebarHandl
 export const EmptyProjectNavigationSidebar = ({ onCreateProject }: { onCreateProject: () => void }) => {
   const { organizationId } = useParams() as { organizationId: string };
   const isScratchPad = models.organization.isScratchpadOrganizationId(organizationId);
+  const { features } = useOrganizationPermissions();
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
       <Tabs>
         <SideBarTabList
-          konnectSyncEnabled={false}
+          konnectSyncEnabled={features.konnectSync.enabled}
           isScratchPad={isScratchPad}
           nonKonnectProjectLength={0}
           konnectProjectsLength={0}

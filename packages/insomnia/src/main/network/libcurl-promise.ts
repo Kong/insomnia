@@ -1,7 +1,5 @@
 // NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
-import { invariant } from '../../utils/invariant';
-invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';
@@ -21,6 +19,8 @@ import { isValid } from 'date-fns';
 import electron from 'electron';
 import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
+
+import { invariant } from '~/common/utils/invariant';
 
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';

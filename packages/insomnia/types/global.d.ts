@@ -20,12 +20,14 @@ type RendererEnv = {
   INSOMNIA_ENV: string | undefined;
   BUILD_DATE: string | undefined;
   PORTABLE_EXECUTABLE_DIR: string | undefined;
+  ALLOW_UPDATES_IN_DEV: string | undefined;
   OAUTH_REDIRECT_URL: string | undefined;
   OAUTH_RELAY_URL: string | undefined;
   INSOMNIA_API_URL: string | undefined;
   INSOMNIA_MOCK_API_URL: string | undefined;
   INSOMNIA_AI_URL: string | undefined;
   KONNECT_API_URL: string | undefined;
+  KONNECT_API_REGIONS: string | undefined;
   INSOMNIA_APP_WEBSITE_URL: string | undefined;
   INSOMNIA_GITHUB_REST_API_URL: string | undefined;
   INSOMNIA_GITHUB_API_URL: string | undefined;
@@ -39,6 +41,8 @@ declare global {
     database: DatabaseBridgeAPI;
     // This is a temporary measure to provide access to services on the global window object. It will be removed in the future once all usages are updated to import services directly from the insomnia-data package.
     _dataServices?: Services;
+    // Under contextIsolation the services Proxy can't cross the bridge; the preload exposes this flat invoke instead and the renderer rebuilds the Proxy.
+    _dataServicesInvoke?: (serviceName: string, methodName: string, ...args: unknown[]) => Promise<unknown>;
     dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
     app: Pick<Electron.App, 'getPath' | 'getAppPath'> & { process: { platform: NodeJS.Platform } };
     shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;

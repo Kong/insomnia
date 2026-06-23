@@ -1,7 +1,7 @@
 import { redirect } from 'react-router';
 
 import { syncProjects } from '~/ui/organization-utils';
-import { getInitialRouteForOrganization } from '~/utils/router';
+import { getInitialRouteForOrganization } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId._index';
 

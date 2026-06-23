@@ -2,8 +2,9 @@ import { models, type ProtoDirectory, type ProtoFile, services } from 'insomnia-
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
+
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
-import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

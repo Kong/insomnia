@@ -239,7 +239,7 @@ export function unescapeForwardSlash(str: string): string {
 export const SECURITY_SETTINGS_PATH_LABEL = 'Insomnia Preferences → General → Security';
 
 export function cannotAccessPathError(accessingPath: string): string {
-  return process.type === 'renderer' || process.type === 'browser'
+  return __IS_RENDERER__
     ? `Insomnia cannot access the file "${accessingPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`
     : `Insomnia cannot access the file ‘${accessingPath}’. You must specify which directories Insomnia can access with one or more "--dataFolders <directory>".`;
 }

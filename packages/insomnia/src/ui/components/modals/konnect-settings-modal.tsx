@@ -13,9 +13,11 @@ import { Icon } from '../icon';
 export const KonnectSettingsModal = ({
   onClose,
   syncKonnectProjectsAndNotifyRef,
+  onDisconnect,
 }: {
   onClose: () => void;
   syncKonnectProjectsAndNotifyRef: React.MutableRefObject<() => Promise<void>>;
+  onDisconnect?: () => void;
 }) => {
   const { settings } = useRootLoaderData()!;
   const patchSettings = useSettingsPatcher();
@@ -66,6 +68,7 @@ export const KonnectSettingsModal = ({
       patchSettings({ hasKonnectPat: true });
       window.main.trackAnalyticsEvent({ event: AnalyticsEvent.kongKonnectPatValidated });
       syncKonnectProjectsAndNotifyRef.current();
+      onClose();
     }
   };
 
@@ -85,6 +88,7 @@ export const KonnectSettingsModal = ({
       }
       await window.main.secretStorage.deleteSecret('konnectPat');
       patchSettings({ hasKonnectPat: false });
+      onDisconnect?.();
       onClose();
     } finally {
       setIsDisconnecting(false);

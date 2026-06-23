@@ -1,9 +1,9 @@
 import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
+import { invariant } from '~/common/utils/invariant';
 import { remoteBranchesCache } from '~/ui/sync-utils';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.delete';
 

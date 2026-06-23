@@ -1,0 +1,292 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Collection Runner Example
+meta:
+  id: wrk_d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6
+  created: 1779753600000
+  modified: 1779743446079
+  description: ""
+collection:
+  - url: "{{ _.base_url }}/test/delay"
+    name: 02 Request
+    meta:
+      id: req_a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600001
+    method: GET
+    parameters:
+      - name: ms
+        value: "200"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('Second best is still pretty good', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/test/delay"
+    name: 08 Request
+    meta:
+      id: req_a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600007
+    method: GET
+    parameters:
+      - name: ms
+        value: "800"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('Eighth wonder of the test suite', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/test/delay"
+    name: 03 Request
+    meta:
+      id: req_b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600002
+    method: GET
+    parameters:
+      - name: ms
+        value: "300"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('Third time is the charm', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/test/delay"
+    name: 09 Request
+    meta:
+      id: req_b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600008
+    method: GET
+    parameters:
+      - name: ms
+        value: "900"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('Cloud nine vibes', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/test/delay"
+    name: 10 Request
+    meta:
+      id: req_c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600009
+    method: GET
+    parameters:
+      - name: ms
+        value: "1000"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('Perfect ten, stuck the landing', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/test/delay"
+    name: 04 Request
+    meta:
+      id: req_c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600003
+    method: GET
+    parameters:
+      - name: ms
+        value: "400"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('Four score and seven delays ago', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/test/delay"
+    name: 05 Request
+    meta:
+      id: req_d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600004
+    method: GET
+    parameters:
+      - name: ms
+        value: "500"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('High five! (wrong kind of five)', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/test/delay"
+    name: 06 Request
+    meta:
+      id: req_e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600005
+    method: GET
+    parameters:
+      - name: ms
+        value: "600"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('Six appeal', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/test/delay"
+    name: 01 Request
+    meta:
+      id: req_f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600000
+    method: GET
+    parameters:
+      - name: ms
+        value: "100"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('First! (insert victory screech)', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/test/delay"
+    name: 07 Request
+    meta:
+      id: req_f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2
+      created: 1779753600000
+      modified: 1779753600000
+      isPrivate: false
+      description: ""
+      sortKey: -1779753600006
+    method: GET
+    parameters:
+      - name: ms
+        value: "700"
+        disabled: false
+    scripts:
+      afterResponse: |-
+        insomnia.test('Lucky number seven', () => {
+          insomnia.expect(true).to.be.true;
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0
+    created: 1779753600000
+    modified: 1779744547323
+environments:
+  name: Base Environment
+  meta:
+    id: env_b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0
+    created: 1779753600000
+    modified: 1779744547324
+    isPrivate: false

@@ -5,11 +5,11 @@ import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
+import { invariant } from '~/common/utils/invariant';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.update';
 
@@ -110,6 +110,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'local',
+            project_id: project._id,
           },
         });
       } catch (error: unknown) {
@@ -162,6 +163,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           event: AnalyticsEvent.projectUpdated,
           properties: {
             storage: 'remote',
+            project_id: project._id,
           },
         });
 
@@ -226,6 +228,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             event: AnalyticsEvent.projectUpdated,
             properties: {
               storage: 'git',
+              project_id: project._id,
             },
           });
         } catch (error: unknown) {
@@ -380,6 +383,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       event: AnalyticsEvent.projectUpdated,
       properties: {
         storage: 'local',
+        project_id: project._id,
       },
     });
 

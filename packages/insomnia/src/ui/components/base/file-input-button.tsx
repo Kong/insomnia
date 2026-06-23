@@ -1,6 +1,6 @@
 import React, { type HTMLAttributes, useCallback } from 'react';
 
-import { selectFileOrFolder } from '../../../common/select-file-or-folder';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
   onChange: (path: string) => void;

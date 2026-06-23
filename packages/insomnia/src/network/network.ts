@@ -24,8 +24,12 @@ import { EnvironmentType, models, services } from 'insomnia-data';
 import { invariant, serializeNDJSON } from 'insomnia-data/common';
 import orderedJSON from 'json-order';
 
+import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
+import { RenderError } from '~/common/templating/render-error';
+import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
+import { getKVPairFromData } from '~/common/utils/environment-utils';
+import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '~/common/utils/url/querystring';
 import { getRuntime } from '~/runtimes';
-import { getKVPairFromData } from '~/utils/environment-utils';
 
 import type { ExecutionOption, RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
@@ -35,14 +39,10 @@ import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeader
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { ResponsePatch } from '../main/network/libcurl-promise';
-import { RenderError } from '../templating/render-error';
-import type { RenderedRequest, RenderPurpose } from '../templating/types';
-import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
 import { QUERY_PARAMS } from './api-key/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from './authentication';
 import { filterClientCertificates } from './certificate';
-import type { TransformedExecuteScriptContext } from './concurrency';
+import type { TransformedExecuteScriptContext } from './concurrency.renderer';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
@@ -424,7 +424,7 @@ export async function savePatchesMadeByScript(patches: {
       dataPropertyOrder,
       // also update kvPairData when environment type is table view(kv pair)
       ...(environmentType === EnvironmentType.KVPAIR && {
-        kvPairData: getKVPairFromData(data, dataPropertyOrder),
+        kvPairData: getKVPairFromData(data, dataPropertyOrder ?? null),
       }),
     });
   };
@@ -453,7 +453,7 @@ export async function savePatchesMadeByScript(patches: {
         environment: mutatedFolder.environment,
         // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
-          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder),
+          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder ?? null),
         }),
       });
     }
@@ -787,11 +787,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
   context: Record<string, any>;
 }) => {
   const { request, context } = renderResult;
-  try {
-    return await getRuntime().network.applyRequestHooks(request, context);
-  } catch {
-    throw new Error(`Failed to transform request with plugins: ${request._id}`);
-  }
+  return await getRuntime().network.applyRequestHooks(request, context);
 };
 
 export interface sendCurlAndWriteTimelineError {

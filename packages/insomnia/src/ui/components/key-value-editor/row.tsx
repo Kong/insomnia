@@ -2,8 +2,8 @@ import classnames from 'classnames';
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
+import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
-import { utf8ByteLength } from '~/utils/utf8-bytes';
 
 import { describeByteSize } from '../../../common/misc';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';

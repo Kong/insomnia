@@ -3,9 +3,9 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
-import { plugins } from '~/plugins/renderer-bridge';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { invariant } from '~/common/utils/invariant';
+import { plugins } from '~/ui/plugins/renderer-bridge';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/cloud-credentials.$cloudCredentialId.update';
 

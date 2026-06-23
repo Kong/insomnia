@@ -52,12 +52,14 @@ export const requestGroupModelSchema: Schema<RequestGroup> = {
   ...baseModelSchema,
   ...toSchema(requestGroup.init()),
   type: () => requestGroup.type,
+  environmentPropertyOrder: () => null,
 };
 
 export const environmentModelSchema: Schema<Environment> = {
   ...baseModelSchema,
   ...toSchema(environment.init()),
   type: () => environment.type,
+  dataPropertyOrder: () => null,
   environmentType: () => EnvironmentType.JSON,
   kvPairData: () => [
     {

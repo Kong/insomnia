@@ -2,8 +2,8 @@ import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from 'in
 import React, { type FC, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
 
+import { utf8StringFromBytes } from '~/common/utils/utf8-bytes';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
-import { utf8StringFromBytes } from '~/utils/utf8-bytes';
 
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import type { SocketIOEvent } from '../../../main/network/socket-io';

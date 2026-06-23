@@ -18,10 +18,9 @@ export async function sendRequest(
   return new Promise(async (resolve, reject) => {
     try {
       const requestOptions = requestToCurlOptions(request, settings);
-      const nodejsCurlRequest =
-        process.type === 'renderer'
-          ? window.bridge.curlRequest
-          : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
+      const nodejsCurlRequest = __IS_RENDERER__
+        ? window.bridge.curlRequest
+        : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
 
       const output = (await nodejsCurlRequest(requestOptions)) as CurlRequestOutput;
       const transformedOutput = await curlOutputToResponse(output, request);

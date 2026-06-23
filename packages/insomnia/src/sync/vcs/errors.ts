@@ -7,7 +7,4 @@ export class UserAbortResolveMergeConflictError extends Error {
 }
 
 export const isUserAbortResolveMergeConflictError = (error: unknown): error is UserAbortResolveMergeConflictError =>
-  typeof error === 'object' &&
-  error !== null &&
-  'name' in error &&
-  error.name === 'UserAbortResolveMergeConflictError';
+  typeof error === 'object' && error !== null && 'name' in error && error.name === 'UserAbortResolveMergeConflictError';

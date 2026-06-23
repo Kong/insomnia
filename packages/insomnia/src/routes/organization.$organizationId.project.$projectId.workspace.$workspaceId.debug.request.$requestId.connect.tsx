@@ -9,10 +9,10 @@ import type {
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
-import type { RenderedRequest } from '~/templating/types';
+import type { RenderedRequest } from '~/common/templating/types';
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 
@@ -47,6 +47,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       headers: rendered.headers,
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
+      suppressUserAgent: rendered.suppressUserAgent,
     });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,
@@ -74,6 +75,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       }),
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
+      suppressUserAgent: rendered.suppressUserAgent,
     });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,
@@ -108,6 +110,7 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       authentication: rendered.authentication,
       query: rendered.query || {},
       path: rendered.path,
+      suppressUserAgent: rendered.suppressUserAgent,
     });
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.requestExecuted,

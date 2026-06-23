@@ -1,6 +1,7 @@
 import type { ClientCertificate } from 'insomnia-data';
 
-import { setDefaultProtocol } from '../utils/url/protocol';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 export function filterClientCertificates(

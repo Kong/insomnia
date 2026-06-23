@@ -13,12 +13,17 @@ export const canDuplicate = true;
 
 export const canSync = true;
 // for those keys do not need to add in model init method
-export const optionalKeys = ['kvPairData', 'environmentType', 'konnectRouteId'];
+export const optionalKeys: (keyof BaseRequestGroup)[] = [
+  'kvPairData',
+  'environmentType',
+  'konnectRouteId',
+  'environmentPropertyOrder',
+];
 interface BaseRequestGroup {
   name: string;
   description: string;
   environment: Record<string, any>;
-  environmentPropertyOrder: Record<string, any> | null;
+  environmentPropertyOrder?: Record<string, any> | null;
   kvPairData?: EnvironmentKvPairData[];
   environmentType?: EnvironmentType;
   metaSortKey: number;
@@ -39,7 +44,6 @@ export function init(): BaseRequestGroup {
     name: 'New Folder',
     description: '',
     environment: {},
-    environmentPropertyOrder: null,
     metaSortKey: -1 * Date.now(),
     preRequestScript: undefined,
     afterResponseScript: undefined,

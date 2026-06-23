@@ -67,6 +67,7 @@ interface Props {
   onSuccessUpdate?(): void;
   credentials: GitCredentials[];
   providers: GitProviderOption[];
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
@@ -78,6 +79,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   onSuccessUpdate,
   credentials,
   providers,
+  onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -122,6 +124,14 @@ export const ProjectSettingsForm: FC<Props> = ({
       ? initCloneGitRepositoryFetcher.data.files
       : [];
 
+  const changedFieldCount = [
+    projectData.name !== project?.name,
+    isSwitchingStorageType(project!, storageType),
+    project?.gitRepositoryId && projectData.uri !== gitRepository?.uri,
+    project?.gitRepositoryId && projectData.credentialsId !== gitRepository?.credentialsId,
+    project?.gitRepositoryId && projectData.selectedAuthorEmail !== gitRepository?.selectedAuthorEmail,
+  ].filter(Boolean).length;
+
   useEffect(() => {
     if (updateProjectFetcher?.data && updateProjectFetcher?.data?.success && onSuccessUpdate) {
       onSuccessUpdate();
@@ -133,6 +143,10 @@ export const ProjectSettingsForm: FC<Props> = ({
       setError(updateProjectFetcher.data.error);
     }
   }, [updateProjectFetcher.data, updateProjectFetcher.state]);
+
+  useEffect(() => {
+    if (onDirtyChange) onDirtyChange(changedFieldCount > 1);
+  }, [onDirtyChange, changedFieldCount]);
 
   const onUpsertProject = () => {
     if (project) {
@@ -248,11 +262,25 @@ export const ProjectSettingsForm: FC<Props> = ({
               className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
             />
           </TextField>
-          <ProjectTypeSelect
-            storageRules={storageRules}
-            value={storageType}
-            onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
-          />
+          {project?.konnectControlPlaneId ? (
+            <div className="flex flex-col gap-2">
+              <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
+                Type
+              </Label>
+              <div className="flex h-7.5 items-center rounded-sm border border-(--hl-sm) px-2 opacity-75">
+                <div className="flex items-center gap-2">
+                  <Icon icon="laptop" />
+                  <span>Synced from Konnect</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <ProjectTypeSelect
+              storageRules={storageRules}
+              value={storageType}
+              onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
+            />
+          )}
           <ProjectTypeWarning
             isGitSyncEnabled={isGitSyncEnabled}
             storageType={storageType}
@@ -516,9 +544,9 @@ export const ProjectSettingsForm: FC<Props> = ({
                 }
                 form={FORMID}
                 type="submit"
-                className="flex h-full w-[14ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
-                Scan for files
+                <span>Scan for files</span>
               </Button>
             ) : (
               <Button

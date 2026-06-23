@@ -81,6 +81,7 @@ export const test = baseTest.extend<{
       INSOMNIA_VAULT_SALT: userConfig.vaultSalt || '',
       INSOMNIA_VAULT_SRP_SECRET: userConfig.vaultSrpSecret || '',
       KONNECT_API_URL: echoServer,
+      KONNECT_API_REGIONS: 'us',
       ...(userConfig.session ? { INSOMNIA_SESSION: JSON.stringify(userConfig.session) } : {}),
     };
 

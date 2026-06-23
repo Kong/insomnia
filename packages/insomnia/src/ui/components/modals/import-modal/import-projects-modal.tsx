@@ -9,7 +9,6 @@ import * as reactUse from 'react-use';
 
 import { database } from '~/common/database';
 import type { ScanResult } from '~/common/import';
-import { selectFileOrFolder } from '~/common/select-file-or-folder';
 import { importScannedResources } from '~/routes/import.resources';
 import { scanImportResources } from '~/routes/import.scan';
 import { useOrganizationLoaderData } from '~/routes/organization';
@@ -19,6 +18,7 @@ import { Modal, type ModalHandle } from '~/ui/components/base/modal';
 import { ModalHeader } from '~/ui/components/base/modal-header';
 import { Icon } from '~/ui/components/icon';
 import { Button } from '~/ui/components/themed-button';
+import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { showModal } from '..';
 import { AlertModal } from '../alert-modal';

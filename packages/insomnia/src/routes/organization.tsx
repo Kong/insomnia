@@ -29,7 +29,7 @@ import { SidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
-import type { AsyncTask } from '~/utils/router';
+import type { AsyncTask } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization';
 
@@ -385,22 +385,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                         <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
                       </Tooltip>
                     </TooltipTrigger>
-                    {!isScratchpadWorkspace && hasUntrackedData && (
-                      <div>
-                        <Button
-                          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                          onPress={() => {
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.statusbarOrphanedProjectsClicked,
-                            });
-                            showModal(SettingsModal, { tab: 'data' });
-                          }}
-                        >
-                          <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click
-                          here to view them.
-                        </Button>
-                      </div>
-                    )}
                     {!isScratchpadWorkspace && hasUntrackedData && (
                       <TooltipTrigger delay={500}>
                         <Button

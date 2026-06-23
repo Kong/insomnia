@@ -2,10 +2,10 @@ import type { Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
+import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
-import { invariant } from '~/utils/invariant';
-import { createFetcherSubmitHook } from '~/utils/router';
+import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.delete';
 

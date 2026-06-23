@@ -7,12 +7,6 @@ export type ConflictHandler = (
   labels: { ours: string; theirs: string },
 ) => Promise<MergeConflict[]>;
 
-export const createVCS = ({
-  dataPath,
-  conflictHandler,
-}: {
-  dataPath: string;
-  conflictHandler?: ConflictHandler;
-}) => {
+export const createVCS = ({ dataPath, conflictHandler }: { dataPath: string; conflictHandler?: ConflictHandler }) => {
   return new VCS(FileSystemDriver.create(dataPath), conflictHandler);
 };

@@ -22,9 +22,18 @@ import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, Services, TestResults 
 import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
-import { bundleSpectralRuleset } from '~/common/bundle-spectral-ruleset';
-import { AI_PLUGIN_NAME } from '~/common/constants';
+import * as crypt from '~/common/account/crypt';
+import { AI_PLUGIN_NAME, type UpdateStatus } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
+import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
+import type {
+  GenerateCommitsFromDiffFunction,
+  GenerateMcpSamplingResponseFunction,
+  MockRouteData,
+  ModelConfig,
+} from '~/common/plugins/types';
+import type { RenderedRequest } from '~/common/templating/types';
+import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import {
@@ -43,20 +52,11 @@ import {
   invalidateCompiledRulesetCache,
   writeCompiledRuleset,
 } from '~/main/spectral-ruleset-cache';
+import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '~/main/utils/sealedbox';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
-import type {
-  GenerateCommitsFromDiffFunction,
-  GenerateMcpSamplingResponseFunction,
-  MockRouteData,
-  ModelConfig,
-} from '~/plugins/types';
 
-import * as crypt from '../../account/crypt';
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
-import type { PluginsBridgeAPI } from '../../plugins/bridge-types';
 import { getRuntime } from '../../runtimes';
-import type { RenderedRequest } from '../../templating/types';
-import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '../../utils/sealedbox';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
@@ -99,6 +99,32 @@ export const openInBrowser = (href: string) => {
   if (protocol === 'http:' || protocol === 'https:') {
     shell.openExternal(href);
   }
+};
+
+const sanitizeModelConfigForRequest = (modelConfig: ModelConfig | null | undefined): ModelConfig | null => {
+  if (!modelConfig) {
+    return null;
+  }
+
+  const sanitizedConfig: ModelConfig = { ...modelConfig };
+
+  if (sanitizedConfig.backend === 'url') {
+    if (sanitizedConfig.sendTemperature === false) {
+      delete sanitizedConfig.temperature;
+    }
+    if (sanitizedConfig.sendTopP === false) {
+      delete sanitizedConfig.topP;
+    }
+    if (sanitizedConfig.sendMaxTokens === false) {
+      delete sanitizedConfig.maxTokens;
+    }
+  }
+
+  delete sanitizedConfig.sendTemperature;
+  delete sanitizedConfig.sendTopP;
+  delete sanitizedConfig.sendMaxTokens;
+
+  return sanitizedConfig;
 };
 
 const readDir = async (_: unknown, options: { path: string }) => {
@@ -194,6 +220,8 @@ export interface RendererToMainBridgeAPI {
   halfSecondAfterAppStart: () => void;
   openDeepLink: (url: string) => void;
   manualUpdateCheck: () => void;
+  applyUpdateAndRestart: () => void;
+  getUpdateStatus: () => UpdateStatus;
   backup: () => Promise<void>;
   restoreBackup: (version: string) => Promise<void>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
@@ -750,7 +778,7 @@ export function registerMainHandlers() {
           openApiSpec,
           specUrl,
           specText,
-          modelConfig,
+          modelConfig: sanitizeModelConfigForRequest(modelConfig as ModelConfig),
           useDynamicMockResponses,
           mockServerAdditionalFiles,
           aiPluginName: AI_PLUGIN_NAME,
@@ -802,7 +830,7 @@ export function registerMainHandlers() {
 
       process.postMessage({
         input,
-        modelConfig,
+        modelConfig: sanitizeModelConfigForRequest(modelConfig),
         aiPluginName: AI_PLUGIN_NAME,
       });
     });
@@ -864,7 +892,7 @@ export function registerMainHandlers() {
       process.postMessage({
         messages,
         systemPrompt,
-        modelConfig: mergedModelConfig,
+        modelConfig: sanitizeModelConfigForRequest(mergedModelConfig as ModelConfig),
         aiPluginName: AI_PLUGIN_NAME,
       });
     });

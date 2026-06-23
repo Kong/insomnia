@@ -30,10 +30,11 @@ import * as grpcReflection from 'grpc-reflection-js';
 import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
+import { invariant } from '~/common/utils/invariant';
+
 import { version } from '../../../package.json';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
-import { writeProtoFile } from '../../network/grpc/write-proto-file';
-import { invariant } from '../../utils/invariant';
+import { writeProtoFile } from '../../network/grpc/write-proto-file.node';
 import { mockRequestMethods } from './automock';
 import { ipcMainHandle, ipcMainOn } from './electron';
 
@@ -336,7 +337,7 @@ export const getSelectedMethod = async (
     request.metadata,
     settings.validateSSL,
     request.reflectionApi,
-    request.disableUserAgentHeader,
+    request.disableUserAgentHeader ?? false,
     ipcParams.clientCert,
     ipcParams.clientKey,
     ipcParams.caCertificate,

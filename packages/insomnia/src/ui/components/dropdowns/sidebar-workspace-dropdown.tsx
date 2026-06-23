@@ -4,8 +4,8 @@ import {
   exportMcpClientToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
-import type { Project, Workspace } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import type { MockServer, Project, Workspace } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
 import React, { Fragment, useState } from 'react';
 import {
@@ -91,7 +91,7 @@ export const SidebarWorkspaceDropdown = ({
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [settingsData, setSettingsData] = useState<{ mockServer: MockServer | null; gitFilePath: string | null }>();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
 
@@ -105,6 +105,7 @@ export const SidebarWorkspaceDropdown = ({
   const workspaceName = workspace.name;
   const projectName = project.name || getProductName();
   const isCollection = workspace.scope === 'collection';
+  const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
 
   const createRequest = (requestType: CreateRequestType) => {
     newRequestFetcher.submit({
@@ -305,7 +306,11 @@ export const SidebarWorkspaceDropdown = ({
         id: 'Settings',
         name: 'Settings',
         icon: 'gear',
-        action: () => setIsSettingsModalOpen(true),
+        action: async () =>
+          setSettingsData({
+            mockServer: (await services.mockServer.getByParentId(workspaceId)) ?? null,
+            gitFilePath: (await services.workspaceMeta.getByParentId(workspaceId))?.gitFilePath ?? null,
+          }),
       },
       {
         id: 'Delete',
@@ -317,7 +322,38 @@ export const SidebarWorkspaceDropdown = ({
     ],
   };
 
-  const allSections: ActionSection[] = [...createSections, actionSection];
+  const scratchpadActionList: ActionSection = {
+    name: 'Actions',
+    id: 'Actions',
+    icon: 'cog',
+    items: [
+      {
+        id: 'Export',
+        name: 'Export',
+        icon: 'file-export',
+        action: () => {
+          window.main.trackAnalyticsEvent({
+            event: AnalyticsEvent.exportStarted,
+            properties: { source: `${workspace.scope}-list` },
+          });
+          if (workspace.scope === 'mock-server') {
+            return exportMockServerToFile(workspace);
+          }
+          if (workspace.scope === 'environment') {
+            return exportGlobalEnvironmentToFile(workspace);
+          }
+          if (workspace.scope === 'mcp') {
+            return exportMcpClientToFile(workspace);
+          }
+          return setIsExportModalOpen(true);
+        },
+      },
+    ],
+  };
+
+  const allSections: ActionSection[] = isScratchpadWorkspace
+    ? [...createSections, scratchpadActionList]
+    : [...createSections, actionSection];
 
   return (
     <Fragment>
@@ -422,8 +458,14 @@ export const SidebarWorkspaceDropdown = ({
       {isExportModalOpen && (
         <ExportRequestsModal workspaceIdToExport={workspaceId} onClose={() => setIsExportModalOpen(false)} />
       )}
-      {isSettingsModalOpen && (
-        <WorkspaceSettingsModal workspace={workspace} project={project} onClose={() => setIsSettingsModalOpen(false)} />
+      {settingsData && (
+        <WorkspaceSettingsModal
+          workspace={workspace}
+          mockServer={settingsData.mockServer}
+          gitFilePath={settingsData.gitFilePath}
+          project={project}
+          onClose={() => setSettingsData(undefined)}
+        />
       )}
       {isDeleteModalOpen && (
         <ModalOverlay
@@ -440,7 +482,9 @@ export const SidebarWorkspaceDropdown = ({
               {({ close }) => (
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between gap-2">
-                    <Heading className="text-2xl">Delete {getWorkspaceLabel(workspace).singular}</Heading>
+                    <Heading className="text-2xl">
+                      {project.konnectControlPlaneId ? 'Remove' : 'Delete'} {getWorkspaceLabel(workspace).singular}
+                    </Heading>
                     <Button
                       className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                       onPress={close}
@@ -459,12 +503,23 @@ export const SidebarWorkspaceDropdown = ({
                     <input type="hidden" name="workspaceId" value={workspaceId} />
                     <div>
                       <p className="line-clamp-5">
-                        This will permanently delete the{' '}
-                        <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
-                        {getWorkspaceLabel(workspace).singular}
+                        {project.konnectControlPlaneId ? (
+                          <>
+                            Do you wish to remove your local copy of the{' '}
+                            <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
+                            {getWorkspaceLabel(workspace).singular}? This will not affect anything in Konnect, or any
+                            other users.
+                          </>
+                        ) : (
+                          <>
+                            This will permanently delete the{' '}
+                            <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
+                            {getWorkspaceLabel(workspace).singular}
+                          </>
+                        )}
                       </p>
                       {models.project.isRemoteProject(project) && (
-                        <RadioGroup name="localOnly" defaultValue="false" className="mb-2 flex flex-col gap-2">
+                        <RadioGroup name="localOnly" defaultValue="true" className="mb-2 flex flex-col gap-2">
                           <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
                           <div className="flex gap-2">
                             <Radio
@@ -502,7 +557,7 @@ export const SidebarWorkspaceDropdown = ({
                         aria-label="Delete Workspace"
                         className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                       >
-                        Delete
+                        {project.konnectControlPlaneId ? 'Remove' : 'Delete'}
                       </Button>
                     </div>
                   </deleteWorkspaceFetcher.Form>

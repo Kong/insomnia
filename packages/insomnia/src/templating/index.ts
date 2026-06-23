@@ -1,10 +1,11 @@
-import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
+import { localTemplateTags } from 'insomnia/src/common/templating/local-template-tags';
 import type { Liquid } from 'liquidjs';
 
-import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from './constants';
-import { buildLiquidEngine, stripLiquidComments } from './liquid-engine';
+import { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import { buildLiquidEngine, stripLiquidComments } from '~/common/templating/liquid-engine';
+import { extractUndefinedVariableKey, translateLiquidError } from '~/common/templating/render-error';
+
 import { createLiquidTag } from './liquid-extension';
-import { extractUndefinedVariableKey, translateLiquidError } from './render-error';
 export { LIQUID_TEMPLATE_GLOBAL_PROPERTY_NAME, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME };
 
 // Cached engine instances

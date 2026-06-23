@@ -1,7 +1,7 @@
 import { extension as mimeExtension } from 'mime-types';
 
-import { jsonPrettify } from '~/utils/prettify/json';
-import { bodyBufferToUtf8 } from '~/utils/utf8-bytes';
+import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
+import { jsonPrettify } from '~/ui/utils/prettify/json';
 
 export async function downloadResponseBody(
   activeRequest: { name: string } | null | undefined,

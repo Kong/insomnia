@@ -14,24 +14,25 @@ import type {
 import { models, services } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
-import { getRuntime } from '../runtimes';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../templating/constants';
-import { RenderError } from '../templating/render-error';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/common/templating/constants';
+import { maskOrDecryptVaultDataIfNecessary } from '~/common/templating/mask-or-decrypt-vault-data';
+import { RenderError } from '~/common/templating/render-error';
 import type {
   BaseRenderContext,
   BaseRenderContextOptions,
   RenderContextAncestor,
   RenderContextOptions,
   RenderedRequest,
-} from '../templating/types';
-import * as templatingUtils from '../templating/utils';
-import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { setDefaultProtocol } from '../utils/url/protocol';
+} from '~/common/templating/types';
+import * as templatingUtils from '~/common/templating/utils';
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
+import { getRuntime } from '../runtimes';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 
-const { PATH_PARAMETER_REGEX } = models.request;
+const { applyPathParametersToUrl } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
 export async function buildRenderContext({
@@ -58,7 +59,7 @@ export async function buildRenderContext({
   if (rootGlobalEnvironment) {
     const ordered = orderedJSON.order(
       rootGlobalEnvironment.data,
-      rootGlobalEnvironment.dataPropertyOrder,
+      rootGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -67,7 +68,7 @@ export async function buildRenderContext({
   if (subGlobalEnvironment) {
     const ordered = orderedJSON.order(
       subGlobalEnvironment.data,
-      subGlobalEnvironment.dataPropertyOrder,
+      subGlobalEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -77,12 +78,16 @@ export async function buildRenderContext({
   // Then get sub environment keys in correct order
   // Then get ancestor (folder) environment keys in correct order
   if (rootEnvironment) {
-    const ordered = orderedJSON.order(rootEnvironment.data, rootEnvironment.dataPropertyOrder, JSON_ORDER_SEPARATOR);
+    const ordered = orderedJSON.order(
+      rootEnvironment.data,
+      rootEnvironment.dataPropertyOrder ?? null,
+      JSON_ORDER_SEPARATOR,
+    );
     envObjects.push(ordered);
   }
 
   if (subEnvironment) {
-    const ordered = orderedJSON.order(subEnvironment.data, subEnvironment.dataPropertyOrder, JSON_ORDER_SEPARATOR);
+    const ordered = orderedJSON.order(subEnvironment.data, subEnvironment.dataPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
     envObjects.push(ordered);
   }
 
@@ -91,7 +96,7 @@ export async function buildRenderContext({
     const { environment, environmentPropertyOrder } = ancestor;
 
     if (typeof environment === 'object' && environment !== null) {
-      const ordered = orderedJSON.order(environment, environmentPropertyOrder, JSON_ORDER_SEPARATOR);
+      const ordered = orderedJSON.order(environment, environmentPropertyOrder ?? null, JSON_ORDER_SEPARATOR);
       envObjects.push(ordered);
     }
   }
@@ -100,7 +105,7 @@ export async function buildRenderContext({
   if (userUploadEnvironment) {
     const ordered = orderedJSON.order(
       userUploadEnvironment.data,
-      userUploadEnvironment.dataPropertyOrder,
+      userUploadEnvironment.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -110,7 +115,7 @@ export async function buildRenderContext({
   if (transientVariables) {
     const ordered = orderedJSON.order(
       transientVariables.data,
-      transientVariables.dataPropertyOrder,
+      transientVariables.dataPropertyOrder ?? null,
       JSON_ORDER_SEPARATOR,
     );
     envObjects.push(ordered);
@@ -611,22 +616,7 @@ export async function getRenderedRequestAndContext({
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
-  // Render path parameters
-  if (renderedRequest.pathParameters) {
-    // Replace path parameters in URL with their rendered values
-    // Path parameters are path segments that start with a colon, e.g. :id
-    renderedRequest.url = renderedRequest.url.replace(PATH_PARAMETER_REGEX, match => {
-      const paramName = match.replace('\/:', '');
-      const param = renderedRequest.pathParameters?.find(p => p.name === paramName);
-
-      if (param && param.value) {
-        // The parameter value needs to be URL encoded
-        return `/${encodeURIComponent(param.value)}`;
-      }
-
-      return match;
-    });
-  }
+  renderedRequest.url = applyPathParametersToUrl(renderedRequest.url, renderedRequest.pathParameters);
 
   return {
     context: renderContext,

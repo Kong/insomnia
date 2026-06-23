@@ -10,34 +10,37 @@ import { HydratedRouter } from 'react-router/dom';
 import { insomniaFetch } from '~/common/insomnia-fetch';
 import { initRuntime } from '~/runtimes';
 import { rendererRuntime } from '~/runtimes/runtime.renderer';
+import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '~/ui/account/session';
 import { database as clientDatabase } from '~/ui/database.client';
+import { applyColorScheme } from '~/ui/plugins/misc';
+import { createServicesProxy } from '~/ui/services-proxy';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
+import { getInitialEntry } from '~/ui/utils/router';
 
-import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { applyColorScheme } from './plugins/misc';
-import { registerSyncMergeConflictListener } from './sync/vcs/insomnia-sync';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
 import { PromptModal } from './ui/components/modals/prompt-modal';
 import { WrapperModal } from './ui/components/modals/wrapper-modal';
 import { initializeSentry } from './ui/sentry';
-import { getInitialEntry } from './utils/router';
+import { registerSyncMergeConflictListener } from './ui/utils/insomnia-sync';
 
 initializeSentry();
 
 // Initialize database for renderer process
 await initDatabase(clientDatabase);
-// Initialize services for renderer process
-if (!window._dataServices) {
+// Initialize services for renderer process.
+// With contextIsolation the preload exposes a flat invoke (a Proxy can't cross
+// the bridge), so rebuild the Proxy here. Without it, the Proxy is on window directly.
+const dataServices =
+  window._dataServices ?? (window._dataServicesInvoke ? createServicesProxy(window._dataServicesInvoke) : undefined);
+if (!dataServices) {
   throw new Error(
-    'window._dataServices is not available. This entrypoint must run in an environment with the preload bridge.',
+    'Services bridge is not available. This entrypoint must run in an environment with the preload bridge.',
   );
 }
-initServices(window._dataServices);
-// Remove the global services reference after initialization to improve security by preventing unintended access from the global scope.
-delete window._dataServices;
+initServices(dataServices);
 initRuntime(rendererRuntime);
 
 configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));

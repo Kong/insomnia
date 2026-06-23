@@ -1,7 +1,8 @@
 import * as Sentry from '@sentry/electron/main';
 import { models, services } from 'insomnia-data';
 
-import * as session from '../account/session';
+import * as session from '~/common/account/session';
+
 import { type ChangeBufferEvent, database as db } from '../common/database';
 import { SENTRY_OPTIONS } from '../common/sentry';
 

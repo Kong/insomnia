@@ -3,8 +3,8 @@ import { EnvironmentType } from 'insomnia-data';
 import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 
+import { getDataFromKVPair } from '~/common/utils/environment-utils';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
-import { getDataFromKVPair } from '~/utils/environment-utils';
 
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -245,7 +245,7 @@ export const RequestGroupPane: FC = () => {
                   key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
                   environmentInfo={{
                     object: activeRequestGroup ? activeRequestGroup.environment : {},
-                    propertyOrder: activeRequestGroup && activeRequestGroup.environmentPropertyOrder,
+                    propertyOrder: (activeRequestGroup && activeRequestGroup.environmentPropertyOrder) ?? null,
                   }}
                   onBlur={saveChanges}
                 />

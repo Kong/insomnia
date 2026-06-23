@@ -2,10 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchAllControlPlanes, fetchAllServices, fetchRoutesForService, validatePat } from '../api';
 
-vi.mock('../../common/constants', () => ({
-  getKonnectApiBaseURL: () => 'https://global.api.konghq.com',
-}));
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function jsonResponse(data: unknown, status = 200, headers: Record<string, string> = {}): Response {
@@ -116,39 +112,58 @@ describe('validatePat', () => {
 
 describe('fetchAllControlPlanes', () => {
   it('yields a single page when total <= PAGE_SIZE', async () => {
-    const page1Data = [{ id: 'cp-1', name: 'CP 1', description: '', config: { cluster_type: 'HYBRID', control_plane_endpoint: '' } }];
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
-      jsonResponse({ data: page1Data, meta: { page: { total: 1, size: 100, number: 1 } } }),
-    ));
+    const page1Data = [
+      {
+        id: 'cp-1',
+        name: 'CP 1',
+        description: '',
+        config: { cluster_type: 'HYBRID', control_plane_endpoint: '', cloud_gateway: true },
+      },
+    ];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse({ data: page1Data, meta: { page: { total: 1, size: 100, number: 1 } } })),
+    );
 
     const pages: any[][] = [];
-    for await (const page of fetchAllControlPlanes('faketoken')) {
+    for await (const page of fetchAllControlPlanes('faketoken', 'us')) {
       pages.push(page);
     }
 
     expect(pages).toHaveLength(1);
-    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, proxy_urls: null })));
+    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, region: 'us', proxy_urls: null })));
   });
 
   it('yields multiple pages when total > PAGE_SIZE', async () => {
     const page1Data = Array.from({ length: 100 }, (_, i) => ({
-      id: `cp-${i}`, name: `CP ${i}`, description: '', config: { cluster_type: 'HYBRID', control_plane_endpoint: '' },
+      id: `cp-${i}`,
+      name: `CP ${i}`,
+      description: '',
+      config: { cluster_type: 'HYBRID', control_plane_endpoint: '', cloud_gateway: true },
     }));
-    const page2Data = [{ id: 'cp-100', name: 'CP 100', description: '', config: { cluster_type: 'HYBRID', control_plane_endpoint: '' } }];
+    const page2Data = [
+      {
+        id: 'cp-100',
+        name: 'CP 100',
+        description: '',
+        config: { cluster_type: 'HYBRID', control_plane_endpoint: '', cloud_gateway: true },
+      },
+    ];
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce(jsonResponse({ data: page1Data, meta: { page: { total: 101, size: 100, number: 1 } } }))
       .mockResolvedValueOnce(jsonResponse({ data: page2Data, meta: { page: { total: 101, size: 100, number: 2 } } }));
     vi.stubGlobal('fetch', fetchMock);
 
     const pages: any[][] = [];
-    for await (const page of fetchAllControlPlanes('faketoken')) {
+    for await (const page of fetchAllControlPlanes('faketoken', 'us')) {
       pages.push(page);
     }
 
     expect(pages).toHaveLength(2);
     expect(pages[0]).toHaveLength(100);
-    expect(pages[1]).toEqual(page2Data.map(cp => ({ ...cp, proxy_urls: null })));
+    expect(pages[1]).toEqual(page2Data.map(cp => ({ ...cp, region: 'us', proxy_urls: null })));
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][0]).toContain('page[number]=1');
     expect(fetchMock.mock.calls[1][0]).toContain('page[number]=2');
@@ -157,7 +172,7 @@ describe('fetchAllControlPlanes', () => {
   it('throws on non-ok response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 500 })));
 
-    const gen = fetchAllControlPlanes('faketoken');
+    const gen = fetchAllControlPlanes('faketoken', 'us');
     await expect(gen.next()).rejects.toThrow('Konnect API error 500 fetching control planes');
   });
 
@@ -166,31 +181,51 @@ describe('fetchAllControlPlanes', () => {
     // field must be defined, even when the upstream payload omits it. Without
     // this, downstream code reading `controlPlane.proxy_urls` would see
     // `undefined` despite the type saying otherwise.
-    const rawCp = { id: 'cp-1', name: 'CP 1', description: '', config: { cluster_type: 'HYBRID', control_plane_endpoint: '' } };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
-      jsonResponse({ data: [rawCp], meta: { page: { total: 1, size: 100, number: 1 } } }),
-    ));
+    const rawCp = {
+      id: 'cp-1',
+      name: 'CP 1',
+      description: '',
+      config: { cluster_type: 'HYBRID', control_plane_endpoint: '', cloud_gateway: true },
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse({ data: [rawCp], meta: { page: { total: 1, size: 100, number: 1 } } })),
+    );
 
     const pages: any[][] = [];
-    for await (const page of fetchAllControlPlanes('faketoken')) {
+    for await (const page of fetchAllControlPlanes('faketoken', 'us')) {
       pages.push(page);
     }
 
-    expect(pages[0][0]).toEqual({ ...rawCp, proxy_urls: null });
+    expect(pages[0][0]).toEqual({ ...rawCp, region: 'us', proxy_urls: null });
   });
 
   it('yields empty data when total is 0', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
-      jsonResponse({ data: [], meta: { page: { total: 0, size: 100, number: 1 } } }),
-    ));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse({ data: [], meta: { page: { total: 0, size: 100, number: 1 } } })),
+    );
 
     const pages: any[][] = [];
-    for await (const page of fetchAllControlPlanes('faketoken')) {
+    for await (const page of fetchAllControlPlanes('faketoken', 'us')) {
       pages.push(page);
     }
 
     expect(pages).toHaveLength(1);
     expect(pages[0]).toEqual([]);
+  });
+
+  it.each(['us', 'eu', 'au', 'me'] as const)('uses the %s regional base URL', async region => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ data: [], meta: { page: { total: 0, size: 100, number: 1 } } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    for await (const _ of fetchAllControlPlanes('faketoken', region)) {
+      // drain
+    }
+
+    expect(fetchMock.mock.calls[0][0]).toMatch(`https://${region}.api.konghq.com/v2/control-planes`);
   });
 });
 
@@ -198,7 +233,9 @@ describe('fetchAllControlPlanes', () => {
 
 describe('fetchAllServices', () => {
   it('fetches a single page when offset is null', async () => {
-    const services = [{ id: 'svc-1', name: 'Svc', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null }];
+    const services = [
+      { id: 'svc-1', name: 'Svc', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null },
+    ];
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ data: services, offset: null })));
 
     const result = await fetchAllServices('faketoken', 'cp-1', 'us');
@@ -207,10 +244,15 @@ describe('fetchAllServices', () => {
   });
 
   it('follows offset pagination across multiple pages', async () => {
-    const page1 = [{ id: 'svc-1', name: 'A', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null }];
-    const page2 = [{ id: 'svc-2', name: 'B', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null }];
+    const page1 = [
+      { id: 'svc-1', name: 'A', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null },
+    ];
+    const page2 = [
+      { id: 'svc-2', name: 'B', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null },
+    ];
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce(jsonResponse({ data: page1, offset: 'cursor-abc' }))
       .mockResolvedValueOnce(jsonResponse({ data: page2, offset: null }));
     vi.stubGlobal('fetch', fetchMock);
@@ -260,10 +302,37 @@ describe('fetchAllServices', () => {
 
 describe('fetchRoutesForService', () => {
   it('follows offset pagination across multiple pages', async () => {
-    const page1 = [{ id: 'r-1', name: null, methods: ['GET'], paths: ['/a'], protocols: ['http'], hosts: null, headers: null, snis: null, expression: null, service: { id: 'svc-1' } }];
-    const page2 = [{ id: 'r-2', name: null, methods: ['POST'], paths: ['/b'], protocols: ['http'], hosts: null, headers: null, snis: null, expression: null, service: { id: 'svc-1' } }];
+    const page1 = [
+      {
+        id: 'r-1',
+        name: null,
+        methods: ['GET'],
+        paths: ['/a'],
+        protocols: ['http'],
+        hosts: null,
+        headers: null,
+        snis: null,
+        expression: null,
+        service: { id: 'svc-1' },
+      },
+    ];
+    const page2 = [
+      {
+        id: 'r-2',
+        name: null,
+        methods: ['POST'],
+        paths: ['/b'],
+        protocols: ['http'],
+        hosts: null,
+        headers: null,
+        snis: null,
+        expression: null,
+        service: { id: 'svc-1' },
+      },
+    ];
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce(jsonResponse({ data: page1, offset: 'cursor-xyz' }))
       .mockResolvedValueOnce(jsonResponse({ data: page2, offset: null }));
     vi.stubGlobal('fetch', fetchMock);
@@ -313,8 +382,11 @@ describe('fetchRoutesForService', () => {
 
 describe('retry on 429', () => {
   it('retries and succeeds after a single 429', async () => {
-    const services = [{ id: 'svc-1', name: 'S', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null }];
-    const fetchMock = vi.fn()
+    const services = [
+      { id: 'svc-1', name: 'S', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null },
+    ];
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce(rateLimitResponse())
       .mockResolvedValueOnce(jsonResponse({ data: services, offset: null }));
     vi.stubGlobal('fetch', fetchMock);
@@ -329,8 +401,11 @@ describe('retry on 429', () => {
   });
 
   it('uses Retry-After header value in seconds when present', async () => {
-    const services = [{ id: 'svc-1', name: 'S', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null }];
-    const fetchMock = vi.fn()
+    const services = [
+      { id: 'svc-1', name: 'S', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null },
+    ];
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce(rateLimitResponse('3'))
       .mockResolvedValueOnce(jsonResponse({ data: services, offset: null }));
     vi.stubGlobal('fetch', fetchMock);
@@ -350,8 +425,11 @@ describe('retry on 429', () => {
   });
 
   it('uses exponential backoff when Retry-After is missing', async () => {
-    const services = [{ id: 'svc-1', name: 'S', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null }];
-    const fetchMock = vi.fn()
+    const services = [
+      { id: 'svc-1', name: 'S', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null },
+    ];
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce(rateLimitResponse())
       .mockResolvedValueOnce(rateLimitResponse())
       .mockResolvedValueOnce(jsonResponse({ data: services, offset: null }));
@@ -395,13 +473,16 @@ describe('retry on 429', () => {
   });
 
   it('retries through all 5 attempts before succeeding', async () => {
-    const services = [{ id: 'svc-1', name: 'S', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null }];
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(rateLimitResponse())   // attempt 0
-      .mockResolvedValueOnce(rateLimitResponse())   // attempt 1
-      .mockResolvedValueOnce(rateLimitResponse())   // attempt 2
-      .mockResolvedValueOnce(rateLimitResponse())   // attempt 3
-      .mockResolvedValueOnce(rateLimitResponse())   // attempt 4
+    const services = [
+      { id: 'svc-1', name: 'S', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null },
+    ];
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(rateLimitResponse()) // attempt 0
+      .mockResolvedValueOnce(rateLimitResponse()) // attempt 1
+      .mockResolvedValueOnce(rateLimitResponse()) // attempt 2
+      .mockResolvedValueOnce(rateLimitResponse()) // attempt 3
+      .mockResolvedValueOnce(rateLimitResponse()) // attempt 4
       .mockResolvedValueOnce(jsonResponse({ data: services, offset: null }));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -415,10 +496,15 @@ describe('retry on 429', () => {
   });
 
   it('retries work across paginated requests', async () => {
-    const page1 = [{ id: 'svc-1', name: 'A', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null }];
-    const page2 = [{ id: 'svc-2', name: 'B', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null }];
+    const page1 = [
+      { id: 'svc-1', name: 'A', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null },
+    ];
+    const page2 = [
+      { id: 'svc-2', name: 'B', protocol: 'http', host: 'h', port: 80, path: null, enabled: true, tags: null },
+    ];
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       // First page succeeds immediately
       .mockResolvedValueOnce(jsonResponse({ data: page1, offset: 'next' }))
       // Second page hits a 429 then succeeds
@@ -436,15 +522,23 @@ describe('retry on 429', () => {
   });
 
   it('retries work for fetchAllControlPlanes pagination', async () => {
-    const page1Data = [{ id: 'cp-1', name: 'CP 1', description: '', config: { cluster_type: 'HYBRID', control_plane_endpoint: '' } }];
+    const page1Data = [
+      {
+        id: 'cp-1',
+        name: 'CP 1',
+        description: '',
+        config: { cluster_type: 'HYBRID', control_plane_endpoint: '', cloud_gateway: true },
+      },
+    ];
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce(rateLimitResponse('1'))
       .mockResolvedValueOnce(jsonResponse({ data: page1Data, meta: { page: { total: 1, size: 100, number: 1 } } }));
     vi.stubGlobal('fetch', fetchMock);
 
     const pages: any[][] = [];
-    const gen = fetchAllControlPlanes('faketoken');
+    const gen = fetchAllControlPlanes('faketoken', 'us');
 
     const iterPromise = (async () => {
       for await (const page of gen) {
@@ -456,7 +550,7 @@ describe('retry on 429', () => {
     await iterPromise;
 
     expect(pages).toHaveLength(1);
-    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, proxy_urls: null })));
+    expect(pages[0]).toEqual(page1Data.map(cp => ({ ...cp, region: 'us', proxy_urls: null })));
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

@@ -24,9 +24,6 @@ import {
 import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
-import { createPlugin } from '~/plugins/create';
-import { setTheme } from '~/plugins/misc';
-import { plugins } from '~/plugins/renderer-bridge';
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
@@ -35,6 +32,7 @@ import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
 } from '~/routes/git-credentials.complete-sign-in';
+import { isLoggedIn } from '~/ui/account/session';
 import { AnalyticsEvent, PENDING_IMPORT_ATTRIBUTION_KEY, trackImportEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CopyButton } from '~/ui/components/base/copy-button';
@@ -45,10 +43,13 @@ import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ImportModal, type ImportSource, validateCurl } from '~/ui/components/modals/import-modal/import-modal';
 import { SettingsModal } from '~/ui/components/modals/settings-modal';
-import { Toaster } from '~/ui/components/toast-notification';
+import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
+import { createPlugin } from '~/ui/plugins/create';
+import { setTheme } from '~/ui/plugins/misc';
+import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import type { Route } from './+types/root';
 
@@ -165,9 +166,12 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
       </h1>
       <p className="text-(--color-font)">
         Failed to render. Please report to{' '}
-        <a className="font-bold underline" href="https://github.com/Kong/insomnia/issues">
+        <button
+          className="font-bold underline"
+          onClick={() => window.main.openInBrowser('https://github.com/Kong/insomnia/issues')}
+        >
           our Github Issues
-        </a>
+        </button>
       </p>
       {errorMessage && (
         <div className="p-6 text-(--color-font)">
@@ -693,6 +697,40 @@ const Root = () => {
       window.main.openDeepLink(pendingDeepLink);
     }
   }, [organizationId]);
+
+  useEffect(() => {
+    const STORAGE_KEY = 'plugin-system-changes-toast-shown';
+    if (localStorage.getItem(STORAGE_KEY)) {
+      return;
+    }
+    isLoggedIn().then(loggedIn => {
+      if (!loggedIn) return;
+      plugins.getPlugins().then(allPlugins => {
+        const userPlugins = allPlugins.filter(p => p.directory !== '');
+        if (userPlugins.length > 0) {
+          showToast(
+            {
+              title: 'Plugin system updated',
+              description: (
+                <>
+                  You are running at least one plug-in that may be impacted.{' '}
+                  <Button
+                    onClick={() => window.main.openInBrowser('https://insomnia.rest/breaking-changes')}
+                    className="cursor-pointer border-0 bg-transparent p-0 text-(--color-link) underline"
+                  >
+                    Learn more
+                  </Button>
+                </>
+              ),
+              status: 'info',
+            },
+            { timeout: null },
+          );
+          localStorage.setItem(STORAGE_KEY, 'true');
+        }
+      });
+    });
+  }, []);
 
   return (
     <>

@@ -50,8 +50,9 @@ test.describe('Cookie editor', () => {
 
     // Send ws request
     await insomnia.navigationSidebar.clickRequestOrFolder('example websocket');
-    await page.getByText('ws://localhost:4010').click();
-    await page.getByTestId('request-pane').getByText('Connect').click();
+    // Click inside the request-pane URL bar to avoid strict-mode violation from the response pane's URL copy
+    await page.locator('pre').filter({ hasText: 'ws://localhost:' }).click();
+    await page.getByRole('button', { name: 'Connect' }).click();
 
     // Check in the timeline that the cookie was sent
     await page.getByRole('tab', { name: 'Console' }).click();

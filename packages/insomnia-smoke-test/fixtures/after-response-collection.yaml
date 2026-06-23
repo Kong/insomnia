@@ -6,7 +6,7 @@ meta:
   created: 1739888439647
   modified: 1739888439647
 collection:
-  - url: "{{_.base_url}}/echo"
+  - url: http://localhost:4010/echo
     name: tests with expect and test
     meta:
       id: req_6d55848a007849e885c0d1d35fd3c8f7

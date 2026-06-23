@@ -10,10 +10,10 @@ import type { RequestAuthentication } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
 import { getOauthRedirectUrl } from '~/common/constants';
+import { invariant } from '~/common/utils/invariant';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import type { ConnectionContext } from '~/main/mcp/common';
 import { encryptOAuthUrl } from '~/main/network/o-auth-2/get-token';
-import { invariant } from '~/utils/invariant';
 
 export class MCPAuthError extends Error {
   constructor(message: string, options?: ErrorOptions) {

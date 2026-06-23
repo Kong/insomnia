@@ -165,9 +165,9 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
       isDismissable={true}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="theme--transparent-overlay fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-(--color-bg) py-[100px]"
+      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full justify-center bg-black/30 py-[100px]"
     >
-      <Modal className="theme--dialog h-fit max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-[32px] text-(--color-font)">
+      <Modal className="max-h-full w-full max-w-[900px] overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
         <Dialog className="relative outline-hidden" aria-label="Cookies Modal">
           {({ close }) => (
             <>

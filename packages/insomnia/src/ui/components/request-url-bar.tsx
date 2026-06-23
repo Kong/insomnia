@@ -1,4 +1,3 @@
-import type { Request, RequestGroup } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
@@ -6,7 +5,7 @@ import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { SECURITY_SETTINGS_PATH_LABEL } from '~/common/misc';
-import { recordProjectRecentRequest } from '~/common/project';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
 import { useRootLoaderData } from '~/root';
 import {
   type ConnectActionParams,
@@ -18,17 +17,15 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
+import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 
-import { database as db } from '../../common/database';
-import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../ui/analytics';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
@@ -43,7 +40,6 @@ import { InputVaultKeyModal } from './modals/input-vault-key-modal';
 import { PromptModal } from './modals/prompt-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
-const { isRequestGroup } = models.requestGroup;
 const { isEventStreamRequest, isGraphqlSubscriptionRequest } = models.request;
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
@@ -66,7 +62,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
     const [undefinedEnvironmentVariables, setUndefinedEnvironmentVariables] = useState('');
     const undefinedEnvironmentVariableList = undefinedEnvironmentVariables?.split(',');
-    if (searchParams.has('error')) {
+
+    useEffect(() => {
+      if (!searchParams.has('error')) {
+        return;
+      }
+
       if (searchParams.has('envVariableMissing') && searchParams.get('undefinedEnvironmentVariables')) {
         setShowEnvVariableMissingModal(true);
         setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
@@ -104,10 +105,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         });
       }
 
-      // clean up params
-      searchParams.delete('error');
       setSearchParams({});
-    }
+    }, [searchParams, setSearchParams]);
 
     const { activeWorkspace, activeEnvironment } = useWorkspaceLoaderData()!;
     const { settings } = useRootLoaderData()!;
@@ -191,24 +190,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           const startListening = async () => {
             const environmentId = activeEnvironment._id;
             const workspaceId = activeWorkspace._id;
-            // Render any Liquid template tags in the url/headers/authentication settings/cookies
-            const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
-
-            const ancestors = await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type]);
-            // check for authentication overrides in parent folders
-            const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
-            activeRequest.authentication = getOrInheritAuthentication({ request: activeRequest, requestGroups });
-            activeRequest.headers = getOrInheritHeaders({ request: activeRequest, requestGroups });
-            const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+            const rendered = await renderRealtimeConnectPayload({
               request: activeRequest,
               environmentId,
-              payload: {
-                url: activeRequest.url,
-                headers: activeRequest.headers,
-                authentication: activeRequest.authentication,
-                parameters: activeRequest.parameters.filter(p => !p.disabled),
-                workspaceCookieJar,
-              },
+              workspaceId,
             });
             rendered &&
               connect({

@@ -6,14 +6,6 @@ import type { Request, RequestGroup, Workspace } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
 import type { PluginConfigMap } from 'insomnia-data/common';
 
-import { fetchFromTemplateWorkerDatabase } from '~/templating/liquid-extension-worker';
-
-import { getAppBundlePlugins, isDevelopment } from '../common/constants';
-import * as pluginApp from '../plugins/context/app';
-import * as pluginNetwork from '../plugins/context/network';
-import * as pluginStore from '../plugins/context/store';
-import type { RenderPurpose } from '../templating/types';
-import themes from './themes';
 import type {
   DocumentAction,
   Plugin,
@@ -24,7 +16,15 @@ import type {
   TemplateTag,
   Theme,
   WorkspaceAction,
-} from './types';
+} from '~/common/plugins/types';
+import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
+import type { RenderPurpose } from '~/common/templating/types';
+
+import { getAppBundlePlugins, isDevelopment } from '../common/constants';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginNetwork from '../plugins/context/network';
+import * as pluginStore from '../plugins/context/store';
+import themes from './themes';
 
 let plugins: Plugin[] | null | undefined = null;
 
@@ -145,7 +145,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Make sure the default directories exist
     const pluginPath = path.resolve(
-      process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
+      process.env['INSOMNIA_DATA_PATH'] || (__IS_RENDERER__ ? window : electron).app.getPath('userData'),
       'plugins',
     );
 
@@ -315,9 +315,7 @@ export function getPluginCommonContext({
     ...pluginNetwork.init(),
     util: {
       openInBrowser: async (url: string) =>
-        process.type === 'renderer' || process.type === 'worker'
-          ? window.main.openInBrowser(url)
-          : electron.shell.openExternal(url),
+        __IS_RENDERER__ ? window.main.openInBrowser(url) : electron.shell.openExternal(url),
       models: {
         request: {
           getById: services.request.getById,

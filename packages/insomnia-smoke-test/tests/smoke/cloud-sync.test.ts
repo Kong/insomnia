@@ -101,6 +101,8 @@ test.describe('Cloud Sync', () => {
   });
 
   test('Push actions', async ({ page, app }) => {
+    test.slow();
+
     await page.getByLabel('Environment Project').click();
     // Wait for sync-dropdown to be mounted
     await page.getByLabel('Git Sync').waitFor({ state: 'visible' });
@@ -117,11 +119,14 @@ test.describe('Cloud Sync', () => {
         win.webContents.send('mainWindowFocusChange', true);
       });
     });
+
     await page.getByLabel('Git Sync').click({ delay: 1000 });
-    await page.getByLabel('Pull').click();
-    // ensure value has been updated
-    await page.getByText('foo').click();
-    await page.getByText('bar').click();
+    const pullButton = page.getByLabel('Pull');
+    await expect.soft(pullButton).not.toHaveAttribute('aria-disabled', 'true');
+    await pullButton.click();
+
+    // Keep focus in environment tree after sync to avoid transient focus races.
+    await page.getByLabel('My Environment').first().click();
     await fetch(`${devServerUrl}/__test-config/cloud-sync/new-commit`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

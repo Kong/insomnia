@@ -7,7 +7,7 @@ import { parse } from 'yaml';
 
 import * as importUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
-import { tryImportV5Data } from '../insomnia-v5';
+import { getInsomniaV5DataExport, tryImportV5Data } from '../insomnia-v5';
 import { generateId } from '../misc';
 
 describe('pathPatternMatches', () => {
@@ -559,5 +559,169 @@ describe('importRaw()', () => {
 
     const result = importUtil.resolveOperationId('nonExistentOpId');
     expect(result).toBeUndefined();
+  });
+});
+
+describe('export/import round-trip is deterministic', () => {
+  // Exports a workspace to v5 YAML, imports it into a fresh project, and
+  // returns the single workspace that was created from the import.
+  const roundTrip = async (workspaceId: string) => {
+    const exported = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: true });
+    expect(exported).not.toBe('');
+
+    const scanResult = await importUtil.scanResources([{ contentStr: exported }]);
+    expect(scanResult[0].errors).toEqual([]);
+
+    const targetProject = await services.project.create();
+    const imported = await importUtil.importResourcesToProject({ projectId: targetProject._id });
+    expect(imported).toHaveLength(1);
+
+    return { exported, workspace: imported[0] };
+  };
+
+  it('preserves a design-doc spec without prepending the Insomnia v5 wrapper', async () => {
+    const openApiContents = [
+      'openapi: 3.0.4',
+      'info:',
+      '  title: Bookings API',
+      '  version: 1.0.0',
+      'paths:',
+      '  /bookings:',
+      '    get:',
+      '      summary: List bookings.',
+      '      responses:',
+      "        '200':",
+      '          description: Successful operation.',
+      '',
+    ].join('\n');
+
+    const sourceWorkspace = await services.workspace.create({ name: 'Bookings', scope: 'design' });
+    await services.environment.getOrCreateForParentId(sourceWorkspace._id);
+    await services.apiSpec.updateOrCreateForParentId(sourceWorkspace._id, {
+      contents: openApiContents,
+      contentType: 'yaml',
+      fileName: 'Bookings',
+    });
+
+    const { workspace } = await roundTrip(sourceWorkspace._id);
+    expect(workspace.scope).toBe('design');
+
+    const importedSpec = await services.apiSpec.getByParentId(workspace._id);
+    expect(importedSpec).toBeTruthy();
+
+    // The spec must round-trip as the OpenAPI document only - it must NOT carry
+    // the Insomnia v5 envelope (type/schema_version/collection/meta).
+    expect(importedSpec?.contents).not.toContain('type: spec.insomnia.rest/5.0');
+    expect(importedSpec?.contents).not.toContain('schema_version');
+
+    const parsed = parse(importedSpec?.contents || '');
+    expect(parsed?.openapi).toBe('3.0.4');
+    expect(parsed?.info?.title).toBe('Bookings API');
+    expect(parsed?.paths?.['/bookings']).toBeTruthy();
+  });
+
+  it('preserves a collection with a folder and request', async () => {
+    const sourceWorkspace = await services.workspace.create({ name: 'My Collection', scope: 'collection' });
+    await services.environment.getOrCreateForParentId(sourceWorkspace._id);
+
+    const folder = await services.requestGroup.create({ name: 'Folder A', parentId: sourceWorkspace._id });
+    await services.request.create({
+      name: 'Create booking',
+      parentId: folder._id,
+      url: '{{ _.base_url }}/bookings',
+      method: 'POST',
+      body: { mimeType: 'application/json', text: '{"hello":"world"}' },
+    });
+
+    const { workspace } = await roundTrip(sourceWorkspace._id);
+    expect(workspace.scope).toBe('collection');
+
+    const folders = await services.requestGroup.findByParentId(workspace._id);
+    expect(folders.map(f => f.name)).toEqual(['Folder A']);
+
+    const requests = await services.request.findByParentId(folders[0]._id);
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({
+      name: 'Create booking',
+      url: '{{ _.base_url }}/bookings',
+      method: 'POST',
+      body: { mimeType: 'application/json', text: '{"hello":"world"}' },
+    });
+  });
+
+  it('preserves an environment workspace with sub-environment data', async () => {
+    const sourceWorkspace = await services.workspace.create({ name: 'Dev Environment', scope: 'environment' });
+    const baseEnv = await services.environment.getOrCreateForParentId(sourceWorkspace._id);
+    await services.environment.create({
+      name: 'Dev',
+      parentId: baseEnv._id,
+      data: { base_url: 'http://localhost:8000', auth_token: 'secret-token' },
+    });
+
+    const { workspace } = await roundTrip(sourceWorkspace._id);
+    expect(workspace.scope).toBe('environment');
+
+    const importedBase = await services.environment.getByParentId(workspace._id);
+    const subEnvs = await services.environment.findByParentId(importedBase!._id);
+    expect(subEnvs).toHaveLength(1);
+    expect(subEnvs[0].name).toBe('Dev');
+    expect(subEnvs[0].data).toEqual({ base_url: 'http://localhost:8000', auth_token: 'secret-token' });
+  });
+
+  it('preserves a mock server with its routes', async () => {
+    const sourceWorkspace = await services.workspace.create({ name: 'My Mock', scope: 'mock-server' });
+    await services.environment.getOrCreateForParentId(sourceWorkspace._id);
+    const mockServer = await services.mockServer.create({
+      name: 'My Mock',
+      parentId: sourceWorkspace._id,
+      url: 'http://localhost:8080',
+      useInsomniaCloud: false,
+    });
+    await services.mockRoute.create({
+      name: '/auth/login',
+      parentId: mockServer._id,
+      method: 'POST',
+      mimeType: 'application/json',
+      statusCode: 200,
+      body: '{"token":"abc"}',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+    });
+
+    const { workspace } = await roundTrip(sourceWorkspace._id);
+    expect(workspace.scope).toBe('mock-server');
+
+    const importedServer = await services.mockServer.getByParentId(workspace._id);
+    expect(importedServer).toMatchObject({ url: 'http://localhost:8080', useInsomniaCloud: false });
+
+    const routes = await services.mockRoute.findByParentId(importedServer!._id);
+    expect(routes).toHaveLength(1);
+    expect(routes[0]).toMatchObject({
+      name: '/auth/login',
+      method: 'POST',
+      statusCode: 200,
+      body: '{"token":"abc"}',
+    });
+  });
+
+  it('preserves an MCP client request', async () => {
+    const sourceWorkspace = await services.workspace.create({ name: 'My MCP', scope: 'mcp' });
+    await services.environment.getOrCreateForParentId(sourceWorkspace._id);
+    await services.mcpRequest.create({
+      name: 'MCP',
+      parentId: sourceWorkspace._id,
+      url: 'https://example.com/mcp',
+      transportType: 'streamable-http',
+      headers: [{ name: 'User-Agent', value: 'insomnia' }],
+    });
+
+    const { workspace } = await roundTrip(sourceWorkspace._id);
+    expect(workspace.scope).toBe('mcp');
+
+    const importedRequest = await services.mcpRequest.getByParentId(workspace._id);
+    expect(importedRequest).toMatchObject({
+      url: 'https://example.com/mcp',
+      transportType: 'streamable-http',
+      headers: [{ name: 'User-Agent', value: 'insomnia' }],
+    });
   });
 });

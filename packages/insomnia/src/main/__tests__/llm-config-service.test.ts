@@ -98,6 +98,9 @@ describe('llm-config-service', () => {
         mockPluginData('url.maxTokens', '4096'),
         mockPluginData('url.temperature', '0.7'),
         mockPluginData('url.topP', '0.95'),
+        mockPluginData('url.sendTemperature', 'false'),
+        mockPluginData('url.sendTopP', 'true'),
+        mockPluginData('url.sendMaxTokens', 'false'),
       ]);
 
       const config = await getBackendConfig('url');
@@ -108,6 +111,9 @@ describe('llm-config-service', () => {
         maxTokens: 4096,
         temperature: 0.7,
         topP: 0.95,
+        sendTemperature: false,
+        sendTopP: true,
+        sendMaxTokens: false,
       });
     });
 
@@ -155,11 +161,17 @@ describe('llm-config-service', () => {
         maxTokens: 4096,
         temperature: 0.7,
         topP: 0.95,
+        sendTemperature: false,
+        sendTopP: true,
+        sendMaxTokens: false,
       });
 
       expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.maxTokens', '4096');
       expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.temperature', '0.7');
       expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.topP', '0.95');
+      expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.sendTemperature', 'false');
+      expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.sendTopP', 'true');
+      expect(services.pluginData.upsertByKey).toHaveBeenCalledWith('insomnia-llm', 'url.sendMaxTokens', 'false');
     });
 
     it('should handle partial config updates', async () => {

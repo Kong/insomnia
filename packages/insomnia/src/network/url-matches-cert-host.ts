@@ -1,5 +1,6 @@
+import { setDefaultProtocol } from '~/common/utils/url/protocol';
+
 import { escapeRegex } from '../common/misc';
-import { setDefaultProtocol } from '../utils/url/protocol';
 
 const DEFAULT_PORT = 443;
 

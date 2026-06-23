@@ -19,10 +19,12 @@
         {
           "_type": "request",
           "_id": "sc_123",
-          "headers": [{
-            "name": "content-type",
-            "value": "multipart/form-encoded"
-          }],
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "multipart/form-encoded"
+            }
+          ],
           "body": "foo=bar&baz=qux&msg=Hello%20World!&flag"
         }
       ]

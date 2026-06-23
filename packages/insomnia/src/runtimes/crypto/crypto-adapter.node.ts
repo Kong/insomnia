@@ -1,5 +1,5 @@
-import { type AESMessage, decryptAES as _decryptAES, encryptAES } from '../../account/crypt';
-import { base64decode, base64encode } from '../../utils/vault';
+import { type AESMessage, decryptAES as _decryptAES, encryptAES } from '~/common/account/crypt';
+import { base64decode, base64encode } from '~/common/utils/vault';
 
 export const decryptAES = (symmetricKey: string | JsonWebKey, encryptedResult: AESMessage): Promise<string> =>
   Promise.resolve(_decryptAES(symmetricKey, encryptedResult));

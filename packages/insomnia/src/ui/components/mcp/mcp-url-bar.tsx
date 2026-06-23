@@ -6,6 +6,7 @@ import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-compo
 import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
+import { getDataFromKVPair } from '~/common/utils/environment-utils';
 import type { McpReadyState } from '~/main/mcp/types';
 import { _buildBearerHeader } from '~/network/authentication';
 import { getBasicAuthHeader } from '~/network/basic-auth/get-header';
@@ -24,9 +25,8 @@ import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { Button } from '~/ui/components/themed-button';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
-import { getDataFromKVPair } from '~/utils/environment-utils';
+import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';

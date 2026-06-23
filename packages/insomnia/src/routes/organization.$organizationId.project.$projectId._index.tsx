@@ -1,7 +1,7 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
+import type { WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   GridList,
@@ -29,8 +29,9 @@ import {
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { fuzzyMatchAll } from '~/common/misc';
-import type { InsomniaFile } from '~/common/project';
+import { getAllLocalFiles, type InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
+import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -59,26 +60,27 @@ import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
 import { isPrimaryClickModifier } from '~/ui/utils';
+import { getAllRemoteFiles } from '~/ui/utils/remote-projects';
 
-export interface ProjectLoaderData {
-  localFiles: InsomniaFile[];
-  allFilesCount: number;
-  documentsCount: number;
-  environmentsCount: number;
-  collectionsCount: number;
-  mockServersCount: number;
-  mcpClientsCount: number;
-  projectsCount: number;
-  activeProject?: Project;
-  activeProjectGitRepository?: GitRepository;
-  projects: (Project & { gitRepository?: GitRepository })[];
-  remoteFilesPromise?: Promise<InsomniaFile[]>;
-  projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
+import type { Route } from './+types/organization.$organizationId.project.$projectId._index';
+
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+  const { organizationId, projectId } = params;
+  invariant(projectId, 'Project ID is required');
+  invariant(organizationId, 'Organization ID is required');
+
+  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
+  const localFiles = await getAllLocalFiles({ projectId });
+
+  return {
+    localFiles,
+    remoteFilesPromise,
+  };
 }
 
-const Component = () => {
-  const { localFiles, activeProject, activeProjectGitRepository, projects, remoteFilesPromise } =
-    useProjectLoaderData()!;
+const Component = ({ loaderData }: Route.ComponentProps) => {
+  const { localFiles, remoteFilesPromise } = loaderData;
+  const { activeProject, activeProjectGitRepository, projects } = useProjectLoaderData()!;
   const { activeSidebarTab } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
@@ -252,16 +254,31 @@ const Component = () => {
       },
     }));
 
-  const createNewCollection = (source: string) =>
-    setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source });
-  const createNewDocument = (source: string) => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source });
-  const createNewMockServer = (source: string) =>
-    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source });
-  const createNewGlobalEnvironment = (source: string) =>
-    setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source });
-  const createNewMcpClient = (source: string) => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source });
+  const canCreateMockServer = activeProject?._id;
 
-  const createNewCollectionWithRequest = () => {
+  const createNewCollection = useCallback(
+    (source: string) => setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source }),
+    [setNewWorkspaceModalState],
+  );
+  const createNewDocument = useCallback(
+    (source: string) => setNewWorkspaceModalState({ scope: 'design', isOpen: true, source }),
+    [setNewWorkspaceModalState],
+  );
+  const createNewMockServer = useCallback(
+    (source: string) =>
+      canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true, source }),
+    [canCreateMockServer, setNewWorkspaceModalState],
+  );
+  const createNewGlobalEnvironment = useCallback(
+    (source: string) => setNewWorkspaceModalState({ scope: 'environment', isOpen: true, source }),
+    [setNewWorkspaceModalState],
+  );
+  const createNewMcpClient = useCallback(
+    (source: string) => setNewWorkspaceModalState({ scope: 'mcp', isOpen: true, source }),
+    [setNewWorkspaceModalState],
+  );
+
+  const createNewCollectionWithRequest = useCallback(() => {
     if (!activeProject) {
       return;
     }
@@ -274,57 +291,67 @@ const Component = () => {
       withRequest: true,
       source: 'home-page',
     });
-  };
+  }, [activeProject, createNewWorkspaceFetcher, organizationId, projectId]);
 
-  const canCreateMockServer = activeProject?._id;
-
-  const createInProjectActionList: {
-    id: string;
-    name: string;
-    icon: IconProp;
-    scope: WorkspaceScope;
-    action: () => void;
-  }[] = [
+  const createInProjectActionList = useMemo<
     {
-      id: 'new-collection',
-      name: 'Collection',
-      icon: 'bars',
-      action: () => createNewCollection('navbar'),
-      scope: 'collection',
-    },
-    {
-      id: 'new-document',
-      name: 'Document',
-      icon: 'file',
-      action: () => createNewDocument('navbar'),
-      scope: 'design',
-    },
-    {
-      id: 'new-mcp-client',
-      name: 'MCP Client',
-      scope: 'mcp',
-      icon: ['fac', 'mcp'] as unknown as IconProp,
-      action: () => createNewMcpClient('navbar'),
-    },
-    ...(canCreateMockServer
-      ? [
-          {
-            id: 'new-mock-server',
-            name: 'Mock Server',
-            scope: 'mock-server' as WorkspaceScope,
-            icon: 'server' as IconName,
-            action: () => createNewMockServer('navbar'),
-          },
-        ]
-      : []),
-    {
-      id: 'new-environment',
-      name: 'Environment',
-      icon: 'code',
-      action: () => createNewGlobalEnvironment('navbar'),
-      scope: 'environment',
-    },
-  ];
+      id: string;
+      name: string;
+      icon: IconProp;
+      scope: WorkspaceScope;
+      action: () => void;
+    }[]
+  >(
+    () => [
+      {
+        id: 'new-collection',
+        name: 'Collection',
+        icon: 'bars',
+        action: () => createNewCollection('navbar'),
+        scope: 'collection',
+      },
+      {
+        id: 'new-document',
+        name: 'Document',
+        icon: 'file',
+        action: () => createNewDocument('navbar'),
+        scope: 'design',
+      },
+      {
+        id: 'new-mcp-client',
+        name: 'MCP Client',
+        scope: 'mcp',
+        icon: ['fac', 'mcp'] as unknown as IconProp,
+        action: () => createNewMcpClient('navbar'),
+      },
+      ...(canCreateMockServer
+        ? [
+            {
+              id: 'new-mock-server',
+              name: 'Mock Server',
+              scope: 'mock-server' as WorkspaceScope,
+              icon: 'server' as IconName,
+              action: () => createNewMockServer('navbar'),
+            },
+          ]
+        : []),
+      {
+        id: 'new-environment',
+        name: 'Environment',
+        icon: 'code',
+        action: () => createNewGlobalEnvironment('navbar'),
+        scope: 'environment',
+      },
+    ],
+    [
+      canCreateMockServer,
+      createNewCollection,
+      createNewDocument,
+      createNewGlobalEnvironment,
+      createNewMcpClient,
+      createNewMockServer,
+    ],
+  );
 
   const isRemoteProjectInconsistent =
     activeProject && models.project.isRemoteProject(activeProject) && !storageRules.enableCloudSync;

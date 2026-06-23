@@ -26,6 +26,7 @@ interface Props {
   activeViewObj?: ReturnType<typeof useActiveView>;
   credentials: GitCredentials[];
   providers: GitProviderOption[];
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export const ProjectCreateForm: FC<Props> = ({
@@ -35,6 +36,7 @@ export const ProjectCreateForm: FC<Props> = ({
   activeViewObj,
   credentials,
   providers,
+  onDirtyChange,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -65,6 +67,18 @@ export const ProjectCreateForm: FC<Props> = ({
     initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data
       ? initCloneGitRepositoryFetcher.data.files
       : [];
+
+  const changedFieldCount = [
+    projectData.name !== defaultProjectName,
+    !!storageType,
+    projectData.uri && projectData.uri.length > 0,
+    !!projectData.credentialsId,
+    projectData.connectRepositoryLater !== false,
+  ].filter(Boolean).length;
+
+  useEffect(() => {
+    if (onDirtyChange) onDirtyChange(changedFieldCount > 1);
+  }, [changedFieldCount, onDirtyChange]);
 
   useEffect(() => {
     if (newProjectFetcher.state === 'idle' && newProjectFetcher.data && newProjectFetcher.data?.error) {
@@ -178,7 +192,7 @@ export const ProjectCreateForm: FC<Props> = ({
                 isDisabled={!isGitSyncEnabled || isGitCredentialInvalid}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
-                Scan for files
+                <span>Scan for files</span>
               </Button>
             )}
           </div>

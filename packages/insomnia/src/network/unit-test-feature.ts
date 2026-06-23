@@ -1,6 +1,7 @@
 import { services } from 'insomnia-data';
 
-import { parseGraphQLReqeustBody } from '../utils/graph-ql';
+import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
+
 import {
   fetchRequestData,
   responseTransform,

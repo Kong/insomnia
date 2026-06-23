@@ -4,8 +4,8 @@ import { Heading } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
+import { invariant } from '~/common/utils/invariant';
 import { Icon } from '~/ui/components/icon';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test-result.$testResultId';
 

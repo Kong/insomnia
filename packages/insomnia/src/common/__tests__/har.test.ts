@@ -20,7 +20,7 @@ vi.mock('~/common/runtime', () => ({
       decryptAES: (_symmetricKey: any, encryptedResult: any) => Promise.resolve(encryptedResult),
     },
     templating: {
-      renderTemplate: async (input: any) => typeof input.input === 'string' ? input.input : null,
+      renderTemplate: async (input: any) => (typeof input.input === 'string' ? input.input : null),
     },
   }),
 }));

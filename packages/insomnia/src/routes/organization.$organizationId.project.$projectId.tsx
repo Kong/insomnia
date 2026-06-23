@@ -6,16 +6,12 @@ import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from
 import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import { logout } from '~/account/session';
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
-import {
-  checkAllProjectSyncStatus,
-  getAllLocalFiles,
-  getAllRemoteFiles,
-  getProjectsWithGitRepositories,
-} from '~/common/project';
+import { checkAllProjectSyncStatus, getProjectsWithGitRepositories } from '~/common/project';
+import { invariant } from '~/common/utils/invariant';
 import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
+import { logout } from '~/ui/account/session';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import {
@@ -29,7 +25,6 @@ import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-g
 import { useLoaderDeferData } from '~/ui/hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { DEFAULT_STORAGE_RULES } from '~/ui/organization-utils';
-import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
@@ -76,17 +71,43 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const project = await services.project.get(projectId);
 
   if (!project) {
+    // When a project is not found (e.g., after deletion), check if user was on Konnect tab
+    // and try to redirect to another Konnect project to avoid switching tabs
+    const storedTab = localStorage.getItem(`${organizationId}:sidebar-tab`);
+    if (storedTab) {
+      try {
+        const parsedTab = JSON.parse(storedTab);
+        if (parsedTab === 'konnect') {
+          const allProjects = await services.project.list({ organizationId });
+          const konnectProjects = models.project.sortProjects(allProjects.filter(p => p.konnectControlPlaneId != null));
+          if (konnectProjects.length > 0) {
+            return redirect(
+              href('/organization/:organizationId/project/:projectId', {
+                organizationId,
+                projectId: konnectProjects[0]._id,
+              }),
+            );
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
     return redirect(href('/organization/:organizationId', { organizationId }));
   }
 
-  const organization = await services.organization.get(organizationId);
+  try {
+    const organization = await services.organization.get(organizationId);
 
-  if (accountId && organization && models.organization.isPersonalOrganization(organization)) {
-    const firstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
+    if (accountId && organization && models.organization.isPersonalOrganization(organization)) {
+      const firstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
 
-    if (!window.localStorage.getItem(firstPersonalOrgLandingKey)) {
-      window.localStorage.setItem(firstPersonalOrgLandingKey, 'true');
+      if (!window.localStorage.getItem(firstPersonalOrgLandingKey)) {
+        window.localStorage.setItem(firstPersonalOrgLandingKey, 'true');
+      }
     }
+  } catch (error) {
+    console.log('[organizations] Failed to load Organizations', error);
   }
 
   const fallbackLearningFeature = {
@@ -97,13 +118,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     url: '',
   };
 
-  const [localFiles, organizationProjects = []] = await Promise.all([
-    getAllLocalFiles({ projectId }),
-    getProjectsWithGitRepositories({ organizationId }),
-  ]);
+  const organizationProjects = await getProjectsWithGitRepositories({ organizationId });
+
   const projects = models.project.sortProjects(organizationProjects);
 
-  const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
   const learningFeaturePromise = getInsomniaLearningFeature(fallbackLearningFeature);
 
   const projectsSyncStatusPromise = checkAllProjectSyncStatus(projects);
@@ -114,18 +132,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       : undefined;
 
   return {
-    localFiles,
-    remoteFilesPromise,
     projects,
-    projectsCount: organizationProjects.length,
     activeProject: project,
     activeProjectGitRepository,
-    allFilesCount: localFiles.length,
-    environmentsCount: localFiles.filter(file => file.scope === 'environment').length,
-    documentsCount: localFiles.filter(file => file.scope === 'design').length,
-    collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
-    mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
-    mcpClientsCount: localFiles.filter(file => file.scope === 'mcp').length,
     projectsSyncStatusPromise,
     learningFeaturePromise,
   };

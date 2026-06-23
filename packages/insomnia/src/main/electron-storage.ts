@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { invariant } from '~/utils/invariant';
+import { invariant } from '~/common/utils/invariant';
 
 // Intentional singleton: initialized once per process via initElectronStorage and shared across the app.
 let electronStorage: ElectronStorage | null = null;

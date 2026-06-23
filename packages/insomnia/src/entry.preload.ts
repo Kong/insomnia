@@ -1,9 +1,20 @@
-import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
+import { contextBridge, ipcRenderer, type IpcRendererEvent, webUtils as webUtilities } from 'electron';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader } from 'insomnia-data';
 
+import type {
+  ApplyRequestHooksArgs,
+  ApplyResponseHooksArgs,
+  ExecutePluginActionArgs,
+  ExecutePluginMainActionArgs,
+  PluginsBridgeAPI,
+  RunTemplateTagActionArgs,
+} from '~/common/plugins/bridge-types';
+import type { GenerateMcpSamplingResponseFunction } from '~/common/plugins/types';
+import type { RenderedRequest } from '~/common/templating/types';
+import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
-import type { GenerateMcpSamplingResponseFunction } from '~/plugins/types';
+import type { PluginInvokeMethod } from '~/plugins/invoke-method';
 import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/errors';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
@@ -18,17 +29,6 @@ import type { CurlBridgeAPI } from './main/network/curl';
 import type { McpBridgeAPI } from './main/network/mcp';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
-import type {
-  ApplyRequestHooksArgs,
-  ApplyResponseHooksArgs,
-  ExecutePluginActionArgs,
-  ExecutePluginMainActionArgs,
-  PluginsBridgeAPI,
-  RunTemplateTagActionArgs,
-} from './plugins/bridge-types';
-import type { PluginInvokeMethod } from './plugins/invoke-method';
-import type { RenderedRequest } from './templating/types';
-import { invariant } from './utils/invariant';
 const ports = new Map<'hiddenWindowPort', MessagePort>();
 
 type PluginMethodResult<T extends PluginInvokeMethod> = T extends keyof PluginsBridgeAPI
@@ -197,10 +197,6 @@ const sync: SyncBridgeAPI = {
     invokeSyncMethod('switchAndCreateBackendProjectIfNotExist', ...args),
   takeSnapshot: (...args) => invokeSyncMethod('takeSnapshot', ...args),
   unstage: (...args) => invokeSyncMethod('unstage', ...args),
-  on: (channel, listener) => {
-    ipcRenderer.on(channel, listener);
-    return () => ipcRenderer.removeListener(channel, listener);
-  },
 };
 
 const git: GitServiceAPI = {
@@ -276,6 +272,8 @@ const main: Window['main'] = {
   openDeepLink: options => ipcRenderer.send('openDeepLink', options),
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
+  applyUpdateAndRestart: () => ipcRenderer.send('applyUpdateAndRestart'),
+  getUpdateStatus: () => ipcRenderer.sendSync('getUpdateStatus'),
   backup: () => invokeWithNormalizedError('backup'),
   restoreBackup: options => invokeWithNormalizedError('restoreBackup', options),
   authorizeUserInWindow: options => invokeWithNormalizedError('authorizeUserInWindow', options),
@@ -313,8 +311,13 @@ const main: Window['main'] = {
   lintSpec: options => invokeWithNormalizedError('lintSpec', options),
   bundleSpectralRuleset: options => invokeWithNormalizedError('bundleSpectralRuleset', options),
   on: (channel, listener) => {
-    ipcRenderer.on(channel, listener);
-    return () => ipcRenderer.removeListener(channel, listener);
+    // Under contextIsolation the IpcRendererEvent can't be cloned across the
+    // contextBridge; no listener uses it, so drop it and forward only the
+    // (cloneable) payload args.
+    const handler = (_event: IpcRendererEvent, ...args: unknown[]) =>
+      (listener as (event: unknown, ...args: unknown[]) => void)(undefined, ...args);
+    ipcRenderer.on(channel, handler);
+    return () => ipcRenderer.removeListener(channel, handler);
   },
   cookies,
   webSocket,
@@ -442,8 +445,7 @@ const main: Window['main'] = {
     applyResponseHooks: (args: ApplyResponseHooksArgs) => invokePluginBridgeMethod('applyResponseHooks', args),
     getBridgeMetrics: () => invokeWithNormalizedError('plugins.getBridgeMetrics'),
   },
-  notifyPromptResult: (id: string, value: string | null) =>
-    ipcRenderer.send('ui.promptResult', { id, value }),
+  notifyPromptResult: (id: string, value: string | null) => ipcRenderer.send('ui.promptResult', { id, value }),
   timeline: {
     getPath: (responseId: string) => invokeWithNormalizedError('timeline.getPath', responseId) as Promise<string>,
     appendToFile: (options: { timelinePath: string; data: string }) =>
@@ -469,10 +471,9 @@ const dialog: Window['dialog'] = {
 const app: Window['app'] = {
   getPath: options => ipcRenderer.sendSync('getPath', options),
   getAppPath: () => ipcRenderer.sendSync('getAppPath'),
+  // platform is constant; expose a plain value so it survives contextBridge cloning (getters are not preserved).
   process: {
-    get platform() {
-      return process.platform as NodeJS.Platform;
-    },
+    platform: process.platform as NodeJS.Platform,
   },
 };
 const shell: Window['shell'] = {
@@ -513,6 +514,8 @@ const env: Window['env'] = {
   BUILD_DATE: process.env.BUILD_DATE,
   // Windows portable binary sentinel: presence disables auto-updates
   PORTABLE_EXECUTABLE_DIR: process.env.PORTABLE_EXECUTABLE_DIR,
+  // Dev override: presence re-enables auto-updates in development mode
+  ALLOW_UPDATES_IN_DEV: process.env.ALLOW_UPDATES_IN_DEV,
   // OAuth flow URL overrides for dev/staging environments
   OAUTH_REDIRECT_URL: process.env.OAUTH_REDIRECT_URL,
   OAUTH_RELAY_URL: process.env.OAUTH_RELAY_URL,
@@ -521,6 +524,7 @@ const env: Window['env'] = {
   INSOMNIA_MOCK_API_URL: process.env.INSOMNIA_MOCK_API_URL,
   INSOMNIA_AI_URL: process.env.INSOMNIA_AI_URL,
   KONNECT_API_URL: process.env.KONNECT_API_URL,
+  KONNECT_API_REGIONS: process.env.KONNECT_API_REGIONS,
   INSOMNIA_APP_WEBSITE_URL: process.env.INSOMNIA_APP_WEBSITE_URL,
   // GitHub API URL overrides for GitHub Enterprise targets
   INSOMNIA_GITHUB_REST_API_URL: process.env.INSOMNIA_GITHUB_REST_API_URL,
@@ -536,7 +540,13 @@ if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('webUtils', webUtils);
   contextBridge.exposeInMainWorld('path', path);
   contextBridge.exposeInMainWorld('database', database);
-  contextBridge.exposeInMainWorld('_dataServices', servicesProxy);
+  // A Proxy cannot be cloned across the contextBridge, so expose a flat invoke
+  // function and rebuild the services Proxy in the isolated renderer world.
+  contextBridge.exposeInMainWorld(
+    '_dataServicesInvoke',
+    (serviceName: string, methodName: string, ...args: unknown[]) =>
+      invokeWithNormalizedError('services.invoke', serviceName, methodName, ...args),
+  );
   contextBridge.exposeInMainWorld('env', env);
 } else {
   window.main = main;
