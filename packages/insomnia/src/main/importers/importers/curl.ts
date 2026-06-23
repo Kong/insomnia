@@ -31,6 +31,7 @@ const SUPPORTED_ARGS = [
   'F',
   'request',
   'X',
+  'compressed',
 ];
 
 type PairsByName = Record<string, (string | boolean)[]>;
@@ -65,6 +66,8 @@ const importCommand = (parseEntries: ParseEntry[]) => {
         // Handle squished arguments like -XPOST
         value = name.slice(1);
         name = name.slice(0, 1);
+      } else if (name === 'compressed' || name === 'G' || name === 'get') {
+        value = true;
       } else if (typeof nextEntry === 'string' && !nextEntry.startsWith('-')) {
         // Next arg is not a flag, so assign it as the value
         value = nextEntry;
@@ -86,13 +89,13 @@ const importCommand = (parseEntries: ParseEntry[]) => {
 };
 const extractUrlAndParameters = (urlValue: string): { url: string; parameters: Parameter[] } => {
   try {
-    const { searchParams, href, search } = new URL(urlValue);
+    const { searchParams, href, search, pathname } = new URL(urlValue.replace(/\\([[\]{}])/g, '$1'));
     const parameters = Array.from(searchParams.entries()).map(([name, value]) => ({
       name,
       value,
       disabled: false,
     }));
-    const url = href.replace(search, '').replace(/\/$/, '');
+    const url = pathname === '/' ? href.replace(search, '').replace(/\/$/, '') : href.replace(search, '');
     return { url, parameters };
   } catch {
     return { url: '', parameters: [] };
@@ -113,6 +116,9 @@ const extractAuth = (pairsByName: PairsByName): RequestAuthentication | {} => {
   if (bearerAuthHeader) {
     const [_, value] = bearerAuthHeader.split(/:(.*)$/);
     return { type: 'bearer', token: value.trim().slice(7) };
+  }
+  if (allHeaders.some(h => h.split(/:(.*)$/)[0].trim().toLowerCase() === 'authorization')) {
+    return {};
   }
   return username
     ? {
@@ -166,7 +172,8 @@ const extractBody = (
     ...((pairsByName.form as string[] | undefined) || []),
     ...((pairsByName.F as string[] | undefined) || []),
   ].map(str => {
-    const [name, value] = str.split('=');
+    const [name, ...rest] = str.split('=');
+    const value = rest.join('=').split(';')[0];
     const item: Parameter = {
       name,
     };
@@ -239,6 +246,9 @@ const buildRequestObject = ({
       name: 'Cookie',
       value: cookieHeaderValue,
     });
+  }
+  if (getPairValue(pairsByName, false, ['compressed']) && !headers.some(header => header.name.toLowerCase() === 'accept-encoding')) {
+    headers.push({ name: 'Accept-Encoding', value: 'deflate, gzip' });
   }
   const dataParameters = pairsToDataParameters(pairsByName);
   let body = {};
