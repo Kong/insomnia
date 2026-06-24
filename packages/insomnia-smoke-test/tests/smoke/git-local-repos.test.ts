@@ -10,7 +10,6 @@ import { test } from '../../playwright/test';
 // Verifies repositories can live in user-chosen folders on disk:
 //  - opening an existing/plain folder as a Git project (runs `git init` if needed)
 //  - cloning into a user-chosen destination folder
-// See GIT_LOCAL_REPOS_DESIGN.md.
 
 const makeTempDir = (prefix: string) => fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 
@@ -26,9 +25,7 @@ test.describe('Git repositories in user-chosen folders', () => {
       await insomnia.projectPage.openGitProjectFromFolder('Opened Folder Project', folder);
 
       // `git init` must have run inside the chosen folder (decision OQ2).
-      await expect
-        .poll(() => fs.existsSync(path.join(folder, '.git')), { timeout: 30_000 })
-        .toBe(true);
+      await expect.poll(() => fs.existsSync(path.join(folder, '.git')), { timeout: 30_000 }).toBe(true);
 
       // The project landed — no error banner.
       await expect.soft(page.getByText('Opened Folder Project')).toBeVisible();
@@ -41,9 +38,7 @@ test.describe('Git repositories in user-chosen folders', () => {
     const folder = makeTempDir('insomnia-open-collision-');
     try {
       await insomnia.projectPage.openGitProjectFromFolder('First Adoption', folder);
-      await expect
-        .poll(() => fs.existsSync(path.join(folder, '.git')), { timeout: 30_000 })
-        .toBe(true);
+      await expect.poll(() => fs.existsSync(path.join(folder, '.git')), { timeout: 30_000 }).toBe(true);
 
       // Back to the project dashboard, then try to adopt the same folder again.
       await insomnia.projectPage.openGitProjectFromFolder('Second Adoption', folder);
@@ -74,9 +69,7 @@ test.describe('Git clone into a user-chosen folder', () => {
       await insomnia.projectPage.cloneGitProjectIntoFolder('Cloned Into Folder', parent);
 
       // The repo URL is "git-server.git" → derived repo name "git-server".
-      await expect
-        .poll(() => fs.existsSync(path.join(parent, 'git-server', '.git')), { timeout: 60_000 })
-        .toBe(true);
+      await expect.poll(() => fs.existsSync(path.join(parent, 'git-server', '.git')), { timeout: 60_000 }).toBe(true);
     } finally {
       fs.rmSync(parent, { recursive: true, force: true });
     }

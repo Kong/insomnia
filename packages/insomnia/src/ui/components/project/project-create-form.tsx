@@ -100,7 +100,7 @@ export const ProjectCreateForm: FC<Props> = ({
     }
 
     // Opening an arbitrary local folder pulls in whatever it contains, so ask
-    // the user to confirm they trust it first. See GIT_LOCAL_REPOS_DESIGN.md.
+    // the user to confirm they trust it first.
     if (isGitOpen && openExistingDir && !(await confirmOpenFolderTrust(openExistingDir))) {
       return;
     }
@@ -266,9 +266,7 @@ export const ProjectCreateForm: FC<Props> = ({
             {storageType !== 'git' || projectData.connectRepositoryLater || isGitOpen ? (
               <Button
                 onPress={onUpsertProject}
-                isDisabled={
-                  !storageType || newProjectFetcher.state !== 'idle' || (isGitOpen && !openExistingDir)
-                }
+                isDisabled={!storageType || newProjectFetcher.state !== 'idle' || (isGitOpen && !openExistingDir)}
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}

@@ -72,7 +72,9 @@ export class ProjectPage extends BasePage {
       }
 
       const breadcrumbLink = this.page.getByTestId('workspace-breadcrumb-level-0').getByRole('link');
-      await ((await breadcrumbLink.isVisible()) ? breadcrumbLink.click() : this.sidebar.projectRow(projectName).click());
+      await ((await breadcrumbLink.isVisible())
+        ? breadcrumbLink.click()
+        : this.sidebar.projectRow(projectName).click());
 
       try {
         await this.page.waitForURL(this.projectDashboardUrl, { timeout: 5000, waitUntil: 'commit' });
@@ -103,9 +105,7 @@ export class ProjectPage extends BasePage {
   async createCollection(name = 'My Collection'): Promise<void> {
     await this.selectCreateInProjectType('Collection');
     await this.page.getByRole('dialog').waitFor({ state: 'visible' });
-    const nameInput = this.page
-      .getByRole('dialog')
-      .getByPlaceholder('Enter a name for your Request Collection');
+    const nameInput = this.page.getByRole('dialog').getByPlaceholder('Enter a name for your Request Collection');
     await nameInput.waitFor({ state: 'visible' });
     await nameInput.fill(name);
     await this.page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
@@ -154,7 +154,7 @@ export class ProjectPage extends BasePage {
   /**
    * Opens an existing local folder as a Git project (no clone). The native
    * directory picker is mocked to return `folderPath`. If the folder isn't a git
-   * repo, the app runs `git init`. See GIT_LOCAL_REPOS_DESIGN.md.
+   * repo, the app runs `git init`.
    */
   async openGitProjectFromFolder(name: string, folderPath: string): Promise<void> {
     await mockOpenDialogForDirectory(this.app, folderPath);

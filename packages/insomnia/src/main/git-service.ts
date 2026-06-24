@@ -392,8 +392,7 @@ async function getRepoBaseDir(gitRepositoryId: string, directory?: string | null
  *
  * Insomnia owns the app-managed location (`directory === null`). A user-chosen
  * `directory` belongs to the user and must never be deleted when the project is
- * removed (decision D4 in GIT_LOCAL_REPOS_DESIGN.md). Failures are logged, not
- * thrown — losing a project record should not be blocked by a stale folder.
+ * removed. Failures are logged, not thrown — losing a project record should not be blocked by a stale folder.
  */
 async function deleteManagedRepoFolderIfOwned(repo: Pick<GitRepository, '_id' | 'directory'>) {
   if (repo.directory) {
@@ -1182,7 +1181,7 @@ export const cloneGitRepoAction = async ({
   selectedAuthorEmail?: string | null;
   /**
    * Optional absolute path to a user-chosen folder to clone into. When omitted,
-   * the repository is stored in the app-managed location. See GIT_LOCAL_REPOS_DESIGN.md.
+   * the repository is stored in the app-managed location.
    */
   directory?: string | null;
 }) => {
@@ -1311,6 +1310,7 @@ export const cloneGitRepoAction = async ({
         gitRepositoryId: gitRepository._id,
         directory: gitRepository.directory,
       });
+
       const repoBaseDir = getGitBaseDir(gitRepository._id);
 
       if (gitRepository.needsFullClone) {
@@ -1588,7 +1588,7 @@ export const cloneGitRepoAction = async ({
 };
 
 /**
- * Open/adopt an existing local folder as a Git project. See GIT_LOCAL_REPOS_DESIGN.md.
+ * Open/adopt an existing local folder as a Git project.
  *
  * Unlike {@link cloneGitRepoAction} this performs no network clone — it points
  * Insomnia at a folder already on disk:
@@ -1627,7 +1627,9 @@ export const openGitRepoAction = async ({
       }
       await fs.promises.access(resolvedDirectory, fs.constants.R_OK | fs.constants.W_OK);
     } catch {
-      return { errors: [`Folder is not accessible (check it exists and you have read/write permission): ${resolvedDirectory}`] };
+      return {
+        errors: [`Folder is not accessible (check it exists and you have read/write permission): ${resolvedDirectory}`],
+      };
     }
 
     // Hard-block if another project already owns this folder (OQ5).
@@ -1723,7 +1725,7 @@ export const openGitRepoAction = async ({
  * Release a Git repository's runtime/disk resources when its project is being
  * deleted (called from the renderer delete flow). Stops the file watcher and
  * deletes the on-disk folder only when Insomnia owns it — user-chosen folders
- * are left untouched (decision D4 in GIT_LOCAL_REPOS_DESIGN.md).
+ * are left untouched.
  *
  * The DB document removal stays in the renderer action so it participates in the
  * same buffered change-set; this only handles the main-process-only concerns.
@@ -1740,7 +1742,7 @@ export const cleanupGitRepoStorageAction = async ({ gitRepositoryId }: { gitRepo
 
 /**
  * Move a Git project's on-disk repository to a user-chosen folder and record the
- * new location on `GitRepository.directory`. See GIT_LOCAL_REPOS_DESIGN.md.
+ * new location on `GitRepository.directory`.
  *
  * The whole repository (working tree + `.git`) is moved, so history and
  * uncommitted changes are preserved. If the previous location was the managed
@@ -3462,9 +3464,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.cloneGitRepo', (_, options: Parameters<typeof cloneGitRepoAction>[0]) =>
     cloneGitRepoAction(options),
   );
-  ipcMainHandle('git.openGitRepo', (_, options: Parameters<typeof openGitRepoAction>[0]) =>
-    openGitRepoAction(options),
-  );
+  ipcMainHandle('git.openGitRepo', (_, options: Parameters<typeof openGitRepoAction>[0]) => openGitRepoAction(options));
   ipcMainHandle('git.cleanupGitRepoStorage', (_, options: Parameters<typeof cleanupGitRepoStorageAction>[0]) =>
     cleanupGitRepoStorageAction(options),
   );

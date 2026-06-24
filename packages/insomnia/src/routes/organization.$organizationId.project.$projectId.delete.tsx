@@ -37,7 +37,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       const gitRepository = effectiveRepoId ? await services.gitRepository.getById(effectiveRepoId) : null;
       if (gitRepository) {
         // Stop the watcher and delete the on-disk folder only if Insomnia owns it.
-        // User-chosen folders are left untouched (see GIT_LOCAL_REPOS_DESIGN.md, D4).
+        // User-chosen folders are left untouched.
         await window.main.git.cleanupGitRepoStorage({ gitRepositoryId: gitRepository._id });
         await services.gitRepository.remove(gitRepository);
       }

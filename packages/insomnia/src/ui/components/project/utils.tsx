@@ -18,7 +18,7 @@ export interface ProjectData {
   /**
    * Optional user-chosen parent folder to clone into. When set, the repo is
    * cloned into `<cloneParentDir>/<repo-name>`; when unset, Insomnia manages the
-   * location. See GIT_LOCAL_REPOS_DESIGN.md.
+   * location.
    */
   cloneParentDir?: string;
 }
@@ -46,7 +46,10 @@ export const deriveRepoName = (uri?: string): string => {
   if (!uri) {
     return 'repository';
   }
-  const cleaned = uri.trim().replace(/\.git$/i, '').replace(/[/\\]+$/, '');
+  const cleaned = uri
+    .trim()
+    .replace(/\.git$/i, '')
+    .replace(/[/\\]+$/, '');
   const last = cleaned.split(/[/\\:]/).pop();
   return last || 'repository';
 };

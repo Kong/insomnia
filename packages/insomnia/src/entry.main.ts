@@ -225,7 +225,6 @@ app.on('activate', (_error, hasVisibleWindows) => {
 // When a folder path is opened from the OS (CLI arg, Finder "Open With", etc.),
 // normalise it into the open-folder deep link so the renderer has a single,
 // well-formed entry point. Returns null when the path isn't an existing folder.
-// See GIT_LOCAL_REPOS_DESIGN.md.
 const toOpenFolderDeepLink = async (rawPath: string): Promise<string | null> => {
   try {
     if (!rawPath || !path.isAbsolute(rawPath)) {

@@ -407,7 +407,7 @@ const Root = () => {
       }
       // Open a local folder as a Git project (from the OS: Finder "Open With",
       // `insomnia /path/to/folder`, or this deep link). The main process has
-      // already verified the path is an existing directory. See GIT_LOCAL_REPOS_DESIGN.md.
+      // already verified the path is an existing directory
       if (urlWithoutParams === 'insomnia://app/open-folder') {
         const folderPath = params.path;
         if (!folderPath) {

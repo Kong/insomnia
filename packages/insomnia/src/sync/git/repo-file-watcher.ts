@@ -1001,7 +1001,7 @@ class RepoFileWatcher {
    * appears empty. We must NOT interpret that as "all files deleted" and wipe the
    * database — instead we treat the repo as temporarily unavailable and skip
    * syncing, so the project's collections survive (and re-sync if the folder
-   * returns). See GIT_LOCAL_REPOS_DESIGN.md (D4 / OQ6).
+   * returns).
    */
   private async repoDirIsAvailable(): Promise<boolean> {
     try {

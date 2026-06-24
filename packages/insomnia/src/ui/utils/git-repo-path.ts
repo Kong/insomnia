@@ -4,7 +4,7 @@ import type { GitRepository } from 'insomnia-data';
  * Resolve a Git repository's on-disk base directory in the renderer.
  *
  * Mirrors the main-process `getRepoBaseDir` (git-service.ts): a user-chosen
- * `directory` when set, else the app-managed location. See GIT_LOCAL_REPOS_DESIGN.md.
+ * `directory` when set, else the app-managed location.
  */
 export const resolveGitRepoBaseDir = (gitRepository: Pick<GitRepository, '_id' | 'directory'>): string => {
   if (gitRepository.directory) {

@@ -11,7 +11,7 @@ import { AskModal } from '~/ui/components/modals/ask-modal';
  * (in Insomnia's sandbox) when requests are sent. Insomnia uses isomorphic-git
  * rather than the native `git` binary, so opening a folder never executes git
  * hooks — but a folder from an untrusted source can still bring in unwanted
- * content, so we surface a one-time trust prompt. See GIT_LOCAL_REPOS_DESIGN.md.
+ * content, so we surface a one-time trust prompt.
  *
  * Resolves `true` when the user chooses to open, `false` if they cancel or dismiss.
  */

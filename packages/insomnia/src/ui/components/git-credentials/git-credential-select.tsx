@@ -19,7 +19,7 @@ interface Props {
 /**
  * Picker for the Git credentials associated with a repository. Includes a "No
  * credentials" option since local repositories may not need a remote. Used by
- * the "Open existing folder" flow. See GIT_LOCAL_REPOS_DESIGN.md.
+ * the "Open existing folder" flow.
  */
 export const GitCredentialSelect: FC<Props> = ({
   credentials,

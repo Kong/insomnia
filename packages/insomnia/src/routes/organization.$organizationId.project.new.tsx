@@ -28,7 +28,7 @@ export interface CreateProjectData {
   directory?: string | null;
   /**
    * When set, adopt this existing local folder as a Git project instead of
-   * cloning from a URL. See GIT_LOCAL_REPOS_DESIGN.md.
+   * cloning from a URL.
    */
   openExistingDirectory?: string;
 }
