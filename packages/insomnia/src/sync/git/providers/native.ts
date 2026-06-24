@@ -1,8 +1,7 @@
 import { spawn } from 'node:child_process';
 
+import type { GitCredentials } from 'insomnia-data';
 import type { GitAuth } from 'isomorphic-git';
-
-import type { GitCredentials } from '~/insomnia-data';
 
 import type { GitRemoteProvider, NativeProviderConfig, ValidationResult } from './types';
 
