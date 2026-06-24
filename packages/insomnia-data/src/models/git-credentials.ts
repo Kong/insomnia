@@ -113,7 +113,6 @@ interface CustomCredential extends BaseCredentialData {
   credentials: {
     username: string;
     password: string; // Personal access token
-    baseURI?: string; // For custom providers
   };
 }
 
