@@ -5,9 +5,11 @@ import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, M
 import { invariant } from '~/common/utils/invariant';
 import { gitRemoteProviderRegistry } from '~/sync/git/providers';
 
-const { isGitCredentialsV2, isGitCredentialsV1 } = models.gitCredentials;
+// Re-exported for backwards compatibility. The pure URL helpers live in a
+// provider/electron-free module so they can be imported from the renderer.
+export { addDotGit, ensureGitRepoUrlSuffix, isAzureDevOpsUrl } from './url-utils';
 
-export const addDotGit = (url: string): string => (url.endsWith('.git') ? url : `${url}.git`);
+const { isGitCredentialsV2, isGitCredentialsV1 } = models.gitCredentials;
 
 /**
  * OAuth2 token responses often include `expires_in` (seconds until access token expires).
