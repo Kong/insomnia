@@ -149,7 +149,6 @@ describe('create()', () => {
       credentials: {
         username: 'myusername',
         password: 'my_personal_access_token',
-        baseURI: 'https://git.mycompany.com',
       },
     };
 
@@ -168,7 +167,6 @@ describe('create()', () => {
       credentials: {
         username: 'myusername',
         password: 'my_personal_access_token',
-        baseURI: 'https://git.mycompany.com',
       },
     });
 
