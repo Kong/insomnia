@@ -105,25 +105,40 @@ test.describe('Check vault used in environment', () => {
 
     // add first secret environment
     const firstRow = kvTable.getByRole('option').first();
-    await firstRow.getByTestId('OneLineEditor').first().click();
+    const firstKey = firstRow.getByTestId('OneLineEditor').first();
+    const firstValue = firstRow.getByTestId('OneLineEditor').nth(1);
+    await firstKey.click();
     await page.keyboard.type('foo');
-    await firstRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
+    await firstValue.click({ delay: 200 });
     await page.keyboard.type('bar');
+    // Confirm the value landed in the value cell before converting to Secret; otherwise the
+    // wrong value gets encrypted and the revealed secret won't match below.
+    await expect.soft(firstValue).toContainText('bar');
+    // Blur the value editor so its debounced onChange is flushed to state before the type
+    // change reads the value to encrypt it.
+    await firstKey.click();
+    await expect.soft(firstKey).toContainText('foo');
     // Delay the click to let debounce finish
     await firstRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
     await expect.soft(firstRow.locator('.fa-eye-slash')).toBeVisible();
     await firstRow.locator('.fa-eye-slash').click();
     // test decrypt secret in UI
-    await expect.soft(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('bar');
+    await expect.soft(firstValue).toContainText('bar');
 
     // add second secret environment
     await page.getByRole('button', { name: 'Add Row' }).click();
     const secondRow = kvTable.getByRole('option').nth(1);
-    await secondRow.getByTestId('OneLineEditor').first().click();
+    const secondKey = secondRow.getByTestId('OneLineEditor').first();
+    const secondValue = secondRow.getByTestId('OneLineEditor').nth(1);
+    await secondKey.click();
     await page.keyboard.type('hello');
-    await secondRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
+    await secondValue.click({ delay: 200 });
     await page.keyboard.type('world');
+    // Confirm the value landed and flush it to state (via blur) before converting to Secret.
+    await expect.soft(secondValue).toContainText('world');
+    await secondKey.click();
+    await expect.soft(secondKey).toContainText('hello');
     // Delay the click to let debounce finish
     await secondRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
