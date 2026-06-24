@@ -371,20 +371,33 @@ to another machine won't carry the path (expected for local repos).
    ready to populate (OQ1) — consistent with cloning an empty repo, so no forced
    workspace scaffolding. Folder is validated for existence + RW (`fs.access`) and
    collision (`getByDirectory`, OQ5). UI: a **Clone from URL / Open existing
-   folder** toggle in the project-create git section; open mode needs no
-   credentials and the button reads **Open**.
+   folder** toggle in the project-create git section; open mode reads **Open** and
+   includes an **optional Git credentials** picker
+   ([`GitCredentialSelect`](packages/insomnia/src/ui/components/git-credentials/git-credential-select.tsx),
+   with a "No credentials" option) so an adopted repo with a remote can fetch/push.
+   `openGitRepoAction` accepts the chosen `credentialsId` (defaults `null`); the OS
+   open flow leaves it null (set later in project settings).
 4. ✅ **Lifecycle & errors (core).** D4 deletion semantics implemented:
    `deleteManagedRepoFolderIfOwned()` deletes the on-disk folder **only** when
    Insomnia owns it (`directory === null`); user folders are never deleted. Wired
    into project delete (`cleanupGitRepoStorageAction` IPC — also stops the watcher
    and clears conflict suppression), git→local conversion, and
    `resetGitRepoAction`. **Note:** folder deletion for managed repos is *new* —
-   previously the folder leaked on delete. Missing-folder detection (OQ6) added to
-   `loadGitRepository`: for a user folder, it `stat`s the path **before** creating
-   the FS client (which would otherwise auto-recreate a deleted folder as empty and
-   let the watcher wipe the DB) and returns a structured
-   `{ repositoryUnavailable: true, directory }` error instead of proceeding. Never
-   auto-removes the project. **Still pending:** the actionable *Locate…* (re-point
+   previously the folder leaked on delete. Missing-folder detection (OQ6) added at **two**
+   layers:
+   - `loadGitRepository` `stat`s a user folder **before** creating the FS client
+     (which would otherwise auto-recreate a deleted folder as empty) and returns a
+     structured `{ repositoryUnavailable: true, directory }` error instead of
+     proceeding. Never auto-removes the project.
+   - **`RepoFileWatcher` guard** (critical for the *live* case — app open, folder
+     deleted in Finder): the watcher's FS→DB sync previously read an empty/missing
+     directory as "every file deleted" and wiped the collections from NeDB. A new
+     `repoDirIsAvailable()` check guards the three deletion chokepoints
+     (`importAllFiles`, `pollDirectory`, and `readIfChanged`'s missing-file path):
+     when the whole folder is gone it **skips syncing** (preserving the DB and
+     re-syncing if the folder returns) instead of deleting. Legitimate single-file
+     deletions (e.g. a `git checkout` dropping a workspace) still work because the
+     folder itself still exists. **Still pending:** the actionable *Locate…* (re-point
    `directory`) / *Remove* buttons + a dedicated unavailable banner in the project
    route — today the unavailable state surfaces as the loader error message.
 5. 🟡 **Polish.** ✅ Reveal-in-folder (Git repository settings modal shows the
