@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { addDotGit, expiresAtFromOAuthExpiresIn } from '../utils';
+import { addDotGit, ensureGitRepoUrlSuffix, isAzureDevOpsUrl } from '../url-utils';
+import { expiresAtFromOAuthExpiresIn } from '../utils';
 
 const links = {
   scp: {
@@ -34,6 +35,41 @@ describe('addDotGit', () => {
     expect(addDotGit(links.ssh.dotGit)).toEqual(links.ssh.dotGit);
     expect(addDotGit(links.http.dotGit)).toEqual(links.http.dotGit);
     expect(addDotGit(links.https.dotGit)).toEqual(links.https.dotGit);
+  });
+});
+
+describe('isAzureDevOpsUrl', () => {
+  it('detects Azure DevOps hosts and the /_git/ path marker', () => {
+    expect(isAzureDevOpsUrl('https://dev.azure.com/declankeane/SE-Repo/_git/SE-Repo')).toBe(true);
+    expect(isAzureDevOpsUrl('https://declankeane.visualstudio.com/SE-Repo/_git/SE-Repo')).toBe(true);
+    // self-hosted Azure DevOps Server identified by the /_git/ marker
+    expect(isAzureDevOpsUrl('https://tfs.mycompany.com/collection/project/_git/repo')).toBe(true);
+  });
+
+  it('returns false for other providers and invalid input', () => {
+    expect(isAzureDevOpsUrl('https://github.com/a/b')).toBe(false);
+    expect(isAzureDevOpsUrl('https://gitlab.com/a/b.git')).toBe(false);
+    expect(isAzureDevOpsUrl('not a url')).toBe(false);
+  });
+});
+
+describe('ensureGitRepoUrlSuffix', () => {
+  it('appends .git for GitHub/GitLab-style URLs', () => {
+    expect(ensureGitRepoUrlSuffix('https://github.com/a/b')).toEqual('https://github.com/a/b.git');
+    expect(ensureGitRepoUrlSuffix('https://github.com/a/b.git')).toEqual('https://github.com/a/b.git');
+  });
+
+  it('trims trailing slashes before appending', () => {
+    expect(ensureGitRepoUrlSuffix('https://github.com/a/b/')).toEqual('https://github.com/a/b.git');
+  });
+
+  it('does not append .git for Azure DevOps URLs', () => {
+    const azure = 'https://dev.azure.com/declankeane/SE-Repo/_git/SE-Repo';
+    expect(ensureGitRepoUrlSuffix(azure)).toEqual(azure);
+  });
+
+  it('handles empty/whitespace input', () => {
+    expect(ensureGitRepoUrlSuffix('   ')).toEqual('');
   });
 });
 
