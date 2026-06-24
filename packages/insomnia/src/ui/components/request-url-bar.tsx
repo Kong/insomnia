@@ -306,6 +306,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           <OneLineEditor
             id="request-url-bar"
             key={uniquenessKey}
+            // Stable across the remounts that `key` (uniquenessKey) forces, so undo
+            // history is restored after a send / environment edit / sync version bump.
+            uniquenessKey={`request-url-bar::${requestId}`}
             ref={inputRef}
             type="text"
             getAutocompleteConstants={handleAutocompleteUrls}
