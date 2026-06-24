@@ -34,6 +34,20 @@ import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
 import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
 
+// Replace the editor's entire value while PRESERVING undo/redo history and the
+// cursor. Unlike cm.setValue(), which clears history, replaceRange records the
+// change as a normal, undoable edit. No-ops when the value is unchanged so we
+// don't push empty history entries or move the cursor needlessly.
+const replaceValuePreservingHistory = (cm: CodeMirror.EditorFromTextArea, value: string) => {
+  if (cm.getValue() === value) {
+    return;
+  }
+  const cursor = cm.getCursor();
+  const lastLine = cm.lastLine();
+  cm.replaceRange(value, { line: 0, ch: 0 }, { line: lastLine, ch: cm.getLine(lastLine).length });
+  cm.setCursor(cursor);
+};
+
 export interface OneLineEditorProps {
   defaultValue: string;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
@@ -424,9 +438,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         },
         setValue: (value: string) => {
           if (codeMirror.current) {
-            const cursor = codeMirror.current.getCursor();
-            codeMirror.current.setValue(value);
-            codeMirror.current.setCursor(cursor);
+            replaceValuePreservingHistory(codeMirror.current, value);
           }
         },
       }),

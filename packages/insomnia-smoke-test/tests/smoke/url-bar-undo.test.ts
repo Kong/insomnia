@@ -79,6 +79,29 @@ test('URL bar: editing keeps focus and Cmd+Z undoes in place', async ({ page }) 
   expect.soft(afterUndo.dataFocused).toBe('on');
 });
 
+// The "Import from URL" action replaces the URL via OneLineEditor's setValue
+// handle. That replacement must stay undoable (history preserved), not wipe it.
+test('URL bar: importing query params stays undoable', async ({ page }) => {
+  await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+  const urlInput = page.locator(`${URL_SEL} textarea`);
+  await urlInput.focus();
+  await page.keyboard.type('https://example.com/path?foo=bar');
+  await expect.soft(page.locator(URL_SEL)).toContainText('foo=bar');
+
+  // Import query params -> strips the query from the URL via the setValue handle.
+  await page.getByRole('tab', { name: 'Params' }).click();
+  const importButton = page.getByRole('button', { name: 'Import from URL' });
+  await expect.soft(importButton).toBeEnabled();
+  await importButton.click();
+  await expect.soft(page.locator(URL_SEL)).not.toContainText('foo=bar');
+
+  // Undo must revert the import (non-destructive setValue preserves history).
+  await urlInput.focus();
+  await page.keyboard.press(isMac ? 'Meta+z' : 'Control+z');
+  await expect.soft(page.locator(URL_SEL)).toContainText('foo=bar');
+});
+
 // The editor is keyed on the environment, so switching environments must refresh
 // the rendered nunjucks variable preview shown in the URL bar.
 test('URL bar: switching environment refreshes the rendered preview', async ({ page, app, insomnia }) => {
