@@ -313,6 +313,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     useResizeObserver(editorContainerRef, ({ width }) => {
       if (width && width > 0) {
         initEditor();
+      }
+    });
+
     reactUse.useMount(() => {
       initEditor();
       if (autoFocus && !readOnly) {
