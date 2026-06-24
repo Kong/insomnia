@@ -87,6 +87,7 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
         organizationId,
         name: newProjectData.name,
         directory: newProjectData.openExistingDirectory,
+        credentialsId: newProjectData.credentialsId,
       });
 
       if (errors) {

@@ -1601,10 +1601,17 @@ export const openGitRepoAction = async ({
   organizationId,
   name,
   directory,
+  credentialsId = null,
 }: {
   organizationId: string;
   name?: string;
   directory: string;
+  /**
+   * Optional Git credentials to associate with the adopted repository so it can
+   * fetch/push to its remote. Null when the user opens a local-only folder or
+   * defers credentials to the project settings.
+   */
+  credentialsId?: string | null;
 }) => {
   try {
     if (!directory || !path.isAbsolute(directory)) {
@@ -1633,7 +1640,7 @@ export const openGitRepoAction = async ({
 
     const gitRepository = await services.gitRepository.create({
       uri: '',
-      credentialsId: null,
+      credentialsId,
       needsFullClone: false,
       directory: resolvedDirectory,
     });
@@ -1657,7 +1664,7 @@ export const openGitRepoAction = async ({
       directory: GIT_CLONE_DIR,
       fs: fsClient,
       gitDirectory: GIT_INTERNAL_DIR,
-      credentialsId: null,
+      credentialsId,
     });
 
     await GitVCS.setAuthor();

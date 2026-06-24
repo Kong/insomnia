@@ -8,6 +8,7 @@ import { useParams } from 'react-router';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import type { GitProviderOption } from '~/sync/git/providers/types';
+import { GitCredentialSelect } from '~/ui/components/git-credentials/git-credential-select';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
@@ -225,6 +226,15 @@ export const ProjectCreateForm: FC<Props> = ({
                     Insomnia will open this folder as a Git project. If it isn't a git repository yet, one will be
                     initialized.
                   </p>
+                  <GitCredentialSelect
+                    credentials={credentials}
+                    providers={providers}
+                    selectedCredentialsId={projectData.credentialsId}
+                    onChange={credentialsId =>
+                      setProjectData(prev => ({ ...prev, credentialsId: credentialsId ?? undefined }))
+                    }
+                    label="Git credentials (optional)"
+                  />
                 </div>
               )}
             </>
