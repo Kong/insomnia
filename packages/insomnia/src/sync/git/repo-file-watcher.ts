@@ -313,7 +313,7 @@ class RepoFileWatcher {
    * Also detects workspace YAML files that were removed from disk (e.g. deleted
    * on the remote) and removes the corresponding workspaces from the DB.
    */
-  async importAllFiles(): Promise<void> {
+  async importAllFiles(options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
     if (this.stopped) {
       return;
     }
@@ -329,7 +329,7 @@ class RepoFileWatcher {
     }
 
     // Detect deleted files: workspaces in DB whose YAML is no longer on disk.
-    this.queue.enqueue(() => this.removeOrphanedWorkspaces(yamlFiles));
+    this.queue.enqueue(() => this.removeOrphanedWorkspaces(yamlFiles, options.removeLocalOnlyOrphans));
 
     await this.queue.waitUntilDone();
   }
@@ -873,8 +873,13 @@ class RepoFileWatcher {
    *    It is NOT an orphan — write it to disk so it is preserved and can be
    *    committed. Without this, connecting an empty repo to a project that
    *    already has local data would silently delete that data.
+   *
+   * `removeLocalOnlyOrphans` overrides the preservation above: when the missing
+   * file is the result of an explicit user action (e.g. discarding an untracked,
+   * never-committed workspace), the workspace should be removed rather than
+   * resurrected back to disk.
    */
-  private async removeOrphanedWorkspaces(currentDiskFiles: string[]): Promise<void> {
+  private async removeOrphanedWorkspaces(currentDiskFiles: string[], removeLocalOnlyOrphans = false): Promise<void> {
     const diskFileSet = new Set(currentDiskFiles.map(f => path.normalize(f)));
     const entries = await this.getWorkspacesWithMeta();
     for (const { workspace, meta } of entries) {
@@ -887,7 +892,7 @@ class RepoFileWatcher {
         continue;
       }
 
-      if (!meta.gitFileLastSyncTime) {
+      if (!meta.gitFileLastSyncTime && !removeLocalOnlyOrphans) {
         // Local-only content never synced to git — preserve it instead of deleting.
         await this.flushWorkspaceToDisk(workspace, absPath);
         continue;
@@ -1115,12 +1120,12 @@ export class RepoFileWatcherRegistry {
    * Call after bulk git operations (clone, pull, merge, checkout) so the DB
    * reflects the new disk state. Content-hash dedup makes repeated calls cheap.
    */
-  importAllFiles(repoId: string): Promise<void> {
+  importAllFiles(repoId: string, options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
     const watcher = this.watchers.get(repoId);
     if (!watcher) {
       return Promise.resolve();
     }
-    return watcher.importAllFiles();
+    return watcher.importAllFiles(options);
   }
 
   /**
