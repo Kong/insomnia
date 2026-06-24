@@ -17,31 +17,33 @@ before attempting any improvement. Findings below are split into **confirmed by 
 ## The three input technologies
 
 ### A. Multi-line CodeMirror — `CodeEditor`
+
 [`code-editor.tsx`](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx)
 
-| Aspect | Behaviour | Ref |
-|---|---|---|
-| Undo engine | CodeMirror built-in history | — |
-| Init | `initEditor` runs once via `useMount`; `defaultValue` applied on mount only → **uncontrolled** | [:560](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L560) |
-| Seed guard | `clearHistory()` after first `setValue` so the seed isn't undoable | [:488](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L488) |
-| External writes | `maybePrettifyAndSetValue` no-ops when value is unchanged | [:296](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L296) |
+| Aspect               | Behaviour                                                                                                                                                                                       | Ref                                                                                                                                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Undo engine          | CodeMirror built-in history                                                                                                                                                                     | —                                                                                                                                                                              |
+| Init                 | `initEditor` runs once via `useMount`; `defaultValue` applied on mount only → **uncontrolled**                                                                                                  | [:560](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L560)                                                                                         |
+| Seed guard           | `clearHistory()` after first `setValue` so the seed isn't undoable                                                                                                                              | [:488](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L488)                                                                                         |
+| External writes      | `maybePrettifyAndSetValue` no-ops when value is unchanged                                                                                                                                       | [:296](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L296)                                                                                         |
 | **Remount survival** | History is persisted to module-global `editorStates[uniquenessKey]` (`getHistory()`) and restored (`setHistory()`) on re-init — **but only if `uniquenessKey` is unchanged across the remount** | [:324](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L324), [:503](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L503) |
-| Persist to model | debounced `onChange`, `DEBOUNCE_MILLIS = 100` | [:598](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L598) |
+| Persist to model     | debounced `onChange`, `DEBOUNCE_MILLIS = 100`                                                                                                                                                   | [:598](../packages/insomnia/src/ui/components/.client/codemirror/code-editor.tsx#L598)                                                                                         |
 
 Consumers (~21): raw body, GraphQL query/variables, environment JSON editor, request
 headers/params editors, request-script, markdown, mock response, code-prompt modal, etc.
 
 ### B. Single-line CodeMirror — `OneLineEditor`
+
 [`one-line-editor.tsx`](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx)
 
-| Aspect | Behaviour | Ref |
-|---|---|---|
-| Undo engine | CodeMirror built-in history | — |
-| Init | `initEditor` once via `useMount`, `defaultValue` on mount only → **uncontrolled** | [:255](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L255) |
-| Seed guard | `clearHistory()` after first set | [:221](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L221) |
-| **Remount survival** | **None.** No `editorStates` equivalent — history is destroyed on every remount | — |
-| `setValue` handle | Preserves cursor but `cm.setValue()` **clears CM undo history** | [:366](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L366) |
-| Persist to model | debounced `onChange` (100ms) **+ flush on blur** | [:295](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L295), [:304](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L304) |
+| Aspect               | Behaviour                                                                         | Ref                                                                                                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Undo engine          | CodeMirror built-in history                                                       | —                                                                                                                                                                                      |
+| Init                 | `initEditor` once via `useMount`, `defaultValue` on mount only → **uncontrolled** | [:255](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L255)                                                                                             |
+| Seed guard           | `clearHistory()` after first set                                                  | [:221](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L221)                                                                                             |
+| **Remount survival** | **None.** No `editorStates` equivalent — history is destroyed on every remount    | —                                                                                                                                                                                      |
+| `setValue` handle    | Preserves cursor but `cm.setValue()` **clears CM undo history**                   | [:366](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L366)                                                                                             |
+| Persist to model     | debounced `onChange` (100ms) **+ flush on blur**                                  | [:295](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L295), [:304](../packages/insomnia/src/ui/components/.client/codemirror/one-line-editor.tsx#L304) |
 
 Consumers (~14): URL bar, all key-value rows (name/value/description for headers, query,
 form-data, env), auth-input rows, cookies modal, WebSocket/gRPC/Socket.IO URL + panes, MCP url bar.
@@ -78,13 +80,14 @@ const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::
 ```
 
 Any change to a segment remounts the editor:
+
 - **Sending a request** → `activeResponseId` changes.
 - **Editing an environment** → `activeEnvironment.modified` changes.
 - **Git/Sync version bump** → `gitVersion` / `vcsVersion` changes.
 - **Initial load settling** after creating/opening a request (observed below).
 
 On remount, `OneLineEditor` loses all undo history; `CodeEditor` can only restore it if the
-`uniquenessKey` is *unchanged* — but several of these triggers change the key itself, defeating
+`uniquenessKey` is _unchanged_ — but several of these triggers change the key itself, defeating
 the restore.
 
 ## Runtime findings (Playwright probe, dev build)
@@ -92,15 +95,15 @@ the restore.
 Method: drive the real Electron renderer, type via keyboard, read CodeMirror state directly
 (`node.CodeMirror.historySize()`, `getValue()`). Probe was temporary and has been removed.
 
-| Scenario | Observation |
-|---|---|
-| URL bar, stable pane, type then settle | `undoDepth = 1` — history retained |
+| Scenario                                                                         | Observation                                                                                      |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| URL bar, stable pane, type then settle                                           | `undoDepth = 1` — history retained                                                               |
 | URL bar typed as the **first** mutation after creating a collection, then settle | `undoDepth = 1` immediately → **`0` after revalidation settles** (initial-load remount wiped it) |
-| Body editor, stable pane, type then settle | `undoDepth = 1` — history retained |
-| Body editor, then **switch tab away and back** (remount) | `undoDepth = 0`, value preserved — **remount wipes history** |
-| Body editor, real `Cmd+Z` | Undid the edit (`{"a":1}` → `{"a"}`) |
-| URL bar, real `Cmd+Z` (single run) | Value **unchanged**; focus retained — Cmd+Z did not undo |
-| Sidebar filter (plain controlled input), real `Cmd+Z` | Native undo **worked** (`"abc"` → `""`) |
+| Body editor, stable pane, type then settle                                       | `undoDepth = 1` — history retained                                                               |
+| Body editor, then **switch tab away and back** (remount)                         | `undoDepth = 0`, value preserved — **remount wipes history**                                     |
+| Body editor, real `Cmd+Z`                                                        | Undid the edit (`{"a":1}` → `{"a"}`)                                                             |
+| URL bar, real `Cmd+Z` (single run)                                               | Value **unchanged**; focus retained — Cmd+Z did not undo                                         |
+| Sidebar filter (plain controlled input), real `Cmd+Z`                            | Native undo **worked** (`"abc"` → `""`)                                                          |
 
 ### What this confirms
 
@@ -112,13 +115,16 @@ Method: drive the real Electron renderer, type via keyboard, read CodeMirror sta
 3. **"All inputs have undo disabled" is not universally true** — at least one plain controlled
    input (sidebar filter) has working native undo.
 
-### Open question (to bisect at fix time)
+### Resolved: why the URL bar lost undo / focus
 
-Why real-keyboard `Cmd+Z` undid the multi-line `CodeEditor` but not the `OneLineEditor` URL bar
-in one run, even though the URL bar's internal history was non-empty when stable. Candidates:
-native Edit-menu `role: 'undo'` routing vs. CodeMirror keymap, focus/selection state, or a
-remount race at the moment of the keypress. Needs an isolated probe (compare
-`cm.execCommand('undo')` vs. menu-accelerator path with focus pinned).
+Follow-up probing (real keyboard + `MutationObserver`) showed the URL bar's `OneLineEditor`
+**remounts ~once shortly after the first edit**: the first `patchRequest` triggers a loader
+revalidation, which changes a volatile segment of the editor's React `key` (`uniqueKey` =
+`activeEnvironment?.modified::requestId::gitVersion::vcsVersion::activeResponseId`). The remount
+**blurs the editor and drops its undo history**. So a `Cmd+Z` right after typing finds an
+already-blurred, empty-history editor — exactly the "re-render + loss of focus" symptom.
+The earlier "history non-empty when stable" reading was just a timing window before that remount
+landed. Confirmed: a stable editor keeps focus and undoes correctly; the remount is the disease.
 
 ## Improvement opportunities (ranked, least disruptive first)
 

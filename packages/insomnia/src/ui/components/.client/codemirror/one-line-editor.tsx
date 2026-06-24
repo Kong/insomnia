@@ -328,6 +328,22 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }
     }, [readOnly, getKeyMap]);
 
+    // Re-seed the editor when the external value changes, but ONLY while the user
+    // isn't actively editing (not focused) and the value actually differs. This
+    // lets callers resync after an external change (sync pull, etc.) without
+    // remounting via a volatile `key`, which would otherwise blur the editor and
+    // drop undo history mid-edit. In-progress typing (focused) is never clobbered.
+    useEffect(() => {
+      const cm = codeMirror.current;
+      if (cm && !cm.hasFocus() && (defaultValue || '') !== cm.getValue()) {
+        const cursor = cm.getCursor();
+        cm.setValue(defaultValue || '');
+        cm.setCursor(cursor);
+        // value baseline changed externally, so the old history no longer applies
+        cm.clearHistory();
+      }
+    }, [defaultValue]);
+
     useEffect(() => {
       // Prevent these things if we're type === "password"
       const preventDefault = (_: CodeMirror.Editor, event: Event) =>

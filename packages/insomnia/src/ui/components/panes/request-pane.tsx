@@ -104,7 +104,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
             key={requestId}
-            uniquenessKey={uniqueKey}
             handleAutocompleteUrls={() =>
               services.helpers.queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)
             }
