@@ -61,6 +61,14 @@ jobs:
             exit 1
           fi
 
+      - name: Check Insomnia JSON schema is up to date
+        run: |
+          npm run generate:schema -w insomnia
+          if ! git diff --exit-code schemas/insomnia.schema.json; then
+            echo "::error::schemas/insomnia.schema.json is out of date. Run 'npm run generate:schema -w insomnia' and commit the result."
+            exit 1
+          fi
+
       - name: Checkout base branch (cycle comparison)
         if: github.event_name == 'pull_request' && always()
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
