@@ -314,6 +314,36 @@ describe('curl', () => {
         parameters: [{ name: 'a', value: 'b' }],
       },
     },
+    // https://github.com/Kong/developer.konghq.com/issues/3805
+    {
+      name: 'detects the URL when -o precedes it',
+      curl: 'curl -o file.csv.gzip https://example.com/data',
+      expected: { url: 'https://example.com/data', method: 'GET' },
+    },
+    {
+      name: 'detects the URL when --output precedes it',
+      curl: 'curl --output file.csv.gzip https://example.com/data',
+      expected: { url: 'https://example.com/data', method: 'GET' },
+    },
+    {
+      name: 'imports with -o option without losing the URL, params or auth',
+      curl: "curl -o file.csv.gzip --location 'https://blabla.net/whatever?country=us&format=csv&' --header 'Accept-Encoding: gzip' --header 'Authorization: Bearer blabla'",
+      expected: {
+        url: 'https://blabla.net/whatever',
+        method: 'GET',
+        parameters: [
+          { name: 'country', value: 'us', disabled: false },
+          { name: 'format', value: 'csv', disabled: false },
+        ],
+        headers: [{ name: 'Accept-Encoding', value: 'gzip' }],
+        authentication: { type: 'bearer', token: 'blabla' },
+      },
+    },
+    {
+      name: 'does not skip the URL for an unsupported boolean flag like --location',
+      curl: 'curl --location https://example.com/data',
+      expected: { url: 'https://example.com/data', method: 'GET' },
+    },
   ];
 
   it.each(testCases)('$name', async ({ curl, expected }) => {

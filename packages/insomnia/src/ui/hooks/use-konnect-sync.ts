@@ -15,7 +15,7 @@ interface KonnectSyncState {
 export interface UseKonnectSyncResult {
   syncing: boolean;
   progress: string;
-  startSync: (organizationId: string) => Promise<SyncResult>;
+  startSync: (organizationId: string, konnectOrganizationId?: string | null) => Promise<SyncResult>;
   cancelSync: () => void;
 }
 
@@ -25,7 +25,7 @@ export function useKonnectSync(): UseKonnectSyncResult {
   const revalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { revalidate } = useRevalidator();
 
-  const startSync = async (organizationId: string): Promise<SyncResult> => {
+  const startSync = async (organizationId: string, konnectOrganizationId?: string | null): Promise<SyncResult> => {
     if (abortRef.current) {
       return {
         success: false,
@@ -90,6 +90,7 @@ export function useKonnectSync(): UseKonnectSyncResult {
       properties: {
         success: result.success,
         cancelled,
+        ...(konnectOrganizationId ? { konnect_organization_id: konnectOrganizationId } : {}),
         control_planes_total: result.controlPlanes.total,
         control_planes_created: result.controlPlanes.created,
         control_planes_updated: result.controlPlanes.updated,

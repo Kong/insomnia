@@ -33,7 +33,6 @@ export const GitCustomCredentialForm = ({
       credentials: {
         username: (formData.get('username') as string) || '',
         password: (formData.get('password') as string) || '',
-        baseURI: (formData.get('baseURI') as string) || '',
       },
       name: 'Custom Git Credential',
     };
@@ -86,15 +85,6 @@ export const GitCustomCredentialForm = ({
             defaultValue={gitCredentialToEdit?.credentials?.password}
           />
         </div>
-        <Input
-          name="baseURI"
-          type="url"
-          isRequired
-          label="Repository base URL"
-          description="Specify the git server base URL that correlates with this access token."
-          placeholder="e.g. https://github.your-domain.com/org-name"
-          defaultValue={gitCredentialToEdit?.credentials?.baseURI}
-        />
       </div>
       <div className="mt-2 flex justify-end gap-2">
         <Button primary type="submit">

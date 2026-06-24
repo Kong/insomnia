@@ -5,7 +5,15 @@ import clone from 'clone';
 import CodeMirror, { type EditorConfiguration, type EditorEventMap } from 'codemirror';
 import type { KeyCombination } from 'insomnia-data/common';
 import { isMac } from 'insomnia-data/common';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import * as reactUse from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '~/common/constants';
@@ -20,6 +28,7 @@ import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { usePlanData } from '~/ui/hooks/use-plan';
+import { useResizeObserver } from '~/ui/hooks/use-resize-observer';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
@@ -63,8 +72,11 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     },
     ref,
   ) => {
+    const editorContainerRef = useRef<HTMLDivElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
+    // We need to track editor version in order to re-apply some effects when the editor is re-initialized.
+    const [editorVersion, setEditorVersion] = useState(0);
     const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
@@ -77,7 +89,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }, [settings.enableKeyMapForInlineTextEditors, settings.editorKeyMap, readOnly]);
 
     const initEditor = useCallback(() => {
-      if (!textAreaRef.current) {
+      if (!textAreaRef.current || codeMirror.current || !editorContainerRef.current?.offsetWidth) {
         return;
       }
 
@@ -228,6 +240,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           id,
         );
       }
+      setEditorVersion(version => version + 1);
     }, [
       defaultValue,
       getAutocompleteConstants,
@@ -252,9 +265,19 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       codeMirror.current?.closeHintDropdown();
       codeMirror.current = null;
     }, []);
-    reactUse.useMount(() => {
-      initEditor();
+
+    useLayoutEffect(() => {
+      if (editorContainerRef.current?.offsetWidth) {
+        initEditor();
+      }
+    }, [initEditor]);
+
+    useResizeObserver(editorContainerRef, ({ width }) => {
+      if (width && width > 0) {
+        initEditor();
+      }
     });
+
     reactUse.useUnmount(() => {
       cleanUpEditor();
     });
@@ -289,7 +312,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         codeMirror.current?.off('cut', preventDefault);
         codeMirror.current?.off('dragstart', preventDefault);
       };
-    }, [type]);
+    }, [editorVersion, type]);
 
     useEffect(() => {
       const fn = misc.debounce((doc: CodeMirror.Editor) => {
@@ -299,7 +322,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }, DEBOUNCE_MILLIS);
       codeMirror.current?.on('changes', fn);
       return () => codeMirror.current?.off('changes', fn);
-    }, [onChange]);
+    }, [editorVersion, onChange]);
 
     useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
@@ -309,7 +332,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       };
       codeMirror.current?.on('blur', flushOnBlur);
       return () => codeMirror.current?.off('blur', flushOnBlur);
-    }, [onChange]);
+    }, [editorVersion, onChange]);
 
     useEffect(() => {
       const unsubscribe = window.main.on(
@@ -402,7 +425,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           }
         }}
       >
-        <div className="editor__container input editor--single-line">
+        <div ref={editorContainerRef} className="editor__container input editor--single-line">
           <textarea
             id={id}
             ref={textAreaRef}

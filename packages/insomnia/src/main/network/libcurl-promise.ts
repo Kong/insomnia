@@ -119,7 +119,8 @@ export const curlRequest = (options: CurlRequestOptions) =>
         authHeader,
         noDecompress = false,
       } = options;
-      // allow reading the file as the caCert is chosen by user
+
+      invariant(!finalUrl.startsWith('file://'), 'Local file URIs are not supported');
       const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({

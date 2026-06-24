@@ -4,34 +4,13 @@ import { models } from 'insomnia-data';
 import * as userSessionService from './user-session';
 
 function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
-  const home = organizations.find(
-    organization =>
-      models.organization.isPersonalOrganization(organization) &&
-      models.organization.isOwnerOfOrganization({
-        organization,
-        accountId,
-      }),
-  );
-  const myOrgs = organizations
-    .filter(
-      organization =>
-        !models.organization.isPersonalOrganization(organization) &&
-        models.organization.isOwnerOfOrganization({
-          organization,
-          accountId,
-        }),
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-  const notMyOrgs = organizations
-    .filter(
-      organization =>
-        !models.organization.isOwnerOfOrganization({
-          organization,
-          accountId,
-        }),
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-  return [...(home ? [home] : []), ...myOrgs, ...notMyOrgs];
+  const owned = organizations
+    .filter(organization => models.organization.isOwnerOfOrganization({ organization, accountId }))
+    .sort((a, b) => a.display_name.localeCompare(b.display_name));
+  const notOwned = organizations
+    .filter(organization => !models.organization.isOwnerOfOrganization({ organization, accountId }))
+    .sort((a, b) => a.display_name.localeCompare(b.display_name));
+  return [...owned, ...notOwned];
 }
 
 /**
