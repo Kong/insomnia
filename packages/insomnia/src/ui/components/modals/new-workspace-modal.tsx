@@ -264,7 +264,12 @@ export const NewWorkspaceModal = ({
                     name="name"
                     value={workspaceData.name}
                     isRequired
-                    onChange={name => setWorkspaceData({ ...workspaceData, name })}
+                    onChange={name => setWorkspaceData({
+                      ...workspaceData,
+                      name,
+                      // Keep the file name in sync with the name until the user edits it themselves.
+                      ...(hasEditedFileName ? {} : { fileName: name }),
+                    })}
                     className="group relative flex flex-col gap-2"
                   >
                     <Label className="text-sm text-(--hl)">Name</Label>
@@ -287,7 +292,10 @@ export const NewWorkspaceModal = ({
                           return null;
                         }}
                         value={safeToUseInsomniaFileName(workspaceData.fileName || '')}
-                        onChange={fileName => setWorkspaceData({ ...workspaceData, fileName })}
+                        onChange={fileName => {
+                          setHasEditedFileName(true);
+                          setWorkspaceData({ ...workspaceData, fileName });
+                        }}
                         className="group relative flex max-w-full flex-col gap-2 overflow-hidden"
                       >
                         <Label className="group relative flex flex-col gap-2 overflow-hidden">

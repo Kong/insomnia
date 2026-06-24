@@ -176,18 +176,20 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                   </TextField>
                   {project &&
                     models.project.isGitProject(project) &&
-                    gitRepoTreeFetcher.data &&
-                    !models.workspace.isMcp(workspace) && (
+                    gitRepoTreeFetcher.data && (
                       <TextField
                         name="fileName"
                         isRequired
                         value={safeToUseInsomniaFileName(fileNameValue || '')}
                         onChange={setFileNameValue}
                         validate={inputValue => {
+                          const candidateFileName = safeToUseInsomniaFileNameWithExt(inputValue);
+                          // Exclude the current file (normalized) so renaming to its own name isn't flagged as a collision.
+                          const currentFileName = safeToUseInsomniaFileNameWithExt(fileName);
                           if (
                             selectedFolderChildren
-                              .filter(name => name !== fileName)
-                              .includes(safeToUseInsomniaFileNameWithExt(inputValue))
+                              .filter(name => name !== currentFileName)
+                              .includes(candidateFileName)
                           ) {
                             return 'A file with the same name already exists in the selected folder';
                           }
