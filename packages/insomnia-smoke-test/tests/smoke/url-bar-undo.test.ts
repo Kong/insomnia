@@ -1,16 +1,18 @@
 import { expect } from '@playwright/test';
 
+import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-// Characterisation test for the request URL bar's undo behaviour.
-// Regression guard for: editing the URL must not remount/blur the editor, and
-// Cmd/Ctrl+Z must undo in place while keeping focus.
+// Characterisation tests for the request URL bar editor.
 // See docs/undo-redo-baseline.md.
 
 const URL_SEL = 'div.editor__container:has(textarea#request-url-bar) .CodeMirror';
 const CONTAINER_SEL = 'div.editor__container:has(textarea#request-url-bar)';
+const TAG_SEL = 'div.editor__container:has(textarea#request-url-bar) .nunjucks-tag';
 const isMac = process.platform === 'darwin';
 
+// Regression guard: editing the URL must not remount/blur the editor, and
+// Cmd/Ctrl+Z must undo in place while keeping focus.
 test('URL bar: editing keeps focus and Cmd+Z undoes in place', async ({ page }) => {
   await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
@@ -75,4 +77,45 @@ test('URL bar: editing keeps focus and Cmd+Z undoes in place', async ({ page }) 
   // Undo happened in place: no remount, focus retained.
   expect.soft(afterUndo.remounts).toBe(0);
   expect.soft(afterUndo.dataFocused).toBe('on');
+});
+
+// The editor is keyed on the environment, so switching environments must refresh
+// the rendered nunjucks variable preview shown in the URL bar.
+test('URL bar: switching environment refreshes the rendered preview', async ({ page, app, insomnia }) => {
+  const text = await loadFixture('environments.yaml');
+  await app.evaluate(async ({ clipboard }, t) => clipboard.writeText(t), text);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+  await page.getByRole('dialog').waitFor({ state: 'hidden' });
+
+  // Open the imported request, then put an environment variable in the URL so it
+  // renders an inline nunjucks preview. Replace the value via the editor API, then
+  // type so onChange persists it to the model (it must survive the env remount).
+  await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
+  const urlInput = page.locator(`${URL_SEL} textarea`);
+  await page.evaluate((sel: string) => {
+    const node = document.querySelector(sel) as any;
+    node?.CodeMirror?.setValue('');
+  }, URL_SEL);
+  await urlInput.focus();
+  await page.keyboard.type('{{ _.exampleString }}');
+  await page.keyboard.press('Escape');
+  // confirm the variable tag rendered (innerHTML is the variable name)
+  await expect.soft(page.locator(URL_SEL)).toContainText('exampleString');
+
+  const tag = page.locator(TAG_SEL).first();
+
+  // ExampleA -> subenvA0
+  await page.getByRole('button', { name: 'Manage Environments' }).click();
+  await page.getByRole('option', { name: 'ExampleA' }).press('Enter');
+  await page.getByRole('option', { name: 'ExampleA' }).press('Escape');
+  await expect.soft(tag).toHaveAttribute('title', /subenvA0/);
+
+  // ExampleB -> subenvB0 (preview must refresh on switch)
+  await page.getByRole('button', { name: 'Manage Environments' }).click();
+  await page.getByRole('option', { name: 'ExampleB' }).press('Enter');
+  await page.getByRole('option', { name: 'ExampleB' }).press('Escape');
+  await expect.soft(tag).toHaveAttribute('title', /subenvB0/);
 });

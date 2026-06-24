@@ -32,15 +32,7 @@ import { useResizeObserver } from '~/ui/hooks/use-resize-observer';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
-interface OneLineEditorState {
-  history: any;
-}
-// Module-level cache so a OneLineEditor's undo/redo history survives remounts
-// (e.g. when the parent's React key changes after a send or environment edit).
-// Mirrors the editorStates cache in CodeEditor. Keyed by `uniquenessKey`, which
-// MUST be stable across the remount (i.e. not the same volatile value used as the
-// React key) for the history to be recovered.
-const editorStates: Record<string, OneLineEditorState> = {};
+import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
 
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -247,8 +239,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       // Restore undo/redo history saved before the previous unmount so undo
       // survives remounts (the value is re-seeded from defaultValue above, which
       // matches the persisted model value, so the restored history stays consistent)
-      if (uniquenessKey && editorStates[uniquenessKey]?.history) {
-        codeMirror.current?.setHistory(editorStates[uniquenessKey].history);
+      const cachedState = uniquenessKey ? getCachedEditorState(uniquenessKey) : undefined;
+      if (cachedState?.history) {
+        codeMirror.current?.setHistory(cachedState.history);
       }
       // Setup Liquid template listeners
       if (handleRender && !settings.nunjucksPowerUserMode) {
@@ -282,9 +275,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
     const persistState = useCallback(() => {
       if (uniquenessKey && codeMirror.current) {
-        editorStates[uniquenessKey] = {
-          history: codeMirror.current.getHistory(),
-        };
+        setCachedEditorState(uniquenessKey, { history: codeMirror.current.getHistory() });
       }
     }, [uniquenessKey]);
 

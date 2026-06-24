@@ -303,12 +303,15 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({ handleAut
       <div className="flex flex-1 items-center p-1">
         <OneLineEditor
           id="request-url-bar"
-          // Key on requestId only. Previously keyed on the volatile uniquenessKey
-          // (environment.modified / response id / sync version), which remounted the
-          // editor on every edit — blurring it and dropping undo history. External
-          // value changes are now resynced in place via OneLineEditor's defaultValue
-          // effect, so no remount is needed except when switching requests.
-          key={requestId}
+          // Remount only when switching requests or when the environment changes
+          // (switch or edit), so nunjucks variable previews refresh. Deliberately
+          // EXCLUDES the response id and sync versions the old key used: those churn
+          // on send / local edits and remounted the editor mid-interaction, blurring
+          // it and dropping undo history. External URL changes (e.g. sync pull) are
+          // resynced in place via OneLineEditor's defaultValue effect.
+          key={`${requestId}::${activeEnvironment?._id}::${activeEnvironment?.modified}`}
+          // Stable cache key so undo history is restored if an environment-driven
+          // remount lands while the user is mid-edit.
           uniquenessKey={`request-url-bar::${requestId}`}
           ref={inputRef}
           type="text"
