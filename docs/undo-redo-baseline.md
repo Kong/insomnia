@@ -128,17 +128,13 @@ landed. Confirmed: a stable editor keeps focus and undoes correctly; the remount
 
 ## Improvement opportunities (ranked, least disruptive first)
 
-1. **Give `OneLineEditor` the same `editorStates` history persistence `CodeEditor` has.**
-   Thread a `uniquenessKey` through and save/restore `getHistory()`/`setHistory()` on
-   unmount/mount. Restores undo across remount for the URL bar and every key-value row. Highest
-   leverage, localized to one component.
-2. **Stabilise the remount key.** Narrow `uniqueKey` in
-   [`request-pane.tsx:82`](../packages/insomnia/src/ui/components/panes/request-pane.tsx#L82) so
-   segments that change mid-edit (`activeEnvironment.modified`, `activeResponseId`) don't tear
-   down the editor. Requires confirming what each segment was guarding against.
-3. **Make `setValue` non-destructive.** Where the manual `setValue` workaround is used, replace
-   the history-clearing `cm.setValue()` with a `replaceRange` over the full doc (preserves
-   history), or guard it to no-op when the incoming value equals the current value.
+1. **DONE.** Give `OneLineEditor` history persistence across remounts via a shared
+   `editor-state-cache` (also used by `CodeEditor`), keyed by a stable `uniquenessKey`.
+2. **DONE.** Narrow the URL bar editor's remount key to `requestId::environmentId::environment.modified`
+   so it refreshes on request/environment change but not on sends or local edits (the focus-loss
+   paths); external value changes resync in place via OneLineEditor's `defaultValue` effect.
+3. **DONE.** `setValue` is non-destructive — it replaces the value via `replaceRange` (history
+   preserved, undoable) and no-ops when unchanged.
 4. **Reconcile the two undo stacks** (native menu vs. CodeMirror). Out of scope for low-hanging
    fruit; track separately.
 5. **Plain controlled inputs (Category C).** Largest surface, lowest per-item value; defer
