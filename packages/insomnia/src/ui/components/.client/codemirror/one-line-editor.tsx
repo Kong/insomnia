@@ -32,6 +32,22 @@ import { useResizeObserver } from '~/ui/hooks/use-resize-observer';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
+import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
+
+// Replace the editor's entire value while PRESERVING undo/redo history and the
+// cursor. Unlike cm.setValue(), which clears history, replaceRange records the
+// change as a normal, undoable edit. No-ops when the value is unchanged so we
+// don't push empty history entries or move the cursor needlessly.
+const replaceValuePreservingHistory = (cm: CodeMirror.EditorFromTextArea, value: string) => {
+  if (cm.getValue() === value) {
+    return;
+  }
+  const cursor = cm.getCursor();
+  const lastLine = cm.lastLine();
+  cm.replaceRange(value, { line: 0, ch: 0 }, { line: lastLine, ch: cm.getLine(lastLine).length });
+  cm.setCursor(cursor);
+};
+
 export interface OneLineEditorProps {
   defaultValue: string;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
@@ -44,6 +60,8 @@ export interface OneLineEditorProps {
   onPaste?: (text: string) => void;
   onBlur?: (e: FocusEvent) => void;
   eventListeners?: EditorEventListener<keyof EditorEventMap>[];
+  // NOTE: stable key for caching/restoring undo history across remounts
+  uniquenessKey?: string;
 }
 
 export interface EditorEventListener<T extends keyof EditorEventMap> {
@@ -69,6 +87,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       onPaste,
       onBlur,
       eventListeners,
+      uniquenessKey,
     },
     ref,
   ) => {
@@ -231,6 +250,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       codeMirror.current?.setValue(defaultValue || '');
       // Clear history so we can't undo the initial set
       codeMirror.current?.clearHistory();
+      // Restore undo/redo history saved before the previous unmount so undo
+      // survives remounts (the value is re-seeded from defaultValue above, which
+      // matches the persisted model value, so the restored history stays consistent)
+      const cachedState = uniquenessKey ? getCachedEditorState(uniquenessKey) : undefined;
+      if (cachedState?.history) {
+        codeMirror.current?.setHistory(cachedState.history);
+      }
       // Setup Liquid template listeners
       if (handleRender && !settings.nunjucksPowerUserMode) {
         codeMirror.current?.enableNunjucksTags(
@@ -258,7 +284,14 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       settings.showVariableSourceAndValue,
       eventListeners,
       id,
+      uniquenessKey,
     ]);
+
+    const persistState = useCallback(() => {
+      if (uniquenessKey && codeMirror.current) {
+        setCachedEditorState(uniquenessKey, { history: codeMirror.current.getHistory() });
+      }
+    }, [uniquenessKey]);
 
     const cleanUpEditor = useCallback(() => {
       codeMirror.current?.toTextArea();
@@ -279,6 +312,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     });
 
     reactUse.useUnmount(() => {
+      persistState();
       cleanUpEditor();
     });
 
@@ -298,6 +332,27 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         codeMirror.current.setOption('keyMap', getKeyMap());
       }
     }, [readOnly, getKeyMap]);
+
+    // Re-seed the editor when the external value changes, but ONLY while the user
+    // isn't actively editing (not focused) and the value actually differs. This
+    // lets callers resync after an external change (sync pull, etc.) without
+    // remounting via a volatile `key`, which would otherwise blur the editor and
+    // drop undo history mid-edit. In-progress typing (focused) is never clobbered.
+    //
+    // Gated on `uniquenessKey`: it marks the editors we deliberately moved off
+    // volatile-key remounting onto stable-key + in-place updates (URL bar,
+    // key-value rows). Other OneLineEditor instances keep their original
+    // uncontrolled-after-mount behaviour, so this stays an opt-in.
+    useEffect(() => {
+      const cm = codeMirror.current;
+      if (cm && uniquenessKey !== undefined && !cm.hasFocus() && (defaultValue || '') !== cm.getValue()) {
+        const cursor = cm.getCursor();
+        cm.setValue(defaultValue || '');
+        cm.setCursor(cursor);
+        // value baseline changed externally, so the old history no longer applies
+        cm.clearHistory();
+      }
+    }, [defaultValue, uniquenessKey]);
 
     useEffect(() => {
       // Prevent these things if we're type === "password"
@@ -388,9 +443,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         },
         setValue: (value: string) => {
           if (codeMirror.current) {
-            const cursor = codeMirror.current.getCursor();
-            codeMirror.current.setValue(value);
-            codeMirror.current.setCursor(cursor);
+            replaceValuePreservingHistory(codeMirror.current, value);
           }
         },
       }),
