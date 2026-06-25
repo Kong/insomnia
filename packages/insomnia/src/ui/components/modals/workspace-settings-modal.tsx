@@ -57,6 +57,27 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
     }
   }, [project, gitRepoTreeFetcher]);
 
+  // When the modal is opened without a gitFilePath prop (e.g. from the project
+  // sidebar), resolve it from the workspace meta so the File name field is populated.
+  const [metaGitFilePath, setMetaGitFilePath] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (gitFilePath || !project || !models.project.isGitProject(project)) {
+      return;
+    }
+
+    let isMounted = true;
+    services.workspaceMeta.getByParentId(workspace._id).then(meta => {
+      if (isMounted && meta?.gitFilePath) {
+        setMetaGitFilePath(meta.gitFilePath);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [gitFilePath, project, workspace._id]);
+
   const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
 
   const workspaceFetcher = useWorkspaceUpdateActionFetcher();
@@ -80,8 +101,9 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
 
   // From the folderPath we need to get the folder children and validate that there is no file with the same name
   // Get the folder from the gitFilePath
-  const selectedFolder = gitFilePath?.split('/').slice(1).join('/') || '';
-  const fileName = gitFilePath?.split('/').pop() || '';
+  const effectiveGitFilePath = gitFilePath || metaGitFilePath || '';
+  const selectedFolder = effectiveGitFilePath.split('/').slice(1).join('/') || '';
+  const fileName = effectiveGitFilePath.split('/').pop() || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
 
   const [fileNameValue, setFileNameValue] = useState<string>(safeToUseInsomniaFileName(fileName || ''));
@@ -92,6 +114,14 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
     description !== workspace.description,
     mockServerUrlValue !== (mockServer?.url || ''),
   ].filter(Boolean).length;
+
+  // Keep the controlled file name in sync once the git file path resolves - it may
+  // arrive asynchronously when loaded from the workspace meta (e.g. opened from the sidebar).
+  useEffect(() => {
+    if (fileName) {
+      setFileNameValue(safeToUseInsomniaFileName(fileName));
+    }
+  }, [fileName]);
 
   return (
     <UnsavedChangesGuard hasUnsavedChanges={changedFieldCount > 1} onClose={onClose}>
@@ -146,18 +176,20 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                   </TextField>
                   {project &&
                     models.project.isGitProject(project) &&
-                    gitRepoTreeFetcher.data &&
-                    !models.workspace.isMcp(workspace) && (
+                    gitRepoTreeFetcher.data && (
                       <TextField
                         name="fileName"
                         isRequired
                         value={safeToUseInsomniaFileName(fileNameValue || '')}
                         onChange={setFileNameValue}
                         validate={inputValue => {
+                          const candidateFileName = safeToUseInsomniaFileNameWithExt(inputValue);
+                          // Exclude the current file (normalized) so renaming to its own name isn't flagged as a collision.
+                          const currentFileName = safeToUseInsomniaFileNameWithExt(fileName);
                           if (
                             selectedFolderChildren
-                              .filter(name => name !== fileName)
-                              .includes(safeToUseInsomniaFileNameWithExt(inputValue))
+                              .filter(name => name !== currentFileName)
+                              .includes(candidateFileName)
                           ) {
                             return 'A file with the same name already exists in the selected folder';
                           }

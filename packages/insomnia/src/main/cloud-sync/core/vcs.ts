@@ -11,6 +11,7 @@ import type { BaseModel } from 'insomnia-data';
 import * as crypt from '~/common/account/crypt';
 import * as session from '~/common/account/session';
 import { PLAYWRIGHT_TEST } from '~/common/constants';
+import { deterministicStringify } from '~/sync/lib/deterministic-stringify';
 
 import type { Operation } from '../../../common/database';
 import { generateId } from '../../../common/misc';
@@ -1347,7 +1348,7 @@ export class VCS {
 
   async _getBackendProject(): Promise<BackendProject | null> {
     const projectId = this._backendProject ? this._backendProject.id : 'n/a';
-    return this._store.getItem(`/projects/${projectId}/meta.json`);
+    return this._getBackendProjectById(projectId);
   }
 
   async _getBackendProjectById(projectId: string): Promise<BackendProject | null> {
@@ -1378,6 +1379,18 @@ export class VCS {
   }
 
   async _storeBackendProject(project: BackendProject) {
+    let existingProject: BackendProject | null = null;
+    try {
+      existingProject = await this._getBackendProjectById(project.id);
+    } catch (err) {
+      console.warn('[sync] Failed to get existing backend project %s', project.id, err);
+    }
+
+    if (existingProject && deterministicStringify(existingProject) === deterministicStringify(project)) {
+      console.debug('[sync] Skipping store due to no backend changes');
+      return;
+    }
+
     return this._store.setItem(`/projects/${project.id}/meta.json`, project);
   }
 
